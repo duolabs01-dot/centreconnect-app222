@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { SUPPORT_EMAIL } from '@/lib/config'
 
 type ErrorPageProps = {
   error: Error & { digest?: string }
@@ -22,7 +23,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button onClick={reset}>Try Again</Button>
           <Button variant="outline" asChild>
-            <Link href="mailto:support@centreconnect.co.za">Contact Support</Link>
+            <Link href={`mailto:${SUPPORT_EMAIL}`}>Contact Support</Link>
           </Button>
         </div>
       </div>

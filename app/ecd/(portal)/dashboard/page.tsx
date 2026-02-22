@@ -7,7 +7,7 @@ import { Button } from '@/components/ecd/Button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/src/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { cn, formatDate, getJohannesburgNowParts, isSameJohannesburgDay } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 

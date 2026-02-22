@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/cc-admin/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
 import { Input } from '@/components/ui/input'

@@ -7,3 +7,8 @@ node_modules/
 tmp-*.log
 tmp-*.mjs
 .next-dev-eperm.flag
+*.tsbuildinfo
+tmp-*.txt
+*audit*.txt
+*manifest*.txt
+

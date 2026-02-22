@@ -4,7 +4,7 @@ import { Button } from '@/components/cc-admin/Button'
 import { adminTheme } from '@/lib/admin-theme'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { CheckCircle2 } from 'lucide-react'
 
 interface ActivateCentreButtonProps {

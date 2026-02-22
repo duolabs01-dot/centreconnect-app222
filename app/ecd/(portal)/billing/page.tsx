@@ -183,8 +183,8 @@ export default async function EcdBillingPage() {
             ) : (
               <div className="space-y-2">
                 {(billingTickets ?? []).map((ticket) => (
-                  <div key={ticket.id} className="glass border border-white/10 p-3 text-sm text-white/80">
-                    <p className="font-medium text-white">{ticket.ticket_number}</p>
+                  <div key={ticket.id} className="border border-border p-3 text-sm text-muted-foreground">
+                    <p className="font-medium text-foreground">{ticket.ticket_number}</p>
                     <p className="text-xs text-slate-400">
                       {ticket.status} | {formatDate(ticket.created_at)}
                     </p>

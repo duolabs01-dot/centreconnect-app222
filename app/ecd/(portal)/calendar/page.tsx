@@ -7,7 +7,7 @@ import { Button } from '@/components/ecd/Button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { cn, formatDate, getJohannesburgNowParts } from '@/lib/utils'
-import { StatusBadge } from '@/src/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 export const metadata: Metadata = {

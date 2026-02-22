@@ -1,7 +1,8 @@
 import 'server-only'
 import { sendSmtpMail } from '@/lib/email/smtp'
+import { ROOT_DOMAIN } from '@/lib/config'
 
-const PRIMARY_RECIPIENT = 'admin@centreconnect.co.za'
+const PRIMARY_RECIPIENT = `admin@${ROOT_DOMAIN}`
 const CC_RECIPIENT = 'mandlakevin@gmail.com'
 
 type PlatformAdminActionNotificationInput = {

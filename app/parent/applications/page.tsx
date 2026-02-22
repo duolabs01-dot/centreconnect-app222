@@ -205,9 +205,9 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
 
             <section className="grid gap-4 md:grid-cols-3">
               {['submitted', 'pending_review', 'approved', 'provisioned', 'rejected'].map((status) => (
-                <div key={status} className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm text-slate-200">
+                <div key={status} className="rounded-2xl border border-border bg-white/90 p-4 text-sm text-foreground">
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{status.replace('_', ' ')}</p>
-                  <p className="mt-2 text-2xl font-semibold text-white">{filteredApplications.filter((a) => a.status === status).length}</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900">{filteredApplications.filter((a) => a.status === status).length}</p>
                 </div>
               ))}
             </section>

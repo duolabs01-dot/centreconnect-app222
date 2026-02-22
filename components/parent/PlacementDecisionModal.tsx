@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { AlertTriangle, Calendar, CheckCircle2, ChevronRight, MapPin, PartyPopper } from 'lucide-react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { formatDate } from '@/lib/utils'

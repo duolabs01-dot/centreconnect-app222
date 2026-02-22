@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Button } from '@/components/ecd/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Input } from '@/components/ui/input'

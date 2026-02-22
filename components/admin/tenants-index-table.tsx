@@ -3,7 +3,7 @@
 import { useState, useTransition, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { Button } from '@/components/cc-admin/Button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -14,6 +14,7 @@ import { adminTheme } from '@/lib/admin-theme'
 import { cn } from '@/lib/utils'
 import { CheckCircle2, AlertTriangle, AlertCircle, Clock, XCircle, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { ROOT_DOMAIN } from '@/lib/config'
 
 export type TenantRow = {
   id: string
@@ -541,7 +542,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
                 value={createForm.slug}
                 onChange={(e) => setCreateForm((prev) => ({ ...prev, slug: e.target.value }))}
               />
-              <p className="text-[11px] text-slate-400">This becomes the subdomain: [slug].centreconnect.co.za</p>
+              <p className="text-[11px] text-slate-400">This becomes the subdomain: [slug].{ROOT_DOMAIN}</p>
             </div>
             <div className="space-y-1">
               <Label htmlFor="primary-contact-name" className={adminTheme.body}>Primary Contact Name</Label>

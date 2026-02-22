@@ -10,7 +10,7 @@ export default function EcdPipelineLoading() {
       <section className="overflow-x-auto">
         <div className="grid min-w-[1200px] grid-cols-5 gap-4">
           {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="glass border border-white/10 p-4">
+            <div key={index} className="glass border border-border p-4">
               <Skeleton className="h-5 w-24" />
               <div className="mt-4 space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (

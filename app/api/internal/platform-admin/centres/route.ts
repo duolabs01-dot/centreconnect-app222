@@ -4,6 +4,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { queueEmail } from '@/lib/communications/emails'
+import { APP_URL } from '@/lib/config'
 
 const createCentreSchema = z.object({
   slug: z.string().min(2).max(80),
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
   })
 
   // Queue welcome email to primary contact
-  const paymentLink = `https://centreconnect.co.za/onboarding/pay?centre=${centre.slug}` // TODO: Replace with real Stripe payment link
+  const paymentLink = `${APP_URL}/onboarding/pay?centre=${centre.slug}` // TODO: Replace with real Stripe payment link
   const emailSubject = "Welcome to CentreConnect — Set up your account"
   const emailBody = `Dear ${data.primaryContactName},
 

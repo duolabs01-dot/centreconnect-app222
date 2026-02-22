@@ -1,6 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse } from 'next/server'
+import { ROOT_DOMAIN } from '@/lib/config'
 
 const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'admin', 'api'])
 
@@ -11,7 +12,7 @@ function getHostname(request: NextRequest) {
 }
 
 function resolveTenantSubdomain(hostname: string) {
-  const rootDomain = (process.env.TENANT_ROOT_DOMAIN ?? 'centreconnect.co.za').toLowerCase()
+  const rootDomain = (process.env.TENANT_ROOT_DOMAIN ?? ROOT_DOMAIN).toLowerCase()
   if (!hostname || hostname === rootDomain || hostname.endsWith(`.${rootDomain}`) === false) return null
   const suffix = `.${rootDomain}`
   const subdomain = hostname.slice(0, -suffix.length)
@@ -24,7 +25,7 @@ export async function middleware(request: NextRequest) {
   const subdomain = resolveTenantSubdomain(getHostname(request))
   if (subdomain && request.nextUrl.pathname === '/') {
     const rewriteUrl = request.nextUrl.clone()
-    rewriteUrl.pathname = `/centre/${subdomain}`
+    rewriteUrl.pathname = `/c/${subdomain}`
     return NextResponse.rewrite(rewriteUrl)
   }
 

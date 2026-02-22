@@ -5,7 +5,7 @@ import { Button } from '@/components/ecd/Button'
 import { cn, formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { StatusBadge } from '@/src/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 export const metadata: Metadata = {
   title: 'Transport Desk | CentreConnect',
   description: 'Manage transport requests, fees, and driver communications in one place.',
@@ -135,9 +135,9 @@ export default async function EcdTransportPage() {
                 { label: 'Quoted', status: 'quoted' },
                 { label: 'Accepted', status: 'accepted' },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                <div key={item.label} className="rounded-2xl border border-border bg-white/5 px-4 py-3">
                   <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="text-2xl font-semibold text-white">
+                  <p className="text-2xl font-semibold text-foreground">
                     {statusRoster[item.status] ?? 0}
                   </p>
                 </div>
@@ -150,7 +150,7 @@ export default async function EcdTransportPage() {
                   <p>No enquiries yet. Encourage parents to request a quote.</p>
                 ) : (
                   recentEnquiries.map((enquiry) => (
-                    <div key={enquiry.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-slate-900/60 px-3 py-2 text-sm transition hover:border-cyan-500/40">
+                    <div key={enquiry.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/80 px-3 py-2 text-sm transition hover:border-primary/30">
                       <div className="min-w-0">
                         <p className="truncate text-white">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
                         <p className="text-xs text-muted-foreground">{formatDate(enquiry.created_at)}</p>

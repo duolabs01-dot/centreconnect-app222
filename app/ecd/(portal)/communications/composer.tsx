@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ecd/Button'
 import { renderTemplate } from '@/lib/communications/templates'

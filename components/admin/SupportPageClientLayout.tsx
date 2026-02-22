@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/cc-admin/Button'
 import { cn } from '@/lib/utils'
 import { SupportTicket } from '@/app/admin/support/page' // Importing the interface
-import toast from 'react-hot-toast' // Import toast
+import { toast } from 'sonner' // Import toast
 import { updateTicketStatus } from '@/lib/actions/support-tickets' // Import the server action
 
 interface SupportPageClientLayoutProps {

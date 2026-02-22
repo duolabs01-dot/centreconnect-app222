@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
+import { ROOT_DOMAIN } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -151,7 +152,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
       navItems={tenantNavItems}
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Subdomain</CardTitle></CardHeader><CardContent><p className="font-mono text-sm">{centre.slug}.centreconnect.co.za</p></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Subdomain</CardTitle></CardHeader><CardContent><p className="font-mono text-sm">{centre.slug}.{ROOT_DOMAIN}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Tenant Status</CardTitle></CardHeader><CardContent><p>{centre.is_active ? 'Enabled' : 'Disabled'}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Verification</CardTitle></CardHeader><CardContent><p>{centre.is_registered ? 'Verified badge active' : 'Not verified'}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Package</CardTitle></CardHeader><CardContent><p className="uppercase">{subscription?.tier ?? 'none'} | {subscription?.status ?? 'none'}</p></CardContent></Card>

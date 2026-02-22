@@ -3,6 +3,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { queueEmail } from '@/lib/communications/emails'
+import { APP_URL } from '@/lib/config'
 
 export async function PATCH(
   request: Request,
@@ -49,7 +50,7 @@ export async function PATCH(
     }
 
     // 3. Send welcome email to ECD admin with login link
-    const loginLink = `https://centreconnect.co.za/login` // TODO: Make this specific to ECD admin login page if different
+    const loginLink = `${APP_URL}/login` // TODO: Make this specific to ECD admin login page if different
     const welcomeSubject = `Welcome to CentreConnect, ${updatedCentre.name}!`
     const welcomeBody = `Dear ${updatedCentre.primary_contact_name},
 

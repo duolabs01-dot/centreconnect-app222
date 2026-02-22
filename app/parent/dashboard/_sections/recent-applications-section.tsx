@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/src/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {

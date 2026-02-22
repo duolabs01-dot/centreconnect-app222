@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import toast from 'react-hot-toast'
+import { toast } from 'sonner'
 import { Bell, Globe, Users } from 'lucide-react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
