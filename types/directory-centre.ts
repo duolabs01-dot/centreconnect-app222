@@ -1,0 +1,23 @@
+export type DirectoryCentre = {
+  id: string
+  slug: string
+  name: string
+  tagline: string | null
+  suburb: string
+  city: string
+  age_groups: string[] | null
+  is_registered: boolean
+  logo_url: string | null
+  cover_image_url: string | null
+  capacity: number | null
+  fees_display_mode: 'exact' | 'range' | 'contact' | null
+  monthly_fee_min: number | null
+  monthly_fee_max: number | null
+  subsidy_accepted: boolean
+  latitude: number | null
+  longitude: number | null
+}
+
+export type RawDirectoryCentre = Omit<DirectoryCentre, 'subsidy_accepted'> & {
+  subsidy_accepted: boolean | null
+}

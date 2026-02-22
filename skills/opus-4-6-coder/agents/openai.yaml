@@ -1,0 +1,4 @@
+interface:
+  display_name: "Opus 4.6 Coder"
+  short_description: "Senior-level coding rigor for scoped changes"
+  default_prompt: "Use $opus-4-6-coder to implement a targeted production-safe fix with explicit risks and validations."

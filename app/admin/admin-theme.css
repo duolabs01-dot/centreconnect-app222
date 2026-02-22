@@ -1,0 +1,97 @@
+/* app/admin/admin-theme.css */
+/* Isolated Cyber-Noir Design System */
+
+.admin-shell {
+  --cyber-cyan:   #00F2FF;
+  --cyber-violet: #8A2BE2;
+  --cyber-green:  #00FF94;
+  --cyber-bg:     #0B0E14;
+  --cyber-card:   rgba(17, 21, 32, 0.72);
+  --cyber-border: rgba(255, 255, 255, 0.08);
+
+  --cyber-cyan-rgb: 0, 242, 255;
+  --cyber-violet-rgb: 138, 43, 226;
+  --cyber-green-rgb: 0, 255, 148;
+  --cyber-amber-rgb: 255, 184, 0;
+  --cyber-rose-rgb: 255, 68, 102;
+
+  background-color: var(--cyber-bg);
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(138, 43, 226, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
+    url("https://www.transparenttextures.com/patterns/carbon-fibre.png");
+  color: #E2E8F0;
+  font-family: var(--font-inter), sans-serif;
+}
+
+/* Typography */
+.holo-text {
+  font-family: var(--font-orbitron), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: white;
+  text-shadow: 
+    0 0 10px rgba(0, 242, 255, 0.5),
+    0 0 20px rgba(0, 242, 255, 0.2);
+}
+
+/* Glassmorphic Cyber Cards */
+.cyber-card {
+  background: var(--cyber-card);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--cyber-border);
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cyber-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.4), transparent);
+}
+
+.cyber-card-glow-cyan {
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.05);
+  border-color: rgba(0, 242, 255, 0.2);
+}
+
+.cyber-card-glow-violet {
+  box-shadow: 0 0 30px rgba(138, 43, 226, 0.05);
+  border-color: rgba(138, 43, 226, 0.2);
+}
+
+/* Animated Scanline Effect */
+.scanline {
+  position: relative;
+}
+.scanline::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 242, 255, 0.02) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* KPI Trend Badges */
+.trend-up {
+  color: var(--cyber-green);
+  background: rgba(0, 255, 148, 0.1);
+  border: 1px solid rgba(0, 255, 148, 0.2);
+}
+
+.trend-down {
+  color: var(--cyber-rose);
+  background: rgba(255, 68, 102, 0.1);
+  border: 1px solid rgba(255, 68, 102, 0.2);
+}

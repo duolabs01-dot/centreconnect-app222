@@ -1,0 +1,168 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { Clock3, HeartHandshake, ShieldCheck, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/lib/utils'
+import { ApplicationProgressSection } from '@/components/landing/application-progress-section'
+
+type HomeClientPageProps = {
+  userEmail: string | null
+  role: 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user' | null
+  parentItems: Array<{
+    id: string
+    centreName: string
+    childName: string
+    status: string
+  }>
+  jobOpportunities: Array<{
+    id: string
+    title: string
+    roleType: string
+    closesAt: string | null
+    centreName: string
+    centreSlug: string | null
+    suburb: string | null
+    city: string | null
+  }>
+}
+
+export default function HomeClientPage({ userEmail, parentItems, jobOpportunities }: HomeClientPageProps) {
+  const isSignedIn = Boolean(userEmail)
+  const parentName = getDisplayNameFromEmail(userEmail)
+  const [timeGreeting, setTimeGreeting] = useState(getJohannesburgGreeting())
+  const activeItems = parentItems.slice(0, 4)
+  const activeJobs = jobOpportunities.slice(0, 6)
+  const title = useMemo(
+    () => (isSignedIn ? `Welcome back, ${parentName}` : `${timeGreeting}, Parent`),
+    [isSignedIn, parentName, timeGreeting]
+  )
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTimeGreeting(getJohannesburgGreeting())
+    }, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)] pb-28 md:pb-0">
+      <header className="cc-glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">CentreConnect</p>
+            <h1 className="mt-1 truncate text-lg font-semibold text-slate-900 sm:text-xl">{title}</h1>
+            {isSignedIn ? <p className="text-xs text-slate-600">{timeGreeting}</p> : null}
+          </div>
+          <Button size="sm" className="shrink-0" variant={isSignedIn ? 'outline' : 'default'} asChild>
+            <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>{isSignedIn ? 'Open Dashboard' : 'Sign in'}</Link>
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="cc-page">
+          <section className="cc-glass-strong rounded-3xl p-5 sm:p-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+              <Sparkles className="h-3.5 w-3.5" />
+              Parent Hub
+            </div>
+            <h2 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">
+              Finally, a parent experience that actually understands the pressure.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+              Compare with confidence, track every response, and know your next best move without chasing updates.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild>
+                <Link href="/directory">Browse Centres</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href={isSignedIn ? '/parent/applications' : '/login'}>My Applications</Link>
+              </Button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                <div className="flex items-center gap-2 text-slate-900">
+                  <Clock3 className="h-4 w-4 text-blue-600" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Save Time</p>
+                </div>
+                <p className="mt-1 text-xs text-slate-600">No more calling centres for status updates.</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                <div className="flex items-center gap-2 text-slate-900">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trust Signals</p>
+                </div>
+                <p className="mt-1 text-xs text-slate-600">See registered centres and compare clearly.</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                <div className="flex items-center gap-2 text-slate-900">
+                  <HeartHandshake className="h-4 w-4 text-fuchsia-600" />
+                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Parent First</p>
+                </div>
+                <p className="mt-1 text-xs text-slate-600">Built around real family decision moments.</p>
+              </div>
+            </div>
+          </section>
+
+          <ApplicationProgressSection />
+
+          <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+            <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In Alexandra</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {[
+                { name: 'Bright Beginnings ECD', reason: 'Strong parent communication' },
+                { name: 'Sunshine Early Learning', reason: 'Balanced routine and play' },
+                { name: 'Happy Hearts Daycare', reason: 'Consistent application feedback' },
+                { name: 'Rainbow Kids Care', reason: 'Great fit for first-time families' },
+              ].map((item) => (
+                <div key={item.name} className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                  <p className="mt-1 text-xs text-slate-600">Alexandra, Johannesburg</p>
+                  <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section id="active-jobs" className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-base font-semibold text-slate-800">Employment Opportunities (Optional)</h3>
+              <span className="text-xs text-slate-500">{activeJobs.length} open</span>
+            </div>
+            <p className="mt-1 text-xs text-slate-600">Tertiary feature: discover roles from centres currently hiring.</p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {activeJobs.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
+                  <p className="text-sm font-semibold text-slate-900">No active jobs yet</p>
+                  <p className="mt-1 text-xs text-slate-600">Check back soon for new centre opportunities.</p>
+                </div>
+              ) : (
+                activeJobs.map((job) => (
+                  <div key={job.id} className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-sm font-semibold text-slate-900">{job.title}</p>
+                    <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{job.roleType}</p>
+                    <p className="mt-2 text-xs text-slate-600">
+                      {job.centreName}
+                      {job.suburb || job.city ? ` - ${[job.suburb, job.city].filter(Boolean).join(', ')}` : ''}
+                    </p>
+                    {job.closesAt ? <p className="mt-1 text-xs text-slate-500">Closes {formatDate(job.closesAt)}</p> : null}
+                    {job.centreSlug ? (
+                      <div className="mt-3">
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/c/${job.centreSlug}/jobs/${job.id}`}>View & Apply</Link>
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  )
+}

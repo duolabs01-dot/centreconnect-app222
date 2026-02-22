@@ -1,0 +1,375 @@
+// components/parent/CentreCard.tsx
+// Premium card for directory listings and saved centres.
+// Uses depth (shadow), not gradients. Subtle hover lift.
+
+'use client'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore } from 'lucide-react'
+import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
+
+interface CentreCardProps {
+  id: string
+  slug: string
+  name: string
+  tagline?: string
+  suburb: string
+  city: string
+  capacity?: number
+  age_groups?: string[]
+  is_registered: boolean
+  logo_url?: string
+  cover_image_url?: string
+  rating?: number        // future feature
+  open_spots?: number    // future: calculated from capacity - approved apps
+  variant?: 'default' | 'compact' | 'featured'
+  subsidy_accepted?: boolean
+  fees_display_mode?: 'exact' | 'range' | 'contact' | null
+  latitude?: number | null // Added
+  longitude?: number | null // Added
+}
+
+export default function CentreCard({
+  slug,
+  name,
+  tagline,
+  suburb,
+  city,
+  capacity,
+  age_groups = [],
+  is_registered,
+  logo_url,
+  cover_image_url,
+  rating,
+  open_spots,
+  variant = 'default',
+  subsidy_accepted = false,
+  fees_display_mode = null,
+  latitude,
+  longitude,
+}: CentreCardProps) {
+  const heroImage = getCentreHeroImage(slug, cover_image_url)
+
+  if (variant === 'compact') {
+    return (
+      <Link href={`/centre/${slug}`} className="centre-card centre-card--compact">
+        <div className="centre-card__logo-sm">
+          {logo_url ? (
+            <Image src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" />
+          ) : (
+            <span className="centre-card__initials">{name.charAt(0)}</span>
+          )}
+        </div>
+        <div className="centre-card__body-sm">
+          <p className="centre-card__name-sm">{name}</p>
+          <p className="centre-card__loc-sm">
+            <MapPin size={11} strokeWidth={2} />
+            {suburb}
+          </p>
+        </div>
+        {is_registered && (
+          <CheckCircle2 size={16} className="centre-card__check" />
+        )}
+        <style jsx>{`
+          .centre-card--compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 14px;
+            border: 1px solid #F1F5F9;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            text-decoration: none;
+            transition: box-shadow 0.15s ease;
+          }
+          .centre-card--compact:active {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          }
+          .centre-card__logo-sm {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: #EFF6FF;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+          }
+          .centre-card__initials {
+            font-size: 18px; font-weight: 700; color: #2563EB;
+          }
+          .centre-card__body-sm { flex: 1; min-width: 0; }
+          .centre-card__name-sm {
+            font-size: 14px; font-weight: 700; color: #0F172A;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          }
+          .centre-card__loc-sm {
+            display: flex; align-items: center; gap: 3px;
+            font-size: 12px; color: #64748B; margin-top: 2px;
+          }
+          .centre-card__check { color: #10B981; flex-shrink: 0; }
+        `}</style>
+      </Link>
+    )
+  }
+
+  return (
+    <>
+      <Link href={`/centre/${slug}`} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
+        {/* Cover image */}
+        <div className="centre-card__cover">
+          <Image
+            src={heroImage}
+            alt={`${name} cover`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 50vw"
+          />
+
+          {/* Registration badge — top right */}
+          {is_registered && (
+            <div className="centre-card__reg-badge">
+              <CheckCircle2 size={12} strokeWidth={2.5} />
+              Registered
+            </div>
+          )}
+
+          {/* Open spots indicator */}
+          {open_spots !== undefined && (
+            <div className={`centre-card__spots ${open_spots === 0 ? 'centre-card__spots--full' : ''}`}>
+              {open_spots === 0 ? 'Full' : `${open_spots} spots`}
+            </div>
+          )}
+        </div>
+
+        {/* Card body */}
+        <div className="centre-card__body">
+          {/* Logo + name row */}
+          <div className="centre-card__header">
+            <div className="centre-card__logo">
+              {logo_url ? (
+                <Image src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" />
+              ) : (
+                <span className="centre-card__initials-lg">{name.charAt(0)}</span>
+              )}
+            </div>
+            <div className="centre-card__title-group">
+              <h3 className="centre-card__name">{name}</h3>
+              {tagline && <p className="centre-card__tagline">{tagline}</p>}
+            </div>
+          </div>
+
+          {/* Meta row */}
+          <div className="centre-card__meta">
+            {!latitude || !longitude ? (
+              <span className="centre-card__meta-item text-orange-500">
+                <MapPin size={13} strokeWidth={2} />
+                Location not yet configured
+              </span>
+            ) : (
+              <span className="centre-card__meta-item">
+                <MapPin size={13} strokeWidth={2} />
+                {suburb}
+              </span>
+            )}
+            {capacity && (
+              <span className="centre-card__meta-item">
+                <Users size={13} strokeWidth={2} />
+                {capacity} children
+              </span>
+            )}
+            {rating && (
+              <span className="centre-card__meta-item centre-card__meta-item--rating">
+                <Star size={13} fill="currentColor" strokeWidth={0} />
+                {rating.toFixed(1)}
+              </span>
+            )}
+          </div>
+
+          {/* Age group chips */}
+          {age_groups.length > 0 && (
+            <div className="centre-card__tags">
+              {age_groups.slice(0, 3).map(age => (
+                <span key={age} className="centre-card__tag">{age} yrs</span>
+              ))}
+              {age_groups.length > 3 && (
+                <span className="centre-card__tag centre-card__tag--more">+{age_groups.length - 3}</span>
+              )}
+            </div>
+          )}
+
+          <div className="centre-card__trust">
+            {is_registered ? (
+              <span className="centre-card__trust-item">
+                <ShieldCheck size={12} /> Registered
+              </span>
+            ) : null}
+            {subsidy_accepted ? (
+              <span className="centre-card__trust-item">
+                <Wallet size={12} /> Subsidy-friendly
+              </span>
+            ) : null}
+            {fees_display_mode && fees_display_mode !== 'contact' ? (
+              <span className="centre-card__trust-item">
+                <MessageCircleMore size={12} /> Clear fees
+              </span>
+            ) : null}
+          </div>
+        </div>
+      </Link>
+
+      <style jsx>{`
+        .centre-card {
+          display: block;
+          background: white;
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+          border: 1px solid rgba(241,245,249,1);
+          text-decoration: none;
+          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                      box-shadow 0.2s ease;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .centre-card:active {
+          transform: scale(0.98);
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        @media (hover: hover) {
+          .centre-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+          }
+        }
+
+        .centre-card--featured {
+          border: 1.5px solid rgba(37,99,235,0.20);
+          box-shadow: 0 4px 16px rgba(37,99,235,0.10), 0 1px 2px rgba(0,0,0,0.04);
+        }
+
+        /* Cover */
+        .centre-card__cover {
+          position: relative;
+          height: 140px;
+          background: #EFF6FF;
+        }
+        .centre-card__reg-badge {
+          position: absolute;
+          top: 10px; right: 10px;
+          display: flex; align-items: center; gap: 4px;
+          background: rgba(255,255,255,0.92);
+          backdrop-filter: blur(8px);
+          color: #059669;
+          font-size: 11px; font-weight: 700;
+          padding: 4px 8px;
+          border-radius: 999px;
+          border: 1px solid rgba(16,185,129,0.20);
+        }
+        .centre-card__spots {
+          position: absolute;
+          bottom: 10px; left: 10px;
+          background: rgba(255,255,255,0.92);
+          backdrop-filter: blur(8px);
+          color: #2563EB;
+          font-size: 11px; font-weight: 700;
+          padding: 3px 8px;
+          border-radius: 999px;
+        }
+        .centre-card__spots--full {
+          color: #EF4444;
+        }
+
+        /* Body */
+        .centre-card__body {
+          padding: 14px 16px 16px;
+        }
+        .centre-card__header {
+          display: flex;
+          gap: 10px;
+          align-items: flex-start;
+          margin-bottom: 10px;
+        }
+        .centre-card__logo {
+          width: 44px; height: 44px;
+          border-radius: 12px;
+          background: #EFF6FF;
+          overflow: hidden;
+          flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border: 1.5px solid #DBEAFE;
+          margin-top: -28px; /* Overlap cover */
+          box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        }
+        .centre-card__initials-lg {
+          font-size: 20px; font-weight: 800; color: #2563EB;
+        }
+        .centre-card__title-group { flex: 1; min-width: 0; padding-top: 2px; }
+        .centre-card__name {
+          font-size: 15px; font-weight: 800; color: #0F172A;
+          line-height: 1.2;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+          margin: 0;
+        }
+        .centre-card__tagline {
+          font-size: 12px; color: #64748B; margin: 2px 0 0;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Meta */
+        .centre-card__meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 10px;
+        }
+        .centre-card__meta-item {
+          display: flex; align-items: center; gap: 4px;
+          font-size: 12px; color: #64748B; font-weight: 500;
+        }
+        .centre-card__meta-item--rating {
+          color: #F59E0B;
+        }
+
+        /* Tags */
+        .centre-card__tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        .centre-card__tag {
+          font-size: 11px; font-weight: 700;
+          padding: 3px 8px;
+          background: #EFF6FF;
+          color: #2563EB;
+          border-radius: 999px;
+          border: 1px solid #DBEAFE;
+        }
+        .centre-card__tag--more {
+          background: #F8FAFC;
+          color: #94A3B8;
+          border-color: #E2E8F0;
+        }
+
+        .centre-card__trust {
+          margin-top: 10px;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+
+        .centre-card__trust-item {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          border-radius: 999px;
+          border: 1px solid #E2E8F0;
+          background: #F8FAFC;
+          color: #334155;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 3px 8px;
+        }
+      `}</style>
+    </>
+  )
+}

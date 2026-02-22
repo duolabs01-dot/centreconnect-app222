@@ -1,0 +1,31 @@
+===============================================
+CENTRECONNECT LOGO INSTRUCTIONS
+===============================================
+
+Please place your CentreConnect logo file in this directory as:
+
+public/logo.jpeg
+
+Recommended specifications:
+- Format: JPEG or PNG
+- Dimensions: 600x180px (horizontal)
+- File size: Under 200KB
+- Transparent background (if PNG)
+
+The logo will be used in:
+- Website header
+- Login/Register pages
+- Email templates
+- Admin dashboards
+
+If you don't have a logo yet, you can:
+1. Use a text-only version temporarily
+2. Create one at Canva.com
+3. Hire a designer on Fiverr
+
+Once you have your logo:
+1. Save it as 'logo.jpeg' or 'logo.png'
+2. Place it in the public/ directory
+3. Update references if using PNG format
+
+Current references look for: /logo.jpeg

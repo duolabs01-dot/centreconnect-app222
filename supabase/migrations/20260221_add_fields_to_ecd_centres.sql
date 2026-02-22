@@ -1,0 +1,6 @@
+ALTER TABLE public.ecd_centres
+ADD COLUMN IF NOT EXISTS primary_contact_name TEXT,
+ADD COLUMN IF NOT EXISTS primary_contact_email TEXT,
+ADD COLUMN IF NOT EXISTS primary_contact_phone TEXT,
+ADD COLUMN IF NOT EXISTS contract_signed BOOLEAN NOT NULL DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS onboarding_fee_paid BOOLEAN NOT NULL DEFAULT FALSE;

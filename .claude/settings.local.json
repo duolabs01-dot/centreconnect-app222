@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head:*)",
+      "Bash(ls:*)",
+      "Bash(tail:*)",
+      "Bash(npm run:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(npm start:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}

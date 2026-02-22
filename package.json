@@ -1,0 +1,72 @@
+{
+  "name": "centreconnect",
+  "version": "1.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010",
+    "dev:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010 -Clean",
+    "dev:restart": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010",
+    "dev:ensure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-ensure.ps1",
+    "dev:raw": "next dev -H 0.0.0.0 -p 3010",
+    "task:finish": "npm run build && npm run dev:ensure",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 3010",
+    "smoke:parent": "node scripts/smoke-parent.mjs",
+    "lint": "next lint && npm run lint:forms",
+    "lint:forms": "node scripts/check-form-standards.mjs",
+    "audit:high": "npm audit --omit=dev --audit-level=high",
+    "security:ci": "npm run lint && npm run audit:high",
+    "seed": "tsx scripts/seed-centres.ts",
+    "seed:centres": "node scripts/seed-centres.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@radix-ui/react-avatar": "^1.0.4",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toast": "^1.1.5",
+    "@supabase/ssr": "^0.0.10",
+    "@supabase/supabase-js": "^2.39.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "date-fns": "^3.2.0",
+    "framer-motion": "^12.34.0",
+    "lucide-react": "^0.309.0",
+    "maplibre-gl": "^5.18.0",
+    "next": "14.1.0",
+    "next-themes": "^0.4.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.71.1",
+    "react-hot-toast": "^2.4.1",
+    "sharp": "^0.34.5",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^2.6.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.25.76",
+    "zustand": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5"
+  },
+  "volta": {
+    "node": "20.20.0"
+  }
+}

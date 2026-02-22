@@ -1,0 +1,139 @@
+{
+  "generated_at": "2026-02-17T12:37:46.763Z",
+  "area": "Alexandra, Johannesburg",
+  "records": [
+    {
+      "name": "Alex ECD",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Bophelong",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Isolihle",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Little Flowers",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Lukhanyiso",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Manor Pre-primary school",
+      "source": "openstreetmap_overpass",
+      "source_url": "https://www.openstreetmap.org/node/558891784",
+      "lat": -26.064691,
+      "lon": 28.075081,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "kindergarten",
+      "confidence": "high",
+      "raw_tags": {
+        "amenity": "kindergarten",
+        "name": "Manor Pre-primary school"
+      }
+    },
+    {
+      "name": "Mojadife",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Siyabangena",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Sweeto",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    },
+    {
+      "name": "Zakhele",
+      "source": "coj_kiddies_games_2022_fallback",
+      "source_url": "https://joburg.org.za/media_/Newsroom/Pages/2022%20News%20Articles/April/The-City-hosts-annual-Kiddies-Games-in-the-heart-of-Alex.aspx",
+      "lat": null,
+      "lon": null,
+      "address": null,
+      "phone": null,
+      "email": null,
+      "amenity": "ecd",
+      "confidence": "low",
+      "raw_tags": null
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+/* app/ecd/ecd-theme.css */
+/* Premium Glassmorphic Light Design System for ECDs */
+
+.ecd-premium-shell {
+  --ecd-cyan: #06B6D4;
+  --ecd-emerald: #10B981;
+  --ecd-bg: #F8FAFC;
+  --ecd-glass: rgba(255, 255, 255, 0.7);
+  --ecd-border: rgba(226, 232, 240, 0.8);
+
+  background-color: var(--ecd-bg);
+  background-image: 
+    radial-gradient(circle at 0% 0%, rgba(6, 182, 212, 0.05) 0%, transparent 30%),
+    radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 30%);
+  color: #1E293B;
+  font-family: 'DM Sans', var(--font-inter), sans-serif;
+}
+
+.ecd-glass-card {
+  background: var(--ecd-glass);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid var(--ecd-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.02);
+  border-radius: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ecd-glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.04);
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+.ecd-premium-nav-active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.1));
+  color: var(--ecd-cyan);
+  border-right: 3px solid var(--ecd-cyan);
+}
+
+.ecd-metric-glow {
+  color: var(--ecd-cyan);
+  text-shadow: 0 0 15px rgba(6, 182, 212, 0.2);
+}
