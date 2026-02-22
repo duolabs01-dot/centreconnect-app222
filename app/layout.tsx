@@ -1,5 +1,5 @@
-import type { Metadata } from "next" 
-import { Orbitron, Inter } from 'next/font/google'
+import type { Metadata } from "next"
+import { Orbitron, Inter, Nunito, DM_Sans } from 'next/font/google'
 import "./globals.css"
 import { Toaster as SonnerToaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
@@ -25,12 +25,25 @@ const inter = Inter({
   weight: ['300', '400', '500', '600', '700'],
 })
 
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-parent',
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
+})
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-ecd',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <html lang="en" className={`${orbitron.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${orbitron.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body className="font-sans">
         <ThemeProvider>
           <ThemeRouteSync />

@@ -1,19 +1,22 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import {
-  Map as MapLibreMap,
-  Marker,
-  Popup,
-  LngLatBounds,
-  NavigationControl,
-} from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import dynamic from 'next/dynamic'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import type { DirectoryCentre } from '@/types/directory-centre'
+
+const DirectoryMap = dynamic(() => import('./DirectoryMap').then(mod => mod.DirectoryMap), {
+  ssr: false,
+  loading: () => (
+    <div className="h-96 rounded-2xl bg-slate-100 animate-pulse
+                    flex items-center justify-center text-slate-400 text-sm">
+      Loading map...
+    </div>
+  ),
+})
 
 type DirectoryFilters = {
   search?: string
@@ -60,10 +63,6 @@ export default function DirectoryExplorer({
   const [searchTerm, setSearchTerm] = useState(initialFilters.search ?? '')
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [isPending, startTransition] = useTransition()
-  const mapContainerRef = useRef<HTMLDivElement | null>(null)
-  const mapInstanceRef = useRef<MapLibreMap | null>(null)
-  const markersRef = useRef<Marker[]>([])
-  const userMarkerRef = useRef<Marker | null>(null)
   const mountedRef = useRef(false)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'pending' | 'granted' | 'denied'>('pending')
@@ -176,64 +175,6 @@ export default function DirectoryExplorer({
       { timeout: 8000 }
     )
   }
-
-  useEffect(() => {
-    if (!showMap || !mapContainerRef.current) return
-
-    if (!mapInstanceRef.current) {
-      mapInstanceRef.current = new MapLibreMap({
-        container: mapContainerRef.current,
-        style: 'https://demotiles.maplibre.org/style.json',
-        center: [18, -26],
-        zoom: 11,
-      })
-      mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-    }
-
-    mapInstanceRef.current.resize()
-  }, [showMap])
-
-  useEffect(() => {
-    if (!showMap || !mapInstanceRef.current) return
-
-    markersRef.current.forEach((marker) => marker.remove())
-    markersRef.current = []
-
-    centresWithLocation.forEach((centre) => {
-      const popup = new Popup({ offset: 15 }).setHTML(
-        `<strong>${centre.name}</strong><p class="text-xs text-slate-500">${centre.suburb}</p>`
-      )
-      const marker = new Marker({ color: '#06b6d4' })
-        .setLngLat([centre.longitude!, centre.latitude!])
-        .setPopup(popup)
-        .addTo(mapInstanceRef.current!)
-      markersRef.current.push(marker)
-    })
-
-    if (centresWithLocation.length > 0) {
-      const bounds = new LngLatBounds()
-      centresWithLocation.forEach((centre) => {
-        bounds.extend([centre.longitude!, centre.latitude!])
-      })
-      mapInstanceRef.current.fitBounds(bounds, {
-        padding: 80,
-        maxZoom: 14,
-      })
-    }
-  }, [centresWithLocation, showMap])
-
-  useEffect(() => {
-    if (!showMap || !mapInstanceRef.current || !userLocation) return
-
-    if (userMarkerRef.current) {
-      userMarkerRef.current.setLngLat(userLocation)
-    } else {
-      userMarkerRef.current = new Marker({ color: '#facc15' })
-        .setLngLat(userLocation)
-        .setPopup(new Popup({ offset: 12 }).setText('You are here'))
-        .addTo(mapInstanceRef.current)
-    }
-  }, [userLocation, showMap])
 
   const handlePageChange = (next: number) => {
     applyFilters({ page: next })
@@ -356,16 +297,15 @@ export default function DirectoryExplorer({
           </div>
         )}
 
-        {showMap ? (
-          <div className="relative h-[420px] w-full rounded-2xl border border-border">
-            <div ref={mapContainerRef} className="h-full w-full" />
-            <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-3">
-              <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-slate-900">
-                {locationHint}
-              </span>
-            </div>
-          </div>
-        ) : centres.length === 0 ? (
+        {showMap && (
+          <DirectoryMap
+            centresWithLocation={centresWithLocation}
+            userLocation={userLocation}
+            locationHint={locationHint}
+            showMap={showMap}
+          />
+        )}
+        {centres.length === 0 && !showMap ? (
           <div className="mt-4 space-y-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
             <p className="text-sm font-semibold text-slate-700">No centres match that search</p>
             <p className="text-xs text-slate-500">
@@ -377,7 +317,7 @@ export default function DirectoryExplorer({
               </Button>
             </div>
           </div>
-        ) : (
+        ) : !showMap ? (
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {centres.map((centre) => (
               <CentreCard
@@ -398,7 +338,7 @@ export default function DirectoryExplorer({
               />
             ))}
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   )
