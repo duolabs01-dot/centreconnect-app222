@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import logo from '@/src/Logo.jpeg'
 
 type BrandMarkProps = {
   href?: string
@@ -24,7 +23,7 @@ export function BrandMark({
       className={cn('inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500', className)}
     >
       <Image
-        src={logo}
+        src="/Logo.jpeg"
         alt={`${label} logo`}
         width={compact ? 56 : 72}
         height={compact ? 56 : 72}
