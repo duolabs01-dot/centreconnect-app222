@@ -49,6 +49,23 @@ const FEE_OPTIONS = [
   { label: 'Under R2000', value: '2000' },
 ]
 
+function normalizeFilterValue(value?: string) {
+  const normalized = value?.trim()
+  if (!normalized || normalized.toLowerCase() === 'all') return undefined
+  return normalized
+}
+
+function sanitizeFilters(filters: DirectoryFilters): DirectoryFilters {
+  const search = filters.search?.trim()
+  return {
+    search: search ? search : undefined,
+    suburb: normalizeFilterValue(filters.suburb),
+    age: normalizeFilterValue(filters.age),
+    fee: normalizeFilterValue(filters.fee),
+    subsidy: filters.subsidy ? true : undefined,
+  }
+}
+
 export default function DirectoryExplorer({
   initialCentres,
   totalResults: initialTotal,
@@ -58,14 +75,24 @@ export default function DirectoryExplorer({
   suburbs,
   ageGroups,
 }: DirectoryExplorerProps) {
+  const sanitizedInitialFilters = useMemo(
+    () => sanitizeFilters(initialFilters),
+    [
+      initialFilters.search,
+      initialFilters.suburb,
+      initialFilters.age,
+      initialFilters.fee,
+      initialFilters.subsidy,
+    ]
+  )
   const [centres, setCentres] = useState(initialCentres)
   const [totalResults, setTotalResults] = useState(initialTotal)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [filters, setFilters] = useState<DirectoryFilters>({
-    ...initialFilters,
+    ...sanitizedInitialFilters,
     page: initialPage,
   })
-  const [searchTerm, setSearchTerm] = useState(initialFilters.search ?? '')
+  const [searchTerm, setSearchTerm] = useState(sanitizedInitialFilters.search ?? '')
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [isPending, startTransition] = useTransition()
   const mountedRef = useRef(false)
@@ -119,7 +146,8 @@ export default function DirectoryExplorer({
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      applyFilters({ search: searchTerm, page: 1 })
+      const normalizedSearch = searchTerm.trim()
+      applyFilters({ search: normalizedSearch || undefined, page: 1 })
     }, 300)
     return () => clearTimeout(timeout)
   }, [searchTerm])
@@ -152,11 +180,8 @@ export default function DirectoryExplorer({
   }, [filters, buildFetchUrl])
 
   const resetFilters = () => {
-    setSearchTerm(initialFilters.search ?? '')
-    setFilters({
-      ...initialFilters,
-      page: 1,
-    })
+    setSearchTerm('')
+    setFilters({ page: 1 })
     setCurrentPage(1)
   }
 
@@ -202,7 +227,7 @@ export default function DirectoryExplorer({
         </div>
         <select
           value={filters.suburb ?? ''}
-          onChange={(event) => applyFilters({ suburb: event.target.value || undefined })}
+          onChange={(event) => applyFilters({ suburb: normalizeFilterValue(event.target.value) })}
           className="cc-native-field"
         >
           <option value="">All suburbs</option>
@@ -214,7 +239,7 @@ export default function DirectoryExplorer({
         </select>
         <select
           value={filters.age ?? ''}
-          onChange={(event) => applyFilters({ age: event.target.value || undefined })}
+          onChange={(event) => applyFilters({ age: normalizeFilterValue(event.target.value) })}
           className="cc-native-field"
         >
           <option value="">All age groups</option>
@@ -226,7 +251,7 @@ export default function DirectoryExplorer({
         </select>
         <select
           value={filters.fee ?? ''}
-          onChange={(event) => applyFilters({ fee: event.target.value || undefined })}
+          onChange={(event) => applyFilters({ fee: normalizeFilterValue(event.target.value) })}
           className="cc-native-field"
         >
           {FEE_OPTIONS.map((option) => (
