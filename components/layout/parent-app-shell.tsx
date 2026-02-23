@@ -9,6 +9,7 @@ import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
+import { ArrowLeft } from 'lucide-react'
 
 type ParentAppShellProps = {
   userEmail: string
@@ -78,8 +79,25 @@ function getTitle(pathname: string) {
 }
 
 function getBackFallback(pathname: string) {
+  if (pathname.startsWith('/directory')) return '/directory'
   if (pathname.startsWith('/parent')) return '/parent/dashboard'
   return '/'
+}
+
+function shouldShowMobileBack(pathname: string) {
+  const topLevelTabs = new Set(['/directory', '/parent/dashboard', '/parent/applications', '/parent/profile'])
+  if (topLevelTabs.has(pathname)) return false
+
+  if (pathname.startsWith('/directory/')) return true
+  if (pathname.startsWith('/parent/dashboard/')) return true
+  if (pathname.startsWith('/parent/applications/')) return true
+  if (pathname.startsWith('/parent/profile/')) return true
+  if (pathname.startsWith('/parent/children')) return true
+  if (pathname.startsWith('/parent/notifications')) return true
+  if (pathname.startsWith('/parent/shortlist')) return true
+  if (pathname.startsWith('/parent/compare')) return true
+
+  return false
 }
 
 export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
@@ -124,6 +142,8 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
     router.push(getBackFallback(pathname))
   }
 
+  const showMobileBack = shouldShowMobileBack(pathname)
+
   return (
     <div
       data-parent-theme="true"
@@ -142,16 +162,18 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
       </div>
       <header className="cc-glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
         <Container className="flex items-center justify-between gap-3 py-3 sm:py-4">
-          <div className="flex shrink-0 items-center md:hidden">
-            <button
-              type="button"
-              onClick={handleMobileBack}
-              className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white"
-              aria-label="Go back"
-            >
-              &lt;-
-            </button>
-          </div>
+          {showMobileBack ? (
+            <div className="flex shrink-0 items-center md:hidden">
+              <button
+                type="button"
+                onClick={handleMobileBack}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
 
           <div className="min-w-0 flex-1">
             <BrandMark compact className="mb-1 max-[360px]:hidden" />

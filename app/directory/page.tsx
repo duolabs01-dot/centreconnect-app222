@@ -182,15 +182,15 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const centresWithCoords = centres
 
   return (
-    <main className="bg-gradient-to-b from-cyan-50/50 via-white to-sky-50/30 py-10 sm:py-12">
+    <main className="bg-gradient-to-b from-cyan-50/50 via-white to-sky-50/30 py-4 sm:py-6 lg:py-8">
       <PageContainer>
-        <div className="cc-page space-y-6">
+        <div className="cc-page space-y-4 sm:space-y-6">
           <section className="cc-section-block">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
               <Sparkles className="h-3.5 w-3.5" />
               Trusted Discovery
             </div>
-            <h1 className="text-3xl font-semibold text-slate-900">
+            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl lg:text-3xl">
               Find Centres That Actually Fit Your Family
             </h1>
             <p className="text-sm text-slate-600">
@@ -198,7 +198,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             </p>
           </section>
 
-          <section className="rounded-2xl border border-cyan-100/80 bg-white/90 p-4 shadow-[0_10px_20px_rgba(15,23,42,0.06)]">
+          <section className="rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2 text-cyan-800">

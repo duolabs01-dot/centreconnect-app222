@@ -6,13 +6,14 @@ import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { submitApplicationAction } from '@/lib/actions/admissions/submit-application'
 import { CreateChildInput, createChildAction, createChildSchema } from '@/lib/actions/parents/create-child'
-import { cn, calculateAge } from '@/lib/utils'
+import { createClient as createBrowserClient } from '@/lib/supabase/client'
+import { calculateAge, cn } from '@/lib/utils'
 
 type ParentChild = {
   id: string
@@ -54,7 +55,10 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
     }
   }, [childList, selectedChildId])
 
-  const selectedChild = useMemo(() => childList.find((child) => child.id === selectedChildId) ?? null, [childList, selectedChildId])
+  const selectedChild = useMemo(
+    () => childList.find((child) => child.id === selectedChildId) ?? null,
+    [childList, selectedChildId]
+  )
 
   const childForm = useForm<ChildFormValues>({
     resolver: zodResolver(createChildSchema),
@@ -68,6 +72,7 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
         toast.error(result.error)
         return
       }
+
       if (result.child) {
         setChildList((prev) => [...prev, result.child])
         setSelectedChildId(result.child.id)
@@ -83,19 +88,29 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
       toast.error('Select or add a child first.')
       return
     }
+
     startTransition(async () => {
       setStatus('submitting')
+
+      const browserSupabase = createBrowserClient()
+      const {
+        data: { session },
+      } = await browserSupabase.auth.getSession()
+
       const result = await submitApplicationAction({
         ecd_id: centre.id,
         child_id: selectedChildId,
         share_multiple_flag: shareMultiple,
         parent_message: parentMessage.trim() || undefined,
+        access_token: session?.access_token,
       })
+
       if (result?.error) {
         toast.error(result.error)
         setStatus('idle')
         return
       }
+
       setStatus('success')
       toast.success('Application submitted. We will update you via email.')
     })
@@ -103,12 +118,14 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
 
   if (status === 'success') {
     return (
-      <Card className="border-cyan-600/40 bg-gradient-to-br from-cyan-700/40 to-slate-900/80">
-        <CardContent className="space-y-4 text-center text-white">
-          <p className="text-xs uppercase tracking-[0.4em] text-cyan-200">Next step</p>
-          <h3 className="text-3xl font-bold">Application sent</h3>
-          <p className="text-sm text-cyan-100">We have forwarded your application to {centre.name}. Expect a confirmation email soon.</p>
-          <div className="flex flex-col gap-2 md:flex-row md:justify-center">
+      <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50">
+        <CardContent className="space-y-4 px-4 py-5 text-center sm:px-6 sm:py-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Next step</p>
+          <h3 className="text-2xl font-bold text-slate-900 sm:text-3xl">Application sent</h3>
+          <p className="text-sm text-slate-600">
+            We have forwarded your application to {centre.name}. Expect a confirmation email soon.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button asChild>
               <Link href="/parent/applications">Go to Application Journey</Link>
             </Button>
@@ -122,24 +139,24 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
   }
 
   return (
-    <div className="space-y-6 rounded-3xl border border-white/10 bg-slate-950/70 p-6 shadow-2xl shadow-slate-950/50">
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Step 1 • child selection</p>
-        <h2 className="text-2xl font-bold text-white">Who is applying?</h2>
-        <p className="text-sm text-slate-300">
-          We automatically read the children linked to your account. Select who is applying or add a new profile.
+    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:space-y-6 sm:p-6">
+      <div className="space-y-1.5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">Step 1 - Child profile</p>
+        <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Who is applying?</h2>
+        <p className="text-sm leading-relaxed text-slate-600">
+          Select one of your saved child profiles, or add a new profile before submitting.
         </p>
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-white/5 bg-white/5 p-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             className={cn(
-              'rounded-2xl border px-4 py-2 text-sm font-semibold transition',
+              'rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors',
               step === 'existing'
-                ? 'border-cyan-400 bg-cyan-500/10 text-white'
-                : 'border-transparent bg-white/10 text-slate-300 hover:bg-white/20'
+                ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
             )}
             onClick={() => setStep('existing')}
           >
@@ -148,10 +165,10 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
           <button
             type="button"
             className={cn(
-              'rounded-2xl border px-4 py-2 text-sm font-semibold transition',
+              'rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors',
               step === 'new'
-                ? 'border-cyan-400 bg-cyan-500/10 text-white'
-                : 'border-transparent bg-white/10 text-slate-300 hover:bg-white/20'
+                ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-800'
             )}
             onClick={() => setStep('new')}
           >
@@ -161,12 +178,13 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
 
         {step === 'existing' ? (
           childList.length === 0 ? (
-            <p className="text-sm text-slate-300">No child profiles yet. Create one to continue.</p>
+            <p className="text-sm text-slate-600">No child profiles yet. Create one to continue.</p>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-2.5 sm:grid-cols-2">
               {childList.map((child) => {
                 const age = child.date_of_birth ? calculateAge(child.date_of_birth) : null
                 const isActive = selectedChildId === child.id
+
                 return (
                   <button
                     key={child.id}
@@ -176,14 +194,16 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
                       setStep('existing')
                     }}
                     className={cn(
-                      'w-full rounded-2xl border px-4 py-3 text-left transition',
+                      'w-full rounded-xl border px-3.5 py-3 text-left transition-colors',
                       isActive
-                        ? 'border-cyan-400 bg-cyan-500/10 text-white shadow-inner shadow-cyan-500/20'
-                        : 'border-white/10 bg-white/5 text-slate-200 hover:border-cyan-500/40 hover:bg-white/10'
+                        ? 'border-cyan-300 bg-cyan-50 text-slate-900'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-cyan-200 hover:bg-cyan-50/40'
                     )}
                   >
-                    <p className="text-lg font-semibold">{child.first_name} {child.last_name}</p>
-                    <p className="text-xs text-slate-400">{age ? `${age} years old` : 'Age pending'}</p>
+                    <p className="text-base font-semibold leading-snug">
+                      {child.first_name} {child.last_name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">{age ? `${age} years old` : 'Age pending'}</p>
                   </button>
                 )
               })}
@@ -192,14 +212,14 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
         ) : (
           <form className="space-y-4" onSubmit={childForm.handleSubmit(handleAddChild)}>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label htmlFor="first_name">First name</Label>
                 <Input id="first_name" {...childForm.register('first_name')} />
                 {childForm.formState.errors.first_name && (
                   <p className="text-xs text-destructive">{childForm.formState.errors.first_name.message}</p>
                 )}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <Label htmlFor="last_name">Last name</Label>
                 <Input id="last_name" {...childForm.register('last_name')} />
                 {childForm.formState.errors.last_name && (
@@ -207,65 +227,71 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
                 )}
               </div>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label htmlFor="date_of_birth">Date of birth</Label>
               <Input id="date_of_birth" type="date" {...childForm.register('date_of_birth')} />
               {childForm.formState.errors.date_of_birth && (
                 <p className="text-xs text-destructive">{childForm.formState.errors.date_of_birth.message}</p>
               )}
             </div>
-            <div className="flex items-center justify-between gap-3 text-sm text-slate-300">
-              <p>Add the child and we’ll carry their profile through every application.</p>
-              <Button type="submit" disabled={isChildPending} size="sm">
-                {isChildPending ? 'Adding…' : 'Add child'}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600">Add the child profile, then continue your application.</p>
+              <Button type="submit" disabled={isChildPending} size="sm" className="sm:w-auto">
+                {isChildPending ? 'Adding...' : 'Add child'}
               </Button>
             </div>
           </form>
         )}
       </div>
 
-      <div className="space-y-4 rounded-2xl border border-white/5 bg-gradient-to-br from-white/5 to-white/3 p-5">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-3.5 sm:p-4">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">Step 2 • application details</p>
-          <h3 className="text-xl font-bold text-white">Submit to {centre.name}</h3>
-          <p className="text-sm text-slate-300">We’ll notify {centre.name} and share any updates you need.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">Step 2 - Submit application</p>
+          <h3 className="text-lg font-bold text-slate-900 sm:text-xl">Submit to {centre.name}</h3>
+          <p className="text-sm leading-relaxed text-slate-600">
+            Add an optional message to help the centre understand your child needs.
+          </p>
         </div>
+
         <div className="space-y-3">
           <Textarea
-            placeholder="Share anything that matters to the centre (special circumstances, siblings, etc.)"
+            placeholder="Share anything important (siblings, support needs, transport notes, etc.)"
             value={parentMessage}
             rows={4}
             onChange={(event) => setParentMessage(event.target.value)}
-            className="bg-slate-900 text-white placeholder:text-slate-500"
+            className="bg-white text-slate-900 placeholder:text-slate-400"
           />
-          <label className="flex items-center gap-3 text-sm text-slate-200">
+
+          <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={shareMultiple}
               onChange={(event) => setShareMultiple(event.target.checked)}
-              className="h-4 w-4 rounded border border-white/40 bg-transparent"
+              className="mt-0.5 h-4 w-4 rounded border border-slate-300"
             />
-            Share this application across other qualified centres (if you have similar preferences)
+            Share this application across other matching centres if needed.
           </label>
-          <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 text-sm text-slate-400">
-            <p className="font-semibold text-white">Selected child</p>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
+            <p className="font-semibold text-slate-900">Selected child</p>
             {selectedChild ? (
-              <p className="text-sm text-slate-300">
+              <p className="mt-0.5 text-slate-600">
                 {selectedChild.first_name} {selectedChild.last_name}
-                {selectedChild.date_of_birth ? ` • ${calculateAge(selectedChild.date_of_birth)} years old` : ''}
+                {selectedChild.date_of_birth ? ` - ${calculateAge(selectedChild.date_of_birth)} years old` : ''}
               </p>
             ) : (
-              <p className="text-sm text-slate-400">Please add a child to proceed.</p>
+              <p className="mt-0.5 text-slate-500">Please add or select a child to continue.</p>
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Ready?</p>
-            <p className="text-sm text-slate-300">One submission per child per centre.</p>
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Ready to submit?</p>
+            <p className="text-sm text-slate-600">One active application per child per centre.</p>
           </div>
-          <Button onClick={handleSubmit} disabled={isPending || !selectedChild} size="lg">
-            {isPending ? 'Submitting…' : 'Submit Application'}
+          <Button onClick={handleSubmit} disabled={isPending || !selectedChild} size="lg" className="w-full sm:w-auto">
+            {isPending || status === 'submitting' ? 'Submitting...' : 'Submit Application'}
           </Button>
         </div>
       </div>

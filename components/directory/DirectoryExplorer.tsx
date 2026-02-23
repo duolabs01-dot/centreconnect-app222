@@ -240,10 +240,10 @@ export default function DirectoryExplorer({
 
   return (
     <section
-      className="rounded-2xl border border-cyan-100/80 bg-white/90 p-5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm"
+      className="overflow-hidden rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-4 lg:p-5"
       aria-live="polite"
     >
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -333,8 +333,8 @@ export default function DirectoryExplorer({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="mt-3.5 flex flex-col gap-2.5 md:mt-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             size="sm"
             variant={viewMode === 'list' ? 'default' : 'outline'}
@@ -353,18 +353,20 @@ export default function DirectoryExplorer({
             Reset filters
           </Button>
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-500 md:text-right">
           {isPending ? 'Searching results...' : 'Results update instantly as you type.'}
         </p>
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <p className="text-xs text-slate-500">
-          Page {currentPage} of {totalPages}
-        </p>
-        <p className="text-xs text-slate-500">
-          Showing {filtered.length} of {totalResults} centre{totalResults === 1 ? '' : 's'}
-        </p>
+      <div className="mt-3.5 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:mt-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1">
+          <p className="text-xs text-slate-500">
+            Showing {filtered.length} of {totalResults} centre{totalResults === 1 ? '' : 's'}
+          </p>
+          <p className="text-xs text-slate-500">
+            Page {currentPage} of {totalPages}
+          </p>
+        </div>
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -385,7 +387,7 @@ export default function DirectoryExplorer({
         </div>
       </div>
 
-      <div className="relative mt-4">
+      <div className="relative mt-3.5 sm:mt-4">
         {isPending && (
           <div className="pointer-events-none absolute inset-0 z-20 rounded-2xl bg-white/80">
             <p className="m-4 text-sm font-semibold text-slate-700">Updating results...</p>
@@ -419,7 +421,7 @@ export default function DirectoryExplorer({
               {filtered.length} {filtered.length === 1 ? 'centre' : 'centres'} found
             </p>
 
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-3.5 grid gap-3 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
               {filtered.map((centre) => (
                 <CentreCard
                   key={centre.id}

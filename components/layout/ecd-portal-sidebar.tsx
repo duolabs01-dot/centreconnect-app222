@@ -8,7 +8,7 @@ import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
-import { Menu, Pin, PinOff } from 'lucide-react'
+import { ArrowLeft, Menu, Pin, PinOff } from 'lucide-react'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -20,8 +20,10 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
   const router = useRouter()
   const primaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') === 'daily')
   const secondaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') !== 'daily')
+  const topLevelPaths = new Set(ECD_DASHBOARD_NAV.map((item) => item.href))
   const [isPinned, setIsPinned] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const showMobileBack = Array.from(topLevelPaths).some((href) => pathname.startsWith(`${href}/`))
 
   const handleMobileBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -65,14 +67,16 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleMobileBack}
-        className="fixed z-50 inline-flex h-9 items-center justify-center rounded-full border border-border bg-card/90 px-3 text-sm font-semibold text-foreground shadow-lg shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
-        aria-label="Go back"
-      >
-        &lt;-
-      </button>
+      {showMobileBack ? (
+        <button
+          type="button"
+          onClick={handleMobileBack}
+          className="fixed z-50 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-lg shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+      ) : null}
 
       <button
         type="button"

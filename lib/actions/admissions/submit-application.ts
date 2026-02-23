@@ -1,14 +1,14 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { z } from 'zod'
+import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
   child_id: z.string().uuid(),
   share_multiple_flag: z.boolean().default(false),
   parent_message: z.string().max(1000).optional(),
+  access_token: z.string().min(16).optional(),
 })
 
 export async function submitApplicationAction(input: unknown) {
@@ -17,19 +17,18 @@ export async function submitApplicationAction(input: unknown) {
     return { error: 'Invalid application data' }
   }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookies().getAll(),
-      },
-    }
-  )
+  const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const [{ data: userData }, { data: sessionData }] = await Promise.all([
+    supabase.auth.getUser(),
+    supabase.auth.getSession(),
+  ])
+  let user = userData.user ?? sessionData.session?.user ?? null
+
+  if (!user && parsed.data.access_token) {
+    const { data: tokenUserData } = await supabase.auth.getUser(parsed.data.access_token)
+    user = tokenUserData.user ?? null
+  }
 
   if (!user) {
     return { error: 'Please log in to apply' }
