@@ -66,13 +66,24 @@ export default async function HomePage() {
   }
 
   if (!user) {
-    const [{ data: jobs }, { data: shortlistRows }] = await Promise.all([
+    const [{ data: jobsRaw }, { data: shortlistRows }] = await Promise.all([
       supabase
         .from('jobs')
-        .select('id,title,role_type,closes_at,ecd_centres(name,slug,suburb,city)')
+        .select(`
+          id,
+          title,
+          role_type,
+          closes_at,
+          ecd_centres (
+            name,
+            slug,
+            suburb,
+            city
+          )
+        `)
         .eq('is_published', true)
-        .order('published_at', { ascending: false })
-        .limit(8),
+        .order('created_at', { ascending: false })
+        .limit(4),
       supabase
         .from('ecd_centres')
         .select('id,name,slug,suburb,city,tagline,latitude,longitude,is_registered')
@@ -83,7 +94,7 @@ export default async function HomePage() {
     ])
 
     jobOpportunities =
-      (jobs ?? []).map((job: any) => {
+      (jobsRaw ?? []).map((job: any) => {
         const centre = Array.isArray(job.ecd_centres) ? job.ecd_centres[0] : job.ecd_centres
         return {
           id: job.id as string,
@@ -92,7 +103,7 @@ export default async function HomePage() {
           closesAt: (job.closes_at as string | null | undefined) ?? null,
           centreName: (centre?.name as string | undefined) ?? 'ECD Centre',
           centreSlug: (centre?.slug as string | undefined) ?? null,
-          suburb: (centre?.suburb as string | null | undefined) ?? null,
+          suburb: (centre?.suburb as string | undefined) ?? '',
           city: (centre?.city as string | null | undefined) ?? null,
         }
       }) ?? []

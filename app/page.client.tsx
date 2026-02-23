@@ -57,10 +57,11 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
   const activeItems = parentItems.slice(0, 4)
   const activeJobs = jobOpportunities.slice(0, 6)
   const fallbackSuburb = useMemo(
-    () => shortlistCentres.find((centre) => centre.suburb)?.suburb ?? 'Alexandra',
+    () => shortlistCentres.find((centre) => centre.suburb)?.suburb ?? '',
     [shortlistCentres]
   )
   const shortlistSuburb = useMemo(() => {
+    if (!fallbackSuburb) return ''
     if (!userCoords) return fallbackSuburb
 
     const nearest = shortlistCentres
@@ -108,10 +109,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
       reason: centre.tagline || fallbackReasons[index % fallbackReasons.length],
     }))
   }, [shortlistCentres, shortlistSuburb])
-  const title = useMemo(
-    () => (isSignedIn ? `Welcome back, ${parentName}` : `${timeGreeting}, Parent`),
-    [isSignedIn, parentName, timeGreeting]
-  )
+  const title = useMemo(() => (isSignedIn ? `Welcome back, ${parentName}` : 'Find Trusted ECD Centres'), [isSignedIn, parentName])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -146,7 +144,11 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">CentreConnect</p>
             <h1 className="mt-1 truncate text-lg font-semibold text-slate-900 sm:text-xl">{title}</h1>
-            {isSignedIn ? <p className="text-xs text-slate-600">{timeGreeting}</p> : null}
+            {isSignedIn ? (
+              <p className="text-xs text-slate-600">{timeGreeting}</p>
+            ) : (
+              <p className="text-sm font-semibold uppercase tracking-wider text-cyan-600">South Africa&apos;s ECD Platform</p>
+            )}
           </div>
           <Button size="sm" className="shrink-0" variant={isSignedIn ? 'outline' : 'default'} asChild>
             <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>{isSignedIn ? 'Open Dashboard' : 'Sign in'}</Link>
@@ -171,9 +173,18 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
               <Button asChild>
                 <Link href="/directory">Browse Centres</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href={isSignedIn ? '/parent/applications' : '/login'}>My Applications</Link>
-              </Button>
+              {isSignedIn ? (
+                <Button variant="outline" asChild>
+                  <Link href="/parent/applications">My Applications</Link>
+                </Button>
+              ) : (
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-cyan-200 bg-white px-6 py-3 font-semibold text-cyan-700 shadow-sm transition-colors hover:bg-cyan-50"
+                >
+                  Create Free Account →
+                </Link>
+              )}
             </div>
             {!isSignedIn ? (
               <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
@@ -224,50 +235,51 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
             )}
           </section>
 
-          <ApplicationProgressSection />
+          {isSignedIn ? <ApplicationProgressSection /> : null}
 
-          <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
-            <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {shortlistCards.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
-                  <p className="text-sm font-semibold text-slate-900">No shortlisted centres yet</p>
-                  <p className="mt-1 text-xs text-slate-600">
-                    Browse the full directory to find centres near you.
-                  </p>
-                  <div className="mt-3">
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/directory">Browse Centres</Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                shortlistCards.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/centre/${item.slug}`}
-                    className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
-                  >
-                    <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+          {isSignedIn && shortlistSuburb ? (
+            <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {shortlistCards.length === 0 ? (
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
+                    <p className="text-sm font-semibold text-slate-900">No shortlisted centres yet</p>
                     <p className="mt-1 text-xs text-slate-600">
-                      {[item.suburb, item.city].filter(Boolean).join(', ')}
+                      Browse the full directory to find centres near you.
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
-                    <p className="mt-3 text-xs font-semibold text-cyan-700 group-hover:text-cyan-800">
-                      View centre -&gt;
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </section>
+                    <div className="mt-3">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/directory">Browse Centres</Link>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  shortlistCards.map((item) => (
+                    <Link
+                      key={item.id}
+                      href={`/centre/${item.slug}`}
+                      className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                    >
+                      <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-xs text-slate-600">
+                        {[item.suburb, item.city].filter(Boolean).join(', ')}
+                      </p>
+                      <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
+                      <p className="mt-3 text-xs font-semibold text-cyan-700 group-hover:text-cyan-800">
+                        View centre -&gt;
+                      </p>
+                    </Link>
+                  ))
+                )}
+              </div>
+            </section>
+          ) : null}
 
           <section id="active-jobs" className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-base font-semibold text-slate-800">Employment Opportunities (Optional)</h3>
               <span className="text-xs text-slate-500">{activeJobs.length} open</span>
             </div>
-            <p className="mt-1 text-xs text-slate-600">Tertiary feature: discover roles from centres currently hiring.</p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {activeJobs.length === 0 ? (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
