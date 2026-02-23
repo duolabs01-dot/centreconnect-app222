@@ -5,6 +5,7 @@ import { Toaster as SonnerToaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
 import { ThemeRouteSync } from '@/components/theme/theme-route-sync'
 import { FooterConditionalRenderer } from '@/components/layout/FooterConditionalRenderer'
+import { Analytics } from "@vercel/analytics/next"
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </FooterConditionalRenderer>
           <SonnerToaster position="top-right" richColors />
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

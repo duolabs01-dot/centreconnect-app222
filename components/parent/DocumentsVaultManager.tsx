@@ -19,21 +19,59 @@ type ParentDocument = {
   created_at: string
 }
 
+type AuditAction = 'upload' | 'view' | 'download' | 'delete'
+
+type DocumentAuditEntry = {
+  id: string
+  document_id: string
+  document_name: string
+  owner_id: string
+  actor_id: string | null
+  action: AuditAction
+  actor_hint: string | null
+  created_at: string
+}
+
 type Props = {
   initialDocuments: ParentDocument[]
+  initialAuditLog: DocumentAuditEntry[]
 }
 
 function sanitizeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9._-]/g, '_')
 }
 
-export function DocumentsVaultManager({ initialDocuments }: Props) {
+export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Props) {
   const supabase = createClient()
   const [documents, setDocuments] = useState(initialDocuments)
+  const [auditLog, setAuditLog] = useState(initialAuditLog)
   const [saving, setSaving] = useState(false)
   const [docType, setDocType] = useState('parent_id')
   const [expiryDate, setExpiryDate] = useState('')
   const [file, setFile] = useState<File | null>(null)
+
+  async function createAuditEntry(
+    action: AuditAction,
+    ownerId: string,
+    documentId: string,
+    documentName: string
+  ) {
+    const { data, error } = await supabase
+      .from('document_audit_log')
+      .insert({
+        document_id: documentId,
+        document_name: documentName,
+        owner_id: ownerId,
+        actor_id: ownerId,
+        action,
+        actor_hint: 'parent_portal',
+      })
+      .select('*')
+      .single()
+
+    if (error || !data) return
+    setAuditLog((prev) => [data as DocumentAuditEntry, ...prev].slice(0, 20))
+  }
 
   async function uploadDocument(e: React.FormEvent) {
     e.preventDefault()
@@ -76,6 +114,7 @@ export function DocumentsVaultManager({ initialDocuments }: Props) {
 
       if (error) throw error
       setDocuments((prev) => [data as ParentDocument, ...prev])
+      await createAuditEntry('upload', user.id, data.id, data.file_name)
       setFile(null)
       setExpiryDate('')
       toast.success('Document uploaded')
@@ -88,8 +127,14 @@ export function DocumentsVaultManager({ initialDocuments }: Props) {
 
   async function openDocument(doc: ParentDocument) {
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       const { data, error } = await supabase.storage.from(DOCUMENT_BUCKET).createSignedUrl(doc.file_path, 120)
       if (error) throw error
+      if (user) {
+        await createAuditEntry('view', user.id, doc.id, doc.file_name)
+      }
       window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to open document')
@@ -99,9 +144,15 @@ export function DocumentsVaultManager({ initialDocuments }: Props) {
   async function removeDocument(doc: ParentDocument) {
     setSaving(true)
     try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       const { error: deleteRowError } = await supabase.from('parent_documents').delete().eq('id', doc.id)
       if (deleteRowError) throw deleteRowError
       await supabase.storage.from(DOCUMENT_BUCKET).remove([doc.file_path])
+      if (user) {
+        await createAuditEntry('delete', user.id, doc.id, doc.file_name)
+      }
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id))
       toast.success('Document removed')
     } catch (error: any) {
@@ -167,6 +218,38 @@ export function DocumentsVaultManager({ initialDocuments }: Props) {
           ))
         )}
       </div>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wider px-1">
+          Access Log
+        </h2>
+        <div className="space-y-2">
+          {auditLog.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-4">
+              No access recorded yet
+            </p>
+          ) : (
+            auditLog.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-700">
+                    {entry.action === 'upload' ? '\u2B06\uFE0F Uploaded' :
+                     entry.action === 'view' ? 'Viewed' :
+                     entry.action === 'download' ? '\u2B07\uFE0F Downloaded' :
+                     'Deleted'} {entry.document_name}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {new Date(entry.created_at).toLocaleString('en-ZA')}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   )
 }
