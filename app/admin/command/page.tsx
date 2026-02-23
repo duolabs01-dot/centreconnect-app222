@@ -1,16 +1,12 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { DashboardShell } from '@/components/cc-admin/DashboardShell'
 import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { KpiCard } from '@/components/cc-admin/KpiCard'
-import { NeuralMap } from '@/components/cc-admin/NeuralMap'
-import { MeshAreaChart } from '@/components/cc-admin/MeshAreaChart'
-import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
-import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
-import { SystemStatus } from '@/components/cc-admin/SystemStatus'
 import { Building2, Users, Activity, TrendingUp, Cpu, Globe } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -19,6 +15,55 @@ export const metadata: Metadata = {
   title: 'Control Tower | CC Command',
   description: 'Premium operations console for onboarding, verification, and neural telemetry.',
 }
+
+type ProvinceScore = {
+  id: string
+  shortLabel: string
+  score: number
+  centres: number
+  row: number
+  col: number
+}
+
+const NeuralMap = dynamic(
+  () => import('@/components/cc-admin/NeuralMap').then((mod) => mod.NeuralMap),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full rounded-md bg-white/5 animate-pulse" />,
+  }
+)
+
+const MeshAreaChart = dynamic(
+  () => import('@/components/cc-admin/MeshAreaChart').then((mod) => mod.MeshAreaChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full rounded-md bg-white/5 animate-pulse" />,
+  }
+)
+
+const HexHeatmap = dynamic(
+  () => import('@/components/cc-admin/HexHeatmap').then((mod) => mod.HexHeatmap),
+  {
+    ssr: false,
+    loading: () => <div className="h-full w-full rounded-md bg-white/5 animate-pulse" />,
+  }
+)
+
+const LiveSessionsCounter = dynamic(
+  () => import('@/components/cc-admin/LiveSessionsCounter').then((mod) => mod.LiveSessionsCounter),
+  {
+    ssr: false,
+    loading: () => <div className="mx-auto h-12 w-36 rounded-md bg-white/5 animate-pulse" />,
+  }
+)
+
+const SystemStatus = dynamic(
+  () => import('@/components/cc-admin/SystemStatus').then((mod) => mod.SystemStatus),
+  {
+    ssr: false,
+    loading: () => <div className="h-24 w-full rounded-md bg-white/5 animate-pulse" />,
+  }
+)
 
 function ConfigurationError() {
   return (
