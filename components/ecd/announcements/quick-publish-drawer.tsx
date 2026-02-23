@@ -122,7 +122,11 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
 
   return (
     <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-lg">
+      <SheetContent
+        side="right"
+        data-ecd-theme="true"
+        className="w-full overflow-y-auto bg-slate-950/95 text-slate-100 sm:max-w-lg"
+      >
         <FormShell
           title={template?.label ?? 'Quick Announcement'}
           description="Review and edit before sending."
@@ -161,7 +165,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Announcement subject"
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 rounded-xl"
+                className="rounded-xl border-slate-700 !bg-none !bg-slate-800 text-white placeholder:text-slate-400 !shadow-none"
               />
             </div>
 
@@ -170,7 +174,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
               <select
                 value={audience}
                 onChange={(event) => setAudience(event.target.value as 'all' | 'class' | 'individual')}
-                className="cc-native-field bg-slate-800 border-slate-700 text-white"
+                className="cc-native-field rounded-xl border-slate-700 !bg-none !bg-slate-800 text-white !shadow-none"
               >
                 <option value="all">All parents</option>
                 <option value="class">Class (requires class targeting)</option>
@@ -184,7 +188,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={10}
-                className="resize-none font-mono text-sm bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 rounded-xl"
+                className="resize-none rounded-xl border-slate-700 !bg-none !bg-slate-800 font-mono text-sm text-white placeholder:text-slate-400 !shadow-none"
               />
             </div>
           </form>
