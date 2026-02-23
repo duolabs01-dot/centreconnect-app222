@@ -44,12 +44,11 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-6 left-4 right-4 z-50 md:hidden pointer-events-none"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed z-50 md:hidden pointer-events-none [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [bottom:calc(max(env(safe-area-inset-bottom),20px)+10px)]"
       aria-label="Primary"
     >
-      <div className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/20 bg-white/60 dark:bg-black/60 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-        <div className="grid grid-cols-4 items-center px-2 py-1">
+      <div className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[0_10px_30px_rgba(15,23,42,0.16)]">
+        <div className="grid grid-cols-4 items-center px-2.5 py-1.5">
           {navItems.map(({ href, label, icon: Icon, matches }) => {
             const active = isPathActive(pathname, matches)
             return (
@@ -58,8 +57,10 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
                 href={href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex min-h-[64px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold tracking-tight transition-colors',
-                  active ? 'text-sky-700 dark:text-sky-300' : 'text-slate-500 dark:text-slate-400'
+                  'flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold tracking-tight transition-colors',
+                  active
+                    ? 'bg-white/45 dark:bg-white/15 text-sky-700 dark:text-sky-300'
+                    : 'text-slate-600/90 dark:text-slate-300'
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={active ? 2.3 : 2} />
@@ -72,4 +73,3 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
     </nav>
   )
 }
-

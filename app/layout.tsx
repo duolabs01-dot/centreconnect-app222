@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Orbitron, Inter, Nunito, DM_Sans } from 'next/font/google'
 import "./globals.css"
 import { Toaster as SonnerToaster } from '@/components/ui/sonner'
@@ -9,6 +9,12 @@ import { FooterConditionalRenderer } from '@/components/layout/FooterConditional
 export const metadata: Metadata = {
   title: 'CentreConnect',
   description: 'Find trusted ECD centres near you. Apply online, track applications, and connect with the best early childhood education for your child.',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 }
 
 const orbitron = Orbitron({
