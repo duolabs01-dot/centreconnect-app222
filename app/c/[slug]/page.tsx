@@ -506,7 +506,7 @@ function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
   if (isExpired) return null
   return (
     <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_40px_rgba(2,6,23,0.4)] transition-all hover:border-cyan-500/30 hover:bg-white/10">
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-cyan-500/30 hover:bg-muted">
         <div>
           <p className="text-lg font-semibold text-white transition-colors group-hover:text-cyan-400">{job.title}</p>
           {job.closes_at ? (

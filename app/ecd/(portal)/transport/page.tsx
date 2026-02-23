@@ -93,7 +93,7 @@ export default async function EcdTransportPage() {
               {transportConfig?.coverage_areas?.length ? (
                 <div className="flex flex-wrap gap-1">
                   {transportConfig.coverage_areas.map((area) => (
-                    <span key={area} className="rounded-full bg-white/5 px-3 py-1 text-xs text-foreground">
+                    <span key={area} className="rounded-full bg-muted px-3 py-1 text-xs text-foreground">
                       {area}
                     </span>
                   ))}
@@ -135,7 +135,7 @@ export default async function EcdTransportPage() {
                 { label: 'Quoted', status: 'quoted' },
                 { label: 'Accepted', status: 'accepted' },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-border bg-white/5 px-4 py-3">
+                <div key={item.label} className="rounded-2xl border border-border bg-card px-4 py-3">
                   <p className="text-xs text-muted-foreground">{item.label}</p>
                   <p className="text-2xl font-semibold text-foreground">
                     {statusRoster[item.status] ?? 0}
@@ -143,8 +143,8 @@ export default async function EcdTransportPage() {
                 </div>
               ))}
             </div>
-            <div className="rounded-2xl border border-border bg-white/5 p-3 text-sm text-slate-300">
-              <p className="font-semibold text-white">Recent enquiries</p>
+            <div className="rounded-2xl border border-border bg-card p-3 text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">Recent enquiries</p>
               <div className="mt-2 space-y-3">
                 {recentEnquiries.length === 0 ? (
                   <p>No enquiries yet. Encourage parents to request a quote.</p>
@@ -152,7 +152,7 @@ export default async function EcdTransportPage() {
                   recentEnquiries.map((enquiry) => (
                     <div key={enquiry.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/80 px-3 py-2 text-sm transition hover:border-primary/30">
                       <div className="min-w-0">
-                        <p className="truncate text-white">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
+                        <p className="truncate text-foreground">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
                         <p className="text-xs text-muted-foreground">{formatDate(enquiry.created_at)}</p>
                       </div>
                       <StatusBadge status={enquiry.status} />
@@ -178,8 +178,8 @@ export default async function EcdTransportPage() {
                 <div
                   key={enquiry.id}
                   className={cn(
-                    'rounded-2xl border border-border/60 bg-white/5 px-4 py-3 text-sm text-slate-200',
-                    enquiry.status === 'quoted' ? 'bg-emerald-900/40' : 'bg-white/5'
+                    'rounded-2xl border border-border/60 bg-card px-4 py-3 text-sm text-foreground',
+                    enquiry.status === 'quoted' ? 'bg-emerald-900/40' : 'bg-muted'
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">

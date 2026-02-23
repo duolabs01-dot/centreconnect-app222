@@ -206,7 +206,7 @@ export function CommunicationsComposer({
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div>
-          <label className="text-sm font-medium text-slate-200">Template</label>
+          <label className="text-sm font-medium text-foreground">Template</label>
           <select
             value={selectedKey}
             onChange={(event) => setSelectedKey(event.target.value)}
@@ -228,7 +228,7 @@ export function CommunicationsComposer({
 
         {mode === 'broadcast' ? (
           <div>
-            <label className="text-sm font-medium text-slate-200">Audience</label>
+            <label className="text-sm font-medium text-foreground">Audience</label>
             <select
               value={audience}
               onChange={(event) => setAudience(event.target.value as 'all' | 'pending')}
@@ -241,7 +241,7 @@ export function CommunicationsComposer({
           </div>
         ) : (
           <div>
-            <label className="text-sm font-medium text-slate-200">Direct recipient</label>
+            <label className="text-sm font-medium text-foreground">Direct recipient</label>
             <select
               value={recipientParentId}
               onChange={(event) => setRecipientParentId(event.target.value)}
@@ -264,7 +264,7 @@ export function CommunicationsComposer({
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-200">Message preview</label>
+        <label className="text-sm font-medium text-foreground">Message preview</label>
         <textarea
           value={customMessage || resolvedBody}
           onChange={(event) => setCustomMessage(event.target.value)}

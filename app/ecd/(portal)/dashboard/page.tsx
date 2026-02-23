@@ -258,7 +258,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
           </CardHeader>
           <CardContent className="space-y-3">
             {topActions.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
+            <div className="rounded-2xl border border-border bg-card p-3 text-sm text-slate-300">
               No urgent blockers right now. Keep admissions moving and monitor pickup completion.
             </div>
             ) : (
@@ -333,7 +333,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
                   'rounded-full px-3 py-1 text-xs font-semibold',
                   transportConfig?.offers_transport
                     ? 'bg-emerald-600/20 text-emerald-300'
-                    : 'bg-amber-600/20 text-amber-300'
+                    : 'bg-amber-100 text-amber-800'
                 )}
               >
                 {transportConfig?.offers_transport ? 'Active transport' : 'Not yet configured'}
@@ -397,19 +397,19 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
                       <option value="in_review">In Review</option>
                       <option value="waitlisted">Waitlisted</option>
                     </select>
-                    <Button type="submit" className="bg-cyan-600 text-white hover:bg-cyan-500">
+                    <Button type="submit" className="bg-cyan-600 text-cyan-50 hover:bg-cyan-500">
                       Apply
                     </Button>
                   </form>
 
                   <div className="mb-4 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-cyan-200">
+                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-cyan-700">
                       Submitted: {submittedCount}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200">
+                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
                       In Review: {inReviewCount}
                     </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-amber-200">
+                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-amber-800">
                       Waitlisted: {waitlistedApplications}
                     </span>
                   </div>
@@ -447,14 +447,14 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
                             return (
                               <TableRow key={application.id}>
                                 <TableCell className="font-medium text-foreground">{application.application_number}</TableCell>
-                                <TableCell className="text-slate-200">
+                                <TableCell className="text-foreground">
                                   {child ? `${child.first_name} ${child.last_name}` : 'Unknown child'}
                                 </TableCell>
-                                <TableCell className="text-slate-200">{parentProfile?.full_name ?? 'Unknown parent'}</TableCell>
+                                <TableCell className="text-foreground">{parentProfile?.full_name ?? 'Unknown parent'}</TableCell>
                                 <TableCell>
                                   <StatusBadge status={application.status} />
                                 </TableCell>
-                                <TableCell className="text-slate-200">{formatDate(application.submitted_at)}</TableCell>
+                                <TableCell className="text-foreground">{formatDate(application.submitted_at)}</TableCell>
                                 <TableCell className="text-right">
                                   <Button size="sm" variant="outline" asChild>
                                     <Link href={`/ecd/applications/${application.id}`}>Review</Link>
@@ -476,8 +476,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <CardHeader>
                 <CardTitle>Operational Scorecard</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm text-slate-300">
-                <p>
+                              <CardContent className="space-y-2 text-sm text-muted-foreground">                <p>
                   Avg response time:{' '}
                   <span className="font-semibold text-cyan-300">{avgResponseHours}h</span>
                 </p>

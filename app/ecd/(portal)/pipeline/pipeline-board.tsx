@@ -331,7 +331,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
                 </div>
                 <p className="mt-2 text-3xl font-black text-foreground">{count}</p>
                 <p className="text-xs text-muted-foreground">{pct}% of pipeline</p>
-                <div className="mt-3 h-1 rounded-full bg-white/5">
+                <div className="mt-3 h-1 rounded-full bg-muted">
                   <div
                     className="h-full rounded-full"
                     style={{

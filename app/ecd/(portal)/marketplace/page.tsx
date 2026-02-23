@@ -151,7 +151,7 @@ export default async function EcdMarketplacePage() {
                       className={`mt-3 rounded-md border px-3 py-2 text-xs font-semibold ${
                         included
                           ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
-                          : 'border-amber-400/40 bg-amber-500/10 text-amber-200'
+                          : 'border-amber-400/40 bg-amber-100 text-amber-800'
                       }`}
                     >
                       {included

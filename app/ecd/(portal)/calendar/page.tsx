@@ -424,7 +424,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                     className={cn(
                       'rounded-full px-3 py-1 text-xs font-semibold transition duration-150',
                       option.value === view
-                        ? 'bg-cyan-600 text-white'
+                        ? 'bg-cyan-600 text-cyan-50'
                         : 'bg-white/10 text-muted-foreground hover:bg-white/20'
                     )}
                   >
@@ -541,7 +541,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 className={cn(
                   'rounded-md px-3 py-2 text-xs font-semibold',
                   visibility === 'all'
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-cyan-600 text-cyan-50'
                     : 'border border-border bg-background text-muted-foreground'
                 )}
               >
@@ -551,7 +551,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 href={buildHref({ visibility: 'public', view })}
                 className={cn(
                   'rounded-md px-3 py-2 text-xs font-semibold',
-                  visibility === 'public' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-800'
+                  visibility === 'public' ? 'bg-emerald-700 text-emerald-50' : 'bg-emerald-50 text-emerald-800'
                 )}
               >
                 Public
@@ -560,7 +560,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 href={buildHref({ visibility: 'internal', view })}
                 className={cn(
                   'rounded-md px-3 py-2 text-xs font-semibold',
-                  visibility === 'internal' ? 'bg-amber-700 text-white' : 'bg-amber-50 text-amber-800'
+                  visibility === 'internal' ? 'bg-amber-700 text-amber-50' : 'bg-amber-50 text-amber-800'
                 )}
               >
                 Internal
@@ -569,7 +569,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 href={buildHref({ scope: 'upcoming', view })}
                 className={cn(
                   'rounded-md px-3 py-2 text-xs font-semibold',
-                  scope === 'upcoming' ? 'bg-blue-700 text-white' : 'bg-blue-50 text-blue-800'
+                  scope === 'upcoming' ? 'bg-blue-700 text-blue-50' : 'bg-blue-50 text-blue-800'
                 )}
               >
                 Upcoming
@@ -579,7 +579,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 className={cn(
                   'rounded-md px-3 py-2 text-xs font-semibold',
                   scope === 'past'
-                    ? 'bg-cyan-600 text-white'
+                    ? 'bg-cyan-600 text-cyan-50'
                     : 'border border-border bg-background text-muted-foreground'
                 )}
               >
@@ -596,7 +596,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 dayViewEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-3xl border border-border/60 bg-white/5 p-4 text-sm text-foreground"
+                    className="rounded-3xl border border-border/60 bg-muted p-4 text-sm text-foreground"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-base font-semibold">{event.title}</p>

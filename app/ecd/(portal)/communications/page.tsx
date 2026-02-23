@@ -114,19 +114,19 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
           <CardContent className="flex flex-wrap gap-2">
             <Link
               href="/ecd/communications?mode=broadcast&template=application_update&audience=all"
-              className="rounded-md border border-cyan-500/30 bg-white/5 px-3 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:bg-white/10"
+              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
             >
               Broadcast general update
             </Link>
             <Link
               href="/ecd/communications?mode=broadcast&template=missing_documents&audience=pending"
-              className="rounded-md border border-cyan-500/30 bg-white/5 px-3 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:bg-white/10"
+              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
             >
               Ask pending parents for docs
             </Link>
             <Link
               href="/ecd/communications?mode=direct&template=application_update"
-              className="rounded-md border border-cyan-500/30 bg-white/5 px-3 py-2 text-sm font-semibold text-cyan-200 transition-colors hover:bg-white/10"
+              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
             >
               Start direct parent chat
             </Link>

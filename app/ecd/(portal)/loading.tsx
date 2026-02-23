@@ -25,8 +25,8 @@ export default function EcdLoading() {
           <main className="flex-1 py-6 lg:py-8">
             <Container>
               <div className="space-y-4">
-                <Skeleton className="h-40 w-full rounded-xl border border-white/10 bg-white/5" />
-                <Skeleton className="h-64 w-full rounded-xl border border-white/10 bg-white/5" />
+                <Skeleton className="h-40 w-full rounded-xl border border-border bg-card" />
+                <Skeleton className="h-64 w-full rounded-xl border border-border bg-card" />
               </div>
             </Container>
           </main>

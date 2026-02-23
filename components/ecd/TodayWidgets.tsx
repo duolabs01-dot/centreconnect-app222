@@ -35,13 +35,13 @@ export default function TodayWidgets({
   const capacityStatus = capacityPct >= 90 ? 'critical' : capacityPct >= 70 ? 'warning' : 'good'
 
   const statCard = (icon: ReactNode, value: ReactNode, label: string, detail?: ReactNode) => (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/60 p-4 shadow-lg">
-      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/5 text-cyan-300">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-cyan-700">
         {icon}
       </div>
-      <p className="text-2xl font-extrabold text-white">{value}</p>
-      <p className="text-sm text-slate-400">{label}</p>
-      {detail ? <p className="mt-1 text-xs text-slate-400">{detail}</p> : null}
+      <p className="text-2xl font-extrabold text-foreground">{value}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      {detail ? <p className="mt-1 text-xs text-muted-foreground">{detail}</p> : null}
     </div>
   )
 
@@ -50,19 +50,19 @@ export default function TodayWidgets({
       {pendingApplications > 0 && (
         <Link
           href="/ecd/applications?tab=pending"
-          className="relative flex gap-3 rounded-2xl border border-white/10 bg-slate-900/60 p-4 shadow-2xl text-white"
+          className="relative flex gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm text-foreground"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-600/20 text-rose-400">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
             <AlertCircle size={22} />
           </div>
           <div className="flex-1">
-            <p className="text-2xl font-extrabold text-white">{pendingApplications}</p>
-            <p className="text-sm font-medium text-slate-300">Awaiting your review</p>
+            <p className="text-2xl font-extrabold text-foreground">{pendingApplications}</p>
+            <p className="text-sm font-medium text-muted-foreground">Awaiting your review</p>
             {newApplicationsToday > 0 ? (
-              <p className="mt-1 text-xs text-slate-400">+{newApplicationsToday} new today</p>
+              <p className="mt-1 text-xs text-muted-foreground">+{newApplicationsToday} new today</p>
             ) : null}
           </div>
-          <div className="absolute bottom-3 right-3 flex items-center gap-1 text-xs font-semibold text-cyan-300">
+          <div className="absolute bottom-3 right-3 flex items-center gap-1 text-xs font-semibold text-cyan-700">
             Review <ChevronRight size={12} />
           </div>
         </Link>
@@ -110,22 +110,22 @@ export function ProfileCompleteness({ items }: { items: ProfileItem[] }) {
   const pct = Math.round((done / total) * 100)
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 shadow-2xl text-white">
-      <p className="text-base font-semibold text-white">Profile completeness</p>
-      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm text-foreground">
+      <p className="text-base font-semibold text-foreground">Profile completeness</p>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-cyan-400" style={{ width: `${pct}%` }} />
       </div>
-      <p className="mt-2 text-sm text-slate-300">{pct}% complete</p>
+      <p className="mt-2 text-sm text-muted-foreground">{pct}% complete</p>
 
       <div className="mt-4 space-y-2">
         {items.map((item) => (
           <Link
             key={item.id}
             href={item.href}
-            className="flex items-center justify-between text-sm text-slate-300"
+            className="flex items-center justify-between text-sm text-muted-foreground"
           >
             <span>{item.label}</span>
-            <span className={item.done ? 'text-emerald-300' : 'text-slate-500'}>
+            <span className={item.done ? 'text-emerald-300' : 'text-muted-foreground'}>
               {item.done ? 'Done' : 'Pending'}
             </span>
           </Link>

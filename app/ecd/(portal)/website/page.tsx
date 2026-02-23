@@ -248,8 +248,7 @@ export default async function EcdWebsitePage() {
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasTagline
                     ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
-                    : 'border-white/10 bg-white/5 text-slate-300'
-                )}
+                                         : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 1: Add headline
               </div>
@@ -258,8 +257,7 @@ export default async function EcdWebsitePage() {
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasAbout
                     ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
-                    : 'border-white/10 bg-white/5 text-slate-300'
-                )}
+                                         : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 2: Add about section
               </div>
@@ -268,8 +266,7 @@ export default async function EcdWebsitePage() {
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasPrograms && hasVisibleSections
                     ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
-                    : 'border-white/10 bg-white/5 text-slate-300'
-                )}
+                                         : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 3: Enable sections and publish
               </div>
@@ -282,7 +279,7 @@ export default async function EcdWebsitePage() {
             <CardTitle>Plan & Website Scope</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="rounded-2xl border border-border bg-card p-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current package</p>
               <p className="mt-1 text-lg font-semibold text-foreground">{guide.label}</p>
               <p className="text-xs text-slate-400">
@@ -318,8 +315,7 @@ export default async function EcdWebsitePage() {
           <CardContent>
             <form action={saveWebsiteContent} className="space-y-4">
               <div>
-                <label htmlFor="tagline" className="text-sm font-medium text-slate-200">
-                  Hero tagline
+                                 <label htmlFor="tagline" className="text-sm font-medium text-foreground">                  Hero tagline
                 </label>
                 <input
                   id="tagline"
@@ -331,7 +327,7 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div>
-                <label htmlFor="about" className="text-sm font-medium text-slate-200">
+                <label htmlFor="about" className="text-sm font-medium text-foreground">
                   About section
                 </label>
                 <textarea
@@ -344,7 +340,7 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div>
-                <label htmlFor="programs" className="text-sm font-medium text-slate-200">
+                <label htmlFor="programs" className="text-sm font-medium text-foreground">
                   Programs (one per line: Title | Description)
                 </label>
                 <textarea
@@ -357,12 +353,12 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium text-slate-200">Visible sections</p>
+                <p className="text-sm font-medium text-foreground">Visible sections</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   {sectionOptions.map((section) => (
                     <label
                       key={section.key}
-                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200"
+                      className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
                     >
                       <input type="checkbox" name="sections" value={section.key} defaultChecked={enabledSections.includes(section.key)} />
                       {section.label}
@@ -390,7 +386,7 @@ export default async function EcdWebsitePage() {
             <CardTitle>Publish Controls</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="rounded-2xl border border-border bg-card p-3">
               <p className="text-sm font-semibold text-foreground">
                 Status: {centre?.is_active ? 'Published' : 'Draft'}
               </p>
