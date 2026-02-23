@@ -12,14 +12,17 @@ interface FooterConditionalRendererProps {
 
 export function FooterConditionalRenderer({ children }: FooterConditionalRendererProps) {
   const pathname = usePathname()
-  const isAdminPath = pathname.startsWith('/admin')
+  const hideFooter =
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/ecd') ||
+    pathname?.startsWith('/parent')
 
   return (
     <>
       {children}
-      {!isAdminPath && <GlobalMobileLegalStrip />}
-      {!isAdminPath && <GlobalDesktopFooter />}
-      {!isAdminPath && <GlobalBottomNav />}
+      {!hideFooter && <GlobalMobileLegalStrip />}
+      {!hideFooter && <GlobalDesktopFooter />}
+      {!hideFooter && <GlobalBottomNav />}
     </>
   )
 }

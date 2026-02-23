@@ -8,7 +8,7 @@ import { FooterConditionalRenderer } from '@/components/layout/FooterConditional
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
-  description: 'Find ECD centres near you.',
+  description: 'Find trusted ECD centres near you. Apply online, track applications, and connect with the best early childhood education for your child.',
 }
 
 const orbitron = Orbitron({
