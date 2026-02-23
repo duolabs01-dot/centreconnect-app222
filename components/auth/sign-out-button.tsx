@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 type SignOutButtonProps = {
   redirectTo?: string
@@ -18,14 +19,25 @@ export function SignOutButton({
 }: SignOutButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleSignOut = async () => {
     if (isLoading) return
     setIsLoading(true)
     const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push(redirectTo)
-    router.refresh()
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast.error(error.message || 'Could not sign out')
+      setIsLoading(false)
+      return
+    }
+
+    if (pathname === redirectTo) {
+      router.refresh()
+    } else {
+      router.push(redirectTo)
+      router.refresh()
+    }
     setIsLoading(false)
   }
 

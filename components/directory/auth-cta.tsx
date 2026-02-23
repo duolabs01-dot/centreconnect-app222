@@ -10,17 +10,24 @@ export function DirectoryAuthCta() {
   const [signedIn, setSignedIn] = useState(false)
 
   useEffect(() => {
-    let cancelled = false
-    async function check() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!cancelled) setSignedIn(Boolean(user))
-    }
-    check()
+    const supabase = createClient()
+    let active = true
+
+    void supabase.auth.getSession().then(({ data }) => {
+      if (!active) return
+      setSignedIn(Boolean(data.session?.user))
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return
+      setSignedIn(Boolean(session?.user))
+    })
+
     return () => {
-      cancelled = true
+      active = false
+      subscription.unsubscribe()
     }
   }, [])
 
