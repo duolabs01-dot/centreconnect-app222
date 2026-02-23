@@ -186,8 +186,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-4 py-2
-             rounded-xl transition-colors min-w-[64px]',
+                  'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors min-w-[64px]',
                   active ? 'text-primary' : 'text-slate-400'
                 )}
               >
