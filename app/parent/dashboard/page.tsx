@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { getJohannesburgGreeting } from '@/lib/utils'
+import { formatDate, getJohannesburgGreeting } from '@/lib/utils'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
 import { RecentApplicationsSection } from './_sections/recent-applications-section'
@@ -51,7 +51,7 @@ export default async function ParentDashboardPage() {
         .select('status'),
       supabase
         .from('jobs')
-        .select('id, title, role_type, ecd_centres(name, suburb, city, slug)')
+        .select('id, title, role_type, closes_at, ecd_centres(name, suburb, city, slug)')
         .eq('is_published', true)
         .limit(4),
     ])
@@ -84,25 +84,43 @@ export default async function ParentDashboardPage() {
               : job.ecd_centres
 
             return (
-              <div
+              <Link
                 key={job.id}
-                className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-200"
+                href={centre?.slug ? `/c/${centre.slug}/jobs/${job.id}` : '/directory'}
+                className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
               >
-                <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 text-sm truncate">
-                    {job.title}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {centre?.name} - {centre?.suburb}
-                  </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-slate-900">
+                      {job.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {centre?.name}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-semibold text-cyan-700">
+                    Details
+                  </span>
                 </div>
-                <Link
-                  href={`/c/${centre?.slug ?? ''}/jobs/${job.id}`}
-                  className="shrink-0 ml-3 text-xs font-semibold text-cyan-600 bg-cyan-50 px-3 py-1.5 rounded-lg hover:bg-cyan-100 transition-colors"
-                >
-                  Apply
-                </Link>
-              </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                    {String(job.role_type ?? '').replace(/_/g, ' ') || 'Role'}
+                  </span>
+                  {[centre?.suburb, centre?.city].filter(Boolean).length > 0 ? (
+                    <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-500">
+                      {[centre?.suburb, centre?.city].filter(Boolean).join(', ')}
+                    </span>
+                  ) : null}
+                  {job.closes_at ? (
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700">
+                      Closes {formatDate(job.closes_at)}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-xs font-semibold text-cyan-700 transition-colors group-hover:text-cyan-800">
+                  Open full role details and apply -&gt;
+                </p>
+              </Link>
             )
           })}
         </div>

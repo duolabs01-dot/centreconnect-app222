@@ -46,10 +46,9 @@ export default function CentreCard({
   variant = 'default',
   subsidy_accepted = false,
   fees_display_mode = null,
-  latitude,
-  longitude,
 }: CentreCardProps) {
   const heroImage = getCentreHeroImage(slug, cover_image_url)
+  const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
 
   if (variant === 'compact') {
     return (
@@ -161,17 +160,10 @@ export default function CentreCard({
 
           {/* Meta row */}
           <div className="centre-card__meta">
-            {!latitude || !longitude ? (
-              <span className="centre-card__meta-item text-orange-500">
-                <MapPin size={13} strokeWidth={2} />
-                Location not yet configured
-              </span>
-            ) : (
-              <span className="centre-card__meta-item">
-                <MapPin size={13} strokeWidth={2} />
-                {suburb}
-              </span>
-            )}
+            <span className={`centre-card__meta-item ${!locationLabel ? 'text-orange-500' : ''}`}>
+              <MapPin size={13} strokeWidth={2} />
+              {locationLabel || 'Location to be confirmed'}
+            </span>
             {capacity && (
               <span className="centre-card__meta-item">
                 <Users size={13} strokeWidth={2} />

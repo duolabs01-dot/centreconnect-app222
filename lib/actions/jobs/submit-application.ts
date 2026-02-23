@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const submitJobApplicationSchema = z.object({
   job_id: z.string().uuid(),
@@ -48,22 +49,73 @@ export async function submitJobApplicationAction(input: SubmitJobApplicationInpu
     return { error: 'You already applied for this position with this email address' as const }
   }
 
-  const { error: insertError } = await supabase.from('job_applications').insert({
+  const corePayload = {
     job_id: parsed.data.job_id,
     ecd_id: parsed.data.ecd_id,
     applicant_name: parsed.data.applicant_name,
     applicant_email: parsed.data.applicant_email,
     applicant_phone: parsed.data.applicant_phone,
-    id_number: parsed.data.id_number,
-    cover_letter: parsed.data.cover_letter,
-    references: parsed.data.references,
-    centreconnect_email: parsed.data.centreconnect_email,
     cv_url: parsed.data.cv_url,
+    cover_letter: parsed.data.cover_letter,
     status: 'new',
-  })
+  }
 
-  if (insertError) return { error: 'Failed to submit application. Please try again.' as const }
+  const extendedPayload = {
+    ...corePayload,
+    ...(parsed.data.id_number ? { id_number: parsed.data.id_number } : {}),
+    ...(parsed.data.references ? { ['references']: parsed.data.references } : {}),
+    ...(parsed.data.centreconnect_email ? { centreconnect_email: parsed.data.centreconnect_email } : {}),
+  }
+
+  const isMissingColumnError = (message?: string) =>
+    Boolean(message && /column .* does not exist|schema cache|could not find/i.test(message))
+
+  const isPermissionError = (code?: string, message?: string) =>
+    code === '42501' ||
+    Boolean(message && /row-level security|permission denied|not allowed/i.test(message))
+
+  const tryInsert = async (
+    client: Awaited<ReturnType<typeof createClient>> | ReturnType<typeof createAdminClient>,
+    includeExtended: boolean
+  ) => {
+    return client
+      .from('job_applications')
+      .insert(includeExtended ? extendedPayload : corePayload)
+  }
+
+  let { error: insertError } = await tryInsert(supabase, true)
+
+  if (insertError && isMissingColumnError(insertError.message)) {
+    const retry = await tryInsert(supabase, false)
+    insertError = retry.error
+  }
+
+  if (insertError && isPermissionError(insertError.code, insertError.message)) {
+    try {
+      const admin = createAdminClient()
+      const adminTry = await tryInsert(admin, true)
+      insertError = adminTry.error
+
+      if (insertError && isMissingColumnError(insertError.message)) {
+        const adminRetry = await tryInsert(admin, false)
+        insertError = adminRetry.error
+      }
+    } catch {
+      // Admin fallback unavailable in this environment.
+    }
+  }
+
+  if (insertError) {
+    console.error('submitJobApplicationAction failed:', {
+      code: insertError.code,
+      message: insertError.message,
+      details: insertError.details,
+      hint: insertError.hint,
+      jobId: parsed.data.job_id,
+      ecdId: parsed.data.ecd_id,
+    })
+    return { error: 'Failed to submit application. Please try again.' as const }
+  }
 
   return { success: true as const }
 }
-

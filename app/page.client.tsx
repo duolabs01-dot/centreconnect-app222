@@ -275,24 +275,48 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                   <p className="mt-1 text-xs text-slate-600">Check back soon for new centre opportunities.</p>
                 </div>
               ) : (
-                activeJobs.map((job) => (
-                  <div key={job.id} className="rounded-xl border border-slate-200 bg-white p-4">
-                    <p className="text-sm font-semibold text-slate-900">{job.title}</p>
-                    <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">{job.roleType}</p>
-                    <p className="mt-2 text-xs text-slate-600">
-                      {job.centreName}
-                      {job.suburb || job.city ? ` - ${[job.suburb, job.city].filter(Boolean).join(', ')}` : ''}
-                    </p>
-                    {job.closesAt ? <p className="mt-1 text-xs text-slate-500">Closes {formatDate(job.closesAt)}</p> : null}
-                    {job.centreSlug ? (
-                      <div className="mt-3">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/c/${job.centreSlug}/jobs/${job.id}`}>View & Apply</Link>
-                        </Button>
+                activeJobs.map((job) => {
+                  const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : '/directory'
+                  const location = [job.suburb, job.city].filter(Boolean).join(', ')
+
+                  return (
+                    <Link
+                      key={job.id}
+                      href={jobHref}
+                      className="group block rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">{job.title}</p>
+                          <p className="mt-1 text-xs text-slate-600">{job.centreName}</p>
+                        </div>
+                        <span className="shrink-0 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-semibold text-cyan-700">
+                          Details
+                        </span>
                       </div>
-                    ) : null}
-                  </div>
-                ))
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                          {job.roleType.replace(/_/g, ' ')}
+                        </span>
+                        {location ? (
+                          <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-500">
+                            {location}
+                          </span>
+                        ) : null}
+                        {job.closesAt ? (
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700">
+                            Closes {formatDate(job.closesAt)}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-3 text-xs font-semibold text-cyan-700 transition-colors group-hover:text-cyan-800">
+                        Open full role details and apply -&gt;
+                      </p>
+                    </Link>
+                  )
+                })
               )}
             </div>
           </section>
