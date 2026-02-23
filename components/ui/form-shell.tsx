@@ -39,7 +39,9 @@ export function FormShell({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0">{children}</div>
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
+        {children}
+      </div>
 
       {footer && (
         <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/20">

@@ -65,7 +65,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
       )}
       <aside
         className={cn(
-          'hidden h-screen overflow-y-auto shrink-0 border-r border-border bg-background px-4 py-6 lg:flex lg:flex-col transition-[width,opacity] duration-300',
+          'hidden h-screen overflow-hidden shrink-0 border-r border-border bg-background px-4 py-6 lg:flex lg:flex-col transition-[width,opacity] duration-300',
           isPinned ? 'lg:w-64 lg:opacity-100 lg:pointer-events-auto' : 'lg:w-0 lg:opacity-0 lg:pointer-events-none'
         )}
         aria-hidden={!isPinned}

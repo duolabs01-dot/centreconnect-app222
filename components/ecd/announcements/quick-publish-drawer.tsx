@@ -122,7 +122,10 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
 
   return (
     <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
-      <SheetContent side="right" className="w-full overflow-y-auto bg-white sm:max-w-lg">
+      <SheetContent
+        side="right"
+        className="w-full overflow-hidden border-l border-slate-200/80 bg-gradient-to-b from-white via-white to-slate-50/90 shadow-[0_24px_60px_rgba(15,23,42,0.2)] sm:max-w-lg [&>button]:hidden"
+      >
         <FormShell
           title={template?.label ?? 'Quick Announcement'}
           description="Review and edit before sending."
@@ -138,7 +141,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
             />
           }
         >
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+          <div className="rounded-2xl border border-cyan-100 bg-gradient-to-b from-cyan-50/60 to-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_rgba(8,145,178,0.12)] space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">When you send this</p>
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <Bell className="h-4 w-4 text-cyan-500" />
@@ -161,7 +164,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Announcement subject"
-                className="rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 shadow-none"
+                className="rounded-xl border-slate-200 bg-gradient-to-b from-white to-slate-50/90 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_18px_rgba(15,23,42,0.06)]"
               />
             </div>
 
@@ -170,7 +173,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
               <select
                 value={audience}
                 onChange={(event) => setAudience(event.target.value as 'all' | 'class' | 'individual')}
-                className="cc-native-field rounded-xl border-slate-200 bg-white text-slate-900 shadow-none"
+                className="cc-native-field rounded-xl border-slate-200 bg-gradient-to-b from-white to-slate-50/90 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_18px_rgba(15,23,42,0.06)]"
               >
                 <option value="all">All parents</option>
                 <option value="class">Class (requires class targeting)</option>
@@ -184,7 +187,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={10}
-                className="resize-none rounded-xl border-slate-200 bg-white font-mono text-sm text-slate-900 placeholder:text-slate-500 shadow-none"
+                className="resize-none rounded-xl border-slate-200 bg-gradient-to-b from-white to-slate-50/90 font-mono text-sm text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_8px_18px_rgba(15,23,42,0.06)]"
               />
             </div>
           </form>

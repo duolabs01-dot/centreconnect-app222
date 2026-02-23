@@ -32,7 +32,7 @@ export function QuickPublishPanel({ ecdId, centreName }: QuickPublishPanelProps)
               key={key}
               type="button"
               variant="outline"
-              className="justify-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-slate-800 shadow-sm transition-colors hover:border-cyan-300 hover:bg-cyan-50/60"
+              className="justify-start gap-2 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/90 px-4 py-3 text-left text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_20px_rgba(15,23,42,0.08)] transition-colors hover:border-cyan-300 hover:from-cyan-50 hover:to-white"
               onClick={() => handleQuickPublish(key)}
             >
               <span className="text-base">{template.emoji}</span>
