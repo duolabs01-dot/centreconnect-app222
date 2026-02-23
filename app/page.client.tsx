@@ -109,7 +109,10 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
       reason: centre.tagline || fallbackReasons[index % fallbackReasons.length],
     }))
   }, [shortlistCentres, shortlistSuburb])
-  const title = useMemo(() => (isSignedIn ? `Welcome back, ${parentName}` : 'Find Trusted ECD Centres'), [isSignedIn, parentName])
+  const title = useMemo(
+    () => (isSignedIn ? `Welcome back, ${parentName}` : 'Find the right ECD for your child'),
+    [isSignedIn, parentName]
+  )
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -178,12 +181,9 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                   <Link href="/parent/applications">My Applications</Link>
                 </Button>
               ) : (
-                <Link
-                  href="/register"
-                  className="inline-flex items-center gap-2 rounded-2xl border border-cyan-200 bg-white px-6 py-3 font-semibold text-cyan-700 shadow-sm transition-colors hover:bg-cyan-50"
-                >
-                  Create Free Account →
-                </Link>
+                <Button variant="outline" asChild>
+                  <Link href="/register">Create Free Account &rarr;</Link>
+                </Button>
               )}
             </div>
             {!isSignedIn ? (
@@ -235,7 +235,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
             )}
           </section>
 
-          {isSignedIn ? <ApplicationProgressSection /> : null}
+          {isSignedIn && <ApplicationProgressSection />}
 
           {isSignedIn && shortlistSuburb ? (
             <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">

@@ -30,10 +30,15 @@ export default function LegalPage() {
           <p className="mt-1 text-sm text-slate-600">Platform usage terms and operational boundaries.</p>
         </Link>
 
-        <Link href="/for-centres" className="rounded-xl border border-slate-200 bg-white p-5 hover:border-slate-300">
+        <a
+          href="/for-centres"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded-xl border border-slate-200 bg-white p-5 hover:border-slate-300"
+        >
           <p className="text-base font-semibold text-slate-900">Centre Onboarding</p>
           <p className="mt-1 text-sm text-slate-600">Information for ECD centres joining CentreConnect.</p>
-        </Link>
+        </a>
       </section>
     </main>
   )
