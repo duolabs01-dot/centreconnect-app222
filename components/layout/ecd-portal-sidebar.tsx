@@ -38,7 +38,13 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
           }
         }}
       >
-        {item.label}
+        <item.icon
+          className={cn(
+            'w-4 h-4 shrink-0',
+            active ? 'text-primary' : 'text-muted-foreground'
+          )}
+        />
+        <span>{item.label}</span>
       </Link>
     )
   }
@@ -59,7 +65,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
       )}
       <aside
         className={cn(
-          'hidden shrink-0 border-r border-border bg-background px-4 py-6 lg:flex lg:flex-col transition-[width,opacity] duration-300',
+          'hidden h-screen overflow-y-auto shrink-0 border-r border-border bg-background px-4 py-6 lg:flex lg:flex-col transition-[width,opacity] duration-300',
           isPinned ? 'lg:w-64 lg:opacity-100 lg:pointer-events-auto' : 'lg:w-0 lg:opacity-0 lg:pointer-events-none'
         )}
         aria-hidden={!isPinned}
@@ -84,7 +90,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
           <div className="my-3 h-px bg-white/10" />
           {secondaryNav.map(renderNavItem)}
         </nav>
-        <div className="mt-auto space-y-3 rounded-2xl border border-border bg-card/80 p-3">
+        <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-border bg-card/80 p-3">
           <p className="truncate text-xs text-muted-foreground">
             Signed in as <span className="font-semibold text-foreground">{userEmail ?? 'Unknown'}</span>
           </p>

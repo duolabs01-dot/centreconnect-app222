@@ -25,7 +25,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
   }
 
   return (
-    <div className="ecd-premium-shell min-h-screen flex text-slate-900">
+    <div className="ecd-premium-shell h-screen overflow-hidden flex">
       <EcdPortalSidebar userEmail={user.email ?? null} />
       <main className="flex-1 overflow-y-auto">
         <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">

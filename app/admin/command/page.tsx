@@ -33,10 +33,27 @@ export default async function AdminDashboardPage() {
 
   // Safely initialize admin client
   let admin: any = null
+  let adminClientInitFailed = false
   try {
     admin = createAdminClient()
   } catch (e) {
-    console.warn("Admin client initialization failed (likely missing SERVICE_ROLE_KEY). Using fallback mode.")
+    adminClientInitFailed = true
+    console.error('Admin client initialization failed in /admin/command.', e)
+  }
+
+  if (adminClientInitFailed) {
+    return (
+      <div className="min-h-screen bg-cyber-bg flex items-center justify-center">
+        <div className="text-center">
+          <p className="font-orbitron text-cyber-cyan text-sm uppercase tracking-widest mb-2">
+            Configuration Error
+          </p>
+          <p className="text-slate-400 text-xs">
+            SUPABASE_SERVICE_ROLE_KEY is not configured in this environment.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   let userProfile: any = null
@@ -46,7 +63,11 @@ export default async function AdminDashboardPage() {
   }
   
   // Strict admin check - if not admin, redirect
-  if (userProfile?.role !== 'platform_admin' && process.env.NODE_ENV === 'production') {
+  if (userProfile?.role !== 'platform_admin') {
+    console.warn('Admin role check failed in /admin/command.', {
+      userId: user.id,
+      role: userProfile?.role ?? null,
+    })
     redirect('/login')
   }
 
