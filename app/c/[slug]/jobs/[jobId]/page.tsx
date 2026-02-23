@@ -11,6 +11,13 @@ type PublicJobPageProps = {
   }
 }
 
+type JobCentre = {
+  id: string
+  name: string
+  slug: string
+  logo_url: string | null
+}
+
 export async function generateMetadata({ params }: PublicJobPageProps): Promise<Metadata> {
   const supabase = await createClient()
   const { data: job } = await supabase
@@ -38,8 +45,8 @@ export default async function PublicJobPage({ params }: PublicJobPageProps) {
     .maybeSingle()
   if (!job) notFound()
 
-  const relatedCentre = Array.isArray(job.ecd_centres) ? job.ecd_centres[0] : job.ecd_centres
-  let centre = relatedCentre ?? null
+  const relatedCentre = (Array.isArray(job.ecd_centres) ? job.ecd_centres[0] : job.ecd_centres) as JobCentre | null
+  let centre: JobCentre | null = relatedCentre ?? null
 
   if (!centre && job.ecd_id) {
     const { data: centreById } = await supabase
@@ -48,7 +55,7 @@ export default async function PublicJobPage({ params }: PublicJobPageProps) {
       .eq('id', job.ecd_id)
       .maybeSingle()
 
-    centre = centreById
+    centre = (centreById as JobCentre | null) ?? null
   }
 
   const centreName = centre?.name ?? 'ECD Centre'
