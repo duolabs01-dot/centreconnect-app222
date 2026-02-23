@@ -133,12 +133,14 @@ export default async function HomePage() {
   }
 
   return (
-    <HomeClientPage
-      userEmail={userEmail}
-      role={role}
-      parentItems={[]}
-      jobOpportunities={jobOpportunities}
-      shortlistCentres={shortlistCentres}
-    />
+    <div className="landing-legacy-typography">
+      <HomeClientPage
+        userEmail={userEmail}
+        role={role}
+        parentItems={[]}
+        jobOpportunities={jobOpportunities}
+        shortlistCentres={shortlistCentres}
+      />
+    </div>
   )
 }
