@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { CircleUser, Compass, Home, Map } from 'lucide-react'
 import { cn } from '@/lib/utils'
 // import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
 import { Container } from '@/components/layout/container'
@@ -11,6 +10,7 @@ import { PageTransition } from '@/components/ui/page-transition'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
+import { GlassBottomNav } from '@/components/nav/GlassBottomNav'
 
 type ParentAppShellProps = {
   userEmail: string
@@ -57,10 +57,10 @@ function LocalSignOutButton({
 }
 
 const navItems = [
-  { href: '/parent/dashboard', label: 'Home', icon: Home },
-  { href: '/directory', label: 'Discover', icon: Compass },
-  { href: '/parent/applications', label: 'Journey', icon: Map },
-  { href: '/parent/profile', label: 'Me', icon: CircleUser },
+  { href: '/parent/dashboard', label: 'Home' },
+  { href: '/directory', label: 'Discover' },
+  { href: '/parent/applications', label: 'Journey' },
+  { href: '/parent/profile', label: 'Me' },
 ]
 
 function getTitle(pathname: string) {
@@ -163,27 +163,9 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
         </Container>
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-cyan-100/70 bg-white/95 backdrop-blur md:hidden">
-        <Container className="grid h-16 grid-cols-4 gap-1">
-          {navItems.map((item) => {
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-            const Icon = item.icon
-            return (
-              <Link
-                key={`mobile-${item.href}`}
-                href={item.href}
-                className={cn(
-                  'flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors',
-                  active ? 'text-cyan-700' : 'text-slate-500'
-                )}
-              >
-                <Icon className={cn('h-4 w-4', active ? 'text-cyan-600' : 'text-slate-400')} />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </Container>
-      </nav>
+      <div className="md:hidden">
+        <GlassBottomNav mode="parent" />
+      </div>
     </div>
   )
 }

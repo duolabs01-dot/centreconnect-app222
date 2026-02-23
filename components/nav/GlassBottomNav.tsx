@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, ClipboardList, User } from 'lucide-react'
+import { CircleUser, Compass, Home, Map } from 'lucide-react'
 
 type NavItem = {
   href: string
@@ -12,17 +12,17 @@ type NavItem = {
 }
 
 const parentNavItems = [
-  { href: '/', label: 'Home', icon: Home, matches: ['/', '/parent/dashboard', '/parent/notifications'] },
-  { href: '/directory', label: 'Find', icon: Search, matches: ['/directory', '/centre', '/c', '/parent/shortlist', '/parent/compare'] },
-  { href: '/parent/applications', label: 'Applications', icon: ClipboardList, matches: ['/parent/applications', '/apply'] },
-  { href: '/parent/profile', label: 'Profile', icon: User, matches: ['/parent/profile', '/parent/children'] },
+  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard', '/parent/notifications'] },
+  { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c', '/parent/shortlist', '/parent/compare'] },
+  { href: '/parent/applications', label: 'Journey', icon: Map, matches: ['/parent/applications', '/apply'] },
+  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences'] },
 ] satisfies NavItem[]
 
 const publicNavItems = [
-  { href: '/', label: 'Home', icon: Home, matches: ['/'] },
-  { href: '/directory', label: 'Find', icon: Search, matches: ['/directory', '/centre', '/c'] },
-  { href: '/login?next=%2Fparent%2Fapplications', label: 'Applications', icon: ClipboardList, matches: ['/apply'] },
-  { href: '/login?next=%2Fparent%2Fprofile', label: 'Profile', icon: User, matches: [] },
+  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard', '/parent/notifications'] },
+  { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c'] },
+  { href: '/parent/applications', label: 'Journey', icon: Map, matches: ['/parent/applications', '/apply'] },
+  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences'] },
 ] satisfies NavItem[]
 
 type GlassBottomNavProps = {
@@ -69,7 +69,7 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
           z-index: 180;
           display: flex;
           justify-content: center;
-          padding: 0 16px calc(14px + env(safe-area-inset-bottom));
+          padding: 0 14px calc(12px + env(safe-area-inset-bottom));
           pointer-events: none;
         }
 
@@ -80,20 +80,24 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
           align-items: center;
           gap: 0;
           width: min(100%, 468px);
-          border-radius: 22px;
-          padding: 8px 12px;
-          border: 1px solid rgba(255, 255, 255, 0.72);
-          background: rgba(255, 255, 255, 0.84);
-          backdrop-filter: blur(12px) saturate(145%);
-          -webkit-backdrop-filter: blur(12px) saturate(145%);
-          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08);
+          border-radius: 26px;
+          padding: 8px 10px;
+          border: 1px solid rgba(255, 255, 255, 0.55);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.34) 100%),
+            rgba(255, 255, 255, 0.24);
+          backdrop-filter: blur(22px) saturate(180%);
+          -webkit-backdrop-filter: blur(22px) saturate(180%);
+          box-shadow:
+            0 16px 32px rgba(15, 23, 42, 0.18),
+            inset 0 1px 0 rgba(255, 255, 255, 0.65);
         }
 
         .glass-nav__item {
           width: 100%;
           min-width: 0;
-          border-radius: 14px;
-          padding: 6px;
+          border-radius: 16px;
+          padding: 6px 4px;
           display: grid;
           grid-template-rows: 30px auto;
           place-items: center;
@@ -105,7 +109,7 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
         }
 
         .glass-nav__item:hover {
-          background: rgba(37, 99, 235, 0.08);
+          background: rgba(255, 255, 255, 0.22);
         }
 
         .glass-nav__item:active {
@@ -118,7 +122,9 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
         }
 
         .glass-nav__item.is-active {
-          color: #2563eb;
+          color: #0f172a;
+          background: rgba(255, 255, 255, 0.42);
+          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
         }
 
         .glass-nav__icon-wrap {
@@ -136,9 +142,9 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
         .glass-nav__item.is-active .glass-nav__icon-wrap::before {
           content: '';
           position: absolute;
-          inset: -4px;
+          inset: -5px;
           border-radius: 50%;
-          background: rgba(37, 99, 235, 0.12);
+          background: rgba(14, 165, 233, 0.16);
           animation: navGlow 180ms var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275));
         }
 
@@ -165,7 +171,7 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
           width: 4px;
           height: 4px;
           border-radius: 50%;
-          background: #2563eb;
+          background: #0891b2;
           animation: navDot 180ms var(--ease-spring, cubic-bezier(0.175, 0.885, 0.32, 1.275));
         }
 
@@ -223,9 +229,11 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
         }
 
         :global(.dark) .glass-nav__pill {
-          border-color: rgba(255, 255, 255, 0.22);
-          background: rgba(15, 23, 42, 0.72);
-          box-shadow: 0 12px 28px rgba(2, 6, 23, 0.48);
+          border-color: rgba(255, 255, 255, 0.3);
+          background:
+            linear-gradient(180deg, rgba(30, 41, 59, 0.72) 0%, rgba(15, 23, 42, 0.58) 100%),
+            rgba(15, 23, 42, 0.5);
+          box-shadow: 0 12px 28px rgba(2, 6, 23, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
 
         :global(.dark) .glass-nav__item {
@@ -233,11 +241,12 @@ export function GlassBottomNav({ mode = 'parent' }: GlassBottomNavProps) {
         }
 
         :global(.dark) .glass-nav__item.is-active {
-          color: #60a5fa;
+          color: #e2e8f0;
+          background: rgba(148, 163, 184, 0.16);
         }
 
         :global(.dark) .glass-nav__dot {
-          background: #60a5fa;
+          background: #22d3ee;
         }
 
         @media (prefers-reduced-motion: reduce) {
