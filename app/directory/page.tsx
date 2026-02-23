@@ -48,6 +48,19 @@ function getFeeOptionFromBudget(value: number | null | undefined) {
 }
 
 function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
+  const latitude =
+    typeof centre.latitude === 'number'
+      ? centre.latitude
+      : centre.latitude != null
+        ? Number(centre.latitude)
+        : null
+  const longitude =
+    typeof centre.longitude === 'number'
+      ? centre.longitude
+      : centre.longitude != null
+        ? Number(centre.longitude)
+        : null
+
   return {
     id: centre.id,
     slug: centre.slug,
@@ -64,8 +77,8 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
     monthly_fee_min: centre.monthly_fee_min,
     monthly_fee_max: centre.monthly_fee_max,
     subsidy_accepted: Boolean(centre.subsidy_accepted),
-    latitude: centre.latitude,
-    longitude: centre.longitude,
+    latitude,
+    longitude,
   }
 }
 
@@ -100,7 +113,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     let centresQuery = supabase
       .from('public_ecd_centres')
       .select(
-        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted'
+        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,latitude,longitude'
       )
       .order('name', { ascending: true })
       .range(pageFrom, pageTo)

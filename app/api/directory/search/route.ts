@@ -15,6 +15,17 @@ type QueryParams = {
 
 const PAGE_SIZE = 24
 
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
 export async function GET(req: Request) {
   const url = new URL(req.url)
   const params = url.searchParams
@@ -83,6 +94,8 @@ export async function GET(req: Request) {
     centres: (centresData ?? []).map((centre) => ({
       ...centre,
       subsidy_accepted: Boolean(centre.subsidy_accepted),
+      latitude: toFiniteNumber((centre as { latitude?: unknown }).latitude),
+      longitude: toFiniteNumber((centre as { longitude?: unknown }).longitude),
     })),
     totalResults: count ?? 0,
   })

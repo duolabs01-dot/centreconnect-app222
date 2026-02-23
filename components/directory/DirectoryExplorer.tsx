@@ -50,6 +50,17 @@ const FEE_OPTIONS = [
   { label: 'Under R2000', value: '2000' },
 ]
 
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
 export default function DirectoryExplorer({
   initialCentres,
   totalResults: initialTotal,
@@ -121,14 +132,14 @@ export default function DirectoryExplorer({
     })
   }, [centres, search, selectedSuburb, selectedAge, selectedFee, selectedSubsidy])
 
-  const centresWithLocation = useMemo(
-    () =>
-      filtered.filter(
-        (centre) =>
-          Number.isFinite(centre.latitude) && Number.isFinite(centre.longitude)
-      ) as DirectoryCentre[],
-    [filtered]
-  )
+  const centresWithLocation = useMemo(() => {
+    return filtered.flatMap((centre) => {
+      const latitude = toFiniteNumber(centre.latitude)
+      const longitude = toFiniteNumber(centre.longitude)
+      if (latitude == null || longitude == null) return []
+      return [{ ...centre, latitude, longitude }]
+    })
+  }, [filtered])
 
   const showMap = viewMode === 'map'
   const locationHint =
