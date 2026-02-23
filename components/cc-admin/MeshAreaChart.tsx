@@ -1,7 +1,8 @@
-// components/cc-admin/MeshAreaChart.tsx
 'use client'
 
 import { motion } from 'framer-motion'
+
+// components/cc-admin/MeshAreaChart.tsx
 
 interface MeshAreaChartProps {
   sessions?: number[]

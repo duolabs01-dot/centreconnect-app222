@@ -1,8 +1,9 @@
-// components/cc-admin/NeuralMap.tsx
-// Abstract neural activity grid — South Africa context
 'use client'
 
 import { motion } from 'framer-motion'
+
+// components/cc-admin/NeuralMap.tsx
+// Abstract neural activity grid — South Africa context
 
 const NODES = Array.from({ length: 24 }, (_, i) => ({
   id: i,

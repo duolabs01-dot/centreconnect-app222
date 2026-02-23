@@ -1,7 +1,8 @@
-// components/cc-admin/HexHeatmap.tsx
 'use client'
 
 import { motion } from 'framer-motion'
+
+// components/cc-admin/HexHeatmap.tsx
 
 export interface ProvinceScore {
   id: string
