@@ -208,8 +208,6 @@ body {
 
   /* Shared layout rhythm. */
   --cc-space-page: clamp(1.25rem, 1.1rem + 0.8vw, 2rem);
-  --cc-space-section: clamp(1rem, 0.9rem + 0.6vw, 1.5rem);
-  --cc-space-stack: clamp(0.875rem, 0.78rem + 0.4vw, 1.125rem);
 }
 
 .dark {
@@ -330,12 +328,12 @@ body { overflow-x: hidden; }
 
   .cc-section-block {
     display: grid;
-    gap: var(--cc-space-section);
+    gap: 1.5rem;
   }
 
   .cc-stack {
     display: grid;
-    gap: var(--cc-space-stack);
+    gap: 1rem;
   }
 }
 
@@ -452,17 +450,17 @@ body { overflow-x: hidden; }
 
 [data-ecd-theme='true'] .ecd-theme-content {
   display: grid;
-  gap: clamp(1rem, 0.85rem + 0.6vw, 1.5rem);
+  gap: 1.5rem;
 }
 
 [data-ecd-theme='true'] .ecd-page-shell {
   display: grid;
-  gap: clamp(1rem, 0.9rem + 0.55vw, 1.4rem);
+  gap: 1.25rem;
 }
 
 [data-ecd-theme='true'] .ecd-page-shell > section {
   display: grid;
-  gap: clamp(0.95rem, 0.85rem + 0.45vw, 1.3rem);
+  gap: 1rem;
 }
 
 [data-ecd-theme='true'] .ecd-page-shell h2 {
@@ -592,17 +590,17 @@ body { overflow-x: hidden; }
 
 [data-parent-theme='true'] .parent-theme-content {
   display: grid;
-  gap: clamp(1rem, 0.85rem + 0.55vw, 1.4rem);
+  gap: 1.5rem;
 }
 
 [data-parent-theme='true'] .parent-page-shell {
   display: grid;
-  gap: clamp(0.95rem, 0.82rem + 0.48vw, 1.25rem);
+  gap: 1.25rem;
 }
 
 [data-parent-theme='true'] .parent-page-shell > section {
   display: grid;
-  gap: clamp(0.85rem, 0.76rem + 0.4vw, 1.1rem);
+  gap: 1rem;
 }
 
 [data-parent-theme='true'] h1,
