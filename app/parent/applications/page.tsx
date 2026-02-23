@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Compass, Map as MapIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ApplicationsList } from './applications-list'
@@ -77,8 +78,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const data = applicationsResult.data
     const childrenData = childrenResult.data
 
-    const hasChildren = (childrenData ?? []).length > 0;
-    const hasApplications = (data ?? []).length > 0;
+    const hasApplications = (data ?? []).length > 0
 
     const childNameById = new Map(
       (childrenData ?? []).map((child) => [
@@ -107,10 +107,10 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           submitted_at: application.submitted_at,
           centreName: centre?.name ?? 'Unknown centre',
           centreSlug: centre?.slug ?? null,
-        childName,
-        childId: application.child_id,
-      }
-    }) ?? []
+          childName,
+          childId: application.child_id,
+        }
+      }) ?? []
 
     const childCounts = new Map<string, number>()
     applications.forEach((application) => {
@@ -161,6 +161,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                   We automatically read your saved child profiles and highlight the one you last viewed. Tap a child card below to swap contexts instantly.
                 </p>
               </div>
+
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-800">Children</h2>
@@ -170,6 +171,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                   Showing {filteredApplications.length} application{filteredApplications.length === 1 ? '' : 's'}
                 </p>
               </div>
+
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 <Link
                   href="/parent/applications"
@@ -203,17 +205,10 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
               </div>
             </section>
 
-            <section className="grid gap-4 md:grid-cols-3">
-              {['submitted', 'pending_review', 'approved', 'provisioned', 'rejected'].map((status) => (
-                <div key={status} className="rounded-2xl border border-border bg-white/90 p-4 text-sm text-foreground">
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{status.replace('_', ' ')}</p>
-                  <p className="mt-2 text-2xl font-semibold text-slate-900">{filteredApplications.filter((a) => a.status === status).length}</p>
-                </div>
-              ))}
-            </section>
             <section className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/80 p-4 text-xs text-slate-500">
               Want to track multiple children faster? Have a child apply to multiple centres with the sticky apply bar at the bottom.
             </section>
+
             <NextBestActionStrip
               title="Keep momentum this week"
               hint="Parents who keep 2-3 active options usually place faster."
@@ -227,38 +222,33 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             <section className="cc-section-block">
               <ApplicationsList applications={filteredApplications} />
             </section>
+
             <div className="sticky bottom-20 z-20 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur md:hidden">
               <Button size="lg" className="h-12 w-full" asChild>
                 <Link href="/directory">Find More Centres</Link>
               </Button>
             </div>
           </>
-        ) : hasChildren ? (
-          // Parent has children but no applications
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            <h2 className="text-lg font-semibold">No applications yet!</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              You have child profiles, but no applications submitted for them. Start by finding a centre.
-            </p>
-            <div className="mt-4">
-              <Button asChild>
-                <Link href="/directory">Apply to a centre for {childCards[0]?.name ?? 'your child'}</Link>
-              </Button>
-            </div>
-          </section>
         ) : (
-          // Parent has no children and no applications
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-            <h2 className="text-lg font-semibold">No child profiles found yet.</h2>
-            <p className="mt-2 text-sm text-slate-600">
-              Start by adding a child profile, then you can apply to centres.
-            </p>
-            <div className="mt-4">
-              <Button asChild>
-                <Link href="/parent/children/new">Add a Child Profile</Link>
-              </Button>
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
+              <MapIcon className="h-8 w-8 text-cyan-400" />
             </div>
-          </section>
+            <p className="mb-1 font-semibold text-slate-700">
+              No applications yet
+            </p>
+            <p className="mb-6 max-w-xs text-sm text-slate-400">
+              Browse centres and submit your first application.
+              It only takes a few minutes.
+            </p>
+            <Link
+              href="/directory"
+              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
+            >
+              <Compass className="h-4 w-4" />
+              Find a Centre
+            </Link>
+          </div>
         )}
       </div>
     )

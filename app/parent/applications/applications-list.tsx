@@ -1,14 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { ChevronRight, Compass, Map } from 'lucide-react'
 import { ApprovalActions } from './approval-actions'
 import { ApprovalReceivedToast } from './approval-received-toast'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { Stepper } from '@/components/ui/Stepper'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { formatDate } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 
 type ApplicationItem = {
   id: string
@@ -23,6 +19,64 @@ type ApplicationItem = {
   childName: string
 }
 
+function StatusPill({ status }: { status: string }) {
+  const config: Record<string, { label: string; className: string }> = {
+    submitted: {
+      label: 'Submitted',
+      className: 'bg-blue-50 text-blue-700 border-blue-200',
+    },
+    in_review: {
+      label: 'In Review',
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    pending_review: {
+      label: 'In Review',
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    approved: {
+      label: 'Approved ✓',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    enrolled: {
+      label: 'Enrolled',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    provisioned: {
+      label: 'Enrolled',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    waitlisted: {
+      label: 'Waitlisted',
+      className: 'bg-slate-50 text-slate-600 border-slate-200',
+    },
+    rejected: {
+      label: 'Unsuccessful',
+      className: 'bg-red-50 text-red-600 border-red-200',
+    },
+    withdrawn: {
+      label: 'Withdrawn',
+      className: 'bg-slate-50 text-slate-400 border-slate-200',
+    },
+  }
+
+  const c = config[status] ?? {
+    label: status,
+    className: 'bg-slate-50 text-slate-500 border-slate-200',
+  }
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-3 py-1',
+        'border text-xs font-semibold',
+        c.className
+      )}
+    >
+      {c.label}
+    </span>
+  )
+}
+
 export function ApplicationsList({ applications }: { applications: ApplicationItem[] }) {
   const pendingApprovalIds = applications
     .filter((application) => application.status === 'approved' && !application.offer_accepted_at)
@@ -30,24 +84,24 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
 
   if (applications.length === 0) {
     return (
-      <div className="space-y-3">
-        <EmptyState
-          title="No applications yet"
-          description="Start by adding a child profile, then apply to 2-3 centres for faster placement options."
-          actionLabel="Add Child Profile"
-          actionHref="/parent/children/new"
-        />
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-sm font-semibold text-slate-900">Then do this next</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button size="sm" asChild>
-              <Link href="/directory">Browse Centres</Link>
-            </Button>
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/parent/preferences">Set Preferences</Link>
-            </Button>
-          </div>
+      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
+          <Map className="h-8 w-8 text-cyan-400" />
         </div>
+        <p className="mb-1 font-semibold text-slate-700">
+          No applications yet
+        </p>
+        <p className="mb-6 max-w-xs text-sm text-slate-400">
+          Browse centres and submit your first application.
+          It only takes a few minutes.
+        </p>
+        <Link
+          href="/directory"
+          className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
+        >
+          <Compass className="h-4 w-4" />
+          Find a Centre
+        </Link>
       </div>
     )
   }
@@ -55,45 +109,44 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
   return (
     <>
       <ApprovalReceivedToast approvalIds={pendingApprovalIds} />
-      {applications.map((application) => (
-        <div key={application.id}>
-          <Card className="border-slate-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{application.childName}</CardTitle>
-              <p className="text-sm text-slate-600">
-                {application.centreName} - {formatDate(application.submitted_at)}
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <StatusBadge status={application.status} />
-                  <Stepper status={application.status} />
-                  {application.status === 'waitlisted' ? (
-                    <div className="mt-2 text-sm">
-                      <span className="font-medium">Waitlist position: #{application.priority ?? '-'}</span>
-                      <p className="text-gray-600">Average wait time: 2-4 weeks</p>
-                    </div>
-                  ) : null}
-                  {application.status === 'approved' && !application.offer_accepted_at ? (
-                    <ApprovalActions applicationId={application.id} />
-                  ) : null}
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" asChild>
-                    <Link href={`/parent/applications/${application.id}`}>Open</Link>
-                  </Button>
-                  {application.centreSlug ? (
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/centre/${application.centreSlug}`}>View Centre</Link>
-                    </Button>
-                  ) : null}
-                </div>
+      <div className="space-y-3">
+        {applications.map((application) => (
+          <div key={application.id} className="space-y-2">
+            <Link
+              href={`/parent/applications/${application.id}`}
+              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-slate-900">
+                  {application.centreName}
+                </p>
+                <p className="mt-0.5 text-sm text-slate-500">
+                  {application.childName}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">
+                  Applied {formatDate(application.submitted_at)}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      ))}
+              <div className="ml-3 flex shrink-0 items-center gap-2">
+                <StatusPill status={application.status} />
+                <ChevronRight className="h-4 w-4 text-slate-300" />
+              </div>
+            </Link>
+
+            {application.status === 'approved' && !application.offer_accepted_at ? (
+              <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                <ApprovalActions applicationId={application.id} />
+              </div>
+            ) : null}
+
+            {application.status === 'waitlisted' ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                Waitlist position: #{application.priority ?? '-'}
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
     </>
   )
 }
