@@ -153,7 +153,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
               <p className="text-sm font-semibold uppercase tracking-wider text-cyan-600">South Africa&apos;s ECD Platform</p>
             )}
           </div>
-          <Button size="sm" className="shrink-0" variant={isSignedIn ? 'outline' : 'default'} asChild>
+          <Button size="sm" className="shrink-0 font-semibold" variant={isSignedIn ? 'outline' : 'default'} asChild>
             <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>{isSignedIn ? 'Open Dashboard' : 'Sign in'}</Link>
           </Button>
         </div>
@@ -166,22 +166,22 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
               <Sparkles className="h-3.5 w-3.5" />
               Parent Hub
             </div>
-            <h2 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">
+            <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
               Finally, a parent experience that actually understands the pressure.
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600">
+            <p className="mt-3 max-w-2xl text-lg font-medium leading-relaxed text-slate-700/90 md:text-xl">
               Compare with confidence, track every response, and know your next best move without chasing updates.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild>
+              <Button className="font-semibold" asChild>
                 <Link href="/directory">Browse Centres</Link>
               </Button>
               {isSignedIn ? (
-                <Button variant="outline" asChild>
+                <Button className="font-semibold" variant="outline" asChild>
                   <Link href="/parent/applications">My Applications</Link>
                 </Button>
               ) : (
-                <Button variant="outline" asChild>
+                <Button className="font-semibold" variant="outline" asChild>
                   <Link href="/register">Create Free Account &rarr;</Link>
                 </Button>
               )}
@@ -203,7 +203,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                     <span className="text-2xl">{item.emoji}</span>
                     <div>
                       <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{item.desc}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{item.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -215,21 +215,21 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                     <Clock3 className="h-4 w-4 text-blue-600" />
                     <p className="text-xs font-semibold uppercase tracking-[0.08em]">Save Time</p>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">No more calling centres for status updates.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">No more calling centres for status updates.</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
                   <div className="flex items-center gap-2 text-slate-900">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                     <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trust Signals</p>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">See registered centres and compare clearly.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">See registered centres and compare clearly.</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
                   <div className="flex items-center gap-2 text-slate-900">
                     <HeartHandshake className="h-4 w-4 text-fuchsia-600" />
                     <p className="text-xs font-semibold uppercase tracking-[0.08em]">Parent First</p>
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">Built around real family decision moments.</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Built around real family decision moments.</p>
                 </div>
               </div>
             )}
@@ -239,12 +239,12 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
 
           {isSignedIn && shortlistSuburb ? (
             <section className="glass-card rounded-2xl p-4 sm:p-6">
-              <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
+              <h3 className="text-xl font-bold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {shortlistCards.length === 0 ? (
                   <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
-                    <p className="text-sm font-semibold text-slate-900">No shortlisted centres yet</p>
-                    <p className="mt-1 text-xs text-slate-600">
+                    <p className="text-base font-bold text-slate-900">No shortlisted centres yet</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
                       Browse the full directory to find centres near you.
                     </p>
                     <div className="mt-3">
@@ -260,12 +260,12 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                       href={`/centre/${item.slug}`}
                       className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
                     >
-                      <p className="text-sm font-semibold text-slate-900">{item.name}</p>
-                      <p className="mt-1 text-xs text-slate-600">
+                      <p className="text-base font-bold text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-sm text-slate-600">
                         {[item.suburb, item.city].filter(Boolean).join(', ')}
                       </p>
-                      <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
-                      <p className="mt-3 text-xs font-semibold text-cyan-700 group-hover:text-cyan-800">
+                      <p className="mt-2 text-sm leading-relaxed text-slate-500">{item.reason}</p>
+                      <p className="mt-3 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">
                         View centre -&gt;
                       </p>
                     </Link>
@@ -277,14 +277,14 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
 
           <section id="active-jobs" className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-slate-800">Employment Opportunities (Optional)</h3>
-              <span className="text-xs text-slate-500">{activeJobs.length} open</span>
+              <h3 className="text-xl font-bold text-slate-800">Employment Opportunities (Optional)</h3>
+              <span className="text-sm text-slate-500">{activeJobs.length} open</span>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {activeJobs.length === 0 ? (
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
-                  <p className="text-sm font-semibold text-slate-900">No active jobs yet</p>
-                  <p className="mt-1 text-xs text-slate-600">Check back soon for new centre opportunities.</p>
+                  <p className="text-base font-bold text-slate-900">No active jobs yet</p>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Check back soon for new centre opportunities.</p>
                 </div>
               ) : (
                 activeJobs.map((job) => {
@@ -299,8 +299,8 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">{job.title}</p>
-                          <p className="mt-1 text-xs text-slate-600">{job.centreName}</p>
+                          <p className="truncate text-base font-bold text-slate-900">{job.title}</p>
+                          <p className="mt-1 text-sm text-slate-600">{job.centreName}</p>
                         </div>
                         <span className="shrink-0 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-semibold text-cyan-700">
                           Details
@@ -323,7 +323,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                         ) : null}
                       </div>
 
-                      <p className="mt-3 text-xs font-semibold text-cyan-700 transition-colors group-hover:text-cyan-800">
+                      <p className="mt-3 text-sm font-semibold text-cyan-700 transition-colors group-hover:text-cyan-800">
                         Open full role details and apply -&gt;
                       </p>
                     </Link>

@@ -52,8 +52,8 @@ export function CentreContactCard({ centreId, centreName }: CentreContactCardPro
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/95 p-5 shadow-[var(--shadow-elevation-3)]">
-      <p className="text-sm font-semibold text-slate-900">Message {centreName}</p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="text-base font-bold text-slate-900">Message {centreName}</p>
+      <p className="mt-1 text-sm leading-relaxed text-slate-500">
         Ask about availability, tours, or any general questions — we will route your note straight to the centre inbox.
       </p>
       <form className="mt-4 space-y-3" onSubmit={handleSubmit}>

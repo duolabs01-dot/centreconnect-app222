@@ -297,13 +297,14 @@ export default function CentreCard({
         }
         .centre-card__title-group { flex: 1; min-width: 0; padding-top: 2px; }
         .centre-card__name {
-          font-size: 15px; font-weight: 800; color: #0F172A;
+          font-size: 16px; font-weight: 700; color: #0F172A;
           line-height: 1.2;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
           margin: 0;
         }
         .centre-card__tagline {
-          font-size: 12px; color: #64748B; margin: 2px 0 0;
+          font-size: 13px; color: #64748B; margin: 2px 0 0;
+          line-height: 1.35;
           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
@@ -316,7 +317,7 @@ export default function CentreCard({
         }
         .centre-card__meta-item {
           display: flex; align-items: center; gap: 4px;
-          font-size: 12px; color: #64748B; font-weight: 500;
+          font-size: 13px; color: #64748B; font-weight: 500;
         }
         .centre-card__meta-item--rating {
           color: #F59E0B;
@@ -329,7 +330,7 @@ export default function CentreCard({
           gap: 6px;
         }
         .centre-card__tag {
-          font-size: 11px; font-weight: 700;
+          font-size: 12px; font-weight: 600;
           padding: 3px 8px;
           background: #EFF6FF;
           color: #2563EB;
@@ -357,8 +358,8 @@ export default function CentreCard({
           border: 1px solid #E2E8F0;
           background: #F8FAFC;
           color: #334155;
-          font-size: 11px;
-          font-weight: 700;
+          font-size: 12px;
+          font-weight: 600;
           padding: 3px 8px;
         }
       `}</style>
