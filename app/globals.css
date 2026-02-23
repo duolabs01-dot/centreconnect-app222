@@ -15,6 +15,7 @@ body {
 
 @layer base {
   :root {
+    /* Global semantic tokens (default/public experience). */
     --background: 216 33% 97%;
     --foreground: 222 47% 12%;
     --primary: 217 91% 42%;
@@ -205,23 +206,19 @@ body {
 }
 
 :root {
+  /* Shared typography tokens (cross-theme). */
   --font-parent: 'Nunito', system-ui, sans-serif;
   --font-ecd: 'DM Sans', system-ui, sans-serif;
-  --cc-brand-50: #eff6ff;
-  --cc-brand-100: #dbeafe;
-  --cc-brand-200: #bfdbfe;
-  --cc-brand-500: #3b82f6;
-  --cc-brand-600: #2563eb;
-  --cc-brand-700: #1d4ed8;
-  --cc-ink-900: #0f172a;
-  --cc-ink-700: #334155;
-  --cc-ink-500: #64748b;
+
+  /* Shared glass + motion helpers. */
   --glass-bg: hsla(var(--card), 0.92);
   --glass-border: hsla(var(--border), 0.84);
   --glass-bg-strong: hsla(var(--card), 0.96);
   --glass-bg-soft: hsla(var(--card), 0.9);
   --glass-stroke: hsla(var(--border), 0.9);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* Shared layout rhythm. */
   --cc-space-page: clamp(1.25rem, 1.1rem + 0.8vw, 2rem);
   --cc-space-section: clamp(1rem, 0.9rem + 0.6vw, 1.5rem);
   --cc-space-stack: clamp(0.875rem, 0.78rem + 0.4vw, 1.125rem);
@@ -430,8 +427,11 @@ body { overflow-x: hidden; }
 .pipeline-col-enrolled { --col-accent: #059669; }
 .pipeline-col-waitlisted { --col-accent: #f59e0b; }
 
-/* ECD portal unified theme scope (does not affect platform admin). */
+/* Admin palette is scoped in app/admin/admin-theme.css via .admin-shell + --cyber-* tokens. */
+
+/* ECD portal theme scope (dark premium). */
 [data-ecd-theme='true'] {
+  /* ECD palette. */
   --ecd-accent-100: #164e63;
   --ecd-accent-200: #0e7490;
   --ecd-accent-500: #0ea5e9;
@@ -440,6 +440,26 @@ body { overflow-x: hidden; }
   --ecd-ink-700: #cbd5e1;
   --ecd-surface: rgba(15, 23, 42, 0.82);
   --ecd-surface-soft: rgba(30, 41, 59, 0.72);
+
+  /* ECD semantic tokens (shadcn names within ECD scope). */
+  --background: 223 38% 11%;
+  --foreground: 210 20% 94%;
+  --card: 223 31% 16%;
+  --card-foreground: 210 20% 94%;
+  --popover: 223 31% 16%;
+  --popover-foreground: 210 20% 94%;
+  --primary: 201 89% 48%;
+  --primary-foreground: 224 47% 12%;
+  --secondary: 222 22% 20%;
+  --secondary-foreground: 210 20% 90%;
+  --muted: 223 18% 23%;
+  --muted-foreground: 215 16% 74%;
+  --accent: 201 89% 48%;
+  --accent-foreground: 224 47% 12%;
+  --border: 217 18% 28%;
+  --input: 217 18% 28%;
+  --ring: 201 89% 48%;
+
   --shadow-elevation-1: 0 1px 2px rgba(2, 6, 23, 0.3);
   --shadow-elevation-2: 0 4px 6px rgba(2, 6, 23, 0.36);
   --shadow-elevation-3: 0 10px 15px rgba(2, 6, 23, 0.42);
@@ -551,8 +571,9 @@ body { overflow-x: hidden; }
   box-shadow: var(--shadow-elevation-4) !important;
 }
 
-/* Parent portal unified theme scope (only /parent shell). */
+/* Parent portal theme scope (light and friendly). */
 [data-parent-theme='true'] {
+  /* Parent palette. */
   --parent-accent-100: #dbeafe;
   --parent-accent-200: #bfdbfe;
   --parent-accent-500: #06b6d4;
@@ -561,6 +582,26 @@ body { overflow-x: hidden; }
   --parent-ink-700: #334155;
   --parent-surface: rgba(255, 255, 255, 0.94);
   --parent-surface-soft: rgba(236, 254, 255, 0.5);
+
+  /* Parent semantic tokens (shadcn names within Parent scope). */
+  --background: 210 60% 98%;
+  --foreground: 222 47% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 12%;
+  --primary: 189 95% 43%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 45% 96%;
+  --secondary-foreground: 222 47% 16%;
+  --muted: 210 30% 95%;
+  --muted-foreground: 215 20% 40%;
+  --accent: 193 100% 93%;
+  --accent-foreground: 217 61% 24%;
+  --border: 214 28% 86%;
+  --input: 214 28% 82%;
+  --ring: 189 95% 43%;
+
   --shadow-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-elevation-2: 0 4px 6px rgba(15, 23, 42, 0.08);
   --shadow-elevation-3: 0 10px 15px rgba(8, 47, 73, 0.1);

@@ -2,9 +2,12 @@
 /* Isolated Cyber-Noir Design System */
 
 .admin-shell {
+  /* Admin palette (cyber-noir). */
   --cyber-cyan:   #00F2FF;
   --cyber-violet: #8A2BE2;
   --cyber-green:  #00FF94;
+  --cyber-amber:  #FFB800;
+  --cyber-rose:   #FF4466;
   --cyber-bg:     #0B0E14;
   --cyber-card:   rgba(17, 21, 32, 0.72);
   --cyber-border: rgba(255, 255, 255, 0.08);
@@ -14,6 +17,25 @@
   --cyber-green-rgb: 0, 255, 148;
   --cyber-amber-rgb: 255, 184, 0;
   --cyber-rose-rgb: 255, 68, 102;
+
+  /* Admin semantic tokens (shadcn names) scoped to .admin-shell only. */
+  --background: 222 35% 7%;
+  --foreground: 210 24% 92%;
+  --card: 224 30% 12%;
+  --card-foreground: 210 24% 92%;
+  --popover: 224 30% 12%;
+  --popover-foreground: 210 24% 92%;
+  --primary: 185 100% 50%;
+  --primary-foreground: 222 47% 12%;
+  --secondary: 223 18% 17%;
+  --secondary-foreground: 210 20% 90%;
+  --muted: 223 18% 17%;
+  --muted-foreground: 215 16% 70%;
+  --accent: 270 76% 53%;
+  --accent-foreground: 0 0% 100%;
+  --border: 220 14% 22%;
+  --input: 220 14% 22%;
+  --ring: 185 100% 50%;
 
     background-color: var(--cyber-bg);
     background-image:

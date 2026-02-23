@@ -17,14 +17,13 @@ const config = {
   	                        inter: ['var(--font-inter)', 'sans-serif'],
   	                },
   	                colors: {
+  	                        // Admin-only utility colors (used by cyber-* Tailwind classes).
   	                        cyber: {
   	                                bg: '#0B0E14',
-  	                                'bg-card': '#111520',
   	                                cyan: '#00F2FF',
   	                                violet: '#8A2BE2',
   	                                green: '#00FF94',
   	                                rose: '#FF4466',
-  	                                amber: '#FFB800',
   	                        },
   	                        border: 'hsl(var(--border))',
   	
