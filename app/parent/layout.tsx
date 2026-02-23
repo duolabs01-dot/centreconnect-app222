@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
+import { GlobalBottomNav } from '@/components/nav/GlobalBottomNav'
 
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -55,8 +56,14 @@ export default async function ParentLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen">
       <ParentAppShell userEmail={user.email ?? 'Unknown email'}>{children}</ParentAppShell>
+      <GlobalBottomNav />
+      <style jsx global>{`
+        [data-parent-theme='true'] > nav.fixed.bottom-0.inset-x-0.z-40 {
+          display: none !important;
+        }
+      `}</style>
     </div>
   )
 }

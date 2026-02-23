@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { GlassBottomNav } from '@/components/nav/GlassBottomNav'
+import { BottomNav } from '@/components/nav/BottomNav'
 import { createClient } from '@/lib/supabase/client'
 
 const HIDDEN_PREFIXES = ['/api', '/admin', '/ecd', '/login', '/register', '/forgot-password', '/reset-password', '/auth', '/for-centres']
@@ -42,16 +42,18 @@ export function GlobalBottomNav() {
 
   const mode = pathname.startsWith('/parent') ? 'parent' : 'public'
   if (mode === 'public' && isSignedIn !== true) return null
+  const spacerClass = mode === 'parent' ? 'cc-nav-spacer cc-nav-spacer--parent' : 'cc-nav-spacer'
 
   return (
     <>
-      <div className="cc-nav-spacer md:hidden" aria-hidden />
-      <div className="md:hidden">
-        <GlassBottomNav mode={mode} />
-      </div>
+      <div className={`${spacerClass} md:hidden`} aria-hidden />
+      <BottomNav mode={mode} />
       <style jsx>{`
         .cc-nav-spacer {
-          height: calc(env(safe-area-inset-bottom) + 104px);
+          height: calc(env(safe-area-inset-bottom) + 112px);
+        }
+        .cc-nav-spacer--parent {
+          height: calc(env(safe-area-inset-bottom) + 36px);
         }
       `}</style>
     </>
