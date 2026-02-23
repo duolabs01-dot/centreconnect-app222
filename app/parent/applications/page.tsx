@@ -218,7 +218,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
         {hasApplications ? (
           <>
             <section className="space-y-6">
-              <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-cyan-50 px-5 py-5">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-cyan-50 px-5 py-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-600">
                   Focused Child
                 </p>

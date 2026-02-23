@@ -207,7 +207,7 @@ export default function ApplicationTimeline({
           display: flex;
           gap: 14px;
           padding: 16px;
-          border-radius: 16px;
+          border-radius: var(--radius-lg);
           border: 1.5px solid;
           align-items: flex-start;
         }
@@ -225,7 +225,7 @@ export default function ApplicationTimeline({
           align-items: center;
           padding: 16px;
           background: white;
-          border-radius: 14px;
+          border-radius: var(--radius-md);
           border: 1px solid #F1F5F9;
           gap: 0;
         }
@@ -271,7 +271,7 @@ export default function ApplicationTimeline({
         /* History */
         .timeline__history {
           background: white;
-          border-radius: 14px;
+          border-radius: var(--radius-md);
           border: 1px solid #F1F5F9;
           padding: 14px 16px;
         }
@@ -304,7 +304,7 @@ export default function ApplicationTimeline({
           font-size: 12px; color: #374151; margin: 4px 0 0;
           padding: 6px 8px;
           background: #F8FAFC;
-          border-radius: 6px;
+          border-radius: var(--radius-sm);
         }
 
         .timeline__ref {

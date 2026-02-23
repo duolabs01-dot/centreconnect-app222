@@ -161,7 +161,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="cc-page">
-          <section className="glass-card rounded-3xl p-5 sm:p-6">
+          <section className="glass-card rounded-2xl p-5 sm:p-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
               <Sparkles className="h-3.5 w-3.5" />
               Parent Hub

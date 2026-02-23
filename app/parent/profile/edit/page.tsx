@@ -114,7 +114,7 @@ export default async function ParentProfileEditPage() {
           </div>
 
           <div
-            className="rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-[var(--shadow-elevation-1)] sm:p-6
+            className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/80 p-4 shadow-[var(--shadow-elevation-1)] sm:p-6
                        [&_input]:w-full [&_input]:rounded-xl [&_input]:border [&_input]:border-slate-200 [&_input]:bg-white [&_input]:px-4 [&_input]:py-3 [&_input]:text-sm [&_input]:text-slate-900 [&_input]:transition-colors [&_input]:focus:border-cyan-400 [&_input]:focus:outline-none [&_input]:focus:ring-2 [&_input]:focus:ring-cyan-500/30
                        [&_textarea]:w-full [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-slate-200 [&_textarea]:bg-white [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:text-slate-900 [&_textarea]:transition-colors [&_textarea]:focus:border-cyan-400 [&_textarea]:focus:outline-none [&_textarea]:focus:ring-2 [&_textarea]:focus:ring-cyan-500/30
                        [&_select]:w-full [&_select]:rounded-xl [&_select]:border [&_select]:border-slate-200 [&_select]:bg-white [&_select]:px-4 [&_select]:py-3 [&_select]:text-sm [&_select]:text-slate-900 [&_select]:transition-colors [&_select]:focus:border-cyan-400 [&_select]:focus:outline-none [&_select]:focus:ring-2 [&_select]:focus:ring-cyan-500/30

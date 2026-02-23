@@ -278,7 +278,7 @@ export function CalendarInteractiveView({
   return (
     <CardSurface>
       <div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
-        <div className="rounded-3xl border border-slate-200/80 bg-white/85 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             {(['month', 'week', 'day'] as CalendarViewMode[]).map((option) => (
               <button
@@ -332,7 +332,7 @@ export function CalendarInteractiveView({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200/90 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
+        <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-slate-900">{periodLabel}</h2>
             <span className="inline-flex w-fit items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
@@ -350,7 +350,7 @@ export function CalendarInteractiveView({
                 dayViewEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-foreground shadow-[var(--shadow-elevation-2)]"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 text-sm text-foreground shadow-[var(--shadow-elevation-2)]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-base font-semibold text-slate-900">{event.title}</p>
@@ -437,7 +437,7 @@ function CardSurface({ children }: { children: ReactNode }) {
   return (
     <div
       id="calendar"
-      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-[var(--shadow-elevation-4)] backdrop-blur-xl"
+      className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-[var(--shadow-elevation-4)] backdrop-blur-xl"
     >
       {children}
     </div>

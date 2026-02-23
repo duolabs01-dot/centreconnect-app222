@@ -305,7 +305,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
   return (
     <main className="pb-28 bg-gradient-to-b from-cyan-50/40 via-white to-slate-50">
       <PageContainer>
-        <section className="relative min-h-[60vh] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 text-white shadow-[var(--shadow-elevation-4)]">
+        <section className="relative min-h-[60vh] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 text-white shadow-[var(--shadow-elevation-4)]">
           <div className="absolute inset-0">
             <Image
               src={heroImage}
@@ -382,7 +382,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
         </Section>
 
         {programs.length > 0 && (
-          <section className="mt-10 rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-50/80 to-emerald-50/80 p-6 shadow-[var(--shadow-elevation-4)] dark:from-cyan-950/20 dark:to-emerald-950/20">
+          <section className="mt-10 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/80 to-emerald-50/80 p-6 shadow-[var(--shadow-elevation-4)] dark:from-cyan-950/20 dark:to-emerald-950/20">
             <SectionHeader title="Our Programmes" emoji="" />
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {programs.map((program, index) => (
@@ -420,7 +420,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
         <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
 
         {jobs.length > 0 && (
-          <section className="mt-14 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 shadow-[var(--shadow-elevation-4)]">
+          <section className="mt-14 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 shadow-[var(--shadow-elevation-4)]">
             <SectionHeader emoji="" title="Join Our Team" titleClass="text-white" emojiSize="text-3xl" />
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
@@ -500,7 +500,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section id={id} className={cn('mt-10 rounded-3xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
+    <section id={id} className={cn('mt-10 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
       <SectionHeader emoji={emoji} title={title} />
       <div className="mt-4 text-base text-foreground/80">{children}</div>
     </section>

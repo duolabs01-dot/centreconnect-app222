@@ -70,7 +70,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-3xl border border-border bg-card/80 p-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-2xl border border-border bg-card/80 p-6">
       <div className="space-y-1">
         <Label htmlFor="preferred_start_month">Preferred start date</Label>
         <Input id="preferred_start_month" type="date" {...register('preferred_start_month')} />

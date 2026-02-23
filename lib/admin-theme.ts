@@ -6,7 +6,7 @@ export const adminTheme = {
   pageDescription: 'mt-2 text-sm text-slate-400',
 
   // Cards
-  card: 'rounded-[26px] border border-white/10 bg-slate-900/70 shadow-[var(--shadow-elevation-4)] backdrop-blur-md',
+  card: 'rounded-2xl border border-white/10 bg-slate-900/70 shadow-[var(--shadow-elevation-4)] backdrop-blur-md',
   cardInner: 'rounded-2xl border border-white/10 bg-white/5',
   cardHeader: 'px-6 py-5 border-b border-white/10',
   cardTitle: 'text-lg font-semibold text-white tracking-tight',

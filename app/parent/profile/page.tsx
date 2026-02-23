@@ -94,7 +94,7 @@ export default async function ParentProfilePage() {
 
     return (
       <div className="cc-page">
-        <div className="mb-4 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white">
+        <div className="mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white">
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
               <div className="rounded-2xl bg-gradient-to-br from-white/90 via-cyan-200/70 to-blue-200/70 p-[2px] shadow-[var(--shadow-elevation-3)]">

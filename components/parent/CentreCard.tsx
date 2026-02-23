@@ -77,7 +77,7 @@ export default function CentreCard({
             gap: 12px;
             padding: 12px 16px;
             background: white;
-            border-radius: 14px;
+            border-radius: var(--radius-md);
             border: 1px solid #F1F5F9;
             box-shadow: var(--shadow-elevation-1);
             text-decoration: none;
@@ -88,7 +88,7 @@ export default function CentreCard({
           }
           .centre-card__logo-sm {
             width: 40px; height: 40px;
-            border-radius: 10px;
+            border-radius: var(--radius-sm);
             background: #EFF6FF;
             overflow: hidden;
             flex-shrink: 0;
@@ -214,7 +214,7 @@ export default function CentreCard({
         .centre-card {
           display: block;
           background: white;
-          border-radius: 20px;
+          border-radius: var(--radius-lg);
           overflow: hidden;
           box-shadow: var(--shadow-elevation-2);
           border: 1px solid rgba(241,245,249,1);
@@ -283,7 +283,7 @@ export default function CentreCard({
         }
         .centre-card__logo {
           width: 44px; height: 44px;
-          border-radius: 12px;
+          border-radius: var(--radius-md);
           background: #EFF6FF;
           overflow: hidden;
           flex-shrink: 0;
