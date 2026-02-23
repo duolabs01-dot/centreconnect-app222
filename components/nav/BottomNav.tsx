@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CircleUser, Compass, Home, Map } from 'lucide-react'
@@ -36,15 +37,80 @@ type BottomNavProps = {
   mode?: BottomNavMode
 }
 
+type NavRuntime = 'ios-standalone' | 'ios-browser' | 'android' | 'other'
+
+function resolveRuntime(): NavRuntime {
+  if (typeof window === 'undefined') return 'other'
+
+  const ua = window.navigator.userAgent ?? ''
+  const standaloneQuery = window.matchMedia('(display-mode: standalone)')
+  const isStandalone = standaloneQuery.matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone)
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  const isAndroid = /Android/i.test(ua)
+
+  if (isIOS && isStandalone) return 'ios-standalone'
+  if (isIOS) return 'ios-browser'
+  if (isAndroid) return 'android'
+  return 'other'
+}
+
 export function BottomNav({ mode = 'parent' }: BottomNavProps) {
   const pathname = usePathname()
   const navItems = mode === 'public' ? publicNavItems : parentNavItems
+  const [runtime, setRuntime] = useState<NavRuntime>('other')
+
+  useEffect(() => {
+    const applyRuntime = () => setRuntime(resolveRuntime())
+    const standaloneQuery = window.matchMedia('(display-mode: standalone)')
+
+    applyRuntime()
+    window.addEventListener('resize', applyRuntime)
+    window.addEventListener('orientationchange', applyRuntime)
+
+    if (typeof standaloneQuery.addEventListener === 'function') {
+      standaloneQuery.addEventListener('change', applyRuntime)
+    } else {
+      standaloneQuery.addListener(applyRuntime)
+    }
+
+    return () => {
+      window.removeEventListener('resize', applyRuntime)
+      window.removeEventListener('orientationchange', applyRuntime)
+      if (typeof standaloneQuery.removeEventListener === 'function') {
+        standaloneQuery.removeEventListener('change', applyRuntime)
+      } else {
+        standaloneQuery.removeListener(applyRuntime)
+      }
+    }
+  }, [])
+
+  const navOffset = useMemo(() => {
+    switch (runtime) {
+      case 'ios-standalone':
+        return 'calc(max(env(safe-area-inset-bottom), 18px) + 16px)'
+      case 'ios-browser':
+        return 'calc(max(env(safe-area-inset-bottom), 10px) + 14px)'
+      case 'android':
+        return 'calc(max(env(safe-area-inset-bottom), 8px) + 12px)'
+      default:
+        return 'calc(max(env(safe-area-inset-bottom), 10px) + 12px)'
+    }
+  }, [runtime])
+
+  const navStyle = useMemo(
+    () =>
+      ({
+        '--cc-bottom-nav-offset': navOffset,
+      }) as CSSProperties,
+    [navOffset]
+  )
 
   if (!pathname) return null
 
   return (
     <nav
-      className="fixed z-50 md:hidden pointer-events-none [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [bottom:calc(max(env(safe-area-inset-bottom),20px)+10px)]"
+      className="fixed z-50 md:hidden pointer-events-none [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [bottom:var(--cc-bottom-nav-offset)]"
+      style={navStyle}
       aria-label="Primary"
     >
       <div className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[0_10px_30px_rgba(15,23,42,0.16)]">
