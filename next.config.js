@@ -2,8 +2,9 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns'],
+    optimizePackageImports: ['lucide-react'],
     workerThreads: true,
     webpackBuildWorker: false,
   },

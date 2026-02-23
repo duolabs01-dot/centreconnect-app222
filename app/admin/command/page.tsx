@@ -92,27 +92,43 @@ export default async function AdminDashboardPage() {
 
   if (admin) {
     try {
-      // Fetch Data
+      const activeStatuses = ['active', 'trial', 'past_due']
       const [
-        centresResult,
-        subscriptionsResult,
-        childrenResult,
+        activeCentresResult,
+        activeSubscriptionsCountResult,
+        newActiveSubscriptionsCountResult,
+        activeSubscriptionsMrrResult,
+        childrenCountResult,
       ] = await Promise.all([
-        admin.from('ecd_centres').select('id,is_active,created_at'),
-        admin.from('subscriptions').select('id,monthly_price,status,created_at'),
-        admin.from('children').select('id'),
+        admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses),
+        admin
+          .from('subscriptions')
+          .select('id', { count: 'exact', head: true })
+          .in('status', activeStatuses)
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+        admin.from('subscriptions').select('monthly_price').in('status', activeStatuses),
+        admin.from('children').select('id', { count: 'exact', head: true }),
       ])
 
-      // Calculations
-      const activeSubs = (subscriptionsResult.data ?? []).filter((s: any) => ['active', 'trial', 'past_due'].includes(s.status))
-      mrrValue = activeSubs.reduce((sum: number, sub: any) => sum + (Number(sub.monthly_price) || 0), 0)
-      
-      const newSubsThisMonth = activeSubs.filter((s: any) => new Date(s.created_at) >= thirtyDaysAgo)
-      revenueGrowth = ((newSubsThisMonth.length / (activeSubs.length || 1)) * 100).toFixed(1)
-      activeCentreCount = centresResult.data?.filter((c: any) => c.is_active).length ?? 0
-      totalParentCount = new Set((childrenResult.data ?? []).map((c: any) => c.id)).size
+      if (activeCentresResult.error) throw activeCentresResult.error
+      if (activeSubscriptionsCountResult.error) throw activeSubscriptionsCountResult.error
+      if (newActiveSubscriptionsCountResult.error) throw newActiveSubscriptionsCountResult.error
+      if (activeSubscriptionsMrrResult.error) throw activeSubscriptionsMrrResult.error
+      if (childrenCountResult.error) throw childrenCountResult.error
+
+      const activeSubsCount = activeSubscriptionsCountResult.count ?? 0
+      const newSubsCount = newActiveSubscriptionsCountResult.count ?? 0
+
+      mrrValue = (activeSubscriptionsMrrResult.data ?? []).reduce(
+        (sum: number, sub: any) => sum + (Number(sub.monthly_price) || 0),
+        0
+      )
+      revenueGrowth = activeSubsCount > 0 ? ((newSubsCount / activeSubsCount) * 100).toFixed(1) : '0.0'
+      activeCentreCount = activeCentresResult.count ?? 0
+      totalParentCount = childrenCountResult.count ?? 0
     } catch (error) {
-      console.error("Error fetching admin dashboard data, using defaults:", error);
+      console.error('Error fetching admin dashboard data, using defaults:', error)
     }
   }
 

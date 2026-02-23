@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export function LiveSessionsCounter({ initialCount = 1284 }: { initialCount?: number }) {
   const [count, setCount] = useState(initialCount)
-  const supabase = createClient()
 
   useEffect(() => {
     // In a real app, use Supabase Presence
