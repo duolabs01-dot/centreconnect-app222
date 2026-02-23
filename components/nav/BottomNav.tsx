@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, CircleUser, Compass, Home } from 'lucide-react'
@@ -39,75 +39,11 @@ type BottomNavProps = {
   mode?: BottomNavMode
 }
 
-type NavRuntime = 'ios-standalone' | 'ios-browser' | 'android' | 'other'
-
-function resolveRuntime(): NavRuntime {
-  if (typeof window === 'undefined') return 'other'
-
-  const ua = window.navigator.userAgent ?? ''
-  const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-  const isStandalone = standaloneQuery.matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone)
-  const isIOS = /iPhone|iPad|iPod/i.test(ua)
-  const isAndroid = /Android/i.test(ua)
-
-  if (isIOS && isStandalone) return 'ios-standalone'
-  if (isIOS) return 'ios-browser'
-  if (isAndroid) return 'android'
-  return 'other'
-}
-
 export function BottomNav({ mode = 'parent' }: BottomNavProps) {
   const pathname = usePathname()
   const navItems = mode === 'public' ? publicNavItems : parentNavItems
-  const [runtime, setRuntime] = useState<NavRuntime>('other')
   const [intentHref, setIntentHref] = useState<string | null>(null)
   const [unreadCount, setUnreadCount] = useState(0)
-
-  useEffect(() => {
-    const applyRuntime = () => setRuntime(resolveRuntime())
-    const standaloneQuery = window.matchMedia('(display-mode: standalone)')
-
-    applyRuntime()
-    window.addEventListener('resize', applyRuntime)
-    window.addEventListener('orientationchange', applyRuntime)
-
-    if (typeof standaloneQuery.addEventListener === 'function') {
-      standaloneQuery.addEventListener('change', applyRuntime)
-    } else {
-      standaloneQuery.addListener(applyRuntime)
-    }
-
-    return () => {
-      window.removeEventListener('resize', applyRuntime)
-      window.removeEventListener('orientationchange', applyRuntime)
-      if (typeof standaloneQuery.removeEventListener === 'function') {
-        standaloneQuery.removeEventListener('change', applyRuntime)
-      } else {
-        standaloneQuery.removeListener(applyRuntime)
-      }
-    }
-  }, [])
-
-  const navOffset = useMemo(() => {
-    switch (runtime) {
-      case 'ios-standalone':
-        return 'calc(max(env(safe-area-inset-bottom), 18px) + 16px)'
-      case 'ios-browser':
-        return 'calc(max(env(safe-area-inset-bottom), 10px) + 14px)'
-      case 'android':
-        return 'calc(max(env(safe-area-inset-bottom), 8px) + 12px)'
-      default:
-        return 'calc(max(env(safe-area-inset-bottom), 10px) + 12px)'
-    }
-  }, [runtime])
-
-  const navStyle = useMemo(
-    () =>
-      ({
-        '--cc-bottom-nav-offset': navOffset,
-      }) as CSSProperties,
-    [navOffset]
-  )
 
   useEffect(() => {
     setIntentHref(null)
@@ -135,8 +71,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed z-50 md:hidden pointer-events-none [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [bottom:var(--cc-bottom-nav-offset)]"
-      style={navStyle}
+      className="fixed bottom-6 left-4 right-4 z-50 pointer-events-none md:hidden"
       aria-label="Primary"
     >
       <LayoutGroup id={`cc-bottom-nav-${mode}`}>
@@ -144,9 +79,9 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
           initial={{ opacity: 0, y: 12, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 240, damping: 24, mass: 0.78 }}
-          className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[var(--shadow-elevation-3)]"
+          className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/20 bg-white/60 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:border-white/20 dark:bg-black/60"
         >
-          <div className="grid grid-cols-4 items-center px-2.5 py-1.5">
+          <div className="flex items-center justify-around px-2.5 py-1.5">
             {navItems.map(({ href, label, icon: Icon, matches }) => {
               const active = intentHref ? intentHref === href : isPathActive(pathname, matches)
               return (
