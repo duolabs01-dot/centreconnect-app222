@@ -69,21 +69,21 @@ export default async function ForCentresPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
             </svg>
             <h3 className="text-xl font-semibold">Fill your centre faster</h3>
-            <p className="text-slate-600">admissions pipeline, parent apps</p>
+            <p className="text-slate-600">Parents apply online. You review, shortlist, and enrol — all from one dashboard. No paperwork, no WhatsApp threads.</p>
           </div>
           <div className="space-y-4">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-16 h-16 text-green-600 mx-auto">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
             <h3 className="text-xl font-semibold">Stay compliant effortlessly</h3>
-            <p className="text-slate-600">DSD registration tracking</p>
+            <p className="text-slate-600">Track DSD registration, upload documents, and generate compliance reports. Stay audit-ready without the stress.</p>
           </div>
           <div className="space-y-4">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-16 h-16 text-purple-600 mx-auto">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0 0 21 18V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v12a2.25 2.25 0 0 0 2.25 2.25Z" />
             </svg>
             <h3 className="text-xl font-semibold">Look professional</h3>
-            <p className="text-slate-600">centre profile, announcements, website</p>
+            <p className="text-slate-600">Your own centre profile page, parent announcements, and a job board — live in minutes, not months.</p>
           </div>
         </div>
       </Section>
@@ -105,7 +105,7 @@ export default async function ForCentresPage() {
                 <li className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>Dedicated Support</li>
               </ul>
               <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                <Link href="/for-centres/register">Start with Basic</Link>
+                <Link href="/for-centres/register?plan=basic">Start with Basic</Link>
               </Button>
             </CardContent>
           </Card>
@@ -127,7 +127,7 @@ export default async function ForCentresPage() {
                 <li className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>Attendance Tracking</li>
               </ul>
               <Button asChild className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                <Link href="/for-centres/register">Start with Standard</Link>
+                <Link href="/for-centres/register?plan=standard">Start with Standard</Link>
               </Button>
             </CardContent>
           </Card>
@@ -148,7 +148,7 @@ export default async function ForCentresPage() {
                 <li className="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/></svg>API Access</li>
               </ul>
               <Button asChild className="w-full bg-teal-600 hover:bg-teal-700 text-white">
-                <Link href="/for-centres/register">Start with Premium</Link>
+                <Link href="/for-centres/register?plan=premium">Start with Premium</Link>
               </Button>
             </CardContent>
           </Card>
@@ -201,6 +201,22 @@ export default async function ForCentresPage() {
           <Link href="/for-centres/register">Register Your ECD &rarr;</Link>
         </Button>
       </Section>
+
+      <section className="py-16 bg-gradient-to-r from-cyan-600 to-blue-700 text-white text-center px-4">
+        <h2 className="text-3xl font-bold mb-3">
+          Ready to grow your centre?
+        </h2>
+        <p className="text-cyan-100 mb-8 max-w-xl mx-auto text-lg">
+          Join centres across South Africa already on CentreConnect.
+          Registration takes 10 minutes.
+        </p>
+        <a
+          href="/for-centres/register"
+          className="inline-block bg-white text-cyan-700 font-bold px-8 py-4 rounded-xl hover:bg-cyan-50 transition-colors shadow-lg text-lg"
+        >
+          Register Your ECD →
+        </a>
+      </section>
     </main>
   )
 }

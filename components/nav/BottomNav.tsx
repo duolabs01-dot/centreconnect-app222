@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CircleUser, Compass, Home, Map } from 'lucide-react'
+import { Bell, CircleUser, Compass, Home } from 'lucide-react'
 import { LayoutGroup, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 
 type BottomNavMode = 'parent' | 'public'
 
@@ -17,17 +18,17 @@ type NavItem = {
 }
 
 const parentNavItems = [
-  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard', '/parent/notifications'] },
+  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard'] },
   { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c', '/parent/shortlist', '/parent/compare'] },
-  { href: '/parent/applications', label: 'Journey', icon: Map, matches: ['/parent/applications', '/apply'] },
-  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences'] },
+  { href: '/parent/notifications', label: 'Messages', icon: Bell, matches: ['/parent/notifications'] },
+  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences', '/parent/applications', '/apply'] },
 ] satisfies NavItem[]
 
 const publicNavItems = [
-  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard', '/parent/notifications'] },
+  { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard'] },
   { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c'] },
-  { href: '/parent/applications', label: 'Journey', icon: Map, matches: ['/parent/applications', '/apply'] },
-  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences'] },
+  { href: '/parent/notifications', label: 'Messages', icon: Bell, matches: ['/parent/notifications'] },
+  { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences', '/parent/applications', '/apply'] },
 ] satisfies NavItem[]
 
 function isPathActive(pathname: string, matches: string[]) {
@@ -60,6 +61,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
   const navItems = mode === 'public' ? publicNavItems : parentNavItems
   const [runtime, setRuntime] = useState<NavRuntime>('other')
   const [intentHref, setIntentHref] = useState<string | null>(null)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     const applyRuntime = () => setRuntime(resolveRuntime())
@@ -111,6 +113,24 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
     setIntentHref(null)
   }, [pathname])
 
+  useEffect(() => {
+    const supabase = createClient()
+    let active = true
+
+    void supabase
+      .from('parent_notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_read', false)
+      .then(({ count }) => {
+        if (!active) return
+        setUnreadCount(count ?? 0)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
   if (!pathname) return null
 
   return (
@@ -161,7 +181,12 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
                       animate={active ? { y: -2, scale: 1.08 } : { y: 0, scale: 1 }}
                       transition={{ type: 'spring', stiffness: 360, damping: 26, mass: 0.65 }}
                     >
-                      <Icon className="h-5 w-5" strokeWidth={active ? 2.3 : 2} />
+                      <div className="relative">
+                        <Icon className="h-5 w-5" strokeWidth={active ? 2.3 : 2} />
+                        {href === '/parent/notifications' && unreadCount > 0 ? (
+                          <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500" />
+                        ) : null}
+                      </div>
                     </motion.span>
                     <motion.span
                       animate={active ? { y: -1, opacity: 1 } : { y: 0, opacity: 0.86 }}

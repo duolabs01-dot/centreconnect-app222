@@ -32,7 +32,7 @@ const HOME_LANGUAGE_OPTIONS = [
   'Other',
 ]
 const CONTACT_TIME_OPTIONS = ['Anytime', 'Morning (08:00-12:00)', 'Afternoon (12:00-17:00)', 'Evening (17:00-20:00)', 'Weekends']
-const FORM_STEPS = ['Basics', 'Home', 'Preferences', 'Comms', 'Billing']
+const FORM_STEPS = ['About You', 'Where You Live', 'Your Priorities', 'Stay in Touch', 'Payment']
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'Full name is required'),
@@ -213,6 +213,7 @@ export function ParentProfileEditor({ initial }: ParentProfileEditorProps) {
   const [avatarPreview, setAvatarPreview] = useState(smartInitial.avatar_url)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [removeAvatar, setRemoveAvatar] = useState(false)
+  const [authEmail, setAuthEmail] = useState('')
 
   const {
     register,
@@ -281,6 +282,18 @@ export function ParentProfileEditor({ initial }: ParentProfileEditorProps) {
     if (!avatarPreview?.startsWith('blob:')) return
     return () => URL.revokeObjectURL(avatarPreview)
   }, [avatarPreview])
+
+  useEffect(() => {
+    let active = true
+    const authClient = createClient()
+    void authClient.auth.getUser().then(({ data }) => {
+      if (!active) return
+      setAuthEmail(data.user?.email ?? '')
+    })
+    return () => {
+      active = false
+    }
+  }, [])
 
   function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -709,8 +722,15 @@ export function ParentProfileEditor({ initial }: ParentProfileEditorProps) {
                 <Input id="medical_aid_number" {...register('medical_aid_number')} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="billing_email">Billing Email</Label>
-                <Input id="billing_email" type="email" {...register('billing_email')} />
+                <input type="hidden" {...register('billing_email')} />
+                <div className="space-y-1">
+                  <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                    Email Address
+                  </Label>
+                  <p className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                    {authEmail || initial.billing_email || 'No email available'}. Email cannot be changed here. Contact support to update.
+                  </p>
+                </div>
               </div>
               <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-700">
                 <input type="checkbox" {...register('auto_pay_enabled')} />
