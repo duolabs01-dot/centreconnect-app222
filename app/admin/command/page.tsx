@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { DashboardShell } from '@/components/cc-admin/DashboardShell'
@@ -25,7 +25,7 @@ type ProvinceScore = {
   col: number
 }
 
-const NeuralMap = dynamic(
+const NeuralMap = nextDynamic(
   () => import('@/components/cc-admin/NeuralMap').then((mod) => mod.NeuralMap),
   {
     ssr: false,
@@ -33,7 +33,7 @@ const NeuralMap = dynamic(
   }
 )
 
-const MeshAreaChart = dynamic(
+const MeshAreaChart = nextDynamic(
   () => import('@/components/cc-admin/MeshAreaChart').then((mod) => mod.MeshAreaChart),
   {
     ssr: false,
@@ -41,7 +41,7 @@ const MeshAreaChart = dynamic(
   }
 )
 
-const HexHeatmap = dynamic(
+const HexHeatmap = nextDynamic(
   () => import('@/components/cc-admin/HexHeatmap').then((mod) => mod.HexHeatmap),
   {
     ssr: false,
@@ -49,7 +49,7 @@ const HexHeatmap = dynamic(
   }
 )
 
-const LiveSessionsCounter = dynamic(
+const LiveSessionsCounter = nextDynamic(
   () => import('@/components/cc-admin/LiveSessionsCounter').then((mod) => mod.LiveSessionsCounter),
   {
     ssr: false,
@@ -57,7 +57,7 @@ const LiveSessionsCounter = dynamic(
   }
 )
 
-const SystemStatus = dynamic(
+const SystemStatus = nextDynamic(
   () => import('@/components/cc-admin/SystemStatus').then((mod) => mod.SystemStatus),
   {
     ssr: false,
