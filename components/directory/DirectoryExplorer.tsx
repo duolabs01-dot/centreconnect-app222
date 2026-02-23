@@ -8,15 +8,20 @@ import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import type { DirectoryCentre } from '@/types/directory-centre'
 
-const DirectoryMap = dynamic(() => import('./DirectoryMap').then(mod => mod.DirectoryMap), {
-  ssr: false,
-  loading: () => (
-    <div className="h-96 rounded-2xl bg-slate-100 animate-pulse
-                    flex items-center justify-center text-slate-400 text-sm">
-      Loading map...
-    </div>
-  ),
-})
+const DirectoryMap = dynamic(
+  () => import('./DirectoryMap'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-96 rounded-2xl bg-slate-100 animate-pulse
+                      flex items-center justify-center">
+        <p className="text-slate-400 text-sm font-medium">
+          Loading map...
+        </p>
+      </div>
+    ),
+  }
+)
 
 type DirectoryFilters = {
   search?: string

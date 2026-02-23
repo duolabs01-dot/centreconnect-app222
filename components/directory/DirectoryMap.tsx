@@ -18,7 +18,7 @@ interface DirectoryMapProps {
   showMap: boolean
 }
 
-export function DirectoryMap({ centresWithLocation, userLocation, locationHint, showMap }: DirectoryMapProps) {
+export default function DirectoryMap({ centresWithLocation, userLocation, locationHint, showMap }: DirectoryMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
