@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 // import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
 import { Container } from '@/components/layout/container'
-import { PageTransition } from '@/components/ui/page-transition'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
@@ -156,9 +155,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
 
       <main className="py-4 pb-24 sm:py-6 md:pb-0">
         <Container>
-          <PageTransition>
-            <div className="parent-theme-content parent-page-shell">{children}</div>
-          </PageTransition>
+          <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
       </main>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { CircleUser, Compass, Home, Map } from 'lucide-react'
+import { LayoutGroup, motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 type BottomNavMode = 'parent' | 'public'
@@ -58,6 +59,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
   const pathname = usePathname()
   const navItems = mode === 'public' ? publicNavItems : parentNavItems
   const [runtime, setRuntime] = useState<NavRuntime>('other')
+  const [intentHref, setIntentHref] = useState<string | null>(null)
 
   useEffect(() => {
     const applyRuntime = () => setRuntime(resolveRuntime())
@@ -105,6 +107,10 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
     [navOffset]
   )
 
+  useEffect(() => {
+    setIntentHref(null)
+  }, [pathname])
+
   if (!pathname) return null
 
   return (
@@ -113,29 +119,54 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
       style={navStyle}
       aria-label="Primary"
     >
-      <div className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[0_10px_30px_rgba(15,23,42,0.16)]">
-        <div className="grid grid-cols-4 items-center px-2.5 py-1.5">
-          {navItems.map(({ href, label, icon: Icon, matches }) => {
-            const active = isPathActive(pathname, matches)
-            return (
-              <Link
-                key={`${label}-${href}`}
-                href={href}
-                aria-current={active ? 'page' : undefined}
-                className={cn(
-                  'flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold tracking-tight transition-colors',
-                  active
-                    ? 'bg-white/45 dark:bg-white/15 text-sky-700 dark:text-sky-300'
-                    : 'text-slate-600/90 dark:text-slate-300'
-                )}
-              >
-                <Icon className="h-5 w-5" strokeWidth={active ? 2.3 : 2} />
-                <span>{label}</span>
-              </Link>
-            )
-          })}
+      <LayoutGroup id={`cc-bottom-nav-${mode}`}>
+        <div className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[0_10px_30px_rgba(15,23,42,0.16)]">
+          <div className="grid grid-cols-4 items-center px-2.5 py-1.5">
+            {navItems.map(({ href, label, icon: Icon, matches }) => {
+              const active = intentHref ? intentHref === href : isPathActive(pathname, matches)
+              return (
+                <Link
+                  key={`${label}-${href}`}
+                  href={href}
+                  prefetch
+                  scroll={false}
+                  onClick={(event) => {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+                    setIntentHref(href)
+                  }}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'relative isolate flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[10px] font-semibold tracking-tight transition-colors duration-250',
+                    active
+                      ? 'text-sky-700 dark:text-sky-300'
+                      : 'text-slate-600/90 dark:text-slate-300'
+                  )}
+                >
+                  {active && (
+                    <motion.span
+                      layoutId={`cc-bottom-nav-pill-${mode}`}
+                      transition={{ type: 'spring', stiffness: 420, damping: 32, mass: 0.55 }}
+                      className="absolute inset-1 -z-10 rounded-2xl bg-white/45 dark:bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_18px_rgba(14,116,144,0.18)]"
+                    />
+                  )}
+                  <motion.span
+                    animate={active ? { y: -1.5, scale: 1.06 } : { y: 0, scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.5 }}
+                  >
+                    <Icon className="h-5 w-5" strokeWidth={active ? 2.35 : 2} />
+                  </motion.span>
+                  <motion.span
+                    animate={active ? { y: -0.5, opacity: 1 } : { y: 0, opacity: 0.86 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {label}
+                  </motion.span>
+                </Link>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      </LayoutGroup>
     </nav>
   )
 }
