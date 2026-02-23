@@ -393,7 +393,7 @@ export default function EcdRegisterPage() {
                           onClick={() => setField('selectedTier', tier)}
                           className={`rounded-xl border p-3 text-left transition ${
                             active
-                              ? 'border-cyan-400 bg-cyan-50 shadow-sm'
+                              ? 'border-cyan-400 bg-cyan-50 shadow-[var(--shadow-elevation-1)]'
                               : 'border-border bg-card/90 text-foreground hover:border-cyan-200 hover:bg-background'
                           }`}
                         >
@@ -491,3 +491,5 @@ export default function EcdRegisterPage() {
     </div>
   )
 }
+
+

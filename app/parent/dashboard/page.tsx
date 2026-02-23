@@ -87,7 +87,7 @@ export default async function ParentDashboardPage() {
               <Link
                 key={job.id}
                 href={centre?.slug ? `/c/${centre.slug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`}
-                className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -146,7 +146,7 @@ export default async function ParentDashboardPage() {
               </div>
               <Link
                 href="/directory"
-                className="inline-flex items-center gap-2 bg-cyan-600 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-cyan-700 transition-colors shadow-lg shadow-cyan-200 text-base"
+                className="inline-flex items-center gap-2 bg-cyan-600 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-cyan-700 transition-colors shadow-[var(--shadow-elevation-3)] shadow-cyan-200 text-base"
               >
                 <Compass className="w-5 h-5" />
                 Find a Centre
@@ -244,5 +244,7 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
+
 
 

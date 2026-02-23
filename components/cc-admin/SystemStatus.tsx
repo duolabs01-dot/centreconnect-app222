@@ -64,7 +64,7 @@ export function SystemStatus() {
                             animate={{
                               width: `${s.val}%`,
                               background: `linear-gradient(90deg, rgba(${getCyberRgbVar(s.color)}, 0.25), ${s.color})`,
-                              boxShadow: `0 0 8px rgba(${getCyberRgbVar(s.color)}, 0.25)`
+                              boxShadow: `0 1px 2px rgba(${getCyberRgbVar(s.color)}, 0.25)`
                             }}              className="h-full rounded-full transition-all duration-1000"
             />
           </div>

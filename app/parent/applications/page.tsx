@@ -256,7 +256,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                   className={cn(
                     'rounded-2xl border px-4 py-3 text-sm font-medium transition',
                     !selectedChildId
-                      ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500 shadow-[0_0_0_1px_rgba(6,182,212,0.45)]'
+                      ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500 shadow-[var(--shadow-elevation-1)]'
                       : 'border-border bg-white/70 text-slate-800 hover:border-cyan-500/60'
                   )}
                 >
@@ -270,7 +270,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                     className={cn(
                       'rounded-2xl border px-4 py-3 text-sm font-medium transition',
                       selectedChildId === child.id
-                        ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500 shadow-[0_0_0_1px_rgba(6,182,212,0.45)]'
+                        ? 'border-cyan-500 bg-cyan-500/10 text-cyan-500 shadow-[var(--shadow-elevation-1)]'
                         : 'border-border bg-white/70 text-slate-800 hover:border-cyan-500/60'
                     )}
                   >
@@ -310,7 +310,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
         ) : (
           <div className="space-y-4">
             <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 py-10 text-center px-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[var(--shadow-elevation-1)]">
                 <MapIcon className="h-8 w-8 text-cyan-500" />
               </div>
               <div>
@@ -358,4 +358,6 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     logRoutePerf(perf)
   }
 }
+
+
 

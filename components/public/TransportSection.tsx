@@ -33,7 +33,7 @@ export function TransportSection({
     <section id="transport" className="mt-10 max-w-4xl px-4 md:px-0">
       <div className="glass-card rounded-2xl border border-white/10 p-6">
         {transport.fee_per_month ? (
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/90 to-emerald-50/90 p-6 text-slate-900 shadow-lg shadow-cyan-900/20">
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/90 to-emerald-50/90 p-6 text-slate-900 shadow-[var(--shadow-elevation-3)] shadow-cyan-900/20">
             <p className="text-3xl font-black text-cyan-700">{currencyLabel}</p>
             {transport.fee_description && (
               <p className="mt-1 text-sm text-slate-700">{transport.fee_description}</p>
@@ -52,7 +52,7 @@ export function TransportSection({
             ) : null}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 text-white shadow-[0_30px_80px_rgba(2,6,23,0.45)]">
+          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 text-white shadow-[var(--shadow-elevation-4)]">
             <p className="text-xl font-semibold text-white">
               Transport quotes are calculated per route.
             </p>
@@ -177,4 +177,6 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
     </div>
   )
 }
+
+
 

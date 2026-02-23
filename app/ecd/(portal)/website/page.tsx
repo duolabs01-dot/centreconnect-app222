@@ -233,7 +233,7 @@ export default async function EcdWebsitePage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
-        <Card className="glass-card border border-border bg-gradient-to-br from-cyan-50/80 via-white/80 to-emerald-50/80 lg:col-span-2 shadow-2xl text-foreground">
+        <Card className="glass-card border border-border bg-gradient-to-br from-cyan-50/80 via-white/80 to-emerald-50/80 lg:col-span-2 shadow-[var(--shadow-elevation-4)] text-foreground">
           <CardHeader>
             <CardTitle className="text-foreground">Website Progress</CardTitle>
           </CardHeader>
@@ -460,4 +460,6 @@ export default async function EcdWebsitePage() {
     </EcdOsShell>
   )
 }
+
+
 

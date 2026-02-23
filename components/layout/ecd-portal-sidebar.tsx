@@ -71,7 +71,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
         <button
           type="button"
           onClick={handleMobileBack}
-          className="fixed z-50 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-lg shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+          className="fixed z-50 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -81,7 +81,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed z-50 flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-lg shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+        className="fixed z-50 flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
         aria-label="Open ECD navigation"
       >
         <Menu className="h-4 w-4" />
@@ -114,7 +114,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
         <button
           type="button"
           onClick={() => setIsPinned(true)}
-          className="fixed left-4 top-4 z-50 hidden items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-lg shadow-slate-900/30 backdrop-blur-xl transition hover:bg-white/20 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 lg:flex"
+          className="fixed left-4 top-4 z-50 hidden items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/30 backdrop-blur-xl transition hover:bg-white/20 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 lg:flex"
         >
           <Menu className="h-4 w-4" />
           <span>Navigation</span>
@@ -157,3 +157,5 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
     </>
   )
 }
+
+

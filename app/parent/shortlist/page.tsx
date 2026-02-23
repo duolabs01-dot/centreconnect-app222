@@ -76,7 +76,7 @@ export default async function ParentShortlistPage() {
             <Link
               key={centre.id}
               href={`/centre/${centre.slug}`}
-              className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+              className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-semibold text-slate-900">
@@ -124,3 +124,5 @@ export default async function ParentShortlistPage() {
     </div>
   )
 }
+
+

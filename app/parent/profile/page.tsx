@@ -97,7 +97,7 @@ export default async function ParentProfilePage() {
         <div className="mb-4 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white">
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
-              <div className="rounded-2xl bg-gradient-to-br from-white/90 via-cyan-200/70 to-blue-200/70 p-[2px] shadow-[0_12px_26px_rgba(8,47,73,0.28)]">
+              <div className="rounded-2xl bg-gradient-to-br from-white/90 via-cyan-200/70 to-blue-200/70 p-[2px] shadow-[var(--shadow-elevation-3)]">
                 <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/20 text-2xl font-bold text-white">
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -109,7 +109,7 @@ export default async function ParentProfilePage() {
               </div>
               <Link
                 href="/parent/profile/edit"
-                className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white text-cyan-700 shadow-sm transition-colors hover:bg-cyan-50"
+                className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white text-cyan-700 shadow-[var(--shadow-elevation-1)] transition-colors hover:bg-cyan-50"
                 aria-label="Edit profile photo"
               >
                 <Camera className="h-3.5 w-3.5" />
@@ -130,7 +130,7 @@ export default async function ParentProfilePage() {
             <Link
               key={section.href}
               href={section.href}
-              className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+              className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50">
                 <section.icon className="h-5 w-5 text-cyan-600" />
@@ -163,3 +163,5 @@ export default async function ParentProfilePage() {
     logRoutePerf(perf)
   }
 }
+
+

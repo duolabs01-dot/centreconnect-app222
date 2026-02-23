@@ -49,7 +49,7 @@ export function AlertsRail({ alerts }: AlertsRailProps) {
   }
 
   return (
-    <Card className="h-full shadow-md border-l-4 border-l-amber-400 bg-white">
+    <Card className="h-full shadow-[var(--shadow-elevation-2)] border-l-4 border-l-amber-400 bg-white">
       <CardHeader className="pb-3 border-b border-slate-100">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -97,5 +97,7 @@ export function AlertsRail({ alerts }: AlertsRailProps) {
     </Card>
   )
 }
+
+
 
 

@@ -143,7 +143,7 @@ function HeroStatCard({
   return (
     <div
       className={cn(
-        'rounded-3xl border border-white/10 bg-gradient-to-br p-5 shadow-[0_30px_45px_rgba(2,6,23,0.4),0_10px_25px_rgba(2,6,23,0.25)] transition-transform duration-200 hover:-translate-y-0.5',
+        'rounded-3xl border border-white/10 bg-gradient-to-br p-5 shadow-[var(--shadow-elevation-4)] transition-transform duration-200 hover:-translate-y-0.5',
         accent ?? statAccents[0]
       )}
     >
@@ -447,7 +447,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
 
   return (
     <div className="space-y-10">
-      <section className="glass-card relative overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-slate-950/80 to-slate-900/70 px-6 py-5 shadow-[0_40px_90px_rgba(2,6,23,0.5)]">
+      <section className="glass-card relative overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-slate-950/80 to-slate-900/70 px-6 py-5 shadow-[var(--shadow-elevation-4)]">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-300">Revenue Pulse</p>
@@ -459,7 +459,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
             </p>
           </div>
           <div className="flex gap-2">
-            <Button className="border border-white/20 bg-cyan-500/80 text-white shadow-lg shadow-cyan-900/40" size="sm">
+            <Button className="border border-white/20 bg-cyan-500/80 text-white shadow-[var(--shadow-elevation-3)] shadow-cyan-900/40" size="sm">
               <ArrowUpRight className="mr-2 h-4 w-4" />Audit Revenue
             </Button>
             <Button variant="outline" className="text-white border-white/20 hover:border-cyan-400 hover:text-cyan-200" size="sm">
@@ -691,4 +691,6 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
     </div>
   )
 }
+
+
 

@@ -47,7 +47,7 @@ export function CommandPalette() {
         open={open}
         onOpenChange={setOpen}
         label="Global Command Palette"
-        className="fixed left-1/2 top-[20%] z-[60] w-full max-w-[640px] -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 text-white shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-200"
+        className="fixed left-1/2 top-[20%] z-[60] w-full max-w-[640px] -translate-x-1/2 overflow-hidden rounded-xl border border-white/10 bg-slate-900/90 text-white shadow-[var(--shadow-elevation-4)] backdrop-blur-xl animate-in zoom-in-95 duration-200"
       >
         <div className="flex items-center border-b border-white/5 px-4 py-3">
           <Search className="mr-3 h-4 w-4 text-slate-400" />
@@ -116,9 +116,11 @@ function Item({ children, onSelect }: { children: React.ReactNode; onSelect: () 
   return (
     <Command.Item
       onSelect={onSelect}
-      className="flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-xs font-medium text-slate-300 transition-all aria-selected:bg-white/10 aria-selected:text-white aria-selected:shadow-[0_0_15px_rgba(0,242,255,0.1)]"
+      className="flex cursor-pointer items-center rounded-lg px-3 py-2.5 text-xs font-medium text-slate-300 transition-all aria-selected:bg-white/10 aria-selected:text-white aria-selected:shadow-[var(--shadow-elevation-3)]"
     >
       {children}
     </Command.Item>
   )
 }
+
+

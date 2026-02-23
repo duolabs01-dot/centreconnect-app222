@@ -243,7 +243,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             </p>
           </section>
 
-          <section className="rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[0_10px_20px_rgba(15,23,42,0.06)] sm:p-4">
+          <section className="rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[var(--shadow-elevation-3)] sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex items-center gap-2 text-cyan-800">
@@ -277,3 +277,5 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </main>
   )
 }
+
+

@@ -154,7 +154,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
     >
       <div
         className={cn(
-          'pointer-events-none fixed inset-x-0 top-[58px] z-40 mx-auto w-fit rounded-full border border-cyan-200/70 bg-white/85 px-3 py-1 text-xs font-semibold text-cyan-700 shadow-sm backdrop-blur transition-opacity',
+          'pointer-events-none fixed inset-x-0 top-[58px] z-40 mx-auto w-fit rounded-full border border-cyan-200/70 bg-white/85 px-3 py-1 text-xs font-semibold text-cyan-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-opacity',
           pullDistance > 8 ? 'opacity-100' : 'opacity-0'
         )}
       >
@@ -167,7 +167,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
               <button
                 type="button"
                 onClick={handleMobileBack}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:bg-white"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-white"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-4 w-4" />
@@ -207,4 +207,6 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
     </div>
   )
 }
+
+
 

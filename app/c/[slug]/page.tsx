@@ -305,7 +305,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
   return (
     <main className="pb-28 bg-gradient-to-b from-cyan-50/40 via-white to-slate-50">
       <PageContainer>
-        <section className="relative min-h-[60vh] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 text-white shadow-2xl">
+        <section className="relative min-h-[60vh] overflow-hidden rounded-3xl border border-white/10 bg-slate-900 text-white shadow-[var(--shadow-elevation-4)]">
           <div className="absolute inset-0">
             <Image
               src={heroImage}
@@ -319,7 +319,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
           <div className="relative z-10 flex h-full flex-col justify-end gap-6 p-6 md:p-10">
             {centre.logo_url ? (
               <div className="flex items-center gap-3">
-                <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/30 bg-slate-950 shadow-2xl">
+                <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/30 bg-slate-950 shadow-[var(--shadow-elevation-4)]">
                   <Image
                     src={centre.logo_url}
                     alt={`${centre.name} logo`}
@@ -369,7 +369,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
           <CentreContactCard centreId={centre.id} centreName={centre.name} />
         </div>
 
-        <div className="sticky top-0 z-20 mt-6 rounded-2xl border border-white/10 bg-white/90 px-4 py-3 shadow-lg shadow-cyan-900/10 backdrop-blur md:px-6">
+        <div className="sticky top-0 z-20 mt-6 rounded-2xl border border-white/10 bg-white/90 px-4 py-3 shadow-[var(--shadow-elevation-3)] shadow-cyan-900/10 backdrop-blur md:px-6">
           <div className="flex items-center gap-4 overflow-x-auto text-sm text-slate-600 scrollbar-none">
             {statChips.map((chip) => (
               <StatChip key={chip.label} {...chip} />
@@ -382,13 +382,13 @@ export default async function CentrePage({ params }: CentrePageProps) {
         </Section>
 
         {programs.length > 0 && (
-          <section className="mt-10 rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-50/80 to-emerald-50/80 p-6 shadow-[0_20px_40px_rgba(15,23,42,0.08)] dark:from-cyan-950/20 dark:to-emerald-950/20">
+          <section className="mt-10 rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-50/80 to-emerald-50/80 p-6 shadow-[var(--shadow-elevation-4)] dark:from-cyan-950/20 dark:to-emerald-950/20">
             <SectionHeader title="Our Programmes" emoji="" />
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               {programs.map((program, index) => (
                 <div
                   key={`${program.title ?? 'program'}-${index}`}
-                  className="glass-card rounded-2xl border border-white/10 p-5 text-slate-900 shadow-lg shadow-black/10"
+                  className="glass-card rounded-2xl border border-white/10 p-5 text-slate-900 shadow-[var(--shadow-elevation-3)] shadow-black/10"
                 >
                   <p className="text-lg font-semibold text-slate-900">{program.title || `Programme ${index + 1}`}</p>
                   <p className="mt-2 text-sm text-slate-700">{program.description || 'Details coming soon.'}</p>
@@ -420,7 +420,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
         <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
 
         {jobs.length > 0 && (
-          <section className="mt-14 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 shadow-[0_20px_40px_rgba(2,6,23,0.45)]">
+          <section className="mt-14 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 shadow-[var(--shadow-elevation-4)]">
             <SectionHeader emoji="" title="Join Our Team" titleClass="text-white" emojiSize="text-3xl" />
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
@@ -500,7 +500,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section id={id} className={cn('mt-10 rounded-3xl border border-white/10 bg-white/95 p-6 shadow-[0_18px_36px_rgba(15,23,42,0.08)]', className)}>
+    <section id={id} className={cn('mt-10 rounded-3xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
       <SectionHeader emoji={emoji} title={title} />
       <div className="mt-4 text-base text-foreground/80">{children}</div>
     </section>
@@ -512,7 +512,7 @@ function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
   if (isExpired) return null
   return (
     <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-cyan-500/30 hover:bg-muted">
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] transition-all hover:border-cyan-500/30 hover:bg-muted">
         <div>
           <p className="text-lg font-semibold text-white transition-colors group-hover:text-cyan-400">{job.title}</p>
           {job.closes_at ? (
@@ -526,3 +526,5 @@ function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
     </Link>
   )
 }
+
+

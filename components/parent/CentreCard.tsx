@@ -79,12 +79,12 @@ export default function CentreCard({
             background: white;
             border-radius: 14px;
             border: 1px solid #F1F5F9;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            box-shadow: var(--shadow-elevation-1);
             text-decoration: none;
             transition: box-shadow 0.15s ease;
           }
           .centre-card--compact:active {
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow-elevation-2);
           }
           .centre-card__logo-sm {
             width: 40px; height: 40px;
@@ -216,7 +216,7 @@ export default function CentreCard({
           background: white;
           border-radius: 20px;
           overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+          box-shadow: var(--shadow-elevation-2);
           border: 1px solid rgba(241,245,249,1);
           text-decoration: none;
           transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
@@ -225,18 +225,18 @@ export default function CentreCard({
         }
         .centre-card:active {
           transform: scale(0.98);
-          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          box-shadow: var(--shadow-elevation-1);
         }
         @media (hover: hover) {
           .centre-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+            box-shadow: var(--shadow-elevation-3);
           }
         }
 
         .centre-card--featured {
           border: 1.5px solid rgba(37,99,235,0.20);
-          box-shadow: 0 4px 16px rgba(37,99,235,0.10), 0 1px 2px rgba(0,0,0,0.04);
+          box-shadow: var(--shadow-elevation-3);
         }
 
         /* Cover */
@@ -290,7 +290,7 @@ export default function CentreCard({
           display: flex; align-items: center; justify-content: center;
           border: 1.5px solid #DBEAFE;
           margin-top: -28px; /* Overlap cover */
-          box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+          box-shadow: var(--shadow-elevation-2);
         }
         .centre-card__initials-lg {
           font-size: 20px; font-weight: 800; color: #2563EB;
@@ -365,3 +365,4 @@ export default function CentreCard({
     </>
   )
 }
+

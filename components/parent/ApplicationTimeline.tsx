@@ -257,11 +257,11 @@ export default function ApplicationTimeline({
         }
         .timeline__dot--done {
           background: #2563EB;
-          box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+          box-shadow: var(--shadow-elevation-1);
         }
         .timeline__dot--current {
           background: #2563EB;
-          box-shadow: 0 0 0 4px rgba(37,99,235,0.20);
+          box-shadow: var(--shadow-elevation-2);
           animation: pulse 2s ease infinite;
         }
         .timeline__step-label {
@@ -312,10 +312,11 @@ export default function ApplicationTimeline({
         }
 
         @keyframes pulse {
-          0%, 100% { box-shadow: 0 0 0 4px rgba(37,99,235,0.20); }
-          50%       { box-shadow: 0 0 0 8px rgba(37,99,235,0.08); }
+          0%, 100% { box-shadow: var(--shadow-elevation-2); }
+          50%       { box-shadow: var(--shadow-elevation-3); }
         }
       `}</style>
     </>
   )
 }
+

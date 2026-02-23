@@ -67,7 +67,7 @@ export function GuardiansManager({ childList }: Props) {
   }, [loadGuardians])
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-sm">
+    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-[var(--shadow-elevation-1)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-[220px]">
           <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Child</label>
@@ -109,7 +109,7 @@ export function GuardiansManager({ childList }: Props) {
         ) : (
           <div className="space-y-3">
             {guardians.map((guardian) => (
-              <div key={guardian.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div key={guardian.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-elevation-1)]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-lg font-semibold text-slate-900">{guardian.full_name ?? 'Unnamed guardian'}</p>
@@ -173,3 +173,5 @@ export function GuardiansManager({ childList }: Props) {
     </div>
   )
 }
+
+

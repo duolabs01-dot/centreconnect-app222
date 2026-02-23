@@ -226,7 +226,7 @@ export function CalendarInteractiveView({
           }
         }}
         className={cn(
-          'min-h-[88px] rounded-2xl border p-2.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition-colors sm:min-h-[108px]',
+          'min-h-[88px] rounded-2xl border p-2.5 text-left shadow-[var(--shadow-elevation-1)] transition-colors sm:min-h-[108px]',
           isInSelectedMonth
             ? 'border-slate-200 bg-white text-foreground'
             : 'border-slate-100 bg-slate-50/80 text-muted-foreground',
@@ -278,7 +278,7 @@ export function CalendarInteractiveView({
   return (
     <CardSurface>
       <div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
-        <div className="rounded-3xl border border-slate-200/80 bg-white/85 p-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-4">
+        <div className="rounded-3xl border border-slate-200/80 bg-white/85 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
           <div className="flex flex-wrap items-center gap-2">
             {(['month', 'week', 'day'] as CalendarViewMode[]).map((option) => (
               <button
@@ -288,7 +288,7 @@ export function CalendarInteractiveView({
                 className={cn(
                   'rounded-full px-4 py-2 text-xs font-semibold capitalize transition duration-150',
                   option === view
-                    ? 'bg-cyan-600 text-cyan-50 shadow-[0_6px_14px_rgba(8,145,178,0.28)]'
+                    ? 'bg-cyan-600 text-cyan-50 shadow-[var(--shadow-elevation-2)]'
                     : 'border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700'
                 )}
               >
@@ -332,7 +332,7 @@ export function CalendarInteractiveView({
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-200/90 bg-white/90 p-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] sm:p-4">
+        <div className="rounded-3xl border border-slate-200/90 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-slate-900">{periodLabel}</h2>
             <span className="inline-flex w-fit items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
@@ -350,7 +350,7 @@ export function CalendarInteractiveView({
                 dayViewEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-foreground shadow-[0_6px_18px_rgba(15,23,42,0.05)]"
+                    className="rounded-3xl border border-slate-200 bg-white p-4 text-sm text-foreground shadow-[var(--shadow-elevation-2)]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-base font-semibold text-slate-900">{event.title}</p>
@@ -396,7 +396,7 @@ export function CalendarInteractiveView({
           <div className="space-y-2">
             <p className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Event List</p>
             {filteredEvents.map((event) => (
-              <div key={event.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_14px_rgba(15,23,42,0.04)]">
+              <div key={event.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-elevation-2)]">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{event.title}</p>
@@ -437,7 +437,7 @@ function CardSurface({ children }: { children: ReactNode }) {
   return (
     <div
       id="calendar"
-      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-[0_18px_52px_rgba(15,23,42,0.08)] backdrop-blur-xl"
+      className="scroll-mt-24 overflow-hidden rounded-3xl border border-slate-200/80 bg-white/90 shadow-[var(--shadow-elevation-4)] backdrop-blur-xl"
     >
       {children}
     </div>
@@ -482,3 +482,5 @@ function FilterChip({
     </button>
   )
 }
+
+

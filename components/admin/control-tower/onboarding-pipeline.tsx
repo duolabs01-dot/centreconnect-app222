@@ -25,7 +25,7 @@ const StageIcon = ({ stage }: { stage: string }) => {
 
 export function OnboardingPipeline({ stages }: OnboardingPipelineProps) {
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-[var(--shadow-elevation-1)]">
       <CardHeader className="pb-4">
         <CardTitle className="text-sm font-medium text-slate-600">Onboarding Pipeline</CardTitle>
       </CardHeader>
@@ -58,3 +58,5 @@ export function OnboardingPipeline({ stages }: OnboardingPipelineProps) {
     </Card>
   )
 }
+
+

@@ -143,7 +143,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
   }
   
   const premiumInputClass =
-    'border-slate-500/80 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-100 placeholder:text-slate-400/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_rgba(2,6,23,0.24)] focus-visible:ring-cyan-400/70 focus-visible:border-cyan-400'
+    'border-slate-500/80 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-100 placeholder:text-slate-400/95 shadow-[var(--shadow-elevation-1)] focus-visible:ring-cyan-400/70 focus-visible:border-cyan-400'
 
   const filteredTenants = useMemo(() => {
     let filtered = tenants;
@@ -370,7 +370,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           <SelectTrigger className={cn("w-[200px]", premiumInputClass)}>
             <SelectValue placeholder="Filter by Tier" />
           </SelectTrigger>
-          <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+          <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
             <SelectItem value="all">All Tiers</SelectItem>
             <SelectItem value="basic">Basic</SelectItem>
             <SelectItem value="standard">Standard</SelectItem>
@@ -381,7 +381,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           <SelectTrigger className={cn("w-[200px]", premiumInputClass)}>
             <SelectValue placeholder="Filter by Status" />
           </SelectTrigger>
-          <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+          <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
             <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="trial">Trial</SelectItem>
@@ -609,7 +609,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
                 <SelectTrigger id="tenant-tier" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+                <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
                   <SelectItem value="basic" className="focus:bg-cyan-500/20 focus:text-cyan-100">Basic R199/mo</SelectItem>
                   <SelectItem value="standard" className="focus:bg-cyan-500/20 focus:text-cyan-100">Standard R299/mo</SelectItem>
                   <SelectItem value="premium" className="focus:bg-cyan-500/20 focus:text-cyan-100">Premium R499/mo</SelectItem>
@@ -710,7 +710,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
                 <SelectTrigger id="invite-role" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+                <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
                   <SelectItem value="ecd_staff" className="focus:bg-cyan-500/20 focus:text-cyan-100">Teacher / Educator</SelectItem>
                   <SelectItem value="ecd_admin" className="focus:bg-cyan-500/20 focus:text-cyan-100">ECD Admin</SelectItem>
                 </SelectContent>
@@ -738,3 +738,5 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
     </div>
   )
 }
+
+

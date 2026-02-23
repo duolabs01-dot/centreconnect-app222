@@ -40,6 +40,10 @@ body {
     --chart-3: 173 69% 34%;
     --chart-4: 36 86% 47%;
     --chart-5: 229 70% 55%;
+    --shadow-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-elevation-3: 0 10px 15px rgba(0, 0, 0, 0.08);
+    --shadow-elevation-4: 0 20px 25px rgba(0, 0, 0, 0.10);
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -66,6 +70,10 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --shadow-elevation-1: 0 1px 2px rgba(2, 6, 23, 0.25);
+    --shadow-elevation-2: 0 4px 6px rgba(2, 6, 23, 0.3);
+    --shadow-elevation-3: 0 10px 15px rgba(2, 6, 23, 0.36);
+    --shadow-elevation-4: 0 20px 25px rgba(2, 6, 23, 0.42);
   }
 }
 
@@ -98,7 +106,8 @@ body {
   }
 
   .cc-card {
-    @apply rounded-2xl border border-border/75 bg-card/95 shadow-[0_20px_44px_rgba(15,23,42,0.08),0_6px_18px_rgba(30,64,175,0.08)];
+    @apply rounded-2xl border border-border/75 bg-card/95;
+    box-shadow: var(--shadow-elevation-2);
   }
 
   .cc-muted {
@@ -106,15 +115,18 @@ body {
   }
 
   .glass-card {
-    @apply rounded-2xl border border-white/60 bg-white/80 backdrop-blur-md shadow-lg;
+    @apply rounded-2xl border border-white/60 bg-white/80 backdrop-blur-md;
+    box-shadow: var(--shadow-elevation-3);
   }
 
   .glass-nav {
-    @apply border-b border-white/40 bg-white/90 backdrop-blur-xl shadow-md;
+    @apply border-b border-white/40 bg-white/90 backdrop-blur-xl;
+    box-shadow: var(--shadow-elevation-2);
   }
 
   .glass-modal {
-    @apply border border-white/70 bg-white/95 backdrop-blur-2xl shadow-2xl;
+    @apply border border-white/70 bg-white/95 backdrop-blur-2xl;
+    box-shadow: var(--shadow-elevation-4);
   }
 }
 
@@ -206,9 +218,6 @@ body {
   --glass-bg-strong: hsla(var(--card), 0.96);
   --glass-bg-soft: hsla(var(--card), 0.9);
   --glass-stroke: hsla(var(--border), 0.9);
-  --glass-shadow-strong: 0 28px 60px rgba(15, 23, 42, 0.12), 0 6px 20px rgba(30, 64, 175, 0.1);
-  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.06);
-  --shadow-blue: 0 8px 30px rgba(30, 64, 175, 0.32);
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --cc-space-page: clamp(1.25rem, 1.1rem + 0.8vw, 2rem);
   --cc-space-section: clamp(1rem, 0.9rem + 0.6vw, 1.5rem);
@@ -233,8 +242,6 @@ body {
   --glass-bg-strong: hsla(var(--card), 0.92);
   --glass-bg-soft: hsla(var(--card), 0.8);
   --glass-stroke: hsla(var(--border), 0.28);
-  --glass-shadow-strong: 0 24px 54px rgba(2, 6, 23, 0.56), 0 2px 10px rgba(2, 6, 23, 0.42);
-  --shadow-card: 0 10px 24px rgba(2, 6, 23, 0.4), 0 1px 2px rgba(2, 6, 23, 0.34);
 }
 
 html.dark body {
@@ -269,7 +276,7 @@ body { overflow-x: hidden; }
   .cc-shell-sidebar {
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(2, 6, 23, 0.85);
-    box-shadow: 0 30px 60px rgba(2, 6, 23, 0.45);
+    box-shadow: var(--shadow-elevation-4);
   }
 
   .cc-shell-nav-item {
@@ -308,7 +315,7 @@ body { overflow-x: hidden; }
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 8px 18px rgba(15, 23, 42, 0.06);
+    box-shadow: var(--shadow-elevation-1);
     transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
   }
 
@@ -319,17 +326,14 @@ body { overflow-x: hidden; }
   .cc-native-field:focus-visible {
     outline: none;
     border-color: rgba(6, 182, 212, 0.75);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.85),
-      0 0 0 2px rgba(6, 182, 212, 0.35),
-      0 8px 18px rgba(15, 23, 42, 0.06);
+    box-shadow: var(--shadow-elevation-2);
   }
 
   .dark .cc-native-field {
     border-color: rgba(71, 85, 105, 0.85);
     background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.94) 100%);
     color: rgb(241 245 249);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 24px rgba(2, 6, 23, 0.45);
+    box-shadow: var(--shadow-elevation-1);
   }
 
   .dark .cc-native-field::placeholder {
@@ -369,27 +373,17 @@ body { overflow-x: hidden; }
   transform: perspective(800px) rotateX(2deg);
   transform-origin: top center;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
-    0 4px 6px -1px rgba(0, 0, 0, 0.12),
-    0 8px 20px -4px rgba(0, 0, 0, 0.08),
-    0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-elevation-2);
 }
 
 .pipeline-card:hover {
   transform: perspective(800px) rotateX(0deg) translateY(-2px);
-  box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 0.12) inset,
-    0 8px 16px -2px rgba(0, 0, 0, 0.16),
-    0 16px 32px -8px rgba(0, 0, 0, 0.12),
-    0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-elevation-3);
 }
 
 .pipeline-column-header {
   border-radius: 1rem 1rem 0 0;
-  box-shadow:
-    0 -2px 8px -2px rgba(0, 0, 0, 0.06),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  box-shadow: var(--shadow-elevation-1);
   position: relative;
   border-top: 3px solid var(--col-accent, #06b6d4);
 }
@@ -406,26 +400,18 @@ body { overflow-x: hidden; }
 
 .pipeline-item {
   border-radius: 0.875rem;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 4px 8px -2px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-elevation-2);
   transition: all 0.15s ease;
 }
 
 .pipeline-item:hover {
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.1),
-    0 8px 16px -4px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-elevation-3);
   transform: translateY(-1px);
 }
 
 .pipeline-item.dragging {
-  box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.2),
-    0 16px 40px -8px rgba(0, 0, 0, 0.15),
-    0 0 0 2px #22d3ee;
+  box-shadow: var(--shadow-elevation-4);
+  outline: 2px solid #22d3ee;
   transform: rotate(2deg) scale(1.02);
   z-index: 50;
 }
@@ -451,7 +437,10 @@ body { overflow-x: hidden; }
   --ecd-ink-700: #cbd5e1;
   --ecd-surface: rgba(15, 23, 42, 0.82);
   --ecd-surface-soft: rgba(30, 41, 59, 0.72);
-  --ecd-shadow: 0 14px 34px rgba(2, 6, 23, 0.46), 0 2px 10px rgba(15, 23, 42, 0.34);
+  --shadow-elevation-1: 0 1px 2px rgba(2, 6, 23, 0.3);
+  --shadow-elevation-2: 0 4px 6px rgba(2, 6, 23, 0.36);
+  --shadow-elevation-3: 0 10px 15px rgba(2, 6, 23, 0.42);
+  --shadow-elevation-4: 0 20px 25px rgba(2, 6, 23, 0.5);
   font-family: var(--font-ecd), var(--font-sans), system-ui, sans-serif;
 }
 
@@ -506,7 +495,7 @@ body { overflow-x: hidden; }
 
 [data-ecd-theme='true'] .glass-card,
 [data-ecd-theme='true'] .cc-card {
-  box-shadow: var(--ecd-shadow) !important;
+  box-shadow: var(--shadow-elevation-3) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
   background: rgba(255, 255, 255, 0.05) !important;
 }
@@ -536,10 +525,7 @@ body { overflow-x: hidden; }
 
 [data-ecd-theme='true'] .cc-native-field:focus-visible {
   border-color: rgba(34, 211, 238, 0.78);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 0 0 2px rgba(34, 211, 238, 0.24),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-elevation-2);
 }
 
 [data-ecd-theme='true'] table thead tr {
@@ -553,13 +539,13 @@ body { overflow-x: hidden; }
 [data-ecd-theme='true'] .glass-nav {
   background: rgba(15, 23, 42, 0.9) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow: var(--ecd-shadow) !important;
+  box-shadow: var(--shadow-elevation-2) !important;
 }
 
 [data-ecd-theme='true'] .glass-modal {
   background: rgba(15, 23, 42, 0.95) !important;
   border-color: rgba(255, 255, 255, 0.16) !important;
-  box-shadow: var(--ecd-shadow) !important;
+  box-shadow: var(--shadow-elevation-4) !important;
 }
 
 /* Parent portal unified theme scope (only /parent shell). */
@@ -572,7 +558,10 @@ body { overflow-x: hidden; }
   --parent-ink-700: #334155;
   --parent-surface: rgba(255, 255, 255, 0.94);
   --parent-surface-soft: rgba(236, 254, 255, 0.5);
-  --parent-shadow: 0 12px 28px rgba(2, 132, 199, 0.08), 0 2px 8px rgba(15, 23, 42, 0.06);
+  --shadow-elevation-1: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-elevation-2: 0 4px 6px rgba(15, 23, 42, 0.08);
+  --shadow-elevation-3: 0 10px 15px rgba(8, 47, 73, 0.1);
+  --shadow-elevation-4: 0 20px 25px rgba(8, 47, 73, 0.12);
   font-family: var(--font-parent), var(--font-sans), system-ui, sans-serif;
 }
 
@@ -630,19 +619,19 @@ body { overflow-x: hidden; }
 [data-parent-theme='true'] .cc-card {
   background: var(--parent-surface) !important;
   border-color: var(--parent-accent-200) !important;
-  box-shadow: var(--parent-shadow) !important;
+  box-shadow: var(--shadow-elevation-3) !important;
 }
 
 [data-parent-theme='true'] .glass-nav {
   background: rgba(255, 255, 255, 0.9) !important;
   border-color: rgba(191, 219, 254, 0.75) !important;
-  box-shadow: var(--parent-shadow) !important;
+  box-shadow: var(--shadow-elevation-2) !important;
 }
 
 [data-parent-theme='true'] .glass-modal {
   background: rgba(255, 255, 255, 0.95) !important;
   border-color: rgba(191, 219, 254, 0.9) !important;
-  box-shadow: var(--parent-shadow) !important;
+  box-shadow: var(--shadow-elevation-4) !important;
 }
 
 [data-parent-theme='true'] .cc-native-field {
@@ -652,10 +641,7 @@ body { overflow-x: hidden; }
 
 [data-parent-theme='true'] .cc-native-field:focus-visible {
   border-color: rgba(6, 182, 212, 0.72);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.88),
-    0 0 0 2px rgba(6, 182, 212, 0.24),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--shadow-elevation-2);
 }
 
 [data-parent-theme='true'] table thead tr {

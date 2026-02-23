@@ -258,7 +258,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                     <Link
                       key={item.id}
                       href={`/centre/${item.slug}`}
-                      className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                      className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
                     >
                       <p className="text-sm font-semibold text-slate-900">{item.name}</p>
                       <p className="mt-1 text-xs text-slate-600">
@@ -295,7 +295,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                     <Link
                       key={job.id}
                       href={jobHref}
-                      className="group block rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                      className="group block rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -337,4 +337,6 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
     </div>
   )
 }
+
+
 

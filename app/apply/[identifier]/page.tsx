@@ -160,7 +160,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
           Back to centre
         </Link>
       </div>
-      <Card className="border-slate-200/90 bg-white/95 shadow-sm">
+      <Card className="border-slate-200/90 bg-white/95 shadow-[var(--shadow-elevation-1)]">
         <CardHeader className="space-y-1.5 pb-3">
           <CardTitle className="text-xl text-slate-900 sm:text-2xl">Apply to {centre.name}</CardTitle>
           <CardDescription className="text-sm text-slate-600">
@@ -188,3 +188,5 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     </main>
   )
 }
+
+

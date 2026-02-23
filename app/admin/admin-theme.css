@@ -55,12 +55,12 @@
 }
 
 .cyber-card-glow-cyan {
-  box-shadow: 0 0 30px rgba(0, 242, 255, 0.05);
+  box-shadow: 0 10px 15px rgba(var(--cyber-cyan-rgb), 0.12);
   border-color: rgba(0, 242, 255, 0.2);
 }
 
 .cyber-card-glow-violet {
-  box-shadow: 0 0 30px rgba(138, 43, 226, 0.05);
+  box-shadow: 0 10px 15px rgba(var(--cyber-violet-rgb), 0.12);
   border-color: rgba(138, 43, 226, 0.2);
 }
 

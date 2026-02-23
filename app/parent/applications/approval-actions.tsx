@@ -81,7 +81,7 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.92, opacity: 0 }}
-              className="flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-800 shadow-sm"
+              className="flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-sm font-semibold text-emerald-800 shadow-[var(--shadow-elevation-1)]"
             >
               <motion.span
                 initial={{ scale: 0.6, opacity: 0 }}
@@ -99,3 +99,5 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
     </div>
   )
 }
+
+

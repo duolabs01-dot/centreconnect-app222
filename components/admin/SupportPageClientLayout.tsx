@@ -101,7 +101,7 @@ export function SupportPageClientLayout({ tickets, availableCentres }: SupportPa
                       const centre = normalizeOne(ticket.ecd_centres);
                       const age = getTicketAge(ticket.created_at);
                       return (
-                        <div key={ticket.id} className="bg-slate-800/50 border border-white/10 rounded-lg p-3 shadow-lg">
+                        <div key={ticket.id} className="bg-slate-800/50 border border-white/10 rounded-lg p-3 shadow-[var(--shadow-elevation-3)]">
                           <p className="font-mono text-[10px] text-slate-400 mb-1">#{ticket.ticket_number} <span className="float-right">{age}</span></p>
                           <p className="text-sm text-white font-medium mb-1">{ticket.subject}</p>
                           <p className="text-xs text-slate-300 mb-2">{(centre as any)?.name ?? 'Unknown Centre'}</p>
@@ -205,3 +205,5 @@ export function SupportPageClientLayout({ tickets, availableCentres }: SupportPa
     </CyberCard>
   )
 }
+
+

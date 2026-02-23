@@ -134,16 +134,18 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         <button
           type="button"
           onClick={handleRecenter}
-          className="absolute left-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur hover:bg-white"
+          className="absolute left-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--shadow-elevation-1)] backdrop-blur hover:bg-white"
         >
           Recenter
         </button>
       ) : null}
       <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-3">
-        <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-lg shadow-slate-900">
+        <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-[var(--shadow-elevation-3)] shadow-slate-900">
           {locationHint}
         </span>
       </div>
     </div>
   )
 }
+
+

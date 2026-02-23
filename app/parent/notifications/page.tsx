@@ -48,7 +48,7 @@ export default async function ParentNotificationsPage() {
           ]}
         />
         <NotificationsInbox initialItems={items} />
-        <div className="sticky bottom-20 z-20 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur md:hidden">
+        <div className="sticky bottom-20 z-20 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-[var(--shadow-elevation-1)] backdrop-blur md:hidden">
           <Button size="lg" className="h-12 w-full" asChild>
             <Link href="/parent/applications">Go To Applications</Link>
           </Button>
@@ -59,3 +59,5 @@ export default async function ParentNotificationsPage() {
     logRoutePerf(perf)
   }
 }
+
+

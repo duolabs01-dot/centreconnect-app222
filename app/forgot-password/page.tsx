@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen">
       <div className="min-h-screen bg-gradient-to-b from-cyan-50/70 via-white to-sky-50/60">
         <Section className="min-h-screen py-8 sm:py-10 lg:py-12" containerClassName="flex min-h-[80vh] items-center justify-center">
-          <Card className="mx-auto w-full max-w-md border-cyan-100/80 bg-white/90 shadow-[0_16px_40px_rgba(2,132,199,0.12)] backdrop-blur">
+          <Card className="mx-auto w-full max-w-md border-cyan-100/80 bg-white/90 shadow-[var(--shadow-elevation-4)] backdrop-blur">
             <CardHeader className="space-y-4">
               <div className="text-center">
                 <Link href="/" className="text-xs font-semibold text-sky-700 hover:underline">
@@ -108,3 +108,5 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
+
+

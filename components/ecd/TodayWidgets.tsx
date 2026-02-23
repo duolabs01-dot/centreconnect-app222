@@ -35,7 +35,7 @@ export default function TodayWidgets({
   const capacityStatus = capacityPct >= 90 ? 'critical' : capacityPct >= 70 ? 'warning' : 'good'
 
   const statCard = (icon: ReactNode, value: ReactNode, label: string, detail?: ReactNode) => (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)]">
       <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-cyan-700">
         {icon}
       </div>
@@ -50,7 +50,7 @@ export default function TodayWidgets({
       {pendingApplications > 0 && (
         <Link
           href="/ecd/applications?tab=pending"
-          className="relative flex gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm text-foreground"
+          className="relative flex gap-3 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] text-foreground"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
             <AlertCircle size={22} />
@@ -110,7 +110,7 @@ export function ProfileCompleteness({ items }: { items: ProfileItem[] }) {
   const pct = Math.round((done / total) * 100)
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm text-foreground">
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-elevation-1)] text-foreground">
       <p className="text-base font-semibold text-foreground">Profile completeness</p>
       <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-cyan-400" style={{ width: `${pct}%` }} />
@@ -134,3 +134,5 @@ export function ProfileCompleteness({ items }: { items: ProfileItem[] }) {
     </div>
   )
 }
+
+

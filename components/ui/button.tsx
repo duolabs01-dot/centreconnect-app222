@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[0_8px_24px_rgba(30,64,175,0.28)] hover:-translate-y-px hover:bg-primary/90 hover:shadow-[0_10px_26px_rgba(30,64,175,0.34)]",
+          "bg-primary text-primary-foreground shadow-[var(--shadow-elevation-3)] hover:-translate-y-px hover:bg-primary/90 hover:shadow-[var(--shadow-elevation-3)]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-[0_8px_20px_rgba(239,68,68,0.25)] hover:-translate-y-px hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-3)] hover:-translate-y-px hover:bg-destructive/90",
         outline:
-          "border-border/90 bg-card text-foreground shadow-[0_2px_8px_rgba(15,23,42,0.08)] hover:-translate-y-px hover:bg-accent hover:text-accent-foreground hover:shadow-[0_8px_18px_rgba(15,23,42,0.14)]",
+          "border-border/90 bg-card text-foreground shadow-[var(--shadow-elevation-1)] hover:-translate-y-px hover:bg-accent hover:text-accent-foreground hover:shadow-[var(--shadow-elevation-3)]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:-translate-y-px hover:bg-secondary/80",
+          "bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:-translate-y-px hover:bg-secondary/80",
         ghost: "text-slate-700 hover:-translate-y-px hover:bg-accent/70 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
@@ -55,3 +55,5 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
+
+

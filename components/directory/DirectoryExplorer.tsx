@@ -253,7 +253,7 @@ export default function DirectoryExplorer({
 
   return (
     <section
-      className="overflow-hidden rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[0_14px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-4 lg:p-5"
+      className="overflow-hidden rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[var(--shadow-elevation-3)] backdrop-blur-sm sm:p-4 lg:p-5"
       aria-live="polite"
     >
       <div className="space-y-2.5 sm:space-y-3">
@@ -460,3 +460,5 @@ export default function DirectoryExplorer({
     </section>
   )
 }
+
+

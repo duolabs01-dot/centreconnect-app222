@@ -277,7 +277,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
       />
 
       <div className="mt-5 grid gap-4 xl:grid-cols-2">
-        <Card className="border-slate-200/90 bg-white/90 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+        <Card className="border-slate-200/90 bg-white/90 shadow-[var(--shadow-elevation-3)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-slate-900">Create Event</CardTitle>
           </CardHeader>
@@ -321,7 +321,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200/90 bg-white/90 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+        <Card className="border-slate-200/90 bg-white/90 shadow-[var(--shadow-elevation-3)]">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-slate-900">Edit Event</CardTitle>
           </CardHeader>
@@ -402,3 +402,5 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     </EcdOsShell>
   )
 }
+
+

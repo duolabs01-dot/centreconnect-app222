@@ -6,7 +6,7 @@ export const adminTheme = {
   pageDescription: 'mt-2 text-sm text-slate-400',
 
   // Cards
-  card: 'rounded-[26px] border border-white/10 bg-slate-900/70 shadow-[0_40px_90px_rgba(2,6,23,0.5)] backdrop-blur-md',
+  card: 'rounded-[26px] border border-white/10 bg-slate-900/70 shadow-[var(--shadow-elevation-4)] backdrop-blur-md',
   cardInner: 'rounded-2xl border border-white/10 bg-white/5',
   cardHeader: 'px-6 py-5 border-b border-white/10',
   cardTitle: 'text-lg font-semibold text-white tracking-tight',
@@ -34,7 +34,9 @@ export const adminTheme = {
   badgeNeutral: 'bg-slate-400/10 text-slate-400 ring-slate-400/20',
   badgeInfo: 'bg-cyan-500/10 text-cyan-400 ring-cyan-500/20',
 
-  buttonPrimary: 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 font-semibold shadow-lg shadow-cyan-900/20',
+  buttonPrimary: 'bg-cyan-500 text-slate-950 hover:bg-cyan-400 font-semibold shadow-[var(--shadow-elevation-3)] shadow-cyan-900/20',
   buttonSecondary: 'border border-white/10 bg-white/5 hover:bg-white/10 text-slate-200',
   buttonDestructive: 'border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20',
 } as const
+
+

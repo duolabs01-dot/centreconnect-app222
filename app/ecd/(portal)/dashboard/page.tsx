@@ -252,7 +252,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
-        <Card className="glass-card border border-border bg-card/95 shadow-2xl text-foreground">
+        <Card className="glass-card border border-border bg-card/95 shadow-[var(--shadow-elevation-4)] text-foreground">
           <CardHeader>
             <CardTitle className="text-foreground">Top 3 Actions Today</CardTitle>
           </CardHeader>
@@ -500,4 +500,6 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
     </EcdOsShell>
   )
 }
+
+
 

@@ -144,7 +144,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
           initial={{ opacity: 0, y: 12, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 240, damping: 24, mass: 0.78 }}
-          className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[0_10px_30px_rgba(15,23,42,0.16)]"
+          className="pointer-events-auto mx-auto w-full max-w-md rounded-full border border-white/35 dark:border-white/20 bg-white/35 dark:bg-black/30 ring-1 ring-white/30 dark:ring-white/15 backdrop-blur-2xl shadow-[var(--shadow-elevation-3)]"
         >
           <div className="grid grid-cols-4 items-center px-2.5 py-1.5">
             {navItems.map(({ href, label, icon: Icon, matches }) => {
@@ -174,7 +174,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
                       <motion.span
                         layoutId={`cc-bottom-nav-pill-${mode}`}
                         transition={{ type: 'spring', stiffness: 380, damping: 30, mass: 0.62 }}
-                        className="absolute inset-1 -z-10 rounded-2xl bg-white/45 dark:bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_8px_18px_rgba(14,116,144,0.18)]"
+                        className="absolute inset-1 -z-10 rounded-2xl bg-white/45 dark:bg-white/15 shadow-[var(--shadow-elevation-1)]"
                       />
                     )}
                     <motion.span
@@ -204,3 +204,5 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
     </nav>
   )
 }
+
+

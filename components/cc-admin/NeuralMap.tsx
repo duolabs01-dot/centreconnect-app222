@@ -68,18 +68,20 @@ export function NeuralMap() {
       {/* Region labels */}
       <div className="absolute bottom-2 left-3 flex gap-4 text-[8px] font-orbitron tracking-widest text-slate-500 uppercase">
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyber-cyan shadow-[0_0_5px_var(--cyber-cyan)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyber-cyan shadow-[var(--shadow-elevation-2)]" />
           GP-HQ
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyber-violet shadow-[0_0_5px_var(--cyber-violet)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyber-violet shadow-[var(--shadow-elevation-2)]" />
           WC-NODE
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-cyber-green shadow-[0_0_5px_var(--cyber-green)]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-cyber-green shadow-[var(--shadow-elevation-2)]" />
           KZN-HUB
         </div>
       </div>
     </div>
   )
 }
+
+

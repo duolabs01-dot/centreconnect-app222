@@ -53,7 +53,7 @@ export function CyberSidebar({ userEmail }: { userEmail: string }) {
               className={cn(
                 "group flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 relative overflow-hidden",
                 active
-                  ? "bg-white/10 text-white shadow-[0_0_15px_rgba(0,242,255,0.1)]"
+                  ? "bg-white/10 text-white shadow-[var(--shadow-elevation-3)]"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
               )}
             >
@@ -88,3 +88,5 @@ export function CyberSidebar({ userEmail }: { userEmail: string }) {
     </aside>
   )
 }
+
+

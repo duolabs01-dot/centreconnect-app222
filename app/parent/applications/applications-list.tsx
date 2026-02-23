@@ -114,7 +114,7 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
           <div key={application.id} className="space-y-2">
             <Link
               href={`/parent/applications/${application.id}`}
-              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-slate-900">
@@ -150,4 +150,6 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     </>
   )
 }
+
+
 

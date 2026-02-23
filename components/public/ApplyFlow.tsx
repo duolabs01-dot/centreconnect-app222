@@ -139,7 +139,7 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
   }
 
   return (
-    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:space-y-6 sm:p-6">
+    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-elevation-1)] sm:space-y-6 sm:p-6">
       <div className="space-y-1.5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700">Step 1 - Child profile</p>
         <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Who is applying?</h2>
@@ -298,3 +298,5 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
     </div>
   )
 }
+
+

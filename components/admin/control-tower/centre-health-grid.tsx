@@ -41,7 +41,7 @@ function HealthIndicator({ score }: { score: 'green' | 'amber' | 'red' }) {
 
 export function CentreHealthGrid({ centres }: CentreHealthGridProps) {
   return (
-    <div className="rounded-md border bg-white shadow-sm">
+    <div className="rounded-md border bg-white shadow-[var(--shadow-elevation-1)]">
       <Table>
         <TableHeader>
           <TableRow>
@@ -110,3 +110,5 @@ export function CentreHealthGrid({ centres }: CentreHealthGridProps) {
     </div>
   )
 }
+
+

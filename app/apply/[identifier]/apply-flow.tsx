@@ -67,7 +67,7 @@ export function ApplyFlow({ centreId, centreSlug, centreName, childProfiles }: A
             className={cn(
               'px-4 py-2 rounded-full text-sm font-semibold transition',
               mode === 'existing'
-                ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                ? 'bg-cyan-600 text-white shadow-[var(--shadow-elevation-3)] shadow-cyan-600/30'
                 : 'border border-border text-slate-600 hover:border-slate-400'
             )}
             onClick={() => setMode('existing')}
@@ -80,7 +80,7 @@ export function ApplyFlow({ centreId, centreSlug, centreName, childProfiles }: A
             className={cn(
               'px-4 py-2 rounded-full text-sm font-semibold transition',
               mode === 'new'
-                ? 'bg-cyan-50 text-cyan-700 border border-cyan-300 shadow-inner'
+                ? 'bg-cyan-50 text-cyan-700 border border-cyan-300 shadow-[var(--shadow-elevation-1)]'
                 : 'border border-border text-slate-600 hover:border-slate-400'
             )}
             onClick={() => setMode('new')}
@@ -222,3 +222,5 @@ function InlineChildForm({ onSuccess }: { onSuccess: (child: ChildProfile) => vo
     </form>
   )
 }
+
+

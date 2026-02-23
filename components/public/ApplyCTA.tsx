@@ -41,7 +41,7 @@ export function ApplyCTA({ centreSlug, variant, userRole }: ApplyCTAProps) {
         className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl
                    bg-cyan-600 hover:bg-cyan-700 active:scale-[0.98]
                    text-white font-bold text-lg transition-all
-                   shadow-lg shadow-cyan-900/30"
+                   shadow-[var(--shadow-elevation-3)] shadow-cyan-900/30"
       >
         Apply Now <ArrowRight className="w-5 h-5" />
       </Link>
@@ -58,3 +58,5 @@ export function ApplyCTA({ centreSlug, variant, userRole }: ApplyCTAProps) {
     </Link>
   )
 }
+
+

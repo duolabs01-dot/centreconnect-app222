@@ -52,7 +52,7 @@ export default async function ForCentresPage() {
           track development, and grow — all in one place.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button asChild size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg">
+          <Button asChild size="lg" className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-[var(--shadow-elevation-3)]">
             <Link href="/for-centres/register">Register Your ECD &rarr;</Link>
           </Button>
           <Button variant="outline" asChild size="lg" className="border-slate-300 text-slate-700 hover:bg-slate-100">
@@ -92,7 +92,7 @@ export default async function ForCentresPage() {
         <h2 className="text-3xl font-bold text-center mb-12">Flexible Pricing for Every Centre</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Basic Card */}
-          <Card className="flex flex-col border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <Card className="flex flex-col border-slate-200 shadow-[var(--shadow-elevation-2)] hover:shadow-[var(--shadow-elevation-3)] transition-shadow duration-300">
             <CardHeader className="bg-slate-50 border-b border-slate-200 py-6 text-center">
               <h3 className="text-2xl font-bold text-indigo-600">Basic</h3>
               <p className="mt-2 text-4xl font-extrabold text-slate-900">R199<span className="text-lg font-medium text-slate-600">/month</span></p>
@@ -111,7 +111,7 @@ export default async function ForCentresPage() {
           </Card>
 
           {/* Standard Card (Most Popular) */}
-          <Card className="relative flex flex-col border-2 border-indigo-500 shadow-xl">
+          <Card className="relative flex flex-col border-2 border-indigo-500 shadow-[var(--shadow-elevation-4)]">
             <div className="absolute -top-3 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Most Popular</div>
             <CardHeader className="bg-indigo-600 py-6 text-center">
               <h3 className="text-2xl font-bold text-white">Standard</h3>
@@ -133,7 +133,7 @@ export default async function ForCentresPage() {
           </Card>
 
           {/* Premium Card */}
-          <Card className="flex flex-col border-slate-200 shadow-md hover:shadow-lg transition-shadow duration-300">
+          <Card className="flex flex-col border-slate-200 shadow-[var(--shadow-elevation-2)] hover:shadow-[var(--shadow-elevation-3)] transition-shadow duration-300">
             <CardHeader className="bg-slate-50 border-b border-slate-200 py-6 text-center">
               <h3 className="text-2xl font-bold text-teal-600">Premium</h3>
               <p className="mt-2 text-4xl font-extrabold text-slate-900">R499<span className="text-lg font-medium text-slate-600">/month</span></p>
@@ -197,7 +197,7 @@ export default async function ForCentresPage() {
       <Section className="bg-gradient-to-br from-cyan-600 to-indigo-700 py-16 md:py-24 text-white text-center">
         <h2 className="text-3xl font-bold mb-4">Ready to join them?</h2>
         <p className="text-lg mb-8">Register your ECD in 10 minutes and unlock your centre&apos;s full potential.</p>
-        <Button asChild size="lg" className="bg-white text-indigo-700 hover:bg-slate-100 shadow-lg">
+        <Button asChild size="lg" className="bg-white text-indigo-700 hover:bg-slate-100 shadow-[var(--shadow-elevation-3)]">
           <Link href="/for-centres/register">Register Your ECD &rarr;</Link>
         </Button>
       </Section>
@@ -212,7 +212,7 @@ export default async function ForCentresPage() {
         </p>
         <a
           href="/for-centres/register"
-          className="inline-block bg-white text-cyan-700 font-bold px-8 py-4 rounded-xl hover:bg-cyan-50 transition-colors shadow-lg text-lg"
+          className="inline-block bg-white text-cyan-700 font-bold px-8 py-4 rounded-xl hover:bg-cyan-50 transition-colors shadow-[var(--shadow-elevation-3)] text-lg"
         >
           Register Your ECD →
         </a>
@@ -220,3 +220,5 @@ export default async function ForCentresPage() {
     </main>
   )
 }
+
+

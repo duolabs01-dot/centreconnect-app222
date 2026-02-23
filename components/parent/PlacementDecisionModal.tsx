@@ -190,7 +190,7 @@ export function StickyApplyCTA({
   if (hasApplied) {
     return (
       <div className="fixed inset-x-0 bottom-20 z-40 px-3 md:hidden">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700 shadow-sm">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-semibold text-emerald-700 shadow-[var(--shadow-elevation-1)]">
           You already applied to {centreName}
         </div>
       </div>
@@ -200,7 +200,7 @@ export function StickyApplyCTA({
   if (isFull) {
     return (
       <div className="fixed inset-x-0 bottom-20 z-40 px-3 md:hidden">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-700 shadow-sm">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm font-semibold text-amber-700 shadow-[var(--shadow-elevation-1)]">
           {centreName} is currently full
         </div>
       </div>
@@ -214,10 +214,12 @@ export function StickyApplyCTA({
     <div className="fixed inset-x-0 bottom-20 z-40 px-3 md:hidden">
       <Link
         href={href}
-        className="block rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white shadow-[0_10px_20px_rgba(2,132,199,0.24)]"
+        className="block rounded-xl bg-primary px-4 py-3 text-center text-sm font-semibold text-white shadow-[var(--shadow-elevation-3)]"
       >
         {label}
       </Link>
     </div>
   )
 }
+
+

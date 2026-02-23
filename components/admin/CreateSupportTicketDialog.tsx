@@ -38,7 +38,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
   })
 
   const premiumInputClass =
-    'border-slate-500/80 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-100 placeholder:text-slate-400/95 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_20px_rgba(2,6,23,0.24)] focus-visible:ring-cyan-400/70 focus-visible:border-cyan-400'
+    'border-slate-500/80 bg-gradient-to-b from-slate-800 to-slate-900 text-slate-100 placeholder:text-slate-400/95 shadow-[var(--shadow-elevation-1)] focus-visible:ring-cyan-400/70 focus-visible:border-cyan-400'
 
   async function handleSubmit() {
     if (isSubmitting) return
@@ -114,7 +114,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
               <SelectTrigger id="ticket-priority" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
                 <SelectValue placeholder="Select Priority" />
               </SelectTrigger>
-              <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+              <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
                 {PRIORITY_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value} className="focus:bg-cyan-500/20 focus:text-cyan-100">
                     {option.label}
@@ -130,7 +130,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
               <SelectTrigger id="ticket-centre" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
                 <SelectValue placeholder="Select Centre" />
               </SelectTrigger>
-              <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[0_24px_60px_rgba(2,6,23,0.52)] [&_*]:text-slate-100")}>
+              <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
                 {availableCentres.length === 0 ? (
                   <SelectItem value="" disabled>No centres available</SelectItem>
                 ) : (
@@ -184,3 +184,5 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
     </Dialog>
   )
 }
+
+
