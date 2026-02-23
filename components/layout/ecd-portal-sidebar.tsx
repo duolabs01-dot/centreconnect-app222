@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
@@ -17,10 +17,19 @@ type EcdPortalSidebarProps = {
 
 export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPortalSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const primaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') === 'daily')
   const secondaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') !== 'daily')
   const [isPinned, setIsPinned] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const handleMobileBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push('/ecd/dashboard')
+  }
 
   const renderNavItem = (item: EcdNavItem, onSelect?: () => void) => {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -56,6 +65,15 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPor
 
   return (
     <>
+      <button
+        type="button"
+        onClick={handleMobileBack}
+        className="fixed z-50 inline-flex h-9 items-center justify-center rounded-full border border-border bg-card/90 px-3 text-sm font-semibold text-foreground shadow-lg shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+        aria-label="Go back"
+      >
+        &lt;-
+      </button>
+
       <button
         type="button"
         onClick={() => setMobileOpen(true)}

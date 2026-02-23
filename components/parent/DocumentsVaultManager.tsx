@@ -163,7 +163,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-x-hidden">
       <form onSubmit={uploadDocument} className="grid gap-3 rounded-xl border border-slate-200 bg-white/80 p-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label>Document Type</Label>
@@ -198,7 +198,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
           <p className="text-sm text-slate-600">No documents uploaded yet.</p>
         ) : (
           documents.map((doc) => (
-            <div key={doc.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3">
+            <div key={doc.id} className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <p className="truncate font-medium text-slate-900">{doc.file_name}</p>
                 <p className="text-xs text-slate-600">
@@ -206,11 +206,11 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
                   {doc.expiry_date ? ` - Expires ${doc.expiry_date}` : ''}
                 </p>
               </div>
-              <div className="flex shrink-0 gap-2">
-                <Button variant="outline" onClick={() => openDocument(doc)}>
+              <div className="flex w-full shrink-0 gap-2 sm:w-auto">
+                <Button size="sm" className="flex-1 sm:flex-none" variant="outline" onClick={() => openDocument(doc)}>
                   Open
                 </Button>
-                <Button variant="outline" disabled={saving} onClick={() => removeDocument(doc)}>
+                <Button size="sm" className="flex-1 sm:flex-none" variant="outline" disabled={saving} onClick={() => removeDocument(doc)}>
                   Remove
                 </Button>
               </div>
@@ -234,8 +234,8 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
                 key={entry.id}
                 className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200"
               >
-                <div>
-                  <p className="text-sm font-medium text-slate-700">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-700 break-words">
                     {entry.action === 'upload' ? '\u2B06\uFE0F Uploaded' :
                      entry.action === 'view' ? 'Viewed' :
                      entry.action === 'download' ? '\u2B07\uFE0F Downloaded' :

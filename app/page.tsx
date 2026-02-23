@@ -15,6 +15,17 @@ type JobOpportunity = {
   city: string | null
 }
 
+type ShortlistCentre = {
+  id: string
+  name: string
+  slug: string
+  suburb: string | null
+  city: string | null
+  tagline: string | null
+  latitude: number | null
+  longitude: number | null
+}
+
 export const metadata: Metadata = {
   title: 'CentreConnect - Find ECD Centres Near You',
   description: 'Browse trusted ECD centres, compare options, and track your applications in one place.',
@@ -32,6 +43,7 @@ export default async function HomePage() {
   let role: UserRole = null
   const userEmail: string | null = user?.email ?? null
   let jobOpportunities: JobOpportunity[] = []
+  let shortlistCentres: ShortlistCentre[] = []
 
   if (user) {
     const { data: profile } = await supabase
@@ -54,12 +66,21 @@ export default async function HomePage() {
   }
 
   if (!user) {
-    const { data: jobs } = await supabase
-      .from('jobs')
-      .select('id,title,role_type,closes_at,ecd_centres(name,slug,suburb,city)')
-      .eq('is_published', true)
-      .order('published_at', { ascending: false })
-      .limit(8)
+    const [{ data: jobs }, { data: shortlistRows }] = await Promise.all([
+      supabase
+        .from('jobs')
+        .select('id,title,role_type,closes_at,ecd_centres(name,slug,suburb,city)')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false })
+        .limit(8),
+      supabase
+        .from('ecd_centres')
+        .select('id,name,slug,suburb,city,tagline,latitude,longitude,is_registered')
+        .eq('is_active', true)
+        .order('is_registered', { ascending: false })
+        .order('name', { ascending: true })
+        .limit(40),
+    ])
 
     jobOpportunities =
       (jobs ?? []).map((job: any) => {
@@ -75,6 +96,29 @@ export default async function HomePage() {
           city: (centre?.city as string | null | undefined) ?? null,
         }
       }) ?? []
+
+    shortlistCentres =
+      (shortlistRows ?? []).map((centre: any) => ({
+        id: centre.id as string,
+        name: (centre.name as string | undefined) ?? 'ECD Centre',
+        slug: (centre.slug as string | undefined) ?? '',
+        suburb: (centre.suburb as string | null | undefined) ?? null,
+        city: (centre.city as string | null | undefined) ?? null,
+        tagline: (centre.tagline as string | null | undefined) ?? null,
+        latitude:
+          typeof centre.latitude === 'number'
+            ? centre.latitude
+            : centre.latitude != null
+              ? Number(centre.latitude)
+              : null,
+        longitude:
+          typeof centre.longitude === 'number'
+            ? centre.longitude
+            : centre.longitude != null
+              ? Number(centre.longitude)
+              : null,
+      }))
+      .filter((centre) => Boolean(centre.slug))
   }
 
   return (
@@ -83,6 +127,7 @@ export default async function HomePage() {
       role={role}
       parentItems={[]}
       jobOpportunities={jobOpportunities}
+      shortlistCentres={shortlistCentres}
     />
   )
 }

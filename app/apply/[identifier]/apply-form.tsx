@@ -69,7 +69,7 @@ export function ApplyForm({
       } = await supabase.auth.getUser()
       if (!user) {
         toast.error('Please sign in again')
-        router.push(`/register?redirect=/apply/${centreId}`)
+        router.push(`/login?next=${encodeURIComponent(`/apply/${centreSlug}`)}`)
         return
       }
 

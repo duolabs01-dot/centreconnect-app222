@@ -54,7 +54,7 @@ export default async function ParentDocumentsPage() {
     ])
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-x-hidden">
         <div className="space-y-4">
           <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-5 text-white">
             <div className="flex items-center gap-3 mb-3">

@@ -77,6 +77,11 @@ function getTitle(pathname: string) {
   return 'Parent Command Centre'
 }
 
+function getBackFallback(pathname: string) {
+  if (pathname.startsWith('/parent')) return '/parent/dashboard'
+  return '/'
+}
+
 export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -111,10 +116,18 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
     router.prefetch('/parent/notifications')
   }, [router])
 
+  function handleMobileBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push(getBackFallback(pathname))
+  }
+
   return (
     <div
       data-parent-theme="true"
-      className="min-h-screen bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)]"
+      className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)]"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -129,6 +142,17 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
       </div>
       <header className="cc-glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
         <Container className="flex items-center justify-between gap-3 py-3 sm:py-4">
+          <div className="flex shrink-0 items-center md:hidden">
+            <button
+              type="button"
+              onClick={handleMobileBack}
+              className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Go back"
+            >
+              &lt;-
+            </button>
+          </div>
+
           <div className="min-w-0 flex-1">
             <BrandMark compact className="mb-1 max-[360px]:hidden" />
             <p className="truncate text-sm font-semibold text-slate-900 sm:text-sm">{getTitle(pathname)}</p>
@@ -153,7 +177,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
         </Container>
       </header>
 
-      <main className="py-4 pb-24 sm:py-6 md:pb-0">
+      <main className="overflow-x-hidden py-4 pb-24 sm:py-6 md:pb-0">
         <Container>
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>

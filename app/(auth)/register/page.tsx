@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { Section } from '@/components/layout/Section'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -25,6 +26,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const supabase = createClient()
+  const requestedNext = searchParams.get('next')
 
   function getErrorMessage(error: unknown, fallback: string) {
     if (typeof error === 'string' && error.trim()) return error
@@ -35,8 +37,27 @@ export default function RegisterPage() {
     return fallback
   }
 
+  function sanitizeNextPath(value: string | null | undefined) {
+    if (!value) return null
+    if (!value.startsWith('/')) return null
+    if (value.startsWith('//')) return null
+    if (value.startsWith('/login') || value.startsWith('/register') || value.startsWith('/auth')) return null
+    return value
+  }
+
+  function authDestinationPath() {
+    return sanitizeNextPath(requestedNext) ?? '/parent/dashboard'
+  }
+
+  function loginHref() {
+    const destination = sanitizeNextPath(requestedNext)
+    if (!destination) return '/login'
+    return `/login?next=${encodeURIComponent(destination)}`
+  }
+
   function getAuthRedirectUrl() {
-    return `${window.location.origin.replace(/\/$/, '')}/auth/confirm?next=/`
+    const destination = encodeURIComponent(authDestinationPath())
+    return `${window.location.origin.replace(/\/$/, '')}/auth/confirm?next=${destination}`
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -76,12 +97,12 @@ export default function RegisterPage() {
         const likelyExistingUser = (authData.user.identities?.length ?? 0) === 0
         if (likelyExistingUser) {
           toast.error('This email is already registered. Sign in or reset your password.')
-          router.push('/login')
+          router.push(loginHref())
           return
         }
 
         toast.success('Confirmation email sent. Check inbox/spam, then confirm and sign in.')
-        router.push('/login')
+        router.push(loginHref())
         return
       }
 
@@ -92,7 +113,7 @@ export default function RegisterPage() {
       }
 
       toast.success('Account created successfully!')
-      router.push('/parent/dashboard')
+      router.push(authDestinationPath())
     } catch (error: any) {
       const message = getErrorMessage(error, 'Failed to create account')
       if (message.toLowerCase().includes('row-level security')) {
@@ -113,7 +134,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent('/')}`,
+          redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(authDestinationPath())}`,
           queryParams: {
             prompt: 'select_account',
           },
@@ -233,7 +254,7 @@ export default function RegisterPage() {
             </form>
             <div className="mt-4 text-center text-sm">
               <span className="text-slate-600">Already have an account? </span>
-              <Link href="/login" className="font-medium text-primary hover:underline">
+              <Link href={loginHref()} className="font-medium text-primary hover:underline">
                 Sign in
               </Link>
             </div>

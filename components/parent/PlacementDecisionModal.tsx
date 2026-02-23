@@ -207,7 +207,7 @@ export function StickyApplyCTA({
     )
   }
 
-  const href = isAuthenticated ? `/apply/${centreId}` : `/login`
+  const href = isAuthenticated ? `/apply/${centreId}` : `/login?next=${encodeURIComponent(`/apply/${centreId}`)}`
   const label = isAuthenticated ? 'Apply to this centre' : 'Sign in to apply'
 
   return (

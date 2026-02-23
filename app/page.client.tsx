@@ -26,14 +26,88 @@ type HomeClientPageProps = {
     suburb: string | null
     city: string | null
   }>
+  shortlistCentres: Array<{
+    id: string
+    name: string
+    slug: string
+    suburb: string | null
+    city: string | null
+    tagline: string | null
+    latitude: number | null
+    longitude: number | null
+  }>
 }
 
-export default function HomeClientPage({ userEmail, parentItems, jobOpportunities }: HomeClientPageProps) {
+function distanceScore(
+  userLat: number,
+  userLng: number,
+  centreLat: number,
+  centreLng: number
+) {
+  const latDelta = userLat - centreLat
+  const lngDelta = userLng - centreLng
+  return latDelta * latDelta + lngDelta * lngDelta
+}
+
+export default function HomeClientPage({ userEmail, parentItems, jobOpportunities, shortlistCentres }: HomeClientPageProps) {
   const isSignedIn = Boolean(userEmail)
   const parentName = getDisplayNameFromEmail(userEmail)
   const [timeGreeting, setTimeGreeting] = useState(getJohannesburgGreeting())
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const activeItems = parentItems.slice(0, 4)
   const activeJobs = jobOpportunities.slice(0, 6)
+  const fallbackSuburb = useMemo(
+    () => shortlistCentres.find((centre) => centre.suburb)?.suburb ?? 'Alexandra',
+    [shortlistCentres]
+  )
+  const shortlistSuburb = useMemo(() => {
+    if (!userCoords) return fallbackSuburb
+
+    const nearest = shortlistCentres
+      .filter(
+        (centre) =>
+          typeof centre.latitude === 'number' &&
+          typeof centre.longitude === 'number' &&
+          Boolean(centre.suburb)
+      )
+      .sort(
+        (a, b) =>
+          distanceScore(
+            userCoords.latitude,
+            userCoords.longitude,
+            a.latitude as number,
+            a.longitude as number
+          ) -
+          distanceScore(
+            userCoords.latitude,
+            userCoords.longitude,
+            b.latitude as number,
+            b.longitude as number
+          )
+      )[0]
+
+    return nearest?.suburb ?? fallbackSuburb
+  }, [fallbackSuburb, shortlistCentres, userCoords])
+  const shortlistCards = useMemo(() => {
+    const fallbackReasons = [
+      'Strong parent communication',
+      'Balanced routine and play',
+      'Consistent application feedback',
+      'Great fit for first-time families',
+    ]
+
+    const suburbKey = shortlistSuburb.toLowerCase()
+    const localCentres = shortlistCentres.filter(
+      (centre) => centre.suburb?.toLowerCase() === suburbKey
+    )
+    const usedIds = new Set(localCentres.map((centre) => centre.id))
+    const backupCentres = shortlistCentres.filter((centre) => !usedIds.has(centre.id))
+
+    return [...localCentres, ...backupCentres].slice(0, 4).map((centre, index) => ({
+      ...centre,
+      reason: centre.tagline || fallbackReasons[index % fallbackReasons.length],
+    }))
+  }, [shortlistCentres, shortlistSuburb])
   const title = useMemo(
     () => (isSignedIn ? `Welcome back, ${parentName}` : `${timeGreeting}, Parent`),
     [isSignedIn, parentName, timeGreeting]
@@ -44,6 +118,25 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
       setTimeGreeting(getJohannesburgGreeting())
     }, 60_000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+      },
+      () => {},
+      {
+        enableHighAccuracy: false,
+        timeout: 6000,
+        maximumAge: 300000,
+      }
+    )
   }, [])
 
   return (
@@ -110,20 +203,38 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
           <ApplicationProgressSection />
 
           <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
-            <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In Alexandra</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {[
-                { name: 'Bright Beginnings ECD', reason: 'Strong parent communication' },
-                { name: 'Sunshine Early Learning', reason: 'Balanced routine and play' },
-                { name: 'Happy Hearts Daycare', reason: 'Consistent application feedback' },
-                { name: 'Rainbow Kids Care', reason: 'Great fit for first-time families' },
-              ].map((item) => (
-                <div key={item.name} className="rounded-xl border border-slate-200 bg-white p-4">
-                  <p className="text-sm font-semibold text-slate-900">{item.name}</p>
-                  <p className="mt-1 text-xs text-slate-600">Alexandra, Johannesburg</p>
-                  <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
+              {shortlistCards.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
+                  <p className="text-sm font-semibold text-slate-900">No shortlisted centres yet</p>
+                  <p className="mt-1 text-xs text-slate-600">
+                    Browse the full directory to find centres near you.
+                  </p>
+                  <div className="mt-3">
+                    <Button asChild size="sm" variant="outline">
+                      <Link href="/directory">Browse Centres</Link>
+                    </Button>
+                  </div>
                 </div>
-              ))}
+              ) : (
+                shortlistCards.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/centre/${item.slug}`}
+                    className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
+                  >
+                    <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+                    <p className="mt-1 text-xs text-slate-600">
+                      {[item.suburb, item.city].filter(Boolean).join(', ')}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500">{item.reason}</p>
+                    <p className="mt-3 text-xs font-semibold text-cyan-700 group-hover:text-cyan-800">
+                      View centre -&gt;
+                    </p>
+                  </Link>
+                ))
+              )}
             </div>
           </section>
 
