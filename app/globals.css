@@ -184,11 +184,40 @@ body {
   animation: pulse-slow 2.6s ease-in-out infinite;
 }
 
+@keyframes parent-confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0) rotate(0deg) scale(0.95);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--confetti-drift, 0px), 320px, 0) rotate(480deg) scale(1);
+  }
+}
+
+.parent-confetti-piece {
+  position: absolute;
+  top: -14px;
+  width: 0.44rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: hsl(var(--confetti-hue, 188) 90% 56% / 0.95);
+  opacity: 0;
+  animation-name: parent-confetti-fall;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.2, 0.88, 0.24, 1);
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .hover-lift,
   .hover-lift:hover,
-  .animate-pulse-slow {
+  .animate-pulse-slow,
+  .parent-confetti-piece {
     animation: none !important;
     transition: none !important;
   }
