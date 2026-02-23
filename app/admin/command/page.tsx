@@ -102,27 +102,12 @@ export default async function AdminDashboardPage() {
       .maybeSingle()
 
     if (userProfile?.role !== 'platform_admin') {
-      console.error('Role mismatch — userId:', user.id, 'role:', userProfile?.role)
+      console.error('Role mismatch - userId:', user.id, 'role:', userProfile?.role)
       redirect('/login')
     }
   } catch (err) {
     console.error('Admin command page error:', err)
-    return (
-      <div
-        style={{
-          padding: 40,
-          fontFamily: 'monospace',
-          background: '#0B0E14',
-          color: '#00F2FF',
-          minHeight: '100vh',
-        }}
-      >
-        <p>Admin page error — check Vercel Functions log</p>
-        <pre style={{ color: '#ff4466', marginTop: 16 }}>
-          {err instanceof Error ? err.message : String(err)}
-        </pre>
-      </div>
-    )
+    redirect('/login')
   }
 
   const thirtyDaysAgo = new Date()

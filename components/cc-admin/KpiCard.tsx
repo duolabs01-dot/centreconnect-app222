@@ -1,7 +1,4 @@
 // components/cc-admin/KpiCard.tsx
-'use client'
-
-import { motion } from 'framer-motion'
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CyberCard } from './CyberCard'
