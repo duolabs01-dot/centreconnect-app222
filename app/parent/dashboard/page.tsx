@@ -149,16 +149,16 @@ export default async function ParentDashboardPage() {
           </div>
         </section>
 
-        <Suspense fallback={<SectionFallback title="Activity feed" />}>
-          <ActivityFeedSection />
+        <Suspense fallback={<SectionFallback title="Recent applications" />}>
+          <RecentApplicationsSection />
         </Suspense>
 
         <Suspense fallback={<SectionFallback title="Suggested centres" />}>
           <SuggestedCentresSection />
         </Suspense>
 
-        <Suspense fallback={<SectionFallback title="Recent applications" />}>
-          <RecentApplicationsSection />
+        <Suspense fallback={<SectionFallback title="Activity feed" />}>
+          <ActivityFeedSection />
         </Suspense>
       </div>
     )
