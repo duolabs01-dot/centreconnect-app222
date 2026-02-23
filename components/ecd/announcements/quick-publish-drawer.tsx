@@ -122,11 +122,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
 
   return (
     <Sheet open={open} onOpenChange={(value) => !value && onClose()}>
-      <SheetContent
-        side="right"
-        data-ecd-theme="true"
-        className="w-full overflow-y-auto bg-slate-950/95 text-slate-100 sm:max-w-lg"
-      >
+      <SheetContent side="right" className="w-full overflow-y-auto bg-white sm:max-w-lg">
         <FormShell
           title={template?.label ?? 'Quick Announcement'}
           description="Review and edit before sending."
@@ -142,39 +138,39 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
             />
           }
         >
-          <div className="glass rounded-2xl border border-white/10 bg-slate-900/50 p-4 space-y-3">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">When you send this</p>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <Bell className="h-4 w-4 text-cyan-400" />
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <Bell className="h-4 w-4 text-cyan-500" />
               In-app notifications go to approved/enrolled parents
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <Globe className="h-4 w-4 text-emerald-500" />
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <Globe className="h-4 w-4 text-emerald-600" />
               Public centre page notice is updated
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-200">
-              <Users className="h-4 w-4 text-blue-400" />
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <Users className="h-4 w-4 text-blue-600" />
               Parents can see it in their notifications feed
             </div>
           </div>
 
           <form id="quick-publish-form" onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-200">Subject</label>
+              <label className="text-sm font-medium text-slate-700">Subject</label>
               <Input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
                 placeholder="Announcement subject"
-                className="rounded-xl border-slate-700 !bg-none !bg-slate-800 text-white placeholder:text-slate-400 !shadow-none"
+                className="rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-500 shadow-none"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-200">Audience</label>
+              <label className="text-sm font-medium text-slate-700">Audience</label>
               <select
                 value={audience}
                 onChange={(event) => setAudience(event.target.value as 'all' | 'class' | 'individual')}
-                className="cc-native-field rounded-xl border-slate-700 !bg-none !bg-slate-800 text-white !shadow-none"
+                className="cc-native-field rounded-xl border-slate-200 bg-white text-slate-900 shadow-none"
               >
                 <option value="all">All parents</option>
                 <option value="class">Class (requires class targeting)</option>
@@ -183,12 +179,12 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-200">Message</label>
+              <label className="text-sm font-medium text-slate-700">Message</label>
               <Textarea
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 rows={10}
-                className="resize-none rounded-xl border-slate-700 !bg-none !bg-slate-800 font-mono text-sm text-white placeholder:text-slate-400 !shadow-none"
+                className="resize-none rounded-xl border-slate-200 bg-white font-mono text-sm text-slate-900 placeholder:text-slate-500 shadow-none"
               />
             </div>
           </form>
