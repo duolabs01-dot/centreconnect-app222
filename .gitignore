@@ -1,14 +1,22 @@
 .next/
 node_modules/
+
+# Environment files
 .env.local
 .env.*.local
+.env*.local
 !.env.example
+
+# Build artifacts
+*.tsbuildinfo
 *.log
 tmp-*.log
 tmp-*.mjs
 .next-dev-eperm.flag
-*.tsbuildinfo
+
+# Audit and temp files
 tmp-*.txt
 *audit*.txt
 *manifest*.txt
-
+hardcoded_colors.txt
+all_ts_files.txt
