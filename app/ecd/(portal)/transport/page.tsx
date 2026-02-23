@@ -65,7 +65,7 @@ export default async function EcdTransportPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="bg-card border border-border rounded-2xl text-foreground">
           <CardHeader>
             <CardTitle>Transport Management</CardTitle>
           </CardHeader>
@@ -121,7 +121,7 @@ export default async function EcdTransportPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="bg-card border border-border rounded-2xl text-foreground">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Enquiry Pipeline</CardTitle>
@@ -164,7 +164,7 @@ export default async function EcdTransportPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90">
+        <Card className="bg-card border border-border rounded-2xl">
           <CardHeader>
             <CardTitle>Recent Transport Enquiries</CardTitle>
           </CardHeader>
