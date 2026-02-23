@@ -143,11 +143,13 @@ export default function DirectoryExplorer({
 
   const showMap = viewMode === 'map'
   const locationHint =
-    geoStatus === 'granted'
-      ? 'Your location is pinned in yellow.'
-      : geoStatus === 'pending'
-        ? 'Requesting location access...'
-        : geoMessage ?? 'Allow location access to showcase your pin.'
+    centresWithLocation.length === 0
+      ? 'No mapped centres for these filters yet. Try resetting filters.'
+      : geoStatus === 'granted'
+        ? 'Showing centres closest to your location. Your pin is yellow.'
+        : geoStatus === 'pending'
+          ? 'Requesting location access...'
+          : geoMessage ?? 'Allow location access to showcase your pin.'
 
   const buildFetchUrl = useCallback(
     (query: DirectoryFilters) => {
@@ -241,7 +243,7 @@ export default function DirectoryExplorer({
         setGeoStatus('denied')
         setGeoMessage(err.message || 'Location access denied.')
       },
-      { timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 180000 }
     )
   }
 

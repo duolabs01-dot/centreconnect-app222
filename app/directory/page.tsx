@@ -32,6 +32,12 @@ type DirectoryFacetSource = {
   age_groups: string[] | null
 }
 
+type CentreGeoRow = {
+  id: string
+  latitude: number | string | null
+  longitude: number | string | null
+}
+
 type ParentPreferences = {
   max_monthly_budget: number | null
   preferred_radius_km: number | null
@@ -113,7 +119,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     let centresQuery = supabase
       .from('public_ecd_centres')
       .select(
-        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,latitude,longitude'
+        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted'
       )
       .order('name', { ascending: true })
       .range(pageFrom, pageTo)
@@ -155,7 +161,33 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     allActiveCentres = (facetsResult.data ?? []) as DirectoryFacetSource[]
     totalResults = countResult.count ?? 0
 
-    centres = (centresResult.data ?? []).map((centre) => toDirectoryCentre(centre as RawDirectoryCentre))
+    const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
+    const centreIds = centreRows.map((centre) => centre.id)
+    const geoById = new Map<string, { latitude: number | string | null; longitude: number | string | null }>()
+
+    if (centreIds.length > 0) {
+      const { data: geoRows, error: geoError } = await supabase
+        .from('ecd_centres')
+        .select('id,latitude,longitude')
+        .in('id', centreIds)
+
+      if (geoError) {
+        console.error('Error fetching centre coordinates:', geoError)
+      } else {
+        ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+          geoById.set(row.id, { latitude: row.latitude, longitude: row.longitude })
+        })
+      }
+    }
+
+    centres = centreRows.map((centre) => {
+      const geo = geoById.get(centre.id)
+      return toDirectoryCentre({
+        ...centre,
+        latitude: (geo?.latitude as number | string | null | undefined) ?? null,
+        longitude: (geo?.longitude as number | string | null | undefined) ?? null,
+      } as RawDirectoryCentre)
+    })
   } catch (err) {
     console.error('Unexpected error in DirectoryPage:', err)
     centres = []
