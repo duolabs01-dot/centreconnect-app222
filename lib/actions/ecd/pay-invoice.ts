@@ -29,9 +29,9 @@ export async function payInvoiceAction(invoiceId: string) {
   const result = await initializePaystackInvoicePayment({
     invoiceId: invoice.id,
     invoiceNumber: invoice.invoice_number,
-    amountRands: invoice.total,
-    email,
-    ecdId,
+    amountZar: invoice.total,
+    customerEmail: email,
+    metadata: { ecd_id: ecdId },
   })
 
   redirect(result.authorizationUrl)
