@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 
 type ApplicationRow = {
   id: string
+  ecd_id: string | null
   child_id: string | null
   application_number: string
   status: string
@@ -118,7 +119,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const [applicationsResult, childrenResult] = await Promise.all([
       supabase
         .from('applications')
-        .select('id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,ecd_centres(name,slug),children(first_name,last_name)')
+        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,ecd_centres(name,slug),children(first_name,last_name)')
         .eq('parent_id', user?.id ?? '')
         .order('submitted_at', { ascending: false })
         .limit(100),
@@ -139,9 +140,34 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
       ])
     )
 
+    const applicationRows = (((data ?? []) as ApplicationRow[]) ?? [])
+    const missingCentreIds = Array.from(
+      new Set(
+        applicationRows
+          .filter((application) => !normalizeOne(application.ecd_centres)?.name && application.ecd_id)
+          .map((application) => application.ecd_id as string)
+      )
+    )
+    const fallbackCentresById = new Map<string, { name: string; slug: string | null }>()
+
+    if (missingCentreIds.length > 0) {
+      const { data: fallbackCentres } = await supabase
+        .from('public_ecd_centres')
+        .select('id,name,slug')
+        .in('id', missingCentreIds)
+
+      ;(fallbackCentres ?? []).forEach((centre) => {
+        fallbackCentresById.set(centre.id as string, {
+          name: (centre.name as string | undefined) ?? 'Centre details pending',
+          slug: (centre.slug as string | null | undefined) ?? null,
+        })
+      })
+    }
+
     const applications =
-      (((data ?? []) as ApplicationRow[]) ?? []).map((application) => {
+      applicationRows.map((application) => {
         const centre = normalizeOne(application.ecd_centres)
+        const fallbackCentre = application.ecd_id ? fallbackCentresById.get(application.ecd_id) : null
         const child = normalizeOne(application.children)
         const relationName = child ? `${child.first_name} ${child.last_name}`.trim() : ''
         const childName =
@@ -157,8 +183,8 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           offer_accepted_at: application.offer_accepted_at,
           priority: application.priority,
           submitted_at: application.submitted_at,
-          centreName: centre?.name ?? 'Unknown centre',
-          centreSlug: centre?.slug ?? null,
+          centreName: centre?.name ?? fallbackCentre?.name ?? 'Centre details pending',
+          centreSlug: centre?.slug ?? fallbackCentre?.slug ?? null,
           childName,
           childId: application.child_id,
         }
@@ -194,7 +220,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             <section className="space-y-6">
               <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-cyan-50 px-5 py-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-600">
-                  Auto-detected child
+                  Focused Child
                 </p>
                 <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xl font-bold text-slate-900">
@@ -210,14 +236,14 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                   </div>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  We automatically read your saved child profiles and highlight the one you last viewed. Tap a child card below to swap contexts instantly.
+                  You are currently viewing this child&apos;s journey. Tap any child below to switch your timeline.
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-slate-800">Children</h2>
-                  <p className="text-xs text-muted-foreground">Auto-selected from your saved profiles.</p>
+                  <p className="text-xs text-muted-foreground">Choose a child to focus this journey.</p>
                 </div>
                 <p className="text-sm text-slate-500">
                   Showing {filteredApplications.length} application{filteredApplications.length === 1 ? '' : 's'}
@@ -258,7 +284,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             </section>
 
             <section className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/80 p-4 text-xs text-slate-500">
-              Want to track multiple children faster? Have a child apply to multiple centres with the sticky apply bar at the bottom.
+              Need more options? Apply to more centres and keep every response in one place.
             </section>
 
             <NextBestActionStrip
@@ -275,7 +301,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
               <ApplicationsList applications={filteredApplications} />
             </section>
 
-            <div className="sticky bottom-20 z-20 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur md:hidden">
+            <div className="md:hidden">
               <Button size="lg" className="h-12 w-full" asChild>
                 <Link href="/directory">Find More Centres</Link>
               </Button>
@@ -303,7 +329,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
 
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
-                Preview — how your applications will look
+                Preview - how your applications will look
               </p>
               {[
                 { centre: 'Sunshine ECD Alexandra', child: 'Amara, 3 yrs', date: 'Applied today', status: 'submitted' },
@@ -317,7 +343,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-slate-900">{mock.centre}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{mock.child} · {mock.date}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{mock.child} | {mock.date}</p>
                     </div>
                     <StatusPill status={mock.status} />
                   </div>
@@ -332,3 +358,4 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     logRoutePerf(perf)
   }
 }
+

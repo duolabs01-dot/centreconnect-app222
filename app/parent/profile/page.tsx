@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Baby, Pencil, FileText, Phone, Users, ShieldCheck, ChevronRight, LogOut } from 'lucide-react'
+import { Baby, Pencil, FileText, Phone, Users, ShieldCheck, ChevronRight, LogOut, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 
@@ -61,17 +61,29 @@ export default async function ParentProfilePage() {
       redirect('/login')
     }
 
-    const { data: userProfile } = await supabase
+    const userProfileResult = await supabase
       .from('user_profiles')
-      .select('full_name,phone')
+      .select('full_name,phone,avatar_url')
       .eq('id', user.id)
       .maybeSingle()
+
+    const userProfileFallback =
+      userProfileResult.error &&
+      typeof userProfileResult.error.message === 'string' &&
+      userProfileResult.error.message.includes("'avatar_url' column")
+        ? await supabase.from('user_profiles').select('full_name,phone').eq('id', user.id).maybeSingle()
+        : null
+
+    const userProfile = (userProfileFallback?.data ?? userProfileResult.data) as
+      | { full_name: string | null; phone: string | null; avatar_url?: string | null }
+      | null
 
     const parentName =
       userProfile?.full_name?.trim() ||
       (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name.trim() : '') ||
       'Parent'
     const userEmail = user.email ?? 'No email'
+    const avatarUrl = userProfile?.avatar_url?.trim() ?? ''
 
     async function handleSignOut() {
       'use server'
@@ -84,12 +96,31 @@ export default async function ParentProfilePage() {
       <div className="cc-page">
         <div className="mb-4 rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-600 p-6 text-white">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-2xl font-bold text-white">
-              {parentName?.[0]?.toUpperCase() ?? 'P'}
+            <div className="relative shrink-0">
+              <div className="rounded-2xl bg-gradient-to-br from-white/90 via-cyan-200/70 to-blue-200/70 p-[2px] shadow-[0_12px_26px_rgba(8,47,73,0.28)]">
+                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white/20 text-2xl font-bold text-white">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt={`${parentName} profile`} className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{parentName?.[0]?.toUpperCase() ?? 'P'}</span>
+                  )}
+                </div>
+              </div>
+              <Link
+                href="/parent/profile/edit"
+                className="absolute -bottom-1 -right-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/60 bg-white text-cyan-700 shadow-sm transition-colors hover:bg-cyan-50"
+                aria-label="Edit profile photo"
+              >
+                <Camera className="h-3.5 w-3.5" />
+              </Link>
             </div>
             <div className="min-w-0">
               <p className="truncate text-xl font-bold">{parentName}</p>
               <p className="truncate text-sm text-cyan-100">{userEmail}</p>
+              <Link href="/parent/profile/edit" className="mt-1 inline-flex text-xs font-semibold text-cyan-100 hover:text-white">
+                Edit photo and details
+              </Link>
             </div>
           </div>
         </div>

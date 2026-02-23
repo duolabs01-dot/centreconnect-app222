@@ -34,7 +34,7 @@ function StatusPill({ status }: { status: string }) {
       className: 'bg-amber-50 text-amber-700 border-amber-200',
     },
     approved: {
-      label: 'Approved ✓',
+      label: 'Approved',
       className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     },
     enrolled: {
@@ -150,3 +150,4 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     </>
   )
 }
+
