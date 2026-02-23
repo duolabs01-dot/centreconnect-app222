@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 // import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
 import { Container } from '@/components/layout/container'
 import { PageTransition } from '@/components/ui/page-transition'
-import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
 
