@@ -60,6 +60,29 @@ export default function RegisterPage() {
     return `${window.location.origin.replace(/\/$/, '')}/auth/confirm?next=${destination}`
   }
 
+  function isEmailAlreadyRegisteredMessage(message: string) {
+    const normalized = message.toLowerCase()
+    return (
+      normalized.includes('already registered') ||
+      normalized.includes('already been registered') ||
+      normalized.includes('already exists') ||
+      normalized.includes('email exists')
+    )
+  }
+
+  async function checkAccountExists(email: string) {
+    const response = await fetch('/api/auth/account-exists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    const payload = (await response.json().catch(() => ({}))) as { exists?: boolean; error?: string }
+    if (!response.ok) {
+      return { exists: false, error: payload.error || 'Unable to validate account email' }
+    }
+    return { exists: Boolean(payload.exists), error: null as string | null }
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
     const normalizedEmail = formData.email.trim().toLowerCase()
@@ -77,6 +100,16 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
+      const accountCheck = await checkAccountExists(normalizedEmail)
+      if (accountCheck.exists) {
+        toast.error('This email is already registered. Sign in or reset your password.')
+        router.push(loginHref())
+        return
+      }
+      if (accountCheck.error) {
+        console.error('[register] Email existence check failed:', accountCheck.error)
+      }
+
       const emailRedirectTo = getAuthRedirectUrl()
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: normalizedEmail,
@@ -118,6 +151,9 @@ export default function RegisterPage() {
       const message = getErrorMessage(error, 'Failed to create account')
       if (message.toLowerCase().includes('row-level security')) {
         toast.error('Account setup is blocked by database policy. Apply the latest Supabase migrations and retry.')
+      } else if (isEmailAlreadyRegisteredMessage(message)) {
+        toast.error('This email is already registered. Sign in or reset your password.')
+        router.push(loginHref())
       } else if (message.toLowerCase().includes('rate limit') || message.toLowerCase().includes('too many')) {
         toast.error('Too many email attempts. Wait a minute, then try again.')
       } else {

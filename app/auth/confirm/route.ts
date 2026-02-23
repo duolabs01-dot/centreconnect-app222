@@ -41,60 +41,132 @@ function buildRedirectUrl(path: string, request: NextRequest) {
   return new URL(path, getSafeRedirectBase(request))
 }
 
+async function provisionProfileWithAdmin(input: {
+  userId: string
+  role: AllowedRole
+  fullName: string
+  phone: string | null
+}) {
+  try {
+    const admin = createAdminClient()
+    const { error: profileError } = await admin.from('user_profiles').upsert(
+      {
+        id: input.userId,
+        role: input.role,
+        full_name: input.fullName,
+        phone: input.phone,
+      },
+      { onConflict: 'id' }
+    )
+    if (profileError) throw profileError
+
+    if (input.role === 'parent_user') {
+      const { error: parentError } = await admin.from('parents').upsert({ id: input.userId }, { onConflict: 'id' })
+      if (parentError) throw parentError
+    }
+
+    return true
+  } catch (error) {
+    console.error('[auth/confirm] Admin profile provisioning failed:', error)
+    return false
+  }
+}
+
+async function provisionProfileWithUserClient(input: {
+  userId: string
+  role: AllowedRole
+  fullName: string
+  phone: string | null
+  supabase: Awaited<ReturnType<typeof createClient>>
+}) {
+  try {
+    const { error: profileError } = await input.supabase.from('user_profiles').upsert(
+      {
+        id: input.userId,
+        role: input.role,
+        full_name: input.fullName,
+        phone: input.phone,
+      },
+      { onConflict: 'id' }
+    )
+    if (profileError) throw profileError
+
+    if (input.role === 'parent_user') {
+      const { error: parentError } = await input.supabase.from('parents').upsert({ id: input.userId }, { onConflict: 'id' })
+      if (parentError) throw parentError
+    }
+    return true
+  } catch (error) {
+    console.error('[auth/confirm] Fallback profile provisioning failed:', error)
+    return false
+  }
+}
+
 export async function GET(request: NextRequest) {
-  const url = new URL(request.url)
-  const code = url.searchParams.get('code')
-  const tokenHash = url.searchParams.get('token_hash')
-  const type = url.searchParams.get('type') as EmailOtpType | null
-  const next = sanitizeNextPath(url.searchParams.get('next'))
+  try {
+    const url = new URL(request.url)
+    const code = url.searchParams.get('code')
+    const tokenHash = url.searchParams.get('token_hash')
+    const type = url.searchParams.get('type') as EmailOtpType | null
+    const next = sanitizeNextPath(url.searchParams.get('next'))
 
-  if (!code && (!tokenHash || !type)) {
-    return NextResponse.redirect(buildRedirectUrl('/login?error=invalid-confirmation-link', request))
-  }
+    if (!code && (!tokenHash || !type)) {
+      return NextResponse.redirect(buildRedirectUrl('/login?error=invalid-confirmation-link', request))
+    }
 
-  const supabase = await createClient()
-  let error: { message: string } | null = null
-  if (code) {
-    const { error: codeError } = await supabase.auth.exchangeCodeForSession(code)
-    if (codeError) error = codeError
-  } else if (tokenHash && type) {
-    const { error: otpError } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type,
+    const supabase = await createClient()
+    let error: { message: string } | null = null
+    if (code) {
+      const { error: codeError } = await supabase.auth.exchangeCodeForSession(code)
+      if (codeError) error = codeError
+    } else if (tokenHash && type) {
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type,
+      })
+      if (otpError) error = otpError
+    }
+
+    if (error) {
+      return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-failed', request))
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-session-missing', request))
+    }
+
+    const desiredRole = sanitizeRole(user.user_metadata?.role)
+    const fullName = user.user_metadata?.full_name ?? fallbackName(user.email)
+    const phone = user.user_metadata?.phone ?? null
+    const userId = user.id
+
+    const provisionedWithAdmin = await provisionProfileWithAdmin({
+      userId,
+      role: desiredRole,
+      fullName,
+      phone,
     })
-    if (otpError) error = otpError
-  }
+    const provisioned = provisionedWithAdmin
+      ? true
+      : await provisionProfileWithUserClient({
+        userId,
+        role: desiredRole,
+        fullName,
+        phone,
+        supabase,
+      })
 
-  if (error) {
+    if (!provisioned) {
+      return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-profile-setup', request))
+    }
+
+    return NextResponse.redirect(buildRedirectUrl(next, request))
+  } catch (error) {
+    console.error('[auth/confirm] Unexpected confirmation error:', error)
     return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-failed', request))
   }
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-session-missing', request))
-  }
-
-  const desiredRole = sanitizeRole(user.user_metadata?.role)
-  const fullName = user.user_metadata?.full_name ?? fallbackName(user.email)
-  const phone = user.user_metadata?.phone ?? null
-  const admin = createAdminClient()
-
-  await admin.from('user_profiles').upsert(
-    {
-      id: user.id,
-      role: desiredRole,
-      full_name: fullName,
-      phone,
-    },
-    { onConflict: 'id' }
-  )
-
-  if (desiredRole === 'parent_user') {
-    await admin.from('parents').upsert({ id: user.id }, { onConflict: 'id' })
-  }
-
-  return NextResponse.redirect(buildRedirectUrl(next, request))
 }

@@ -24,6 +24,15 @@ export default function LoginPage() {
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
   const reason = searchParams.get('reason')
+  const authError = searchParams.get('error')
+
+  function confirmationErrorMessage(code: string | null) {
+    if (code === 'invalid-confirmation-link') return 'That email confirmation link is invalid.'
+    if (code === 'confirmation-failed') return 'We could not confirm your email. Please request a new confirmation link.'
+    if (code === 'confirmation-session-missing') return 'Confirmation succeeded, but we could not start your session. Please sign in.'
+    if (code === 'confirmation-profile-setup') return 'Your email was confirmed, but account setup is incomplete. Please sign in again.'
+    return null
+  }
 
   function sanitizeNextPath(value: string | null | undefined) {
     if (!value) return null
@@ -72,7 +81,7 @@ export default function LoginPage() {
       const ensureProfileResponse = await fetch('/api/auth/ensure-profile', { method: 'POST' })
       const ensurePayload = (await ensureProfileResponse.json().catch(() => ({}))) as { error?: string; role?: string }
       if (!ensureProfileResponse.ok) {
-        throw new Error(ensurePayload.error || 'Failed to finalize account profile')
+        console.error('[login] ensure-profile failed:', ensurePayload.error || 'unknown error')
       }
 
       const { data: profile } = await supabase
@@ -81,11 +90,7 @@ export default function LoginPage() {
         .eq('id', data.user.id)
         .maybeSingle()
 
-      const role = profile?.role ?? ensurePayload.role
-
-      if (!role) {
-        throw new Error('Profile not found after login')
-      }
+      const role = profile?.role ?? ensurePayload.role ?? data.user.user_metadata?.role ?? 'parent_user'
 
       triggerConfetti('application')
       toast.success('Logged in successfully!')
@@ -135,6 +140,11 @@ export default function LoginPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {confirmationErrorMessage(authError) && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 mb-4">
+                {confirmationErrorMessage(authError)}
+              </div>
+            )}
             {reason === 'session_expired' && (
               <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700 mb-4">
                 You were signed out because your account was accessed from another device.

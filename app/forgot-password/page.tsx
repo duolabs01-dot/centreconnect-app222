@@ -19,13 +19,38 @@ export default function ForgotPasswordPage() {
     return `${window.location.origin.replace(/\/$/, '')}/reset-password`
   }
 
+  async function checkAccountExists(normalizedEmail: string) {
+    const response = await fetch('/api/auth/account-exists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: normalizedEmail }),
+    })
+    const payload = (await response.json().catch(() => ({}))) as { exists?: boolean; error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Unable to verify account email right now')
+    }
+    return Boolean(payload.exists)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      toast.error('Please enter your email address.')
+      return
+    }
+
     setLoading(true)
 
     try {
+      const exists = await checkAccountExists(normalizedEmail)
+      if (!exists) {
+        toast.error('No account was found for that email. Check the address or create a new account.')
+        return
+      }
+
       const redirectTo = getAuthRedirectUrl()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
       if (error) throw error
       toast.success('Password reset link sent. Check your email.')
     } catch (error: any) {
