@@ -28,7 +28,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     <div className="ecd-premium-shell h-screen overflow-hidden flex">
       <EcdPortalSidebar userEmail={user.email ?? null} />
       <main className="flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
-        <div className="p-6 lg:p-10 max-w-[1600px] mx-auto">
+        <div className="mx-auto max-w-[1600px] px-6 pb-6 pt-20 lg:p-10">
           {children}
         </div>
       </main>
