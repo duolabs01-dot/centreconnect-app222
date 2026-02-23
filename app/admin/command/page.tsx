@@ -95,30 +95,34 @@ export default async function AdminDashboardPage() {
   let admin: any = null
   try {
     admin = createAdminClient()
-  } catch (error) {
-    console.error('Admin client initialization failed in /admin/command.', error)
-    return <ConfigurationError />
-  }
-
-  let role: string | null = null
-  try {
-    const { data, error } = await admin
+    const { data: userProfile } = await admin
       .from('user_profiles')
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    if (error) throw error
-    role = data?.role ?? null
-  } catch (error) {
-    console.error('Role lookup failed in /admin/command.', { userId: user.id, error })
-  }
 
-  if (role !== 'platform_admin') {
-    console.warn('Admin role check failed in /admin/command.', {
-      userId: user.id,
-      role,
-    })
-    redirect('/login')
+    if (userProfile?.role !== 'platform_admin') {
+      console.error('Role mismatch — userId:', user.id, 'role:', userProfile?.role)
+      redirect('/login')
+    }
+  } catch (err) {
+    console.error('Admin command page error:', err)
+    return (
+      <div
+        style={{
+          padding: 40,
+          fontFamily: 'monospace',
+          background: '#0B0E14',
+          color: '#00F2FF',
+          minHeight: '100vh',
+        }}
+      >
+        <p>Admin page error — check Vercel Functions log</p>
+        <pre style={{ color: '#ff4466', marginTop: 16 }}>
+          {err instanceof Error ? err.message : String(err)}
+        </pre>
+      </div>
+    )
   }
 
   const thirtyDaysAgo = new Date()
