@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 
 export const metadata: Metadata = {
   title: 'Billing - CentreConnect',
@@ -153,6 +154,7 @@ export default async function EcdBillingPage() {
                       <TableHead>Issued</TableHead>
                       <TableHead>Due</TableHead>
                       <TableHead>Paid</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -164,6 +166,13 @@ export default async function EcdBillingPage() {
                         <TableCell>{invoice.issued_at ? formatDate(invoice.issued_at) : '--'}</TableCell>
                         <TableCell>{invoice.due_at ? formatDate(invoice.due_at) : '--'}</TableCell>
                         <TableCell>{invoice.paid_at ? formatDate(invoice.paid_at) : '--'}</TableCell>
+                        <TableCell className="text-right">
+                          {invoice.status !== 'paid' ? (
+                            <PayInvoiceButton invoiceId={invoice.id} />
+                          ) : (
+                            <span className="text-xs text-emerald-600 font-semibold">Paid ✓</span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

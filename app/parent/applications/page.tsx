@@ -282,54 +282,47 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             </div>
           </>
         ) : (
-          <div className="space-y-6 py-8">
-            <div className="px-6 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
-                <MapIcon className="h-8 w-8 text-cyan-400" />
+          <div className="space-y-4">
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 py-10 text-center px-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
+                <MapIcon className="h-8 w-8 text-cyan-500" />
               </div>
-              <h2 className="mb-2 text-lg font-bold text-slate-800">
-                Your journey starts here
-              </h2>
-              <p className="mx-auto max-w-xs text-sm text-slate-400">
-                When you apply to centres, your applications
-                will appear here with live status updates.
-              </p>
+              <div>
+                <p className="text-lg font-semibold text-slate-900">Your journey starts here</p>
+                <p className="mt-1 text-sm text-slate-500 max-w-xs mx-auto">
+                  Apply to centres and every response, update, and decision will appear here in one place.
+                </p>
+              </div>
+              <Button asChild>
+                <Link href="/directory">
+                  <Compass className="mr-2 h-4 w-4" />
+                  Find a Centre
+                </Link>
+              </Button>
             </div>
 
-            <div className="space-y-3 px-1 opacity-40 pointer-events-none select-none">
-              <p className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Preview - how it will look
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 px-1">
+                Preview — how your applications will look
               </p>
               {[
-                { centre: 'Sunshine ECD Centre', child: 'Your Child', status: 'approved', date: 'Today' },
-                { centre: 'Little Stars Academy', child: 'Your Child', status: 'in_review', date: 'Yesterday' },
-                { centre: 'Rainbow Learning Centre', child: 'Your Child', status: 'submitted', date: '2 days ago' },
+                { centre: 'Sunshine ECD Alexandra', child: 'Amara, 3 yrs', date: 'Applied today', status: 'submitted' },
+                { centre: 'Bright Minds Marlboro', child: 'Amara, 3 yrs', date: 'Applied yesterday', status: 'in_review' },
               ].map((mock) => (
                 <div
                   key={mock.centre}
-                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                  className="pointer-events-none select-none rounded-2xl border border-slate-200 bg-white p-4 opacity-40"
+                  aria-hidden="true"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {mock.centre}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-400">
-                      {mock.child} - {mock.date}
-                    </p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">{mock.centre}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{mock.child} · {mock.date}</p>
+                    </div>
+                    <StatusPill status={mock.status} />
                   </div>
-                  <StatusPill status={mock.status} />
                 </div>
               ))}
-            </div>
-
-            <div className="text-center">
-              <Link
-                href="/directory"
-                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
-              >
-                <Compass className="h-4 w-4" />
-                Find a Centre to Apply
-              </Link>
             </div>
           </div>
         )}

@@ -6,6 +6,7 @@ import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/utils'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
+import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import type { TransportConfig } from '@/components/public/TransportSection'
 import { TransportSection } from '@/components/public/TransportSection'
 import { InteractionActions } from './interaction-actions'
@@ -255,6 +256,15 @@ export default async function CentrePage({ params }: CentrePageProps) {
   const {
     data: { user },
   } = await authResultPromise
+  const { data: savedRow } = user
+    ? await supabase
+        .from('parent_shortlists')
+        .select('id')
+        .eq('parent_id', user.id)
+        .eq('centre_id', centre.id)
+        .maybeSingle()
+    : { data: null }
+  const initialSaved = Boolean(savedRow)
   let userRole: string | null = null
 
   if (user) {
@@ -324,7 +334,10 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 </div>
               </div>
             ) : null}
-            <h1 className="text-3xl font-black leading-tight md:text-5xl">{centre.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-3xl font-black leading-tight md:text-5xl">{centre.name}</h1>
+              <SaveCentreButton centreId={centre.id} initialSaved={initialSaved} />
+            </div>
             {centre.tagline ? (
               <p className="text-lg text-white/70 max-w-2xl">{centre.tagline}</p>
             ) : null}
