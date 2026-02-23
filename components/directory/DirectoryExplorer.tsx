@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
+import { usePathname, useRouter } from 'next/navigation'
 import { Search, SlidersHorizontal } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -66,30 +67,42 @@ export default function DirectoryExplorer({
   totalResults: initialTotal,
   pageSize,
   initialPage,
+  initialFilters,
   suburbs,
   ageGroups,
 }: DirectoryExplorerProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const initialSearch = (initialFilters.search ?? '').trim()
+  const initialSuburb = initialFilters.suburb ?? ''
+  const initialAge = initialFilters.age ?? ''
+  const initialFee = initialFilters.fee ?? ''
+  const initialSubsidy = initialFilters.subsidy ? 'true' : ''
+
   const [centres, setCentres] = useState(initialCentres)
   const [totalResults, setTotalResults] = useState(initialTotal)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
 
-  const [search, setSearch] = useState('')
-  const [selectedSuburb, setSelectedSuburb] = useState('')
-  const [selectedAge, setSelectedAge] = useState('')
-  const [selectedFee, setSelectedFee] = useState('')
-  const [selectedSubsidy, setSelectedSubsidy] = useState('')
+  const [search, setSearch] = useState(initialSearch)
+  const [selectedSuburb, setSelectedSuburb] = useState(initialSuburb)
+  const [selectedAge, setSelectedAge] = useState(initialAge)
+  const [selectedFee, setSelectedFee] = useState(initialFee)
+  const [selectedSubsidy, setSelectedSubsidy] = useState(initialSubsidy)
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [isPending, startTransition] = useTransition()
-  const mountedRef = useRef(false)
+  const fetchMountedRef = useRef(false)
+  const urlSyncMountedRef = useRef(false)
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'pending' | 'granted' | 'denied'>('pending')
   const [geoMessage, setGeoMessage] = useState<string | null>(null)
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
+  const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
 
   const filtered = useMemo(() => {
     const searchValue = search.trim().toLowerCase()
@@ -186,8 +199,27 @@ export default function DirectoryExplorer({
   }, [search])
 
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true
+    if (!urlSyncMountedRef.current) {
+      urlSyncMountedRef.current = true
+      return
+    }
+
+    const params = new URLSearchParams()
+    const trimmedSearch = search.trim()
+    if (trimmedSearch) params.set('search', trimmedSearch)
+    if (selectedSuburb) params.set('suburb', selectedSuburb)
+    if (selectedAge) params.set('age', selectedAge)
+    if (selectedFee) params.set('fee', selectedFee)
+    if (selectedSubsidy === 'true') params.set('subsidy', 'true')
+    if (currentPage > 1) params.set('page', String(currentPage))
+
+    const next = params.toString()
+    router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false })
+  }, [search, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage, pathname, router])
+
+  useEffect(() => {
+    if (!fetchMountedRef.current) {
+      fetchMountedRef.current = true
       return
     }
 
@@ -257,92 +289,105 @@ export default function DirectoryExplorer({
       aria-live="polite"
     >
       <div className="space-y-2.5 sm:space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search centres or suburbs..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setCurrentPage(1)
-            }}
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-9 pr-4 text-sm focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-          />
-        </div>
+        <div className="sticky top-2 z-30 -mx-1 rounded-2xl border border-cyan-100/80 bg-white/95 p-2 shadow-[var(--shadow-elevation-2)] backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search centres or suburbs..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value)
+                  setCurrentPage(1)
+                }}
+                className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-4 text-sm font-medium focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+              />
+            </div>
 
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((prev) => !prev)}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700 md:hidden"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          {filtersOpen ? 'Hide filters' : 'Filter centres'}
-          {(selectedSuburb || selectedAge || selectedFee) && (
-            <span className="h-2 w-2 rounded-full bg-cyan-500" />
-          )}
-        </button>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((prev) => !prev)}
+              className="inline-flex h-[46px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-cyan-300 hover:text-cyan-700 md:hidden"
+            >
+              <span className="relative inline-flex">
+                <SlidersHorizontal className="h-4 w-4" />
+                {hasActiveFilters ? (
+                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-blue-500" />
+                ) : null}
+              </span>
+              Filter
+            </button>
+          </div>
 
-        <div className={cn('grid gap-3 md:grid md:grid-cols-3', filtersOpen ? 'grid' : 'hidden md:grid')}>
-          <select
-            value={selectedSuburb}
-            onChange={(event) => {
-              setSelectedSuburb(event.target.value)
-              setCurrentPage(1)
-            }}
-            className="cc-native-field"
+          <div
+            className={cn(
+              'grid gap-3 overflow-hidden transition-all duration-300 ease-out md:grid-cols-3 md:overflow-visible',
+              filtersOpen
+                ? 'mt-2 max-h-96 border-t border-slate-100 pt-2 opacity-100 md:mt-0 md:max-h-none md:border-0 md:pt-0'
+                : 'max-h-0 opacity-0 md:mt-2 md:max-h-none md:opacity-100'
+            )}
           >
-            <option value="">All suburbs</option>
-            {suburbs.map((suburb) => (
-              <option key={suburb} value={suburb}>
-                {suburb}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedAge}
-            onChange={(event) => {
-              setSelectedAge(event.target.value)
-              setCurrentPage(1)
-            }}
-            className="cc-native-field"
-          >
-            <option value="">All age groups</option>
-            {ageGroups.map((group) => (
-              <option key={group} value={group}>
-                {group}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={selectedFee}
-            onChange={(event) => {
-              setSelectedFee(event.target.value)
-              setCurrentPage(1)
-            }}
-            className="cc-native-field"
-          >
-            {FEE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-
-          <label className="flex items-center gap-2 rounded-md border border-border px-3 text-xs font-semibold">
-            <input
-              type="checkbox"
-              checked={selectedSubsidy === 'true'}
+            <select
+              value={selectedSuburb}
               onChange={(event) => {
-                setSelectedSubsidy(event.target.checked ? 'true' : '')
+                setSelectedSuburb(event.target.value)
                 setCurrentPage(1)
               }}
-              className="h-4 w-4 rounded border-slate-300"
-            />
-            Subsidy accepted
-          </label>
+              className="cc-native-field"
+            >
+              <option value="">All suburbs</option>
+              {suburbs.map((suburb) => (
+                <option key={suburb} value={suburb}>
+                  {suburb}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedAge}
+              onChange={(event) => {
+                setSelectedAge(event.target.value)
+                setCurrentPage(1)
+              }}
+              className="cc-native-field"
+            >
+              <option value="">All age groups</option>
+              {ageGroups.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedFee}
+              onChange={(event) => {
+                setSelectedFee(event.target.value)
+                setCurrentPage(1)
+              }}
+              className="cc-native-field"
+            >
+              {FEE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="flex h-10 items-center gap-2 rounded-md border border-border px-3 text-xs font-semibold md:col-span-3">
+              <input
+                type="checkbox"
+                checked={selectedSubsidy === 'true'}
+                onChange={(event) => {
+                  setSelectedSubsidy(event.target.checked ? 'true' : '')
+                  setCurrentPage(1)
+                }}
+                className="h-4 w-4 rounded border-slate-300"
+              />
+              Subsidy accepted
+            </label>
+          </div>
         </div>
       </div>
 
