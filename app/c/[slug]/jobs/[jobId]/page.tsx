@@ -30,40 +30,48 @@ export async function generateMetadata({ params }: PublicJobPageProps): Promise<
 
 export default async function PublicJobPage({ params }: PublicJobPageProps) {
   const supabase = await createClient()
-  const { data: centre } = await supabase
-    .from('ecd_centres')
-    .select('id,name,slug,logo_url')
-    .eq('slug', params.slug)
-    .maybeSingle()
-  if (!centre) notFound()
-
   const { data: job } = await supabase
     .from('jobs')
-    .select('id,title,role_type,description,requirements,closes_at,is_published')
+    .select('id,ecd_id,title,role_type,description,requirements,closes_at,is_published,ecd_centres(id,name,slug,logo_url)')
     .eq('id', params.jobId)
-    .eq('ecd_id', centre.id)
     .eq('is_published', true)
     .maybeSingle()
   if (!job) notFound()
 
+  const relatedCentre = Array.isArray(job.ecd_centres) ? job.ecd_centres[0] : job.ecd_centres
+  let centre = relatedCentre ?? null
+
+  if (!centre && job.ecd_id) {
+    const { data: centreById } = await supabase
+      .from('ecd_centres')
+      .select('id,name,slug,logo_url')
+      .eq('id', job.ecd_id)
+      .maybeSingle()
+
+    centre = centreById
+  }
+
+  const centreName = centre?.name ?? 'ECD Centre'
+  const centreLogoUrl = centre?.logo_url ?? null
+  const ecdId = job.ecd_id as string
   const isClosed = Boolean(job.closes_at && new Date(job.closes_at) < new Date())
 
   return (
     <main className="min-h-screen bg-slate-50 pb-10">
       <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
-          {centre.logo_url ? (
+          {centreLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={centre.logo_url} alt={centre.name} className="h-8 w-8 rounded-lg object-cover" />
+            <img src={centreLogoUrl} alt={centreName} className="h-8 w-8 rounded-lg object-cover" />
           ) : null}
-          <span className="text-sm font-medium text-slate-900">{centre.name}</span>
+          <span className="text-sm font-medium text-slate-900">{centreName}</span>
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-3xl space-y-8 px-4 py-8">
         <section className="space-y-2">
           <h1 className="text-3xl font-bold text-slate-900">{job.title}</h1>
-          <p className="text-sm text-slate-600">{centre.name}</p>
+          <p className="text-sm text-slate-600">{centreName}</p>
           {job.closes_at ? (
             <p className={`text-sm ${isClosed ? 'text-red-700' : 'text-slate-600'}`}>
               {isClosed ? 'Applications closed' : `Apply by ${formatDate(job.closes_at)}`}
@@ -95,13 +103,12 @@ export default async function PublicJobPage({ params }: PublicJobPageProps) {
         ) : (
           <PublicJobApplyForm
             jobId={job.id}
-            ecdId={centre.id}
+            ecdId={ecdId}
             jobTitle={job.title}
-            centreName={centre.name}
+            centreName={centreName}
           />
         )}
       </div>
     </main>
   )
 }
-

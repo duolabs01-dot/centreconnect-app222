@@ -86,7 +86,7 @@ export default async function ParentDashboardPage() {
             return (
               <Link
                 key={job.id}
-                href={centre?.slug ? `/c/${centre.slug}/jobs/${job.id}` : '/directory'}
+                href={centre?.slug ? `/c/${centre.slug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`}
                 className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-sm"
               >
                 <div className="flex items-start justify-between gap-3">

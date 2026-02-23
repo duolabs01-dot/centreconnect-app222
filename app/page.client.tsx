@@ -288,7 +288,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                 </div>
               ) : (
                 activeJobs.map((job) => {
-                  const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : '/directory'
+                  const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`
                   const location = [job.suburb, job.city].filter(Boolean).join(', ')
 
                   return (
