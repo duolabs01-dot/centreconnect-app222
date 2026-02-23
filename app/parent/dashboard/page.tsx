@@ -1,15 +1,12 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { StatCard } from '@/components/ui/StatCard'
 import { getJohannesburgGreeting } from '@/lib/utils'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
-import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { RecentApplicationsSection } from './_sections/recent-applications-section'
-import { Sparkles, ShieldCheck, Clock3, Rocket, BellRing } from 'lucide-react'
+import { Compass, Sparkles, ShieldCheck, ChevronRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Parent Command Centre | CentreConnect',
@@ -55,114 +52,103 @@ export default async function ParentDashboardPage() {
     ])
 
     const applicationStatuses = (applicationsResult.data ?? []).map((row) => row.status)
+    const childrenCount = childrenCountResult.count ?? 0
     const totalApplications = applicationStatuses.length
-    const pendingApplications = applicationStatuses.filter((status) => status === 'submitted' || status === 'in_review').length
     const approvedApplications = applicationStatuses.filter((status) => status === 'approved' || status === 'enrolled').length
-
-    const stats = [
-      { label: 'Children', value: childrenCountResult.count ?? 0, helper: 'Profiles added' },
-      { label: 'Applications', value: totalApplications, helper: 'Submitted total' },
-      { label: 'Pending', value: pendingApplications, helper: 'Awaiting review' },
-      { label: 'Approved', value: approvedApplications, helper: 'Accepted and enrolled' },
-    ]
+    const hasChildren = childrenCount > 0
+    const hasApplications = totalApplications > 0
+    const hasEnrolled = approvedApplications > 0
 
     return (
       <div className="cc-page">
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-cyan-50 via-white to-blue-50 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.1)] sm:p-7">
-          <div className="absolute -right-24 -top-24 h-56 w-56 rounded-full bg-cyan-200/30 blur-3xl" aria-hidden />
-          <div className="absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" aria-hidden />
-          <div className="relative">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/90 px-3 py-1 text-xs font-semibold text-cyan-800">
-              <Sparkles className="h-3.5 w-3.5" />
-              Parent Home
+        {!hasApplications ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6 gap-6">
+            <div className="w-20 h-20 rounded-full bg-cyan-50 flex items-center justify-center">
+              <Sparkles className="w-10 h-10 text-cyan-500" />
             </div>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-900 sm:text-3xl">Welcome back, {parentName}</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              {greeting}. This is your parent command centre for applications, alerts, and placement momentum.
-            </p>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <Clock3 className="h-4 w-4 text-blue-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Faster Decisions</p>
-                </div>
-                <p className="mt-1 text-xs text-slate-600">Keep documents complete and avoid stalled applications.</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trusted Centres</p>
-                </div>
-                <p className="mt-1 text-xs text-slate-600">Compare centres by fit, affordability, and confidence signals.</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <Rocket className="h-4 w-4 text-violet-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Placement Momentum</p>
-                </div>
-                <p className="mt-1 text-xs text-slate-600">Aim for multiple live applications to reduce wait risk.</p>
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button asChild>
-                <Link href="/directory">Browse Centres</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/parent/applications">Track Applications</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <StatCard key={stat.label} title={stat.label} value={stat.value} helper={stat.helper} />
-          ))}
-        </section>
-
-        <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
-          <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold">Priority Actions</h2>
-              <p className="mt-1 text-sm text-slate-600">Complete these first to keep every application moving forward.</p>
+              <h1 className="text-2xl font-bold text-slate-900 mb-2">
+                Welcome, {parentName}
+              </h1>
+              <p className="text-slate-500 text-base max-w-sm mx-auto leading-relaxed">
+                Let&apos;s find the perfect ECD centre for your child.
+                It takes less than 5 minutes to apply.
+              </p>
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800 sm:inline-flex">
-              <BellRing className="h-3.5 w-3.5" />
-              Action queue
+            <Link
+              href="/directory"
+              className="inline-flex items-center gap-2 bg-cyan-600 text-white font-semibold px-8 py-4 rounded-2xl hover:bg-cyan-700 transition-colors shadow-lg shadow-cyan-200 text-base"
+            >
+              <Compass className="w-5 h-5" />
+              Find a Centre
+            </Link>
+            <Link
+              href={hasChildren ? '/parent/children' : '/parent/children/new'}
+              className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              {hasChildren ? "Review your child's profile ->" : "Add your child's profile first ->"}
+            </Link>
+          </div>
+        ) : hasApplications && !hasEnrolled ? (
+          <div className="space-y-4">
+            <div className="px-1">
+              <p className="text-sm font-medium text-slate-500">
+                {greeting}, {parentName}
+              </p>
+              <h1 className="text-xl font-bold text-slate-900 mt-0.5">
+                Your Application Journey
+              </h1>
+            </div>
+
+            <Suspense fallback={<SectionFallback title="Applications" />}>
+              <RecentApplicationsSection />
+            </Suspense>
+
+            <div className="pt-2">
+              <Link
+                href="/directory"
+                className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:bg-cyan-50 hover:border-cyan-200 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Compass className="w-5 h-5 text-slate-400 group-hover:text-cyan-500" />
+                  <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">
+                    Discover more centres
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </Link>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <Button size="lg" className="h-12 w-full justify-start bg-blue-600 px-4 text-left hover:bg-blue-500" asChild>
-              <Link href="/directory">Find a Centre</Link>
-            </Button>
-            <Button size="lg" className="h-12 w-full justify-start bg-emerald-600 px-4 text-left hover:bg-emerald-500" asChild>
-              <Link href="/parent/children/new">Add Child</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="h-12 w-full justify-start border-orange-200 bg-orange-50 px-4 text-left text-orange-900 hover:bg-orange-100" asChild>
-              <Link href="/parent/applications">Track Applications</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="h-12 w-full justify-start border-violet-200 bg-violet-50 px-4 text-left text-violet-900 hover:bg-violet-100" asChild>
-              <Link href="/parent/profile">Complete Profile</Link>
-            </Button>
+        ) : (
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 p-5 text-white">
+              <div className="flex items-center gap-3 mb-1">
+                <ShieldCheck className="w-5 h-5 text-cyan-200" />
+                <p className="text-cyan-100 text-xs font-semibold uppercase tracking-wider">
+                  All Good
+                </p>
+              </div>
+              <p className="text-lg font-bold">
+                Your child is in good hands
+              </p>
+              <p className="text-cyan-100 text-sm mt-1">
+                Enrolled and learning today
+              </p>
+            </div>
+
+            <Suspense fallback={<SectionFallback title="Activity" />}>
+              <ActivityFeedSection />
+            </Suspense>
+
+            <Suspense fallback={<SectionFallback title="Applications" />}>
+              <RecentApplicationsSection />
+            </Suspense>
           </div>
-        </section>
-
-        <Suspense fallback={<SectionFallback title="Recent applications" />}>
-          <RecentApplicationsSection />
-        </Suspense>
-
-        <Suspense fallback={<SectionFallback title="Suggested centres" />}>
-          <SuggestedCentresSection />
-        </Suspense>
-
-        <Suspense fallback={<SectionFallback title="Activity feed" />}>
-          <ActivityFeedSection />
-        </Suspense>
+        )}
       </div>
     )
   } finally {
     logRoutePerf(perf)
   }
 }
+
