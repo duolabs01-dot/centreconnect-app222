@@ -175,29 +175,53 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                 <Link href={isSignedIn ? '/parent/applications' : '/login'}>My Applications</Link>
               </Button>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <Clock3 className="h-4 w-4 text-blue-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Save Time</p>
-                </div>
-                <p className="mt-1 text-xs text-slate-600">No more calling centres for status updates.</p>
+            {!isSignedIn ? (
+              <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
+                {[
+                  { emoji: '📍', title: 'Find Centres', desc: 'Browse ECDs near you' },
+                  { emoji: '📝', title: 'Apply Online', desc: 'No paperwork needed' },
+                  { emoji: '📊', title: 'Track Progress', desc: 'Real-time status updates' },
+                  { emoji: '💬', title: 'Communicate', desc: 'Direct centre messaging' },
+                  { emoji: '🗂️', title: 'Store Documents', desc: 'Secure document vault' },
+                  { emoji: '🔔', title: 'Get Notified', desc: 'Instant decision alerts' },
+                ].map((item) => (
+                  <div
+                    key={item.title}
+                    className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 p-4 backdrop-blur-sm"
+                  >
+                    <span className="text-2xl">{item.emoji}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trust Signals</p>
+            ) : (
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <Clock3 className="h-4 w-4 text-blue-600" />
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Save Time</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">No more calling centres for status updates.</p>
                 </div>
-                <p className="mt-1 text-xs text-slate-600">See registered centres and compare clearly.</p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                <div className="flex items-center gap-2 text-slate-900">
-                  <HeartHandshake className="h-4 w-4 text-fuchsia-600" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">Parent First</p>
+                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trust Signals</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">See registered centres and compare clearly.</p>
                 </div>
-                <p className="mt-1 text-xs text-slate-600">Built around real family decision moments.</p>
+                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <HeartHandshake className="h-4 w-4 text-fuchsia-600" />
+                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Parent First</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">Built around real family decision moments.</p>
+                </div>
               </div>
-            </div>
+            )}
           </section>
 
           <ApplicationProgressSection />

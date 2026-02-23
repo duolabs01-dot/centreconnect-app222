@@ -161,7 +161,7 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
         {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
       <header className="cc-glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
-        <Container className="flex items-center justify-between gap-3 py-3 sm:py-4">
+        <Container className="max-w-3xl flex items-center justify-between gap-3 py-3 sm:py-4">
           {showMobileBack ? (
             <div className="flex shrink-0 items-center md:hidden">
               <button
@@ -199,8 +199,8 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
         </Container>
       </header>
 
-      <main className="overflow-x-hidden py-4 pb-24 sm:py-6 md:pb-0">
-        <Container>
+      <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0">
+        <Container className="max-w-3xl">
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
       </main>

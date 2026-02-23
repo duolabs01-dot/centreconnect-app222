@@ -55,6 +55,58 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function StatusPill({ status }: { status: string }) {
+  const config: Record<string, { label: string; className: string }> = {
+    submitted: {
+      label: 'Submitted',
+      className: 'bg-blue-50 text-blue-700 border-blue-200',
+    },
+    in_review: {
+      label: 'In Review',
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    pending_review: {
+      label: 'In Review',
+      className: 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    approved: {
+      label: 'Approved',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    enrolled: {
+      label: 'Enrolled',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    provisioned: {
+      label: 'Enrolled',
+      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    waitlisted: {
+      label: 'Waitlisted',
+      className: 'bg-slate-50 text-slate-600 border-slate-200',
+    },
+    rejected: {
+      label: 'Unsuccessful',
+      className: 'bg-red-50 text-red-600 border-red-200',
+    },
+    withdrawn: {
+      label: 'Withdrawn',
+      className: 'bg-slate-50 text-slate-400 border-slate-200',
+    },
+  }
+
+  const c = config[status] ?? {
+    label: status,
+    className: 'bg-slate-50 text-slate-500 border-slate-200',
+  }
+
+  return (
+    <span className={cn('inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border', c.className)}>
+      {c.label}
+    </span>
+  )
+}
+
 export default async function ParentApplicationsPage({ searchParams }: ParentApplicationsPageProps) {
   const perf = startRoutePerf('/parent/applications')
   const supabase = await createClient()
@@ -230,24 +282,55 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
-              <MapIcon className="h-8 w-8 text-cyan-400" />
+          <div className="space-y-6 py-8">
+            <div className="px-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
+                <MapIcon className="h-8 w-8 text-cyan-400" />
+              </div>
+              <h2 className="mb-2 text-lg font-bold text-slate-800">
+                Your journey starts here
+              </h2>
+              <p className="mx-auto max-w-xs text-sm text-slate-400">
+                When you apply to centres, your applications
+                will appear here with live status updates.
+              </p>
             </div>
-            <p className="mb-1 font-semibold text-slate-700">
-              No applications yet
-            </p>
-            <p className="mb-6 max-w-xs text-sm text-slate-400">
-              Browse centres and submit your first application.
-              It only takes a few minutes.
-            </p>
-            <Link
-              href="/directory"
-              className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
-            >
-              <Compass className="h-4 w-4" />
-              Find a Centre
-            </Link>
+
+            <div className="space-y-3 px-1 opacity-40 pointer-events-none select-none">
+              <p className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Preview - how it will look
+              </p>
+              {[
+                { centre: 'Sunshine ECD Centre', child: 'Your Child', status: 'approved', date: 'Today' },
+                { centre: 'Little Stars Academy', child: 'Your Child', status: 'in_review', date: 'Yesterday' },
+                { centre: 'Rainbow Learning Centre', child: 'Your Child', status: 'submitted', date: '2 days ago' },
+              ].map((mock) => (
+                <div
+                  key={mock.centre}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-slate-900">
+                      {mock.centre}
+                    </p>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      {mock.child} - {mock.date}
+                    </p>
+                  </div>
+                  <StatusPill status={mock.status} />
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center">
+              <Link
+                href="/directory"
+                className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
+              >
+                <Compass className="h-4 w-4" />
+                Find a Centre to Apply
+              </Link>
+            </div>
           </div>
         )}
       </div>
