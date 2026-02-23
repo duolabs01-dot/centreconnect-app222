@@ -12,10 +12,15 @@ const config = {
   		}
   	},
   	        extend: {
-  	                fontFamily: {
-  	                        orbitron: ['var(--font-orbitron)', 'sans-serif'],
-  	                        inter: ['var(--font-inter)', 'sans-serif'],
-  	                },
+ 	                fontFamily: {
+	                        // Existing utilities used by current live pages.
+ 	                        orbitron: ['var(--font-orbitron)', 'sans-serif'],
+ 	                        inter: ['var(--font-inter)', 'sans-serif'],
+	                        // Theme aliases for new components/pages (non-breaking).
+	                        parent: ['var(--font-parent)', 'sans-serif'],
+	                        ecd: ['var(--font-ecd)', 'sans-serif'],
+	                        admin: ['var(--font-admin)', 'sans-serif'],
+ 	                },
   	                colors: {
   	                        // Admin-only utility colors (used by cyber-* Tailwind classes).
   	                        cyber: {

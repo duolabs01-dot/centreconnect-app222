@@ -204,11 +204,17 @@ body {
 }
 
 :root {
-  /* Shared typography tokens (cross-theme). */
+  /* === LANDING PAGE FONTS (do not modify) === */
   --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-orbitron), var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* === PARENT THEME FONTS === */
   --font-parent: 'Nunito', sans-serif;
+
+  /* === ECD THEME FONTS === */
   --font-ecd: 'DM Sans', sans-serif;
+
+  /* === ADMIN THEME FONTS === */
   --font-admin: 'Inter', sans-serif;
 
   /* Shared glass + motion helpers. */
