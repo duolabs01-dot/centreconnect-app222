@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { Eye, EyeOff } from 'lucide-react'
 import { Section } from '@/components/layout/Section'
 import { triggerConfetti } from '@/lib/ui/confetti'
+import { registerSession } from '@/lib/session-guard'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
+  const reason = searchParams.get('reason')
 
   function sanitizeNextPath(value: string | null | undefined) {
     if (!value) return null
@@ -53,6 +55,19 @@ export default function LoginPage() {
         password: normalizedPassword,
       })
       if (error) throw error
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session?.access_token && data.user) {
+        await registerSession(
+          data.user.id,
+          session.access_token,
+          typeof window !== 'undefined'
+            ? navigator.userAgent.slice(0, 100)
+            : 'server'
+        )
+      }
 
       const ensureProfileResponse = await fetch('/api/auth/ensure-profile', { method: 'POST' })
       const ensurePayload = (await ensureProfileResponse.json().catch(() => ({}))) as { error?: string; role?: string }
@@ -120,6 +135,11 @@ export default function LoginPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {reason === 'session_expired' && (
+              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-700 mb-4">
+                You were signed out because your account was accessed from another device.
+              </div>
+            )}
             <Button
               type="button"
               variant="outline"
