@@ -107,7 +107,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="glass-card border border-border bg-card/90 text-foreground">
           <CardHeader>
             <CardTitle>Quick Start</CardTitle>
           </CardHeader>
@@ -134,7 +134,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
         </Card>
 
         <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <Card className="glass border border-border bg-card/90 text-foreground">
+          <Card className="glass-card border border-border bg-card/90 text-foreground">
             <CardHeader>
               <CardTitle>Compose Message</CardTitle>
             </CardHeader>
@@ -155,7 +155,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
           </Card>
 
           <div className="space-y-6">
-            <Card className="glass border border-border bg-card/90 text-foreground">
+            <Card className="glass-card border border-border bg-card/90 text-foreground">
               <CardHeader>
                 <CardTitle>Recent Notifications</CardTitle>
               </CardHeader>
@@ -174,7 +174,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                 )}
               </CardContent>
             </Card>
-            <Card className="glass border border-border bg-card/90 text-foreground">
+            <Card className="glass-card border border-border bg-card/90 text-foreground">
               <CardHeader>
                 <CardTitle>Recent Threads</CardTitle>
               </CardHeader>
@@ -199,4 +199,5 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     </EcdOsShell>
   )
 }
+
 

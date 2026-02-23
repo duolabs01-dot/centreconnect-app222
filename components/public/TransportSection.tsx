@@ -31,7 +31,7 @@ export function TransportSection({
 
   return (
     <section id="transport" className="mt-10 max-w-4xl px-4 md:px-0">
-      <div className="glass rounded-2xl border border-white/10 p-6">
+      <div className="glass-card rounded-2xl border border-white/10 p-6">
         {transport.fee_per_month ? (
           <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/90 to-emerald-50/90 p-6 text-slate-900 shadow-lg shadow-cyan-900/20">
             <p className="text-3xl font-black text-cyan-700">{currencyLabel}</p>
@@ -57,7 +57,7 @@ export function TransportSection({
               Transport quotes are calculated per route.
             </p>
             <p className="mt-2 text-sm text-slate-300">
-              Submit your pickup location and we’ll share a personalised quote within 1–2 business days.
+              Submit your pickup location and weÃ¢â‚¬â„¢ll share a personalised quote within 1Ã¢â‚¬â€œ2 business days.
             </p>
           </div>
         )}
@@ -87,7 +87,7 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
     return (
         <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
           <CheckCircle className="h-4 w-4 text-emerald-500" />
-          Enquiry sent! We’ll share a quote soon.
+          Enquiry sent! WeÃ¢â‚¬â„¢ll share a quote soon.
         </div>
     )
   }
@@ -171,9 +171,10 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
           disabled={loading}
           className="flex-1 rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-cyan-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Sending…' : 'Send Enquiry'}
+          {loading ? 'SendingÃ¢â‚¬Â¦' : 'Send Enquiry'}
         </button>
       </div>
     </div>
   )
 }
+

@@ -112,15 +112,15 @@ export default async function EcdMarketplacePage() {
             <CardTitle>Package Context</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-3">
-            <div className="glass border-border bg-card/80 p-3 text-foreground">
+            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tier</p>
               <p className="mt-1 text-lg font-semibold text-foreground">{tier}</p>
             </div>
-            <div className="glass border-border bg-card/80 p-3 text-foreground">
+            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Billing status</p>
               <p className="mt-1 text-lg font-semibold text-foreground">{subscription?.status ?? 'trial'}</p>
             </div>
-            <div className="glass border-border bg-card/80 p-3 text-foreground">
+            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Monthly price</p>
               <p className="mt-1 text-lg font-semibold text-foreground">{subscription?.monthly_price ? `R${subscription.monthly_price}` : 'R0'}</p>
             </div>
@@ -129,7 +129,7 @@ export default async function EcdMarketplacePage() {
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {services.length === 0 ? (
-            <div className="glass border-border bg-card/80 p-5 text-sm text-muted-foreground">
+            <div className="glass-card border-border bg-card/80 p-5 text-sm text-muted-foreground">
               No services listed yet. Seed `marketplace_services` to show offerings.
             </div>
           ) : (
@@ -223,3 +223,4 @@ export default async function EcdMarketplacePage() {
     </EcdOsShell>
   )
 }
+

@@ -233,7 +233,7 @@ export default async function EcdWebsitePage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
-        <Card className="glass border border-border bg-gradient-to-br from-cyan-50/80 via-white/80 to-emerald-50/80 lg:col-span-2 shadow-2xl text-foreground">
+        <Card className="glass-card border border-border bg-gradient-to-br from-cyan-50/80 via-white/80 to-emerald-50/80 lg:col-span-2 shadow-2xl text-foreground">
           <CardHeader>
             <CardTitle className="text-foreground">Website Progress</CardTitle>
           </CardHeader>
@@ -274,7 +274,7 @@ export default async function EcdWebsitePage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="glass-card border border-border bg-card/90 text-foreground">
           <CardHeader>
             <CardTitle>Plan & Website Scope</CardTitle>
           </CardHeader>
@@ -308,7 +308,7 @@ export default async function EcdWebsitePage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="glass-card border border-border bg-card/90 text-foreground">
           <CardHeader>
             <CardTitle>Edit Website Content</CardTitle>
           </CardHeader>
@@ -381,7 +381,7 @@ export default async function EcdWebsitePage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="glass-card border border-border bg-card/90 text-foreground">
           <CardHeader>
             <CardTitle>Publish Controls</CardTitle>
           </CardHeader>
@@ -417,7 +417,7 @@ export default async function EcdWebsitePage() {
           </CardContent>
         </Card>
 
-        <Card className="glass border border-border bg-card/90 text-foreground lg:col-span-2">
+        <Card className="glass-card border border-border bg-card/90 text-foreground lg:col-span-2">
           <CardHeader>
             <CardTitle>Need a Full Website Setup?</CardTitle>
           </CardHeader>
@@ -460,3 +460,4 @@ export default async function EcdWebsitePage() {
     </EcdOsShell>
   )
 }
+

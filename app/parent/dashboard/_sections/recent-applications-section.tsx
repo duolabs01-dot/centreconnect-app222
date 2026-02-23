@@ -51,7 +51,7 @@ export async function RecentApplicationsSection() {
     }) ?? []
 
   return (
-    <section id="applications" className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+    <section id="applications" className="glass-card rounded-2xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold">Recent applications</h2>
       <p className="mt-1 text-sm text-slate-600">Latest submissions and their current status.</p>
       <div className="mt-4 space-y-3">
@@ -85,3 +85,4 @@ export async function RecentApplicationsSection() {
     </section>
   )
 }
+

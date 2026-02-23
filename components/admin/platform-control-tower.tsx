@@ -447,7 +447,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
 
   return (
     <div className="space-y-10">
-      <section className="glass relative overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-slate-950/80 to-slate-900/70 px-6 py-5 shadow-[0_40px_90px_rgba(2,6,23,0.5)]">
+      <section className="glass-card relative overflow-hidden rounded-[34px] border border-white/10 bg-gradient-to-br from-slate-950/80 to-slate-900/70 px-6 py-5 shadow-[0_40px_90px_rgba(2,6,23,0.5)]">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-[0.4em] text-cyan-300">Revenue Pulse</p>
@@ -492,7 +492,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1fr_0.7fr]">
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Centre Health Grid</CardTitle>
@@ -528,7 +528,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
             ))}
           </CardContent>
         </Card>
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Alerts Rail</CardTitle>
@@ -558,7 +558,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/75 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/75 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Onboarding Pipeline</CardTitle>
@@ -572,7 +572,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
             ))}
           </CardContent>
         </Card>
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/75 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/75 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Subscription Tier Distribution</CardTitle>
@@ -593,14 +593,14 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
               </div>
             ))}
             <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-3 text-sm text-slate-100">
-              {upgradeCandidates.length} starter/growth centres trending premium – flag them now.
+              {upgradeCandidates.length} starter/growth centres trending premium Ã¢â‚¬â€œ flag them now.
             </div>
           </CardContent>
         </Card>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1fr_0.65fr]">
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Financial Detail</CardTitle>
@@ -625,7 +625,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
             ))}
           </CardContent>
         </Card>
-        <Card className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+        <Card className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg text-white">Platform Health</CardTitle>
@@ -647,7 +647,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
         </Card>
       </section>
 
-      <section className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+      <section className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -671,7 +671,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
         </CardContent>
       </section>
 
-      <section className="glass rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
+      <section className="glass-card rounded-[26px] border border-white/10 bg-slate-900/70 p-6">
         <CardHeader>
           <CardTitle className="text-lg text-white">Control Tower Summary</CardTitle>
           <p className="text-xs text-slate-400">This page always ends with the live tally of what just happened.</p>
@@ -691,3 +691,4 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
     </div>
   )
 }
+

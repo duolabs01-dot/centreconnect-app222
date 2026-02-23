@@ -352,7 +352,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 href="#about"
                 className="flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-white/10"
               >
-                Learn more ↓
+                Learn more â†“
               </a>
             </div>
             <div className="max-w-3xl">
@@ -388,7 +388,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
               {programs.map((program, index) => (
                 <div
                   key={`${program.title ?? 'program'}-${index}`}
-                  className="glass rounded-2xl border border-white/10 p-5 text-slate-900 shadow-lg shadow-black/10"
+                  className="glass-card rounded-2xl border border-white/10 p-5 text-slate-900 shadow-lg shadow-black/10"
                 >
                   <p className="text-lg font-semibold text-slate-900">{program.title || `Programme ${index + 1}`}</p>
                   <p className="mt-2 text-sm text-slate-700">{program.description || 'Details coming soon.'}</p>

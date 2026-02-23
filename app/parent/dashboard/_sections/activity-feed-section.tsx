@@ -46,7 +46,7 @@ export async function ActivityFeedSection() {
     }) ?? []
 
   return (
-    <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+    <section className="glass-card rounded-2xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold">Activity feed</h2>
       <p className="mt-1 text-sm text-slate-600">Recent updates on your applications.</p>
       <div className="mt-4 space-y-4">
@@ -86,3 +86,4 @@ export async function ActivityFeedSection() {
     </section>
   )
 }
+

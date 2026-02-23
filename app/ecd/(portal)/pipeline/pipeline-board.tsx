@@ -263,7 +263,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
             parent_id: parent.id,
             ecd_id: ecdId,
             application_id: applicationId,
-            title: 'Application approved 🎉',
+            title: 'Application approved Ã°Å¸Å½â€°',
             message: `Hi ${parentName}, ${centreName} has approved the application for ${childName} (${application.application_number}).`,
           })
         }
@@ -316,7 +316,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
             return (
               <div
                 key={`summary-${column.key}`}
-                className="glass rounded-2xl border border-border px-4 py-3"
+                className="glass-card rounded-2xl border border-border px-4 py-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -351,7 +351,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
           {grouped.map((column) => (
           <Card
             key={column.key}
-            className={`pipeline-card glass border border-border bg-card/90 ${column.pipelineClass} ${
+            className={`pipeline-card glass-card border border-border bg-card/90 ${column.pipelineClass} ${
               dropTarget === column.key ? `ring-2 ${column.dropRing}` : ''
             }`}
             onDragOver={(event) => {
@@ -442,3 +442,4 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
     </section>
   )
 }
+

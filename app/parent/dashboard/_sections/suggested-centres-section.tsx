@@ -19,7 +19,7 @@ export async function SuggestedCentresSection() {
   }>
 
   return (
-    <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+    <section className="glass-card rounded-2xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold">Suggested centres</h2>
       <p className="mt-1 text-sm text-slate-600">Explore popular centres you can apply to next.</p>
       <div className="mt-4 space-y-3">
@@ -45,3 +45,4 @@ export async function SuggestedCentresSection() {
     </section>
   )
 }
+

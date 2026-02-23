@@ -105,8 +105,16 @@ body {
     @apply text-sm text-slate-600;
   }
 
-  .cc-glass {
-    @apply border border-white/80 bg-white/88 backdrop-blur-xl shadow-[0_22px_52px_rgba(15,23,42,0.10),0_6px_18px_rgba(37,99,235,0.10)];
+  .glass-card {
+    @apply rounded-2xl border border-white/60 bg-white/80 backdrop-blur-md shadow-lg;
+  }
+
+  .glass-nav {
+    @apply border-b border-white/40 bg-white/90 backdrop-blur-xl shadow-md;
+  }
+
+  .glass-modal {
+    @apply border border-white/70 bg-white/95 backdrop-blur-2xl shadow-2xl;
   }
 }
 
@@ -288,45 +296,6 @@ body { overflow-x: hidden; }
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(7, 12, 24, 0.85);
     color: #94a3b8;
-  }
-
-  .cc-glass-soft {
-    background: var(--glass-bg-soft);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: saturate(170%) blur(14px);
-    -webkit-backdrop-filter: saturate(170%) blur(14px);
-    box-shadow: var(--shadow-card);
-  }
-
-  .cc-glass-strong {
-    background: var(--glass-bg-strong);
-    border: 1px solid var(--glass-stroke);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    box-shadow: var(--glass-shadow-strong);
-  }
-
-  .glass {
-    background: hsla(var(--card) / 0.05);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsla(var(--border) / 0.1);
-    border-radius: 1rem;
-    color: hsl(var(--foreground));
-  }
-
-  .glass:hover {
-    background: hsla(var(--card) / 0.08);
-    border-color: hsla(var(--border) / 0.25);
-    transition: all 0.2s ease;
-  }
-
-  .cc-glass-nav {
-    background: var(--glass-bg-strong);
-    border: 1px solid var(--glass-stroke);
-    backdrop-filter: saturate(180%) blur(18px);
-    -webkit-backdrop-filter: saturate(180%) blur(18px);
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.10);
   }
 
   .cc-native-field {
@@ -535,13 +504,11 @@ body { overflow-x: hidden; }
   background-color: var(--ecd-surface-soft) !important;
 }
 
-[data-ecd-theme='true'] .cc-glass-soft,
-[data-ecd-theme='true'] .cc-glass-strong,
+[data-ecd-theme='true'] .glass-card,
 [data-ecd-theme='true'] .cc-card {
   box-shadow: var(--ecd-shadow) !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 [data-ecd-theme='true'] [class*='CardHeader'],
@@ -583,18 +550,16 @@ body { overflow-x: hidden; }
   background: rgba(34, 211, 238, 0.08);
 }
 
-[data-ecd-theme='true'] .glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+[data-ecd-theme='true'] .glass-nav {
+  background: rgba(15, 23, 42, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: var(--ecd-shadow) !important;
 }
 
-[data-ecd-theme='true'] .glass-card-hover:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(6, 182, 212, 0.38);
-  transform: translateY(-1px);
-  transition: all 0.2s ease;
+[data-ecd-theme='true'] .glass-modal {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  box-shadow: var(--ecd-shadow) !important;
 }
 
 /* Parent portal unified theme scope (only /parent shell). */
@@ -661,9 +626,22 @@ body { overflow-x: hidden; }
   background-color: var(--parent-surface-soft) !important;
 }
 
-[data-parent-theme='true'] .cc-glass-soft,
-[data-parent-theme='true'] .cc-glass-strong,
+[data-parent-theme='true'] .glass-card,
 [data-parent-theme='true'] .cc-card {
+  background: var(--parent-surface) !important;
+  border-color: var(--parent-accent-200) !important;
+  box-shadow: var(--parent-shadow) !important;
+}
+
+[data-parent-theme='true'] .glass-nav {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(191, 219, 254, 0.75) !important;
+  box-shadow: var(--parent-shadow) !important;
+}
+
+[data-parent-theme='true'] .glass-modal {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(191, 219, 254, 0.9) !important;
   box-shadow: var(--parent-shadow) !important;
 }
 

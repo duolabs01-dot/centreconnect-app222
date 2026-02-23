@@ -33,7 +33,7 @@ export function AppHeader({
   })
 
   return (
-    <header className="cc-glass-nav sticky top-0 z-40 border-b border-cyan-100/60">
+    <header className="glass-nav sticky top-0 z-40 border-b border-cyan-100/60">
       <PageContainer className="flex items-center justify-between py-4">
         <BrandMark href={brandHref} label={brandLabel} compact hideLabelOnMobile />
         <nav className="hidden items-center gap-5 md:flex">
@@ -112,3 +112,4 @@ export function AppHeader({
     </header>
   )
 }
+

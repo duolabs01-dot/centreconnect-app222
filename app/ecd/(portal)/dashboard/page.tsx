@@ -252,7 +252,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
-        <Card className="glass border border-border bg-card/95 shadow-2xl text-foreground">
+        <Card className="glass-card border border-border bg-card/95 shadow-2xl text-foreground">
           <CardHeader>
             <CardTitle className="text-foreground">Top 3 Actions Today</CardTitle>
           </CardHeader>
@@ -290,7 +290,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
         </Card>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Card className="glass border border-border bg-card/90">
+          <Card className="glass-card border border-border bg-card/90">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-foreground">New Admissions (7 days)</CardTitle>
             </CardHeader>
@@ -299,7 +299,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <p className="text-xs text-slate-400">{trendLabel(admissionsCurrent7, admissionsPrevious7)}</p>
             </CardContent>
           </Card>
-          <Card className="glass border border-border bg-card/90">
+          <Card className="glass-card border border-border bg-card/90">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-foreground">Attendance Logged (7 days)</CardTitle>
             </CardHeader>
@@ -308,7 +308,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <p className="text-xs text-slate-400">{trendLabel(attendanceCurrent7, attendancePrevious7)}</p>
             </CardContent>
           </Card>
-          <Card className="glass border border-border bg-card/90">
+          <Card className="glass-card border border-border bg-card/90">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-foreground">Pickup Completion Today</CardTitle>
             </CardHeader>
@@ -321,7 +321,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
           </Card>
         </div>
 
-        <Card className="glass border border-border bg-card/90 text-foreground">
+        <Card className="glass-card border border-border bg-card/90 text-foreground">
           <CardHeader>
             <CardTitle>Transport Overview</CardTitle>
           </CardHeader>
@@ -375,7 +375,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <Card className="glass border border-border bg-card/90 text-foreground">
+              <Card className="glass-card border border-border bg-card/90 text-foreground">
                 <CardHeader>
                   <CardTitle>Applications Needing Action</CardTitle>
                 </CardHeader>
@@ -472,7 +472,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
             </div>
           <div>
             <ProfileCompleteness items={profileItems} />
-            <Card className="mt-4 glass border border-border bg-card/90 text-foreground">
+            <Card className="mt-4 glass-card border border-border bg-card/90 text-foreground">
               <CardHeader>
                 <CardTitle>Operational Scorecard</CardTitle>
               </CardHeader>
@@ -500,3 +500,4 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
     </EcdOsShell>
   )
 }
+

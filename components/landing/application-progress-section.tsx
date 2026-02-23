@@ -78,7 +78,7 @@ export function ApplicationProgressSection() {
 
   if (loading) {
     return (
-      <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+      <section className="glass-card rounded-2xl p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-slate-900">Application Progress</h3>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((idx) => (
@@ -91,7 +91,7 @@ export function ApplicationProgressSection() {
 
   if (!isSignedIn) {
     return (
-      <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+      <section className="glass-card rounded-2xl p-4 sm:p-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-50">
             <FileText className="h-7 w-7 text-cyan-600" />
@@ -120,7 +120,7 @@ export function ApplicationProgressSection() {
   }
 
   return (
-    <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+    <section className="glass-card rounded-2xl p-4 sm:p-6">
       <h3 className="text-lg font-semibold text-slate-900">Your Applications</h3>
       <p className="mt-1 text-sm text-slate-600">Recent activity for your child applications.</p>
       {items.length === 0 ? (
@@ -149,4 +149,5 @@ export function ApplicationProgressSection() {
     </section>
   )
 }
+
 

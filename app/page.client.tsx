@@ -142,7 +142,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)] pb-28 md:pb-0">
-      <header className="cc-glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
+      <header className="glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">CentreConnect</p>
@@ -161,7 +161,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="cc-page">
-          <section className="cc-glass-strong rounded-3xl p-5 sm:p-6">
+          <section className="glass-card rounded-3xl p-5 sm:p-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
               <Sparkles className="h-3.5 w-3.5" />
               Parent Hub
@@ -189,12 +189,12 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
             {!isSignedIn ? (
               <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
                 {[
-                  { emoji: '📍', title: 'Find Centres', desc: 'Browse ECDs near you' },
-                  { emoji: '📝', title: 'Apply Online', desc: 'No paperwork needed' },
-                  { emoji: '📊', title: 'Track Progress', desc: 'Real-time status updates' },
-                  { emoji: '💬', title: 'Communicate', desc: 'Direct centre messaging' },
-                  { emoji: '🗂️', title: 'Store Documents', desc: 'Secure document vault' },
-                  { emoji: '🔔', title: 'Get Notified', desc: 'Instant decision alerts' },
+                  { emoji: 'Ã°Å¸â€œÂ', title: 'Find Centres', desc: 'Browse ECDs near you' },
+                  { emoji: 'Ã°Å¸â€œÂ', title: 'Apply Online', desc: 'No paperwork needed' },
+                  { emoji: 'Ã°Å¸â€œÅ ', title: 'Track Progress', desc: 'Real-time status updates' },
+                  { emoji: 'Ã°Å¸â€™Â¬', title: 'Communicate', desc: 'Direct centre messaging' },
+                  { emoji: 'Ã°Å¸â€”â€šÃ¯Â¸Â', title: 'Store Documents', desc: 'Secure document vault' },
+                  { emoji: 'Ã°Å¸â€â€', title: 'Get Notified', desc: 'Instant decision alerts' },
                 ].map((item) => (
                   <div
                     key={item.title}
@@ -238,7 +238,7 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
           {isSignedIn && <ApplicationProgressSection />}
 
           {isSignedIn && shortlistSuburb ? (
-            <section className="cc-glass-soft rounded-2xl p-4 sm:p-6">
+            <section className="glass-card rounded-2xl p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {shortlistCards.length === 0 ? (
@@ -337,3 +337,4 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
     </div>
   )
 }
+
