@@ -59,11 +59,6 @@ export default async function ParentLayout({ children }: { children: React.React
     <div className="min-h-screen">
       <ParentAppShell userEmail={user.email ?? 'Unknown email'}>{children}</ParentAppShell>
       <GlobalBottomNav />
-      <style jsx global>{`
-        [data-parent-theme='true'] > nav.fixed.bottom-0.inset-x-0.z-40 {
-          display: none !important;
-        }
-      `}</style>
     </div>
   )
 }

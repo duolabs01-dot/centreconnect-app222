@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Search, FileText, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 // import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
 import { Container } from '@/components/layout/container'
@@ -162,43 +161,6 @@ export function ParentAppShell({ userEmail, children }: ParentAppShellProps) {
           </PageTransition>
         </Container>
       </main>
-
-      <nav
-        className="fixed bottom-0 inset-x-0 z-40 md:hidden
-             border-t border-slate-200/80 bg-white/95
-             backdrop-blur-xl"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-      >
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.map((item) => {
-            const active =
-              pathname === item.href ||
-              pathname.startsWith(item.href + '/')
-
-            const Icon =
-              item.href === '/parent/dashboard' ? Home :
-              item.href === '/directory' ? Search :
-              item.href === '/parent/applications' ? FileText :
-              User
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors min-w-[64px]',
-                  active ? 'text-primary' : 'text-slate-400'
-                )}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-semibold tracking-tight">
-                  {item.label}
-                </span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
     </div>
   )
 }
