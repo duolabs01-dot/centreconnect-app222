@@ -32,6 +32,15 @@ const mapCentre = (centre: any): CentreRecord => ({
   suburb: centre.suburb ?? null,
 })
 
+const mapPublicCentre = (centre: any): CentreRecord => ({
+  id: centre.id,
+  slug: centre.slug,
+  name: centre.name ?? 'Unnamed centre',
+  is_active: true,
+  city: centre.city ?? null,
+  suburb: centre.suburb ?? null,
+})
+
 const getCentreByIdentifier = cache(async (identifier: string): Promise<CentreRecord | null> => {
   const supabase = await createClient()
 
@@ -50,6 +59,22 @@ const getCentreByIdentifier = cache(async (identifier: string): Promise<CentreRe
     .maybeSingle()
 
   if (bySlug) return mapCentre(bySlug)
+
+  const { data: publicById } = await supabase
+    .from('public_ecd_centres')
+    .select('id,slug,name,city,suburb')
+    .eq('id', identifier)
+    .maybeSingle()
+
+  if (publicById) return mapPublicCentre(publicById)
+
+  const { data: publicBySlug } = await supabase
+    .from('public_ecd_centres')
+    .select('id,slug,name,city,suburb')
+    .eq('slug', identifier)
+    .maybeSingle()
+
+  if (publicBySlug) return mapPublicCentre(publicBySlug)
 
   return null
 })

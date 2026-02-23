@@ -255,19 +255,15 @@ export default async function CentrePage({ params }: CentrePageProps) {
   const {
     data: { user },
   } = await authResultPromise
-  let canApply = true
   let userRole: string | null = null
 
   if (user) {
-    const [{ data: profile }, { data: membership }] = await Promise.all([
-      supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle(),
-      supabase.from('ecd_admins').select('id').eq('ecd_id', centre.id).eq('user_id', user.id).maybeSingle(),
-    ])
-    const role = profile?.role ?? null
-    userRole = role
-    if (role === 'ecd_admin' || role === 'ecd_staff' || membership?.id) {
-      canApply = false
-    }
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    userRole = profile?.role ?? null
   }
 
   const [jobsResult, transportResult] = await Promise.all([jobsPromise, transportPromise])
@@ -422,9 +418,6 @@ export default async function CentrePage({ params }: CentrePageProps) {
         )}
       </PageContainer>
 
-      {canApply && (
-        <ApplyCTA variant="sticky" centreSlug={centre.slug} userRole={userRole} />
-      )}
     </main>
   )
 }
