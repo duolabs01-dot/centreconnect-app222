@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -82,7 +82,7 @@ export function ApplicationProgressSection() {
         <h3 className="text-lg font-semibold text-slate-900">Application Progress</h3>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((idx) => (
-            <div key={idx} className="h-20 animate-pulse rounded-xl border border-slate-200 bg-white" />
+            <div key={idx} className="h-20 animate-pulse-slow rounded-xl border border-slate-200 bg-white" />
           ))}
         </div>
       </section>
@@ -149,5 +149,6 @@ export function ApplicationProgressSection() {
     </section>
   )
 }
+
 
 

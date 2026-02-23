@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
@@ -20,7 +20,7 @@ function SectionFallback({ title }: { title: string }) {
   return (
     <section className="glass-card mt-6 rounded-2xl p-4 sm:p-6">
       <h2 className="text-lg font-semibold">{title}</h2>
-      <div className="mt-4 h-24 animate-pulse rounded-lg border border-slate-200 bg-slate-100" />
+      <div className="mt-4 h-24 animate-pulse-slow rounded-lg border border-slate-200 bg-slate-100" />
     </section>
   )
 }
@@ -244,6 +244,7 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
 
 
 

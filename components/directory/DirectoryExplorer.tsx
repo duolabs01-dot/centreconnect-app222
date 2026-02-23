@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
@@ -14,7 +14,7 @@ const DirectoryMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-96 rounded-2xl bg-slate-100 animate-pulse
+      <div className="h-96 rounded-2xl bg-slate-100 animate-pulse-slow
                       flex items-center justify-center">
         <p className="text-slate-400 text-sm font-medium">
           Loading map...
@@ -460,5 +460,6 @@ export default function DirectoryExplorer({
     </section>
   )
 }
+
 
 

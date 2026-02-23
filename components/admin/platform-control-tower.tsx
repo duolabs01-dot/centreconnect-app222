@@ -143,7 +143,7 @@ function HeroStatCard({
   return (
     <div
       className={cn(
-        'rounded-2xl border border-white/10 bg-gradient-to-br p-5 shadow-[var(--shadow-elevation-4)] transition-transform duration-200 hover:-translate-y-0.5',
+        'hover-lift rounded-2xl border border-white/10 bg-gradient-to-br p-5 shadow-[var(--shadow-elevation-4)]',
         accent ?? statAccents[0]
       )}
     >

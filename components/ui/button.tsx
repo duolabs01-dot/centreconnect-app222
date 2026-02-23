@@ -5,19 +5,19 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent text-sm font-semibold transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-[1px] active:scale-[0.99] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-transparent text-sm font-semibold transition-colors duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-[var(--shadow-elevation-3)] hover:-translate-y-px hover:bg-primary/90 hover:shadow-[var(--shadow-elevation-3)]",
+          "hover-lift bg-primary text-primary-foreground shadow-[var(--shadow-elevation-3)] hover:bg-primary/90 hover:shadow-[var(--shadow-elevation-3)]",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-3)] hover:-translate-y-px hover:bg-destructive/90",
+          "hover-lift bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-3)] hover:bg-destructive/90",
         outline:
-          "border-border/90 bg-card text-foreground shadow-[var(--shadow-elevation-1)] hover:-translate-y-px hover:bg-accent hover:text-accent-foreground hover:shadow-[var(--shadow-elevation-3)]",
+          "hover-lift border-border/90 bg-card text-foreground shadow-[var(--shadow-elevation-1)] hover:bg-accent hover:text-accent-foreground hover:shadow-[var(--shadow-elevation-3)]",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:-translate-y-px hover:bg-secondary/80",
-        ghost: "text-slate-700 hover:-translate-y-px hover:bg-accent/70 hover:text-accent-foreground",
+          "hover-lift bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:bg-secondary/80",
+        ghost: "hover-lift text-slate-700 hover:bg-accent/70 hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

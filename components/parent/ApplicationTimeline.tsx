@@ -262,7 +262,6 @@ export default function ApplicationTimeline({
         .timeline__dot--current {
           background: #2563EB;
           box-shadow: var(--shadow-elevation-2);
-          animation: pulse 2s ease infinite;
         }
         .timeline__step-label {
           font-size: 11px; text-align: center;
@@ -309,11 +308,6 @@ export default function ApplicationTimeline({
 
         .timeline__ref {
           font-size: 11px; color: #CBD5E1; text-align: center; margin: 0;
-        }
-
-        @keyframes pulse {
-          0%, 100% { box-shadow: var(--shadow-elevation-2); }
-          50%       { box-shadow: var(--shadow-elevation-3); }
         }
       `}</style>
     </>
