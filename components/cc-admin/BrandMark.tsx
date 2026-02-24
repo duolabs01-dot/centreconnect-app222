@@ -23,11 +23,11 @@ export function BrandMark({
       className={cn('inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500', className)}
     >
       <Image
-        src="/Logo.jpeg"
+        src="/centreconnect-logo.svg"
         alt={`${label} logo`}
         width={compact ? 56 : 72}
         height={compact ? 56 : 72}
-        className="rounded-md object-cover"
+        className="object-contain"
         priority
       />
       <span className={cn('font-semibold text-white', compact ? 'text-lg' : 'text-2xl', hideLabelOnMobile && 'hidden sm:inline')}>

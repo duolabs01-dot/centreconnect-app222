@@ -129,7 +129,7 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
       </div>
       <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0">
         <Container className="max-w-3xl">
-          <div className="sticky top-0 z-30 -mx-2 mb-3 bg-gradient-to-b from-cyan-50/80 via-sky-50/55 to-transparent px-2 pb-2 pt-1 backdrop-blur-[2px] sm:mb-4">
+          <div className="mb-3 px-1 pt-1 sm:mb-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
@@ -138,7 +138,7 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
                       <button
                         type="button"
                         onClick={handleMobileBack}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-200/80 bg-cyan-50/70 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-cyan-100/70"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-200/70 bg-transparent text-slate-700 transition hover:bg-cyan-50/60"
                         aria-label="Go back"
                       >
                         <ArrowLeft className="h-4 w-4" />
@@ -161,7 +161,7 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
                           title="CentreConnect affiliate badge"
                         >
                           <Image
-                            src="/Logo.jpeg"
+                            src="/centreconnect-logo.svg"
                             alt="CentreConnect verification badge"
                             width={16}
                             height={16}

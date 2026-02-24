@@ -1,0 +1,19 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cc_bg" x1="10" y1="10" x2="86" y2="86" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="cc_ring" x1="16" y1="16" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E8F9"/>
+      <stop offset="1" stop-color="#BFDBFE"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="76" height="76" rx="22" fill="url(#cc_bg)"/>
+  <rect x="16" y="16" width="64" height="64" rx="18" stroke="url(#cc_ring)" stroke-width="2.5" opacity="0.9"/>
+
+  <path d="M57.1 30.4C62.1 30.4 66.4 32.3 69.7 35.8L65.4 40.1C63.2 37.8 60.5 36.5 57.1 36.5C50.8 36.5 46 41.2 46 47.5C46 53.8 50.8 58.5 57.1 58.5C60.5 58.5 63.2 57.2 65.4 54.9L69.7 59.2C66.4 62.7 62.1 64.6 57.1 64.6C47.4 64.6 39.9 57.2 39.9 47.5C39.9 37.8 47.4 30.4 57.1 30.4Z" fill="white"/>
+  <path d="M39.9 30.4C34.9 30.4 30.6 32.3 27.3 35.8L31.6 40.1C33.8 37.8 36.5 36.5 39.9 36.5C42.2 36.5 44.3 37.2 46 38.4V31.5C44.1 30.8 42.1 30.4 39.9 30.4Z" fill="white" opacity="0.95"/>
+  <path d="M39.9 64.6C34.9 64.6 30.6 62.7 27.3 59.2L31.6 54.9C33.8 57.2 36.5 58.5 39.9 58.5C42.2 58.5 44.3 57.8 46 56.6V63.5C44.1 64.2 42.1 64.6 39.9 64.6Z" fill="white" opacity="0.95"/>
+</svg>
