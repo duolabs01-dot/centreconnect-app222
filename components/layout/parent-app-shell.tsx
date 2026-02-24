@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
+import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, BadgeCheck } from 'lucide-react'
 
@@ -128,64 +129,72 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
       </div>
       <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0">
         <Container className="max-w-3xl">
-          <div className="mb-3 flex items-start justify-between gap-3 px-1 pt-1 sm:mb-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                {showMobileBack ? (
-                  <div className="flex shrink-0 items-center md:hidden">
-                    <button
-                      type="button"
-                      onClick={handleMobileBack}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-white"
-                      aria-label="Go back"
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </button>
+          <div className="sticky top-0 z-30 -mx-2 mb-3 bg-gradient-to-b from-cyan-50/80 via-sky-50/55 to-transparent px-2 pb-2 pt-1 backdrop-blur-[2px] sm:mb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2.5">
+                  {showMobileBack ? (
+                    <div className="flex shrink-0 items-center md:hidden">
+                      <button
+                        type="button"
+                        onClick={handleMobileBack}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-200/80 bg-cyan-50/70 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-cyan-100/70"
+                        aria-label="Go back"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <BrandMark href="/parent/dashboard" compact hideLabelOnMobile className="shrink-0" />
+                  <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">{getTitle(pathname)}</p>
+                </div>
+                {onMeTab ? (
+                  <div className={cn('mt-1 flex items-center gap-2', showMobileBack ? 'ml-10 md:ml-0' : 'ml-[3.5rem] md:ml-0')}>
+                    <p className="truncate text-xs font-semibold text-slate-700">{userName}</p>
+                    {isVerified ? (
+                      <span className="inline-flex items-center gap-1" aria-label="Verified badges">
+                        <span className="inline-flex h-4 w-4 items-center justify-center" title="X-style verified badge">
+                          <BadgeCheck className="h-4 w-4 fill-[#1d9bf0] text-white" />
+                        </span>
+                        <span
+                          className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
+                          title="CentreConnect affiliate badge"
+                        >
+                          <Image
+                            src="/Logo.jpeg"
+                            alt="CentreConnect verification badge"
+                            width={16}
+                            height={16}
+                            className="h-full w-full object-cover"
+                          />
+                        </span>
+                      </span>
+                    ) : null}
                   </div>
                 ) : null}
-                <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">{getTitle(pathname)}</p>
               </div>
-              {onMeTab ? (
-                <div className={cn('mt-1 flex items-center gap-2', showMobileBack ? 'ml-10 md:ml-0' : '')}>
-                  <p className="truncate text-xs font-semibold text-slate-700">{userName}</p>
-                  {isVerified ? (
-                    <span className="inline-flex items-center gap-1" aria-label="Verified badges">
-                      <span className="inline-flex h-4 w-4 items-center justify-center" title="X-style verified badge">
-                        <BadgeCheck className="h-4 w-4 fill-[#1d9bf0] text-white" />
-                      </span>
-                      <span
-                        className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
-                        title="CentreConnect affiliate badge"
-                      >
-                        <Image
-                          src="/Logo.jpeg"
-                          alt="CentreConnect verification badge"
-                          width={16}
-                          height={16}
-                          className="h-full w-full object-cover"
-                        />
-                      </span>
-                    </span>
-                  ) : null}
-                </div>
-              ) : null}
+              <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
+                {navItems.map((item) => {
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  return (
+                    <Button
+                      key={item.href}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        'rounded-full',
+                        active
+                          ? 'bg-cyan-100/80 text-cyan-800 shadow-[var(--shadow-elevation-1)] hover:bg-cyan-100'
+                          : 'text-slate-600 hover:bg-cyan-50/70 hover:text-slate-900'
+                      )}
+                      asChild
+                    >
+                      <Link href={item.href}>{item.label}</Link>
+                    </Button>
+                  )
+                })}
+              </nav>
             </div>
-            <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
-              {navItems.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-                return (
-                  <Button
-                    key={item.href}
-                    variant={active ? 'default' : 'ghost'}
-                    size="sm"
-                    className={active ? 'rounded-full' : 'rounded-full text-slate-600 hover:text-slate-900'}
-                    asChild
-                  >
-                    <Link href={item.href}>{item.label}</Link>
-                  </Button>
-                )
-              })}
-            </nav>
           </div>
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
