@@ -71,6 +71,7 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/profile/edit')) return 'Profile Studio'
   if (pathname.startsWith('/parent/profile')) return 'Parent Profile'
   if (pathname.startsWith('/parent/children/new')) return 'Add Child Profile'
+  if (pathname.startsWith('/parent/children') && pathname.includes('/edit')) return 'Edit Child Profile'
   if (pathname.startsWith('/parent/children')) return 'Child Profiles'
   if (pathname.startsWith('/parent/shortlist')) return 'Saved Centres'
   if (pathname.startsWith('/parent/notifications')) return 'Message Centre'
