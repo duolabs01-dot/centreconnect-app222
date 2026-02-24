@@ -35,7 +35,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
   const { data: application } = await supabase
     .from('applications')
     .select(
-      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,address,suburb,city,province,user_profiles(full_name,phone))'
+      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,user_profiles(full_name,phone))'
     )
     .eq('id', params.id)
     .eq('ecd_id', ecdId)
@@ -241,6 +241,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                 centreName={centre?.name ?? 'Your centre'}
                 childName={childName}
                 parentName={parentName}
+                parentEmail={parent?.billing_email ?? null}
                 applicationNumber={application.application_number}
                 currentStatus={application.status}
                 currentNotes={application.admin_notes}

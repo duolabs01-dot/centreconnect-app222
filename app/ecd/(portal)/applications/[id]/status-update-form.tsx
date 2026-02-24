@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ecd/Button'
 import { Textarea } from '@/components/ui/textarea'
 import { renderTemplate, toStatusLabel } from '@/lib/communications/templates'
+import { applicationStatusEmail } from '@/lib/email/templates'
 
 type StatusUpdateFormProps = {
   applicationId: string
@@ -15,6 +16,7 @@ type StatusUpdateFormProps = {
   centreName: string
   childName: string
   parentName: string
+  parentEmail: string | null
   applicationNumber: string
   currentStatus: string
   currentNotes: string | null
@@ -30,6 +32,7 @@ export function StatusUpdateForm({
   centreName,
   childName,
   parentName,
+  parentEmail,
   applicationNumber,
   currentStatus,
   currentNotes,
@@ -136,6 +139,26 @@ export function StatusUpdateForm({
           })
           if (notificationError) {
             warnings.push('parent notification')
+          }
+
+          const appUrl = `${window.location.origin}/parent/applications/${applicationId}`
+          const { subject, html } = applicationStatusEmail({
+            parentName,
+            childName,
+            centreName,
+            newStatus: status,
+            appUrl,
+          })
+          const recipient = parentEmail?.trim() || `user:${parentId}`
+
+          const { error: emailQueueError } = await supabase.from('email_queue').insert({
+            recipient,
+            subject,
+            body: html,
+            status: 'pending',
+          })
+          if (emailQueueError) {
+            warnings.push('email queue')
           }
         }
 
