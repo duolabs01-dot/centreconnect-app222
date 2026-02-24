@@ -15,7 +15,7 @@ import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { formatDate, formatLongDate } from '@/lib/utils'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 
 type CentrePageProps = {
   params: {
@@ -38,6 +38,7 @@ type Centre = {
   age_groups: string[] | null
   logo_url: string | null
   cover_image_url: string | null
+  is_registered: boolean | null
   capacity: number | null
   fees_display_mode: 'exact' | 'range' | 'contact' | null
   monthly_fee_min: number | null
@@ -102,7 +103,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
     const { data: centre, error } = await supabase
       .from('ecd_centres')
       .select(
-        `id,slug,name,tagline,description,email,phone,address,suburb,city,province,age_groups,logo_url,cover_image_url,capacity,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone,
+        `id,slug,name,tagline,description,email,phone,address,suburb,city,province,age_groups,logo_url,cover_image_url,is_registered,capacity,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone,
         ecd_content(id,section,content_blocks),
         ecd_media(id,title,alt_text,storage_path)`
       )
@@ -125,6 +126,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
         age_groups: centre.age_groups ?? null,
         logo_url: centre.logo_url ?? null,
         cover_image_url: centre.cover_image_url ?? null,
+        is_registered: centre.is_registered ?? false,
         capacity: centre.capacity ?? null,
         fees_display_mode: centre.fees_display_mode ?? 'range',
         monthly_fee_min: centre.monthly_fee_min ?? null,
@@ -147,7 +149,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
     const fallback = await supabase
       .from('public_ecd_centres')
       .select(
-        'id,slug,name,tagline,description,suburb,city,province,age_groups,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone'
+        'id,slug,name,tagline,description,suburb,city,province,age_groups,logo_url,cover_image_url,is_registered,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone'
       )
       .eq('slug', slug)
       .maybeSingle()
@@ -169,6 +171,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       age_groups: fallback.data.age_groups ?? null,
       logo_url: fallback.data.logo_url ?? null,
       cover_image_url: fallback.data.cover_image_url ?? null,
+      is_registered: fallback.data.is_registered ?? false,
       capacity: null,
       fees_display_mode: fallback.data.fees_display_mode ?? 'range',
       monthly_fee_min: fallback.data.monthly_fee_min ?? null,
@@ -197,20 +200,17 @@ export async function generateMetadata({ params }: CentrePageProps): Promise<Met
     }
   }
 
-  const title = `${centre.name} | CentreConnect`
+  const title = `${centre.name} \u2014 ECD Centre in ${centre.suburb} | CentreConnect`
   const description =
-    centre.tagline ||
-    centre.description ||
-    `Explore ${centre.name} in ${centre.suburb}, ${centre.city}.`
-  const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
+    centre.tagline ?? centre.description ?? `Learn about ${centre.name} in ${centre.suburb}.`
 
   return {
     title,
     description,
     openGraph: {
-      title,
-      description,
-      images: [heroImage],
+      title: centre.name,
+      description: centre.tagline ?? '',
+      images: centre.cover_image_url ? [centre.cover_image_url] : [],
     },
   }
 }
@@ -238,10 +238,13 @@ export default async function CentrePage({ params }: CentrePageProps) {
   const programs = Array.isArray(programsSection?.content_blocks)
     ? (programsSection?.content_blocks as Array<{ title?: string; description?: string }>)
     : []
-  const gallery: EcdMedia[] = centre.ecd_media ?? []
-
   const supabase = await createClient()
   const authResultPromise = supabase.auth.getUser()
+  const mediaPromise = supabase
+    .from('ecd_media')
+    .select('id,storage_path,file_name')
+    .eq('ecd_id', centre.id)
+    .limit(6)
   const jobsPromise = supabase
     .from('jobs')
     .select('id,title,role_type,description,requirements,closes_at')
@@ -277,8 +280,13 @@ export default async function CentrePage({ params }: CentrePageProps) {
     userRole = profile?.role ?? null
   }
 
-  const [jobsResult, transportResult] = await Promise.all([jobsPromise, transportPromise])
+  const [mediaResult, jobsResult, transportResult] = await Promise.all([mediaPromise, jobsPromise, transportPromise])
 
+  const media = (mediaResult.error ? [] : mediaResult.data ?? []) as Array<{
+    id: string
+    storage_path: string
+    file_name: string | null
+  }>
   const jobs: Job[] = jobsResult.error ? [] : jobsResult.data ?? []
   const transportConfig: TransportConfig | null = transportResult.error ? null : transportResult.data ?? null
   const heroFacts = [
@@ -287,10 +295,25 @@ export default async function CentrePage({ params }: CentrePageProps) {
     centre.subsidy_accepted ? 'Subsidy friendly' : null,
   ].filter(Boolean)
 
+  const feesLabel =
+    centre.fees_display_mode === 'exact' && centre.monthly_fee_min !== null
+      ? `R${centre.monthly_fee_min} / month`
+      : centre.fees_display_mode === 'range' &&
+          centre.monthly_fee_min !== null &&
+          centre.monthly_fee_max !== null
+        ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max} / month`
+        : centre.fees_display_mode === 'contact'
+          ? 'Contact centre for fees'
+          : 'Contact centre for fees'
+
   const statChips: Array<{ label: string; value: string; accent?: 'emerald' }> = [
     {
       label: 'Ages',
       value: centre.age_groups && centre.age_groups.length ? centre.age_groups.join(', ') : 'Not specified',
+    },
+    {
+      label: 'Fees',
+      value: feesLabel,
     },
     {
       label: 'Capacity',
@@ -336,7 +359,14 @@ export default async function CentrePage({ params }: CentrePageProps) {
               </div>
             ) : null}
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-3xl font-black leading-tight md:text-5xl">{centre.name}</h1>
+              <div className="min-w-0">
+                <h1 className="text-3xl font-black leading-tight md:text-5xl">{centre.name}</h1>
+                {centre.is_registered ? (
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> DSD Registered
+                  </span>
+                ) : null}
+              </div>
               <SaveCentreButton centreId={centre.id} initialSaved={initialSaved} />
             </div>
             {centre.tagline ? (
@@ -347,6 +377,15 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 <HeroPill key={fact}>{fact}</HeroPill>
               ))}
             </div>
+            {centre.age_groups?.length ? (
+              <div className="flex flex-wrap gap-1.5">
+                {(centre.age_groups ?? []).map((group) => (
+                  <span key={group} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                    {group}
+                  </span>
+                ))}
+              </div>
+            ) : null}
             <div className="grid gap-3 md:grid-cols-[auto_auto_auto]">
               <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
               <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
@@ -354,8 +393,8 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 href="#about"
                 className="flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-white/10"
               >
-                Learn more â†“
-              </a>
+                  Learn more
+                </a>
             </div>
             <div className="max-w-3xl">
               <InteractionActions
@@ -366,6 +405,20 @@ export default async function CentrePage({ params }: CentrePageProps) {
             </div>
           </div>
         </section>
+
+        {media.length > 0 && (
+          <section className="mt-4 grid grid-cols-3 gap-2">
+            {media.map((item) => (
+              <div key={item.id} className="aspect-square overflow-hidden rounded-xl bg-slate-100">
+                <img
+                  src={supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl}
+                  alt={item.file_name ?? `${centre.name} gallery image`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ))}
+          </section>
+        )}
 
         <div className="mt-6">
           <CentreContactCard centreId={centre.id} centreName={centre.name} />
@@ -398,25 +451,6 @@ export default async function CentrePage({ params }: CentrePageProps) {
               ))}
             </div>
           </section>
-        )}
-
-        {gallery.length > 0 && (
-          <Section id="gallery" emoji="" title="Gallery">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              {gallery.slice(0, 9).map((photo, index) => (
-                <div key={photo.id ?? index} className="relative aspect-square overflow-hidden rounded-2xl bg-muted">
-                  <Image
-                    src={photo.storage_path}
-                    alt={photo.alt_text ?? `${centre.name} gallery`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 30vw"
-                    loading={index > 2 ? 'lazy' : 'eager'}
-                  />
-                </div>
-              ))}
-            </div>
-          </Section>
         )}
 
         <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
