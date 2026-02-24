@@ -29,14 +29,17 @@ type ApplicationRow = {
   offer_accepted_at: string | null
   priority: number | null
   submitted_at: string
+  updated_at: string | null
   ecd_centres:
     | {
         name: string
         slug: string
+        logo_url: string | null
       }
     | Array<{
         name: string
         slug: string
+        logo_url: string | null
       }>
     | null
   children:
@@ -49,63 +52,18 @@ type ApplicationRow = {
         last_name: string
       }>
     | null
+  application_status_history:
+    | Array<{
+        new_status: string
+        created_at: string
+        notes: string | null
+      }>
+    | null
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
-}
-
-function StatusPill({ status }: { status: string }) {
-  const config: Record<string, { label: string; className: string }> = {
-    submitted: {
-      label: 'Submitted',
-      className: 'bg-blue-50 text-blue-700 border-blue-200',
-    },
-    in_review: {
-      label: 'In Review',
-      className: 'bg-amber-50 text-amber-700 border-amber-200',
-    },
-    pending_review: {
-      label: 'In Review',
-      className: 'bg-amber-50 text-amber-700 border-amber-200',
-    },
-    approved: {
-      label: 'Approved',
-      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    },
-    enrolled: {
-      label: 'Enrolled',
-      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    },
-    provisioned: {
-      label: 'Enrolled',
-      className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    },
-    waitlisted: {
-      label: 'Waitlisted',
-      className: 'bg-slate-50 text-slate-600 border-slate-200',
-    },
-    rejected: {
-      label: 'Unsuccessful',
-      className: 'bg-red-50 text-red-600 border-red-200',
-    },
-    withdrawn: {
-      label: 'Withdrawn',
-      className: 'bg-slate-50 text-slate-400 border-slate-200',
-    },
-  }
-
-  const c = config[status] ?? {
-    label: status,
-    className: 'bg-slate-50 text-slate-500 border-slate-200',
-  }
-
-  return (
-    <span className={cn('inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border', c.className)}>
-      {c.label}
-    </span>
-  )
 }
 
 export default async function ParentApplicationsPage({ searchParams }: ParentApplicationsPageProps) {
@@ -119,7 +77,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const [applicationsResult, childrenResult] = await Promise.all([
       supabase
         .from('applications')
-        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,ecd_centres(name,slug),children(first_name,last_name)')
+        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,updated_at,ecd_centres(name,slug,logo_url),children(first_name,last_name),application_status_history(new_status,created_at,notes)')
         .eq('parent_id', user?.id ?? '')
         .order('submitted_at', { ascending: false })
         .limit(100),
@@ -148,18 +106,19 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           .map((application) => application.ecd_id as string)
       )
     )
-    const fallbackCentresById = new Map<string, { name: string; slug: string | null }>()
+    const fallbackCentresById = new Map<string, { name: string; slug: string | null; logoUrl: string | null }>()
 
     if (missingCentreIds.length > 0) {
       const { data: fallbackCentres } = await supabase
         .from('public_ecd_centres')
-        .select('id,name,slug')
+        .select('id,name,slug,logo_url')
         .in('id', missingCentreIds)
 
       ;(fallbackCentres ?? []).forEach((centre) => {
         fallbackCentresById.set(centre.id as string, {
           name: (centre.name as string | undefined) ?? 'Centre details pending',
           slug: (centre.slug as string | null | undefined) ?? null,
+          logoUrl: (centre.logo_url as string | null | undefined) ?? null,
         })
       })
     }
@@ -183,10 +142,20 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           offer_accepted_at: application.offer_accepted_at,
           priority: application.priority,
           submitted_at: application.submitted_at,
+          updated_at: application.updated_at,
           centreName: centre?.name ?? fallbackCentre?.name ?? 'Centre details pending',
           centreSlug: centre?.slug ?? fallbackCentre?.slug ?? null,
+          centreLogoUrl: centre?.logo_url ?? fallbackCentre?.logoUrl ?? null,
           childName,
           childId: application.child_id,
+          history:
+            [...(application.application_status_history ?? [])]
+              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+              .map((item) => ({
+                status: item.new_status,
+                created_at: item.created_at,
+                notes: item.notes ?? undefined,
+              })) ?? [],
         }
       }) ?? []
 
@@ -345,7 +314,9 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                       <p className="truncate text-sm font-semibold text-slate-900">{mock.centre}</p>
                       <p className="mt-0.5 text-xs text-slate-500">{mock.child} | {mock.date}</p>
                     </div>
-                    <StatusPill status={mock.status} />
+                    <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                      Pending
+                    </span>
                   </div>
                 </div>
               ))}

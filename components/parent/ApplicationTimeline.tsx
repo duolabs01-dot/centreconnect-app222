@@ -1,15 +1,19 @@
-// components/parent/ApplicationTimeline.tsx
-// A stepper that shows application progress in parent-friendly language.
-// NO technical status names. Uses icons, color, and plain English.
-
 'use client'
 
-import { CheckCircle2, Clock, Search, PartyPopper, XCircle, ListOrdered } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import {
+  CheckCircle2,
+  Clock3,
+  ListOrdered,
+  PartyPopper,
+  Search,
+  XCircle,
+  type LucideIcon,
+} from 'lucide-react'
+import { cn, formatDate } from '@/lib/utils'
 
-type AppStatus = 'submitted' | 'in_review' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
+export type AppStatus = 'submitted' | 'in_review' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
 
-interface TimelineEvent {
+export interface TimelineEvent {
   status: AppStatus
   created_at: string
   notes?: string
@@ -23,74 +27,74 @@ interface ApplicationTimelineProps {
   applicationNumber: string
 }
 
-const STATUS_CONFIG: Record<AppStatus, {
+type StatusConfig = {
   label: string
   description: string
-  icon: React.ElementType
-  color: string
-  bgColor: string
-  borderColor: string
-}> = {
+  icon: LucideIcon
+  iconTone: string
+  surfaceTone: string
+}
+
+const STATUS_CONFIG: Record<AppStatus, StatusConfig> = {
   submitted: {
-    label: 'Application Sent ✓',
-    description: 'Your application was received. The centre will be in touch soon.',
+    label: 'Application submitted',
+    description: 'Your application has been received by the centre.',
     icon: CheckCircle2,
-    color: '#2563EB',
-    bgColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
+    iconTone: 'text-blue-600',
+    surfaceTone: 'border-blue-200 bg-blue-50',
   },
   in_review: {
-    label: 'They\'re Looking 👀',
-    description: 'The centre is reviewing your application right now.',
+    label: 'In review',
+    description: 'The centre is currently reviewing your submission.',
     icon: Search,
-    color: '#D97706',
-    bgColor: '#FFFBEB',
-    borderColor: '#FDE68A',
+    iconTone: 'text-amber-700',
+    surfaceTone: 'border-amber-200 bg-amber-50',
   },
   approved: {
-    label: 'You Got In! 🎉',
-    description: 'Congratulations! Your child has been accepted. Confirm enrollment below.',
+    label: 'Approved',
+    description: 'Great news. Your child has been accepted.',
     icon: PartyPopper,
-    color: '#059669',
-    bgColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
+    iconTone: 'text-emerald-700',
+    surfaceTone: 'border-emerald-200 bg-emerald-50',
   },
   enrolled: {
-    label: 'Enrollment Confirmed',
-    description: 'Your spot is confirmed and the centre should contact you next.',
+    label: 'Enrolled',
+    description: 'Enrollment is confirmed for this centre.',
     icon: PartyPopper,
-    color: '#047857',
-    bgColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
+    iconTone: 'text-emerald-700',
+    surfaceTone: 'border-emerald-200 bg-emerald-50',
   },
   waitlisted: {
-    label: 'On the List 📋',
-    description: 'You\'re on the waitlist. We\'ll notify you as soon as a spot opens up.',
+    label: 'Waitlisted',
+    description: 'The application is on a waitlist pending availability.',
     icon: ListOrdered,
-    color: '#7C3AED',
-    bgColor: '#F5F3FF',
-    borderColor: '#DDD6FE',
+    iconTone: 'text-violet-700',
+    surfaceTone: 'border-violet-200 bg-violet-50',
   },
   rejected: {
-    label: 'Not This Time',
-    description: 'Unfortunately there isn\'t a spot available. Try other centres — we\'ll help you find one.',
+    label: 'Unsuccessful',
+    description: 'This application was not accepted by the centre.',
     icon: XCircle,
-    color: '#DC2626',
-    bgColor: '#FEF2F2',
-    borderColor: '#FECACA',
+    iconTone: 'text-rose-700',
+    surfaceTone: 'border-rose-200 bg-rose-50',
   },
   withdrawn: {
-    label: 'Application Withdrawn',
-    description: 'You withdrew this application.',
+    label: 'Withdrawn',
+    description: 'This application was withdrawn.',
     icon: XCircle,
-    color: '#6B7280',
-    bgColor: '#F9FAFB',
-    borderColor: '#E5E7EB',
+    iconTone: 'text-slate-600',
+    surfaceTone: 'border-slate-200 bg-slate-50',
   },
 }
 
-// The ORDERED flow — only show steps up to current
 const FLOW: AppStatus[] = ['submitted', 'in_review', 'approved', 'enrolled']
+
+function flowLabel(status: AppStatus) {
+  if (status === 'submitted') return 'Sent'
+  if (status === 'in_review') return 'Review'
+  if (status === 'approved') return 'Approved'
+  return 'Enrolled'
+}
 
 export default function ApplicationTimeline({
   currentStatus,
@@ -100,217 +104,96 @@ export default function ApplicationTimeline({
   applicationNumber,
 }: ApplicationTimelineProps) {
   const config = STATUS_CONFIG[currentStatus]
-  const Icon = config.icon
-
-  // Find where we are in the main flow
-  const currentFlowIndex = FLOW.indexOf(currentStatus)
+  const CurrentIcon = config.icon
   const isTerminal = currentStatus === 'rejected' || currentStatus === 'withdrawn'
   const isWaitlisted = currentStatus === 'waitlisted'
+  const currentFlowIndex = FLOW.indexOf(currentStatus)
+
+  const sortedHistory = [...history].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  )
 
   return (
-    <>
-      <div className="timeline">
-        {/* Current Status Hero Card */}
-        <div
-          className="timeline__status-card"
-          style={{ background: config.bgColor, borderColor: config.borderColor }}
-        >
-          <div className="timeline__status-icon" style={{ color: config.color }}>
-            <Icon size={28} strokeWidth={2} />
+    <div className="space-y-4 p-4 sm:p-5">
+      <section className={cn('rounded-2xl border p-4', config.surfaceTone)}>
+        <div className="flex items-start gap-3">
+          <div className={cn('mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border bg-white', config.iconTone)}>
+            <CurrentIcon className="h-5 w-5" />
           </div>
-          <div>
-            <p className="timeline__status-label" style={{ color: config.color }}>
-              {config.label}
+          <div className="min-w-0">
+            <p className={cn('text-sm font-semibold', config.iconTone)}>{config.label}</p>
+            <p className="mt-1 text-sm text-slate-600">{config.description}</p>
+            <p className="mt-2 text-xs text-slate-500">
+              {childName} - {centreName}
             </p>
-            <p className="timeline__status-desc">{config.description}</p>
           </div>
         </div>
+      </section>
 
-        {/* Progress dots (only for non-terminal, non-waitlist) */}
-        {!isTerminal && !isWaitlisted && (
-          <div className="timeline__progress">
-            {FLOW.map((step, i) => {
-              const isDone = i <= currentFlowIndex
-              const isCurrentStep = i === currentFlowIndex
-              const stepConfig = STATUS_CONFIG[step]
+      {!isTerminal && !isWaitlisted ? (
+        <section className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="grid grid-cols-4 items-start gap-2">
+            {FLOW.map((step, index) => {
+              const reached = currentFlowIndex >= index
+              const isCurrent = currentFlowIndex === index
               return (
-                <div key={step} className="timeline__step">
-                  {/* Line connector */}
-                  {i > 0 && (
-                    <div
-                      className="timeline__line"
-                      style={{ background: isDone ? '#2563EB' : '#E2E8F0' }}
-                    />
-                  )}
-
-                  {/* Step dot */}
-                  <div
-                    className={`timeline__dot ${isDone ? 'timeline__dot--done' : ''} ${isCurrentStep ? 'timeline__dot--current' : ''}`}
-                  >
-                    {isDone && <CheckCircle2 size={16} strokeWidth={2.5} />}
+                <div key={step} className="flex flex-col items-center gap-2 text-center">
+                  <div className="relative flex w-full items-center justify-center">
+                    {index > 0 ? (
+                      <span
+                        className={cn(
+                          'absolute left-0 right-1/2 top-1/2 h-0.5 -translate-y-1/2',
+                          reached ? 'bg-cyan-500' : 'bg-slate-200'
+                        )}
+                      />
+                    ) : null}
+                    <span
+                      className={cn(
+                        'relative z-10 inline-flex h-6 w-6 items-center justify-center rounded-full border text-[11px] font-semibold',
+                        reached
+                          ? 'border-cyan-500 bg-cyan-500 text-white'
+                          : 'border-slate-300 bg-slate-100 text-slate-500',
+                        isCurrent ? 'ring-2 ring-cyan-200 ring-offset-2 ring-offset-white' : ''
+                      )}
+                    >
+                      {reached ? <CheckCircle2 className="h-3.5 w-3.5" /> : index + 1}
+                    </span>
                   </div>
-
-                  {/* Label */}
-                  <span
-                    className="timeline__step-label"
-                    style={{ color: isDone ? '#0F172A' : '#94A3B8', fontWeight: isDone ? 700 : 500 }}
-                  >
-                    {i === 0 ? 'Sent' : i === 1 ? 'In review' : i === 2 ? 'Accepted' : 'Enrolled'}
-                  </span>
+                  <p className={cn('text-[11px] font-medium', reached ? 'text-slate-800' : 'text-slate-400')}>
+                    {flowLabel(step)}
+                  </p>
                 </div>
               )
             })}
           </div>
-        )}
+        </section>
+      ) : null}
 
-        {/* History log (collapsed by default) */}
-        <div className="timeline__history">
-          <p className="timeline__history-title">Activity</p>
-          {history.map((event, i) => {
-            const ec = STATUS_CONFIG[event.status]
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Activity</p>
+        <div className="mt-3 flex flex-col gap-3">
+          {sortedHistory.map((event, index) => {
+            const eventConfig = STATUS_CONFIG[event.status]
             return (
-              <div key={i} className="timeline__history-item">
-                <div
-                  className="timeline__history-dot"
-                  style={{ background: ec.color }}
-                />
-                <div className="timeline__history-content">
-                  <p className="timeline__history-label" style={{ color: ec.color }}>
-                    {ec.label}
-                  </p>
-                  <p className="timeline__history-date">
-                    {formatDate(event.created_at)}
-                  </p>
-                  {event.notes && (
-                    <p className="timeline__history-notes">{event.notes}</p>
-                  )}
+              <article key={`${event.created_at}-${event.status}-${index}`} className="flex gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                <div className={cn('mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full', eventConfig.surfaceTone)}>
+                  <Clock3 className={cn('h-3 w-3', eventConfig.iconTone)} />
                 </div>
-              </div>
+                <div className="min-w-0">
+                  <p className={cn('text-sm font-semibold', eventConfig.iconTone)}>{eventConfig.label}</p>
+                  <p className="text-xs text-slate-500">{formatDate(event.created_at)}</p>
+                  {event.notes ? (
+                    <p className="mt-1 rounded-md bg-slate-50 px-2 py-1 text-xs text-slate-600">{event.notes}</p>
+                  ) : null}
+                </div>
+              </article>
             )
           })}
         </div>
+      </section>
 
-        {/* Application reference */}
-        <p className="timeline__ref">Ref: {applicationNumber}</p>
-      </div>
-
-      <style jsx>{`
-        .timeline {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          padding: 20px 16px;
-        }
-
-        /* Status hero */
-        .timeline__status-card {
-          display: flex;
-          gap: 14px;
-          padding: 16px;
-          border-radius: var(--radius-lg);
-          border: 1.5px solid;
-          align-items: flex-start;
-        }
-        .timeline__status-icon { flex-shrink: 0; margin-top: 2px; }
-        .timeline__status-label {
-          font-size: 17px; font-weight: 800; margin: 0 0 4px;
-        }
-        .timeline__status-desc {
-          font-size: 14px; color: #374151; margin: 0; line-height: 1.5;
-        }
-
-        /* Progress bar */
-        .timeline__progress {
-          display: flex;
-          align-items: center;
-          padding: 16px;
-          background: white;
-          border-radius: var(--radius-md);
-          border: 1px solid #F1F5F9;
-          gap: 0;
-        }
-        .timeline__step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          position: relative;
-          flex: 1;
-        }
-        .timeline__line {
-          position: absolute;
-          top: 12px;
-          left: -50%;
-          right: 50%;
-          height: 2px;
-          transition: background 0.3s ease;
-        }
-        .timeline__dot {
-          width: 24px; height: 24px;
-          border-radius: 50%;
-          background: #E2E8F0;
-          display: flex; align-items: center; justify-content: center;
-          color: white;
-          position: relative;
-          z-index: 1;
-          transition: all 0.3s ease;
-        }
-        .timeline__dot--done {
-          background: #2563EB;
-          box-shadow: var(--shadow-elevation-1);
-        }
-        .timeline__dot--current {
-          background: #2563EB;
-          box-shadow: var(--shadow-elevation-2);
-        }
-        .timeline__step-label {
-          font-size: 11px; text-align: center;
-        }
-
-        /* History */
-        .timeline__history {
-          background: white;
-          border-radius: var(--radius-md);
-          border: 1px solid #F1F5F9;
-          padding: 14px 16px;
-        }
-        .timeline__history-title {
-          font-size: 13px; font-weight: 700; color: #64748B;
-          text-transform: uppercase; letter-spacing: 0.06em;
-          margin: 0 0 12px;
-        }
-        .timeline__history-item {
-          display: flex;
-          gap: 12px;
-          padding: 8px 0;
-          border-bottom: 1px solid #F8FAFC;
-        }
-        .timeline__history-item:last-child { border-bottom: none; }
-        .timeline__history-dot {
-          width: 8px; height: 8px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          margin-top: 5px;
-        }
-        .timeline__history-content { flex: 1; }
-        .timeline__history-label {
-          font-size: 13px; font-weight: 700; margin: 0 0 2px;
-        }
-        .timeline__history-date {
-          font-size: 12px; color: #94A3B8; margin: 0;
-        }
-        .timeline__history-notes {
-          font-size: 12px; color: #374151; margin: 4px 0 0;
-          padding: 6px 8px;
-          background: #F8FAFC;
-          border-radius: var(--radius-sm);
-        }
-
-        .timeline__ref {
-          font-size: 11px; color: #CBD5E1; text-align: center; margin: 0;
-        }
-      `}</style>
-    </>
+      <p className="text-center text-[11px] text-slate-400">Ref: {applicationNumber}</p>
+    </div>
   )
 }
 
