@@ -3,6 +3,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -128,6 +129,49 @@ export async function submitApplicationAction(input: unknown) {
       return { error: 'Your session expired. Please sign in again and retry.' }
     }
     return { error: 'Could not submit application. Please try again.' }
+  }
+
+  // Notify ECD team immediately when a new application lands.
+  // This runs out-of-band and should never block submission success.
+  try {
+    const admin = createAdminClient()
+    const [{ data: childInfo }, { data: centreInfo }, { data: parentProfile }] = await Promise.all([
+      admin
+        .from('children')
+        .select('first_name,last_name')
+        .eq('id', parsed.data.child_id)
+        .maybeSingle(),
+      admin
+        .from('ecd_centres')
+        .select('name')
+        .eq('id', parsed.data.ecd_id)
+        .maybeSingle(),
+      admin
+        .from('user_profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle(),
+    ])
+
+    const childName = [childInfo?.first_name, childInfo?.last_name].filter(Boolean).join(' ').trim() || 'a child'
+    const centreName = centreInfo?.name?.trim() || 'your centre'
+    const parentName = parentProfile?.full_name?.trim() || user.email?.split('@')[0] || 'A parent'
+
+    await admin.from('ecd_notifications').insert({
+      ecd_id: parsed.data.ecd_id,
+      application_id: applicationId,
+      title: 'New application submitted',
+      message: `${parentName} submitted an application for ${childName} at ${centreName}.`,
+      metadata: {
+        kind: 'application_submitted',
+        application_id: applicationId,
+        parent_id: user.id,
+        child_id: parsed.data.child_id,
+      },
+      is_read: false,
+    })
+  } catch (notifyError) {
+    console.error('submitApplicationAction notification dispatch failed:', notifyError)
   }
 
   return { success: true, applicationId }

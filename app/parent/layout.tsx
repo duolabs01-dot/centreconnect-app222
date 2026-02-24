@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
+import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -72,6 +73,7 @@ export default async function ParentLayout({ children }: { children: React.React
   return (
     <div className="min-h-screen">
       <ParentAppShell userName={userName} isVerified={isVerified}>
+        <BrowserNotificationBridge mode="parent" parentId={user.id} />
         {children}
       </ParentAppShell>
     </div>

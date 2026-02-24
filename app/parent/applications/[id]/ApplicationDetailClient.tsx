@@ -182,6 +182,7 @@ export default function ApplicationDetailClient({
   const [parentMessage, setParentMessage] = useState(initialParentMessage ?? '')
   const [editMessage, setEditMessage] = useState(initialParentMessage ?? '')
   const [isSaving, startSave] = useTransition()
+  const [isWithdrawing, startWithdraw] = useTransition()
 
   const childName = useMemo(
     () => `${childFirstName}${childLastName ? ` ${childLastName}` : ''}`.trim(),
@@ -208,6 +209,8 @@ export default function ApplicationDetailClient({
           notes: item.notes ?? undefined,
         }))
       : [{ status: currentStatus, created_at: submittedAt }]
+  const canWithdraw = ['submitted', 'in_review', 'waitlisted', 'approved'].includes(status)
+  const withdrawLabel = status === 'approved' ? 'Cancel application' : 'Withdraw application'
 
   async function onAccept() {
     const response = await fetch(`/api/parent/applications/${id}/decision`, {
@@ -240,6 +243,26 @@ export default function ApplicationDetailClient({
     router.refresh()
   }
 
+  function onWithdraw() {
+    const confirmed = window.confirm('Withdraw this application? You can re-apply later if needed.')
+    if (!confirmed) return
+
+    startWithdraw(async () => {
+      const response = await fetch(`/api/parent/applications/${id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'withdraw' }),
+      })
+      const payload = (await response.json()) as { ok?: boolean; error?: string }
+      if (!response.ok || !payload.ok) {
+        toast.error(payload.error || 'Failed to withdraw application')
+        return
+      }
+      toast.success('Application withdrawn')
+      router.refresh()
+    })
+  }
+
   return (
     <div style={{ fontFamily: 'var(--font-parent)', padding: '0 0 32px' }}>
       <div className="mb-3 flex items-center gap-2">
@@ -250,6 +273,18 @@ export default function ApplicationDetailClient({
       <p>
         {centreName} {'\u00b7'} {centreSuburb}
       </p>
+      {canWithdraw ? (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={onWithdraw}
+            disabled={isWithdrawing}
+            className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
+          >
+            {isWithdrawing ? 'Processing...' : withdrawLabel}
+          </button>
+        </div>
+      ) : null}
       {showMultipleApplicationsNotice ? (
         <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
           This centre can see that this child has multiple active applications because you enabled this sharing preference.

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { acceptOffer } from '@/lib/actions/admissions/accept-offer'
 
-type DecisionAction = 'accept' | 'decline'
+type DecisionAction = 'accept' | 'decline' | 'withdraw'
 
 type RouteContext = {
   params: {
@@ -22,13 +22,13 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     const { action } = (await request.json()) as { action?: DecisionAction }
-    if (action !== 'accept' && action !== 'decline') {
+    if (action !== 'accept' && action !== 'decline' && action !== 'withdraw') {
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
 
     const { data: targetApp, error: targetError } = await supabase
       .from('applications')
-      .select('id,parent_id,child_id')
+      .select('id,parent_id,child_id,status')
       .eq('id', params.id)
       .eq('parent_id', user.id)
       .maybeSingle()
@@ -42,10 +42,29 @@ export async function POST(request: Request, { params }: RouteContext) {
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 })
       }
-    } else {
+    } else if (action === 'decline') {
       const { error } = await supabase.rpc('parent_decline_offer', { p_application_id: params.id })
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+    } else {
+      if (!['submitted', 'in_review', 'waitlisted', 'approved'].includes(targetApp.status)) {
+        return NextResponse.json({ error: 'Application cannot be withdrawn in its current status' }, { status: 400 })
+      }
+
+      const now = new Date().toISOString()
+      const { error } = await supabase
+        .from('applications')
+        .update({
+          status: 'withdrawn',
+          withdrawn_at: now,
+          withdraw_reason: 'parent_manual',
+        })
+        .eq('id', params.id)
+        .eq('parent_id', user.id)
+
+      if (error) {
+        return NextResponse.json({ error: error.message || 'Failed to withdraw application' }, { status: 400 })
       }
     }
 

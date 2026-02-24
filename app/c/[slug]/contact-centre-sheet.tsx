@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
 import { MessageCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -15,30 +14,23 @@ export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetP
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
-  const supabase = createClient()
 
   const handleSend = () => {
     if (!message.trim()) return
     startTransition(async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) {
-        toast.error('Sign in to send messages')
-        return
-      }
-
-      const { error } = await supabase.from('parent_notifications').insert({
-        parent_id: user.id,
-        ecd_id: centreId,
-        title: `Message to ${centreName}`,
-        message: message.trim(),
-        is_read: false,
+      const response = await fetch('/api/centres/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          centreId,
+          centreName,
+          message: message.trim(),
+        }),
       })
 
-      if (error) {
-        toast.error('Could not send message. Please try again.')
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null
+      if (!response.ok) {
+        toast.error(payload?.error || 'Could not send message. Please try again.')
         return
       }
 
@@ -94,4 +86,3 @@ export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetP
     </div>
   )
 }
-

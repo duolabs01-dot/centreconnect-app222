@@ -8,7 +8,8 @@ import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
   centreId: z.string().uuid(),
-  message: z.string().min(5, 'Please write at least five characters.'),
+  centreName: z.string().trim().min(1).optional(),
+  message: z.string().trim().min(1, 'Please write a message.'),
 })
 
 export async function POST(req: Request) {
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid data submitted.' }, { status: 400 })
   }
 
-  const { centreId, message } = parsed.data
+  const { centreId, centreName, message } = parsed.data
   const supabase = await createClient()
   const {
     data: { user },
@@ -78,6 +79,29 @@ export async function POST(req: Request) {
   if (messageError) {
     return NextResponse.json({ error: 'Could not send your message. Please try again.' }, { status: 500 })
   }
+
+  await admin.from('ecd_notifications').insert({
+    ecd_id: centreId,
+    application_id: null,
+    title: 'New parent message',
+    message: 'A parent sent a new message in your inbox.',
+    metadata: { kind: 'parent_message', thread_id: threadId, parent_id: user.id },
+    is_read: false,
+  })
+
+  // Mirror the message into the parent inbox feed.
+  // If parent profile row is missing, do not block successful send.
+  const inboxTitle = centreName?.trim()
+    ? `Message to ${centreName.trim()}`
+    : 'Message sent to centre'
+  await admin.from('parent_notifications').insert({
+    parent_id: user.id,
+    ecd_id: centreId,
+    title: inboxTitle,
+    message: message.trim(),
+    is_read: false,
+    template_key: null,
+  })
 
   return NextResponse.json({ success: true })
 }
