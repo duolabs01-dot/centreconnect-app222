@@ -88,6 +88,9 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       applicationNumber={appRow.application_number}
       status={appRow.status}
       submittedAt={appRow.submitted_at}
+      childId={appRow.child_id}
+      ecdId={appRow.ecd_id}
+      parentId={user.id}
       startDate={appRow.start_date}
       parentMessage={appRow.parent_message ?? null}
       adminNotes={appRow.admin_notes}

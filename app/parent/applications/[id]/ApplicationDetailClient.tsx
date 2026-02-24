@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -19,6 +19,9 @@ type ApplicationDetailClientProps = {
   applicationNumber: string
   status: string
   submittedAt: string
+  childId: string
+  ecdId: string
+  parentId: string
   startDate: string | null
   parentMessage?: string | null
   adminNotes: string | null
@@ -32,11 +35,137 @@ type ApplicationDetailClientProps = {
   showMultipleApplicationsNotice: boolean
 }
 
+type PickupCodeSectionProps = {
+  applicationId: string
+  childId: string
+  ecdId: string
+  parentId: string
+}
+
+function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCodeSectionProps) {
+  const [code, setCode] = useState<string | null>(null)
+  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadActiveCode() {
+      if (!childId || !ecdId) return
+      const supabase = createClient()
+      const { data, error: fetchError } = await supabase
+        .from('pickup_codes')
+        .select('id,code,expires_at,used,locked')
+        .eq('child_id', childId)
+        .eq('ecd_id', ecdId)
+        .eq('used', false)
+        .eq('locked', false)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!active) return
+
+      if (fetchError) {
+        setError(fetchError.message)
+        return
+      }
+
+      if (data?.code) {
+        setCode(data.code)
+        setExpiresAt(data.expires_at ?? null)
+      }
+    }
+
+    void loadActiveCode()
+
+    return () => {
+      active = false
+    }
+  }, [childId, ecdId])
+
+  async function generateCode() {
+    if (!childId || !ecdId || !parentId) return
+    setGenerating(true)
+    setError(null)
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
+    const nextExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    const supabase = createClient()
+
+    try {
+      const { data, error: rpcError } = await supabase.rpc('generate_pickup_code_atomic', {
+        p_ecd_id: ecdId,
+        p_child_id: childId,
+        p_parent_id: parentId,
+        p_generated_by_role: 'parent',
+        p_code: randomCode,
+        p_expires_at: nextExpiresAt,
+      })
+
+      if (rpcError) {
+        setError(rpcError.message)
+        toast.error('Could not generate code')
+        return
+      }
+
+      const result = data as { success?: boolean; error?: string } | null
+      if (!result?.success) {
+        setError(result?.error ?? 'unknown')
+        toast.error('Could not generate code')
+        return
+      }
+
+      setCode(randomCode)
+      setExpiresAt(nextExpiresAt)
+      toast.success('Pickup code generated')
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  if (code) {
+    return (
+      <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
+        <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Today's Pickup Code</p>
+          <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Show this to the centre staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup Code</p>
+        <p className="mt-1 text-sm text-slate-600">No active code. Generate one for today's pickup.</p>
+        <button
+          type="button"
+          onClick={generateCode}
+          disabled={generating}
+          className="mt-3 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+        >
+          {generating ? 'Generating...' : 'Generate Pickup Code'}
+        </button>
+        {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
+      </div>
+    </section>
+  )
+}
+
 export default function ApplicationDetailClient({
   id,
   applicationNumber,
   status,
   submittedAt,
+  childId,
+  ecdId,
+  parentId,
   startDate,
   parentMessage: initialParentMessage,
   acceptedAt,
@@ -209,6 +338,14 @@ export default function ApplicationDetailClient({
           </div>
         </div>
       </div>
+      {status === 'enrolled' && (
+        <PickupCodeSection
+          applicationId={id}
+          childId={childId || ''}
+          ecdId={ecdId}
+          parentId={parentId}
+        />
+      )}
       <ApplicationTimeline
         currentStatus={currentStatus}
         history={timelineHistory}
