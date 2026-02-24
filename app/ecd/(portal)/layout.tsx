@@ -5,6 +5,7 @@
 import { redirect } from 'next/navigation'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdPortalSidebar } from '@/components/layout/ecd-portal-sidebar'
+import { createAdminClient } from '@/lib/supabase/admin'
 import '../ecd-theme.css'
 
 type EcdLayoutProps = {
@@ -12,19 +13,30 @@ type EcdLayoutProps = {
 }
 
 export default async function EcdLayout({ children }: EcdLayoutProps) {
-  const { supabase, user, role, ecdId } = await requireEcdPortalSession()
+  const { user, role, ecdId } = await requireEcdPortalSession()
+  const admin = createAdminClient()
 
-  const { data: centre } = await supabase
+  const { data: centreWithOnboarding, error: centreWithOnboardingError } = await admin
     .from('ecd_centres')
     .select('id, onboarding_complete')
     .eq('id', ecdId)
     .maybeSingle()
 
-  if (!centre?.id) {
-    redirect('/for-centres?status=pending')
+  let centre = centreWithOnboarding as { id: string; onboarding_complete?: boolean | null } | null
+  if (!centre && centreWithOnboardingError) {
+    // Backward compatible fallback if onboarding_complete is not yet migrated in the target DB.
+    const { data: centreFallback } = await admin.from('ecd_centres').select('id').eq('id', ecdId).maybeSingle()
+    centre = centreFallback as { id: string; onboarding_complete?: boolean | null } | null
   }
 
-  if (!centre.onboarding_complete) {
+  if (!centre?.id) {
+    redirect('/ecd/login?error=centre-link')
+  }
+
+  const onboardingComplete =
+    typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : true
+
+  if (!onboardingComplete) {
     redirect('/ecd/onboarding')
   }
 
