@@ -71,7 +71,7 @@ export default async function EcdTransportPage() {
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-cyan-300">Current Status</p>
+              <p className="text-sm font-semibold text-cyan-700">Current Status</p>
               <p className="text-lg font-bold text-foreground">
                 {transportConfig?.offers_transport ? 'Offering transport' : 'Not configured'}
               </p>
@@ -80,7 +80,7 @@ export default async function EcdTransportPage() {
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-cyan-300">Fee</p>
+              <p className="text-sm font-semibold text-cyan-700">Fee</p>
               <p className="text-lg font-bold text-foreground">
                 {formatCents(transportConfig?.fee_per_month)}
               </p>
@@ -89,7 +89,7 @@ export default async function EcdTransportPage() {
               )}
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-cyan-300">Coverage</p>
+              <p className="text-sm font-semibold text-cyan-700">Coverage</p>
               {transportConfig?.coverage_areas?.length ? (
                 <div className="flex flex-wrap gap-1">
                   {transportConfig.coverage_areas.map((area) => (

@@ -90,7 +90,7 @@ export default function TodayWidgets({
         </div>
       )}
 
-      {statCard(<Clock size={22} className="text-cyan-300" />, `${avgResponseHours}h`, 'Avg. response time')}
+      {statCard(<Clock size={22} className="text-cyan-700" />, `${avgResponseHours}h`, 'Avg. response time')}
 
       {statCard(
         <TrendingUp size={22} className="text-emerald-300" />,

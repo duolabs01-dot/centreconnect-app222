@@ -295,7 +295,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <CardTitle className="text-sm font-semibold text-foreground">New Admissions (7 days)</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black text-cyan-300">{admissionsCurrent7}</p>
+              <p className="text-3xl font-black text-cyan-700">{admissionsCurrent7}</p>
               <p className="text-xs text-slate-400">{trendLabel(admissionsCurrent7, admissionsPrevious7)}</p>
             </CardContent>
           </Card>
@@ -478,19 +478,19 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               </CardHeader>
                               <CardContent className="space-y-2 text-sm text-muted-foreground">                <p>
                   Avg response time:{' '}
-                  <span className="font-semibold text-cyan-300">{avgResponseHours}h</span>
+                  <span className="font-semibold text-cyan-700">{avgResponseHours}h</span>
                 </p>
                 <p>
                   New applications today:{' '}
-                  <span className="font-semibold text-cyan-300">{newToday}</span>
+                  <span className="font-semibold text-cyan-700">{newToday}</span>
                 </p>
                 <p>
                   Waitlisted:{' '}
-                  <span className="font-semibold text-cyan-300">{waitlistedApplications}</span>
+                  <span className="font-semibold text-cyan-700">{waitlistedApplications}</span>
                 </p>
                 <p>
                   Unverified guardians:{' '}
-                  <span className="font-semibold text-cyan-300">{unverifiedGuardians}</span>
+                  <span className="font-semibold text-cyan-700">{unverifiedGuardians}</span>
                 </p>
               </CardContent>
             </Card>

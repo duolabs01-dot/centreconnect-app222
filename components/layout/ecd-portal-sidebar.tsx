@@ -118,7 +118,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole
         <button
           type="button"
           onClick={() => setIsPinned(true)}
-          className="fixed left-4 top-4 z-50 hidden items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/30 backdrop-blur-xl transition hover:bg-white/20 hover:text-cyan-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 lg:flex"
+          className="fixed left-4 top-4 z-50 hidden items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/30 backdrop-blur-xl transition hover:bg-white/20 hover:text-cyan-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 lg:flex"
         >
           <Menu className="h-4 w-4" />
           <span>Navigation</span>
@@ -137,7 +137,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole
             <button
               type="button"
               onClick={togglePin}
-              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-cyan-300 transition hover:text-cyan-200"
+              className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-cyan-700 transition hover:text-cyan-800"
               aria-label={isPinned ? 'Enable auto-hide sidebar' : 'Pin sidebar'}
             >
               {isPinned ? <Pin className="h-3.5 w-3.5" /> : <PinOff className="h-3.5 w-3.5" />}
