@@ -37,6 +37,24 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { label: string; classes: string }> = {
+    submitted: { label: 'Submitted', classes: 'border-blue-200 bg-blue-50 text-blue-700' },
+    in_review: { label: 'In Review', classes: 'border-amber-200 bg-amber-50 text-amber-700' },
+    waitlisted: { label: 'Waitlisted', classes: 'border-orange-200 bg-orange-50 text-orange-700' },
+    approved: { label: 'Approved', classes: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+    enrolled: { label: 'Enrolled', classes: 'border-green-200 bg-green-50 text-green-700' },
+    rejected: { label: 'Not Accepted', classes: 'border-rose-200 bg-rose-50 text-rose-700' },
+    offer_pending: { label: 'Offer Waiting', classes: 'border-violet-200 bg-violet-50 text-violet-700' },
+  }
+  const pill = map[status] ?? { label: status, classes: 'border-slate-200 bg-slate-50 text-slate-600' }
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${pill.classes}`}>
+      {pill.label}
+    </span>
+  )
+}
+
 function ApplicationStatusCard({
   application,
   delayMs = 0,
@@ -57,9 +75,7 @@ function ApplicationStatusCard({
           <p className="mt-2 text-xs text-slate-500">Last updated {formatDate(application.lastUpdatedAt)}</p>
         </div>
         <div className="shrink-0 pl-2">
-          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-            Pending
-          </span>
+          <StatusPill status={application.status} />
           <div className="mt-3 flex items-center justify-end gap-1 text-xs font-semibold text-slate-500 transition-colors group-hover:text-cyan-700">
             <span>View Details</span>
             <ChevronRight className="h-3.5 w-3.5" />
