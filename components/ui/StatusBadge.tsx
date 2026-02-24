@@ -13,5 +13,16 @@ function toVariant(status: string): 'secondary' | 'success' | 'warning' | 'outli
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  return <Badge variant={toVariant(status)}>{status.replaceAll('_', ' ')}</Badge>
+  const normalizedStatus = status.toLowerCase()
+  const showApprovalCelebrate = normalizedStatus === 'approved'
+
+  return (
+    <Badge
+      variant={toVariant(normalizedStatus)}
+      data-status={normalizedStatus}
+      className={showApprovalCelebrate ? 'cc-approval-confetti' : undefined}
+    >
+      {normalizedStatus.replaceAll('_', ' ')}
+    </Badge>
+  )
 }

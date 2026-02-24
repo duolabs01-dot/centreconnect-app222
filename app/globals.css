@@ -164,11 +164,52 @@ body {
 }
 
 .hover-lift {
-  transition: transform 200ms ease;
+  transition: transform 200ms ease-out;
 }
 
 .hover-lift:hover {
   transform: translateY(-0.125rem);
+}
+
+@keyframes cc-approval-confetti-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.82);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -88%) scale(1.04);
+  }
+}
+
+.cc-approval-confetti {
+  position: relative;
+  isolation: isolate;
+}
+
+.cc-approval-confetti::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 5.25rem;
+  height: 2.75rem;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  background:
+    radial-gradient(circle at 8% 78%, #f59e0b 0 2px, transparent 2.4px),
+    radial-gradient(circle at 20% 22%, #f97316 0 2px, transparent 2.4px),
+    radial-gradient(circle at 35% 70%, #10b981 0 2px, transparent 2.4px),
+    radial-gradient(circle at 49% 18%, #34d399 0 2px, transparent 2.4px),
+    radial-gradient(circle at 63% 74%, #22c55e 0 2px, transparent 2.4px),
+    radial-gradient(circle at 78% 20%, #fb7185 0 2px, transparent 2.4px),
+    radial-gradient(circle at 92% 64%, #facc15 0 2px, transparent 2.4px);
+  animation: cc-approval-confetti-pop 200ms ease-out forwards;
+  will-change: transform, opacity;
 }
 
 @keyframes pulse-slow {
@@ -217,7 +258,8 @@ body {
   .hover-lift,
   .hover-lift:hover,
   .animate-pulse-slow,
-  .parent-confetti-piece {
+  .parent-confetti-piece,
+  .cc-approval-confetti::after {
     animation: none !important;
     transition: none !important;
   }
