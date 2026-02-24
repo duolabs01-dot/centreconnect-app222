@@ -75,7 +75,13 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
 
   const viewParam = searchParams?.view
   const view: CalendarViewMode =
-    viewParam === 'week' ? 'week' : viewParam === 'day' ? 'day' : 'month'
+    viewParam === 'week'
+      ? 'week'
+      : viewParam === 'day'
+        ? 'day'
+        : viewParam === 'timetable'
+          ? 'timetable'
+          : 'month'
   const focusParam = searchParams?.focus ?? searchParams?.day
   const focusDate = parseDayKey(focusParam) ?? today
   const focusDayKey = formatDayKey(focusDate)
