@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Share2, Smartphone } from 'lucide-react'
+import { Download, Laptop, Smartphone } from 'lucide-react'
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -27,18 +27,45 @@ function getPlatform() {
   }
 }
 
+function IosShareGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-3.5 w-3.5 text-cyan-600">
+      <path
+        d="M12 3v9m0-9 3 3m-3-3-3 3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="5"
+        y="9"
+        width="14"
+        height="12"
+        rx="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+    </svg>
+  )
+}
+
 export function PwaInstallCard() {
   const installedKey = 'cc-pwa-installed'
   const dismissedKey = 'cc-pwa-install-dismissed'
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [showManualSteps, setShowManualSteps] = useState(false)
 
   const platform = useMemo(() => getPlatform(), [])
   const heading = platform.desktop
     ? 'Install CentreConnect on your computer'
     : 'Add CentreConnect to your home screen'
   const installButtonLabel = platform.desktop ? 'Install on this computer' : 'Install CentreConnect'
+  const hasOneTapInstall = Boolean(installPrompt)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -129,38 +156,26 @@ export function PwaInstallCard() {
       </div>
 
       <div className="mt-3 space-y-2 text-xs leading-relaxed text-slate-600">
-        {installPrompt ? (
+        {hasOneTapInstall ? (
           <p className="flex items-center gap-2">
             <Download className="h-3.5 w-3.5 text-cyan-600" />
-            {platform.desktop
-              ? 'Install in one click for a cleaner desktop app experience.'
-              : 'Install in one tap for faster loading, full-screen use, and app-like experience.'}
+            Tap install once for faster loading, full-screen use, and an app-like experience.
           </p>
         ) : null}
 
-        {platform.ios ? (
+        {!hasOneTapInstall ? (
           <p className="flex items-center gap-2">
-            <Share2 className="h-3.5 w-3.5 text-cyan-600" />
-            On iPhone/iPad: tap Share, then choose <span className="font-semibold text-slate-700">Add to Home Screen</span>.
-          </p>
-        ) : null}
-
-        {platform.android && !installPrompt ? (
-          <p className="flex items-center gap-2">
-            <Smartphone className="h-3.5 w-3.5 text-cyan-600" />
-            On Android: open browser menu, then tap <span className="font-semibold text-slate-700">Install app</span> or <span className="font-semibold text-slate-700">Add to Home screen</span>.
-          </p>
-        ) : null}
-
-        {platform.desktop && !installPrompt ? (
-          <p className="flex items-center gap-2">
-            <Download className="h-3.5 w-3.5 text-cyan-600" />
-            On desktop: use your browser address bar install icon, or menu &rarr; <span className="font-semibold text-slate-700">Install app</span>.
+            {platform.desktop ? (
+              <Laptop className="h-3.5 w-3.5 text-cyan-600" />
+            ) : (
+              <Smartphone className="h-3.5 w-3.5 text-cyan-600" />
+            )}
+            One-tap install is not available in this browser. Open quick steps below.
           </p>
         ) : null}
       </div>
 
-      {installPrompt ? (
+      {hasOneTapInstall ? (
         <button
           type="button"
           onClick={handleInstallClick}
@@ -169,6 +184,39 @@ export function PwaInstallCard() {
           <Download className="h-3.5 w-3.5" />
           {installButtonLabel}
         </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowManualSteps((prev) => !prev)}
+          className="mt-3 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700 transition-colors hover:bg-cyan-100"
+        >
+          {platform.ios ? <IosShareGlyph /> : <Download className="h-3.5 w-3.5" />}
+          {showManualSteps ? 'Hide install steps' : 'Show install steps'}
+        </button>
+      )}
+
+      {!hasOneTapInstall && showManualSteps ? (
+        <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+          {platform.ios ? (
+            <p className="flex items-start gap-2">
+              <IosShareGlyph />
+              Tap the iOS Share button (square + arrow up), then choose{' '}
+              <span className="font-semibold text-slate-700">Add to Home Screen</span>.
+            </p>
+          ) : platform.android ? (
+            <p className="flex items-start gap-2">
+              <Smartphone className="mt-0.5 h-3.5 w-3.5 text-cyan-600" />
+              Open the browser menu and tap <span className="font-semibold text-slate-700">Install app</span> or{' '}
+              <span className="font-semibold text-slate-700">Add to Home screen</span>.
+            </p>
+          ) : (
+            <p className="flex items-start gap-2">
+              <Laptop className="mt-0.5 h-3.5 w-3.5 text-cyan-600" />
+              Use your browser's address bar install icon, or menu &rarr;{' '}
+              <span className="font-semibold text-slate-700">Install CentreConnect</span>.
+            </p>
+          )}
+        </div>
       ) : null}
     </section>
   )

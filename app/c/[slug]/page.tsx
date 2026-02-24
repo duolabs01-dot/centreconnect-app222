@@ -11,6 +11,7 @@ import type { TransportConfig } from '@/components/public/TransportSection'
 import { TransportSection } from '@/components/public/TransportSection'
 import { InteractionActions } from './interaction-actions'
 import { ContactCentreSheet } from './contact-centre-sheet'
+import { ShareCentreSheet } from './share-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
@@ -386,9 +387,15 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 ))}
               </div>
             ) : null}
-            <div className="grid gap-3 md:grid-cols-[auto_auto_auto]">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
               <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
+              <ShareCentreSheet
+                centreName={centre.name}
+                centreSlug={centre.slug}
+                suburb={centre.suburb ?? null}
+                city={centre.city ?? null}
+              />
               <a
                 href="#about"
                 className="flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-white/10"
