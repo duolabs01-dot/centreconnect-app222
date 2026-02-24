@@ -35,6 +35,8 @@ export async function POST() {
       .from('ecd_admins')
       .select('id,ecd_id')
       .eq('user_id', user.id)
+      .order('invited_at', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
     if (existingAssignment?.ecd_id) {

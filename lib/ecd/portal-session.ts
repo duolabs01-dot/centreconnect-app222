@@ -20,15 +20,24 @@ async function getLatestMembership(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string
 ) {
-  const { data: membership } = await supabase
+  const { data: memberships } = await supabase
     .from('ecd_admins')
     .select('ecd_id')
     .eq('user_id', userId)
     .order('invited_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .limit(10)
 
-  return membership?.ecd_id ?? null
+  const membershipRows = (memberships ?? []).filter((row) => Boolean(row?.ecd_id))
+  if (membershipRows.length === 0) return null
+
+  const candidateIds = Array.from(new Set(membershipRows.map((row) => row.ecd_id)))
+  const { data: visibleCentres } = await supabase.from('ecd_centres').select('id').in('id', candidateIds)
+  const visibleSet = new Set((visibleCentres ?? []).map((centre) => centre.id))
+
+  const validMembership = membershipRows.find((row) => visibleSet.has(row.ecd_id))
+  if (validMembership?.ecd_id) return validMembership.ecd_id
+
+  return null
 }
 
 async function tryRepairEcdMembership(input: {
