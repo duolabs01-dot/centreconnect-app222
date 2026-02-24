@@ -32,9 +32,52 @@ type DashboardApplication = {
   childName: string
 }
 
+type DashboardApplicationSummary = {
+  id: string
+  status: string | null
+  submitted_at: string | null
+}
+
+type DashboardStatusHistory = {
+  application_id: string | null
+  created_at: string | null
+  new_status: string | null
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function median(values: number[]) {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 1) return sorted[middle]
+  return (sorted[middle - 1] + sorted[middle]) / 2
+}
+
+function formatDurationDays(days: number | null) {
+  if (days === null) return 'No responses yet'
+  if (days < 1) {
+    const hours = Math.max(1, Math.round(days * 24))
+    return `${hours}h`
+  }
+  if (days < 10) return `${days.toFixed(1)}d`
+  return `${Math.round(days)}d`
+}
+
+function formatAgeFromNow(iso: string | null) {
+  if (!iso) return 'No unread'
+  const then = new Date(iso).getTime()
+  if (!Number.isFinite(then)) return 'No unread'
+  const diff = Math.max(0, Date.now() - then)
+  const minute = 60 * 1000
+  const hour = 60 * minute
+  const day = 24 * hour
+  if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))}m ago`
+  if (diff < day) return `${Math.floor(diff / hour)}h ago`
+  return `${Math.floor(diff / day)}d ago`
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -87,6 +130,50 @@ function ApplicationStatusCard({
   )
 }
 
+function TrendSnapshot({
+  responseRatePct,
+  respondedApplicationsForTrends,
+  totalApplicationsForTrends,
+  firstResponseLabel,
+  unreadNotificationsCount,
+  oldestUnreadAgeLabel,
+}: {
+  responseRatePct: number
+  respondedApplicationsForTrends: number
+  totalApplicationsForTrends: number
+  firstResponseLabel: string
+  unreadNotificationsCount: number
+  oldestUnreadAgeLabel: string
+}) {
+  return (
+    <section className="glass-card rounded-2xl p-4 sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Trend Snapshot</p>
+        <p className="text-[11px] text-slate-500">30d response + live inbox</p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Response Rate</p>
+          <p className="mt-1 text-xl font-bold text-cyan-700">{responseRatePct}%</p>
+          <p className="text-xs text-slate-500">
+            {respondedApplicationsForTrends} of {totalApplicationsForTrends} responded
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">First Response</p>
+          <p className="mt-1 text-xl font-bold text-slate-900">{firstResponseLabel}</p>
+          <p className="text-xs text-slate-500">Median time from submission</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white/80 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Inbox Pulse</p>
+          <p className="mt-1 text-xl font-bold text-slate-900">{unreadNotificationsCount}</p>
+          <p className="text-xs text-slate-500">Oldest unread: {oldestUnreadAgeLabel}</p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default async function ParentDashboardPage() {
   const perf = startRoutePerf('/parent/dashboard')
   const supabase = await createClient()
@@ -95,25 +182,39 @@ export default async function ParentDashboardPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser()
+    const thirtyDaysAgoIso = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    const [profileResult, childrenResult, applicationsResult] = await Promise.all([
-      supabase
-        .from('user_profiles')
-        .select('full_name')
-        .eq('id', user?.id ?? '')
-        .maybeSingle(),
-      supabase
-        .from('children')
-        .select('id,first_name,last_name')
-        .eq('parent_id', user?.id ?? '')
-        .limit(8),
-      supabase
-        .from('applications')
-        .select('id,status,submitted_at,updated_at,child_id,ecd_centres(name,slug),children(first_name,last_name)')
-        .eq('parent_id', user?.id ?? '')
-        .order('submitted_at', { ascending: false })
-        .limit(8),
-    ])
+    const [profileResult, childrenResult, applicationsResult, applicationSummaryResult, unreadNotificationsResult] =
+      await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('full_name')
+          .eq('id', user?.id ?? '')
+          .maybeSingle(),
+        supabase
+          .from('children')
+          .select('id,first_name,last_name')
+          .eq('parent_id', user?.id ?? '')
+          .limit(8),
+        supabase
+          .from('applications')
+          .select('id,status,submitted_at,updated_at,child_id,ecd_centres(name,slug),children(first_name,last_name)')
+          .eq('parent_id', user?.id ?? '')
+          .order('submitted_at', { ascending: false })
+          .limit(8),
+        supabase
+          .from('applications')
+          .select('id,status,submitted_at')
+          .eq('parent_id', user?.id ?? '')
+          .gte('submitted_at', thirtyDaysAgoIso),
+        supabase
+          .from('parent_notifications')
+          .select('id,created_at', { count: 'exact' })
+          .eq('parent_id', user?.id ?? '')
+          .eq('is_read', false)
+          .order('created_at', { ascending: true })
+          .limit(1),
+      ])
 
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
     const greeting = getJohannesburgGreeting()
@@ -149,6 +250,52 @@ export default async function ParentDashboardPage() {
         childName,
       } satisfies DashboardApplication
     })
+
+    const applicationSummaries = (applicationSummaryResult.data ?? []) as DashboardApplicationSummary[]
+    const summaryIds = applicationSummaries.map((item) => item.id).filter(Boolean)
+    const statusHistoryResult =
+      summaryIds.length > 0
+        ? await supabase
+            .from('application_status_history')
+            .select('application_id,created_at,new_status')
+            .in('application_id', summaryIds)
+            .order('created_at', { ascending: true })
+        : { data: [] as DashboardStatusHistory[] }
+
+    const statusHistoryRows = (statusHistoryResult.data ?? []) as DashboardStatusHistory[]
+    const firstResponseByApplication = new Map<string, string>()
+    for (const row of statusHistoryRows) {
+      if (!row.application_id || !row.created_at) continue
+      if (firstResponseByApplication.has(row.application_id)) continue
+      if ((row.new_status ?? 'submitted') === 'submitted') continue
+      firstResponseByApplication.set(row.application_id, row.created_at)
+    }
+
+    const firstResponseDurations = applicationSummaries
+      .map((application) => {
+        const submittedAt = application.submitted_at ? new Date(application.submitted_at).getTime() : NaN
+        const firstResponseAt = firstResponseByApplication.get(application.id)
+        const firstResponseMs = firstResponseAt ? new Date(firstResponseAt).getTime() : NaN
+        if (!Number.isFinite(submittedAt) || !Number.isFinite(firstResponseMs) || firstResponseMs < submittedAt) {
+          return null
+        }
+        return (firstResponseMs - submittedAt) / (1000 * 60 * 60 * 24)
+      })
+      .filter((value): value is number => typeof value === 'number')
+
+    const totalApplicationsForTrends = applicationSummaries.length
+    const respondedApplicationsForTrends = applicationSummaries.filter(
+      (application) => (application.status ?? 'submitted') !== 'submitted'
+    ).length
+    const responseRatePct =
+      totalApplicationsForTrends > 0
+        ? Math.round((respondedApplicationsForTrends / totalApplicationsForTrends) * 100)
+        : 0
+    const medianFirstResponseDays = median(firstResponseDurations)
+    const firstResponseLabel = formatDurationDays(medianFirstResponseDays)
+    const unreadNotificationsCount = unreadNotificationsResult.count ?? 0
+    const oldestUnreadCreatedAt = unreadNotificationsResult.data?.[0]?.created_at ?? null
+    const oldestUnreadAgeLabel = formatAgeFromNow(oldestUnreadCreatedAt)
 
     const enrolledApplication = applications.find((application) => application.status === 'enrolled')
     const hasApplications = applications.length > 0
@@ -288,6 +435,15 @@ export default async function ParentDashboardPage() {
               </div>
             </section>
 
+            <TrendSnapshot
+              responseRatePct={responseRatePct}
+              respondedApplicationsForTrends={respondedApplicationsForTrends}
+              totalApplicationsForTrends={totalApplicationsForTrends}
+              firstResponseLabel={firstResponseLabel}
+              unreadNotificationsCount={unreadNotificationsCount}
+              oldestUnreadAgeLabel={oldestUnreadAgeLabel}
+            />
+
             <section className="cc-stack">
               {applications.map((application, index) => (
                 <ApplicationStatusCard key={application.id} application={application} delayMs={index * 70} />
@@ -325,6 +481,15 @@ export default async function ParentDashboardPage() {
                 </p>
               </div>
             </section>
+
+            <TrendSnapshot
+              responseRatePct={responseRatePct}
+              respondedApplicationsForTrends={respondedApplicationsForTrends}
+              totalApplicationsForTrends={totalApplicationsForTrends}
+              firstResponseLabel={firstResponseLabel}
+              unreadNotificationsCount={unreadNotificationsCount}
+              oldestUnreadAgeLabel={oldestUnreadAgeLabel}
+            />
 
             <section className="grid grid-cols-2 gap-3 sm:gap-4">
               {quickActions.map((action, index) => {
