@@ -41,6 +41,28 @@ function buildRedirectUrl(path: string, request: NextRequest) {
   return new URL(path, getSafeRedirectBase(request))
 }
 
+async function verifyWithTokenHash(input: {
+  supabase: Awaited<ReturnType<typeof createClient>>
+  tokenHash: string
+  type: EmailOtpType | null
+}) {
+  const candidateTypes: EmailOtpType[] = []
+  if (input.type) candidateTypes.push(input.type)
+  if (!candidateTypes.includes('signup')) candidateTypes.push('signup')
+
+  let lastError: { message: string } | null = null
+  for (const otpType of candidateTypes) {
+    const { error } = await input.supabase.auth.verifyOtp({
+      token_hash: input.tokenHash,
+      type: otpType,
+    })
+    if (!error) return { error: null }
+    lastError = error
+  }
+
+  return { error: lastError ?? { message: 'Invalid confirmation link' } }
+}
+
 async function provisionProfileWithAdmin(input: {
   userId: string
   role: AllowedRole
@@ -118,10 +140,20 @@ export async function GET(request: NextRequest) {
     let error: { message: string } | null = null
     if (code) {
       const { error: codeError } = await supabase.auth.exchangeCodeForSession(code)
-      if (codeError) error = codeError
-    } else if (tokenHash && type) {
-      const { error: otpError } = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
+      if (codeError && tokenHash) {
+        const { error: otpError } = await verifyWithTokenHash({
+          supabase,
+          tokenHash,
+          type,
+        })
+        error = otpError
+      } else if (codeError) {
+        error = codeError
+      }
+    } else if (tokenHash) {
+      const { error: otpError } = await verifyWithTokenHash({
+        supabase,
+        tokenHash,
         type,
       })
       if (otpError) error = otpError
@@ -161,7 +193,7 @@ export async function GET(request: NextRequest) {
       })
 
     if (!provisioned) {
-      return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-profile-setup', request))
+      console.warn('[auth/confirm] Profile provisioning deferred until first authenticated request')
     }
 
     return NextResponse.redirect(buildRedirectUrl(next, request))
