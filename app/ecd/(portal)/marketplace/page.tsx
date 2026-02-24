@@ -131,12 +131,9 @@ export default async function EcdMarketplacePage() {
           {services.length === 0 ? (
             <div className="rounded-2xl border border-border bg-card/80 p-8 text-center">
               <p className="text-base font-semibold text-foreground">No add-ons available yet</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Your package already includes your core features. Additional services will appear here
-                when the CentreConnect team activates them for your region.
-              </p>
-              <p className="mt-4 text-xs text-muted-foreground">
-                Questions about your package? Open a support ticket.
+              <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
+                Additional services will appear here when activated by CentreConnect for your region.
+                Your current package already includes your core features.
               </p>
             </div>
           ) : (
