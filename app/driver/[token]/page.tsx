@@ -4,32 +4,49 @@ import { notFound } from 'next/navigation'
 export default async function DriverPage({ params }: { params: { token: string } }) {
   const supabase = await createClient()
 
-  // Use token as ecd_id for now
-  const ecdId = params.token
-
-  const { data: enquiries } = await supabase
-    .from('transport_enquiries')
-    .select('id,pickup_address,status,created_at')
-    .eq('ecd_id', ecdId)
-    .in('status', ['accepted', 'active'])
-    .order('created_at', { ascending: true })
-    .limit(30)
-
-  const { data: centre } = await supabase
-    .from('ecd_centres')
-    .select('name')
-    .eq('id', ecdId)
+  const { data: driver } = await supabase
+    .from('transport_drivers')
+    .select('id,full_name,ecd_id,ecd_centres(name)')
+    .eq('driver_token', params.token)
+    .eq('status', 'active')
     .maybeSingle()
 
-  if (!centre) notFound()
+  if (!driver) {
+    notFound()
+  }
 
-  const rows = enquiries ?? []
+  const centreName = Array.isArray(driver.ecd_centres)
+    ? driver.ecd_centres[0]?.name
+    : driver.ecd_centres?.name ?? 'Unknown Centre'
+
+  const { data: driverRoutes } = await supabase
+    .from('transport_routes')
+    .select('id,name,departure_time')
+    .eq('driver_id', driver.id)
+    .eq('is_active', true)
+    .limit(5)
+
+  const routeIds = (driverRoutes ?? []).map((route) => route.id)
+  const routeNameById = new Map((driverRoutes ?? []).map((route) => [route.id, route.name ?? 'Route']))
+
+  const { data: stops } =
+    routeIds.length > 0
+      ? await supabase
+          .from('route_children')
+          .select('id,route_id,pickup_address,stop_order,children(first_name,last_name)')
+          .in('route_id', routeIds)
+          .order('stop_order', { ascending: true })
+          .limit(50)
+      : { data: [] }
+
+  const rows = stops ?? []
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="border-b border-white/10 bg-slate-900 px-4 py-5">
         <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">CentreConnect Driver</p>
-        <h1 className="mt-1 text-xl font-bold">{centre.name}</h1>
+        <h1 className="mt-1 text-xl font-bold">{centreName}</h1>
+        <p className="text-sm font-medium text-slate-200">Driver: {driver.full_name}</p>
         <p className="text-sm text-slate-400">Today's route - {rows.length} stops</p>
       </header>
 
@@ -44,17 +61,20 @@ export default async function DriverPage({ params }: { params: { token: string }
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-cyan-400">Stop {i + 1}</p>
+                  <p className="mt-1 text-sm font-semibold text-cyan-100">
+                    {routeNameById.get(stop.route_id) ?? 'Route'}
+                  </p>
+                  <p className="mt-1 text-base font-semibold text-white">
+                    {Array.isArray(stop.children)
+                      ? `${stop.children[0]?.first_name ?? ''} ${stop.children[0]?.last_name ?? ''}`.trim() ||
+                        'Child not linked'
+                      : `${stop.children?.first_name ?? ''} ${stop.children?.last_name ?? ''}`.trim() ||
+                        'Child not linked'}
+                  </p>
                   <p className="mt-1 text-base font-semibold text-white">
                     {stop.pickup_address ?? 'Address pending'}
                   </p>
                 </div>
-                <span
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                    stop.status === 'active' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-600 text-slate-300'
-                  }`}
-                >
-                  {stop.status}
-                </span>
               </div>
             </div>
           ))
