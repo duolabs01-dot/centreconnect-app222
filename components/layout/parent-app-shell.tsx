@@ -58,7 +58,7 @@ function LocalSignOutButton({
 const navItems = [
   { href: '/parent/dashboard', label: 'Home' },
   { href: '/directory', label: 'Discover' },
-  { href: '/parent/notifications', label: 'Messages' },
+  { href: '/parent/notifications', label: 'Inbox' },
   { href: '/parent/profile', label: 'Me' },
 ]
 
@@ -74,7 +74,7 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/children') && pathname.includes('/edit')) return 'Edit Child Profile'
   if (pathname.startsWith('/parent/children')) return 'Child Profiles'
   if (pathname.startsWith('/parent/shortlist')) return 'Saved Centres'
-  if (pathname.startsWith('/parent/notifications')) return 'Message Centre'
+  if (pathname.startsWith('/parent/notifications')) return 'Family Inbox'
   if (pathname.startsWith('/parent/compare')) return 'Centre Comparison'
   return 'Parent Command Centre'
 }

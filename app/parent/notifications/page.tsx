@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { NotificationsInbox } from './notifications-inbox'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import { NextBestActionStrip } from '@/components/parent/next-best-action-strip'
-import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: 'Message Centre | Parent Portal | CentreConnect',
-  description: 'All centre updates, reminders, and important parent alerts in one inbox.',
+  title: 'Family Inbox — Messages, Announcements & Updates',
+  description: 'All centre messages, announcements, and application updates in one inbox.',
 }
 
 export default async function ParentNotificationsPage() {
@@ -36,8 +34,8 @@ export default async function ParentNotificationsPage() {
     return (
       <div className="cc-page">
         <section>
-          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Message Centre</h1>
-          <p className="mt-1 text-sm text-slate-600">See every centre update quickly so you never miss an important response.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Family Inbox</h1>
+          <p className="mt-1 text-sm text-slate-600">Messages from centres, announcements, and application updates.</p>
         </section>
         <NextBestActionStrip
           title="Close the loop quickly"
@@ -47,12 +45,18 @@ export default async function ParentNotificationsPage() {
             { label: 'Find More Centres', href: '/directory' },
           ]}
         />
-        <NotificationsInbox initialItems={items} />
-        <div className="sticky bottom-20 z-20 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-[var(--shadow-elevation-1)] backdrop-blur md:hidden">
-          <Button size="lg" className="h-12 w-full" asChild>
-            <Link href="/parent/applications">Go To Applications</Link>
-          </Button>
+        <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+          {(['All', 'Messages', 'Announcements', 'Updates'] as const).map((tab) => (
+            <button
+              key={tab}
+              className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-700 data-[active=true]:bg-white data-[active=true]:text-slate-900 data-[active=true]:shadow-sm"
+              data-active={tab === 'All' ? 'true' : 'false'}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
+        <NotificationsInbox initialItems={items} />
       </div>
     )
   } finally {

@@ -20,14 +20,14 @@ type NavItem = {
 const parentNavItems = [
   { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard'] },
   { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c', '/parent/shortlist', '/parent/compare'] },
-  { href: '/parent/notifications', label: 'Messages', icon: Bell, matches: ['/parent/notifications'] },
+  { href: '/parent/notifications', label: 'Inbox', icon: Bell, matches: ['/parent/notifications'] },
   { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences', '/parent/applications', '/apply'] },
 ] satisfies NavItem[]
 
 const publicNavItems = [
   { href: '/parent/dashboard', label: 'Home', icon: Home, matches: ['/parent/dashboard'] },
   { href: '/directory', label: 'Discover', icon: Compass, matches: ['/directory', '/centre', '/c'] },
-  { href: '/parent/notifications', label: 'Messages', icon: Bell, matches: ['/parent/notifications'] },
+  { href: '/parent/notifications', label: 'Inbox', icon: Bell, matches: ['/parent/notifications'] },
   { href: '/parent/profile', label: 'Me', icon: CircleUser, matches: ['/parent/profile', '/parent/children', '/parent/preferences', '/parent/applications', '/apply'] },
 ] satisfies NavItem[]
 
