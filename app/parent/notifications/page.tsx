@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { NotificationsInbox } from './notifications-inbox'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
-import { NextBestActionStrip } from '@/components/parent/next-best-action-strip'
 
 export const metadata: Metadata = {
   title: 'Family Inbox — Messages, Announcements & Updates',
@@ -38,14 +37,6 @@ export default async function ParentNotificationsPage() {
           <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Family Inbox</h1>
           <p className="mt-1 text-sm text-slate-600">Messages from centres, announcements, and application updates.</p>
         </section>
-        <NextBestActionStrip
-          title="Close the loop quickly"
-          hint="Responding to updates early improves placement outcomes."
-          actions={[
-            { label: 'View Applications', href: '/parent/applications' },
-            { label: 'Find More Centres', href: '/directory' },
-          ]}
-        />
         <NotificationsInbox initialItems={items} />
       </div>
     )

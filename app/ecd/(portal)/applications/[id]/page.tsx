@@ -11,7 +11,7 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 export const metadata: Metadata = {
   title: 'Application Details — CentreConnect',
-  description: 'Review child and parent application details and update admission status.',
+  description: 'Review child and parent application details and manage admission status.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -273,4 +273,3 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     </EcdOsShell>
   )
 }
-

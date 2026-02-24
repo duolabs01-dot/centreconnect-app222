@@ -5,7 +5,7 @@ import { ArrowRight } from 'lucide-react'
 
 interface ApplyCTAProps {
   centreSlug: string
-  variant: 'hero' | 'sticky' | 'inline'
+  variant: 'hero' | 'inline'
   userRole?: string | null
 }
 
@@ -13,26 +13,6 @@ export function ApplyCTA({ centreSlug, variant, userRole }: ApplyCTAProps) {
   if (userRole === 'ecd_admin' || userRole === 'ecd_staff') return null
 
   const href = `/apply/${centreSlug}`
-
-  if (variant === 'sticky') {
-    return (
-      <div
-        className="fixed bottom-0 inset-x-0 z-40 md:hidden
-                   bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl
-                   border-t border-border
-                   px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
-      >
-        <Link
-          href={href}
-          className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl
-                     bg-cyan-600 hover:bg-cyan-700 active:scale-[0.98]
-                     text-white font-semibold text-base transition-all"
-        >
-          Apply Now <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
-    )
-  }
 
   if (variant === 'hero') {
     return (
