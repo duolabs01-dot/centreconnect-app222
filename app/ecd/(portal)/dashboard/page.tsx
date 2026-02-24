@@ -304,7 +304,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <CardTitle className="text-sm font-semibold text-foreground">Attendance Logged (7 days)</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black text-emerald-300">{attendanceCurrent7}</p>
+              <p className="text-3xl font-black text-emerald-700">{attendanceCurrent7}</p>
               <p className="text-xs text-slate-400">{trendLabel(attendanceCurrent7, attendancePrevious7)}</p>
             </CardContent>
           </Card>
@@ -332,7 +332,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
                 className={cn(
                   'rounded-full px-3 py-1 text-xs font-semibold',
                   transportConfig?.offers_transport
-                    ? 'bg-emerald-600/20 text-emerald-300'
+                    ? 'bg-emerald-600/20 text-emerald-700'
                     : 'bg-amber-100 text-amber-800'
                 )}
               >

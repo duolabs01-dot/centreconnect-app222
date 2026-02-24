@@ -69,7 +69,7 @@ export default function TodayWidgets({
       )}
 
       {statCard(
-        <Users size={22} className="text-emerald-300" />,
+        <Users size={22} className="text-emerald-700" />,
         (
           <>
             {currentCapacity}/{totalCapacity}
@@ -93,7 +93,7 @@ export default function TodayWidgets({
       {statCard(<Clock size={22} className="text-cyan-700" />, `${avgResponseHours}h`, 'Avg. response time')}
 
       {statCard(
-        <TrendingUp size={22} className="text-emerald-300" />,
+        <TrendingUp size={22} className="text-emerald-700" />,
         weeklyVisitors,
         'Visitors this week',
         <span className={`text-xs font-semibold ${visitorsTrend >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -125,7 +125,7 @@ export function ProfileCompleteness({ items }: { items: ProfileItem[] }) {
             className="flex items-center justify-between text-sm text-muted-foreground"
           >
             <span>{item.label}</span>
-            <span className={item.done ? 'text-emerald-300' : 'text-muted-foreground'}>
+            <span className={item.done ? 'text-emerald-700' : 'text-muted-foreground'}>
               {item.done ? 'Done' : 'Pending'}
             </span>
           </Link>

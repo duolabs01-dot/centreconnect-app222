@@ -247,7 +247,7 @@ export default async function EcdWebsitePage() {
                 className={cn(
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasTagline
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
                                          : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 1: Add headline
@@ -256,7 +256,7 @@ export default async function EcdWebsitePage() {
                 className={cn(
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasAbout
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
                                          : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 2: Add about section
@@ -265,7 +265,7 @@ export default async function EcdWebsitePage() {
                 className={cn(
                   'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
                   hasPrograms && hasVisibleSections
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-300'
+                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
                                          : 'border-border bg-card text-muted-foreground'                )}
               >
                 Step 3: Enable sections and publish
