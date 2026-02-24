@@ -7,6 +7,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore } from 'lucide-react'
+import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
 interface CentreCardProps {
@@ -31,6 +32,7 @@ interface CentreCardProps {
 }
 
 export default function CentreCard({
+  id,
   slug,
   name,
   tagline,
@@ -139,6 +141,9 @@ export default function CentreCard({
               {open_spots === 0 ? 'Full' : `${open_spots} spots`}
             </div>
           )}
+          <div style={{position: 'absolute', bottom: '10px', right: '10px'}}>
+            <SaveCentreButton centreId={id} />
+          </div>
         </div>
 
         {/* Card body */}
