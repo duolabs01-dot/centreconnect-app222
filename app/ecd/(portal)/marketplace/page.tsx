@@ -129,11 +129,11 @@ export default async function EcdMarketplacePage() {
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {services.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card/80 p-8 text-center">
+            <div className="rounded-2xl border border-border bg-card/80 p-10 text-center">
               <p className="text-base font-semibold text-foreground">No add-ons available yet</p>
-              <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
-                Additional services will appear here when activated by CentreConnect for your region.
-                Your current package already includes your core features.
+              <p className="mt-2 max-w-sm mx-auto text-sm text-muted-foreground">
+                Additional services will appear here once activated for your region.
+                Your current package already includes all core features.
               </p>
             </div>
           ) : (

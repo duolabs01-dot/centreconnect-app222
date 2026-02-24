@@ -32,13 +32,12 @@ export function EnrolledConfetti({ applicationId }: EnrolledConfettiProps) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const key = `confetti-${applicationId}`
-    const alreadyShown = window.localStorage.getItem(key) === 'shown'
-    if (alreadyShown) {
+    const storageKey = `cc-confetti-${applicationId}`
+    if (window.localStorage.getItem(storageKey)) {
       return
     }
 
-    window.localStorage.setItem(key, 'shown')
+    window.localStorage.setItem(storageKey, '1')
     setVisible(true)
 
     const timer = window.setTimeout(() => setVisible(false), 2800)

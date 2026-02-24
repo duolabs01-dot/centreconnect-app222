@@ -128,7 +128,8 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
             <p className="text-xs font-bold uppercase tracking-widest text-cyan-200">For ECD Centres</p>
             <h3 className="mt-2 text-2xl font-extrabold tracking-tight">Get found by parents in your area</h3>
             <p className="mt-2 max-w-lg text-sm leading-relaxed text-cyan-100">
-              Manage applications, send announcements, and track admissions from one dashboard. Built for South African ECD centres.
+              Manage applications, communicate with parents, and run your centre — from one dashboard.
+              Built for South African ECD owners.
             </p>
             <Link
               href="/for-centres"
