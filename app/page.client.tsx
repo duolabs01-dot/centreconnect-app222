@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Clock3, HeartHandshake, ShieldCheck, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { Map, FileCheck, ActivitySquare, MessageCircle, FolderLock, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/lib/utils'
-import { ApplicationProgressSection } from '@/components/landing/application-progress-section'
 
 type HomeClientPageProps = {
   userEmail: string | null
@@ -38,77 +38,20 @@ type HomeClientPageProps = {
   }>
 }
 
-function distanceScore(
-  userLat: number,
-  userLng: number,
-  centreLat: number,
-  centreLng: number
-) {
-  const latDelta = userLat - centreLat
-  const lngDelta = userLng - centreLng
-  return latDelta * latDelta + lngDelta * lngDelta
-}
+const features = [
+  { icon: Map, title: 'Find Centres', desc: 'Browse ECDs near you' },
+  { icon: FileCheck, title: 'Apply Online', desc: 'No paperwork needed' },
+  { icon: ActivitySquare, title: 'Track Progress', desc: 'Real-time status updates' },
+  { icon: MessageCircle, title: 'Communicate', desc: 'Direct centre messaging' },
+  { icon: FolderLock, title: 'Store Documents', desc: 'Secure document vault' },
+  { icon: Bell, title: 'Get Notified', desc: 'Instant decision alerts' },
+]
 
-export default function HomeClientPage({ userEmail, parentItems, jobOpportunities, shortlistCentres }: HomeClientPageProps) {
+export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClientPageProps) {
   const isSignedIn = Boolean(userEmail)
   const parentName = getDisplayNameFromEmail(userEmail)
   const [timeGreeting, setTimeGreeting] = useState(getJohannesburgGreeting())
-  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
-  const activeItems = parentItems.slice(0, 4)
   const activeJobs = jobOpportunities.slice(0, 6)
-  const fallbackSuburb = useMemo(
-    () => shortlistCentres.find((centre) => centre.suburb)?.suburb ?? '',
-    [shortlistCentres]
-  )
-  const shortlistSuburb = useMemo(() => {
-    if (!fallbackSuburb) return ''
-    if (!userCoords) return fallbackSuburb
-
-    const nearest = shortlistCentres
-      .filter(
-        (centre) =>
-          typeof centre.latitude === 'number' &&
-          typeof centre.longitude === 'number' &&
-          Boolean(centre.suburb)
-      )
-      .sort(
-        (a, b) =>
-          distanceScore(
-            userCoords.latitude,
-            userCoords.longitude,
-            a.latitude as number,
-            a.longitude as number
-          ) -
-          distanceScore(
-            userCoords.latitude,
-            userCoords.longitude,
-            b.latitude as number,
-            b.longitude as number
-          )
-      )[0]
-
-    return nearest?.suburb ?? fallbackSuburb
-  }, [fallbackSuburb, shortlistCentres, userCoords])
-  const shortlistCards = useMemo(() => {
-    const fallbackReasons = [
-      'Strong parent communication',
-      'Balanced routine and play',
-      'Consistent application feedback',
-      'Great fit for first-time families',
-    ]
-
-    const suburbKey = shortlistSuburb.toLowerCase()
-    const localCentres = shortlistCentres.filter(
-      (centre) => centre.suburb?.toLowerCase() === suburbKey
-    )
-    const usedIds = new Set(localCentres.map((centre) => centre.id))
-    const backupCentres = shortlistCentres.filter((centre) => !usedIds.has(centre.id))
-
-    return [...localCentres, ...backupCentres].slice(0, 4).map((centre, index) => ({
-      ...centre,
-      reason: centre.tagline || fallbackReasons[index % fallbackReasons.length],
-    }))
-  }, [shortlistCentres, shortlistSuburb])
   const title = useMemo(
     () => (isSignedIn ? `Welcome back, ${parentName}` : 'Find the right ECD for your child'),
     [isSignedIn, parentName]
@@ -119,25 +62,6 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
       setTimeGreeting(getJohannesburgGreeting())
     }, 60_000)
     return () => window.clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    if (!('geolocation' in navigator)) return
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setUserCoords({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        })
-      },
-      () => {},
-      {
-        enableHighAccuracy: false,
-        timeout: 6000,
-        maximumAge: 300000,
-      }
-    )
   }, [])
 
   return (
@@ -186,94 +110,34 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
                 </Button>
               )}
             </div>
-            {!isSignedIn ? (
-              <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
-                {[
-                  { emoji: 'Ã°Å¸â€œÂ', title: 'Find Centres', desc: 'Browse ECDs near you' },
-                  { emoji: 'Ã°Å¸â€œÂ', title: 'Apply Online', desc: 'No paperwork needed' },
-                  { emoji: 'Ã°Å¸â€œÅ ', title: 'Track Progress', desc: 'Real-time status updates' },
-                  { emoji: 'Ã°Å¸â€™Â¬', title: 'Communicate', desc: 'Direct centre messaging' },
-                  { emoji: 'Ã°Å¸â€”â€šÃ¯Â¸Â', title: 'Store Documents', desc: 'Secure document vault' },
-                  { emoji: 'Ã°Å¸â€â€', title: 'Get Notified', desc: 'Instant decision alerts' },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 p-4 backdrop-blur-sm"
-                  >
-                    <span className="text-2xl">{item.emoji}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{item.desc}</p>
-                    </div>
+            <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
+              {features.map((item) => (
+                <div key={item.title} className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 p-4 backdrop-blur-sm">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
+                    <item.icon className="h-4 w-4" />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Clock3 className="h-4 w-4 text-blue-600" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Save Time</p>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{item.desc}</p>
                   </div>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">No more calling centres for status updates.</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Trust Signals</p>
-                  </div>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">See registered centres and compare clearly.</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-white/90 p-3">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <HeartHandshake className="h-4 w-4 text-fuchsia-600" />
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em]">Parent First</p>
-                  </div>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Built around real family decision moments.</p>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </section>
 
-          {isSignedIn && <ApplicationProgressSection />}
-
-          {isSignedIn && shortlistSuburb ? (
-            <section className="glass-card rounded-2xl p-4 sm:p-6">
-              <h3 className="text-xl font-bold text-slate-900">Shortlist-Worthy In {shortlistSuburb}</h3>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {shortlistCards.length === 0 ? (
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
-                    <p className="text-base font-bold text-slate-900">No shortlisted centres yet</p>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                      Browse the full directory to find centres near you.
-                    </p>
-                    <div className="mt-3">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href="/directory">Browse Centres</Link>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  shortlistCards.map((item) => (
-                    <Link
-                      key={item.id}
-                      href={`/centre/${item.slug}`}
-                      className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
-                    >
-                      <p className="text-base font-bold text-slate-900">{item.name}</p>
-                      <p className="mt-1 text-sm text-slate-600">
-                        {[item.suburb, item.city].filter(Boolean).join(', ')}
-                      </p>
-                      <p className="mt-2 text-sm leading-relaxed text-slate-500">{item.reason}</p>
-                      <p className="mt-3 text-sm font-semibold text-cyan-700 group-hover:text-cyan-800">
-                        View centre -&gt;
-                      </p>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </section>
-          ) : null}
+          <section className="rounded-2xl border border-cyan-100 bg-gradient-to-r from-cyan-600 to-sky-700 p-6 text-white text-center">
+            <p className="text-xs font-bold uppercase tracking-widest text-cyan-200">For ECD Centres</p>
+            <h3 className="mt-2 text-2xl font-extrabold">Grow your centre with CentreConnect</h3>
+            <p className="mt-2 text-cyan-100 text-sm max-w-xl mx-auto">
+              Get found by parents searching nearby. Manage applications, send announcements, and track admissions from one dashboard.
+            </p>
+            <Link
+              href="/for-centres"
+              className="mt-5 inline-block rounded-full bg-white text-cyan-700 font-bold px-6 py-3 text-sm hover:bg-cyan-50 transition-colors"
+            >
+              Register Your Centre →
+            </Link>
+          </section>
 
           <section id="active-jobs" className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -337,6 +201,3 @@ export default function HomeClientPage({ userEmail, parentItems, jobOpportunitie
     </div>
   )
 }
-
-
-
