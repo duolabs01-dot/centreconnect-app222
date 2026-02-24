@@ -23,6 +23,7 @@ type ApplicationRow = {
   child_id: string
   ecd_id: string
   start_date: string | null
+  parent_message: string | null
   admin_notes: string | null
   offer_accepted_at: string | null
   share_multiple_flag: boolean | null
@@ -53,7 +54,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
     .from('applications')
     .select(`
       id, application_number, status, submitted_at, child_id, ecd_id,
-      start_date, admin_notes, offer_accepted_at, share_multiple_flag,
+      start_date, parent_message, admin_notes, offer_accepted_at, share_multiple_flag,
       ecd_centres (name, suburb, slug),
       children (first_name, last_name),
       application_status_history (new_status, created_at, notes)
@@ -88,6 +89,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       status={appRow.status}
       submittedAt={appRow.submitted_at}
       startDate={appRow.start_date}
+      parentMessage={appRow.parent_message ?? null}
       adminNotes={appRow.admin_notes}
       acceptedAt={appRow.offer_accepted_at}
       centreName={centre?.name ?? 'Unknown centre'}
