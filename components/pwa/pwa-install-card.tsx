@@ -15,9 +15,11 @@ function isStandalone() {
 
 function getPlatform() {
   if (typeof window === 'undefined') return { ios: false, android: false, desktop: false }
-  const ua = window.navigator.userAgent.toLowerCase()
-  const ios = /iphone|ipad|ipod/.test(ua)
-  const android = /android/.test(ua)
+  const ua = window.navigator.userAgent
+  const lowerUa = ua.toLowerCase()
+  const isAppleTouchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
+  const ios = /iphone|ipad|ipod/.test(lowerUa) || isAppleTouchMac
+  const android = /android/.test(lowerUa)
   return {
     ios,
     android,
@@ -26,11 +28,17 @@ function getPlatform() {
 }
 
 export function PwaInstallCard() {
+  const installedKey = 'cc-pwa-installed'
+  const dismissedKey = 'cc-pwa-install-dismissed'
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installed, setInstalled] = useState(false)
   const [dismissed, setDismissed] = useState(false)
 
   const platform = useMemo(() => getPlatform(), [])
+  const heading = platform.desktop
+    ? 'Install CentreConnect on your computer'
+    : 'Add CentreConnect to your home screen'
+  const installButtonLabel = platform.desktop ? 'Install on this computer' : 'Install CentreConnect'
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -41,10 +49,13 @@ export function PwaInstallCard() {
       })
     }
 
-    setInstalled(isStandalone())
+    const isStandaloneMode = isStandalone()
     try {
-      setDismissed(window.localStorage.getItem('cc-pwa-install-dismissed') === '1')
+      const wasInstalled = window.localStorage.getItem(installedKey) === '1'
+      setInstalled(isStandaloneMode || wasInstalled)
+      setDismissed(window.localStorage.getItem(dismissedKey) === '1')
     } catch {
+      setInstalled(isStandaloneMode)
       setDismissed(false)
     }
 
@@ -56,6 +67,12 @@ export function PwaInstallCard() {
     const onAppInstalled = () => {
       setInstalled(true)
       setInstallPrompt(null)
+      try {
+        window.localStorage.setItem(installedKey, '1')
+        window.localStorage.removeItem(dismissedKey)
+      } catch {
+        // no-op
+      }
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
@@ -65,7 +82,7 @@ export function PwaInstallCard() {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
       window.removeEventListener('appinstalled', onAppInstalled)
     }
-  }, [])
+  }, [dismissedKey, installedKey])
 
   async function handleInstallClick() {
     if (!installPrompt) return
@@ -73,6 +90,12 @@ export function PwaInstallCard() {
     const choice = await installPrompt.userChoice
     if (choice.outcome === 'accepted') {
       setInstalled(true)
+      try {
+        window.localStorage.setItem(installedKey, '1')
+        window.localStorage.removeItem(dismissedKey)
+      } catch {
+        // no-op
+      }
     }
     setInstallPrompt(null)
   }
@@ -80,7 +103,7 @@ export function PwaInstallCard() {
   function dismissCard() {
     setDismissed(true)
     try {
-      window.localStorage.setItem('cc-pwa-install-dismissed', '1')
+      window.localStorage.setItem(dismissedKey, '1')
     } catch {
       // no-op
     }
@@ -93,7 +116,7 @@ export function PwaInstallCard() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">Install App</p>
-          <p className="mt-1 text-sm font-semibold text-slate-900">Add CentreConnect to your home screen</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{heading}</p>
         </div>
         <button
           type="button"
@@ -109,7 +132,9 @@ export function PwaInstallCard() {
         {installPrompt ? (
           <p className="flex items-center gap-2">
             <Download className="h-3.5 w-3.5 text-cyan-600" />
-            Install in one tap for faster loading, full-screen use, and app-like experience.
+            {platform.desktop
+              ? 'Install in one click for a cleaner desktop app experience.'
+              : 'Install in one tap for faster loading, full-screen use, and app-like experience.'}
           </p>
         ) : null}
 
@@ -142,7 +167,7 @@ export function PwaInstallCard() {
           className="mt-3 inline-flex items-center gap-2 rounded-full bg-cyan-600 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-cyan-700"
         >
           <Download className="h-3.5 w-3.5" />
-          Install CentreConnect
+          {installButtonLabel}
         </button>
       ) : null}
     </section>
