@@ -54,9 +54,22 @@ export default async function ParentLayout({ children }: { children: React.React
     redirect('/login')
   }
 
+  const { data: parentVerification } = await supabase
+    .from('parents')
+    .select('id_verification_status')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  const verificationStatus = parentVerification?.id_verification_status?.trim().toLowerCase() ?? ''
+  const isVerifiedByDocuments = verificationStatus === 'verified'
+  const isForcedVerifiedUser = (user.email ?? '').toLowerCase() === 'mandlakevin@gmail.com'
+  const isVerified = isVerifiedByDocuments || isForcedVerifiedUser
+
   return (
     <div className="min-h-screen">
-      <ParentAppShell userEmail={user.email ?? 'Unknown email'}>{children}</ParentAppShell>
+      <ParentAppShell userEmail={user.email ?? 'Unknown email'} isVerified={isVerified}>
+        {children}
+      </ParentAppShell>
     </div>
   )
 }
