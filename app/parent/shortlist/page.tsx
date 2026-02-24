@@ -75,7 +75,7 @@ export default async function ParentShortlistPage() {
           {centres.map((centre: any) => (
             <Link
               key={centre.id}
-              href={`/centre/${centre.slug}`}
+              href={`/c/${centre.slug}`}
               className="group block rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
             >
               <div className="flex items-start justify-between gap-2">

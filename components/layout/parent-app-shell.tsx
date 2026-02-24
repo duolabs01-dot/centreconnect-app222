@@ -58,7 +58,7 @@ function LocalSignOutButton({
 const navItems = [
   { href: '/parent/dashboard', label: 'Home' },
   { href: '/directory', label: 'Discover' },
-  { href: '/parent/applications', label: 'Journey' },
+  { href: '/parent/notifications', label: 'Messages' },
   { href: '/parent/profile', label: 'Me' },
 ]
 

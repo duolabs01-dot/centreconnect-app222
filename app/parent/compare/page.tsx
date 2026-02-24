@@ -20,6 +20,9 @@ type CentreRow = {
   capacity: number | null
   age_groups: string[] | null
   is_registered: boolean | null
+  fees_display_mode: string | null
+  monthly_fee_min: number | null
+  monthly_fee_max: number | null
 }
 
 function normalizeCentresParam(input?: string | string[]): string[] {
@@ -39,7 +42,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   if (centreIds.length > 0) {
     const primary = await supabase
       .from('ecd_centres')
-      .select('id,name,suburb,capacity,age_groups,is_registered')
+      .select('id,name,suburb,capacity,age_groups,is_registered,fees_display_mode,monthly_fee_min,monthly_fee_max')
       .in('id', centreIds)
 
     if (primary.error) {
@@ -55,6 +58,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         capacity: null,
         age_groups: centre.age_groups,
         is_registered: centre.is_registered,
+        fees_display_mode: null,
+        monthly_fee_min: null,
+        monthly_fee_max: null,
       }))
     } else {
       centres = (primary.data ?? []).map((centre) => ({
@@ -64,6 +70,9 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         capacity: centre.capacity,
         age_groups: centre.age_groups,
         is_registered: centre.is_registered,
+        fees_display_mode: centre.fees_display_mode,
+        monthly_fee_min: centre.monthly_fee_min,
+        monthly_fee_max: centre.monthly_fee_max,
       }))
     }
   }
@@ -133,7 +142,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 <TableCell className="px-4 py-3 font-medium text-slate-700">Monthly Fee</TableCell>
                 {orderedCentres.map((centre) => (
                   <TableCell key={centre.id} className="px-4 py-3 text-slate-700">
-                    R800-1200 (contact for exact)
+                    {centre.fees_display_mode === 'exact' && centre.monthly_fee_min
+                      ? `R${centre.monthly_fee_min}`
+                      : centre.fees_display_mode === 'range' && centre.monthly_fee_min && centre.monthly_fee_max
+                      ? `R${centre.monthly_fee_min} – R${centre.monthly_fee_max}`
+                      : centre.fees_display_mode === 'contact'
+                      ? 'Contact for fees'
+                      : 'Not specified'}
                   </TableCell>
                 ))}
               </TableRow>
