@@ -15,7 +15,7 @@ export default async function ParentNotificationsPage() {
   try {
     const { data } = await supabase
       .from('parent_notifications')
-      .select('id,title,message,is_read,created_at,ecd_centres(name,contact_whatsapp,contact_phone)')
+      .select('id,title,message,is_read,created_at,template_key,ecd_centres(name,contact_whatsapp,contact_phone)')
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -25,6 +25,7 @@ export default async function ParentNotificationsPage() {
       message: string
       is_read: boolean
       created_at: string
+      template_key: string | null
       ecd_centres?:
         | { name: string; contact_whatsapp: string | null; contact_phone: string | null }
         | { name: string; contact_whatsapp: string | null; contact_phone: string | null }[]
@@ -45,17 +46,6 @@ export default async function ParentNotificationsPage() {
             { label: 'Find More Centres', href: '/directory' },
           ]}
         />
-        <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
-          {(['All', 'Messages', 'Announcements', 'Updates'] as const).map((tab) => (
-            <button
-              key={tab}
-              className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-700 data-[active=true]:bg-white data-[active=true]:text-slate-900 data-[active=true]:shadow-sm"
-              data-active={tab === 'All' ? 'true' : 'false'}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
         <NotificationsInbox initialItems={items} />
       </div>
     )

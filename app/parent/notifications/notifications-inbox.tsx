@@ -13,11 +13,14 @@ type NotificationItem = {
   message: string
   is_read: boolean
   created_at: string
+  template_key?: string | null
   ecd_centres?:
     | { name: string; contact_whatsapp: string | null; contact_phone: string | null }
     | { name: string; contact_whatsapp: string | null; contact_phone: string | null }[]
     | null
 }
+
+type InboxTab = 'All' | 'Messages' | 'Announcements' | 'Updates'
 
 function normalizeCentre(value: NotificationItem['ecd_centres']) {
   if (!value) return { name: 'Centre update', contactWhatsapp: null as string | null, contactPhone: null as string | null }
@@ -39,8 +42,36 @@ function toWhatsappHref(phone: string | null, message: string) {
 export function NotificationsInbox({ initialItems }: { initialItems: NotificationItem[] }) {
   const supabase = createClient()
   const [items, setItems] = useState(initialItems)
+  const [activeTab, setActiveTab] = useState<InboxTab>('All')
 
-  const unreadCount = useMemo(() => items.filter((item) => !item.is_read).length, [items])
+  const filteredItems = useMemo(() => {
+    if (activeTab === 'All') return items
+    return items.filter((item) => {
+      const templateKey = (item.template_key ?? '').trim().toLowerCase()
+      const title = item.title.trim().toLowerCase()
+
+      const isMessage =
+        templateKey === 'parent_message' ||
+        title.startsWith('message to ') ||
+        title.startsWith('message from ') ||
+        title.startsWith('direct message')
+      const isAnnouncement =
+        templateKey === 'announcement' ||
+        templateKey === 'open_day_invite' ||
+        templateKey === 'spot_available' ||
+        title.includes('announcement') ||
+        title.includes('open day') ||
+        title.includes('invite') ||
+        title.includes('spot available')
+      const isUpdate = !isMessage && !isAnnouncement
+
+      if (activeTab === 'Messages') return isMessage
+      if (activeTab === 'Announcements') return isAnnouncement
+      return isUpdate
+    })
+  }, [activeTab, items])
+
+  const unreadCount = useMemo(() => filteredItems.filter((item) => !item.is_read).length, [filteredItems])
 
   async function markRead(notificationId: string) {
     const { error } = await supabase
@@ -78,18 +109,32 @@ export function NotificationsInbox({ initialItems }: { initialItems: Notificatio
 
   return (
     <div className="space-y-4">
+      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+        {(['All', 'Messages', 'Announcements', 'Updates'] as const).map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            onClick={() => setActiveTab(tab)}
+            className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-700 data-[active=true]:bg-white data-[active=true]:text-slate-900 data-[active=true]:shadow-sm"
+            data-active={activeTab === tab ? 'true' : 'false'}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-600">
-          {unreadCount} unread notification{unreadCount === 1 ? '' : 's'}
+          {unreadCount} unread notification{unreadCount === 1 ? '' : 's'} {activeTab === 'All' ? 'in inbox' : `in ${activeTab.toLowerCase()}`}
         </p>
         <Button type="button" variant="outline" size="sm" onClick={markAllRead}>
           Mark all read
         </Button>
       </div>
 
-      {items.length === 0 ? (
+      {filteredItems.length === 0 ? (
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <p className="text-sm font-semibold text-slate-900">No updates yet</p>
+          <p className="text-sm font-semibold text-slate-900">No {activeTab === 'All' ? 'updates' : activeTab.toLowerCase()} yet</p>
           <p className="mt-1 text-sm text-slate-600">Apply to centres and switch on preferences to get proactive updates here.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" asChild>
@@ -101,7 +146,7 @@ export function NotificationsInbox({ initialItems }: { initialItems: Notificatio
           </div>
         </div>
       ) : (
-        items.map((item) => (
+        filteredItems.map((item) => (
           <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-blue-200 bg-blue-50/40'}`}>
             {(() => {
               const centre = normalizeCentre(item.ecd_centres)
