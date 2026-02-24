@@ -16,12 +16,16 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const { data: centre } = await supabase
     .from('ecd_centres')
-    .select('id')
+    .select('id, onboarding_complete')
     .eq('id', ecdId)
     .maybeSingle()
 
   if (!centre?.id) {
     redirect('/for-centres?status=pending')
+  }
+
+  if (!centre.onboarding_complete) {
+    redirect('/ecd/onboarding')
   }
 
   return (
