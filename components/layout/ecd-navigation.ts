@@ -25,7 +25,7 @@ export type EcdNavItem = {
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/dashboard', label: 'Today', icon: LayoutDashboard, group: 'daily' },
   { href: '/ecd/applications', label: 'Applications', icon: ClipboardList, group: 'daily' },
-  { href: '/ecd/pipeline', label: 'Children Journey (Pipeline)', icon: GitFork, group: 'daily' },
+  { href: '/ecd/pipeline', label: 'Pipeline', icon: GitFork, group: 'daily' },
   { href: '/ecd/billing', label: 'Billing', icon: CreditCard, group: 'daily' },
   { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'daily' },
   { href: '/ecd/communications', label: 'Messages', icon: MessageSquare, group: 'operations' },

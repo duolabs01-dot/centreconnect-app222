@@ -10,8 +10,8 @@ import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 export const metadata: Metadata = {
-  title: 'CentreConnect - Digital Presence for ECD Centres',
-  description: 'Get found online. R199/month for professional website + application management',
+  title: 'Application Details - CentreConnect',
+  description: 'Review child and parent application details and update admission status.',
   openGraph: {
     images: ['/og-image.png'],
   },

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
-import { cn, formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -161,45 +161,6 @@ export default async function EcdTransportPage() {
                 )}
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-card border border-border rounded-2xl">
-          <CardHeader>
-            <CardTitle>Recent Transport Enquiries</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {enquiries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No transport enquiries yet. Parents that request transport will appear here.
-              </p>
-            ) : (
-              enquiries.map((enquiry) => (
-                <div
-                  key={enquiry.id}
-                  className={cn(
-                    'rounded-2xl border border-border/60 bg-card px-4 py-3 text-sm text-foreground',
-                    enquiry.status === 'quoted' ? 'bg-emerald-900/40' : 'bg-muted'
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-foreground">
-                      {enquiry.pickup_address ?? 'Pickup address pending'}
-                    </p>
-                    <StatusBadge status={enquiry.status as any} />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Updated {formatDate(enquiry.created_at)}
-                  </p>
-                  {enquiry.quote_amount ? (
-                    <p className="text-xs font-semibold text-foreground">
-                      Quote: {formatCents(enquiry.quote_amount)}
-                      {enquiry.quote_notes ? ` · ${enquiry.quote_notes}` : ''}
-                    </p>
-                  ) : null}
-                </div>
-              ))
-            )}
           </CardContent>
         </Card>
       </div>
