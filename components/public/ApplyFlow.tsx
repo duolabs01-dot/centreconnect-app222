@@ -59,6 +59,10 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
     () => childList.find((child) => child.id === selectedChildId) ?? null,
     [childList, selectedChildId]
   )
+  const centreLocation = useMemo(
+    () => [centre.suburb, centre.city].filter(Boolean).join(', ') || 'Location pending',
+    [centre.city, centre.suburb]
+  )
 
   const childForm = useForm<ChildFormValues>({
     resolver: zodResolver(createChildSchema),
@@ -254,6 +258,17 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
         </div>
 
         <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="apply-centre-name">Centre name</Label>
+              <Input id="apply-centre-name" value={centre.name} readOnly className="bg-slate-50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="apply-centre-location">Location</Label>
+              <Input id="apply-centre-location" value={centreLocation} readOnly className="bg-slate-50" />
+            </div>
+          </div>
+
           <Textarea
             placeholder="Share anything important (siblings, support needs, transport notes, etc.)"
             value={parentMessage}

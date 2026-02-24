@@ -456,8 +456,8 @@ export default async function CentrePage({ params }: CentrePageProps) {
         <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
 
         {jobs.length > 0 && (
-          <section className="mt-14 rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-6 shadow-[var(--shadow-elevation-4)]">
-            <SectionHeader emoji="" title="Join Our Team" titleClass="text-white" emojiSize="text-3xl" />
+          <section className="mt-14 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]">
+            <SectionHeader emoji="" title="Join Our Team" emojiSize="text-3xl" />
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
                 <JobTeaserCard key={job.id} job={job} centreSlug={centre.slug} />
@@ -550,12 +550,12 @@ function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
     <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] transition-all hover:border-cyan-500/30 hover:bg-muted">
         <div>
-          <p className="text-lg font-semibold text-white transition-colors group-hover:text-cyan-400">{job.title}</p>
+          <p className="text-lg font-semibold text-slate-900 transition-colors group-hover:text-cyan-700">{job.title}</p>
           {job.closes_at ? (
-            <p className="text-xs text-slate-400">Apply by {formatDate(job.closes_at)}</p>
+            <p className="text-xs text-slate-500">Apply by {formatDate(job.closes_at)}</p>
           ) : null}
         </div>
-        <div className="flex items-center gap-1 text-cyan-400 text-sm font-medium">
+        <div className="flex items-center gap-1 text-cyan-700 text-sm font-medium">
           View & Apply <ArrowRight className="w-4 h-4" />
         </div>
       </div>

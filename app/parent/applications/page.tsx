@@ -35,11 +35,15 @@ type ApplicationRow = {
         name: string
         slug: string
         logo_url: string | null
+        suburb: string | null
+        city: string | null
       }
     | Array<{
         name: string
         slug: string
         logo_url: string | null
+        suburb: string | null
+        city: string | null
       }>
     | null
   children:
@@ -77,7 +81,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const [applicationsResult, childrenResult] = await Promise.all([
       supabase
         .from('applications')
-        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,updated_at,ecd_centres(name,slug,logo_url),children(first_name,last_name),application_status_history(new_status,created_at,notes)')
+        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,updated_at,ecd_centres(name,slug,logo_url,suburb,city),children(first_name,last_name),application_status_history(new_status,created_at,notes)')
         .eq('parent_id', user?.id ?? '')
         .order('submitted_at', { ascending: false })
         .limit(100),
@@ -106,12 +110,15 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           .map((application) => application.ecd_id as string)
       )
     )
-    const fallbackCentresById = new Map<string, { name: string; slug: string | null; logoUrl: string | null }>()
+    const fallbackCentresById = new Map<
+      string,
+      { name: string; slug: string | null; logoUrl: string | null; suburb: string | null; city: string | null }
+    >()
 
     if (missingCentreIds.length > 0) {
       const { data: fallbackCentres } = await supabase
         .from('public_ecd_centres')
-        .select('id,name,slug,logo_url')
+        .select('id,name,slug,logo_url,suburb,city')
         .in('id', missingCentreIds)
 
       ;(fallbackCentres ?? []).forEach((centre) => {
@@ -119,6 +126,8 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           name: (centre.name as string | undefined) ?? 'Centre details pending',
           slug: (centre.slug as string | null | undefined) ?? null,
           logoUrl: (centre.logo_url as string | null | undefined) ?? null,
+          suburb: (centre.suburb as string | null | undefined) ?? null,
+          city: (centre.city as string | null | undefined) ?? null,
         })
       })
     }
@@ -146,6 +155,10 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           centreName: centre?.name ?? fallbackCentre?.name ?? 'Centre details pending',
           centreSlug: centre?.slug ?? fallbackCentre?.slug ?? null,
           centreLogoUrl: centre?.logo_url ?? fallbackCentre?.logoUrl ?? null,
+          centreLocation:
+            [centre?.suburb ?? fallbackCentre?.suburb ?? null, centre?.city ?? fallbackCentre?.city ?? null]
+              .filter(Boolean)
+              .join(', ') || 'Location pending',
           childName,
           childId: application.child_id,
           history:

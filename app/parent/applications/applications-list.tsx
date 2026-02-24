@@ -22,6 +22,7 @@ type ApplicationItem = {
   centreName: string
   centreSlug: string | null
   centreLogoUrl: string | null
+  centreLocation: string
   childName: string
   history: Array<{
     status: string
@@ -100,7 +101,7 @@ function ApplicationCard({
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-900">{application.centreName}</p>
             <p className="mt-0.5 truncate text-xs text-slate-500">
-              {application.childName} - Applied {formatDate(application.submitted_at)}
+              {application.centreLocation} | {application.childName} - Applied {formatDate(application.submitted_at)}
             </p>
           </div>
         </div>
@@ -142,6 +143,7 @@ function TimelinePanel({ application }: { application: ApplicationItem }) {
       <div className="px-1">
         <p className="text-xs font-semibold uppercase tracking-wider text-cyan-700">Application Timeline</p>
         <h3 className="mt-1 text-lg font-semibold text-slate-900">{application.centreName}</h3>
+        <p className="text-sm text-slate-600">{application.centreLocation}</p>
         <p className="text-sm text-slate-600">{application.childName}</p>
       </div>
       <div className="max-h-[70vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white">
