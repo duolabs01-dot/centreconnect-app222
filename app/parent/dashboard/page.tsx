@@ -467,7 +467,7 @@ export default async function ParentDashboardPage() {
           <div className="cc-stack">
             <section className="glass-card animate-fade-in relative overflow-hidden rounded-2xl p-5 sm:p-6">
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
-              <EnrolledConfetti />
+              <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
               <div className="relative">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
                   <Sparkles className="h-5 w-5" />

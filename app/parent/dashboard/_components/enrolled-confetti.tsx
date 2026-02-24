@@ -24,20 +24,26 @@ type ConfettiStyle = CSSProperties & {
   '--confetti-drift': string
 }
 
-export function EnrolledConfetti() {
+type EnrolledConfettiProps = {
+  applicationId: string
+}
+
+export function EnrolledConfetti({ applicationId }: EnrolledConfettiProps) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const key = 'parent-dashboard-enrolled-confetti'
-    const alreadyShown = window.sessionStorage.getItem(key) === 'shown'
-    if (alreadyShown) return
+    const key = `confetti-${applicationId}`
+    const alreadyShown = window.localStorage.getItem(key) === 'shown'
+    if (alreadyShown) {
+      return
+    }
 
-    window.sessionStorage.setItem(key, 'shown')
+    window.localStorage.setItem(key, 'shown')
     setVisible(true)
 
     const timer = window.setTimeout(() => setVisible(false), 2800)
     return () => window.clearTimeout(timer)
-  }, [])
+  }, [applicationId])
 
   if (!visible) return null
 
