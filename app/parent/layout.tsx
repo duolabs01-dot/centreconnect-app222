@@ -71,7 +71,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   return (
     <div className="min-h-screen">
-      <ParentAppShell userEmail={user.email ?? 'Unknown email'} userName={userName} isVerified={isVerified}>
+      <ParentAppShell userName={userName} isVerified={isVerified}>
         {children}
       </ParentAppShell>
     </div>

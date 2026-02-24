@@ -960,7 +960,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         </div>
         <div>
           <p className="text-base font-bold text-slate-900">{profile.full_name || 'Your Name'}</p>
-          <p className="text-sm text-slate-500">{profile.email}</p>
+          <p className="text-sm text-slate-500">Manage your family profile</p>
         </div>
       </div>
 

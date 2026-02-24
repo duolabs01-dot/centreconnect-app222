@@ -5,57 +5,14 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
-// import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
 import { Container } from '@/components/layout/container'
-import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
 import { ArrowLeft, BadgeCheck } from 'lucide-react'
 
 type ParentAppShellProps = {
   userName: string
-  userEmail: string
   isVerified?: boolean
   children: React.ReactNode
-}
-
-// Local SignOutButton component to use the generic UI Button
-function LocalSignOutButton({
-  redirectTo = '/',
-  className,
-  variant,
-  size,
-}: {
-  redirectTo?: string
-  className?: string
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null | undefined
-  size?: "default" | "sm" | "lg" | "icon" | null | undefined
-}) {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleSignOut = async () => {
-    if (isLoading) return
-    setIsLoading(true)
-    await supabase.auth.signOut()
-    router.push(redirectTo)
-    router.refresh()
-    setIsLoading(false)
-  }
-
-  return (
-    <Button
-      type="button"
-      variant={variant}
-      size={size}
-      className={className}
-      onClick={handleSignOut}
-      disabled={isLoading}
-    >
-      {isLoading ? 'Signing out...' : 'Sign out'}
-    </Button>
-  )
 }
 
 const navItems = [
@@ -104,7 +61,11 @@ function shouldShowMobileBack(pathname: string) {
   return false
 }
 
-export function ParentAppShell({ userName, userEmail, isVerified = false, children }: ParentAppShellProps) {
+function isMeTab(pathname: string) {
+  return pathname === '/parent/profile' || pathname.startsWith('/parent/profile/')
+}
+
+export function ParentAppShell({ userName, isVerified = false, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [pullDistance, setPullDistance] = useState(0)
@@ -147,6 +108,7 @@ export function ParentAppShell({ userName, userEmail, isVerified = false, childr
   }
 
   const showMobileBack = shouldShowMobileBack(pathname)
+  const onMeTab = isMeTab(pathname)
 
   return (
     <div
@@ -158,80 +120,73 @@ export function ParentAppShell({ userName, userEmail, isVerified = false, childr
     >
       <div
         className={cn(
-          'pointer-events-none fixed inset-x-0 top-[58px] z-40 mx-auto w-fit rounded-full border border-cyan-200/70 bg-white/85 px-3 py-1 text-xs font-semibold text-cyan-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-opacity',
+          'pointer-events-none fixed inset-x-0 top-3 z-40 mx-auto w-fit rounded-full border border-cyan-200/70 bg-white/85 px-3 py-1 text-xs font-semibold text-cyan-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-opacity',
           pullDistance > 8 ? 'opacity-100' : 'opacity-0'
         )}
       >
         {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
-      <header className="glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
-        <Container className="max-w-3xl flex items-center justify-between gap-3 py-3 sm:py-4">
-          {showMobileBack ? (
-            <div className="flex shrink-0 items-center md:hidden">
-              <button
-                type="button"
-                onClick={handleMobileBack}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/90 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-white"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </button>
-            </div>
-          ) : null}
-
-          <div className="min-w-0 flex-1">
-            <BrandMark compact className="mb-1 max-[360px]:hidden" />
-            <p className="truncate text-sm font-semibold text-slate-900 sm:text-sm">{getTitle(pathname)}</p>
-            <div className="max-[360px]:hidden sm:block">
-              <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                <p className="truncate text-[11px] font-semibold text-slate-700">{userName}</p>
-                {isVerified ? (
-                  <span className="inline-flex items-center gap-1" aria-label="Verified badges">
-                    <span
-                      className="inline-flex h-4 w-4 items-center justify-center"
-                      title="X-style verified badge"
-                    >
-                      <BadgeCheck className="h-4 w-4 fill-[#1d9bf0] text-white" />
-                    </span>
-                    <span
-                      className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
-                      title="CentreConnect affiliate badge"
-                    >
-                      <Image
-                        src="/Logo.jpeg"
-                        alt="CentreConnect verification badge"
-                        width={16}
-                        height={16}
-                        className="h-full w-full object-cover"
-                      />
-                    </span>
-                  </span>
-                ) : null}
-              </div>
-              <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2 md:hidden">
-            <LocalSignOutButton redirectTo="/" variant="outline" size="sm" className="h-8 px-3 text-xs" />
-          </div>
-
-          <nav className="hidden items-center gap-2 md:flex">
-            {navItems.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-              return (
-                <Button key={item.href} variant={active ? 'default' : 'ghost'} size="sm" asChild>
-                  <Link href={item.href}>{item.label}</Link>
-                </Button>
-              )
-            })}
-            <LocalSignOutButton redirectTo="/" variant="outline" className="ml-1" />
-          </nav>
-        </Container>
-      </header>
-
       <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0">
         <Container className="max-w-3xl">
+          <div className="mb-3 flex items-start justify-between gap-3 px-1 pt-1 sm:mb-4">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                {showMobileBack ? (
+                  <div className="flex shrink-0 items-center md:hidden">
+                    <button
+                      type="button"
+                      onClick={handleMobileBack}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/80 bg-white/80 text-slate-700 shadow-[var(--shadow-elevation-1)] transition hover:bg-white"
+                      aria-label="Go back"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : null}
+                <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">{getTitle(pathname)}</p>
+              </div>
+              {onMeTab ? (
+                <div className={cn('mt-1 flex items-center gap-2', showMobileBack ? 'ml-10 md:ml-0' : '')}>
+                  <p className="truncate text-xs font-semibold text-slate-700">{userName}</p>
+                  {isVerified ? (
+                    <span className="inline-flex items-center gap-1" aria-label="Verified badges">
+                      <span className="inline-flex h-4 w-4 items-center justify-center" title="X-style verified badge">
+                        <BadgeCheck className="h-4 w-4 fill-[#1d9bf0] text-white" />
+                      </span>
+                      <span
+                        className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
+                        title="CentreConnect affiliate badge"
+                      >
+                        <Image
+                          src="/Logo.jpeg"
+                          alt="CentreConnect verification badge"
+                          width={16}
+                          height={16}
+                          className="h-full w-full object-cover"
+                        />
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+            <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
+              {navItems.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                return (
+                  <Button
+                    key={item.href}
+                    variant={active ? 'default' : 'ghost'}
+                    size="sm"
+                    className={active ? 'rounded-full' : 'rounded-full text-slate-600 hover:text-slate-900'}
+                    asChild
+                  >
+                    <Link href={item.href}>{item.label}</Link>
+                  </Button>
+                )
+              })}
+            </nav>
+          </div>
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
       </main>
