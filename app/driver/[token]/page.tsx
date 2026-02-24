@@ -1,35 +1,71 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 
+type DriverRow = {
+  id: string
+  full_name: string
+  ecd_id: string
+}
+
+type CentreRow = {
+  name: string | null
+}
+
+type DriverRouteRow = {
+  id: string
+  name: string | null
+  departure_time: string | null
+}
+
+type StopChild = {
+  first_name: string | null
+  last_name: string | null
+}
+
+type StopRow = {
+  id: string
+  route_id: string
+  pickup_address: string | null
+  stop_order: number
+  children: StopChild | StopChild[] | null
+}
+
 export default async function DriverPage({ params }: { params: { token: string } }) {
   const supabase = await createClient()
 
-  const { data: driver } = await supabase
+  const { data: driverData } = await supabase
     .from('transport_drivers')
-    .select('id,full_name,ecd_id,ecd_centres(name)')
+    .select('id,full_name,ecd_id')
     .eq('driver_token', params.token)
     .eq('status', 'active')
     .maybeSingle()
 
+  const driver = (driverData ?? null) as DriverRow | null
   if (!driver) {
     notFound()
   }
 
-  const centreName = Array.isArray(driver.ecd_centres)
-    ? driver.ecd_centres[0]?.name
-    : driver.ecd_centres?.name ?? 'Unknown Centre'
+  const { data: centreData } = await supabase
+    .from('ecd_centres')
+    .select('name')
+    .eq('id', driver.ecd_id)
+    .maybeSingle()
 
-  const { data: driverRoutes } = await supabase
+  const centre = (centreData ?? null) as CentreRow | null
+  const centreName = centre?.name ?? 'Unknown Centre'
+
+  const { data: driverRoutesData } = await supabase
     .from('transport_routes')
     .select('id,name,departure_time')
     .eq('driver_id', driver.id)
     .eq('is_active', true)
     .limit(5)
+  const driverRoutes = (driverRoutesData ?? []) as DriverRouteRow[]
 
-  const routeIds = (driverRoutes ?? []).map((route) => route.id)
-  const routeNameById = new Map((driverRoutes ?? []).map((route) => [route.id, route.name ?? 'Route']))
+  const routeIds = driverRoutes.map((route) => route.id)
+  const routeNameById = new Map(driverRoutes.map((route) => [route.id, route.name ?? 'Route']))
 
-  const { data: stops } =
+  const { data: stopsData } =
     routeIds.length > 0
       ? await supabase
           .from('route_children')
@@ -39,7 +75,7 @@ export default async function DriverPage({ params }: { params: { token: string }
           .limit(50)
       : { data: [] }
 
-  const rows = stops ?? []
+  const rows = (stopsData ?? []) as StopRow[]
 
   return (
     <div className="min-h-screen bg-slate-950 text-white">
