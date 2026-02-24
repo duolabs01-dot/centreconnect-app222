@@ -10,7 +10,7 @@ import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
-import { ArrowLeft, Check } from 'lucide-react'
+import { ArrowLeft, BadgeCheck } from 'lucide-react'
 
 type ParentAppShellProps = {
   userName: string
@@ -188,21 +188,21 @@ export function ParentAppShell({ userName, userEmail, isVerified = false, childr
                 {isVerified ? (
                   <span className="inline-flex items-center gap-1" aria-label="Verified badges">
                     <span
-                      className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#1d9bf0] text-white shadow-sm"
-                      title="Verified"
+                      className="inline-flex h-4 w-4 items-center justify-center"
+                      title="X-style verified badge"
                     >
-                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                      <BadgeCheck className="h-4 w-4 fill-[#1d9bf0] text-white" />
                     </span>
                     <span
-                      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-cyan-200 bg-white shadow-sm"
-                      title="CentreConnect verified"
+                      className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
+                      title="CentreConnect affiliate badge"
                     >
                       <Image
                         src="/Logo.jpeg"
                         alt="CentreConnect verification badge"
-                        width={12}
-                        height={12}
-                        className="rounded-full object-cover"
+                        width={16}
+                        height={16}
+                        className="h-full w-full object-cover"
                       />
                     </span>
                   </span>
