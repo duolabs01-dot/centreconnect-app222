@@ -14,7 +14,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   const { data: existingProfile } = await supabase
     .from('user_profiles')
-    .select('role')
+    .select('role,full_name')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -64,10 +64,14 @@ export default async function ParentLayout({ children }: { children: React.React
   const isVerifiedByDocuments = verificationStatus === 'verified'
   const isForcedVerifiedUser = (user.email ?? '').toLowerCase() === 'mandlakevin@gmail.com'
   const isVerified = isVerifiedByDocuments || isForcedVerifiedUser
+  const userName =
+    existingProfile?.full_name?.trim() ||
+    (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name.trim() : '') ||
+    (user.email?.split('@')[0]?.replace(/[._-]+/g, ' ').trim() || 'Parent')
 
   return (
     <div className="min-h-screen">
-      <ParentAppShell userEmail={user.email ?? 'Unknown email'} isVerified={isVerified}>
+      <ParentAppShell userEmail={user.email ?? 'Unknown email'} userName={userName} isVerified={isVerified}>
         {children}
       </ParentAppShell>
     </div>

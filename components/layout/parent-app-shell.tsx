@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 // import { SignOutButton } from '@/components/cc-admin/SignOutButton' // Removed admin-specific import
@@ -9,9 +10,10 @@ import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client' // Import createClient for local SignOutButton
-import { ArrowLeft, BadgeCheck } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 
 type ParentAppShellProps = {
+  userName: string
   userEmail: string
   isVerified?: boolean
   children: React.ReactNode
@@ -102,7 +104,7 @@ function shouldShowMobileBack(pathname: string) {
   return false
 }
 
-export function ParentAppShell({ userEmail, isVerified = false, children }: ParentAppShellProps) {
+export function ParentAppShell({ userName, userEmail, isVerified = false, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [pullDistance, setPullDistance] = useState(0)
@@ -182,14 +184,31 @@ export function ParentAppShell({ userEmail, isVerified = false, children }: Pare
             <p className="truncate text-sm font-semibold text-slate-900 sm:text-sm">{getTitle(pathname)}</p>
             <div className="max-[360px]:hidden sm:block">
               <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
+                <p className="truncate text-[11px] font-semibold text-slate-700">{userName}</p>
                 {isVerified ? (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-                    <BadgeCheck className="h-3 w-3" />
-                    Verified
+                  <span className="inline-flex items-center gap-1" aria-label="Verified badges">
+                    <span
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#1d9bf0] text-white shadow-sm"
+                      title="Verified"
+                    >
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    </span>
+                    <span
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-cyan-200 bg-white shadow-sm"
+                      title="CentreConnect verified"
+                    >
+                      <Image
+                        src="/Logo.jpeg"
+                        alt="CentreConnect verification badge"
+                        width={12}
+                        height={12}
+                        className="rounded-full object-cover"
+                      />
+                    </span>
                   </span>
                 ) : null}
               </div>
+              <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
             </div>
           </div>
 
