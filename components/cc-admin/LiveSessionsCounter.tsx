@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/lib/supabase/client'
 
-export function LiveSessionsCounter({ initialCount = 1284 }: { initialCount?: number }) {
+export function LiveSessionsCounter({ initialCount = 0 }: { initialCount?: number }) {
   const [liveCount, setLiveCount] = useState(initialCount)
 
   useEffect(() => {
@@ -12,14 +12,20 @@ export function LiveSessionsCounter({ initialCount = 1284 }: { initialCount?: nu
     let active = true
 
     const fetchLiveCount = async () => {
-      const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
-      const { count } = await supabase
-        .from('user_sessions')
-        .select('id', { count: 'exact', head: true })
-        .gte('last_seen_at', fifteenMinsAgo)
+      try {
+        const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
+        const { count, error } = await supabase
+          .from('user_sessions')
+          .select('*', { count: 'exact', head: true })
+          .gte('last_seen_at', fifteenMinsAgo)
 
-      if (active) {
-        setLiveCount(count ?? 0)
+        if (active) {
+          setLiveCount(error ? 0 : (count ?? 0))
+        }
+      } catch {
+        if (active) {
+          setLiveCount(0)
+        }
       }
     }
 

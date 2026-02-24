@@ -11,7 +11,7 @@ type RevenuePoint = {
   revenue: number
 }
 
-function getLastSixMonthStarts() {
+function getLastSixMonthDates() {
   const now = new Date()
   return Array.from({ length: 6 }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
@@ -21,8 +21,8 @@ function getLastSixMonthStarts() {
 }
 
 function buildEmptyRevenueSeries(): RevenuePoint[] {
-  return getLastSixMonthStarts().map((date) => ({
-    month: date.toISOString().slice(0, 7),
+  return getLastSixMonthDates().map((date) => ({
+    month: date.toLocaleString('en-ZA', { month: 'short', year: '2-digit' }),
     revenue: 0,
   }))
 }
@@ -37,34 +37,39 @@ export function MeshAreaChart() {
     let active = true
 
     const fetchRevenue = async () => {
-      const monthStarts = getLastSixMonthStarts()
-      const sixMonthsAgoISO = monthStarts[0].toISOString()
-      const { data } = await supabase
-        .from('invoices')
-        .select('issued_at, total')
-        .eq('status', 'paid')
-        .gte('issued_at', sixMonthsAgoISO)
-        .order('issued_at', { ascending: true })
+      try {
+        const monthDates = getLastSixMonthDates()
+        const monthLabels = monthDates.map((date) =>
+          date.toLocaleString('en-ZA', { month: 'short', year: '2-digit' })
+        )
+        const sixMonthsAgoISO = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()
+        const { data: invoices } = await supabase
+          .from('invoices')
+          .select('total, paid_at')
+          .eq('status', 'paid')
+          .gte('paid_at', sixMonthsAgoISO)
+          .order('paid_at', { ascending: true })
 
-      const totalsByMonth = new Map<string, number>()
-      for (const row of data ?? []) {
-        const issuedAt = typeof row.issued_at === 'string' ? row.issued_at : null
-        if (!issuedAt) continue
-        const monthKey = new Date(issuedAt).toISOString().slice(0, 7)
-        const totalValue = Number(row.total ?? 0)
-        totalsByMonth.set(monthKey, (totalsByMonth.get(monthKey) ?? 0) + totalValue)
-      }
+        const monthlyRevenue =
+          invoices?.reduce((acc, inv) => {
+            if (!inv.paid_at) return acc
+            const month = new Date(inv.paid_at).toLocaleString('en-ZA', { month: 'short', year: '2-digit' })
+            acc[month] = (acc[month] ?? 0) + Number(inv.total ?? 0)
+            return acc
+          }, {} as Record<string, number>) ?? {}
 
-      const nextSeries: RevenuePoint[] = monthStarts.map((date) => {
-        const monthKey = date.toISOString().slice(0, 7)
-        return {
-          month: monthKey,
-          revenue: totalsByMonth.get(monthKey) ?? 0,
+        const nextSeries: RevenuePoint[] = monthLabels.map((month) => ({
+          month,
+          revenue: monthlyRevenue[month] ?? 0,
+        }))
+
+        if (active) {
+          setRevenueSeries(nextSeries)
         }
-      })
-
-      if (active) {
-        setRevenueSeries(nextSeries)
+      } catch {
+        if (active) {
+          setRevenueSeries(buildEmptyRevenueSeries())
+        }
       }
     }
 
@@ -93,14 +98,10 @@ export function MeshAreaChart() {
     const graphHeight = H - topPadding - bottomPadding
     const toY = (value: number) => H - bottomPadding - (value / maxRevenue) * graphHeight
 
-    const labels = revenueSeries.map((point) =>
-      new Date(`${point.month}-01T00:00:00.000Z`).toLocaleString('en-US', { month: 'short' })
-    )
-
     return {
       revenueY: revenues.map(toY),
       trendY: trend.map(toY),
-      monthLabels: labels,
+      monthLabels: revenueSeries.map((point) => point.month),
     }
   }, [revenueSeries])
 

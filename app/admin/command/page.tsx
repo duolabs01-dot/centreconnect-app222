@@ -11,7 +11,7 @@ import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
 import { SystemStatus } from '@/components/cc-admin/SystemStatus'
 import { MeshAreaChart } from '@/components/cc-admin/MeshAreaChart'
 import { HexHeatmap } from '@/components/cc-admin/HexHeatmap'
-import { Building2, Users, Activity, TrendingUp, Cpu, Globe } from 'lucide-react'
+import { Building2, Users, Activity, TrendingUp, Globe } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,6 +81,7 @@ export default async function AdminDashboardPage() {
   let mrrValue = 0
   let revenueGrowth = '0.0'
   let totalParentCount = 0
+  let pendingApplicationCount = 0
   const regionalData: ProvinceScore[] = [
     { id: 'lp', shortLabel: 'LP', score: 62, centres: 34, row: 0, col: 1 },
     { id: 'mp', shortLabel: 'MP', score: 58, centres: 28, row: 0, col: 2 },
@@ -101,10 +102,11 @@ export default async function AdminDashboardPage() {
       newActiveSubscriptionsCountResult,
       activeSubscriptionsMrrResult,
       childrenCountResult,
+      pendingApplicationsCountResult,
     ] = await Promise.all([
       admin
         .from('ecd_centres')
-        .select('id', { count: 'planned', head: true })
+        .select('*', { count: 'exact', head: true })
         .eq('is_active', true),
       admin
         .from('subscriptions')
@@ -121,6 +123,10 @@ export default async function AdminDashboardPage() {
         .in('status', activeStatuses)
         .limit(5000),
       admin.from('children').select('id', { count: 'planned', head: true }),
+      admin
+        .from('applications')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['submitted', 'in_review']),
     ])
 
     if (activeCentresResult.error) throw activeCentresResult.error
@@ -128,6 +134,7 @@ export default async function AdminDashboardPage() {
     if (newActiveSubscriptionsCountResult.error) throw newActiveSubscriptionsCountResult.error
     if (activeSubscriptionsMrrResult.error) throw activeSubscriptionsMrrResult.error
     if (childrenCountResult.error) throw childrenCountResult.error
+    if (pendingApplicationsCountResult.error) throw pendingApplicationsCountResult.error
 
     const activeSubsCount = activeSubscriptionsCountResult.count ?? 0
     const newSubsCount = newActiveSubscriptionsCountResult.count ?? 0
@@ -139,6 +146,7 @@ export default async function AdminDashboardPage() {
     revenueGrowth = activeSubsCount > 0 ? ((newSubsCount / activeSubsCount) * 100).toFixed(1) : '0.0'
     activeCentreCount = activeCentresResult.count ?? 0
     totalParentCount = childrenCountResult.count ?? 0
+    pendingApplicationCount = pendingApplicationsCountResult.count ?? 0
   } catch (error) {
     console.error('Error fetching admin dashboard data, using defaults:', error)
   }
@@ -191,12 +199,12 @@ export default async function AdminDashboardPage() {
             index={2}
           />
           <KpiCard
-            label="System Uptime"
-            value="99.98%"
-            subValue="Last 30 days"
+            label="Pending Applications"
+            value={pendingApplicationCount.toLocaleString()}
+            subValue="Submitted + In Review"
             trend={0}
-            trendLabel="STABLE"
-            icon={Cpu}
+            trendLabel="Live queue"
+            icon={Activity}
             accent="violet"
             index={3}
           />
@@ -225,7 +233,7 @@ export default async function AdminDashboardPage() {
               Live Sessions
             </p>
             <div className="text-center py-4">
-              <LiveSessionsCounter initialCount={1284} />
+              <LiveSessionsCounter />
               <p className="font-inter text-[10px] mt-3 text-slate-500 uppercase tracking-widest">
                 concurrent entities
               </p>
