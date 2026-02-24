@@ -33,6 +33,9 @@ export function GlobalDesktopFooter() {
             Terms
           </Link>
           <span className="text-slate-500">(c) {currentYear} CentreConnect. All rights reserved.</span>
+          <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-mono font-semibold text-slate-400">
+            v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}
+          </span>
         </div>
       </div>
     </footer>

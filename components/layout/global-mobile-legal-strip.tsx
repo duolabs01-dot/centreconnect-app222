@@ -20,6 +20,9 @@ export function GlobalMobileLegalStrip() {
         </Link>
         <span className="text-slate-500">(c) {currentYear} CentreConnect</span>
       </div>
+      <p className="mt-1 text-center text-[10px] font-mono text-slate-400">
+        v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}
+      </p>
     </div>
   )
 }
