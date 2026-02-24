@@ -14,31 +14,31 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait',
     icons: [
       {
-        src: '/centreconnect-logo.svg',
+        src: '/centreconnect-logo.svg?v=20260224-cc',
         sizes: 'any',
         type: 'image/svg+xml',
         purpose: 'any',
       },
       {
-        src: '/icon-192.png',
+        src: '/icon-192.png?v=20260224-cc',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icon-512.png',
+        src: '/icon-512.png?v=20260224-cc',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icon-192-maskable.png',
+        src: '/icon-192-maskable.png?v=20260224-cc',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'maskable',
       },
       {
-        src: '/icon-512-maskable.png',
+        src: '/icon-512-maskable.png?v=20260224-cc',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
