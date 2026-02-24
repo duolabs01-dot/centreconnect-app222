@@ -29,6 +29,7 @@ export async function POST() {
     }
 
     const admin = createAdminClient()
+    const normalizedEmail = (user.email ?? '').trim().toLowerCase()
 
     const { data: existingAssignment } = await admin
       .from('ecd_admins')
@@ -40,21 +41,61 @@ export async function POST() {
       return NextResponse.json({ ok: true, created: false })
     }
 
-    const { data: serviceApplication } = await admin
+    const serviceApplicationQuery = admin
       .from('ecd_service_applications')
       .select(
         'id,status,centre_name,centre_phone,centre_address,centre_suburb,centre_city,centre_province,selected_tier,provisioned_at'
       )
-      .or(`user_id.eq.${user.id},applicant_email.eq.${(user.email ?? '').toLowerCase()}`)
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle()
+    const { data: serviceApplication } = await (normalizedEmail
+      ? serviceApplicationQuery.or(`user_id.eq.${user.id},applicant_email.eq.${normalizedEmail}`)
+      : serviceApplicationQuery.eq('user_id', user.id)
+    ).maybeSingle()
 
-    if (!serviceApplication || serviceApplication.status !== 'approved') {
+    if (!serviceApplication || !['approved', 'provisioned'].includes(serviceApplication.status)) {
       return NextResponse.json(
         { error: 'Application pending approval', code: 'APPLICATION_PENDING' },
         { status: 403 }
       )
+    }
+
+    if (serviceApplication.status === 'provisioned') {
+      const centreNameHint = (serviceApplication.centre_name ?? '').trim()
+      const centreLookupByEmail = normalizedEmail
+        ? await admin
+            .from('ecd_centres')
+            .select('id')
+            .eq('email', normalizedEmail)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        : { data: null as null }
+
+      const centreLookupByName =
+        !centreLookupByEmail.data && centreNameHint
+          ? await admin
+              .from('ecd_centres')
+              .select('id')
+              .eq('name', centreNameHint)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+          : { data: null as null }
+
+      const recoveredEcdId = centreLookupByEmail.data?.id ?? centreLookupByName.data?.id ?? null
+      if (recoveredEcdId) {
+        await admin.from('ecd_admins').upsert(
+          {
+            ecd_id: recoveredEcdId,
+            user_id: user.id,
+            role: 'ecd_admin',
+            accepted_at: new Date().toISOString(),
+          },
+          { onConflict: 'ecd_id,user_id' }
+        )
+        return NextResponse.json({ ok: true, created: false, recovered: true })
+      }
     }
 
     const centreName = (serviceApplication.centre_name ?? '').trim() || 'New ECD Centre'

@@ -2,6 +2,7 @@ import 'server-only'
 import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export type EcdPortalRole = 'ecd_admin' | 'ecd_staff'
 
@@ -13,6 +14,98 @@ export type EcdPortalSession = {
   }
   role: EcdPortalRole
   ecdId: string
+}
+
+async function getLatestMembership(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+) {
+  const { data: membership } = await supabase
+    .from('ecd_admins')
+    .select('ecd_id')
+    .eq('user_id', userId)
+    .order('invited_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  return membership?.ecd_id ?? null
+}
+
+async function tryRepairEcdMembership(input: {
+  userId: string
+  email: string | null
+  role: EcdPortalRole
+}): Promise<void> {
+  const normalizedEmail = (input.email ?? '').trim().toLowerCase()
+  try {
+    const admin = createAdminClient()
+    let ecdIdToLink: string | null = null
+    let membershipRole: EcdPortalRole = input.role
+
+    const { data: invitationByUserId } = await admin
+      .from('ecd_admin_invitations')
+      .select('ecd_id,role,invited_at')
+      .eq('auth_user_id', input.userId)
+      .order('invited_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    const { data: invitationByEmail } = normalizedEmail
+      ? await admin
+          .from('ecd_admin_invitations')
+          .select('ecd_id,role,invited_at,auth_user_id,accepted_at')
+          .eq('email', normalizedEmail)
+          .order('invited_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null as null }
+
+    const invitation = invitationByUserId ?? invitationByEmail
+    if (invitation?.ecd_id) {
+      ecdIdToLink = invitation.ecd_id
+      if (invitation.role === 'ecd_admin' || invitation.role === 'ecd_staff') {
+        membershipRole = invitation.role
+      }
+    }
+
+    if (!ecdIdToLink && input.role === 'ecd_admin' && normalizedEmail) {
+      const { data: centreByEmail } = await admin
+        .from('ecd_centres')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      ecdIdToLink = centreByEmail?.id ?? null
+    }
+
+    if (!ecdIdToLink) {
+      return
+    }
+
+    await admin.from('ecd_admins').upsert(
+      {
+        ecd_id: ecdIdToLink,
+        user_id: input.userId,
+        role: membershipRole,
+        accepted_at: new Date().toISOString(),
+      },
+      { onConflict: 'ecd_id,user_id' }
+    )
+
+    if (invitationByEmail?.ecd_id === ecdIdToLink && !invitationByEmail.auth_user_id) {
+      await admin
+        .from('ecd_admin_invitations')
+        .update({
+          auth_user_id: input.userId,
+          accepted_at: invitationByEmail.accepted_at ?? new Date().toISOString(),
+        })
+        .eq('ecd_id', ecdIdToLink)
+        .eq('email', normalizedEmail)
+    }
+  } catch {
+    // If admin fallback is unavailable, we keep normal auth flow without crashing.
+  }
 }
 
 async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
@@ -33,15 +126,16 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
     return null
   }
 
-  const { data: membership } = await supabase
-    .from('ecd_admins')
-    .select('ecd_id')
-    .eq('user_id', user.id)
-    .order('invited_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (!membership?.ecd_id) return null
+  let ecdId = await getLatestMembership(supabase, user.id)
+  if (!ecdId) {
+    await tryRepairEcdMembership({
+      userId: user.id,
+      email: user.email ?? null,
+      role: profile.role,
+    })
+    ecdId = await getLatestMembership(supabase, user.id)
+  }
+  if (!ecdId) return null
 
   return {
     supabase,
@@ -50,7 +144,7 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
       email: user.email ?? null,
     },
     role: profile.role,
-    ecdId: membership.ecd_id,
+    ecdId,
   }
 }
 
