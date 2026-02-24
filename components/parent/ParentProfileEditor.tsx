@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type ComponentType } from 'react'
 import { useRouter } from 'next/navigation'
+import { Baby, ChevronRight, FileText, Loader2, Pencil, Phone, ShieldCheck } from 'lucide-react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -11,6 +13,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 
 const AVATAR_BUCKET = 'parent-avatars'
 const MAX_AVATAR_SIZE_BYTES = 3 * 1024 * 1024
@@ -295,7 +299,7 @@ export function ParentProfileEditor({ initial }: ParentProfileEditorProps) {
     }
   }, [])
 
-  function onAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function onAvatarChange(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
@@ -757,5 +761,392 @@ export function ParentProfileEditor({ initial }: ParentProfileEditorProps) {
         </form>
       </CardContent>
     </Card>
+  )
+}
+
+type ParentProfileHubInitial = {
+  full_name: string
+  phone: string
+  email: string
+  avatar_url: string
+  emergency_contact_name: string
+  emergency_contact_phone: string
+}
+
+type InlineEditableTextProps = {
+  label: string
+  value: string
+  placeholder?: string
+  type?: 'text' | 'tel'
+  allowEmpty?: boolean
+  isPending?: boolean
+  onSave: (nextValue: string) => void
+}
+
+type HubSection = {
+  id: 'children' | 'documents' | 'emergency' | 'security'
+  label: string
+  description: string
+  detail: string
+  href: string
+  icon: ComponentType<{ className?: string }>
+}
+
+const HUB_SECTIONS: HubSection[] = [
+  {
+    id: 'children',
+    label: 'My Children',
+    description: 'Profiles, admissions, and updates',
+    detail: 'Manage each child profile, application progress, and enrollment details in one place.',
+    href: '/parent/children',
+    icon: Baby,
+  },
+  {
+    id: 'documents',
+    label: 'Documents',
+    description: 'Upload IDs and supporting files',
+    detail: 'Review uploaded documents and add anything missing for ongoing applications.',
+    href: '/parent/profile/documents',
+    icon: FileText,
+  },
+  {
+    id: 'emergency',
+    label: 'Emergency Contacts',
+    description: 'Who we should call first',
+    detail: 'Keep emergency contact details accurate so centres can reach the right person quickly.',
+    href: '/parent/profile/emergency',
+    icon: Phone,
+  },
+  {
+    id: 'security',
+    label: 'Security',
+    description: 'Password and sign-in controls',
+    detail: 'Review account security settings and recent sign-in activity.',
+    href: '/parent/profile/security',
+    icon: ShieldCheck,
+  },
+]
+
+function InlineEditableText({
+  label,
+  value,
+  placeholder = 'Not set',
+  type = 'text',
+  allowEmpty = true,
+  isPending = false,
+  onSave,
+}: InlineEditableTextProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+  const [errorMessage, setErrorMessage] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraft(value)
+    }
+  }, [value, isEditing])
+
+  useEffect(() => {
+    if (!isEditing) return
+    inputRef.current?.focus()
+  }, [isEditing])
+
+  function handleSave() {
+    const nextValue = draft.trim()
+    const currentValue = value.trim()
+
+    if (!allowEmpty && nextValue.length === 0) {
+      setErrorMessage(`${label} is required`)
+      return
+    }
+
+    setErrorMessage('')
+    if (nextValue === currentValue) {
+      setIsEditing(false)
+      return
+    }
+
+    onSave(nextValue)
+    setIsEditing(false)
+  }
+
+  if (isEditing) {
+    return (
+      <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-3">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+        <Input
+          ref={inputRef}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          type={type}
+          className="h-10 rounded-xl"
+          disabled={isPending}
+        />
+        {errorMessage ? <p className="mt-2 text-xs text-rose-600">{errorMessage}</p> : null}
+        <div className="mt-3 flex items-center gap-2">
+          <Button type="button" size="sm" onClick={handleSave} disabled={isPending}>
+            {isPending ? 'Saving...' : 'Save'}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={isPending}
+            onClick={() => {
+              setDraft(value)
+              setErrorMessage('')
+              setIsEditing(false)
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="group rounded-xl border border-slate-200 bg-white p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+          <p className={cn('mt-1 truncate text-sm font-medium', value ? 'text-slate-900' : 'text-slate-400')}>{value || placeholder}</p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 opacity-100 transition-opacity hover:bg-slate-100 disabled:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+          onClick={() => setIsEditing(true)}
+          disabled={isPending}
+          aria-label={`Edit ${label}`}
+        >
+          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial }) {
+  const supabase = createClient()
+  const [profile, setProfile] = useState(initial)
+  const [activeSectionId, setActiveSectionId] = useState<HubSection['id'] | null>(null)
+  const [pendingField, setPendingField] = useState<keyof Pick<ParentProfileHubInitial, 'full_name' | 'phone' | 'emergency_contact_name' | 'emergency_contact_phone'> | null>(null)
+  const [isPending, startTransition] = useTransition()
+
+  const completionPercent = useMemo(() => {
+    const completionSignals = [
+      profile.full_name,
+      profile.phone,
+      profile.avatar_url,
+      profile.emergency_contact_name,
+      profile.emergency_contact_phone,
+    ]
+    const completed = completionSignals.filter((value) => value.trim().length > 0).length
+    return Math.round((completed / completionSignals.length) * 100)
+  }, [profile])
+
+  const initials = initialsFromName(profile.full_name)
+  const ringRadius = 26
+  const ringCircumference = 2 * Math.PI * ringRadius
+  const ringOffset = ringCircumference - (completionPercent / 100) * ringCircumference
+  const activeSection = HUB_SECTIONS.find((section) => section.id === activeSectionId) ?? null
+
+  function saveField(
+    field: keyof Pick<ParentProfileHubInitial, 'full_name' | 'phone' | 'emergency_contact_name' | 'emergency_contact_phone'>,
+    nextValue: string
+  ) {
+    const previousValue = profile[field]
+    if (nextValue === previousValue) return
+
+    setProfile((current) => ({
+      ...current,
+      [field]: nextValue,
+    }))
+    setPendingField(field)
+
+    startTransition(() => {
+      void (async () => {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          throw new Error('Please sign in again to update your profile.')
+        }
+
+        if (field === 'full_name' || field === 'phone') {
+          const profilePayload: { full_name?: string | null; phone?: string | null } = {}
+          if (field === 'full_name') profilePayload.full_name = nextValue || null
+          if (field === 'phone') profilePayload.phone = nextValue || null
+
+          const { error: userProfileError } = await supabase.from('user_profiles').update(profilePayload).eq('id', user.id)
+          if (userProfileError) throw userProfileError
+
+          if (field === 'full_name') {
+            const { error: authUpdateError } = await supabase.auth.updateUser({
+              data: {
+                full_name: nextValue || undefined,
+              },
+            })
+            if (authUpdateError) throw authUpdateError
+          } else {
+            const { error: authUpdateError } = await supabase.auth.updateUser({
+              data: {
+                phone: nextValue || undefined,
+              },
+            })
+            if (authUpdateError) throw authUpdateError
+          }
+        } else {
+          const emergencyPayload: { emergency_contact_name?: string | null; emergency_contact_phone?: string | null } = {}
+          if (field === 'emergency_contact_name') emergencyPayload.emergency_contact_name = nextValue || null
+          if (field === 'emergency_contact_phone') emergencyPayload.emergency_contact_phone = nextValue || null
+
+          const { error: parentError } = await supabase
+            .from('parents')
+            .upsert({ id: user.id, ...emergencyPayload }, { onConflict: 'id' })
+          if (parentError) throw parentError
+        }
+      })()
+        .then(() => {
+          toast.success('Changes saved')
+        })
+        .catch((error: any) => {
+          setProfile((current) => ({
+            ...current,
+            [field]: previousValue,
+          }))
+          toast.error(error?.message || 'Failed to save changes')
+        })
+        .finally(() => {
+          setPendingField((current) => (current === field ? null : current))
+        })
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 p-5 text-white shadow-[var(--shadow-elevation-3)]">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/40 bg-white/20">
+              {profile.avatar_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profile.avatar_url} alt={`${profile.full_name} profile`} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-xl font-bold">{initials}</div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-lg font-bold">{profile.full_name || 'Parent'}</p>
+              <p className="truncate text-sm text-cyan-100">{profile.email || 'No email'}</p>
+              <Link href="/parent/profile/edit" className="mt-2 inline-flex text-xs font-semibold text-cyan-100 hover:text-white">
+                Open full profile form
+              </Link>
+            </div>
+          </div>
+          <div className="relative h-14 w-14 shrink-0">
+            <svg viewBox="0 0 64 64" className="h-14 w-14">
+              <circle cx="32" cy="32" r={ringRadius} className="stroke-white/30" strokeWidth="6" fill="none" />
+              <circle
+                cx="32"
+                cy="32"
+                r={ringRadius}
+                className="stroke-white"
+                strokeWidth="6"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={ringCircumference}
+                strokeDashoffset={ringOffset}
+                transform="rotate(-90 32 32)"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold">{completionPercent}%</span>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <InlineEditableText
+            label="Full name"
+            value={profile.full_name}
+            allowEmpty={false}
+            isPending={isPending && pendingField === 'full_name'}
+            onSave={(nextValue) => saveField('full_name', nextValue)}
+          />
+          <InlineEditableText
+            label="Phone"
+            value={profile.phone}
+            placeholder="Add phone number"
+            type="tel"
+            isPending={isPending && pendingField === 'phone'}
+            onSave={(nextValue) => saveField('phone', nextValue)}
+          />
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        {HUB_SECTIONS.map((section) => (
+          <button
+            key={section.id}
+            type="button"
+            className="flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
+            onClick={() => setActiveSectionId(section.id)}
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50">
+              <section.icon className="h-5 w-5 text-cyan-600" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-900">{section.label}</p>
+              <p className="mt-0.5 text-xs text-slate-400">{section.description}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
+          </button>
+        ))}
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Emergency Snapshot</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <InlineEditableText
+            label="Emergency name"
+            value={profile.emergency_contact_name}
+            placeholder="Add emergency contact name"
+            isPending={isPending && pendingField === 'emergency_contact_name'}
+            onSave={(nextValue) => saveField('emergency_contact_name', nextValue)}
+          />
+          <InlineEditableText
+            label="Emergency phone"
+            value={profile.emergency_contact_phone}
+            placeholder="Add emergency contact phone"
+            type="tel"
+            isPending={isPending && pendingField === 'emergency_contact_phone'}
+            onSave={(nextValue) => saveField('emergency_contact_phone', nextValue)}
+          />
+        </div>
+      </section>
+
+      <Sheet
+        open={Boolean(activeSection)}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setActiveSectionId(null)
+        }}
+      >
+        <SheetContent side="bottom" className="rounded-t-3xl border-slate-200 pb-8">
+          {activeSection ? (
+            <div className="space-y-5 pr-8">
+              <SheetHeader className="space-y-2 text-left">
+                <SheetTitle>{activeSection.label}</SheetTitle>
+                <SheetDescription className="text-sm text-slate-600">{activeSection.detail}</SheetDescription>
+              </SheetHeader>
+              <Button asChild className="w-full rounded-xl">
+                <Link href={activeSection.href}>Open {activeSection.label}</Link>
+              </Button>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+    </div>
   )
 }
