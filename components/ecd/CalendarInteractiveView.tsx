@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { cn, formatDate } from '@/lib/utils'
 
-export type CalendarViewMode = 'month' | 'week' | 'day'
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'timetable'
 export type CalendarVisibility = 'all' | 'public' | 'internal'
 export type CalendarScope = 'all' | 'upcoming' | 'past'
 
@@ -78,6 +78,136 @@ function formatTimeRange(startTime: string | null, endTime: string | null) {
   return end ? `${start} - ${end}` : start
 }
 
+type TermWindow = {
+  id: string
+  label: string
+  start: string
+  end: string
+  chipClass: string
+  dayToneClass: string
+}
+
+const WEEKDAY_SCHOOL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+
+const TIMETABLE_SLOTS: Array<{ time: string; weekA: string; weekB: string }> = [
+  { time: '07:00', weekA: 'Arrival and health check', weekB: 'Arrival and wellbeing check' },
+  { time: '08:00', weekA: 'Circle time and attendance', weekB: 'Morning movement and attendance' },
+  { time: '09:00', weekA: 'Literacy focus block', weekB: 'Numeracy focus block' },
+  { time: '10:00', weekA: 'Outdoor play and snack', weekB: 'Music and movement' },
+  { time: '11:30', weekA: 'Project learning stations', weekB: 'Creative arts stations' },
+  { time: '13:00', weekA: 'Lunch and pickup wave 1', weekB: 'Lunch and pickup wave 1' },
+  { time: '15:00', weekA: 'Aftercare structured play', weekB: 'Aftercare homework support' },
+]
+
+function buildTermWindows(year: number): TermWindow[] {
+  return [
+    {
+      id: `${year}-t1`,
+      label: 'Term 1',
+      start: `${year}-01-15`,
+      end: `${year}-03-28`,
+      chipClass: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+      dayToneClass: 'bg-cyan-50/40',
+    },
+    {
+      id: `${year}-t2`,
+      label: 'Term 2',
+      start: `${year}-04-08`,
+      end: `${year}-06-28`,
+      chipClass: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+      dayToneClass: 'bg-emerald-50/40',
+    },
+    {
+      id: `${year}-t3`,
+      label: 'Term 3',
+      start: `${year}-07-22`,
+      end: `${year}-10-04`,
+      chipClass: 'border-amber-200 bg-amber-50 text-amber-800',
+      dayToneClass: 'bg-amber-50/35',
+    },
+    {
+      id: `${year}-t4`,
+      label: 'Term 4',
+      start: `${year}-10-14`,
+      end: `${year}-12-10`,
+      chipClass: 'border-violet-200 bg-violet-50 text-violet-800',
+      dayToneClass: 'bg-violet-50/40',
+    },
+  ]
+}
+
+function getIsoWeekNumber(date: Date) {
+  const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = utcDate.getUTCDay() || 7
+  utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1))
+  return Math.ceil((((utcDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, '0')
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function getEasterSunday(year: number) {
+  const a = year % 19
+  const b = Math.floor(year / 100)
+  const c = year % 100
+  const d = Math.floor(b / 4)
+  const e = b % 4
+  const f = Math.floor((b + 8) / 25)
+  const g = Math.floor((b - f + 1) / 3)
+  const h = (19 * a + b - d - g + 15) % 30
+  const i = Math.floor(c / 4)
+  const k = c % 4
+  const l = (32 + 2 * e + 2 * i - h - k) % 7
+  const m = Math.floor((a + 11 * h + 22 * l) / 451)
+  const month = Math.floor((h + l - 7 * m + 114) / 31)
+  const day = ((h + l - 7 * m + 114) % 31) + 1
+  return new Date(year, month - 1, day)
+}
+
+function getSouthAfricaHolidays(year: number) {
+  const easter = getEasterSunday(year)
+  const goodFriday = addDays(easter, -2)
+  const familyDay = addDays(easter, 1)
+
+  const list = [
+    { date: `${year}-01-01`, name: 'New Year\'s Day' },
+    { date: toDateKey(goodFriday), name: 'Good Friday' },
+    { date: toDateKey(familyDay), name: 'Family Day' },
+    { date: `${year}-03-21`, name: 'Human Rights Day' },
+    { date: `${year}-04-27`, name: 'Freedom Day' },
+    { date: `${year}-05-01`, name: 'Workers Day' },
+    { date: `${year}-06-16`, name: 'Youth Day' },
+    { date: `${year}-08-09`, name: 'Women\'s Day' },
+    { date: `${year}-09-24`, name: 'Heritage Day' },
+    { date: `${year}-12-16`, name: 'Day of Reconciliation' },
+    { date: `${year}-12-25`, name: 'Christmas Day' },
+    { date: `${year}-12-26`, name: 'Day of Goodwill' },
+  ]
+
+  const observed: Array<{ date: string; name: string }> = []
+  for (const holiday of list) {
+    const [y, m, d] = holiday.date.split('-').map(Number)
+    const date = new Date(y, (m ?? 1) - 1, d ?? 1)
+    if (date.getDay() === 0) {
+      observed.push({ date: toDateKey(addDays(date, 1)), name: `${holiday.name} (Observed)` })
+    }
+  }
+
+  return [...list, ...observed]
+}
+
 export function CalendarInteractiveView({
   events,
   initialView,
@@ -112,7 +242,9 @@ export function CalendarInteractiveView({
       ? selectedDate.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })
       : view === 'week'
         ? `Week of ${weekStart.toLocaleDateString('en-ZA', { month: 'long', day: 'numeric', year: 'numeric' })}`
-        : `Day of ${focusDate.toLocaleDateString('en-ZA', { month: 'long', day: 'numeric', year: 'numeric' })}`
+        : view === 'timetable'
+          ? `School timetable week of ${weekStart.toLocaleDateString('en-ZA', { month: 'long', day: 'numeric', year: 'numeric' })}`
+          : `Day of ${focusDate.toLocaleDateString('en-ZA', { month: 'long', day: 'numeric', year: 'numeric' })}`
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
@@ -154,6 +286,22 @@ export function CalendarInteractiveView({
   const weekStartIndex = days.findIndex((day) => formatDayKey(day) === formatDayKey(weekStart))
   const weekDays = weekStartIndex >= 0 ? days.slice(weekStartIndex, weekStartIndex + 7) : days.slice(0, 7)
   const dayViewEvents = eventsByDate.get(focusDayKey) ?? []
+  const agendaEvents = filteredEvents.slice(0, 12)
+  const focusWeekNumber = getIsoWeekNumber(focusDate)
+  const activeWeekType = focusWeekNumber % 2 === 0 ? 'B' : 'A'
+  const termWindows = useMemo(() => buildTermWindows(selectedDate.getFullYear()), [selectedDate])
+  const activeTerm = termWindows.find((term) => focusDayKey >= term.start && focusDayKey <= term.end) ?? null
+  const holidayMap = useMemo(() => {
+    const years = new Set(days.map((day) => day.getFullYear()))
+    const map = new Map<string, string>()
+    for (const year of years) {
+      const holidays = getSouthAfricaHolidays(year)
+      for (const holiday of holidays) {
+        map.set(holiday.date, holiday.name)
+      }
+    }
+    return map
+  }, [days])
   const weekdayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
   function setViewMode(next: CalendarViewMode) {
@@ -176,7 +324,7 @@ export function CalendarInteractiveView({
     }
     setFocusDate((prev) => {
       const nextDate = new Date(prev)
-      nextDate.setDate(nextDate.getDate() - (view === 'week' ? 7 : 1))
+      nextDate.setDate(nextDate.getDate() - (view === 'week' || view === 'timetable' ? 7 : 1))
       setMonthDate(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1))
       return nextDate
     })
@@ -189,7 +337,7 @@ export function CalendarInteractiveView({
     }
     setFocusDate((prev) => {
       const nextDate = new Date(prev)
-      nextDate.setDate(nextDate.getDate() + (view === 'week' ? 7 : 1))
+      nextDate.setDate(nextDate.getDate() + (view === 'week' || view === 'timetable' ? 7 : 1))
       setMonthDate(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1))
       return nextDate
     })
@@ -214,6 +362,9 @@ export function CalendarInteractiveView({
     const isInSelectedMonth = day.getMonth() === selectedDate.getMonth()
     const isToday = dayKey === todayKey
     const isFocused = dayKey === focusDayKey
+    const holidayName = holidayMap.get(dayKey) ?? null
+    const dayTerms = buildTermWindows(day.getFullYear())
+    const dayTerm = dayTerms.find((term) => dayKey >= term.start && dayKey <= term.end) ?? null
 
     return (
       <button
@@ -226,10 +377,12 @@ export function CalendarInteractiveView({
           }
         }}
         className={cn(
-          'min-h-[88px] rounded-2xl border p-2.5 text-left shadow-[var(--shadow-elevation-1)] transition-colors sm:min-h-[108px]',
+          'min-h-[68px] rounded-xl border p-2 text-left shadow-[var(--shadow-elevation-1)] transition-colors sm:min-h-[84px]',
           isInSelectedMonth
             ? 'border-slate-200 bg-white text-foreground'
             : 'border-slate-100 bg-slate-50/80 text-muted-foreground',
+          isInSelectedMonth && dayTerm ? dayTerm.dayToneClass : '',
+          holidayName ? 'border-rose-200 bg-rose-50/40' : '',
           isFocused ? 'ring-2 ring-cyan-400/70' : ''
         )}
       >
@@ -248,14 +401,24 @@ export function CalendarInteractiveView({
             <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
               {dayEvents.length}
             </span>
+          ) : holidayName ? (
+            <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">PH</span>
           ) : null}
         </div>
         <div className="space-y-1">
+          {holidayName ? (
+            <div
+              className="truncate rounded-md border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800"
+              title={holidayName}
+            >
+              {holidayName}
+            </div>
+          ) : null}
           {dayEvents.slice(0, 2).map((event) => (
             <div
               key={event.id}
               className={cn(
-                'truncate rounded-lg px-2 py-1 text-[10px] font-semibold leading-tight',
+                'truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-tight',
                 event.is_public ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'
               )}
               title={`${event.title} (${formatTimeRange(event.start_time, event.end_time)})`}
@@ -277,10 +440,10 @@ export function CalendarInteractiveView({
 
   return (
     <CardSurface>
-      <div className="space-y-5 p-4 sm:space-y-6 sm:p-6">
-        <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
+      <div className="space-y-4 p-3 sm:space-y-5 sm:p-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-[var(--shadow-elevation-3)]">
           <div className="flex flex-wrap items-center gap-2">
-            {(['month', 'week', 'day'] as CalendarViewMode[]).map((option) => (
+            {(['month', 'week', 'day', 'timetable'] as CalendarViewMode[]).map((option) => (
               <button
                 key={option}
                 type="button"
@@ -292,12 +455,12 @@ export function CalendarInteractiveView({
                     : 'border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700'
                 )}
               >
-                {option}
+                {option === 'timetable' ? 'Week A/B' : option}
               </button>
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center">
             <button
               type="button"
               onClick={goPrevious}
@@ -323,17 +486,47 @@ export function CalendarInteractiveView({
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <FilterChip label="All" active={visibility === 'all'} onClick={() => setVisibility('all')} />
             <FilterChip label="Public" active={visibility === 'public'} tone="emerald" onClick={() => setVisibility('public')} />
             <FilterChip label="Internal" active={visibility === 'internal'} tone="amber" onClick={() => setVisibility('internal')} />
             <FilterChip label="Upcoming" active={scope === 'upcoming'} tone="blue" onClick={() => setScope('upcoming')} />
             <FilterChip label="Past" active={scope === 'past'} onClick={() => setScope('past')} />
+            {view === 'timetable' ? (
+              <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-semibold text-cyan-800">
+                Week {activeWeekType} - ISO {focusWeekNumber}
+              </span>
+            ) : null}
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)] sm:p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)]">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">School Terms</p>
+            {activeTerm ? (
+              <span className={cn('rounded-full border px-2.5 py-1 text-[11px] font-semibold', activeTerm.chipClass)}>
+                Active: {activeTerm.label}
+              </span>
+            ) : (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                Out of term
+              </span>
+            )}
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {termWindows.map((term) => (
+              <div key={term.id} className={cn('rounded-xl border px-3 py-2 text-xs font-semibold', term.chipClass)}>
+                <p>{term.label}</p>
+                <p className="mt-1 text-[11px] font-medium opacity-90">
+                  {term.start} to {term.end}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200/90 bg-white/90 p-3 shadow-[var(--shadow-elevation-3)]">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold text-slate-900">{periodLabel}</h2>
             <span className="inline-flex w-fit items-center rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
               {nowBadge}
@@ -376,9 +569,37 @@ export function CalendarInteractiveView({
                 ))
               )}
             </div>
+          ) : view === 'timetable' ? (
+            <div className="space-y-3">
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-cyan-700">
+                  Week {activeWeekType} timetable
+                </p>
+                <p className="mt-1 text-sm text-cyan-900">
+                  Structured planning blocks for school operations this week.
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {WEEKDAY_SCHOOL_DAYS.map((dayName) => (
+                  <div key={dayName} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-600">{dayName}</p>
+                    <div className="mt-2 space-y-1.5">
+                      {TIMETABLE_SLOTS.map((slot) => (
+                        <div key={`${dayName}-${slot.time}`} className="rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5">
+                          <p className="text-[11px] font-semibold text-slate-500">{slot.time}</p>
+                          <p className="text-xs font-medium text-slate-800">
+                            {activeWeekType === 'A' ? slot.weekA : slot.weekB}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="grid min-w-[680px] grid-cols-7 gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-2 sm:p-3">
+              <div className="grid min-w-[640px] grid-cols-7 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50/70 p-2">
                 {weekdayLabels.map((label) => (
                   <div key={label} className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {label}
@@ -394,9 +615,9 @@ export function CalendarInteractiveView({
           <EmptyState title="No events in this view" description="Try switching filters or creating a new event." />
         ) : (
           <div className="space-y-2">
-            <p className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Event List</p>
-            {filteredEvents.map((event) => (
-              <div key={event.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[var(--shadow-elevation-2)]">
+            <p className="px-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">School Agenda</p>
+            {agendaEvents.map((event) => (
+              <div key={event.id} className="rounded-xl border border-slate-200 bg-white p-3 shadow-[var(--shadow-elevation-2)]">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-slate-900">{event.title}</p>
@@ -416,6 +637,11 @@ export function CalendarInteractiveView({
                 </div>
               </div>
             ))}
+            {filteredEvents.length > agendaEvents.length ? (
+              <p className="px-1 text-xs text-slate-500">
+                Showing first {agendaEvents.length} events for this filter. Refine by view/day for more.
+              </p>
+            ) : null}
           </div>
         )}
 
@@ -425,6 +651,12 @@ export function CalendarInteractiveView({
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1">
             <span className="h-2 w-2 rounded-full bg-amber-500" /> Internal
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-1">
+            <span className="h-2 w-2 rounded-full bg-rose-500" /> Public Holiday
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2 py-1">
+            <span className="h-2 w-2 rounded-full bg-cyan-500" /> Week {activeWeekType}
           </span>
           <span>Month: {monthStartKey} to {monthEndKey}</span>
         </div>
