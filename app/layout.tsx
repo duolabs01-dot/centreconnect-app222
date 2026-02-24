@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Orbitron, Inter, Nunito, DM_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter, Nunito, DM_Sans } from 'next/font/google'
 import "./globals.css"
 import { Toaster as SonnerToaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
@@ -18,11 +18,11 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-const orbitron = Orbitron({
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  variable: '--font-orbitron',
+  variable: '--font-display-var',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: ['400', '500', '600', '700', '800'],
 })
 
 const inter = Inter({
@@ -50,7 +50,7 @@ const dmSans = DM_Sans({
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <html lang="en" className={`${orbitron.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body className="font-sans">
         <ThemeProvider>
           <ThemeRouteSync />

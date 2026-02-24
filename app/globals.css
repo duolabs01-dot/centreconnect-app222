@@ -276,8 +276,8 @@ body {
 
 :root {
   /* === LANDING PAGE FONTS (do not modify) === */
-  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-orbitron), var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-var, 'Plus Jakarta Sans', sans-serif);
+  --font-sans: var(--font-parent);
 
   /* === PARENT THEME FONTS === */
   --font-parent: 'Nunito', sans-serif;
@@ -286,7 +286,7 @@ body {
   --font-ecd: 'DM Sans', sans-serif;
 
   /* === ADMIN THEME FONTS === */
-  --font-admin: 'Inter', sans-serif;
+  --font-admin: var(--font-inter), sans-serif;
 
   /* Shared glass + motion helpers. */
   --glass-bg: hsla(var(--card), 0.92);

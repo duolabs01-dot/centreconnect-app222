@@ -2,8 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Sparkles } from 'lucide-react'
-import { Map, FileCheck, ActivitySquare, MessageCircle, FolderLock, Bell } from 'lucide-react'
+import { Sparkles, Map, FileCheck2, Activity, MessageCircle, FolderLock, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/lib/utils'
 
@@ -40,8 +39,8 @@ type HomeClientPageProps = {
 
 const features = [
   { icon: Map, title: 'Find Centres', desc: 'Browse ECDs near you' },
-  { icon: FileCheck, title: 'Apply Online', desc: 'No paperwork needed' },
-  { icon: ActivitySquare, title: 'Track Progress', desc: 'Real-time status updates' },
+  { icon: FileCheck2, title: 'Apply Online', desc: 'No paperwork needed' },
+  { icon: Activity, title: 'Track Progress', desc: 'Real-time status updates' },
   { icon: MessageCircle, title: 'Communicate', desc: 'Direct centre messaging' },
   { icon: FolderLock, title: 'Store Documents', desc: 'Secure document vault' },
   { icon: Bell, title: 'Get Notified', desc: 'Instant decision alerts' },
@@ -90,7 +89,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
               <Sparkles className="h-3.5 w-3.5" />
               Parent Hub
             </div>
-            <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
+            <h2 className="mt-3 text-[2.6rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 md:text-5xl lg:text-6xl">
               Finally, a parent experience that actually understands the pressure.
             </h2>
             <p className="mt-3 max-w-2xl text-lg font-medium leading-relaxed text-slate-700/90 md:text-xl">
@@ -125,17 +124,17 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
             </div>
           </section>
 
-          <section className="rounded-2xl border border-cyan-100 bg-gradient-to-r from-cyan-600 to-sky-700 p-6 text-white text-center">
+          <section className="rounded-2xl bg-gradient-to-br from-cyan-700 via-sky-700 to-blue-800 p-6 text-white">
             <p className="text-xs font-bold uppercase tracking-widest text-cyan-200">For ECD Centres</p>
-            <h3 className="mt-2 text-2xl font-extrabold">Grow your centre with CentreConnect</h3>
-            <p className="mt-2 text-cyan-100 text-sm max-w-xl mx-auto">
-              Get found by parents searching nearby. Manage applications, send announcements, and track admissions from one dashboard.
+            <h3 className="mt-2 text-2xl font-extrabold tracking-tight">Get found by parents in your area</h3>
+            <p className="mt-2 max-w-lg text-sm leading-relaxed text-cyan-100">
+              Manage applications, send announcements, and track admissions from one dashboard. Built for South African ECD centres.
             </p>
             <Link
               href="/for-centres"
-              className="mt-5 inline-block rounded-full bg-white text-cyan-700 font-bold px-6 py-3 text-sm hover:bg-cyan-50 transition-colors"
+              className="mt-4 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-bold text-cyan-800 transition-colors hover:bg-cyan-50"
             >
-              Register Your Centre →
+              Register Your Centre &rarr;
             </Link>
           </section>
 
