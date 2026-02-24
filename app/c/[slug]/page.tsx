@@ -10,6 +10,7 @@ import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import type { TransportConfig } from '@/components/public/TransportSection'
 import { TransportSection } from '@/components/public/TransportSection'
 import { InteractionActions } from './interaction-actions'
+import { ContactCentreSheet } from './contact-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
@@ -346,8 +347,9 @@ export default async function CentrePage({ params }: CentrePageProps) {
                 <HeroPill key={fact}>{fact}</HeroPill>
               ))}
             </div>
-            <div className="grid gap-3 md:grid-cols-[auto_auto]">
+            <div className="grid gap-3 md:grid-cols-[auto_auto_auto]">
               <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+              <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
               <a
                 href="#about"
                 className="flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-white/10"
