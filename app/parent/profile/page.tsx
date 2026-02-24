@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { LogOut } from 'lucide-react'
 import { ParentProfileHub } from '@/components/parent/ParentProfileEditor'
 import { createClient } from '@/lib/supabase/server'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
@@ -46,22 +45,28 @@ export default async function ParentProfilePage() {
     const userEmail = user.email ?? 'No email'
     const avatarUrl = userProfile?.avatar_url?.trim() ?? ''
 
-    const parentProfileResult = await supabase
-      .from('parents')
-      .select('emergency_contact_name,emergency_contact_phone')
-      .eq('id', user.id)
-      .maybeSingle()
+    const [parentProfileResult, childrenCountResult] = await Promise.all([
+      supabase
+        .from('parents')
+        .select(
+          'guardian_relationship,emergency_contact_name,emergency_contact_phone,notifications_application_updates,notifications_reminders'
+        )
+        .eq('id', user.id)
+        .maybeSingle(),
+      supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id),
+    ])
 
     const parentProfile = (parentProfileResult.error ? null : parentProfileResult.data) as
-      | { emergency_contact_name: string | null; emergency_contact_phone: string | null }
+      | {
+          guardian_relationship: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          notifications_application_updates: boolean | null
+          notifications_reminders: boolean | null
+        }
       | null
 
-    async function handleSignOut() {
-      'use server'
-      const serverClient = await createClient()
-      await serverClient.auth.signOut()
-      redirect('/')
-    }
+    const childCount = childrenCountResult.count ?? 0
 
     return (
       <div className="cc-page space-y-4">
@@ -71,20 +76,14 @@ export default async function ParentProfilePage() {
             phone: userProfile?.phone?.trim() ?? '',
             email: userEmail,
             avatar_url: avatarUrl,
+            guardian_relationship: parentProfile?.guardian_relationship?.trim() ?? '',
             emergency_contact_name: parentProfile?.emergency_contact_name?.trim() ?? '',
             emergency_contact_phone: parentProfile?.emergency_contact_phone?.trim() ?? '',
+            notifications_application_updates: parentProfile?.notifications_application_updates ?? true,
+            notifications_reminders: parentProfile?.notifications_reminders ?? true,
+            child_count: childCount,
           }}
         />
-
-        <form action={handleSignOut}>
-          <button
-            type="submit"
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 p-4 text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-        </form>
       </div>
     )
   } finally {

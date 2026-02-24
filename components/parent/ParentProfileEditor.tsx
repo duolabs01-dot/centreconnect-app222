@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent, type ComponentType } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Baby, ChevronRight, FileText, Loader2, Pencil, Phone, ShieldCheck } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -13,8 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { cn } from '@/lib/utils'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 const AVATAR_BUCKET = 'parent-avatars'
 const MAX_AVATAR_SIZE_BYTES = 3 * 1024 * 1024
@@ -769,379 +768,426 @@ type ParentProfileHubInitial = {
   phone: string
   email: string
   avatar_url: string
+  guardian_relationship: string
   emergency_contact_name: string
   emergency_contact_phone: string
+  notifications_application_updates: boolean
+  notifications_reminders: boolean
+  child_count: number
 }
 
-type InlineEditableTextProps = {
-  label: string
-  value: string
-  placeholder?: string
-  type?: 'text' | 'tel'
-  allowEmpty?: boolean
-  isPending?: boolean
-  onSave: (nextValue: string) => void
-}
+type EditableField = 'full_name' | 'phone' | 'guardian_relationship' | 'emergency_contact_name'
+type ToggleField = 'notifications_application_updates' | 'notifications_reminders'
 
-type HubSection = {
-  id: 'children' | 'documents' | 'emergency' | 'security'
-  label: string
-  description: string
-  detail: string
-  href: string
-  icon: ComponentType<{ className?: string }>
-}
-
-const HUB_SECTIONS: HubSection[] = [
-  {
-    id: 'children',
-    label: 'My Children',
-    description: 'Profiles, admissions, and updates',
-    detail: 'Manage each child profile, application progress, and enrollment details in one place.',
-    href: '/parent/children',
-    icon: Baby,
-  },
-  {
-    id: 'documents',
-    label: 'Documents',
-    description: 'Upload IDs and supporting files',
-    detail: 'Review uploaded documents and add anything missing for ongoing applications.',
-    href: '/parent/profile/documents',
-    icon: FileText,
-  },
-  {
-    id: 'emergency',
-    label: 'Emergency Contacts',
-    description: 'Who we should call first',
-    detail: 'Keep emergency contact details accurate so centres can reach the right person quickly.',
-    href: '/parent/profile/emergency',
-    icon: Phone,
-  },
-  {
-    id: 'security',
-    label: 'Security',
-    description: 'Password and sign-in controls',
-    detail: 'Review account security settings and recent sign-in activity.',
-    href: '/parent/profile/security',
-    icon: ShieldCheck,
-  },
-]
-
-function InlineEditableText({
-  label,
-  value,
-  placeholder = 'Not set',
-  type = 'text',
-  allowEmpty = true,
-  isPending = false,
-  onSave,
-}: InlineEditableTextProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [draft, setDraft] = useState(value)
-  const [errorMessage, setErrorMessage] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!isEditing) {
-      setDraft(value)
-    }
-  }, [value, isEditing])
-
-  useEffect(() => {
-    if (!isEditing) return
-    inputRef.current?.focus()
-  }, [isEditing])
-
-  function handleSave() {
-    const nextValue = draft.trim()
-    const currentValue = value.trim()
-
-    if (!allowEmpty && nextValue.length === 0) {
-      setErrorMessage(`${label} is required`)
-      return
-    }
-
-    setErrorMessage('')
-    if (nextValue === currentValue) {
-      setIsEditing(false)
-      return
-    }
-
-    onSave(nextValue)
-    setIsEditing(false)
-  }
-
-  if (isEditing) {
-    return (
-      <div className="rounded-xl border border-cyan-200 bg-cyan-50/40 p-3">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-        <Input
-          ref={inputRef}
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          type={type}
-          className="h-10 rounded-xl"
-          disabled={isPending}
-        />
-        {errorMessage ? <p className="mt-2 text-xs text-rose-600">{errorMessage}</p> : null}
-        <div className="mt-3 flex items-center gap-2">
-          <Button type="button" size="sm" onClick={handleSave} disabled={isPending}>
-            {isPending ? 'Saving...' : 'Save'}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={isPending}
-            onClick={() => {
-              setDraft(value)
-              setErrorMessage('')
-              setIsEditing(false)
-            }}
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="group rounded-xl border border-slate-200 bg-white p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-          <p className={cn('mt-1 truncate text-sm font-medium', value ? 'text-slate-900' : 'text-slate-400')}>{value || placeholder}</p>
-        </div>
-        <button
-          type="button"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-500 opacity-100 transition-opacity hover:bg-slate-100 disabled:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-          onClick={() => setIsEditing(true)}
-          disabled={isPending}
-          aria-label={`Edit ${label}`}
-        >
-          {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />}
-        </button>
-      </div>
-    </div>
-  )
+const EDITABLE_FIELD_CONFIG: Record<EditableField, { label: string; type: 'text' | 'tel'; required?: boolean }> = {
+  full_name: { label: 'Full Name', type: 'text', required: true },
+  phone: { label: 'Phone', type: 'tel' },
+  guardian_relationship: { label: 'Role', type: 'text' },
+  emergency_contact_name: { label: 'Emergency Contact', type: 'text' },
 }
 
 export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial }) {
+  const router = useRouter()
   const supabase = createClient()
   const [profile, setProfile] = useState(initial)
-  const [activeSectionId, setActiveSectionId] = useState<HubSection['id'] | null>(null)
-  const [pendingField, setPendingField] = useState<keyof Pick<ParentProfileHubInitial, 'full_name' | 'phone' | 'emergency_contact_name' | 'emergency_contact_phone'> | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [activeField, setActiveField] = useState<EditableField | null>(null)
+  const [draftValue, setDraftValue] = useState('')
+  const [savingField, setSavingField] = useState<EditableField | null>(null)
+  const [savingToggle, setSavingToggle] = useState<ToggleField | null>(null)
+  const [isSigningOut, setIsSigningOut] = useState(false)
 
-  const completionPercent = useMemo(() => {
-    const completionSignals = [
-      profile.full_name,
-      profile.phone,
-      profile.avatar_url,
-      profile.emergency_contact_name,
-      profile.emergency_contact_phone,
-    ]
-    const completed = completionSignals.filter((value) => value.trim().length > 0).length
-    return Math.round((completed / completionSignals.length) * 100)
-  }, [profile])
+  const completedFields = [
+    profile.full_name,
+    profile.phone,
+    profile.emergency_contact_name,
+    profile.emergency_contact_phone,
+  ].filter(Boolean).length
+  const totalFields = 4
+  const completionPct = Math.round((completedFields / totalFields) * 100)
+  const activeFieldConfig = activeField ? EDITABLE_FIELD_CONFIG[activeField] : null
 
-  const initials = initialsFromName(profile.full_name)
-  const ringRadius = 26
-  const ringCircumference = 2 * Math.PI * ringRadius
-  const ringOffset = ringCircumference - (completionPercent / 100) * ringCircumference
-  const activeSection = HUB_SECTIONS.find((section) => section.id === activeSectionId) ?? null
+  function openFieldEditor(field: EditableField) {
+    setActiveField(field)
+    setDraftValue(profile[field] ?? '')
+    setSheetOpen(true)
+  }
 
-  function saveField(
-    field: keyof Pick<ParentProfileHubInitial, 'full_name' | 'phone' | 'emergency_contact_name' | 'emergency_contact_phone'>,
-    nextValue: string
-  ) {
+  function closeFieldEditor() {
+    if (savingField) return
+    setSheetOpen(false)
+    setActiveField(null)
+    setDraftValue('')
+  }
+
+  async function saveField() {
+    if (!activeField) return
+    const config = EDITABLE_FIELD_CONFIG[activeField]
+    const nextValue = draftValue.trim()
+
+    if (config.required && !nextValue) {
+      toast.error(`${config.label} is required`)
+      return
+    }
+
+    const field = activeField
     const previousValue = profile[field]
-    if (nextValue === previousValue) return
+    if (nextValue === previousValue) {
+      closeFieldEditor()
+      return
+    }
 
     setProfile((current) => ({
       ...current,
       [field]: nextValue,
     }))
-    setPendingField(field)
+    setSavingField(field)
+    setSheetOpen(false)
 
-    startTransition(() => {
-      void (async () => {
-        const {
-          data: { user },
-          error: authError,
-        } = await supabase.auth.getUser()
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
 
-        if (authError || !user) {
-          throw new Error('Please sign in again to update your profile.')
-        }
+      if (authError || !user) throw new Error('Please sign in again to update your profile.')
 
-        if (field === 'full_name' || field === 'phone') {
-          const profilePayload: { full_name?: string | null; phone?: string | null } = {}
-          if (field === 'full_name') profilePayload.full_name = nextValue || null
-          if (field === 'phone') profilePayload.phone = nextValue || null
+      if (field === 'full_name' || field === 'phone') {
+        const profilePayload: { full_name?: string | null; phone?: string | null } = {}
+        if (field === 'full_name') profilePayload.full_name = nextValue || null
+        if (field === 'phone') profilePayload.phone = nextValue || null
 
-          const { error: userProfileError } = await supabase.from('user_profiles').update(profilePayload).eq('id', user.id)
-          if (userProfileError) throw userProfileError
+        const { error: userProfileError } = await supabase.from('user_profiles').update(profilePayload).eq('id', user.id)
+        if (userProfileError) throw userProfileError
 
-          if (field === 'full_name') {
-            const { error: authUpdateError } = await supabase.auth.updateUser({
-              data: {
-                full_name: nextValue || undefined,
-              },
-            })
-            if (authUpdateError) throw authUpdateError
-          } else {
-            const { error: authUpdateError } = await supabase.auth.updateUser({
-              data: {
-                phone: nextValue || undefined,
-              },
-            })
-            if (authUpdateError) throw authUpdateError
-          }
+        if (field === 'full_name') {
+          const { error: authUpdateError } = await supabase.auth.updateUser({
+            data: { full_name: nextValue || undefined },
+          })
+          if (authUpdateError) throw authUpdateError
         } else {
-          const emergencyPayload: { emergency_contact_name?: string | null; emergency_contact_phone?: string | null } = {}
-          if (field === 'emergency_contact_name') emergencyPayload.emergency_contact_name = nextValue || null
-          if (field === 'emergency_contact_phone') emergencyPayload.emergency_contact_phone = nextValue || null
-
-          const { error: parentError } = await supabase
-            .from('parents')
-            .upsert({ id: user.id, ...emergencyPayload }, { onConflict: 'id' })
-          if (parentError) throw parentError
+          const { error: authUpdateError } = await supabase.auth.updateUser({
+            data: { phone: nextValue || undefined },
+          })
+          if (authUpdateError) throw authUpdateError
         }
-      })()
-        .then(() => {
-          toast.success('Changes saved')
-        })
-        .catch((error: any) => {
-          setProfile((current) => ({
-            ...current,
-            [field]: previousValue,
-          }))
-          toast.error(error?.message || 'Failed to save changes')
-        })
-        .finally(() => {
-          setPendingField((current) => (current === field ? null : current))
-        })
-    })
+      } else {
+        const parentPayload: { guardian_relationship?: string | null; emergency_contact_name?: string | null } = {}
+        if (field === 'guardian_relationship') parentPayload.guardian_relationship = nextValue || null
+        if (field === 'emergency_contact_name') parentPayload.emergency_contact_name = nextValue || null
+
+        const { error: parentError } = await supabase
+          .from('parents')
+          .upsert({ id: user.id, ...parentPayload }, { onConflict: 'id' })
+        if (parentError) throw parentError
+      }
+
+      toast.success('Changes saved')
+    } catch (error: any) {
+      setProfile((current) => ({
+        ...current,
+        [field]: previousValue,
+      }))
+      toast.error(error?.message || 'Failed to save changes')
+    } finally {
+      setSavingField((current) => (current === field ? null : current))
+      setActiveField(null)
+      setDraftValue('')
+    }
+  }
+
+  async function togglePreference(field: ToggleField) {
+    const previousValue = profile[field]
+    const nextValue = !previousValue
+
+    setProfile((current) => ({
+      ...current,
+      [field]: nextValue,
+    }))
+    setSavingToggle(field)
+
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
+      if (authError || !user) throw new Error('Please sign in again to update your profile.')
+
+      const { error: parentError } = await supabase
+        .from('parents')
+        .upsert({ id: user.id, [field]: nextValue }, { onConflict: 'id' })
+      if (parentError) throw parentError
+
+      toast.success('Preference updated')
+    } catch (error: any) {
+      setProfile((current) => ({
+        ...current,
+        [field]: previousValue,
+      }))
+      toast.error(error?.message || 'Failed to update preference')
+    } finally {
+      setSavingToggle((current) => (current === field ? null : current))
+    }
+  }
+
+  async function handleSignOut() {
+    if (isSigningOut) return
+    setIsSigningOut(true)
+
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      toast.error(error.message || 'Failed to sign out')
+      setIsSigningOut(false)
+      return
+    }
+
+    router.push('/')
+    router.refresh()
   }
 
   return (
     <div className="space-y-4">
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 p-5 text-white shadow-[var(--shadow-elevation-3)]">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/40 bg-white/20">
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt={`${profile.full_name} profile`} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-xl font-bold">{initials}</div>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-lg font-bold">{profile.full_name || 'Parent'}</p>
-              <p className="truncate text-sm text-cyan-100">{profile.email || 'No email'}</p>
-              <Link href="/parent/profile/edit" className="mt-2 inline-flex text-xs font-semibold text-cyan-100 hover:text-white">
-                Open full profile form
-              </Link>
-            </div>
-          </div>
-          <div className="relative h-14 w-14 shrink-0">
-            <svg viewBox="0 0 64 64" className="h-14 w-14">
-              <circle cx="32" cy="32" r={ringRadius} className="stroke-white/30" strokeWidth="6" fill="none" />
-              <circle
-                cx="32"
-                cy="32"
-                r={ringRadius}
-                className="stroke-white"
-                strokeWidth="6"
-                fill="none"
-                strokeLinecap="round"
-                strokeDasharray={ringCircumference}
-                strokeDashoffset={ringOffset}
-                transform="rotate(-90 32 32)"
-              />
-            </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold">{completionPercent}%</span>
-          </div>
+      <div className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 mb-4">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xl font-bold text-white">
+          {profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={profile.avatar_url} alt="Profile photo" className="h-full w-full object-cover" />
+          ) : profile.full_name ? (
+            profile.full_name.charAt(0).toUpperCase()
+          ) : (
+            '?'
+          )}
         </div>
+        <div>
+          <p className="text-base font-bold text-slate-900">{profile.full_name || 'Your Name'}</p>
+          <p className="text-sm text-slate-500">{profile.email}</p>
+        </div>
+      </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <InlineEditableText
-            label="Full name"
-            value={profile.full_name}
-            allowEmpty={false}
-            isPending={isPending && pendingField === 'full_name'}
-            onSave={(nextValue) => saveField('full_name', nextValue)}
+      <p className="text-sm font-semibold text-slate-700">Profile {completionPct}% complete</p>
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-1.5">
+          <p className="text-xs font-semibold text-slate-500">Profile completeness</p>
+          <p className="text-xs font-bold text-cyan-700">{completionPct}%</p>
+        </div>
+        <div className="h-1.5 w-full rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-500"
+            style={{ width: `${completionPct}%` }}
           />
-          <InlineEditableText
-            label="Phone"
-            value={profile.phone}
-            placeholder="Add phone number"
-            type="tel"
-            isPending={isPending && pendingField === 'phone'}
-            onSave={(nextValue) => saveField('phone', nextValue)}
-          />
+        </div>
+        {completionPct < 100 && (
+          <p className="mt-1 text-xs text-slate-400">Complete your profile to improve your application outcomes.</p>
+        )}
+      </div>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Account</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+            onClick={() => openFieldEditor('full_name')}
+            disabled={savingField === 'full_name'}
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Full Name</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">{profile.full_name || 'Not set'}</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </button>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+            onClick={() => openFieldEditor('phone')}
+            disabled={savingField === 'phone'}
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Phone</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">{profile.phone || 'Not set'}</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </button>
+          <div className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Email</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">{profile.email || 'Not set'}</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="space-y-2">
-        {HUB_SECTIONS.map((section) => (
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Family</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
           <button
-            key={section.id}
             type="button"
-            className="flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
-            onClick={() => setActiveSectionId(section.id)}
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+            onClick={() => openFieldEditor('guardian_relationship')}
+            disabled={savingField === 'guardian_relationship'}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50">
-              <section.icon className="h-5 w-5 text-cyan-600" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Role</p>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-900">{section.label}</p>
-              <p className="mt-0.5 text-xs text-slate-400">{section.description}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">{profile.guardian_relationship || 'Not set'}</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
           </button>
-        ))}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Emergency Snapshot</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <InlineEditableText
-            label="Emergency name"
-            value={profile.emergency_contact_name}
-            placeholder="Add emergency contact name"
-            isPending={isPending && pendingField === 'emergency_contact_name'}
-            onSave={(nextValue) => saveField('emergency_contact_name', nextValue)}
-          />
-          <InlineEditableText
-            label="Emergency phone"
-            value={profile.emergency_contact_phone}
-            placeholder="Add emergency contact phone"
-            type="tel"
-            isPending={isPending && pendingField === 'emergency_contact_phone'}
-            onSave={(nextValue) => saveField('emergency_contact_phone', nextValue)}
-          />
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+            onClick={() => openFieldEditor('emergency_contact_name')}
+            disabled={savingField === 'emergency_contact_name'}
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Emergency Contact</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">{profile.emergency_contact_name || 'Not set'}</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </button>
         </div>
       </section>
 
-      <Sheet
-        open={Boolean(activeSection)}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setActiveSectionId(null)
-        }}
-      >
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Children</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <Link
+            href="/parent/children"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">My Children</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-cyan-100 px-1.5 text-xs font-semibold text-cyan-700">
+                {profile.child_count}
+              </span>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Documents</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <Link
+            href="/parent/profile/documents"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Documents Vault</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Security</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <Link
+            href="/parent/profile/security"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Security & Sign-in Activity</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Notifications</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <div className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Application updates</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={profile.notifications_application_updates}
+              disabled={savingToggle === 'notifications_application_updates'}
+              onClick={() => togglePreference('notifications_application_updates')}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                profile.notifications_application_updates ? 'bg-cyan-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  profile.notifications_application_updates ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+          <div className="flex w-full items-center justify-between px-4 py-3.5 text-left">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Reminders</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={profile.notifications_reminders}
+              disabled={savingToggle === 'notifications_reminders'}
+              onClick={() => togglePreference('notifications_reminders')}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                profile.notifications_reminders ? 'bg-cyan-600' : 'bg-slate-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  profile.notifications_reminders ? 'translate-x-5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <button
+            type="button"
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="w-full px-4 py-3.5 text-center text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 active:bg-red-100"
+          >
+            {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+          </button>
+        </div>
+      </section>
+
+      <Sheet open={sheetOpen} onOpenChange={(isOpen) => (!isOpen ? closeFieldEditor() : null)}>
         <SheetContent side="bottom" className="rounded-t-3xl border-slate-200 pb-8">
-          {activeSection ? (
+          {activeField && activeFieldConfig ? (
             <div className="space-y-5 pr-8">
-              <SheetHeader className="space-y-2 text-left">
-                <SheetTitle>{activeSection.label}</SheetTitle>
-                <SheetDescription className="text-sm text-slate-600">{activeSection.detail}</SheetDescription>
+              <SheetHeader className="text-left">
+                <SheetTitle>{activeFieldConfig.label}</SheetTitle>
               </SheetHeader>
-              <Button asChild className="w-full rounded-xl">
-                <Link href={activeSection.href}>Open {activeSection.label}</Link>
+              <Input
+                value={draftValue}
+                onChange={(event) => setDraftValue(event.target.value)}
+                type={activeFieldConfig.type}
+                className="cc-native-field"
+                disabled={Boolean(savingField)}
+              />
+              <Button type="button" className="w-full" disabled={Boolean(savingField)} onClick={saveField}>
+                {savingField ? 'Saving...' : 'Save'}
               </Button>
             </div>
           ) : null}
