@@ -10,12 +10,28 @@ import { Analytics } from "@vercel/analytics/next"
 export const metadata: Metadata = {
   title: 'CentreConnect',
   description: 'Find trusted ECD centres near you. Apply online, track applications, and connect with the best early childhood education for your child.',
+  applicationName: 'CentreConnect',
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: ['/icon-192.png'],
+  },
+  appleWebApp: {
+    capable: true,
+    title: 'CentreConnect',
+    statusBarStyle: 'default',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
+  themeColor: '#0891b2',
 }
 
 const plusJakartaSans = Plus_Jakarta_Sans({

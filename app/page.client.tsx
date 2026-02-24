@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Sparkles, Map, FileCheck2, Activity, MessageCircle, FolderLock, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PwaInstallCard } from '@/components/pwa/pwa-install-card'
 import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/lib/utils'
 
 type HomeClientPageProps = {
@@ -123,6 +124,8 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
               ))}
             </div>
           </section>
+
+          <PwaInstallCard />
 
           <section className="rounded-2xl bg-gradient-to-br from-cyan-700 via-sky-700 to-blue-800 p-6 text-white">
             <p className="text-xs font-bold uppercase tracking-widest text-cyan-200">For ECD Centres</p>
