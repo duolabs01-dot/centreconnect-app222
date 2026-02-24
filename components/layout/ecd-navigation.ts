@@ -12,6 +12,7 @@ import {
   Settings2,
   Store,
   Truck,
+  UserCheck,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -27,6 +28,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/dashboard', label: 'Today', icon: LayoutDashboard, group: 'daily' },
   { href: '/ecd/applications', label: 'Applications', icon: ClipboardList, group: 'daily' },
   { href: '/ecd/pipeline', label: 'Pipeline', icon: GitFork, group: 'daily' },
+  { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck, group: 'daily' },
   { href: '/ecd/billing', label: 'Billing', icon: CreditCard, group: 'daily', adminOnly: true },
   { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'daily' },
   { href: '/ecd/communications', label: 'Messages', icon: MessageSquare, group: 'operations' },
