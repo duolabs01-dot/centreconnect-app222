@@ -25,6 +25,8 @@ const navItems = [
 
 function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/applications')) return 'Application Journey'
+  if (pathname.startsWith('/parent/support')) return 'Support'
+  if (pathname.startsWith('/parent/preferences')) return 'Preferences'
   if (pathname.startsWith('/parent/profile/security')) return 'Security & Sign-in Activity'
   if (pathname.startsWith('/parent/profile/documents')) return 'Documents Vault'
   if (pathname.startsWith('/parent/profile/emergency')) return 'Emergency Contacts'
@@ -54,6 +56,8 @@ function shouldShowMobileBack(pathname: string) {
   if (pathname.startsWith('/parent/dashboard/')) return true
   if (pathname.startsWith('/parent/applications/')) return true
   if (pathname.startsWith('/parent/profile/')) return true
+  if (pathname.startsWith('/parent/preferences')) return true
+  if (pathname.startsWith('/parent/support')) return true
   if (pathname.startsWith('/parent/children')) return true
   if (pathname.startsWith('/parent/notifications')) return true
   if (pathname.startsWith('/parent/shortlist')) return true
@@ -175,7 +179,13 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
               </div>
               <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
                 {navItems.map((item) => {
-                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const active =
+                    item.href === '/parent/profile'
+                      ? pathname.startsWith('/parent/profile') ||
+                        pathname.startsWith('/parent/preferences') ||
+                        pathname.startsWith('/parent/support') ||
+                        pathname.startsWith('/parent/children')
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
                   return (
                     <Button
                       key={item.href}

@@ -1020,6 +1020,18 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
               <p className="text-sm text-slate-500">{profile.email || 'Not set'}</p>
             </div>
           </div>
+          <Link
+            href="/parent/profile/edit"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Edit Full Profile</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">Profile Studio</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -1156,6 +1168,42 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
               />
             </button>
           </div>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Preferences</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <Link
+            href="/parent/preferences"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Centre Discovery Preferences</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">Budget, radius, transport</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Help</p>
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+          <Link
+            href="/parent/support"
+            className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-slate-50 active:bg-slate-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Report an Issue</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-sm text-slate-500">Open support ticket</p>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          </Link>
         </div>
       </section>
 
