@@ -13,14 +13,18 @@ import { ArrowLeft, Menu, Pin, PinOff } from 'lucide-react'
 type EcdPortalSidebarProps = {
   userEmail: string | null
   roleLabel?: string
+  userRole?: 'ecd_admin' | 'ecd_staff' | null
 }
 
-export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal' }: EcdPortalSidebarProps) {
+export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole = null }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const primaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') === 'daily')
-  const secondaryNav = ECD_DASHBOARD_NAV.filter((item) => (item.group ?? 'daily') !== 'daily')
-  const topLevelPaths = new Set(ECD_DASHBOARD_NAV.map((item) => item.href))
+  const visibleNav = ECD_DASHBOARD_NAV.filter(item =>
+    !item.adminOnly || userRole === 'ecd_admin'
+  )
+  const primaryNav = visibleNav.filter((item) => (item.group ?? 'daily') === 'daily')
+  const secondaryNav = visibleNav.filter((item) => (item.group ?? 'daily') !== 'daily')
+  const topLevelPaths = new Set(visibleNav.map((item) => item.href))
   const [isPinned, setIsPinned] = useState(true)
   const [mobileOpen, setMobileOpen] = useState(false)
   const showMobileBack = Array.from(topLevelPaths).some((href) => pathname.startsWith(`${href}/`))
