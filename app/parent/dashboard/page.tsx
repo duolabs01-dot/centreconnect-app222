@@ -42,10 +42,11 @@ function StatusPill({ status }: { status: string }) {
     submitted: { label: 'Submitted', classes: 'border-blue-200 bg-blue-50 text-blue-700' },
     in_review: { label: 'In Review', classes: 'border-amber-200 bg-amber-50 text-amber-700' },
     waitlisted: { label: 'Waitlisted', classes: 'border-orange-200 bg-orange-50 text-orange-700' },
-    approved: { label: 'Approved', classes: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-    enrolled: { label: 'Enrolled', classes: 'border-green-200 bg-green-50 text-green-700' },
-    rejected: { label: 'Not Accepted', classes: 'border-rose-200 bg-rose-50 text-rose-700' },
+    approved: { label: 'Approved ✓', classes: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+    enrolled: { label: 'Enrolled ', classes: 'border-green-200 bg-green-50 text-green-700' },
+    rejected: { label: 'Unsuccessful', classes: 'border-rose-200 bg-rose-50 text-rose-700' },
     offer_pending: { label: 'Offer Waiting', classes: 'border-violet-200 bg-violet-50 text-violet-700' },
+    withdrawn: { label: 'Withdrawn', classes: 'border-slate-200 bg-slate-50 text-slate-500' },
   }
   const pill = map[status] ?? { label: status, classes: 'border-slate-200 bg-slate-50 text-slate-600' }
   return (
@@ -153,6 +154,8 @@ export default async function ParentDashboardPage() {
     const hasApplications = applications.length > 0
     const screenState: 'empty' | 'pending' | 'enrolled' =
       !hasApplications ? 'empty' : enrolledApplication ? 'enrolled' : 'pending'
+    const respondedCount = applications.filter((a) => !['submitted'].includes(a.status)).length
+    const progressPct = applications.length > 0 ? Math.round((respondedCount / applications.length) * 100) : 0
 
     const firstChildName =
       `${children[0]?.first_name ?? ''} ${children[0]?.last_name ?? ''}`.trim() ||
@@ -192,38 +195,59 @@ export default async function ParentDashboardPage() {
     return (
       <div className="cc-page">
         {screenState === 'empty' ? (
-          <section className="glass-card animate-fade-in relative overflow-hidden rounded-2xl p-5 sm:p-7">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-50/80 via-cyan-50/50 to-white" />
-            <div className="relative space-y-6">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 text-rose-500">
-                <Heart className="h-5 w-5" />
+          <section className="glass-card animate-fade-in relative overflow-hidden rounded-2xl p-6 sm:p-8">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/70 via-cyan-50/40 to-white" />
+            <div className="relative">
+              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50">
+                <Heart className="h-7 w-7 text-cyan-600" />
               </div>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  {greeting}, {parentName}
-                </p>
-                <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Find a centre for {firstChildName}</h1>
-                <p className="max-w-xl text-sm text-slate-600 sm:text-base">
-                  Search trusted ECD centres nearby, compare fit, and apply when you are ready.
-                </p>
+              <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
+              <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+                Let's find the right ECD<br />for {firstChildName}.
+              </h1>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
+                Browse trusted centres nearby, compare your options, and apply — all in one place. Most families find
+                their match within a week.
+              </p>
+
+              {/* Journey steps */}
+              <div className="mt-6 grid grid-cols-3 gap-3">
+                {[
+                  { step: '1', label: 'Browse', desc: 'Find centres near you', color: 'bg-cyan-100 text-cyan-700' },
+                  { step: '2', label: 'Apply', desc: 'One-click application', color: 'bg-amber-100 text-amber-700' },
+                  { step: '3', label: 'Enrol', desc: 'Accept your offer', color: 'bg-emerald-100 text-emerald-700' },
+                ].map((item) => (
+                  <div key={item.step} className="rounded-xl border border-white bg-white/80 p-3 text-center">
+                    <div
+                      className={`mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${item.color}`}
+                    >
+                      {item.step}
+                    </div>
+                    <p className="text-xs font-bold text-slate-800">{item.label}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">{item.desc}</p>
+                  </div>
+                ))}
               </div>
-              <form action="/directory" className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <label className="relative block flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input
-                    name="q"
-                    type="search"
-                    placeholder="Search by suburb, centre name, or programme"
-                    className="cc-native-field h-11 rounded-xl pl-10"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-cyan-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                >
-                  Browse Centres
-                </button>
-              </form>
+
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <form action="/directory" className="flex flex-1 gap-2">
+                  <label className="relative flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      name="q"
+                      type="search"
+                      placeholder="Search by suburb or centre name"
+                      className="cc-native-field h-11 w-full rounded-xl pl-10"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-cyan-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                  >
+                    Browse
+                  </button>
+                </form>
+              </div>
             </div>
           </section>
         ) : screenState === 'pending' ? (
@@ -236,6 +260,32 @@ export default async function ParentDashboardPage() {
               <p className="mt-2 text-sm text-slate-600">
                 Keep an eye on updates from each centre while decisions are pending.
               </p>
+            </section>
+
+            <section className="glass-card rounded-2xl p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Application Progress</p>
+                <p className="text-xs font-semibold text-cyan-700">
+                  {respondedCount} of {applications.length} responded
+                </p>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 transition-all duration-700"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="text-xs text-slate-500">
+                  Submitted: {applications.filter((a) => a.status === 'submitted').length}
+                </span>
+                <span className="text-xs font-medium text-amber-600">
+                  In Review: {applications.filter((a) => a.status === 'in_review').length}
+                </span>
+                <span className="text-xs font-medium text-emerald-600">
+                  Approved: {applications.filter((a) => a.status === 'approved').length}
+                </span>
+              </div>
             </section>
 
             <section className="cc-stack">
