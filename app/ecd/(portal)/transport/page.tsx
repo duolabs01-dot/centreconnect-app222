@@ -112,7 +112,7 @@ export default async function EcdTransportPage() {
                 <Link href="/ecd/communications">Message Drivers</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/ecd/transport/drivers">Manage Drivers -></Link>
+                <Link href="/ecd/transport/drivers">Manage Drivers {'->'}</Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link href="/ecd/calendar">Sync to Calendar</Link>
