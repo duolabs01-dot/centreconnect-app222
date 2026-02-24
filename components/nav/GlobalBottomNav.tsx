@@ -40,6 +40,15 @@ export function GlobalBottomNav() {
     return null
   }
 
+  const isDiscoverRoute =
+    pathname === '/directory' ||
+    pathname.startsWith('/directory/') ||
+    pathname === '/centre' ||
+    pathname.startsWith('/centre/') ||
+    pathname === '/c' ||
+    pathname.startsWith('/c/')
+  if (isDiscoverRoute && isSignedIn !== true) return null
+
   const mode = pathname.startsWith('/parent') ? 'parent' : 'public'
   if (mode === 'public' && isSignedIn !== true) return null
 
