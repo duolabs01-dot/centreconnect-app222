@@ -29,6 +29,7 @@ interface CentreCardProps {
   fees_display_mode?: 'exact' | 'range' | 'contact' | null
   latitude?: number | null // Added
   longitude?: number | null // Added
+  distanceLabel?: string
 }
 
 export default function CentreCard({
@@ -48,6 +49,7 @@ export default function CentreCard({
   variant = 'default',
   subsidy_accepted = false,
   fees_display_mode = null,
+  distanceLabel,
 }: CentreCardProps) {
   const heroImage = getCentreHeroImage(slug, cover_image_url)
   const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
@@ -169,6 +171,11 @@ export default function CentreCard({
               <MapPin size={13} strokeWidth={2} />
               {locationLabel || 'Location to be confirmed'}
             </span>
+            {distanceLabel && (
+              <span className="centre-card__meta-item" style={{ color: '#0891b2', fontWeight: '700' }}>
+                {distanceLabel}
+              </span>
+            )}
             {capacity && (
               <span className="centre-card__meta-item">
                 <Users size={13} strokeWidth={2} />

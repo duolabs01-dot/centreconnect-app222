@@ -44,7 +44,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
       mapInstanceRef.current = new MapLibreMap({
         container: mapContainerRef.current,
         style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-        center: [18, -26],
+        center: [28.0473, -26.2041],
         zoom: 11,
       })
       mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
@@ -130,6 +130,14 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
   return (
     <div className="relative h-[420px] w-full rounded-2xl border border-border">
       <div ref={mapContainerRef} className="h-full w-full" />
+      {centresWithLocation.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/80">
+          <div className="px-4 text-center">
+            <p className="text-sm font-semibold text-slate-700">Location data is being added</p>
+            <p className="mt-1 text-xs text-slate-500">Centre coordinates are being verified. Check back soon.</p>
+          </div>
+        </div>
+      )}
       {userLocation ? (
         <button
           type="button"

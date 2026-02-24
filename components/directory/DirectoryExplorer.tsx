@@ -62,6 +62,28 @@ function toFiniteNumber(value: unknown): number | null {
   return null
 }
 
+function distanceKm(
+  userLng: number,
+  userLat: number,
+  centreLng: number,
+  centreLat: number
+): number {
+  const toRad = (d: number) => (d * Math.PI) / 180
+  const R = 6371
+  const dLat = toRad(centreLat - userLat)
+  const dLon = toRad(centreLng - userLng)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(userLat)) * Math.cos(toRad(centreLat)) * Math.sin(dLon / 2) ** 2
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)}m`
+  if (km < 10) return `${km.toFixed(1)} km`
+  return `${Math.round(km)} km`
+}
+
 export default function DirectoryExplorer({
   initialCentres,
   totalResults: initialTotal,
@@ -460,6 +482,29 @@ export default function DirectoryExplorer({
             showMap={showMap}
           />
         )}
+        {showMap && userLocation && centresWithLocation.length > 0 && (
+          <button
+            type="button"
+            className="mt-3 w-full rounded-xl border border-cyan-200 bg-cyan-50 py-3 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
+            onClick={() => {
+              const nearest = [...centresWithLocation]
+                .filter((c) => c.latitude && c.longitude)
+                .sort(
+                  (a, b) =>
+                    distanceKm(userLocation[0], userLocation[1], a.longitude!, a.latitude!) -
+                    distanceKm(userLocation[0], userLocation[1], b.longitude!, b.latitude!)
+                )[0]
+
+              if (nearest) {
+                setViewMode('list')
+                setSelectedSuburb(nearest.suburb ?? '')
+                setCurrentPage(1)
+              }
+            }}
+          >
+            Show nearest centres first
+          </button>
+        )}
 
         {filtered.length === 0 && !showMap ? (
           <div className="mt-4 space-y-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
@@ -480,24 +525,34 @@ export default function DirectoryExplorer({
             </p>
 
             <div className="mt-3.5 grid gap-3 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-              {filtered.map((centre) => (
-                <CentreCard
-                  key={centre.id}
-                  id={centre.id}
-                  slug={centre.slug}
-                  name={centre.name}
-                  tagline={centre.tagline ?? undefined}
-                  suburb={centre.suburb}
-                  city={centre.city}
-                  capacity={centre.capacity ?? undefined}
-                  age_groups={centre.age_groups ?? []}
-                  is_registered={centre.is_registered}
-                  logo_url={centre.logo_url ?? undefined}
-                  cover_image_url={centre.cover_image_url ?? undefined}
-                  subsidy_accepted={centre.subsidy_accepted}
-                  fees_display_mode={centre.fees_display_mode}
-                />
-              ))}
+              {filtered.map((centre) => {
+                const latitude = toFiniteNumber(centre.latitude)
+                const longitude = toFiniteNumber(centre.longitude)
+                const distanceLabel =
+                  userLocation && latitude != null && longitude != null
+                    ? `${formatDistance(distanceKm(userLocation[0], userLocation[1], longitude, latitude))} away`
+                    : null
+
+                return (
+                  <CentreCard
+                    key={centre.id}
+                    id={centre.id}
+                    slug={centre.slug}
+                    name={centre.name}
+                    tagline={centre.tagline ?? undefined}
+                    suburb={centre.suburb}
+                    city={centre.city}
+                    capacity={centre.capacity ?? undefined}
+                    age_groups={centre.age_groups ?? []}
+                    is_registered={centre.is_registered}
+                    logo_url={centre.logo_url ?? undefined}
+                    cover_image_url={centre.cover_image_url ?? undefined}
+                    subsidy_accepted={centre.subsidy_accepted}
+                    fees_display_mode={centre.fees_display_mode}
+                    distanceLabel={distanceLabel ?? undefined}
+                  />
+                )
+              })}
             </div>
           </>
         ) : null}
