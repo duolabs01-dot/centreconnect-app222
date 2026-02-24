@@ -1,20 +1,108 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
+import { createClient } from '@/lib/supabase/client'
 
 // components/cc-admin/MeshAreaChart.tsx
 
-interface MeshAreaChartProps {
-  sessions?: number[]
-  load?: number[]
+type RevenuePoint = {
+  month: string
+  revenue: number
 }
 
-export function MeshAreaChart({ 
-  sessions = [120, 130, 100, 80, 110, 60], 
-  load = [140, 120, 135, 115, 130, 125] 
-}: MeshAreaChartProps) {
+function getLastSixMonthStarts() {
+  const now = new Date()
+  return Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
+    date.setHours(0, 0, 0, 0)
+    return date
+  })
+}
+
+function buildEmptyRevenueSeries(): RevenuePoint[] {
+  return getLastSixMonthStarts().map((date) => ({
+    month: date.toISOString().slice(0, 7),
+    revenue: 0,
+  }))
+}
+
+export function MeshAreaChart() {
+  const [revenueSeries, setRevenueSeries] = useState<RevenuePoint[]>(() => buildEmptyRevenueSeries())
   const W = 400
   const H = 160
+
+  useEffect(() => {
+    const supabase = createClient()
+    let active = true
+
+    const fetchRevenue = async () => {
+      const monthStarts = getLastSixMonthStarts()
+      const sixMonthsAgoISO = monthStarts[0].toISOString()
+      const { data } = await supabase
+        .from('invoices')
+        .select('issued_at, total')
+        .eq('status', 'paid')
+        .gte('issued_at', sixMonthsAgoISO)
+        .order('issued_at', { ascending: true })
+
+      const totalsByMonth = new Map<string, number>()
+      for (const row of data ?? []) {
+        const issuedAt = typeof row.issued_at === 'string' ? row.issued_at : null
+        if (!issuedAt) continue
+        const monthKey = new Date(issuedAt).toISOString().slice(0, 7)
+        const totalValue = Number(row.total ?? 0)
+        totalsByMonth.set(monthKey, (totalsByMonth.get(monthKey) ?? 0) + totalValue)
+      }
+
+      const nextSeries: RevenuePoint[] = monthStarts.map((date) => {
+        const monthKey = date.toISOString().slice(0, 7)
+        return {
+          month: monthKey,
+          revenue: totalsByMonth.get(monthKey) ?? 0,
+        }
+      })
+
+      if (active) {
+        setRevenueSeries(nextSeries)
+      }
+    }
+
+    void fetchRevenue()
+    const interval = setInterval(() => {
+      void fetchRevenue()
+    }, 5000)
+
+    return () => {
+      active = false
+      clearInterval(interval)
+    }
+  }, [])
+
+  const { revenueY, trendY, monthLabels } = useMemo(() => {
+    const revenues = revenueSeries.map((point) => point.revenue)
+    const trend = revenues.map((_, index) => {
+      const start = Math.max(0, index - 2)
+      const values = revenues.slice(start, index + 1)
+      const sum = values.reduce((acc, value) => acc + value, 0)
+      return values.length > 0 ? sum / values.length : 0
+    })
+    const maxRevenue = Math.max(...revenues, ...trend, 1)
+    const topPadding = 10
+    const bottomPadding = 10
+    const graphHeight = H - topPadding - bottomPadding
+    const toY = (value: number) => H - bottomPadding - (value / maxRevenue) * graphHeight
+
+    const labels = revenueSeries.map((point) =>
+      new Date(`${point.month}-01T00:00:00.000Z`).toLocaleString('en-US', { month: 'short' })
+    )
+
+    return {
+      revenueY: revenues.map(toY),
+      trendY: trend.map(toY),
+      monthLabels: labels,
+    }
+  }, [revenueSeries])
 
   const generatePath = (data: number[], height: number, isArea: boolean) => {
     const step = W / (data.length - 1)
@@ -39,10 +127,10 @@ export function MeshAreaChart({
     return path
   }
 
-  const sessionsArea = generatePath(sessions, H, true)
-  const sessionsLine = generatePath(sessions, H, false)
-  const loadArea = generatePath(load, H, true)
-  const loadLine = generatePath(load, H, false)
+  const sessionsArea = generatePath(revenueY, H, true)
+  const sessionsLine = generatePath(revenueY, H, false)
+  const loadArea = generatePath(trendY, H, true)
+  const loadLine = generatePath(trendY, H, false)
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -50,13 +138,13 @@ export function MeshAreaChart({
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-0.5 rounded" style={{ background: 'var(--cyber-cyan)' }} />
           <span className="font-inter text-[10px]" style={{ color: 'rgb(74, 85, 104)', fontWeight: 500 }}>
-            Concurrent Sessions
+            Paid Revenue
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-0.5 rounded" style={{ background: 'var(--cyber-violet)' }} />
           <span className="font-inter text-[10px]" style={{ color: 'rgb(74, 85, 104)', fontWeight: 500 }}>
-            System Load %
+            3-Month Trend
           </span>
         </div>
       </div>
@@ -114,7 +202,7 @@ export function MeshAreaChart({
         </svg>
 
         <div className="flex justify-between px-0 mt-1">
-          {['00:00', '06:00', '12:00', '18:00', '23:59'].map(t => (
+          {monthLabels.map((t) => (
             <span key={t} className="font-inter text-[9px]" style={{ color: '#4A5568', fontWeight: 400 }}>{t}</span>
           ))}
         </div>
