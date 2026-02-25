@@ -83,7 +83,7 @@ export default async function DriverPage({ params }: { params: { token: string }
         <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">CentreConnect Driver</p>
         <h1 className="mt-1 text-xl font-bold">{centreName}</h1>
         <p className="text-sm font-medium text-slate-200">Driver: {driver.full_name}</p>
-        <p className="text-sm text-slate-400">Today's route - {rows.length} stops</p>
+        <p className="text-sm text-slate-400">{`Today's route - ${rows.length} stops`}</p>
       </header>
 
       <main className="space-y-3 p-4">

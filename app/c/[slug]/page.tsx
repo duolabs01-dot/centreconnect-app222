@@ -415,15 +415,20 @@ export default async function CentrePage({ params }: CentrePageProps) {
 
         {media.length > 0 && (
           <section className="mt-4 grid grid-cols-3 gap-2">
-            {media.map((item) => (
-              <div key={item.id} className="aspect-square overflow-hidden rounded-xl bg-slate-100">
-                <img
-                  src={supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl}
-                  alt={item.file_name ?? `${centre.name} gallery image`}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ))}
+            {media.map((item) => {
+              const imageUrl = supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl
+              return (
+                <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
+                  <Image
+                    src={imageUrl}
+                    alt={item.file_name ?? `${centre.name} gallery image`}
+                    fill
+                    sizes="(max-width: 768px) 33vw, 200px"
+                    className="object-cover"
+                  />
+                </div>
+              )
+            })}
           </section>
         )}
 

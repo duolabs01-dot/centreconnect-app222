@@ -230,7 +230,10 @@ export function CalendarInteractiveView({
   const [focusDate, setFocusDate] = useState<Date>(parseDayKey(initialFocusDayKey) ?? fallbackDate)
   const [monthDate, setMonthDate] = useState<Date>(initialMonthDate)
 
-  const selectedDate = view === 'month' ? monthDate : new Date(focusDate.getFullYear(), focusDate.getMonth(), 1)
+  const selectedDate = useMemo(
+    () => (view === 'month' ? monthDate : new Date(focusDate.getFullYear(), focusDate.getMonth(), 1)),
+    [view, monthDate, focusDate]
+  )
   const focusDayKey = formatDayKey(focusDate)
   const monthKey = toMonthKey(selectedDate)
 
@@ -398,17 +401,17 @@ export function CalendarInteractiveView({
             {day.getDate()}
           </p>
           {dayEvents.length > 0 ? (
-            <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-500">
+            <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">
               {dayEvents.length}
             </span>
           ) : holidayName ? (
-            <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">PH</span>
+            <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-xs font-medium text-rose-700">PH</span>
           ) : null}
         </div>
         <div className="space-y-1">
           {holidayName ? (
             <div
-              className="truncate rounded-md border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800"
+              className="truncate rounded-md border border-rose-200 bg-rose-100 px-1.5 py-0.5 text-xs font-semibold text-rose-800"
               title={holidayName}
             >
               {holidayName}
@@ -418,7 +421,7 @@ export function CalendarInteractiveView({
             <div
               key={event.id}
               className={cn(
-                'truncate rounded-md px-1.5 py-0.5 text-[10px] font-semibold leading-tight',
+                'truncate rounded-md px-1.5 py-0.5 text-xs font-semibold leading-tight',
                 event.is_public ? 'bg-emerald-100 text-emerald-900' : 'bg-amber-100 text-amber-900'
               )}
               title={`${event.title} (${formatTimeRange(event.start_time, event.end_time)})`}
@@ -427,7 +430,7 @@ export function CalendarInteractiveView({
             </div>
           ))}
           {dayEvents.length > 2 ? (
-            <p className="text-[10px] text-slate-500">+{dayEvents.length - 2} more</p>
+            <p className="text-xs text-slate-500">+{dayEvents.length - 2} more</p>
           ) : null}
         </div>
       </button>
@@ -449,7 +452,7 @@ export function CalendarInteractiveView({
                 type="button"
                 onClick={() => setViewMode(option)}
                 className={cn(
-                  'rounded-full px-4 py-2 text-xs font-semibold capitalize transition duration-150',
+                  'min-h-11 rounded-full px-4 py-2 text-sm font-semibold capitalize transition duration-150',
                   option === view
                     ? 'bg-cyan-600 text-cyan-50 shadow-[var(--shadow-elevation-2)]'
                     : 'border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700'
@@ -504,11 +507,11 @@ export function CalendarInteractiveView({
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">School Terms</p>
             {activeTerm ? (
-              <span className={cn('rounded-full border px-2.5 py-1 text-[11px] font-semibold', activeTerm.chipClass)}>
+              <span className={cn('rounded-full border px-2.5 py-1 text-xs font-semibold', activeTerm.chipClass)}>
                 Active: {activeTerm.label}
               </span>
             ) : (
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
                 Out of term
               </span>
             )}
@@ -517,7 +520,7 @@ export function CalendarInteractiveView({
             {termWindows.map((term) => (
               <div key={term.id} className={cn('rounded-xl border px-3 py-2 text-xs font-semibold', term.chipClass)}>
                 <p>{term.label}</p>
-                <p className="mt-1 text-[11px] font-medium opacity-90">
+                <p className="mt-1 text-xs font-medium opacity-90">
                   {term.start} to {term.end}
                 </p>
               </div>
@@ -586,7 +589,7 @@ export function CalendarInteractiveView({
                     <div className="mt-2 space-y-1.5">
                       {TIMETABLE_SLOTS.map((slot) => (
                         <div key={`${dayName}-${slot.time}`} className="rounded-md border border-slate-100 bg-slate-50 px-2 py-1.5">
-                          <p className="text-[11px] font-semibold text-slate-500">{slot.time}</p>
+                          <p className="text-xs font-semibold text-slate-500">{slot.time}</p>
                           <p className="text-xs font-medium text-slate-800">
                             {activeWeekType === 'A' ? slot.weekA : slot.weekB}
                           </p>
@@ -708,7 +711,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={cn('rounded-full px-3 py-1.5 text-xs font-semibold transition-colors', toneClass)}
+      className={cn('min-h-11 rounded-full px-3.5 py-2 text-sm font-semibold transition-colors', toneClass)}
     >
       {label}
     </button>

@@ -1,6 +1,6 @@
-// ⚠️ ECD ADMIN ONLY
+// ECD portal shell
 // Allowed imports: components/ecd/* + components/ui/*
-// NEVER import from components/cc-admin/*
+// Never import from components/cc-admin/*
 
 import { redirect } from 'next/navigation'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -96,3 +96,4 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     </div>
   )
 }
+

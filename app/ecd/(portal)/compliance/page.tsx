@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { addStaffCheckAction, markDocumentUploadedAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Compliance Toolkit - CentreConnect',
@@ -100,55 +100,6 @@ export default async function EcdCompliancePage() {
     )
   }
 
-  async function markDocumentUploaded(formData: FormData) {
-    'use server'
-    const session = await requireEcdPortalSession({ cached: false })
-    if (session.role !== 'ecd_admin' && session.role !== 'ecd_supervisor') return
-
-    const id = String(formData.get('id') ?? '').trim()
-    const currentStatus = String(formData.get('current_status') ?? 'missing').trim()
-    const expiresAtRaw = String(formData.get('expires_at') ?? '').trim()
-    const notes = String(formData.get('notes') ?? '').trim()
-    if (!id) return
-
-    const nextStatus = currentStatus === 'verified' ? 'verified' : 'uploaded'
-    await session.supabase
-      .from('compliance_documents')
-      .update({
-        status: nextStatus,
-        expires_at: expiresAtRaw || null,
-        notes: notes || null,
-        uploaded_by: session.user.id,
-      })
-      .eq('id', id)
-      .eq('ecd_id', session.ecdId)
-
-    revalidatePath('/ecd/compliance')
-  }
-
-  async function addStaffCheck(formData: FormData) {
-    'use server'
-    const session = await requireEcdPortalSession({ cached: false })
-    if (session.role !== 'ecd_admin' && session.role !== 'ecd_supervisor') return
-
-    const staffName = String(formData.get('staff_name') ?? '').trim()
-    if (!staffName) return
-
-    await session.supabase.from('compliance_staff_checks').insert({
-      ecd_id: session.ecdId,
-      staff_name: staffName,
-      staff_role: String(formData.get('staff_role') ?? '').trim() || null,
-      medical_clearance_date: String(formData.get('medical_clearance_date') ?? '').trim() || null,
-      criminal_clearance_date: String(formData.get('criminal_clearance_date') ?? '').trim() || null,
-      first_aid_cert_date: String(formData.get('first_aid_cert_date') ?? '').trim() || null,
-      first_aid_cert_expires: String(formData.get('first_aid_cert_expires') ?? '').trim() || null,
-      form_29_submitted: String(formData.get('form_29_submitted') ?? '') === 'on',
-      notes: String(formData.get('notes') ?? '').trim() || null,
-    })
-
-    revalidatePath('/ecd/compliance')
-  }
-
   const [{ data: centre }, { data: docsData }, { data: staffData }] = await Promise.all([
     supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
     supabase
@@ -202,7 +153,7 @@ export default async function EcdCompliancePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {documents.map((doc) => (
-              <form key={doc.id} action={markDocumentUploaded} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <form key={doc.id} action={markDocumentUploadedAction} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
                 <input type="hidden" name="id" value={doc.id} />
                 <input type="hidden" name="current_status" value={doc.status} />
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -239,9 +190,15 @@ export default async function EcdCompliancePage() {
             <CardTitle>Staff Clearances</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <form action={addStaffCheck} className="grid gap-3 lg:grid-cols-2">
-              <input name="staff_name" className="cc-native-field" placeholder="Staff name" required />
-              <input name="staff_role" className="cc-native-field" placeholder="Role" />
+            <form action={addStaffCheckAction} className="grid gap-3 lg:grid-cols-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Staff name
+                <input name="staff_name" className="cc-native-field mt-1" required />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Staff role
+                <input name="staff_role" className="cc-native-field mt-1" />
+              </label>
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Medical clearance date
                 <input type="date" name="medical_clearance_date" className="cc-native-field mt-1" />
@@ -262,11 +219,14 @@ export default async function EcdCompliancePage() {
                 <input type="checkbox" name="form_29_submitted" />
                 Form 29 submitted
               </label>
-              <textarea
-                name="notes"
-                className="cc-native-field h-auto min-h-20 py-2 md:col-span-2"
-                placeholder="Notes"
-              />
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 md:col-span-2">
+                Notes
+                <textarea
+                  name="notes"
+                  className="cc-native-field mt-1 h-auto min-h-20 py-2"
+                  placeholder="Notes"
+                />
+              </label>
               <Button type="submit" className="w-full sm:w-fit" disabled={role === 'ecd_staff'}>
                 Add Staff Member
               </Button>

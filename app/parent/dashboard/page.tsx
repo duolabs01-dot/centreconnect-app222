@@ -350,7 +350,7 @@ export default async function ParentDashboardPage() {
               </div>
               <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
               <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                Let's find the right ECD<br />for {firstChildName}.
+                {`Let's find the right ECD`}<br />for {firstChildName}.
               </h1>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
                 Browse trusted centres nearby, compare your options, and apply — all in one place. Most families find

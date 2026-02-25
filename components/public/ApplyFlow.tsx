@@ -282,13 +282,17 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
             </div>
           </div>
 
-          <Textarea
-            placeholder="Share anything important (siblings, support needs, transport notes, etc.)"
-            value={parentMessage}
-            rows={4}
-            onChange={(event) => setParentMessage(event.target.value)}
-            className="bg-white text-slate-900 placeholder:text-slate-400"
-          />
+          <div className="space-y-1.5">
+            <Label htmlFor="apply-parent-message">Message to centre (optional)</Label>
+            <Textarea
+              id="apply-parent-message"
+              placeholder="Share anything important (siblings, support needs, transport notes, etc.)"
+              value={parentMessage}
+              rows={4}
+              onChange={(event) => setParentMessage(event.target.value)}
+              className="bg-white text-slate-900 placeholder:text-slate-400"
+            />
+          </div>
 
           <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
             <input

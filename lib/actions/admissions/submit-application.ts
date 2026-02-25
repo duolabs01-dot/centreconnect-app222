@@ -133,8 +133,8 @@ export async function submitApplicationAction(input: unknown) {
           is_read: false,
         })
       }
-    } catch (nudgeError) {
-      console.error('submitApplicationAction readiness nudge failed:', nudgeError)
+    } catch {
+      // Non-blocking: intake nudges should not fail application flow.
     }
 
     return {
@@ -191,7 +191,6 @@ export async function submitApplicationAction(input: unknown) {
   }
 
   if (insertError) {
-    console.error('submitApplicationAction failed:', insertError)
     if (insertError.message?.includes('infinite recursion')) {
       return { error: 'Server configuration error. Please contact support.' }
     }
@@ -240,8 +239,8 @@ export async function submitApplicationAction(input: unknown) {
       },
       is_read: false,
     })
-  } catch (notifyError) {
-    console.error('submitApplicationAction notification dispatch failed:', notifyError)
+  } catch {
+    // Non-blocking: ECD notifications should not fail application submission.
   }
 
   return { success: true, applicationId }

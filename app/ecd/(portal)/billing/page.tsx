@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
@@ -8,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
+import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Billing - CentreConnect',
@@ -18,54 +18,6 @@ export default async function EcdBillingPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
-
-  async function requestCancellation(formData: FormData) {
-    'use server'
-    const session = await requireEcdPortalSession({ cached: false })
-    const reason = String(formData.get('reason') ?? '').trim()
-    const ticketNumber = `BILL-${Date.now().toString().slice(-8)}`
-
-    await session.supabase.from('support_tickets').insert({
-      ticket_number: ticketNumber,
-      ecd_id: session.ecdId,
-      created_by: session.user.id,
-      subject: 'Subscription cancellation request',
-      description: reason || 'Please assist with subscription cancellation and final invoice process.',
-      category: 'billing',
-      priority: 3,
-      status: 'open',
-    })
-
-    revalidatePath('/ecd/billing')
-  }
-
-  async function saveFinancialSnapshot(formData: FormData) {
-    'use server'
-    const session = await requireEcdPortalSession({ cached: false })
-    if (session.role === 'ecd_staff') return
-
-    const periodMonth = String(formData.get('period_month') ?? '').trim() || currentMonth
-    const revenueTotal = Number(formData.get('revenue_total') ?? 0)
-    const expensesTotal = Number(formData.get('expenses_total') ?? 0)
-    const assetsTotal = Number(formData.get('assets_total') ?? 0)
-    const liabilitiesTotal = Number(formData.get('liabilities_total') ?? 0)
-    const notes = String(formData.get('notes') ?? '').trim()
-
-    await session.supabase.from('ecd_financial_snapshots').upsert(
-      {
-        ecd_id: session.ecdId,
-        period_month: periodMonth,
-        revenue_total: Number.isFinite(revenueTotal) ? revenueTotal : 0,
-        expenses_total: Number.isFinite(expensesTotal) ? expensesTotal : 0,
-        assets_total: Number.isFinite(assetsTotal) ? assetsTotal : 0,
-        liabilities_total: Number.isFinite(liabilitiesTotal) ? liabilitiesTotal : 0,
-        notes: notes || null,
-      },
-      { onConflict: 'ecd_id,period_month' }
-    )
-
-    revalidatePath('/ecd/billing')
-  }
 
   const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }] = await Promise.all([
     supabase
@@ -164,8 +116,12 @@ export default async function EcdBillingPage() {
               <p className="text-sm text-rose-900">
                 Cancellation creates a billing support ticket so the team can finalize your account and invoices safely.
               </p>
-              <form action={requestCancellation} className="space-y-3">
+              <form action={requestCancellationAction} className="space-y-3">
+                <label htmlFor="billing-cancellation-reason" className="text-sm font-medium text-rose-900">
+                  Reason (optional)
+                </label>
                 <textarea
+                  id="billing-cancellation-reason"
                   name="reason"
                   className="cc-native-field min-h-24 h-auto py-2"
                   placeholder="Reason (optional)"
@@ -204,7 +160,7 @@ export default async function EcdBillingPage() {
                 <p className="mt-1 text-lg font-bold text-violet-800">R{netWorth.toLocaleString()}</p>
               </div>
             </div>
-            <form action={saveFinancialSnapshot} className="grid gap-3 lg:grid-cols-2">
+            <form action={saveFinancialSnapshotAction} className="grid gap-3 lg:grid-cols-2">
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Month
                 <input type="date" name="period_month" className="cc-native-field mt-1" defaultValue={currentMonth} />
@@ -306,7 +262,7 @@ export default async function EcdBillingPage() {
                           {invoice.status !== 'paid' ? (
                             <PayInvoiceButton invoiceId={invoice.id} />
                           ) : (
-                            <span className="text-xs text-emerald-600 font-semibold">Paid ✓</span>
+                            <span className="text-xs font-semibold text-emerald-600">Paid</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -343,3 +299,4 @@ export default async function EcdBillingPage() {
     </EcdOsShell>
   )
 }
+

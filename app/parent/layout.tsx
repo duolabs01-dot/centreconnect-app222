@@ -68,8 +68,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   const verificationStatus = parentProfileResult.data?.id_verification_status?.trim().toLowerCase() ?? ''
   const isVerifiedByDocuments = verificationStatus === 'verified'
-  const isForcedVerifiedUser = (user.email ?? '').toLowerCase() === 'mandlakevin@gmail.com'
-  const isVerified = isVerifiedByDocuments || isForcedVerifiedUser
+  const isVerified = isVerifiedByDocuments
   const readiness = evaluateParentIntakeReadiness({
     parent: {
       fullName: existingProfile?.full_name,

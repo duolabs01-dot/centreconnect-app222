@@ -78,7 +78,7 @@ export function EcdPortalSidebar({
         <button
           type="button"
           onClick={handleMobileBack}
-          className="fixed z-50 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+          className="fixed z-50 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/90 text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [right:max(1rem,calc(env(safe-area-inset-right)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function EcdPortalSidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed z-50 flex items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
+        className="fixed z-50 flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/90 px-3 py-2 text-sm font-semibold uppercase tracking-wide text-foreground shadow-[var(--shadow-elevation-3)] shadow-slate-900/10 backdrop-blur-xl transition hover:bg-card lg:hidden [left:max(1rem,calc(env(safe-area-inset-left)+0.75rem))] [top:max(0.75rem,calc(env(safe-area-inset-top)+0.5rem))]"
         aria-label="Open ECD navigation"
       >
         <Menu className="h-4 w-4" />

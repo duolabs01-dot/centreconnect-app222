@@ -148,7 +148,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
                       <button
                         type="button"
                         onClick={handleMobileBack}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-200/70 bg-transparent text-slate-700 transition hover:bg-cyan-50/60"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-cyan-200/70 bg-transparent text-slate-700 transition hover:bg-cyan-50/60"
                         aria-label="Go back"
                       >
                         <ArrowLeft className="h-4 w-4" />

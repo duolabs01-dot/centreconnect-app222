@@ -31,7 +31,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export default async function ApplicationDetailsPage({ params }: ApplicationDetailsPageProps) {
-  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  const { supabase, user, ecdId } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
 
   const { data: application } = await supabase
@@ -290,14 +290,6 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
             <CardContent>
               <StatusUpdateForm
                 applicationId={application.id}
-                ecdId={application.ecd_id}
-                role={role}
-                parentId={parent?.id ?? ''}
-                centreName={centre?.name ?? 'Your centre'}
-                childName={childName}
-                parentName={parentName}
-                parentEmail={parent?.billing_email ?? null}
-                applicationNumber={application.application_number}
                 currentStatus={application.status}
                 currentNotes={application.admin_notes}
                 currentOfferAcceptedAt={application.offer_accepted_at}

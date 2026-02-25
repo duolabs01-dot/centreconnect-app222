@@ -129,7 +129,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
     return (
       <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
         <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Today's Pickup Code</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">{`Today's Pickup Code`}</p>
           <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
           <p className="mt-1 text-xs text-slate-500">
             Show this to the centre staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
@@ -143,7 +143,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
     <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup Code</p>
-        <p className="mt-1 text-sm text-slate-600">No active code. Generate one for today's pickup.</p>
+        <p className="mt-1 text-sm text-slate-600">{`No active code. Generate one for today's pickup.`}</p>
         <button
           type="button"
           onClick={generateCode}

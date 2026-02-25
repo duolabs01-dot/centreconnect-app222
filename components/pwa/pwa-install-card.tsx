@@ -212,7 +212,7 @@ export function PwaInstallCard() {
           ) : (
             <p className="flex items-start gap-2">
               <Laptop className="mt-0.5 h-3.5 w-3.5 text-cyan-600" />
-              Use your browser's address bar install icon, or menu &rarr;{' '}
+              Use your browser&apos;s address bar install icon, or menu &rarr;{' '}
               <span className="font-semibold text-slate-700">Install CentreConnect</span>.
             </p>
           )}

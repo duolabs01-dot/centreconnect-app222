@@ -178,50 +178,6 @@ async function partitionPendingForReview(applications: ApplicationRow[]) {
   return { ready, blocked }
 }
 
-async function sendIntakePushbackNotifications(input: {
-  ecdId: string
-  centreName: string
-  blocked: IntakeBlockedApplication[]
-}) {
-  if (input.blocked.length === 0) return
-
-  const admin = (() => {
-    try {
-      return createAdminClient()
-    } catch {
-      return null
-    }
-  })()
-  if (!admin) return
-  const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-
-  for (const item of input.blocked) {
-    const parent = normalizeOne(item.application.parents)
-    if (!parent?.id) continue
-
-    const { data: recent } = await admin
-      .from('parent_notifications')
-      .select('id')
-      .eq('parent_id', parent.id)
-      .eq('application_id', item.application.id)
-      .eq('title', 'Action needed before review')
-      .gte('created_at', cutoffIso)
-      .limit(1)
-      .maybeSingle()
-
-    if (recent?.id) continue
-
-    await admin.from('parent_notifications').insert({
-      parent_id: parent.id,
-      ecd_id: input.ecdId,
-      application_id: item.application.id,
-      title: 'Action needed before review',
-      message: `Hi there. ${input.centreName} is ready to review this application as soon as a few details are completed: ${item.missing.join(', ')}. Open your Profile and Documents to finish quickly.`,
-      is_read: false,
-    })
-  }
-}
-
 function renderApplicationList(
   applications: ApplicationRow[],
   context: {
@@ -495,14 +451,6 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     }
   }
 
-  if (blockedPendingApplications.length > 0) {
-    await sendIntakePushbackNotifications({
-      ecdId,
-      centreName: centre?.name ?? 'the centre',
-      blocked: blockedPendingApplications.slice(0, 25),
-    })
-  }
-
   const totalForSelected =
     selectedTab === 'pending'
       ? filteredCounts.pending
@@ -614,7 +562,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               back to parents for missing details
             </p>
             <p className="mt-1 text-xs text-amber-800">
-              Parents were notified automatically. These applications will reappear once details are completed.
+              Ask parents to update their profile/documents. These applications reappear once required details are complete.
             </p>
             <div className="mt-2 space-y-1">
               {blockedPendingApplications.slice(0, 3).map((item) => {
