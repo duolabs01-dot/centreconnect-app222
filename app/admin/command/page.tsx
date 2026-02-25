@@ -40,34 +40,28 @@ const PROVINCE_NORMALIZED_TO_CODE: Record<string, ProvinceScore['shortLabel']> =
   NW: 'NW',
   NORTHWEST: 'NW',
   NORTH_WEST: 'NW',
-  NORTH-WEST: 'NW',
   GP: 'GP',
   GAUTENG: 'GP',
   KZN: 'KZN',
   KWAZULUNATAL: 'KZN',
   KWAZULU_NATAL: 'KZN',
-  KWAZULU-NATAL: 'KZN',
   FS: 'FS',
   FREESTATE: 'FS',
   FREE_STATE: 'FS',
-  FREE-STATE: 'FS',
   NC: 'NC',
   NORTHERNCAPE: 'NC',
   NORTHERN_CAPE: 'NC',
-  NORTHERN-CAPE: 'NC',
   EC: 'EC',
   EASTERNCAPE: 'EC',
   EASTERN_CAPE: 'EC',
-  EASTERN-CAPE: 'EC',
   WC: 'WC',
   WESTERNCAPE: 'WC',
   WESTERN_CAPE: 'WC',
-  WESTERN-CAPE: 'WC',
 }
 
 function normalizeProvinceToCode(value: string | null): ProvinceScore['shortLabel'] | null {
   if (!value) return null
-  const normalized = value.toUpperCase().replace(/\./g, '').replace(/\s+/g, '_').trim()
+  const normalized = value.toUpperCase().replace(/\./g, '').replace(/[\s-]+/g, '_').trim()
   return PROVINCE_NORMALIZED_TO_CODE[normalized] ?? PROVINCE_NORMALIZED_TO_CODE[normalized.replace(/_/g, '')] ?? null
 }
 
