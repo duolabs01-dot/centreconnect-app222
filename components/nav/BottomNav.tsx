@@ -71,7 +71,7 @@ export function BottomNav({ mode = 'parent' }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-6 left-4 right-4 z-50 pointer-events-none md:hidden"
+      className="fixed bottom-6 left-4 right-4 z-30 pointer-events-none md:hidden"
       aria-label="Primary"
     >
       <LayoutGroup id={`cc-bottom-nav-${mode}`}>

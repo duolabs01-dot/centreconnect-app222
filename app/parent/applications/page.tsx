@@ -5,7 +5,6 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { ApplicationsList } from './applications-list'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
-import { NextBestActionStrip } from '@/components/parent/next-best-action-strip'
 import { cn } from '@/lib/utils'
 
 type ParentApplicationsPageProps = {
@@ -268,16 +267,6 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             <section className="rounded-2xl border border-dashed border-cyan-500/30 bg-white/80 p-4 text-xs text-slate-500">
               Need more options? Apply to more centres and keep every response in one place.
             </section>
-
-            <NextBestActionStrip
-              title="Keep momentum this week"
-              hint="Parents who keep 2-3 active options usually place faster."
-              actions={[
-                { label: 'Find More Centres', href: '/directory' },
-                { label: 'Add Child Profile', href: '/parent/children/new' },
-                { label: 'Open Notifications', href: '/parent/notifications' },
-              ]}
-            />
 
             <section className="cc-section-block">
               <ApplicationsList applications={filteredApplications} />
