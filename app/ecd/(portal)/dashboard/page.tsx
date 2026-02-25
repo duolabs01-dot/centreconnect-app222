@@ -329,57 +329,73 @@ export default async function EcdDashboardPage() {
           </Card>
         </div>
 
-        <Card className="glass-card border border-border bg-card/90 text-foreground">
-          <CardHeader>
-            <CardTitle>Transport Overview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-semibold text-muted-foreground">Status:</span>
-              <span
-                className={cn(
-                  'rounded-full px-3 py-1 text-xs font-semibold',
-                  transportConfig?.offers_transport
-                    ? 'bg-emerald-600/20 text-emerald-700'
-                    : 'bg-amber-100 text-amber-800'
-                )}
-              >
-                {transportConfig?.offers_transport ? 'Active transport' : 'Not yet configured'}
-              </span>
-            </div>
-            <p className="text-base font-semibold text-foreground">
-              {formatTransportFee(transportConfig?.fee_per_month)}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {transportConfig?.fee_description ?? 'Publish a transparent monthly fee or keep it quote-based.'}
-            </p>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coverage areas</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {transportConfig?.coverage_areas?.length ? (
-                  transportConfig.coverage_areas.map((area: string) => (
-                    <span key={area} className="rounded-full bg-white/10 px-3 py-1 text-xs text-foreground">
-                      {area}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-muted-foreground">Define suburbs or zones so parents know if you cover their route.</span>
-                )}
+        {transportConfig?.offers_transport ? (
+          <Card className="glass-card border border-border bg-card/90 text-foreground">
+            <CardHeader>
+              <CardTitle>Transport Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-muted-foreground">Status:</span>
+                <span
+                  className={cn(
+                    'rounded-full px-3 py-1 text-xs font-semibold',
+                    transportConfig?.offers_transport
+                      ? 'bg-emerald-600/20 text-emerald-700'
+                      : 'bg-amber-100 text-amber-800'
+                  )}
+                >
+                  {transportConfig?.offers_transport ? 'Active transport' : 'Not yet configured'}
+                </span>
               </div>
-            </div>
-            {transportConfig?.notes ? (
-              <p className="text-xs text-muted-foreground">{transportConfig.notes}</p>
-            ) : null}
-            <div className="flex flex-wrap gap-2 pt-2">
+              <p className="text-base font-semibold text-foreground">
+                {formatTransportFee(transportConfig?.fee_per_month)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {transportConfig?.fee_description ?? 'Publish a transparent monthly fee or keep it quote-based.'}
+              </p>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coverage areas</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {transportConfig?.coverage_areas?.length ? (
+                    transportConfig.coverage_areas.map((area: string) => (
+                      <span key={area} className="rounded-full bg-white/10 px-3 py-1 text-xs text-foreground">
+                        {area}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Define suburbs or zones so parents know if you cover their route.</span>
+                  )}
+                </div>
+              </div>
+              {transportConfig?.notes ? (
+                <p className="text-xs text-muted-foreground">{transportConfig.notes}</p>
+              ) : null}
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button asChild>
+                  <Link href="/ecd/transport">Open Transport Desk</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/ecd/communications">Message drivers</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="glass-card border border-border bg-card/90 text-foreground">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Transport not configured</p>
+                <p className="text-xs text-muted-foreground">
+                  Set up transport to manage routes and drivers.
+                </p>
+              </div>
               <Button asChild>
-                <Link href="/ecd/transport">Open Transport Desk</Link>
+                <Link href="/ecd/transport">Set Up Transport</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/ecd/communications">Message drivers</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">

@@ -1,24 +1,28 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { updateNotificationPreferencesAction } from '@/lib/actions/settings/update-notification-preferences'
-import {
-  inviteStaffAction,
-  removeStaffAction,
-  changeStaffRoleAction,
-} from '@/lib/actions/settings/staff-management'
+import { inviteStaffAction } from '@/lib/actions/settings/staff-management'
 import { requestCancellationAction } from '@/lib/actions/settings/cancel-subscription'
+import { DangerZoneClient } from './danger-zone-client'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
   description: 'Manage centre, account, and operational settings.',
 }
 
-export default async function EcdProfilePage() {
+type ProfilePageProps = {
+  searchParams?: {
+    staffError?: string
+  }
+}
+
+export default async function EcdProfilePage({ searchParams }: ProfilePageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')
@@ -143,25 +147,101 @@ export default async function EcdProfilePage() {
     revalidatePath('/ecd/support')
   }
 
-  async function requestRoleChange(formData: FormData) {
+  async function updateStaffRole(formData: FormData) {
     'use server'
-    await changeStaffRoleAction({
-      ecdId,
-      staffUserId: String(formData.get('staff_user_id') ?? ''),
-      role: String(formData.get('new_role') ?? 'ecd_staff'),
-    })
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') {
+      redirect('/ecd/profile?staffError=Only%20centre%20admins%20can%20change%20roles.')
+    }
+
+    const staffUserId = String(formData.get('staff_user_id') ?? '').trim()
+    const nextRole = String(formData.get('new_role') ?? 'ecd_staff').trim()
+    if (!staffUserId || !['ecd_admin', 'ecd_supervisor', 'ecd_staff'].includes(nextRole)) {
+      redirect('/ecd/profile?staffError=Invalid%20staff%20role%20change%20request.')
+    }
+
+    const { data: targetMembership } = await session.supabase
+      .from('ecd_admins')
+      .select('role')
+      .eq('ecd_id', session.ecdId)
+      .eq('user_id', staffUserId)
+      .maybeSingle()
+
+    if (!targetMembership) {
+      redirect('/ecd/profile?staffError=Staff%20member%20not%20found.')
+    }
+
+    if (targetMembership.role === 'ecd_admin' && nextRole !== 'ecd_admin') {
+      const { count: adminCount } = await session.supabase
+        .from('ecd_admins')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('ecd_id', session.ecdId)
+        .eq('role', 'ecd_admin')
+
+      if ((adminCount ?? 0) <= 1) {
+        redirect('/ecd/profile?staffError=You%20cannot%20demote%20the%20last%20ECD%20admin.')
+      }
+    }
+
+    await session.supabase
+      .from('ecd_admins')
+      .update({ role: nextRole })
+      .eq('ecd_id', session.ecdId)
+      .eq('user_id', staffUserId)
+
+    await session.supabase.from('user_profiles').update({ role: nextRole }).eq('id', staffUserId)
+
     revalidatePath('/ecd/profile')
-    revalidatePath('/ecd/support')
+    revalidatePath('/ecd/dashboard')
+    revalidatePath('/ecd/applications')
   }
 
-  async function requestStaffRemoval(formData: FormData) {
+  async function removeStaff(formData: FormData) {
     'use server'
-    await removeStaffAction({
-      ecdId,
-      staffUserId: String(formData.get('staff_user_id') ?? ''),
-    })
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') {
+      redirect('/ecd/profile?staffError=Only%20centre%20admins%20can%20remove%20staff.')
+    }
+
+    const staffUserId = String(formData.get('staff_user_id') ?? '').trim()
+    if (!staffUserId) {
+      redirect('/ecd/profile?staffError=Invalid%20staff%20removal%20request.')
+    }
+    if (staffUserId === session.user.id) {
+      redirect('/ecd/profile?staffError=You%20cannot%20remove%20yourself.')
+    }
+
+    const { data: targetMembership } = await session.supabase
+      .from('ecd_admins')
+      .select('role')
+      .eq('ecd_id', session.ecdId)
+      .eq('user_id', staffUserId)
+      .maybeSingle()
+
+    if (!targetMembership) {
+      redirect('/ecd/profile?staffError=Staff%20member%20not%20found.')
+    }
+
+    if (targetMembership.role === 'ecd_admin') {
+      const { count: adminCount } = await session.supabase
+        .from('ecd_admins')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('ecd_id', session.ecdId)
+        .eq('role', 'ecd_admin')
+      if ((adminCount ?? 0) <= 1) {
+        redirect('/ecd/profile?staffError=You%20cannot%20remove%20the%20last%20ECD%20admin.')
+      }
+    }
+
+    await session.supabase
+      .from('ecd_admins')
+      .delete()
+      .eq('ecd_id', session.ecdId)
+      .eq('user_id', staffUserId)
+
     revalidatePath('/ecd/profile')
-    revalidatePath('/ecd/support')
+    revalidatePath('/ecd/dashboard')
+    revalidatePath('/ecd/applications')
   }
 
   async function updateSupervisorPermissions(formData: FormData) {
@@ -375,6 +455,11 @@ export default async function EcdProfilePage() {
             <CardTitle>Staff Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {searchParams?.staffError ? (
+              <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+                {searchParams.staffError}
+              </p>
+            ) : null}
             <form action={inviteStaff} className="grid gap-3 md:grid-cols-3">
               <input name="name" className="cc-native-field" placeholder="Staff full name" required />
               <input name="email" type="email" className="cc-native-field" placeholder="Staff email" required />
@@ -398,18 +483,18 @@ export default async function EcdProfilePage() {
                     <p className="mt-1 text-xs text-slate-600">Role: {member.role}</p>
                     {role === 'ecd_admin' ? (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        <form action={requestRoleChange} className="flex items-center gap-2">
+                        <form action={updateStaffRole} className="flex items-center gap-2">
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
                           <select name="new_role" className="cc-native-field h-9">
                             <option value="ecd_staff">Set staff</option>
                             <option value="ecd_supervisor">Set supervisor</option>
                             <option value="ecd_admin">Set admin</option>
                           </select>
-                          <Button size="sm" variant="outline" type="submit">Request Role Change</Button>
+                          <Button size="sm" variant="outline" type="submit">Change Role</Button>
                         </form>
-                        <form action={requestStaffRemoval}>
+                        <form action={removeStaff}>
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
-                          <Button size="sm" variant="outline" type="submit">Request Removal</Button>
+                          <Button size="sm" variant="outline" type="submit">Remove</Button>
                         </form>
                       </div>
                     ) : null}
@@ -491,30 +576,9 @@ export default async function EcdProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-rose-200 bg-rose-50/50 xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Danger Zone</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={requestCancellation} className="grid gap-3 md:grid-cols-2">
-              <textarea
-                name="reason"
-                className="cc-native-field md:col-span-2 h-auto min-h-24 py-2"
-                placeholder="Reason for cancellation"
-                required
-              />
-              <input
-                name="confirmation"
-                className="cc-native-field"
-                placeholder='Type "CANCEL" to confirm'
-                required
-              />
-              <Button type="submit" variant="outline" className="w-fit border-rose-300 text-rose-800">
-                Request Subscription Cancellation
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="xl:col-span-2">
+          <DangerZoneClient action={requestCancellation} />
+        </div>
       </section>
     </EcdOsShell>
   )

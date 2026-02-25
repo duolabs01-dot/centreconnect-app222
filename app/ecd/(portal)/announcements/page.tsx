@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { QuickPublishPanel } from '@/components/ecd/announcements/quick-publish-panel'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { AnnouncementComposer } from './announcement-composer'
 
 export const metadata: Metadata = {
   title: 'Announcements - CentreConnect',
@@ -52,6 +52,10 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
   const selectedTemplate =
     searchParams?.template && announcementTemplates[searchParams.template]
       ? announcementTemplates[searchParams.template]
+      : null
+  const sendSimilarHref =
+    searchParams?.template && announcementTemplates[searchParams.template]?.commsTemplate
+      ? `/ecd/communications?mode=broadcast&template=${announcementTemplates[searchParams.template]?.commsTemplate}&audience=all`
       : null
 
   async function createAnnouncement(formData: FormData) {
@@ -139,57 +143,14 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
-        <Card className="border-emerald-200 bg-emerald-50/60">
-          <CardHeader>
-            <CardTitle>Quick Publish</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <QuickPublishPanel ecdId={ecdId} centreName={centre?.name ?? 'Your centre'} />
-          </CardContent>
-        </Card>
-
-        <Card className="border-blue-200 bg-blue-50/60">
-          <CardHeader>
-            <CardTitle>Create Broadcast Announcement</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <form action={createAnnouncement} className="grid gap-3">
-              <input
-                name="title"
-                defaultValue={selectedTemplate?.title ?? ''}
-                className="cc-native-field"
-                placeholder="Announcement title"
-                required
-              />
-              <textarea
-                name="content"
-                defaultValue={selectedTemplate?.message ?? ''}
-                className="cc-native-field h-auto min-h-28 py-2"
-                placeholder="Write your announcement message..."
-                required
-              />
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="publish_now" />
-                Publish immediately
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit">Save Announcement</Button>
-                <Button type="button" variant="outline" asChild>
-                  <Link href="/ecd/communications?mode=broadcast">Open Messages</Link>
-                </Button>
-                {searchParams?.template && announcementTemplates[searchParams.template]?.commsTemplate ? (
-                  <Button type="button" variant="outline" asChild>
-                    <Link
-                      href={`/ecd/communications?mode=broadcast&template=${announcementTemplates[searchParams.template]?.commsTemplate}&audience=all`}
-                    >
-                      Send Similar Message
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <AnnouncementComposer
+          ecdId={ecdId}
+          centreName={centre?.name ?? 'Your centre'}
+          defaultTitle={selectedTemplate?.title ?? ''}
+          defaultMessage={selectedTemplate?.message ?? ''}
+          sendSimilarHref={sendSimilarHref}
+          createAnnouncementAction={createAnnouncement}
+        />
 
         <Card className="border-slate-200">
           <CardHeader>

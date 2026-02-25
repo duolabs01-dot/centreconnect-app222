@@ -151,9 +151,9 @@ export default async function EcdBillingPage() {
                       <TableHead>Invoice</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Total</TableHead>
-                      <TableHead>Issued</TableHead>
-                      <TableHead>Due</TableHead>
-                      <TableHead>Paid</TableHead>
+                      <TableHead className="hidden lg:table-cell">Issued</TableHead>
+                      <TableHead className="hidden lg:table-cell">Due</TableHead>
+                      <TableHead className="hidden lg:table-cell">Paid</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -163,9 +163,9 @@ export default async function EcdBillingPage() {
                         <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
                         <TableCell>{invoice.status}</TableCell>
                         <TableCell>R{invoice.total}</TableCell>
-                        <TableCell>{invoice.issued_at ? formatDate(invoice.issued_at) : '--'}</TableCell>
-                        <TableCell>{invoice.due_at ? formatDate(invoice.due_at) : '--'}</TableCell>
-                        <TableCell>{invoice.paid_at ? formatDate(invoice.paid_at) : '--'}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{invoice.issued_at ? formatDate(invoice.issued_at) : '--'}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{invoice.due_at ? formatDate(invoice.due_at) : '--'}</TableCell>
+                        <TableCell className="hidden lg:table-cell">{invoice.paid_at ? formatDate(invoice.paid_at) : '--'}</TableCell>
                         <TableCell className="text-right">
                           {invoice.status !== 'paid' ? (
                             <PayInvoiceButton invoiceId={invoice.id} />

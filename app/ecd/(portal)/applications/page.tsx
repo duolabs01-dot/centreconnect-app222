@@ -393,9 +393,9 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
             <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Awaiting parent response</p>
             <p className="mt-1 text-2xl font-semibold text-amber-800">{filteredCounts.awaitingOfferResponse}</p>
           </div>
-          <div className="glass-card border-emerald-400/30 bg-emerald-500/10 p-3 text-emerald-200">
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-200">Enrolled</p>
-            <p className="mt-1 text-2xl font-semibold text-emerald-200">{filteredCounts.enrolled}</p>
+          <div className="glass-card border-emerald-200 bg-emerald-50 p-3 text-emerald-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Enrolled</p>
+            <p className="mt-1 text-2xl font-semibold text-emerald-700">{filteredCounts.enrolled}</p>
           </div>
           <div className="glass-card border-border bg-card/80 p-3 text-foreground">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total filtered</p>
