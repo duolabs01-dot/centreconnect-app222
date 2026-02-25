@@ -13,6 +13,10 @@ import { ArrowLeft, BadgeCheck } from 'lucide-react'
 type ParentAppShellProps = {
   userName: string
   isVerified?: boolean
+  profileNudge?: {
+    completionPct: number
+    missing: string[]
+  } | null
   children: React.ReactNode
 }
 
@@ -70,10 +74,11 @@ function isMeTab(pathname: string) {
   return pathname === '/parent/profile' || pathname.startsWith('/parent/profile/')
 }
 
-export function ParentAppShell({ userName, isVerified = false, children }: ParentAppShellProps) {
+export function ParentAppShell({ userName, isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [pullDistance, setPullDistance] = useState(0)
+  const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
 
   function onTouchStart(e: TouchEvent<HTMLDivElement>) {
@@ -114,6 +119,7 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
 
   const showMobileBack = shouldShowMobileBack(pathname)
   const onMeTab = isMeTab(pathname)
+  const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !pathname.startsWith('/parent/profile'))
 
   return (
     <div
@@ -206,6 +212,39 @@ export function ParentAppShell({ userName, isVerified = false, children }: Paren
               </nav>
             </div>
           </div>
+          {showProfileNudge ? (
+            <section className="mb-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3 sm:mb-4 sm:p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Complete your profile</p>
+                  <p className="mt-1 text-sm font-semibold text-amber-900">
+                    You are {profileNudge?.completionPct ?? 0}% ready. Centres respond faster when details are complete.
+                  </p>
+                  {profileNudge?.missing?.length ? (
+                    <p className="mt-1 text-xs text-amber-800">
+                      Missing: {profileNudge.missing.join(', ')}.
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button size="sm" asChild>
+                      <Link href="/parent/profile">Finish profile</Link>
+                    </Button>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href="/parent/profile/documents">Upload documents</Link>
+                    </Button>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setHideProfileNudge(true)}
+                  className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                  aria-label="Dismiss profile reminder"
+                >
+                  Later
+                </button>
+              </div>
+            </section>
+          ) : null}
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
       </main>

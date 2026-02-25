@@ -44,6 +44,8 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
   const [step, setStep] = useState<'existing' | 'new'>(childProfiles.length > 0 ? 'existing' : 'new')
   const [shareMultiple, setShareMultiple] = useState(true)
   const [parentMessage, setParentMessage] = useState('')
+  const [missingRequirements, setMissingRequirements] = useState<string[]>([])
+  const [readinessPct, setReadinessPct] = useState<number | null>(null)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle')
   const [isPending, startTransition] = useTransition()
   const [isChildPending, startAddChild] = useTransition()
@@ -110,11 +112,22 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
       })
 
       if (result?.error) {
+        const missing = Array.isArray((result as { missingRequirements?: unknown }).missingRequirements)
+          ? (((result as { missingRequirements?: string[] }).missingRequirements ?? []).filter(Boolean) as string[])
+          : []
+        setMissingRequirements(missing)
+        setReadinessPct(
+          typeof (result as { readinessPct?: unknown }).readinessPct === 'number'
+            ? ((result as { readinessPct?: number }).readinessPct ?? null)
+            : null
+        )
         toast.error(result.error)
         setStatus('idle')
         return
       }
 
+      setMissingRequirements([])
+      setReadinessPct(null)
       setStatus('success')
       toast.success('Application submitted. We will update you via email.')
     })
@@ -298,6 +311,29 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
               <p className="mt-0.5 text-slate-500">Please add or select a child to continue.</p>
             )}
           </div>
+
+          {missingRequirements.length > 0 ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Almost there</p>
+              {readinessPct !== null ? (
+                <p className="mt-1 text-xs font-semibold text-amber-700">Application readiness: {readinessPct}%</p>
+              ) : null}
+              <p className="mt-1">Complete these before submission:</p>
+              <ul className="mt-2 space-y-1 text-xs sm:text-sm">
+                {missingRequirements.map((item) => (
+                  <li key={item}>- {item}</li>
+                ))}
+              </ul>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/parent/profile">Open Profile</Link>
+                </Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link href="/parent/profile/documents">Open Documents</Link>
+                </Button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

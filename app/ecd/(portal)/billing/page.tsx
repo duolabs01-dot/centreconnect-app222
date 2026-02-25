@@ -15,7 +15,9 @@ export const metadata: Metadata = {
 }
 
 export default async function EcdBillingPage() {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  const now = new Date()
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
 
   async function requestCancellation(formData: FormData) {
     'use server'
@@ -37,7 +39,35 @@ export default async function EcdBillingPage() {
     revalidatePath('/ecd/billing')
   }
 
-  const [{ data: subscription }, { data: invoices }, { data: billingTickets }] = await Promise.all([
+  async function saveFinancialSnapshot(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role === 'ecd_staff') return
+
+    const periodMonth = String(formData.get('period_month') ?? '').trim() || currentMonth
+    const revenueTotal = Number(formData.get('revenue_total') ?? 0)
+    const expensesTotal = Number(formData.get('expenses_total') ?? 0)
+    const assetsTotal = Number(formData.get('assets_total') ?? 0)
+    const liabilitiesTotal = Number(formData.get('liabilities_total') ?? 0)
+    const notes = String(formData.get('notes') ?? '').trim()
+
+    await session.supabase.from('ecd_financial_snapshots').upsert(
+      {
+        ecd_id: session.ecdId,
+        period_month: periodMonth,
+        revenue_total: Number.isFinite(revenueTotal) ? revenueTotal : 0,
+        expenses_total: Number.isFinite(expensesTotal) ? expensesTotal : 0,
+        assets_total: Number.isFinite(assetsTotal) ? assetsTotal : 0,
+        liabilities_total: Number.isFinite(liabilitiesTotal) ? liabilitiesTotal : 0,
+        notes: notes || null,
+      },
+      { onConflict: 'ecd_id,period_month' }
+    )
+
+    revalidatePath('/ecd/billing')
+  }
+
+  const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }] = await Promise.all([
     supabase
       .from('subscriptions')
       .select('id,tier,status,monthly_price,setup_fee,current_period_start,current_period_end,trial_ends_at')
@@ -58,7 +88,22 @@ export default async function EcdBillingPage() {
       .eq('category', 'billing')
       .order('created_at', { ascending: false })
       .limit(5),
+    supabase
+      .from('ecd_financial_snapshots')
+      .select('period_month,revenue_total,expenses_total,assets_total,liabilities_total,notes')
+      .eq('ecd_id', ecdId)
+      .eq('period_month', currentMonth)
+      .maybeSingle(),
   ])
+
+  const pnl = {
+    revenue: Number(financialSnapshot?.revenue_total ?? 0),
+    expenses: Number(financialSnapshot?.expenses_total ?? 0),
+    assets: Number(financialSnapshot?.assets_total ?? 0),
+    liabilities: Number(financialSnapshot?.liabilities_total ?? 0),
+  }
+  const monthlyProfit = pnl.revenue - pnl.expenses
+  const netWorth = pnl.assets - pnl.liabilities
 
   return (
     <EcdOsShell
@@ -132,6 +177,97 @@ export default async function EcdBillingPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-slate-200">
+          <CardHeader>
+            <CardTitle>Business Snapshot (P&L)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Keep monthly financials updated to track profitability and operational health.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-md border border-slate-200 bg-cyan-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Revenue</p>
+                <p className="mt-1 text-lg font-bold text-cyan-800">R{pnl.revenue.toLocaleString()}</p>
+              </div>
+              <div className="rounded-md border border-rose-200 bg-rose-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Expenses</p>
+                <p className="mt-1 text-lg font-bold text-rose-800">R{pnl.expenses.toLocaleString()}</p>
+              </div>
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Profit / Loss</p>
+                <p className="mt-1 text-lg font-bold text-emerald-800">R{monthlyProfit.toLocaleString()}</p>
+              </div>
+              <div className="rounded-md border border-violet-200 bg-violet-50 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Net Assets</p>
+                <p className="mt-1 text-lg font-bold text-violet-800">R{netWorth.toLocaleString()}</p>
+              </div>
+            </div>
+            <form action={saveFinancialSnapshot} className="grid gap-3 lg:grid-cols-2">
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Month
+                <input type="date" name="period_month" className="cc-native-field mt-1" defaultValue={currentMonth} />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Revenue (R)
+                <input
+                  type="number"
+                  name="revenue_total"
+                  className="cc-native-field mt-1"
+                  min="0"
+                  step="0.01"
+                  defaultValue={pnl.revenue}
+                />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Expenses (R)
+                <input
+                  type="number"
+                  name="expenses_total"
+                  className="cc-native-field mt-1"
+                  min="0"
+                  step="0.01"
+                  defaultValue={pnl.expenses}
+                />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Assets (R)
+                <input
+                  type="number"
+                  name="assets_total"
+                  className="cc-native-field mt-1"
+                  min="0"
+                  step="0.01"
+                  defaultValue={pnl.assets}
+                />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Liabilities (R)
+                <input
+                  type="number"
+                  name="liabilities_total"
+                  className="cc-native-field mt-1"
+                  min="0"
+                  step="0.01"
+                  defaultValue={pnl.liabilities}
+                />
+              </label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 lg:col-span-2">
+                Notes
+                <textarea
+                  name="notes"
+                  className="cc-native-field mt-1 h-auto min-h-20 py-2"
+                  defaultValue={financialSnapshot?.notes ?? ''}
+                  placeholder="Add context for this month (seasonality, staffing changes, etc.)"
+                />
+              </label>
+              <Button type="submit" className="w-full sm:w-fit" disabled={role === 'ecd_staff'}>
+                Save Financial Snapshot
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         <Card className="border-slate-200">
           <CardHeader>

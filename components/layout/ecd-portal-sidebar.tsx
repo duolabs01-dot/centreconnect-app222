@@ -14,9 +14,15 @@ type EcdPortalSidebarProps = {
   userEmail: string | null
   roleLabel?: string
   userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
+  attentionBadges?: Partial<Record<string, number>>
 }
 
-export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole = null }: EcdPortalSidebarProps) {
+export function EcdPortalSidebar({
+  userEmail,
+  roleLabel = 'ECD Portal',
+  userRole = null,
+  attentionBadges = {},
+}: EcdPortalSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const visibleNav = ECD_DASHBOARD_NAV.filter((item) => {
@@ -40,6 +46,7 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole
 
   const renderNavItem = (item: EcdNavItem, onSelect?: () => void) => {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+    const badgeCount = attentionBadges[item.href] ?? 0
     return (
       <Link
         key={item.href}
@@ -54,13 +61,13 @@ export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole
           onSelect?.()
         }}
       >
-        <item.icon
-          className={cn(
-            'w-4 h-4 shrink-0',
-            active ? 'text-primary' : 'text-muted-foreground'
-          )}
-        />
-        <span>{item.label}</span>
+        <item.icon className={cn('w-4 h-4 shrink-0', active ? 'text-primary' : 'text-muted-foreground')} />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        {badgeCount > 0 ? (
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200">
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
+        ) : null}
       </Link>
     )
   }

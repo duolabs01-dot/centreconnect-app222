@@ -4,6 +4,10 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  evaluateApplicationIntakeReadiness,
+  formatMissingRequirementsList,
+} from '@/lib/admissions/intake-readiness'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -66,13 +70,79 @@ export async function submitApplicationAction(input: unknown) {
 
   const { data: child } = await db
     .from('children')
-    .select('id,parent_id')
+    .select('id,parent_id,first_name,last_name,date_of_birth,gender')
     .eq('id', parsed.data.child_id)
     .eq('parent_id', user.id)
     .maybeSingle()
 
   if (!child) {
     return { error: 'Child not found' }
+  }
+
+  const [{ data: parentRow }, { data: userProfile }, { data: documents }] = await Promise.all([
+    db
+      .from('parents')
+      .select('guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status')
+      .eq('id', user.id)
+      .maybeSingle(),
+    db.from('user_profiles').select('full_name,phone').eq('id', user.id).maybeSingle(),
+    db.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(50),
+  ])
+
+  const readiness = evaluateApplicationIntakeReadiness({
+    parent: {
+      fullName: userProfile?.full_name,
+      phone: userProfile?.phone,
+      guardianRelationship: parentRow?.guardian_relationship,
+      emergencyContactName: parentRow?.emergency_contact_name,
+      emergencyContactPhone: parentRow?.emergency_contact_phone,
+      idVerificationStatus: parentRow?.id_verification_status,
+    },
+    child: {
+      firstName: child.first_name,
+      lastName: child.last_name,
+      dateOfBirth: child.date_of_birth,
+      gender: child.gender,
+    },
+    docTypes: (documents ?? []).map((doc) => doc.doc_type),
+  })
+
+  if (!readiness.ready) {
+    const missingList = readiness.missing.slice(0, 6)
+    const missingText = formatMissingRequirementsList(missingList)
+
+    try {
+      const admin = createAdminClient()
+      const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const { data: recentNudge } = await admin
+        .from('parent_notifications')
+        .select('id')
+        .eq('parent_id', user.id)
+        .eq('ecd_id', parsed.data.ecd_id)
+        .eq('title', 'Almost there - one quick profile update')
+        .gte('created_at', cutoffIso)
+        .limit(1)
+        .maybeSingle()
+
+      if (!recentNudge?.id) {
+        await admin.from('parent_notifications').insert({
+          parent_id: user.id,
+          ecd_id: parsed.data.ecd_id,
+          title: 'Almost there - one quick profile update',
+          message: `You are very close to submitting. Please complete:\n${missingText}\n\nYou can do this in Me > Profile and Documents.`,
+          is_read: false,
+        })
+      }
+    } catch (nudgeError) {
+      console.error('submitApplicationAction readiness nudge failed:', nudgeError)
+    }
+
+    return {
+      error:
+        'Before we send this to the centre, please complete the missing profile and document details in Me > Profile and Me > Documents.',
+      missingRequirements: missingList,
+      readinessPct: readiness.completionPct,
+    }
   }
 
   const { data: duplicate } = await db

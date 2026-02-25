@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ecd/Button'
 import { Textarea } from '@/components/ui/textarea'
-import { renderTemplate, toStatusLabel } from '@/lib/communications/templates'
+import { buildWarmApplicationUpdateMessage } from '@/lib/communications/templates'
 import { applicationStatusEmail } from '@/lib/email/templates'
 
 type StatusUpdateFormProps = {
@@ -129,36 +129,20 @@ export function StatusUpdateForm({
         }
 
         if (parentId) {
-          const { data: templateRow } = await supabase
-            .from('communication_templates')
-            .select('template_key,title,body')
-            .eq('template_key', 'application_update')
-            .maybeSingle()
-
-          const fallbackBody =
-            status === 'approved'
-              ? `Hi ${parentName}, ${centreName} has approved the application for ${childName} (${applicationNumber}). Please accept to finalize enrollment.`
-              : `Hi ${parentName}, ${childName}'s application (${applicationNumber}) at ${centreName} is now ${toStatusLabel(status)}.`
-
-          const message =
-            status === 'approved'
-              ? fallbackBody
-              : templateRow
-                ? renderTemplate(templateRow.body, {
-                    centreName,
-                    childName,
-                    parentName,
-                    applicationNumber,
-                    status,
-                  })
-                : fallbackBody
+          const message = buildWarmApplicationUpdateMessage({
+            centreName,
+            childName,
+            parentName,
+            applicationNumber,
+            status,
+          })
 
           const { error: notificationError } = await supabase.from('parent_notifications').insert({
             parent_id: parentId,
             ecd_id: ecdId,
             application_id: applicationId,
-            template_key: templateRow?.template_key ?? null,
-            title: status === 'approved' ? 'Application approved' : templateRow?.title ?? 'Application Update',
+            template_key: null,
+            title: status === 'approved' ? 'Great news from your centre' : 'A quick update on your application',
             message,
           })
           if (notificationError) {

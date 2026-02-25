@@ -4,6 +4,8 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ecd/Button'
 import { PipelineBoard } from './pipeline-board'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 
 export const metadata: Metadata = {
   title: 'Children Journey (Pipeline) - CentreConnect',
@@ -20,6 +22,8 @@ type PipelineStatus = 'submitted' | 'in_review' | 'waitlisted' | 'approved' | 'r
 
 type ApplicationRow = {
   id: string
+  parent_id: string
+  child_id: string
   application_number: string
   status: PipelineStatus
   submitted_at: string
@@ -27,13 +31,17 @@ type ApplicationRow = {
   parent_message: string | null
   admin_notes: string | null
   children:
-    | { first_name: string; last_name: string }
-    | Array<{ first_name: string; last_name: string }>
+    | { first_name: string; last_name: string; date_of_birth: string | null; gender: string | null }
+    | Array<{ first_name: string; last_name: string; date_of_birth: string | null; gender: string | null }>
     | null
   parents:
     | {
         id: string
         alt_phone: string | null
+        guardian_relationship: string | null
+        emergency_contact_name: string | null
+        emergency_contact_phone: string | null
+        id_verification_status: string | null
         user_profiles:
           | { full_name: string | null; phone: string | null }
           | Array<{ full_name: string | null; phone: string | null }>
@@ -42,6 +50,10 @@ type ApplicationRow = {
     | Array<{
         id: string
         alt_phone: string | null
+        guardian_relationship: string | null
+        emergency_contact_name: string | null
+        emergency_contact_phone: string | null
+        id_verification_status: string | null
         user_profiles:
           | { full_name: string | null; phone: string | null }
           | Array<{ full_name: string | null; phone: string | null }>
@@ -57,6 +69,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 
 export default async function EcdPipelinePage({ searchParams }: PipelinePageProps) {
   const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const admin = createAdminClient()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
   const pageSize = 120
   const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
@@ -68,7 +81,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
     supabase
       .from('applications')
       .select(
-        'id,application_number,status,submitted_at,offer_made_at,parent_message,admin_notes,children(first_name,last_name),parents(id,alt_phone,user_profiles(full_name,phone))'
+        'id,parent_id,child_id,application_number,status,submitted_at,offer_made_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
       )
       .eq('ecd_id', ecdId)
       .order('submitted_at', { ascending: false })
@@ -80,6 +93,72 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
   ])
 
   const applications = ((data ?? []) as ApplicationRow[]) ?? []
+  const parentIds = Array.from(new Set(applications.map((application) => application.parent_id).filter(Boolean)))
+  const { data: docsRows, error: docsError } =
+    parentIds.length > 0
+      ? await admin.from('parent_documents').select('parent_id,doc_type').in('parent_id', parentIds).limit(500)
+      : { data: [] as Array<{ parent_id: string; doc_type: string | null }>, error: null }
+  const docsByParent = new Map<string, string[]>()
+  for (const row of docsRows ?? []) {
+    const list = docsByParent.get(row.parent_id) ?? []
+    if (row.doc_type) list.push(row.doc_type)
+    docsByParent.set(row.parent_id, list)
+  }
+
+  const blockedPendingCount = docsError
+    ? 0
+    : applications.filter((application) => {
+        if (application.status !== 'submitted' && application.status !== 'in_review') return false
+        const parent = normalizeOne(application.parents)
+        const profile = normalizeOne(parent?.user_profiles ?? null)
+        const child = normalizeOne(application.children)
+        const readiness = evaluateApplicationIntakeReadiness({
+          parent: {
+            fullName: profile?.full_name ?? null,
+            phone: profile?.phone ?? parent?.alt_phone ?? null,
+            guardianRelationship: parent?.guardian_relationship ?? null,
+            emergencyContactName: parent?.emergency_contact_name ?? null,
+            emergencyContactPhone: parent?.emergency_contact_phone ?? null,
+            idVerificationStatus: parent?.id_verification_status ?? null,
+          },
+          child: {
+            firstName: child?.first_name ?? null,
+            lastName: child?.last_name ?? null,
+            dateOfBirth: child?.date_of_birth ?? null,
+            gender: child?.gender ?? null,
+          },
+          docTypes: docsByParent.get(application.parent_id) ?? [],
+        })
+        return !readiness.ready
+      }).length
+
+  const visibleApplications =
+    docsError
+      ? applications
+      : applications.filter((application) => {
+          if (application.status !== 'submitted' && application.status !== 'in_review') return true
+          const parent = normalizeOne(application.parents)
+          const profile = normalizeOne(parent?.user_profiles ?? null)
+          const child = normalizeOne(application.children)
+          const readiness = evaluateApplicationIntakeReadiness({
+            parent: {
+              fullName: profile?.full_name ?? null,
+              phone: profile?.phone ?? parent?.alt_phone ?? null,
+              guardianRelationship: parent?.guardian_relationship ?? null,
+              emergencyContactName: parent?.emergency_contact_name ?? null,
+              emergencyContactPhone: parent?.emergency_contact_phone ?? null,
+              idVerificationStatus: parent?.id_verification_status ?? null,
+            },
+            child: {
+              firstName: child?.first_name ?? null,
+              lastName: child?.last_name ?? null,
+              dateOfBirth: child?.date_of_birth ?? null,
+              gender: child?.gender ?? null,
+            },
+            docTypes: docsByParent.get(application.parent_id) ?? [],
+          })
+          return readiness.ready
+        })
   const total = totalCount ?? 0
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const canPrev = currentPage > 1
@@ -98,8 +177,14 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
           Tip: move children stage-by-stage. The board will guide and correct where needed.
         </p>
         <p className="mt-1 text-xs text-slate-500">
-          Showing most recent {applications.length} of {total} applications. Page {currentPage} of {totalPages}.
+          Showing most recent {visibleApplications.length} of {total} applications. Page {currentPage} of {totalPages}.
         </p>
+        {blockedPendingCount > 0 ? (
+          <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            {blockedPendingCount} pending application{blockedPendingCount === 1 ? '' : 's'} are hidden until parents
+            complete required intake details.
+          </p>
+        ) : null}
         <div className="mt-2 flex items-center gap-2">
           <Button size="sm" variant="outline" asChild disabled={!canPrev}>
             <Link href={canPrev ? `/ecd/pipeline?page=${currentPage - 1}` : '/ecd/pipeline'}>Previous</Link>
@@ -112,7 +197,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
         </div>
       </section>
 
-      {applications.length === 0 ? (
+      {visibleApplications.length === 0 ? (
         <div className="rounded-2xl border border-border bg-card/90 p-6 text-sm text-muted-foreground">
           <p>No applications yet. Complete your profile to attract parents.</p>
           <div className="mt-3">
@@ -125,7 +210,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
         <PipelineBoard
           ecdId={ecdId}
           centreName={centre?.name ?? 'Your centre'}
-          initialApplications={applications}
+          initialApplications={visibleApplications}
         />
       )}
     </EcdOsShell>

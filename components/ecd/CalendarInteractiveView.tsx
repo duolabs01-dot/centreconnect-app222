@@ -377,7 +377,7 @@ export function CalendarInteractiveView({
           }
         }}
         className={cn(
-          'min-h-[68px] rounded-xl border p-2 text-left shadow-[var(--shadow-elevation-1)] transition-colors sm:min-h-[84px]',
+          'min-h-[56px] rounded-xl border p-2 text-left shadow-[var(--shadow-elevation-1)] transition-colors sm:min-h-[84px]',
           isInSelectedMonth
             ? 'border-slate-200 bg-white text-foreground'
             : 'border-slate-100 bg-slate-50/80 text-muted-foreground',
@@ -599,7 +599,7 @@ export function CalendarInteractiveView({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <div className="grid min-w-[640px] grid-cols-7 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50/70 p-2">
+              <div className="grid min-w-[540px] grid-cols-7 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50/70 p-2 sm:min-w-[640px]">
                 {weekdayLabels.map((label) => (
                   <div key={label} className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     {label}
@@ -658,7 +658,7 @@ export function CalendarInteractiveView({
           <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-2 py-1">
             <span className="h-2 w-2 rounded-full bg-cyan-500" /> Week {activeWeekType}
           </span>
-          <span>Month: {monthStartKey} to {monthEndKey}</span>
+          <span className="break-words">Month: {monthStartKey} to {monthEndKey}</span>
         </div>
       </div>
     </CardSurface>

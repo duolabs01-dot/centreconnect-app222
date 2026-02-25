@@ -41,9 +41,52 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     redirect('/ecd/onboarding')
   }
 
+  const [
+    pendingApplicationsCount,
+    unreadEcdNotificationsCount,
+    pendingTransportCount,
+    complianceOutstandingCount,
+  ] = await Promise.all([
+    admin
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .in('status', ['submitted', 'in_review'])
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('ecd_notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .eq('is_read', false)
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('transport_enquiries')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .eq('status', 'pending')
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('compliance_documents')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .in('status', ['missing', 'expired'])
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+  ])
+
+  const attentionBadges: Partial<Record<string, number>> = {
+    '/ecd/applications': pendingApplicationsCount,
+    '/ecd/communications': unreadEcdNotificationsCount,
+    '/ecd/transport': pendingTransportCount,
+    '/ecd/compliance': complianceOutstandingCount,
+  }
+
   return (
     <div className="ecd-premium-shell h-screen overflow-hidden flex">
-      <EcdPortalSidebar userEmail={user.email ?? null} userRole={role} />
+      <EcdPortalSidebar
+        userEmail={user.email ?? null}
+        userRole={role}
+        attentionBadges={attentionBadges}
+      />
       <main className="flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
         <div className="mx-auto max-w-[1600px] px-6 pb-6 pt-20 lg:p-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />

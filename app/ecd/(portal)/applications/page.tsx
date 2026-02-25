@@ -9,6 +9,8 @@ import { QuickSendTemplate } from './quick-send-template'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 
 export const metadata: Metadata = {
   title: 'Admissions Inbox - CentreConnect',
@@ -28,6 +30,8 @@ type TabKey = 'pending' | 'awaiting_offer_response' | 'approved' | 'enrolled' | 
 
 type ApplicationRow = {
   id: string
+  parent_id: string
+  child_id: string
   application_number: string
   status: string
   submitted_at: string
@@ -38,16 +42,24 @@ type ApplicationRow = {
     | {
         first_name: string
         last_name: string
+        date_of_birth: string | null
+        gender: string | null
       }
     | Array<{
         first_name: string
         last_name: string
+        date_of_birth: string | null
+        gender: string | null
       }>
     | null
   parents:
     | {
         id: string
         alt_phone: string | null
+        guardian_relationship: string | null
+        emergency_contact_name: string | null
+        emergency_contact_phone: string | null
+        id_verification_status: string | null
         user_profiles:
           | {
               full_name: string
@@ -62,6 +74,10 @@ type ApplicationRow = {
     | Array<{
         id: string
         alt_phone: string | null
+        guardian_relationship: string | null
+        emergency_contact_name: string | null
+        emergency_contact_phone: string | null
+        id_verification_status: string | null
         user_profiles:
           | {
               full_name: string
@@ -85,6 +101,125 @@ type Template = {
   template_key: string
   title: string
   body: string
+}
+
+type IntakeBlockedApplication = {
+  application: ApplicationRow
+  missing: string[]
+}
+
+async function partitionPendingForReview(applications: ApplicationRow[]) {
+  if (applications.length === 0) {
+    return {
+      ready: [] as ApplicationRow[],
+      blocked: [] as IntakeBlockedApplication[],
+    }
+  }
+
+  const admin = (() => {
+    try {
+      return createAdminClient()
+    } catch {
+      return null
+    }
+  })()
+  if (!admin) return { ready: applications, blocked: [] as IntakeBlockedApplication[] }
+  const parentIds = Array.from(new Set(applications.map((application) => application.parent_id).filter(Boolean)))
+  const { data: docsRows, error: docsError } =
+    parentIds.length > 0
+      ? await admin.from('parent_documents').select('parent_id,doc_type').in('parent_id', parentIds).limit(500)
+      : { data: [] as Array<{ parent_id: string; doc_type: string | null }> }
+
+  if (docsError) {
+    return { ready: applications, blocked: [] as IntakeBlockedApplication[] }
+  }
+
+  const docTypesByParent = new Map<string, string[]>()
+  for (const row of docsRows ?? []) {
+    const list = docTypesByParent.get(row.parent_id) ?? []
+    if (row.doc_type) list.push(row.doc_type)
+    docTypesByParent.set(row.parent_id, list)
+  }
+
+  const ready: ApplicationRow[] = []
+  const blocked: IntakeBlockedApplication[] = []
+
+  for (const application of applications) {
+    const parent = normalizeOne(application.parents)
+    const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+    const child = normalizeOne(application.children)
+
+    const readiness = evaluateApplicationIntakeReadiness({
+      parent: {
+        fullName: parentProfile?.full_name ?? null,
+        phone: parentProfile?.phone ?? parent?.alt_phone ?? null,
+        guardianRelationship: parent?.guardian_relationship ?? null,
+        emergencyContactName: parent?.emergency_contact_name ?? null,
+        emergencyContactPhone: parent?.emergency_contact_phone ?? null,
+        idVerificationStatus: parent?.id_verification_status ?? null,
+      },
+      child: {
+        firstName: child?.first_name ?? null,
+        lastName: child?.last_name ?? null,
+        dateOfBirth: child?.date_of_birth ?? null,
+        gender: child?.gender ?? null,
+      },
+      docTypes: docTypesByParent.get(application.parent_id) ?? [],
+    })
+
+    if (readiness.ready) {
+      ready.push(application)
+      continue
+    }
+
+    blocked.push({ application, missing: readiness.missing.slice(0, 4) })
+  }
+
+  return { ready, blocked }
+}
+
+async function sendIntakePushbackNotifications(input: {
+  ecdId: string
+  centreName: string
+  blocked: IntakeBlockedApplication[]
+}) {
+  if (input.blocked.length === 0) return
+
+  const admin = (() => {
+    try {
+      return createAdminClient()
+    } catch {
+      return null
+    }
+  })()
+  if (!admin) return
+  const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  for (const item of input.blocked) {
+    const parent = normalizeOne(item.application.parents)
+    if (!parent?.id) continue
+
+    const { data: recent } = await admin
+      .from('parent_notifications')
+      .select('id')
+      .eq('parent_id', parent.id)
+      .eq('application_id', item.application.id)
+      .eq('title', 'Action needed before review')
+      .gte('created_at', cutoffIso)
+      .limit(1)
+      .maybeSingle()
+
+    if (recent?.id) continue
+
+    await admin.from('parent_notifications').insert({
+      parent_id: parent.id,
+      ecd_id: input.ecdId,
+      application_id: item.application.id,
+      title: 'Action needed before review',
+      message: `Hi there. ${input.centreName} is ready to review this application as soon as a few details are completed: ${item.missing.join(', ')}. Open your Profile and Documents to finish quickly.`,
+      is_read: false,
+    })
+  }
 }
 
 function renderApplicationList(
@@ -245,13 +380,14 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
   }
 
   let selectedApplications: ApplicationRow[] = []
+  let blockedPendingApplications: IntakeBlockedApplication[] = []
   let filteredCounts = dbCounts
 
   if (searchValue) {
     const { data: searchRows } = await supabase
       .from('applications')
       .select(
-        'id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name),parents(id,alt_phone,user_profiles(full_name,phone))'
+        'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
       )
       .eq('ecd_id', ecdId)
       .order('submitted_at', { ascending: false })
@@ -284,6 +420,12 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       rejected: filteredApplications.filter((app) => app.status === 'rejected'),
     }
 
+    if (grouped.pending.length > 0) {
+      const pendingPartition = await partitionPendingForReview(grouped.pending)
+      grouped.pending = pendingPartition.ready
+      blockedPendingApplications = pendingPartition.blocked
+    }
+
     filteredCounts = {
       pending: grouped.pending.length,
       awaitingOfferResponse: grouped.awaitingOfferResponse.length,
@@ -308,24 +450,57 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
     selectedApplications = selectedPool.slice(pageFrom, pageTo + 1)
   } else {
-    let selectedTabQuery = supabase
-      .from('applications')
-      .select(
-        'id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name),parents(id,alt_phone,user_profiles(full_name,phone))'
-      )
-      .eq('ecd_id', ecdId)
-      .order('submitted_at', { ascending: false })
-
     if (selectedTab === 'pending') {
-      selectedTabQuery = selectedTabQuery.in('status', ['submitted', 'in_review'])
-    } else if (selectedTab === 'awaiting_offer_response') {
-      selectedTabQuery = selectedTabQuery.eq('status', 'approved').is('offer_accepted_at', null)
-    } else {
-      selectedTabQuery = selectedTabQuery.eq('status', selectedTab)
-    }
+      const { data: pendingRows } = await supabase
+        .from('applications')
+        .select(
+          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        )
+        .eq('ecd_id', ecdId)
+        .in('status', ['submitted', 'in_review'])
+        .order('submitted_at', { ascending: false })
+        .limit(500)
 
-    const { data: rows } = await selectedTabQuery.range(pageFrom, pageTo)
-    selectedApplications = ((rows ?? []) as ApplicationRow[]) ?? []
+      const pendingApplications = ((pendingRows ?? []) as ApplicationRow[]) ?? []
+      const pendingPartition = await partitionPendingForReview(pendingApplications)
+      blockedPendingApplications = pendingPartition.blocked
+      filteredCounts = {
+        ...filteredCounts,
+        pending: pendingPartition.ready.length,
+      }
+      selectedApplications = pendingPartition.ready.slice(pageFrom, pageTo + 1)
+    } else if (selectedTab === 'awaiting_offer_response') {
+      const { data: rows } = await supabase
+        .from('applications')
+        .select(
+          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        )
+        .eq('ecd_id', ecdId)
+        .eq('status', 'approved')
+        .is('offer_accepted_at', null)
+        .order('submitted_at', { ascending: false })
+        .range(pageFrom, pageTo)
+      selectedApplications = ((rows ?? []) as ApplicationRow[]) ?? []
+    } else {
+      const { data: rows } = await supabase
+        .from('applications')
+        .select(
+          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        )
+        .eq('ecd_id', ecdId)
+        .eq('status', selectedTab)
+        .order('submitted_at', { ascending: false })
+        .range(pageFrom, pageTo)
+      selectedApplications = ((rows ?? []) as ApplicationRow[]) ?? []
+    }
+  }
+
+  if (blockedPendingApplications.length > 0) {
+    await sendIntakePushbackNotifications({
+      ecdId,
+      centreName: centre?.name ?? 'the centre',
+      blocked: blockedPendingApplications.slice(0, 25),
+    })
   }
 
   const totalForSelected =
@@ -361,7 +536,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     const { data: focusedRow } = await supabase
       .from('applications')
       .select(
-        'id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name),parents(id,alt_phone,user_profiles(full_name,phone))'
+        'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
       )
       .eq('ecd_id', ecdId)
       .eq('id', searchParams.focus)
@@ -432,6 +607,30 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
             </Button>
           ))}
         </div>
+        {selectedTab === 'pending' && blockedPendingApplications.length > 0 ? (
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <p className="text-sm font-semibold text-amber-900">
+              {blockedPendingApplications.length} application{blockedPendingApplications.length === 1 ? '' : 's'} moved
+              back to parents for missing details
+            </p>
+            <p className="mt-1 text-xs text-amber-800">
+              Parents were notified automatically. These applications will reappear once details are completed.
+            </p>
+            <div className="mt-2 space-y-1">
+              {blockedPendingApplications.slice(0, 3).map((item) => {
+                const child = normalizeOne(item.application.children)
+                const parent = normalizeOne(item.application.parents)
+                const profile = normalizeOne(parent?.user_profiles ?? null)
+                const childName = child ? `${child.first_name} ${child.last_name}` : 'Child profile'
+                return (
+                  <p key={item.application.id} className="text-xs text-amber-900">
+                    {childName} ({profile?.full_name ?? 'Parent'}): {item.missing.join(', ')}
+                  </p>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
         {renderApplicationList(selectedApplications, {
           ecdId,
           centreName: centre?.name ?? 'Your centre',

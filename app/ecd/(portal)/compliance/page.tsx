@@ -202,7 +202,7 @@ export default async function EcdCompliancePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {documents.map((doc) => (
-              <form key={doc.id} action={markDocumentUploaded} className="rounded-xl border border-slate-200 bg-white p-3">
+              <form key={doc.id} action={markDocumentUploaded} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
                 <input type="hidden" name="id" value={doc.id} />
                 <input type="hidden" name="current_status" value={doc.status} />
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -211,7 +211,7 @@ export default async function EcdCompliancePage() {
                     {doc.status}
                   </span>
                 </div>
-                <div className="mt-3 grid gap-2 md:grid-cols-[200px_1fr_auto]">
+                <div className="mt-3 grid gap-2 lg:grid-cols-[200px_1fr_auto]">
                   <input
                     type="date"
                     name="expires_at"
@@ -225,7 +225,7 @@ export default async function EcdCompliancePage() {
                     className="cc-native-field"
                     placeholder="Notes"
                   />
-                  <Button type="submit" disabled={role === 'ecd_staff'}>
+                  <Button type="submit" disabled={role === 'ecd_staff'} className="w-full lg:w-auto">
                     Mark as Uploaded
                   </Button>
                 </div>
@@ -239,7 +239,7 @@ export default async function EcdCompliancePage() {
             <CardTitle>Staff Clearances</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <form action={addStaffCheck} className="grid gap-2 md:grid-cols-2">
+            <form action={addStaffCheck} className="grid gap-3 lg:grid-cols-2">
               <input name="staff_name" className="cc-native-field" placeholder="Staff name" required />
               <input name="staff_role" className="cc-native-field" placeholder="Role" />
               <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -267,7 +267,7 @@ export default async function EcdCompliancePage() {
                 className="cc-native-field h-auto min-h-20 py-2 md:col-span-2"
                 placeholder="Notes"
               />
-              <Button type="submit" className="w-fit" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit" disabled={role === 'ecd_staff'}>
                 Add Staff Member
               </Button>
             </form>
@@ -275,36 +275,54 @@ export default async function EcdCompliancePage() {
             {(staffChecks ?? []).length === 0 ? (
               <p className="text-sm text-slate-600">No staff records yet.</p>
             ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Staff</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Medical</TableHead>
-                      <TableHead>Criminal</TableHead>
-                      <TableHead>First Aid</TableHead>
-                      <TableHead>Expiry Warning</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {staffChecks.map((row) => {
-                      const warning = expiryWarning(row.first_aid_cert_expires)
-                      return (
-                        <TableRow key={row.id}>
-                          <TableCell className="font-medium">{row.staff_name}</TableCell>
-                          <TableCell>{row.staff_role ?? '--'}</TableCell>
-                          <TableCell>{formatDate(row.medical_clearance_date)}</TableCell>
-                          <TableCell>{formatDate(row.criminal_clearance_date)}</TableCell>
-                          <TableCell>{formatDate(row.first_aid_cert_expires)}</TableCell>
-                          <TableCell>
-                            <span className={`text-xs font-semibold ${warning.className}`}>{warning.label}</span>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+              <div className="space-y-2">
+                <div className="space-y-2 md:hidden">
+                  {staffChecks.map((row) => {
+                    const warning = expiryWarning(row.first_aid_cert_expires)
+                    return (
+                      <div key={row.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                        <p className="text-sm font-semibold text-slate-900">{row.staff_name}</p>
+                        <p className="mt-1 text-xs text-slate-600">{row.staff_role ?? '--'}</p>
+                        <p className="mt-2 text-xs text-slate-600">Medical: {formatDate(row.medical_clearance_date)}</p>
+                        <p className="text-xs text-slate-600">Criminal: {formatDate(row.criminal_clearance_date)}</p>
+                        <p className="text-xs text-slate-600">First aid expiry: {formatDate(row.first_aid_cert_expires)}</p>
+                        <p className={`mt-1 text-xs font-semibold ${warning.className}`}>{warning.label}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Staff</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Medical</TableHead>
+                        <TableHead>Criminal</TableHead>
+                        <TableHead>First Aid</TableHead>
+                        <TableHead>Expiry Warning</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {staffChecks.map((row) => {
+                        const warning = expiryWarning(row.first_aid_cert_expires)
+                        return (
+                          <TableRow key={row.id}>
+                            <TableCell className="font-medium">{row.staff_name}</TableCell>
+                            <TableCell>{row.staff_role ?? '--'}</TableCell>
+                            <TableCell>{formatDate(row.medical_clearance_date)}</TableCell>
+                            <TableCell>{formatDate(row.criminal_clearance_date)}</TableCell>
+                            <TableCell>{formatDate(row.first_aid_cert_expires)}</TableCell>
+                            <TableCell>
+                              <span className={`text-xs font-semibold ${warning.className}`}>{warning.label}</span>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             )}
           </CardContent>

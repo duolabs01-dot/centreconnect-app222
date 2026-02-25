@@ -8,9 +8,11 @@ import { StatusUpdateForm } from './status-update-form'
 import { TemplateSendPanel } from './template-send-panel'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const metadata: Metadata = {
-  title: 'Application Details — CentreConnect',
+  title: 'Application Details - CentreConnect',
   description: 'Review child application details and manage admission status.',
   openGraph: {
     images: ['/og-image.png'],
@@ -35,7 +37,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
   const { data: application } = await supabase
     .from('applications')
     .select(
-      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,user_profiles(full_name,phone))'
+      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
     )
     .eq('id', params.id)
     .eq('ecd_id', ecdId)
@@ -63,6 +65,37 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     title: string
     body: string
   }>
+
+  let parentDocs: Array<{ doc_type: string | null }> = []
+  let parentDocsError: Error | null = null
+  if (parent?.id) {
+    try {
+      const admin = createAdminClient()
+      const { data, error } = await admin.from('parent_documents').select('doc_type').eq('parent_id', parent.id).limit(50)
+      parentDocs = (data ?? []) as Array<{ doc_type: string | null }>
+      parentDocsError = error ? new Error(error.message) : null
+    } catch (error) {
+      parentDocsError = error as Error
+    }
+  }
+
+  const readiness = evaluateApplicationIntakeReadiness({
+    parent: {
+      fullName: parentProfile?.full_name ?? null,
+      phone: parentPhone || null,
+      guardianRelationship: parent?.guardian_relationship ?? null,
+      emergencyContactName: parent?.emergency_contact_name ?? null,
+      emergencyContactPhone: parent?.emergency_contact_phone ?? null,
+      idVerificationStatus: parent?.id_verification_status ?? null,
+    },
+    child: {
+      firstName: child?.first_name ?? null,
+      lastName: child?.last_name ?? null,
+      dateOfBirth: child?.date_of_birth ?? null,
+      gender: child?.gender ?? null,
+    },
+    docTypes: parentDocsError ? ['parent_id', 'birth_certificate'] : parentDocs.map((doc) => doc.doc_type),
+  })
 
   return (
     <EcdOsShell
@@ -136,6 +169,27 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
               ) : (
                 <p className="text-xs text-slate-500">Multiple Applications: Not shared</p>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className={readiness.ready ? 'border-emerald-200 bg-emerald-50/40' : 'border-amber-200 bg-amber-50/50'}>
+            <CardHeader>
+              <CardTitle>Application Readiness</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className={readiness.ready ? 'text-emerald-700' : 'text-amber-900'}>
+                {readiness.ready
+                  ? 'All core details and documents are complete for admissions processing.'
+                  : 'Some required intake details are missing. Parent was prompted to complete them.'}
+              </p>
+              <p className="text-xs text-slate-600">Completion: {readiness.completionPct}%</p>
+              {!readiness.ready ? (
+                <ul className="space-y-1 text-xs text-amber-900">
+                  {readiness.missing.slice(0, 5).map((item) => (
+                    <li key={item}>- {item}</li>
+                  ))}
+                </ul>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -275,3 +329,4 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     </EcdOsShell>
   )
 }
+
