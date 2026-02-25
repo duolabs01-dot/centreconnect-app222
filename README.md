@@ -75,6 +75,7 @@ npm.cmd run dev
 ## QA Checklist
 
 See `docs/QA.md` for a full validation checklist.
+For staged, multi-agent pre-merge and pre-release quality gates, use `docs/QA_AGENT_PACK.md`.
 
 For Admin production hardening and billing-completion roadmap, see:
 
