@@ -127,7 +127,7 @@ export default async function EcdCompliancePage() {
     <EcdOsShell
       title="Compliance Toolkit"
       description="Track required documents and staff clearances in one place."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -296,3 +296,4 @@ export default async function EcdCompliancePage() {
     </EcdOsShell>
   )
 }
+

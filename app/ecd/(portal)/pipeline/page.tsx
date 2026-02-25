@@ -68,7 +68,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export default async function EcdPipelinePage({ searchParams }: PipelinePageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
   const pageSize = 120
@@ -168,7 +168,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
     <EcdOsShell
       title="Children Journey (Pipeline)"
       description="Simple view of where each application is right now. Pipeline means stage-by-stage flow."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-4 space-y-3">
@@ -216,4 +216,6 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
     </EcdOsShell>
   )
 }
+
+
 

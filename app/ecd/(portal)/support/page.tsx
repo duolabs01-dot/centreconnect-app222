@@ -21,7 +21,7 @@ type SupportPageProps = {
 }
 
 export default async function EcdSupportPage({ searchParams }: SupportPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   async function createTicket(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
@@ -68,7 +68,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
     <EcdOsShell
       title="Support"
       description="Track support requests and follow-ups."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <Card className="mb-6 border-border bg-card/80 text-foreground">
@@ -180,3 +180,5 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
     </EcdOsShell>
   )
 }
+
+

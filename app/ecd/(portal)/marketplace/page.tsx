@@ -44,7 +44,7 @@ function isIncludedInTier(tier: SubscriptionTier, serviceName: string) {
 }
 
 export default async function EcdMarketplacePage() {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
 
   async function requestService(formData: FormData) {
     'use server'
@@ -103,7 +103,7 @@ export default async function EcdMarketplacePage() {
     <EcdOsShell
       title="Marketplace"
       description="See what your package already includes and request add-ons only where needed."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -227,4 +227,6 @@ export default async function EcdMarketplacePage() {
     </EcdOsShell>
   )
 }
+
+
 

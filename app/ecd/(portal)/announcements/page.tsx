@@ -139,7 +139,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     <EcdOsShell
       title="Announcements"
       description="This page is for creating and publishing announcements quickly."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -225,3 +225,4 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     </EcdOsShell>
   )
 }
+

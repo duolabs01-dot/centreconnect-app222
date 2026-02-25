@@ -290,7 +290,7 @@ function renderApplicationList(
 }
 
 export default async function EcdApplicationsPage({ searchParams }: ApplicationsPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
   const { data: templatesData } = await supabase
     .from('communication_templates')
@@ -499,7 +499,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     <EcdOsShell
       title="Admissions Inbox"
       description="Prioritize pending reviews and approved offers awaiting parent acceptance."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-4">
@@ -644,6 +644,8 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     </EcdOsShell>
   )
 }
+
+
 
 
 

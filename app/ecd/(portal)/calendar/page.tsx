@@ -66,7 +66,7 @@ function parseDayKey(value?: string) {
 }
 
 export default async function EcdCalendarPage({ searchParams }: CalendarPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const nowJhb = getJohannesburgNowParts()
   const today = new Date(
     `${nowJhb.year}-${String(nowJhb.month).padStart(2, '0')}-${String(nowJhb.day).padStart(2, '0')}T00:00:00`
@@ -268,7 +268,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     <EcdOsShell
       title="Full Calendar"
       description="View your month at a glance. Public and internal events appear in one calendar."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <CalendarInteractiveView
@@ -408,5 +408,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     </EcdOsShell>
   )
 }
+
+
 
 

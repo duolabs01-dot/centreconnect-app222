@@ -8,9 +8,9 @@ import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { KpiCard } from '@/components/cc-admin/KpiCard'
 import { NeuralMap } from '@/components/cc-admin/NeuralMap'
 import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
-import { SystemStatus } from '@/components/cc-admin/SystemStatus'
+import { SystemHealthWidget } from '@/components/cc-admin/SystemHealthWidget'
 import { MeshAreaChart } from '@/components/cc-admin/MeshAreaChart'
-import { HexHeatmap } from '@/components/cc-admin/HexHeatmap'
+import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
 import { Building2, Users, Activity, TrendingUp, Globe } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -20,28 +20,55 @@ export const metadata: Metadata = {
   description: 'Premium operations console for onboarding, verification, and neural telemetry.',
 }
 
-type ProvinceScore = {
-  id: string
-  shortLabel: string
-  score: number
-  centres: number
-  row: number
-  col: number
+const SA_PROVINCES: ProvinceScore[] = [
+  { id: 'lp', shortLabel: 'LP', row: 0, col: 1, score: 0, centres: 0 },
+  { id: 'mp', shortLabel: 'MP', row: 0, col: 2, score: 0, centres: 0 },
+  { id: 'nw', shortLabel: 'NW', row: 1, col: 0, score: 0, centres: 0 },
+  { id: 'gp', shortLabel: 'GP', row: 1, col: 1, score: 0, centres: 0 },
+  { id: 'kzn', shortLabel: 'KZN', row: 1, col: 2, score: 0, centres: 0 },
+  { id: 'fs', shortLabel: 'FS', row: 2, col: 0, score: 0, centres: 0 },
+  { id: 'nc', shortLabel: 'NC', row: 2, col: 1, score: 0, centres: 0 },
+  { id: 'ec', shortLabel: 'EC', row: 2, col: 2, score: 0, centres: 0 },
+  { id: 'wc', shortLabel: 'WC', row: 3, col: 0, score: 0, centres: 0 },
+]
+
+const PROVINCE_NORMALIZED_TO_CODE: Record<string, ProvinceScore['shortLabel']> = {
+  LP: 'LP',
+  LIMPOPO: 'LP',
+  MP: 'MP',
+  MPUMALANGA: 'MP',
+  NW: 'NW',
+  NORTHWEST: 'NW',
+  NORTH_WEST: 'NW',
+  NORTH-WEST: 'NW',
+  GP: 'GP',
+  GAUTENG: 'GP',
+  KZN: 'KZN',
+  KWAZULUNATAL: 'KZN',
+  KWAZULU_NATAL: 'KZN',
+  KWAZULU-NATAL: 'KZN',
+  FS: 'FS',
+  FREESTATE: 'FS',
+  FREE_STATE: 'FS',
+  FREE-STATE: 'FS',
+  NC: 'NC',
+  NORTHERNCAPE: 'NC',
+  NORTHERN_CAPE: 'NC',
+  NORTHERN-CAPE: 'NC',
+  EC: 'EC',
+  EASTERNCAPE: 'EC',
+  EASTERN_CAPE: 'EC',
+  EASTERN-CAPE: 'EC',
+  WC: 'WC',
+  WESTERNCAPE: 'WC',
+  WESTERN_CAPE: 'WC',
+  WESTERN-CAPE: 'WC',
 }
 
-function ConfigurationError() {
-  return (
-    <div className="min-h-screen bg-cyber-bg flex items-center justify-center">
-      <div className="text-center">
-        <p className="font-orbitron text-cyber-cyan text-sm uppercase tracking-widest mb-2">
-          Configuration Error
-        </p>
-        <p className="text-slate-400 text-xs">
-          SUPABASE_SERVICE_ROLE_KEY is not configured in this environment.
-        </p>
-      </div>
-    </div>
-  )
+function normalizeProvinceToCode(value: string | null): ProvinceScore['shortLabel'] | null {
+  if (!value) return null
+  const normalized = value.toUpperCase().replace(/\./g, '').replace(/\s+/g, '_').trim()
+  return PROVINCE_NORMALIZED_TO_CODE[normalized] ?? PROVINCE_NORMALIZED_TO_CODE[normalized.replace(/_/g, '')] ?? null
 }
 
 export default async function AdminDashboardPage() {
@@ -56,14 +83,9 @@ export default async function AdminDashboardPage() {
   }
   if (!user) redirect('/login')
 
-  let admin: any = null
+  const admin = createAdminClient()
   try {
-    admin = createAdminClient()
-    const { data: userProfile } = await admin
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
+    const { data: userProfile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
 
     if (userProfile?.role !== 'platform_admin') {
       console.error('Role mismatch - userId:', user.id, 'role:', userProfile?.role)
@@ -80,19 +102,18 @@ export default async function AdminDashboardPage() {
   let activeCentreCount = 0
   let mrrValue = 0
   let revenueGrowth = '0.0'
-  let totalParentCount = 0
   let pendingApplicationCount = 0
-  const regionalData: ProvinceScore[] = [
-    { id: 'lp', shortLabel: 'LP', score: 62, centres: 34, row: 0, col: 1 },
-    { id: 'mp', shortLabel: 'MP', score: 58, centres: 28, row: 0, col: 2 },
-    { id: 'nw', shortLabel: 'NW', score: 54, centres: 22, row: 1, col: 0 },
-    { id: 'gp', shortLabel: 'GP', score: 88, centres: 142, row: 1, col: 1 },
-    { id: 'kzn', shortLabel: 'KZN', score: 74, centres: 89, row: 1, col: 2 },
-    { id: 'fs', shortLabel: 'FS', score: 61, centres: 31, row: 2, col: 0 },
-    { id: 'nc', shortLabel: 'NC', score: 45, centres: 14, row: 2, col: 1 },
-    { id: 'ec', shortLabel: 'EC', score: 56, centres: 47, row: 2, col: 2 },
-    { id: 'wc', shortLabel: 'WC', score: 82, centres: 98, row: 3, col: 0 },
-  ]
+  let totalAdmins = 0
+  let totalParents = 0
+  let totalStaff = 0
+  let realRegionalData: ProvinceScore[] = SA_PROVINCES.map((province) => ({
+    id: province.id,
+    shortLabel: province.shortLabel,
+    row: province.row,
+    col: province.col,
+    score: 0,
+    centres: 0,
+  }))
 
   try {
     const activeStatuses = ['active', 'trial', 'past_due']
@@ -101,52 +122,81 @@ export default async function AdminDashboardPage() {
       activeSubscriptionsCountResult,
       newActiveSubscriptionsCountResult,
       activeSubscriptionsMrrResult,
-      childrenCountResult,
       pendingApplicationsCountResult,
+      centresWithProvinceResult,
+      totalAdminUsersResult,
+      totalParentUsersResult,
+      totalStaffUsersResult,
     ] = await Promise.all([
-      admin
-        .from('ecd_centres')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_active', true),
+      admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses),
       admin
         .from('subscriptions')
-        .select('id', { count: 'planned', head: true })
-        .in('status', activeStatuses),
-      admin
-        .from('subscriptions')
-        .select('id', { count: 'planned', head: true })
+        .select('id', { count: 'exact', head: true })
         .in('status', activeStatuses)
         .gte('created_at', thirtyDaysAgo.toISOString()),
-      admin
-        .from('subscriptions')
-        .select('monthly_price')
-        .in('status', activeStatuses)
-        .limit(5000),
-      admin.from('children').select('id', { count: 'planned', head: true }),
-      admin
-        .from('applications')
-        .select('*', { count: 'exact', head: true })
-        .in('status', ['submitted', 'in_review']),
+      admin.from('subscriptions').select('monthly_price').in('status', activeStatuses).limit(5000),
+      admin.from('applications').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'in_review']),
+      admin.from('ecd_centres').select('province').not('province', 'is', null).limit(2000),
+      admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'ecd_admin'),
+      admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
+      admin.from('user_profiles').select('id', { count: 'exact', head: true }).in('role', ['ecd_staff', 'ecd_supervisor']),
     ])
 
     if (activeCentresResult.error) throw activeCentresResult.error
     if (activeSubscriptionsCountResult.error) throw activeSubscriptionsCountResult.error
     if (newActiveSubscriptionsCountResult.error) throw newActiveSubscriptionsCountResult.error
     if (activeSubscriptionsMrrResult.error) throw activeSubscriptionsMrrResult.error
-    if (childrenCountResult.error) throw childrenCountResult.error
     if (pendingApplicationsCountResult.error) throw pendingApplicationsCountResult.error
+    if (centresWithProvinceResult.error) throw centresWithProvinceResult.error
+    if (totalAdminUsersResult.error) throw totalAdminUsersResult.error
+    if (totalParentUsersResult.error) throw totalParentUsersResult.error
+    if (totalStaffUsersResult.error) throw totalStaffUsersResult.error
 
     const activeSubsCount = activeSubscriptionsCountResult.count ?? 0
     const newSubsCount = newActiveSubscriptionsCountResult.count ?? 0
 
     mrrValue = (activeSubscriptionsMrrResult.data ?? []).reduce(
-      (sum: number, sub: any) => sum + (Number(sub.monthly_price) || 0),
+      (sum, subscription) => sum + (Number(subscription.monthly_price) || 0),
       0
     )
     revenueGrowth = activeSubsCount > 0 ? ((newSubsCount / activeSubsCount) * 100).toFixed(1) : '0.0'
+
     activeCentreCount = activeCentresResult.count ?? 0
-    totalParentCount = childrenCountResult.count ?? 0
     pendingApplicationCount = pendingApplicationsCountResult.count ?? 0
+    totalAdmins = totalAdminUsersResult.count ?? 0
+    totalParents = totalParentUsersResult.count ?? 0
+    totalStaff = totalStaffUsersResult.count ?? 0
+
+    const centresWithProvince = centresWithProvinceResult.data ?? []
+    const provinceCounts: Record<ProvinceScore['shortLabel'], number> = {
+      LP: 0,
+      MP: 0,
+      NW: 0,
+      GP: 0,
+      KZN: 0,
+      FS: 0,
+      NC: 0,
+      EC: 0,
+      WC: 0,
+    }
+
+    for (const centre of centresWithProvince) {
+      const code = normalizeProvinceToCode(centre.province)
+      if (!code) continue
+      provinceCounts[code] = (provinceCounts[code] ?? 0) + 1
+    }
+
+    const maxCentres = Math.max(...SA_PROVINCES.map((province) => provinceCounts[province.shortLabel] ?? 0), 1)
+
+    realRegionalData = SA_PROVINCES.map((province) => ({
+      id: province.id,
+      shortLabel: province.shortLabel,
+      row: province.row,
+      col: province.col,
+      centres: provinceCounts[province.shortLabel] ?? 0,
+      score: Math.round(((provinceCounts[province.shortLabel] ?? 0) / maxCentres) * 100),
+    }))
   } catch (error) {
     console.error('Error fetching admin dashboard data, using defaults:', error)
   }
@@ -167,7 +217,7 @@ export default async function AdminDashboardPage() {
       navItems={ADMIN_NAV_ITEMS}
     >
       <div className="space-y-6">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <KpiCard
             label="Active Tenants"
             value={activeCentreCount}
@@ -190,10 +240,10 @@ export default async function AdminDashboardPage() {
           />
           <KpiCard
             label="Active Operatives"
-            value={totalParentCount.toLocaleString()}
-            subValue="Platform Users"
-            trend={23}
-            trendLabel="vs last month"
+            value={(totalAdmins + totalParents).toLocaleString()}
+            subValue="Admins + Parents registered"
+            trend={0}
+            trendLabel="users in system"
             icon={Users}
             accent="cyan"
             index={2}
@@ -210,86 +260,80 @@ export default async function AdminDashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 auto-rows-auto">
-          <CyberCard accent="cyan" scanLine glow className="p-5 lg:col-span-2 lg:row-span-2 min-h-[400px]">
-            <div className="flex items-center justify-between mb-4">
+        <div className="grid auto-rows-auto grid-cols-1 gap-6 lg:grid-cols-3">
+          <CyberCard accent="cyan" scanLine glow className="min-h-[400px] p-5 lg:col-span-2 lg:row-span-2">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-cyber-cyan font-semibold">
+                <p className="font-orbitron text-[9px] font-semibold uppercase tracking-[0.25em] text-cyber-cyan">
                   Neural Activity Map
                 </p>
-                <p className="font-inter text-xs mt-1 text-slate-400">
-                  Cross-platform centre engagement protocols
-                </p>
+                <p className="mt-1 font-inter text-xs text-slate-400">Cross-platform centre engagement protocols</p>
               </div>
-              <Globe className="w-4 h-4 text-cyber-cyan" />
+              <Globe className="h-4 w-4 text-cyber-cyan" />
             </div>
             <div className="h-[320px]">
               <NeuralMap />
             </div>
           </CyberCard>
 
-          <CyberCard accent="violet" glow className="p-6 flex flex-col justify-between min-h-[200px]">
-            <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-cyber-violet font-semibold">
+          <CyberCard accent="violet" glow className="flex min-h-[200px] flex-col justify-between p-6">
+            <p className="font-orbitron text-[9px] font-semibold uppercase tracking-[0.25em] text-cyber-violet">
               Live Sessions
             </p>
-            <div className="text-center py-4">
+            <div className="py-4 text-center">
               <LiveSessionsCounter />
-              <p className="font-inter text-[10px] mt-3 text-slate-500 uppercase tracking-widest">
-                concurrent entities
-              </p>
+              <p className="mt-3 font-inter text-[10px] uppercase tracking-widest text-slate-500">concurrent entities</p>
             </div>
             <div className="flex justify-between border-t border-white/5 pt-4">
               {[
-                { label: 'Parents', val: '834' },
-                { label: 'Staff', val: '312' },
-                { label: 'Admins', val: '138' },
+                { label: 'Parents', val: totalParents.toLocaleString() },
+                { label: 'Staff', val: totalStaff.toLocaleString() },
+                { label: 'Admins', val: totalAdmins.toLocaleString() },
               ].map(({ label, val }) => (
                 <div key={label} className="text-center">
                   <p className="font-orbitron text-xs font-bold text-cyber-violet">{val}</p>
-                  <p className="text-[8px] text-slate-500 uppercase tracking-tighter">{label}</p>
+                  <p className="text-[8px] uppercase tracking-tighter text-slate-500">{label}</p>
                 </div>
               ))}
             </div>
           </CyberCard>
 
-          <CyberCard accent="cyan" className="p-6 min-h-[200px]">
-            <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-cyber-cyan font-semibold mb-4">
+          <CyberCard accent="cyan" className="min-h-[200px] p-6">
+            <p className="mb-4 font-orbitron text-[9px] font-semibold uppercase tracking-[0.25em] text-cyber-cyan">
               Core Status
             </p>
-            <SystemStatus />
+            <SystemHealthWidget />
           </CyberCard>
 
-          <CyberCard accent="cyan" className="p-6 lg:col-span-2 min-h-[260px]">
-            <div className="flex items-center justify-between mb-4">
+          <CyberCard accent="cyan" className="min-h-[260px] p-6 lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-cyber-cyan font-semibold">
+                <p className="font-orbitron text-[9px] font-semibold uppercase tracking-[0.25em] text-cyber-cyan">
                   Load vs Learners
                 </p>
-                <p className="font-inter text-xs mt-1 text-slate-400">
-                  Daily system stress-test telemetry
-                </p>
+                <p className="mt-1 font-inter text-xs text-slate-400">Daily system stress-test telemetry</p>
               </div>
-              <Activity className="w-4 h-4 text-cyber-cyan" />
+              <Activity className="h-4 w-4 text-cyber-cyan" />
             </div>
             <div className="h-40">
               <MeshAreaChart />
             </div>
           </CyberCard>
 
-          <CyberCard accent="violet" glow className="p-6 lg:col-span-3 min-h-[300px]">
-            <div className="flex items-center justify-between mb-6">
+          <CyberCard accent="violet" glow className="min-h-[300px] p-6 lg:col-span-3">
+            <div className="mb-6 flex items-center justify-between">
               <div>
-                <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-cyber-violet font-semibold">
+                <p className="font-orbitron text-[9px] font-semibold uppercase tracking-[0.25em] text-cyber-violet">
                   Curriculum Mastery
                 </p>
-                <p className="font-inter text-xs mt-1 text-slate-400">
+                <p className="mt-1 font-inter text-xs text-slate-400">
                   Regional developmental metrics - Neural platform rollup
                 </p>
               </div>
-              <Globe className="w-4 h-4 text-cyber-violet" />
+              <Globe className="h-4 w-4 text-cyber-violet" />
             </div>
             <div className="h-full">
-              <HexHeatmap data={regionalData} />
+              <HexHeatmap data={realRegionalData} />
             </div>
           </CyberCard>
         </div>

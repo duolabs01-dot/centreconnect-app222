@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 }
 
 export default async function EcdPickupPage() {
-  const { user, ecdId } = await requireEcdPortalSession()
+  const { user, ecdId, role } = await requireEcdPortalSession()
 
   return (
     <EcdOsShell
       title="Pickup Verification"
       description="Verify a parent's pickup code before releasing a child."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-4">
@@ -30,3 +30,5 @@ export default async function EcdPickupPage() {
     </EcdOsShell>
   )
 }
+
+

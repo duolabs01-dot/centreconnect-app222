@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/ecd/BrandMark'
@@ -30,11 +30,16 @@ export function EcdPortalSidebar({
     if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
     return !item.adminOnly
   })
-  const primaryNav = visibleNav.filter((item) => (item.group ?? 'daily') === 'daily')
-  const secondaryNav = visibleNav.filter((item) => (item.group ?? 'daily') !== 'daily')
   const topLevelPaths = new Set(visibleNav.map((item) => item.href))
   const [mobileOpen, setMobileOpen] = useState(false)
   const showMobileBack = Array.from(topLevelPaths).some((href) => pathname.startsWith(`${href}/`))
+
+  const GROUP_LABELS: Record<string, string> = {
+    daily: 'Daily Operations',
+    operations: 'Operations',
+    growth: 'Growth & Visibility',
+    admin: 'Admin',
+  }
 
   const handleMobileBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -72,6 +77,26 @@ export function EcdPortalSidebar({
     )
   }
 
+  const renderGroupedNav = (items: EcdNavItem[], onSelect?: () => void) => {
+    let lastGroup = ''
+    return items.map((item) => {
+      const itemGroup = item.group ?? 'daily'
+      const showHeader = itemGroup !== lastGroup
+      lastGroup = itemGroup
+
+      return (
+        <Fragment key={item.href}>
+          {showHeader ? (
+            <p className="mt-3 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              {GROUP_LABELS[itemGroup] ?? itemGroup}
+            </p>
+          ) : null}
+          {renderNavItem(item, onSelect)}
+        </Fragment>
+      )
+    })
+  }
+
   return (
     <>
       {showMobileBack ? (
@@ -103,9 +128,7 @@ export function EcdPortalSidebar({
               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-600">{roleLabel}</p>
             </div>
             <nav className="mt-6 space-y-1.5 flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80" aria-label="ECD portal navigation">
-              {primaryNav.map((item) => renderNavItem(item, () => setMobileOpen(false)))}
-              <div className="my-3 h-px bg-border" />
-              {secondaryNav.map((item) => renderNavItem(item, () => setMobileOpen(false)))}
+              {renderGroupedNav(visibleNav, () => setMobileOpen(false))}
             </nav>
             <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-border bg-card/80 p-3">
               <p className="truncate text-xs text-muted-foreground">
@@ -124,9 +147,7 @@ export function EcdPortalSidebar({
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-cyan-600">{roleLabel}</p>
         </div>
         <nav className="mt-6 space-y-1.5" aria-label="ECD portal navigation">
-          {primaryNav.map((item) => renderNavItem(item))}
-          <div className="my-3 h-px bg-border" />
-          {secondaryNav.map((item) => renderNavItem(item))}
+          {renderGroupedNav(visibleNav)}
         </nav>
         <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-border bg-card/80 p-3">
           <p className="truncate text-xs text-muted-foreground">

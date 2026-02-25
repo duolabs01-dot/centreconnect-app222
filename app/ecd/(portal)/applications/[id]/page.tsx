@@ -31,7 +31,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export default async function ApplicationDetailsPage({ params }: ApplicationDetailsPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
 
   const { data: application } = await supabase
@@ -101,7 +101,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     <EcdOsShell
       title="Application Details"
       description="Review child and parent information, then update application status."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-4">
@@ -321,4 +321,6 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     </EcdOsShell>
   )
 }
+
+
 

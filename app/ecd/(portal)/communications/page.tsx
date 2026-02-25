@@ -34,7 +34,7 @@ type CommunicationsPageProps = {
 }
 
 export default async function EcdCommunicationsPage({ searchParams }: CommunicationsPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const [centreResult, templatesResult, recentNotificationsResult, recipientRowsResult, recentThreadsResult] =
     await Promise.all([
       supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
@@ -103,7 +103,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     <EcdOsShell
       title="Messages"
       description="Choose Broadcast or Direct first, then send quickly using templates."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -199,5 +199,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     </EcdOsShell>
   )
 }
+
+
 
 

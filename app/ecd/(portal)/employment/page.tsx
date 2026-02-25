@@ -42,6 +42,15 @@ type JobApplicationRow = {
     | null
 }
 
+type TeamMemberRow = {
+  user_id: string
+  role: 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
+  can_approve_applications: boolean
+  can_publish_announcements: boolean
+  invited_at: string
+  user_profiles: { full_name: string | null } | Array<{ full_name: string | null }> | null
+}
+
 type EmploymentPageProps = {
   searchParams?: {
     success?: string
@@ -79,7 +88,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     : null
   const { data: centre } = await supabase.from('ecd_centres').select('slug,name').eq('id', ecdId).maybeSingle()
 
-  const [{ data: jobs }, { count: applicationsCount }, { data: jobApplications }] = await Promise.all([
+  const [{ data: jobs }, { count: applicationsCount }, { data: jobApplications }, teamMembersResult] = await Promise.all([
     supabase
       .from('jobs')
       .select('id,title,role_type,is_published,closes_at,created_at')
@@ -96,10 +105,19 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
       .limit(20),
+    supabase
+      .from('ecd_admins')
+      .select(
+        'user_id,role,can_approve_applications,can_publish_announcements,invited_at,user_profiles(full_name)'
+      )
+      .eq('ecd_id', ecdId)
+      .order('invited_at', { ascending: true })
+      .limit(50),
   ])
 
   const jobRows = ((jobs ?? []) as JobRow[]) ?? []
   const applicationRows = ((jobApplications ?? []) as JobApplicationRow[]) ?? []
+  const teamMembers = ((teamMembersResult.data ?? []) as TeamMemberRow[]) ?? []
   const publishedCount = jobRows.filter((job) => job.is_published).length
   const draftCount = jobRows.length - publishedCount
 
@@ -125,7 +143,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     <EcdOsShell
       title="Employment"
       description="Publish jobs in seconds and keep your hiring pipeline active."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -166,6 +184,57 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-slate-200">
+          <CardHeader>
+            <CardTitle>Your Team ({teamMembers.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {teamMembers.length === 0 ? (
+              <p className="text-sm text-slate-500">No team members found. Invite staff from Settings.</p>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {teamMembers.map((member) => {
+                  const profile = Array.isArray(member.user_profiles) ? member.user_profiles[0] : member.user_profiles
+                  const name = profile?.full_name ?? 'Team Member'
+                  const memberRoleLabel =
+                    member.role === 'ecd_admin'
+                      ? 'Centre Admin'
+                      : member.role === 'ecd_supervisor'
+                        ? 'Supervisor'
+                        : 'Staff Member'
+                  return (
+                    <div key={member.user_id} className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{name}</p>
+                        <p className="text-xs text-slate-500">{memberRoleLabel}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-1 text-right">
+                        {member.can_approve_applications ? (
+                          <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] text-cyan-700">
+                            Can Approve
+                          </span>
+                        ) : null}
+                        {member.can_publish_announcements ? (
+                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700">
+                            Can Publish
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            {role === 'ecd_admin' ? (
+              <div className="mt-4 border-t border-slate-100 pt-4">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/ecd/profile#staff">Manage Staff in Settings</Link>
+                </Button>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
 
         <Card className="pipeline-card pipeline-col-shortlisted border-slate-200">
           <CardHeader>

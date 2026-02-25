@@ -284,7 +284,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     <EcdOsShell
       title="Settings"
       description="Update centre, account, and operational settings from one place."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
@@ -583,3 +583,4 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     </EcdOsShell>
   )
 }
+

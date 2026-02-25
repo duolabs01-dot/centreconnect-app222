@@ -98,7 +98,7 @@ function fromProgramBlocks(contentBlocks: unknown): string {
 }
 
 export default async function EcdWebsitePage() {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const [{ data: centre }, { data: contentRows }, { data: subscription }] = await Promise.all([
     supabase
       .from('ecd_centres')
@@ -229,7 +229,7 @@ export default async function EcdWebsitePage() {
     <EcdOsShell
       title="Website"
       description="Build your page, publish when ready, and request custom website setup."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
@@ -460,6 +460,8 @@ export default async function EcdWebsitePage() {
     </EcdOsShell>
   )
 }
+
+
 
 
 

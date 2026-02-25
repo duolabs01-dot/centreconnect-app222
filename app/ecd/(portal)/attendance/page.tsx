@@ -30,7 +30,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export default async function EcdAttendancePage() {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
@@ -84,7 +84,7 @@ export default async function EcdAttendancePage() {
     <EcdOsShell
       title="Attendance"
       description="Mark daily attendance and pickup status."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <AttendanceClient
@@ -97,3 +97,5 @@ export default async function EcdAttendancePage() {
     </EcdOsShell>
   )
 }
+
+

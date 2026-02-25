@@ -34,7 +34,7 @@ function formatCents(amount: number | null | undefined) {
 }
 
 export default async function EcdTransportPage() {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const [configResult, enquiriesResult] = await Promise.all([
     supabase
       .from('transport_configs')
@@ -61,7 +61,7 @@ export default async function EcdTransportPage() {
     <EcdOsShell
       title="Transport Desk"
       description="Shipments, routes, and driver enquiries."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
@@ -170,3 +170,5 @@ export default async function EcdTransportPage() {
     </EcdOsShell>
   )
 }
+
+

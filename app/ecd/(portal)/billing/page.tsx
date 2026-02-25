@@ -61,7 +61,7 @@ export default async function EcdBillingPage() {
     <EcdOsShell
       title="Billing"
       description="Plan details, invoices, and subscription actions in one place."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -299,4 +299,5 @@ export default async function EcdBillingPage() {
     </EcdOsShell>
   )
 }
+
 

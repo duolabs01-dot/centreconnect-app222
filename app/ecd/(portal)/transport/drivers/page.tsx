@@ -136,7 +136,7 @@ export default async function EcdTransportDriversPage() {
     <EcdOsShell
       title="Drivers"
       description="Manage transport drivers and route links."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
@@ -308,3 +308,4 @@ export default async function EcdTransportDriversPage() {
     </EcdOsShell>
   )
 }
+
