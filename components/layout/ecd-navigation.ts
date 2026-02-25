@@ -10,6 +10,7 @@ import {
   Megaphone,
   MessageSquare,
   Settings2,
+  ShieldAlert,
   ShieldCheck,
   Store,
   Truck,
@@ -41,5 +42,6 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/website', label: 'Website', icon: Globe, group: 'growth' },
   { href: '/ecd/marketplace', label: 'Marketplace', icon: Store, group: 'growth', adminOnly: true },
   { href: '/ecd/employment', label: 'Employment', icon: Briefcase, group: 'growth', supervisorAllowed: true },
+  { href: '/ecd/compliance', label: 'Compliance', icon: ShieldAlert, group: 'admin', supervisorAllowed: true },
   { href: '/ecd/support', label: 'Support', icon: LifeBuoy, group: 'admin', supervisorAllowed: true },
 ]
