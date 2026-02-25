@@ -25,23 +25,28 @@ export async function registerSession(
   deviceHint?: string
 ) {
   const { supabaseUrl } = getSupabaseConfig()
-  if (!supabaseUrl || !userId || !sessionToken) return
+  if (!supabaseUrl || !userId || !sessionToken) return false
 
-  await fetch(`${supabaseUrl}/rest/v1/user_sessions?on_conflict=user_id`, {
-    method: 'POST',
-    headers: (() => {
-      const headers = withAuthHeaders(sessionToken, true)
-      headers.set('Prefer', 'resolution=merge-duplicates,return=minimal')
-      return headers
-    })(),
-    body: JSON.stringify({
-      user_id: userId,
-      session_token: sessionToken,
-      device_hint: deviceHint ?? 'unknown',
-      last_seen_at: new Date().toISOString(),
-    }),
-    cache: 'no-store',
-  })
+  try {
+    await fetch(`${supabaseUrl}/rest/v1/user_sessions?on_conflict=user_id`, {
+      method: 'POST',
+      headers: (() => {
+        const headers = withAuthHeaders(sessionToken, true)
+        headers.set('Prefer', 'resolution=merge-duplicates,return=minimal')
+        return headers
+      })(),
+      body: JSON.stringify({
+        user_id: userId,
+        session_token: sessionToken,
+        device_hint: deviceHint ?? 'unknown',
+        last_seen_at: new Date().toISOString(),
+      }),
+      cache: 'no-store',
+    })
+    return true
+  } catch {
+    return false
+  }
 }
 
 export async function validateSession(
@@ -49,24 +54,28 @@ export async function validateSession(
   sessionToken: string
 ): Promise<boolean> {
   const { supabaseUrl } = getSupabaseConfig()
-  if (!supabaseUrl || !userId) return true
+  if (!supabaseUrl || !userId) return false
   if (!sessionToken) return false
 
-  const response = await fetch(
-    `${supabaseUrl}/rest/v1/user_sessions?user_id=eq.${encodeURIComponent(userId)}&select=session_token`,
-    {
-      method: 'GET',
-      headers: withAuthHeaders(sessionToken),
-      cache: 'no-store',
-    }
-  )
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/user_sessions?user_id=eq.${encodeURIComponent(userId)}&select=session_token`,
+      {
+        method: 'GET',
+        headers: withAuthHeaders(sessionToken),
+        cache: 'no-store',
+      }
+    )
 
-  if (!response.ok) return true
+    if (!response.ok) return false
 
-  const data = (await response.json().catch(() => [])) as Array<{ session_token?: string }>
-  if (!Array.isArray(data) || data.length === 0) return true
+    const data = (await response.json().catch(() => [])) as Array<{ session_token?: string }>
+    if (!Array.isArray(data) || data.length === 0) return false
 
-  return data[0]?.session_token === sessionToken
+    return data[0]?.session_token === sessionToken
+  } catch {
+    return false
+  }
 }
 
 export async function clearSession(userId: string) {

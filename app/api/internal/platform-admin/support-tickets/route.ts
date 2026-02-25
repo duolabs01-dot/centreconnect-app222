@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
+import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server' // Import for user session
+
+const createSupportTicketSchema = z.object({
+  subject: z.string().min(3).max(200),
+  priority: z.number().int().min(1).max(5),
+  ecdId: z.string().uuid(),
+  description: z.string().min(5).max(5000),
+})
 
 export async function POST(req: Request) {
   const supabaseAdmin = createAdminClient()
@@ -18,11 +26,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { subject, priority, ecdId, description } = await req.json()
-
-    if (!subject || !priority || !ecdId || !description) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    const payload = await req.json().catch(() => null)
+    const parsed = createSupportTicketSchema.safeParse(payload)
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid payload', issues: parsed.error.flatten() }, { status: 400 })
     }
+    const { subject, priority, ecdId, description } = parsed.data
 
     // Generate ticket_number - a simple timestamp based one for now
     const ticket_number = `TICKET-${Date.now()}`

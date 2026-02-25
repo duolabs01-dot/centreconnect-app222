@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Section } from '@/components/layout/Section'
 import { triggerConfetti } from '@/lib/ui/confetti'
+import { registerSession } from '@/lib/session-guard'
 
 export default function EcdLoginPage() {
   const router = useRouter()
@@ -37,6 +38,17 @@ export default function EcdLoginPage() {
       })
       if (error) throw error
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session?.access_token && data.user) {
+        await registerSession(
+          data.user.id,
+          session.access_token,
+          typeof window !== 'undefined' ? navigator.userAgent.slice(0, 100) : 'server'
+        )
+      }
+
       const ensureProfileResponse = await fetch('/api/auth/ensure-profile', { method: 'POST' })
       if (!ensureProfileResponse.ok) {
         const payload = (await ensureProfileResponse.json().catch(() => ({}))) as { error?: string }
@@ -51,7 +63,7 @@ export default function EcdLoginPage() {
 
       if (profileError) throw profileError
 
-      if (profile.role !== 'ecd_admin' && profile.role !== 'ecd_staff') {
+      if (profile.role !== 'ecd_admin' && profile.role !== 'ecd_staff' && profile.role !== 'ecd_supervisor') {
         await supabase.auth.signOut()
         toast.error('This login is for ECD centres only')
         setLoading(false)

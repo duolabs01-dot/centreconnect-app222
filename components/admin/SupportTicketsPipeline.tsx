@@ -117,15 +117,15 @@ export function SupportTicketsPipeline({ tickets }: SupportTicketsPipelineProps)
                       {TICKET_STATUSES.map(s => {
                         if (s === status) return null
                         return (
-                          <Button
-                            key={s}
-                            variant="outline"
-                            size="sm"
-                            className={cn(
-                              "h-6 px-2 text-[8px] uppercase tracking-widest",
-                              "border-white/10 text-slate-400 hover:bg-white/5",
-                              updatingTicket === ticket.id ? "opacity-50 cursor-not-allowed" : ""
-                            )}
+                            <Button
+                              key={s}
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "min-h-11 px-3 text-[10px] uppercase tracking-widest",
+                                "border-white/10 text-slate-400 hover:bg-white/5",
+                                updatingTicket === ticket.id ? "opacity-50 cursor-not-allowed" : ""
+                              )}
                             onClick={() => void updateTicketStatus(ticket.id, s)}
                             disabled={updatingTicket === ticket.id}
                           >

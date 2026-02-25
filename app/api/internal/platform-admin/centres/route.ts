@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
+import { randomBytes } from 'crypto'
 
 const createCentreSchema = z.object({
   slug: z.string().min(2).max(80),
@@ -65,8 +66,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: centreError.message }, { status: 400 })
   }
 
-  // Generate a random password for the new ECD admin user
-  const tempPassword = Math.random().toString(36).slice(-10)
+  // Generate a cryptographically strong temporary password for the new ECD admin user
+  const tempPassword = `Cc!${randomBytes(16).toString('base64url')}a1`
 
   // Create the auth user in Supabase
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
@@ -129,11 +130,14 @@ export async function POST(request: Request) {
   })
 
   if (subscriptionError) {
+    await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', authUser.user.id)
+    await adminClient.from('user_profiles').delete().eq('id', authUser.user.id)
+    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
       {
-        error: 'Centre created, but failed to create subscription',
+        error: 'Failed to create subscription and rolled back tenant provisioning',
         details: subscriptionError.message,
-        centre,
       },
       { status: 500 }
     )

@@ -1,19 +1,32 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+
+const updateTicketStatusSchema = z.object({
+  ticketId: z.string().uuid(),
+  newStatus: z.enum(['open', 'in_progress', 'waiting_response', 'resolved', 'closed']),
+})
 
 export async function updateTicketStatus(ticketId: string, newStatus: string) {
-  const supabaseAdmin = createAdminClient()
+  const parsed = updateTicketStatusSchema.safeParse({ ticketId, newStatus })
+  if (!parsed.success) {
+    return { success: false, error: 'Invalid ticket update request.' }
+  }
 
-  // TODO: Add authorization check to ensure only platform_admin can update status
-  // This could involve fetching the user from an authenticated session here
-  // and checking their role. For now, assuming calling context ensures admin.
+  const platformAdmin = await requirePlatformAdmin()
+  if (!platformAdmin) {
+    return { success: false, error: 'Forbidden' }
+  }
+
+  const supabaseAdmin = createAdminClient()
 
   const { data, error } = await supabaseAdmin
     .from('support_tickets')
-    .update({ status: newStatus, updated_at: new Date().toISOString() })
-    .eq('id', ticketId)
+    .update({ status: parsed.data.newStatus, updated_at: new Date().toISOString() })
+    .eq('id', parsed.data.ticketId)
     .select()
 
   if (error) {

@@ -79,7 +79,15 @@ export async function updateSession(request: NextRequest) {
 
   const userResult = await withTimeout(supabase.auth.getUser(), 1400)
   if (!userResult) {
-    return finish(response, 'user-timeout')
+    clearRoleCache(response, request)
+    if (protectedArea) {
+      const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+      const nextPath = `${pathname}${request.nextUrl.search}`
+      loginUrl.searchParams.set('next', nextPath)
+      loginUrl.searchParams.set('reason', 'auth_check_timeout')
+      return finish(NextResponse.redirect(loginUrl), 'user-timeout-protected-redirect')
+    }
+    return finish(response, 'user-timeout-public-pass')
   }
 
   const {
@@ -105,9 +113,30 @@ export async function updateSession(request: NextRequest) {
   }
 
   const cachedRole = isAuthRoute ? null : getCachedRole(request, user.id)
-  const role = cachedRole ?? (await withTimeout(getUserRole(supabase, user.id), 1400))
-  if (role === null) return finish(response, 'role-timeout')
-  if (!cachedRole) setRoleCache(response, request, user.id, role)
+  let role: UserRole | null = cachedRole
+
+  if (!cachedRole) {
+    const roleLookup = await withTimeout(
+      getUserRole(supabase, user.id).then((value) => ({ value })),
+      1400
+    )
+    if (!roleLookup) {
+      clearRoleCache(response, request)
+      if (protectedArea) {
+        const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+        const nextPath = `${pathname}${request.nextUrl.search}`
+        loginUrl.searchParams.set('next', nextPath)
+        loginUrl.searchParams.set('reason', 'role_check_timeout')
+        return finish(NextResponse.redirect(loginUrl), 'role-timeout-protected-redirect')
+      }
+      return finish(response, 'role-timeout-public-pass')
+    }
+    role = roleLookup.value
+    if (role) {
+      setRoleCache(response, request, user.id, role)
+    }
+  }
+
   const dashboardPath = role ? getDashboardPath(role) : '/'
 
   if (isAuthRoute && role) {

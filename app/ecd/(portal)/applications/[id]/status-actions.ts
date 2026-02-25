@@ -155,7 +155,10 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
 
     const parent = Array.isArray(application.parents) ? application.parents[0] ?? null : application.parents
     const child = Array.isArray(application.children) ? application.children[0] ?? null : application.children
-    const parentProfile = parent && Array.isArray(parent.user_profiles) ? parent.user_profiles[0] ?? null : parent?.user_profiles ?? null
+    const rawParentProfile = parent?.user_profiles ?? null
+    const parentProfile: ApplicationProfile | null = Array.isArray(rawParentProfile)
+      ? rawParentProfile[0] ?? null
+      : rawParentProfile
 
     if (parent?.id) {
       const centreNameResult = await session.supabase.from('ecd_centres').select('name').eq('id', session.ecdId).maybeSingle()

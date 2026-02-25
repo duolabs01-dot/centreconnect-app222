@@ -124,7 +124,7 @@ export function SupportPageClientLayout({ tickets, availableCentres }: SupportPa
                                   key={col.id}
                                   variant="outline"
                                   size="sm"
-                                  className="h-6 text-[8px] uppercase tracking-widest font-orbitron border-white/10 hover:bg-white/5"
+                                  className="min-h-11 px-3 text-[10px] uppercase tracking-widest font-orbitron border-white/10 hover:bg-white/5"
                                   onClick={() => handleStatusChange(ticket.id, col.statuses[0])}
                                   disabled={isPending}
                                 >

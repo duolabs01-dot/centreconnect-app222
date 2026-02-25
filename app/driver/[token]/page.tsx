@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 
 type DriverRow = {
@@ -31,12 +31,17 @@ type StopRow = {
 }
 
 export default async function DriverPage({ params }: { params: { token: string } }) {
-  const supabase = await createClient()
+  const token = params.token?.trim()
+  if (!token || !/^[a-f0-9]{32}$/i.test(token)) {
+    notFound()
+  }
+
+  const supabase = createAdminClient()
 
   const { data: driverData } = await supabase
     .from('transport_drivers')
     .select('id,full_name,ecd_id')
-    .eq('driver_token', params.token)
+    .eq('driver_token', token)
     .eq('status', 'active')
     .maybeSingle()
 

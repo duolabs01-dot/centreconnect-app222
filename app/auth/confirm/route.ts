@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { registerSession } from '@/lib/session-guard'
 
 type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
@@ -175,6 +176,17 @@ export async function GET(request: NextRequest) {
     const fullName = user.user_metadata?.full_name ?? fallbackName(user.email)
     const phone = user.user_metadata?.phone ?? null
     const userId = user.id
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.access_token) {
+      await registerSession(
+        userId,
+        session.access_token,
+        request.headers.get('user-agent')?.slice(0, 100) ?? 'auth-confirm'
+      )
+    }
 
     const provisionedWithAdmin = await provisionProfileWithAdmin({
       userId,
