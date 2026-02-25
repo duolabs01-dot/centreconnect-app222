@@ -4,11 +4,7 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { cn, formatDate, getJohannesburgNowParts, isSameJohannesburgDay } from '@/lib/utils'
+import { cn, getJohannesburgNowParts, isSameJohannesburgDay } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 export const metadata: Metadata = {
@@ -16,37 +12,11 @@ export const metadata: Metadata = {
   description: 'Daily operations first: attendance, pickup security, and admissions inbox.',
 }
 
-type DashboardPageProps = {
-  searchParams?: {
-    status?: string
-    q?: string
-  }
-}
-
 type PendingApplicationRow = {
   id: string
-  application_number: string
   status: string
   submitted_at: string
   reviewed_at: string | null
-  children:
-    | { first_name: string; last_name: string }
-    | Array<{ first_name: string; last_name: string }>
-    | null
-  parents:
-    | {
-        user_profiles:
-          | { full_name: string | null }
-          | Array<{ full_name: string | null }>
-          | null
-      }
-    | Array<{
-        user_profiles:
-          | { full_name: string | null }
-          | Array<{ full_name: string | null }>
-          | null
-      }>
-    | null
 }
 
 type TransportConfigSnapshot = {
@@ -56,21 +26,39 @@ type TransportConfigSnapshot = {
   coverage_areas: string[] | null
   notes: string | null
 }
-function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
-  if (!value) return null
-  return Array.isArray(value) ? value[0] ?? null : value
-}
-
 function pct(part: number, total: number) {
   if (total <= 0) return 0
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)))
 }
 
-function trendLabel(current: number, previous: number) {
+function trendLabel(current: number, previous: number, period = 'vs last week') {
   const diff = current - previous
-  if (diff > 0) return `+${diff} vs last week`
-  if (diff < 0) return `${diff} vs last week`
-  return 'No change vs last week'
+  if (diff > 0) return `+${diff} ${period}`
+  if (diff < 0) return `${diff} ${period}`
+  return `No change ${period}`
+}
+
+function trendTone(current: number, previous: number) {
+  if (current > previous) return { arrow: '^', className: 'text-emerald-600' }
+  if (current < previous) return { arrow: 'v', className: 'text-rose-600' }
+  return { arrow: '-', className: 'text-slate-400' }
+}
+
+function TrendText({
+  current,
+  previous,
+  period = 'vs last week',
+}: {
+  current: number
+  previous: number
+  period?: string
+}) {
+  const trend = trendTone(current, previous)
+  return (
+    <p className={`mt-1 text-[11px] font-semibold ${trend.className}`}>
+      {trend.arrow} {trendLabel(current, previous, period)}
+    </p>
+  )
 }
 
 function formatTransportFee(cents: number | null | undefined) {
@@ -78,38 +66,34 @@ function formatTransportFee(cents: number | null | undefined) {
   return `R${(cents / 100).toFixed(0)} / month`
 }
 
-export default async function EcdDashboardPage({ searchParams }: DashboardPageProps) {
+export default async function EcdDashboardPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')
     .select('logo_url,cover_image_url,description,phone,address,suburb')
     .eq('id', ecdId)
     .maybeSingle()
-  const selectedStatus = ['submitted', 'in_review', 'waitlisted'].includes(searchParams?.status ?? '')
-    ? (searchParams?.status as 'submitted' | 'in_review' | 'waitlisted')
-    : 'all'
-  const searchText = (searchParams?.q ?? '').trim().toLowerCase()
   const nowJhb = getJohannesburgNowParts()
   const todayDate = `${nowJhb.year}-${String(nowJhb.month).padStart(2, '0')}-${String(nowJhb.day).padStart(2, '0')}`
+  const monthStartIso = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
+  const previousMonthStartIso = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString()
 
-  let pendingQuery = supabase
+  const pendingQuery = supabase
     .from('applications')
-    .select(
-      'id,application_number,status,submitted_at,reviewed_at,children(first_name,last_name),parents(user_profiles(full_name))'
-    )
+    .select('id,status,submitted_at,reviewed_at')
     .eq('ecd_id', ecdId)
     .in('status', ['submitted', 'in_review', 'waitlisted'])
     .order('submitted_at', { ascending: true })
     .limit(30)
 
-  if (selectedStatus !== 'all') {
-    pendingQuery = pendingQuery.eq('status', selectedStatus)
-  }
-
   const [
     pendingApplicationsResult,
     snapshotResult,
     transportResult,
+    enrolledResult,
+    revenueResult,
+    staffResult,
+    previousRevenueResult,
   ] = await Promise.all([
     pendingQuery,
     supabase.rpc('get_ecd_dashboard_snapshot', { p_ecd_id: ecdId, p_today: todayDate }),
@@ -118,6 +102,16 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
       .select('offers_transport,fee_per_month,fee_description,coverage_areas,notes')
       .eq('ecd_id', ecdId)
       .maybeSingle(),
+    supabase.from('applications').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId).eq('status', 'enrolled'),
+    supabase.from('invoices').select('total').eq('ecd_id', ecdId).eq('status', 'paid').gte('paid_at', monthStartIso),
+    supabase.from('ecd_admins').select('user_id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+    supabase
+      .from('invoices')
+      .select('total')
+      .eq('ecd_id', ecdId)
+      .eq('status', 'paid')
+      .gte('paid_at', previousMonthStartIso)
+      .lt('paid_at', monthStartIso),
   ])
   const snapshot = (snapshotResult.data?.[0] ?? {}) as {
     submitted_count?: number
@@ -133,6 +127,10 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
     unverified_guardians_count?: number
   }
   const transportConfig = (transportResult.data ?? null) as TransportConfigSnapshot | null
+  const enrolledCount = enrolledResult.count ?? 0
+  const revenueThisMonth = (revenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
+  const revenuePreviousMonth = (previousRevenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
+  const staffCount = staffResult.count ?? 0
 
   const applications = (pendingApplicationsResult.data ?? []) as PendingApplicationRow[]
   const nowTs = Date.now()
@@ -226,24 +224,6 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
   }>
   const topActions = recommendationItems.slice(0, 3)
 
-  const filteredPendingApplications = applications.filter((app) => {
-    if (!searchText) return true
-    const child = normalizeOne(app.children)
-    const parent = normalizeOne(app.parents)
-    const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-    const haystack = [
-      app.application_number,
-      app.status,
-      child?.first_name,
-      child?.last_name,
-      parentProfile?.full_name,
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-    return haystack.includes(searchText)
-  })
-
   return (
     <EcdOsShell
       title="Daily Operations"
@@ -289,6 +269,33 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
           </CardContent>
         </Card>
 
+        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Enrolled</p>
+            <p className="mt-2 text-3xl font-black text-cyan-700">{enrolledCount}</p>
+            <p className="text-xs text-slate-500">Active children</p>
+            <TrendText current={enrolledCount} previous={enrolledCount} />
+          </Card>
+          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Revenue</p>
+            <p className="mt-2 text-3xl font-black text-emerald-700">R{revenueThisMonth.toLocaleString()}</p>
+            <p className="text-xs text-slate-500">This month paid</p>
+            <TrendText current={revenueThisMonth} previous={revenuePreviousMonth} period="vs last month" />
+          </Card>
+          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Staff</p>
+            <p className="mt-2 text-3xl font-black text-foreground">{staffCount}</p>
+            <p className="text-xs text-slate-500">Team members</p>
+            <TrendText current={staffCount} previous={staffCount} />
+          </Card>
+          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Attendance</p>
+            <p className="mt-2 text-3xl font-black text-amber-700">{attendanceCurrent7}</p>
+            <p className="text-xs text-slate-500">Logs this week</p>
+            <TrendText current={attendanceCurrent7} previous={attendancePrevious7} />
+          </Card>
+        </section>
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card className="glass-card border border-border bg-card/90">
             <CardHeader className="pb-2">
@@ -296,7 +303,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-black text-cyan-700">{admissionsCurrent7}</p>
-              <p className="text-xs text-slate-400">{trendLabel(admissionsCurrent7, admissionsPrevious7)}</p>
+              <TrendText current={admissionsCurrent7} previous={admissionsPrevious7} />
             </CardContent>
           </Card>
           <Card className="glass-card border border-border bg-card/90">
@@ -305,7 +312,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-black text-emerald-700">{attendanceCurrent7}</p>
-              <p className="text-xs text-slate-400">{trendLabel(attendanceCurrent7, attendancePrevious7)}</p>
+              <TrendText current={attendanceCurrent7} previous={attendancePrevious7} />
             </CardContent>
           </Card>
           <Card className="glass-card border border-border bg-card/90">
@@ -317,6 +324,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <p className="text-xs text-slate-400">
                 {pickedUpToday}/{attendanceToday} picked up, {activePickupCodes} active codes
               </p>
+              <TrendText current={pickupCompletionPct} previous={pickupCompletionPct} period="today" />
             </CardContent>
           </Card>
         </div>
@@ -377,96 +385,33 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
             <div className="xl:col-span-2">
               <Card className="glass-card border border-border bg-card/90 text-foreground">
                 <CardHeader>
-                  <CardTitle>Applications Needing Action</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form method="get" action="/ecd/dashboard" className="mb-4 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-                    <Input
-                      name="q"
-                      defaultValue={searchParams?.q ?? ''}
-                      placeholder="Search by child, parent, or application number"
-                      className="bg-background border-border text-foreground"
-                    />
-                    <select
-                      name="status"
-                      defaultValue={selectedStatus}
-                      className="cc-native-field bg-background border-border text-foreground"
-                    >
-                      <option value="all">All statuses</option>
-                      <option value="submitted">Submitted</option>
-                      <option value="in_review">In Review</option>
-                      <option value="waitlisted">Waitlisted</option>
-                    </select>
-                    <Button type="submit" className="bg-cyan-600 text-cyan-50 hover:bg-cyan-500">
-                      Apply
-                    </Button>
-                  </form>
-
-                  <div className="mb-4 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-cyan-700">
-                      Submitted: {submittedCount}
-                    </span>
-                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground">
-                      In Review: {inReviewCount}
-                    </span>
-                    <span className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-amber-800">
-                      Waitlisted: {waitlistedApplications}
-                    </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <CardTitle>Admissions at a Glance</CardTitle>
+                    <Link href="/ecd/applications" className="text-sm font-semibold text-cyan-700 hover:text-cyan-600">
+                      View All
+                    </Link>
                   </div>
-
-                  {filteredPendingApplications.length === 0 ? (
-                    <EmptyState
-                      title="No applications needing action"
-                      description="Start by checking new applications or ask parents to submit directly from their side."
-                      actionLabel="Open Applications"
-                      actionHref="/ecd/applications"
-                      checklist={[
-                        'Invite parents to apply from their own accounts for accurate details.',
-                        'Confirm centre profile and contact details are complete.',
-                        'Check again after new submissions arrive.',
-                      ]}
-                    />
-                  ) : (
-                    <div className="overflow-x-auto rounded-2xl border border-border bg-card/80">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Application</TableHead>
-                            <TableHead>Child</TableHead>
-                            <TableHead>Parent</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Submitted</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredPendingApplications.map((application) => {
-                            const child = normalizeOne(application.children)
-                            const parent = normalizeOne(application.parents)
-                            const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-                            return (
-                              <TableRow key={application.id}>
-                                <TableCell className="font-medium text-foreground">{application.application_number}</TableCell>
-                                <TableCell className="text-foreground">
-                                  {child ? `${child.first_name} ${child.last_name}` : 'Unknown child'}
-                                </TableCell>
-                                <TableCell className="text-foreground">{parentProfile?.full_name ?? 'Unknown parent'}</TableCell>
-                                <TableCell>
-                                  <StatusBadge status={application.status} />
-                                </TableCell>
-                                <TableCell className="text-foreground">{formatDate(application.submitted_at)}</TableCell>
-                                <TableCell className="text-right">
-                                  <Button size="sm" variant="outline" asChild>
-                                    <Link href={`/ecd/applications/${application.id}`}>Review</Link>
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            )
-                          })}
-                        </TableBody>
-                      </Table>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
+                      <p className="text-2xl font-black text-foreground">{submittedCount}</p>
+                      <p className="text-xs font-semibold text-slate-500">New</p>
                     </div>
-                  )}
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
+                      <p className="text-2xl font-black text-amber-700">{inReviewCount}</p>
+                      <p className="text-xs font-semibold text-amber-700">In Review</p>
+                    </div>
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-center">
+                      <p className="text-2xl font-black text-rose-700">{stale24h}</p>
+                      <p className="text-xs font-semibold text-rose-700">Waiting over 24h</p>
+                    </div>
+                  </div>
+                  {stale72h > 0 ? (
+                    <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+                      {stale72h} applications are waiting longer than 72h and need urgent review.
+                    </p>
+                  ) : null}
                 </CardContent>
               </Card>
             </div>
@@ -476,22 +421,29 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
               <CardHeader>
                 <CardTitle>Operational Scorecard</CardTitle>
               </CardHeader>
-                              <CardContent className="space-y-2 text-sm text-muted-foreground">                <p>
-                  Avg response time:{' '}
-                  <span className="font-semibold text-cyan-700">{avgResponseHours}h</span>
-                </p>
-                <p>
-                  New applications today:{' '}
-                  <span className="font-semibold text-cyan-700">{newToday}</span>
-                </p>
-                <p>
-                  Waitlisted:{' '}
-                  <span className="font-semibold text-cyan-700">{waitlistedApplications}</span>
-                </p>
-                <p>
-                  Unverified guardians:{' '}
-                  <span className="font-semibold text-cyan-700">{unverifiedGuardians}</span>
-                </p>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
+                    <p className="text-2xl font-black text-cyan-700">{avgResponseHours}h</p>
+                    <p className="text-xs font-semibold text-slate-500">Avg Response</p>
+                    <TrendText current={avgResponseHours} previous={avgResponseHours} />
+                  </div>
+                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
+                    <p className="text-2xl font-black text-foreground">{newToday}</p>
+                    <p className="text-xs font-semibold text-slate-500">New Today</p>
+                    <TrendText current={newToday} previous={newToday} />
+                  </div>
+                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
+                    <p className="text-2xl font-black text-amber-700">{waitlistedApplications}</p>
+                    <p className="text-xs font-semibold text-slate-500">Waitlisted</p>
+                    <TrendText current={waitlistedApplications} previous={waitlistedApplications} />
+                  </div>
+                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
+                    <p className="text-2xl font-black text-rose-700">{unverifiedGuardians}</p>
+                    <p className="text-xs font-semibold text-slate-500">Unverified</p>
+                    <TrendText current={unverifiedGuardians} previous={unverifiedGuardians} />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
