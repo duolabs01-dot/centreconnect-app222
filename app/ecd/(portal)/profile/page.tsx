@@ -41,7 +41,7 @@ export default async function EcdProfilePage() {
     .maybeSingle()
   const { data: staffMembers } = await supabase
     .from('ecd_admins')
-    .select('user_id,role,user_profiles(full_name)')
+    .select('user_id,role,can_approve_applications,can_publish_announcements,user_profiles(full_name)')
     .eq('ecd_id', ecdId)
     .order('invited_at', { ascending: false })
     .limit(20)
@@ -164,6 +164,30 @@ export default async function EcdProfilePage() {
     revalidatePath('/ecd/support')
   }
 
+  async function updateSupervisorPermissions(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') return
+
+    const staffUserId = String(formData.get('staff_user_id') ?? '').trim()
+    if (!staffUserId) return
+
+    const canApproveApplications = String(formData.get('can_approve_applications') ?? 'false') === 'true'
+    const canPublishAnnouncements = String(formData.get('can_publish_announcements') ?? 'false') === 'true'
+
+    await session.supabase
+      .from('ecd_admins')
+      .update({
+        can_approve_applications: canApproveApplications,
+        can_publish_announcements: canPublishAnnouncements,
+      })
+      .eq('ecd_id', session.ecdId)
+      .eq('user_id', staffUserId)
+      .eq('role', 'ecd_supervisor')
+
+    revalidatePath('/ecd/profile')
+  }
+
   async function requestCancellation(formData: FormData) {
     'use server'
     await requestCancellationAction({
@@ -194,7 +218,8 @@ export default async function EcdProfilePage() {
             </div>
             <p className="text-sm font-semibold text-foreground">{score}% complete</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Centre: {centre?.name ?? 'Your centre'} | Role: {role === 'ecd_admin' ? 'ECD Admin' : 'ECD Staff'}
+              Centre: {centre?.name ?? 'Your centre'} | Role:{' '}
+              {role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}
             </p>
             <div className="mt-3 space-y-2">
               {checks.map((item) => (
@@ -355,6 +380,7 @@ export default async function EcdProfilePage() {
               <input name="email" type="email" className="cc-native-field" placeholder="Staff email" required />
               <select name="role" className="cc-native-field">
                 <option value="ecd_staff">ECD Staff</option>
+                <option value="ecd_supervisor">ECD Supervisor</option>
                 <option value="ecd_admin">ECD Admin</option>
               </select>
               <Button type="submit" className="w-fit md:col-span-3">Invite Staff (Support-assisted)</Button>
@@ -376,6 +402,7 @@ export default async function EcdProfilePage() {
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
                           <select name="new_role" className="cc-native-field h-9">
                             <option value="ecd_staff">Set staff</option>
+                            <option value="ecd_supervisor">Set supervisor</option>
                             <option value="ecd_admin">Set admin</option>
                           </select>
                           <Button size="sm" variant="outline" type="submit">Request Role Change</Button>
@@ -384,6 +411,77 @@ export default async function EcdProfilePage() {
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
                           <Button size="sm" variant="outline" type="submit">Request Removal</Button>
                         </form>
+                      </div>
+                    ) : null}
+                    {member.role === 'ecd_supervisor' && role === 'ecd_admin' ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <form action={updateSupervisorPermissions}>
+                          <input type="hidden" name="staff_user_id" value={member.user_id} />
+                          <input
+                            type="hidden"
+                            name="can_approve_applications"
+                            value={member.can_approve_applications ? 'false' : 'true'}
+                          />
+                          <input
+                            type="hidden"
+                            name="can_publish_announcements"
+                            value={member.can_publish_announcements ? 'true' : 'false'}
+                          />
+                          <button
+                            type="submit"
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                              member.can_approve_applications
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-200 bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            Approve Applications: {member.can_approve_applications ? 'On' : 'Off'}
+                          </button>
+                        </form>
+                        <form action={updateSupervisorPermissions}>
+                          <input type="hidden" name="staff_user_id" value={member.user_id} />
+                          <input
+                            type="hidden"
+                            name="can_approve_applications"
+                            value={member.can_approve_applications ? 'true' : 'false'}
+                          />
+                          <input
+                            type="hidden"
+                            name="can_publish_announcements"
+                            value={member.can_publish_announcements ? 'false' : 'true'}
+                          />
+                          <button
+                            type="submit"
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                              member.can_publish_announcements
+                                ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                                : 'border-slate-200 bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            Publish Announcements: {member.can_publish_announcements ? 'On' : 'Off'}
+                          </button>
+                        </form>
+                      </div>
+                    ) : member.role === 'ecd_supervisor' ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+                            member.can_approve_applications
+                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-slate-50 text-slate-600'
+                          }`}
+                        >
+                          Approve Applications: {member.can_approve_applications ? 'On' : 'Off'}
+                        </span>
+                        <span
+                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+                            member.can_publish_announcements
+                              ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                              : 'border-slate-200 bg-slate-50 text-slate-600'
+                          }`}
+                        >
+                          Publish Announcements: {member.can_publish_announcements ? 'On' : 'Off'}
+                        </span>
                       </div>
                     ) : null}
                   </div>

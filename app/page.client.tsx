@@ -9,7 +9,7 @@ import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/
 
 type HomeClientPageProps = {
   userEmail: string | null
-  role: 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user' | null
+  role: 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user' | null
   parentItems: Array<{
     id: string
     centreName: string

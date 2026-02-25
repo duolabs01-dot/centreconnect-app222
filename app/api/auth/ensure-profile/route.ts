@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user'
+type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
 function sanitizeRole(role: unknown): AllowedRole {
-  if (role === 'platform_admin' || role === 'ecd_admin' || role === 'ecd_staff' || role === 'parent_user') {
+  if (role === 'platform_admin' || role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor' || role === 'parent_user') {
     return role
   }
   return 'parent_user'
@@ -70,7 +70,7 @@ export async function POST() {
       }
     }
 
-    if (roleToPersist === 'ecd_admin' || roleToPersist === 'ecd_staff') {
+    if (roleToPersist === 'ecd_admin' || roleToPersist === 'ecd_staff' || roleToPersist === 'ecd_supervisor') {
       const normalizedEmail = (user.email ?? '').trim().toLowerCase()
       const { data: memberships } = await admin
         .from('ecd_admins')

@@ -79,7 +79,7 @@ function formatTransportFee(cents: number | null | undefined) {
 }
 
 export default async function EcdDashboardPage({ searchParams }: DashboardPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')
     .select('logo_url,cover_image_url,description,phone,address,suburb')
@@ -248,7 +248,7 @@ export default async function EcdDashboardPage({ searchParams }: DashboardPagePr
     <EcdOsShell
       title="Daily Operations"
       description="Attendance, pickup flow, and admissions in one operational view."
-      roleLabel="ECD Portal"
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">

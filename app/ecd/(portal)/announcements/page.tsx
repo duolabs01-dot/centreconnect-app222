@@ -46,7 +46,7 @@ const announcementTemplates: Record<string, { title: string; message: string; co
 }
 
 export default async function EcdAnnouncementsPage({ searchParams }: AnnouncementsPageProps) {
-  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
   const publishedFilter = searchParams?.published === 'false' ? 'false' : 'all'
   const selectedTemplate =
@@ -61,13 +61,27 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     const content = String(formData.get('content') ?? '').trim()
     const publishNow = String(formData.get('publish_now') ?? '') === 'on'
     if (!title || !content) return
+    let canPublishAnnouncements = true
+    if (session.role === 'ecd_supervisor') {
+      const { data: membership } = await session.supabase
+        .from('ecd_admins')
+        .select('can_publish_announcements')
+        .eq('ecd_id', session.ecdId)
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+      canPublishAnnouncements = membership?.can_publish_announcements === true
+    }
+
+    const pendingAdminApproval = session.role === 'ecd_supervisor' && !canPublishAnnouncements
+    const shouldPublishNow = publishNow && !pendingAdminApproval
 
     await session.supabase.from('announcements').insert({
       ecd_id: session.ecdId,
       title,
       content,
-      is_published: publishNow,
-      published_at: publishNow ? new Date().toISOString() : null,
+      is_published: shouldPublishNow,
+      published_at: shouldPublishNow ? new Date().toISOString() : null,
+      pending_admin_approval: pendingAdminApproval,
       created_by: session.user.id,
     })
 
@@ -80,12 +94,23 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     const id = String(formData.get('id') ?? '').trim()
     const nextPublished = String(formData.get('next_published') ?? 'false') === 'true'
     if (!id) return
+    const { data: announcement } = await session.supabase
+      .from('announcements')
+      .select('pending_admin_approval')
+      .eq('id', id)
+      .eq('ecd_id', session.ecdId)
+      .maybeSingle()
+
+    if (nextPublished && announcement?.pending_admin_approval && session.role !== 'ecd_admin') {
+      return
+    }
 
     await session.supabase
       .from('announcements')
       .update({
         is_published: nextPublished,
         published_at: nextPublished ? new Date().toISOString() : null,
+        pending_admin_approval: nextPublished ? false : announcement?.pending_admin_approval ?? false,
       })
       .eq('id', id)
       .eq('ecd_id', session.ecdId)
@@ -95,7 +120,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
 
   let query = supabase
     .from('announcements')
-    .select('id,title,is_published,created_at,published_at')
+    .select('id,title,is_published,created_at,published_at,pending_admin_approval')
     .eq('ecd_id', ecdId)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -201,17 +226,31 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
                     {announcements.map((item) => (
                       <TableRow key={item.id}>
                         <TableCell className="font-medium">{item.title}</TableCell>
-                        <TableCell>{item.is_published ? 'Published' : 'Draft'}</TableCell>
+                        <TableCell>
+                          {item.pending_admin_approval ? (
+                            <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                              Pending Admin Approval
+                            </span>
+                          ) : item.is_published ? (
+                            'Published'
+                          ) : (
+                            'Draft'
+                          )}
+                        </TableCell>
                         <TableCell>{formatDate(item.created_at)}</TableCell>
                         <TableCell>{item.published_at ? formatDate(item.published_at) : '--'}</TableCell>
                         <TableCell className="text-right">
-                          <form action={toggleAnnouncementStatus}>
-                            <input type="hidden" name="id" value={item.id} />
-                            <input type="hidden" name="next_published" value={item.is_published ? 'false' : 'true'} />
-                            <Button size="sm" variant="outline" type="submit">
-                              {item.is_published ? 'Unpublish' : 'Publish'}
-                            </Button>
-                          </form>
+                          {item.pending_admin_approval && role !== 'ecd_admin' ? (
+                            <span className="text-xs text-slate-500">Awaiting admin</span>
+                          ) : (
+                            <form action={toggleAnnouncementStatus}>
+                              <input type="hidden" name="id" value={item.id} />
+                              <input type="hidden" name="next_published" value={item.is_published ? 'false' : 'true'} />
+                              <Button size="sm" variant="outline" type="submit">
+                                {item.is_published ? 'Unpublish' : 'Publish'}
+                              </Button>
+                            </form>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

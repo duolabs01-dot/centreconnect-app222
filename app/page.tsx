@@ -3,7 +3,7 @@ import HomeClientPage from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
-type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user' | null
+type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user' | null
 type JobOpportunity = {
   id: string
   title: string
@@ -57,7 +57,7 @@ export default async function HomePage() {
     if (role === 'platform_admin') {
       redirect('/admin/command')
     }
-    if (role === 'ecd_admin' || role === 'ecd_staff') {
+    if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') {
       redirect('/ecd/dashboard')
     }
     if (role === 'parent_user') {

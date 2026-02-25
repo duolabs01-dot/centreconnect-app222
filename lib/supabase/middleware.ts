@@ -127,7 +127,7 @@ export async function updateSession(request: NextRequest) {
   return finish(response, cachedRole ? 'protected-pass-cache' : 'protected-pass-db')
 }
 
-type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user'
+type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 type ProtectedArea = 'admin' | 'ecd' | 'parent'
 
 function getProtectedArea(pathname: string): ProtectedArea | null {
@@ -141,12 +141,12 @@ function getProtectedArea(pathname: string): ProtectedArea | null {
 
 function isRoleAllowed(area: ProtectedArea, role: UserRole): boolean {
   if (area === 'admin') return role === 'platform_admin'
-  if (area === 'ecd') return role === 'ecd_admin' || role === 'ecd_staff'
+  if (area === 'ecd') return role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor'
   return role === 'parent_user'
 }
 
 function getDashboardPath(role: UserRole | null): string {
-     if (role === 'platform_admin') return '/admin/command';  if (role === 'ecd_admin' || role === 'ecd_staff') return '/ecd/dashboard'
+     if (role === 'platform_admin') return '/admin/command';  if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
   return '/parent/dashboard'
 }
 
@@ -219,5 +219,5 @@ function clearRoleCache(response: NextResponse, request: NextRequest) {
 }
 
 function isValidRole(value: string): value is UserRole {
-  return value === 'platform_admin' || value === 'ecd_admin' || value === 'ecd_staff' || value === 'parent_user'
+  return value === 'platform_admin' || value === 'ecd_admin' || value === 'ecd_staff' || value === 'ecd_supervisor' || value === 'parent_user'
 }

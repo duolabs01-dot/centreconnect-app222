@@ -12,6 +12,7 @@ import { applicationStatusEmail } from '@/lib/email/templates'
 type StatusUpdateFormProps = {
   applicationId: string
   ecdId: string
+  role: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
   parentId: string
   centreName: string
   childName: string
@@ -28,6 +29,7 @@ const FINAL_STATUSES = new Set(['approved', 'waitlisted', 'rejected', 'withdrawn
 export function StatusUpdateForm({
   applicationId,
   ecdId,
+  role,
   parentId,
   centreName,
   childName,
@@ -53,6 +55,28 @@ export function StatusUpdateForm({
       }
       if (currentOfferAcceptedAt && status !== 'enrolled') {
         throw new Error('This offer has already been accepted by the parent and cannot be changed.')
+      }
+      if (role === 'ecd_supervisor' && status !== currentStatus) {
+        const blockedStatus = new Set(['approved', 'enrolled', 'rejected'])
+        if (blockedStatus.has(status)) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser()
+          if (!user) {
+            throw new Error('Session expired. Please sign in again.')
+          }
+
+          const { data: membership, error: membershipError } = await supabase
+            .from('ecd_admins')
+            .select('can_approve_applications')
+            .eq('ecd_id', ecdId)
+            .eq('user_id', user.id)
+            .maybeSingle()
+
+          if (membershipError || !membership?.can_approve_applications) {
+            throw new Error('Contact the centre admin to grant approval rights before making final decisions.')
+          }
+        }
       }
 
       const now = new Date().toISOString()

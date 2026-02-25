@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   function destinationForRole(role: string | null | undefined) {
     if (role === 'platform_admin') return '/admin/command'
-    if (role === 'ecd_admin' || role === 'ecd_staff') return '/ecd/dashboard'
+    if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
     return '/parent/dashboard'
   }
 

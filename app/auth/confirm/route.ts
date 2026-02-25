@@ -3,10 +3,10 @@ import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'parent_user'
+type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
 function sanitizeRole(role: unknown): AllowedRole {
-  if (role === 'platform_admin' || role === 'ecd_admin' || role === 'ecd_staff' || role === 'parent_user') {
+  if (role === 'platform_admin' || role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor' || role === 'parent_user') {
     return role
   }
   return 'parent_user'

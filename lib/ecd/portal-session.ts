@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export type EcdPortalRole = 'ecd_admin' | 'ecd_staff'
+export type EcdPortalRole = 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
 
 export type EcdPortalSession = {
   supabase: Awaited<ReturnType<typeof createClient>>
@@ -72,7 +72,7 @@ async function tryRepairEcdMembership(input: {
     const invitation = invitationByUserId ?? invitationByEmail
     if (invitation?.ecd_id) {
       ecdIdToLink = invitation.ecd_id
-      if (invitation.role === 'ecd_admin' || invitation.role === 'ecd_staff') {
+      if (invitation.role === 'ecd_admin' || invitation.role === 'ecd_staff' || invitation.role === 'ecd_supervisor') {
         membershipRole = invitation.role
       }
     }
@@ -131,7 +131,8 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!profile || (profile.role !== 'ecd_admin' && profile.role !== 'ecd_staff')) {
+  const role = profile?.role
+  if (!role || (role !== 'ecd_admin' && role !== 'ecd_staff' && role !== 'ecd_supervisor')) {
     return null
   }
 
@@ -140,7 +141,7 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
     await tryRepairEcdMembership({
       userId: user.id,
       email: user.email ?? null,
-      role: profile.role,
+      role,
     })
     ecdId = await getLatestMembership(supabase, user.id)
   }
@@ -152,7 +153,7 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
       id: user.id,
       email: user.email ?? null,
     },
-    role: profile.role,
+    role,
     ecdId,
   }
 }

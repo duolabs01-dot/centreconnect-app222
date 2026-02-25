@@ -13,15 +13,17 @@ import { ArrowLeft, Menu } from 'lucide-react'
 type EcdPortalSidebarProps = {
   userEmail: string | null
   roleLabel?: string
-  userRole?: 'ecd_admin' | 'ecd_staff' | null
+  userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
 }
 
 export function EcdPortalSidebar({ userEmail, roleLabel = 'ECD Portal', userRole = null }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const visibleNav = ECD_DASHBOARD_NAV.filter(item =>
-    !item.adminOnly || userRole === 'ecd_admin'
-  )
+  const visibleNav = ECD_DASHBOARD_NAV.filter((item) => {
+    if (userRole === 'ecd_admin') return true
+    if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
+    return !item.adminOnly
+  })
   const primaryNav = visibleNav.filter((item) => (item.group ?? 'daily') === 'daily')
   const secondaryNav = visibleNav.filter((item) => (item.group ?? 'daily') !== 'daily')
   const topLevelPaths = new Set(visibleNav.map((item) => item.href))

@@ -6,7 +6,7 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 const inviteStaffSchema = z.object({
   ecdId: z.string().uuid(),
   email: z.string().email(),
-  role: z.enum(['ecd_staff', 'ecd_admin']),
+  role: z.enum(['ecd_staff', 'ecd_supervisor', 'ecd_admin']),
   name: z.string().min(2),
 })
 
@@ -18,7 +18,7 @@ const removeStaffSchema = z.object({
 const changeRoleSchema = z.object({
   ecdId: z.string().uuid(),
   staffUserId: z.string().uuid(),
-  role: z.enum(['ecd_staff', 'ecd_admin']),
+  role: z.enum(['ecd_staff', 'ecd_supervisor', 'ecd_admin']),
 })
 
 async function assertAdminAccess(ecdId: string) {
