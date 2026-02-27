@@ -99,9 +99,19 @@
 }
 
 /* Theme Transition Smoothing */
-/* Using a general selector for now. More specific targeting can be done with data attributes if needed. */
+/* General transition for UI elements */
 * {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* Prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important; /* Ensure animations don't loop indefinitely */
+    scroll-behavior: auto !important; /* Disable smooth scrolling */
+  }
 }
 
 
