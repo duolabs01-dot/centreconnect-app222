@@ -106,11 +106,9 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
   }
 
   useEffect(() => {
-    // Warm likely next routes so parent navigation feels instant.
-    router.prefetch('/parent/applications')
-    router.prefetch('/parent/profile')
+    // Prefetch only critical routes
     router.prefetch('/directory')
-    router.prefetch('/parent/notifications')
+    router.prefetch('/parent/dashboard')
   }, [router])
 
   function handleMobileBack() {
