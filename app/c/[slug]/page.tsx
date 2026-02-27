@@ -19,6 +19,7 @@ import { formatDate, formatLongDate } from '@/lib/utils'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
 // import { LiteImage } from '@/components/ui/LiteImage' // Removed LiteImage import
 import { HeroPill } from '@/components/ui/hero-pill' // Added HeroPill import
+import { StatChip } from '@/components/ui/stat-chip'   // Added StatChip import
 
 type CentrePageProps = {
   params: {
