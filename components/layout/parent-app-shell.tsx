@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck } from 'lucide-react'
-import { useAppNavLock } from '@/lib/hooks/useAppNavLock' // Import the hook
+import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react' // Added Lucide icons
+import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 
 type ParentAppShellProps = {
   userName: string
@@ -22,10 +22,10 @@ type ParentAppShellProps = {
 }
 
 const navItems = [
-  { href: '/parent/dashboard', label: 'Home' },
-  { href: '/directory', label: 'Discover' },
-  { href: '/parent/notifications', label: 'Inbox' },
-  { href: '/parent/profile', label: 'Me' },
+  { href: '/parent/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/directory', label: 'Discover', icon: Compass },
+  { href: '/parent/notifications', label: 'Inbox', icon: Bell },
+  { href: '/parent/profile', label: 'Me', icon: User },
 ]
 
 function getTitle(pathname: string) {
@@ -78,7 +78,7 @@ function isMeTab(pathname: string) {
 export function ParentAppShell({ userName, isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
-  useAppNavLock() // Add the hook here
+  useAppNavLock()
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
@@ -250,6 +250,33 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
           <div className="parent-theme-content parent-page-shell">{children}</div>
         </Container>
       </main>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="fixed sticky bottom-0 z-50 md:hidden flex items-center justify-around min-h-[64px] w-full border-t border-gray-200 bg-white shadow-lg">
+        {navItems.map((item) => {
+          const active =
+            item.href === '/parent/profile'
+              ? pathname.startsWith('/parent/profile') ||
+                pathname.startsWith('/parent/preferences') ||
+                pathname.startsWith('/parent/support') ||
+                pathname.startsWith('/parent/children')
+              : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 min-h-[48px] py-3 text-xs font-medium text-gray-500 hover:text-gray-900",
+                active && "border-b-4 border-primary bg-primary/10 text-primary"
+              )}
+            >
+              <item.icon className="h-7 w-7" strokeWidth={1.75} />
+              <span className="mt-1">{item.label}</span>
+            </Link>
+          )
+        })}
+      </nav>
     </div>
   )
 }
