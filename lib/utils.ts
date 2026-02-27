@@ -40,8 +40,10 @@ export function getJohannesburgGreeting() {
   return 'Good evening'
 }
 
-export function getDisplayNameFromEmail(email?: string | null) {
-  if (!email) return 'Parent'
+export function getDisplayNameFromEmail(
+  email: string | null | undefined // Updated type signature
+): string {
+  if (!email || typeof email !== 'string') return 'Parent' // Null/undefined check
   const local = email.split('@')[0] ?? ''
   const token = (local.split(/[._-]+/).find(Boolean) ?? local).trim()
   if (!token) return 'Parent'
@@ -104,4 +106,14 @@ export function formatLongDate(value: string | Date) {
     month: 'long',
     day: 'numeric',
   }).format(date)
+}
+
+// Add runtime validation for non-null checks
+export function assertNonNull<T>(
+  value: T | null | undefined,
+  message: string
+): asserts value is T {
+  if (value === null || value === undefined) {
+    throw new Error(message)
+  }
 }
