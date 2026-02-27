@@ -12,6 +12,8 @@ import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'luc
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner'
 import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
+import { InstallPrompt } from '@/components/public/InstallPrompt' // Import InstallPrompt
+import { createClient } from '@/lib/supabase/client' // Import Supabase client
 
 type ParentAppShellProps = {
   userName: string
@@ -84,6 +86,26 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
+  const [hasSubmittedFirstApplication, setHasSubmittedFirstApplication] = useState(false); // State for application check
+
+  useEffect(() => {
+    const checkApplications = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { count, error } = await supabase
+          .from('applications')
+          .select('id', { count: 'exact', head: true })
+          .eq('parent_id', user.id);
+        if (error) {
+          console.error('Error checking applications for install prompt:', error);
+          return;
+        }
+        setHasSubmittedFirstApplication((count ?? 0) > 0);
+      }
+    };
+    checkApplications();
+  }, []);
 
   function onTouchStart(e: TouchEvent<HTMLDivElement>) {
     if (window.scrollY > 0) return
@@ -280,6 +302,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
       </nav>
 
       <OfflineBanner /> {/* Add OfflineBanner */}
+      <InstallPrompt hasSubmittedFirstApplication={hasSubmittedFirstApplication} /> {/* Add InstallPrompt */}
     </div>
   )
 }
