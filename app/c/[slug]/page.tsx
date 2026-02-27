@@ -17,7 +17,8 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { formatDate, formatLongDate } from '@/lib/utils'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
-// import { LiteImage } from '@/components/ui/LiteImage'
+// import { LiteImage } from '@/components/ui/LiteImage' // Removed LiteImage import
+import { HeroPill } from '@/components/ui/hero-pill' // Added HeroPill import
 
 type CentrePageProps = {
   params: {
