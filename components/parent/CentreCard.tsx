@@ -59,7 +59,7 @@ export default function CentreCard({
       <Link href={`/centre/${slug}`} className="centre-card centre-card--compact">
         <div className="centre-card__logo-sm">
           {logo_url ? (
-            <Image src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" />
+            <Image src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" quality={75} loading="lazy" sizes="40px" />
           ) : (
             <span className="centre-card__initials">{name.charAt(0)}</span>
           )}
@@ -127,6 +127,8 @@ export default function CentreCard({
             fill
             className="object-cover"
             sizes="(max-width: 640px) 100vw, 50vw"
+            quality={75}
+            loading="lazy"
           />
 
           {/* Registration badge — top right */}
@@ -154,7 +156,7 @@ export default function CentreCard({
           <div className="centre-card__header">
             <div className="centre-card__logo">
               {logo_url ? (
-                <Image src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" />
+                <Image src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" quality={75} loading="lazy" sizes="44px" />
               ) : (
                 <span className="centre-card__initials-lg">{name.charAt(0)}</span>
               )}
@@ -378,4 +380,3 @@ export default function CentreCard({
     </>
   )
 }
-

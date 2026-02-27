@@ -338,6 +338,8 @@ export default async function CentrePage({ params }: CentrePageProps) {
               fill
               className="object-cover"
               priority
+              quality={75} // Added
+              sizes="100vw" // Added
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           </div>
@@ -351,6 +353,9 @@ export default async function CentrePage({ params }: CentrePageProps) {
                     width={64}
                     height={64}
                     className="object-cover"
+                    quality={75} // Added
+                    loading="lazy" // Added
+                    sizes="64px" // Added
                   />
                 </div>
                 <div>
@@ -424,6 +429,8 @@ export default async function CentrePage({ params }: CentrePageProps) {
                     alt={item.file_name ?? `${centre.name} gallery image`}
                     fill
                     sizes="(max-width: 768px) 33vw, 200px"
+                    quality={75} // Added
+                    loading="lazy" // Added
                     className="object-cover"
                   />
                 </div>
@@ -574,5 +581,3 @@ function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
     </Link>
   )
 }
-
-

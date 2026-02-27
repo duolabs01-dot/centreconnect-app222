@@ -29,6 +29,8 @@ export function BrandMark({
         height={compact ? 56 : 72}
         className="object-contain"
         priority
+        quality={75} // Added
+        sizes="(max-width: 768px) 56px, (max-width: 1200px) 72px, 72px" // Added
       />
       <span className={cn('font-semibold text-white', compact ? 'text-lg' : 'text-2xl', hideLabelOnMobile && 'hidden sm:inline')}>
         {label}

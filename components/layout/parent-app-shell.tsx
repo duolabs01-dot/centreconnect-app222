@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type TouchEvent } from 'react'
+import { useEffect, useRef, useState, type TouchEvent } => 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react' // Added Lucide icons
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner' // Import OfflineBanner
 
@@ -179,6 +179,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
                             width={16}
                             height={16}
                             className="h-full w-full object-cover"
+                            quality={75} loading="lazy" sizes="16px" // Added for this image
                           />
                         </span>
                       </span>
