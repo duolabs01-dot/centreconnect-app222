@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Map as MapLibreMap,
   Marker,
@@ -36,25 +36,32 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
   const mapInstanceRef = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Marker[]>([])
   const userMarkerRef = useRef<Marker | null>(null)
+  const [mapError, setMapError] = useState(false)
 
   useEffect(() => {
     if (!showMap || !mapContainerRef.current) return
 
     if (!mapInstanceRef.current) {
-      mapInstanceRef.current = new MapLibreMap({
-        container: mapContainerRef.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-        center: [28.0473, -26.2041],
-        zoom: 11,
-      })
-      mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+      try {
+        mapInstanceRef.current = new MapLibreMap({
+          container: mapContainerRef.current,
+          style: 'https://tiles.openfreemap.org/styles/liberty',
+          center: [28.0473, -26.2041],
+          zoom: 11,
+        })
+        mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+        mapInstanceRef.current.on('error', () => setMapError(true))
+      } catch (err) {
+        console.error('Map initialization error:', err)
+        setMapError(true)
+      }
     }
 
-    mapInstanceRef.current.resize()
+    mapInstanceRef.current?.resize()
   }, [showMap])
 
   useEffect(() => {
-    if (!showMap || !mapInstanceRef.current) return
+    if (!showMap || !mapInstanceRef.current || mapError) return
 
     markersRef.current.forEach((marker) => marker.remove())
     markersRef.current = []
@@ -101,10 +108,10 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
     } else if (userLocation) {
       mapInstanceRef.current.flyTo({ center: userLocation, zoom: 13.5, essential: true })
     }
-  }, [centresWithLocation, showMap, userLocation])
+  }, [centresWithLocation, showMap, userLocation, mapError])
 
   useEffect(() => {
-    if (!showMap || !mapInstanceRef.current || !userLocation) return
+    if (!showMap || !mapInstanceRef.current || !userLocation || mapError) return
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat(userLocation)
@@ -114,10 +121,10 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         .setPopup(new Popup({ offset: 12 }).setText('You are here'))
         .addTo(mapInstanceRef.current)
     }
-  }, [userLocation, showMap])
+  }, [userLocation, showMap, mapError])
 
   const handleRecenter = () => {
-    if (!mapInstanceRef.current || !userLocation) return
+    if (!mapInstanceRef.current || !userLocation || mapError) return
     mapInstanceRef.current.flyTo({
       center: userLocation,
       zoom: 13.5,
@@ -127,8 +134,24 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
     })
   }
 
+  if (mapError) {
+    return (
+      <div 
+        className="h-[260px] sm:h-[420px] flex items-center justify-center bg-slate-100 rounded-2xl text-slate-500"
+        aria-label="ECD centre map"
+        role="region"
+      >
+        Map temporarily unavailable • <a href="https://maps.google.com" className="underline">Open in Google Maps</a>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative h-[420px] w-full rounded-2xl border border-border">
+    <div 
+      className="relative h-[260px] sm:h-[420px] w-full rounded-2xl border border-border"
+      aria-label="ECD centre map"
+      role="region"
+    >
       <div ref={mapContainerRef} className="h-full w-full" />
       {centresWithLocation.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/80">
@@ -155,5 +178,3 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
     </div>
   )
 }
-
-
