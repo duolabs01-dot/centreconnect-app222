@@ -8,8 +8,26 @@ const metadataValueSchema = z.union([z.string().max(200), z.number(), z.boolean(
 
 const eventSchema = z.object({
   ecdId: z.string().uuid(),
-  eventType: z.enum(['profile_view', 'whatsapp_click', 'call_click', 'application_submitted']),
+  eventType: z.enum([
+    'profile_view',
+    'whatsapp_click',
+    'call_click',
+    'application_submitted',
+    'page_view',
+    'page_duration',
+    'pickup_verified',
+    'announcement_sent',
+    'compliance_uploaded',
+    'parent_invite_sent',
+    'invoice_paid',
+    'marketplace_requested',
+    'referral_used'
+  ]),
   applicationId: z.string().uuid().optional(),
+  actorRole: z.string().optional(),
+  path: z.string().optional(),
+  durationMs: z.number().int().optional(),
+  sessionId: z.string().optional(),
   metadata: z.record(metadataValueSchema).optional(),
 })
 
@@ -20,7 +38,7 @@ export async function POST(request: Request) {
     const rateLimit = await enforceRateLimit({
       scope: 'analytics-events-ip',
       key: `${ip}:${agent}`,
-      max: 120,
+      max: 300, // Increased for heartbeat/page_view events
       windowMs: 60 * 1000,
     })
     if (!rateLimit.ok) {
@@ -33,11 +51,12 @@ export async function POST(request: Request) {
     const body = await request.json()
     const parsed = eventSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 })
+      return NextResponse.json({ error: 'Invalid payload', details: parsed.error }, { status: 400 })
     }
 
     const supabase = createAdminClient()
 
+    // Validate centre existence
     const { data: centre } = await supabase
       .from('ecd_centres')
       .select('id,is_active')
@@ -52,6 +71,10 @@ export async function POST(request: Request) {
       ecd_id: parsed.data.ecdId,
       event_type: parsed.data.eventType,
       application_id: parsed.data.applicationId ?? null,
+      actor_role: parsed.data.actorRole ?? null,
+      path: parsed.data.path ?? null,
+      duration_ms: parsed.data.durationMs ?? null,
+      session_id: parsed.data.sessionId ?? null,
       metadata: parsed.data.metadata ?? {},
     })
 
@@ -60,7 +83,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (err) {
+    console.error('Analytics API error:', err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
