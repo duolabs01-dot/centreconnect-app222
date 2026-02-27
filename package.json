@@ -6,7 +6,8 @@
     "node": ">=20 <23"
   },
   "scripts": {
-    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010",
+    "dev": "next dev -H 0.0.0.0 -p 3010",
+    "dev:safe": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010",
     "dev:clean": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010 -Clean",
     "dev:restart": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-safe.ps1 -Port 3010",
     "dev:ensure": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-ensure.ps1",
