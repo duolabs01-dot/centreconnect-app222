@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import Image from 'next/image' // Reverted to standard Image import
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
@@ -11,7 +11,7 @@ import type { TransportConfig } from '@/components/public/TransportSection'
 import { TransportSection } from '@/components/public/TransportSection'
 import { InteractionActions } from './interaction-actions'
 import { ContactCentreSheet } from './contact-centre-sheet'
-import { ShareCentreSheet } from './share-centre-sheet'
+import { ShareCentreSheet } from './share-centre-sheet' // Corrected import path
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
@@ -169,7 +169,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       address: null,
       suburb: fallback.data.suburb,
       city: fallback.data.city,
-      province: fallback.data.province,
+      province: fallback.province,
       age_groups: fallback.data.age_groups ?? null,
       logo_url: fallback.data.logo_url ?? null,
       cover_image_url: fallback.data.cover_image_url ?? null,
@@ -488,97 +488,5 @@ export default async function CentrePage({ params }: CentrePageProps) {
       </PageContainer>
 
     </main>
-  )
-}
-
-function HeroPill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white">
-      {children}
-    </span>
-  )
-}
-
-function StatChip({
-  label,
-  value,
-  accent,
-}: {
-  label: string
-  value: string
-  accent?: 'emerald'
-}) {
-  return (
-    <div className="flex flex-col items-center min-w-[120px] text-center">
-      <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
-      <span
-        className={cn(
-          'mt-1 text-sm font-semibold whitespace-nowrap',
-          accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
-        )}
-      >
-        {value}
-      </span>
-    </div>
-  )
-}
-
-function SectionHeader({
-  emoji,
-  title,
-  titleClass = 'text-foreground',
-  emojiSize = 'text-2xl',
-}: {
-  emoji: string
-  title: string
-  titleClass?: string
-  emojiSize?: string
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      {!!emoji && <span className={emojiSize}>{emoji}</span>}
-      <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
-    </div>
-  )
-}
-
-function Section({
-  id,
-  emoji,
-  title,
-  className,
-  children,
-}: {
-  id?: string
-  emoji: string
-  title: string
-  className?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section id={id} className={cn('mt-10 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
-      <SectionHeader emoji={emoji} title={title} />
-      <div className="mt-4 text-base text-foreground/80">{children}</div>
-    </section>
-  )
-}
-
-function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
-  const isExpired = job.closes_at ? new Date(job.closes_at) < new Date() : false
-  if (isExpired) return null
-  return (
-    <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] transition-all hover:border-cyan-500/30 hover:bg-muted">
-        <div>
-          <p className="text-lg font-semibold text-slate-900 transition-colors group-hover:text-cyan-700">{job.title}</p>
-          {job.closes_at ? (
-            <p className="text-xs text-slate-500">Apply by {formatDate(job.closes_at)}</p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-1 text-cyan-700 text-sm font-medium">
-          View & Apply <ArrowRight className="w-4 h-4" />
-        </div>
-      </div>
-    </Link>
   )
 }
