@@ -6,21 +6,22 @@ import { ThemeProvider } from '@/components/theme/theme-provider'
 import { ThemeRouteSync } from '@/components/theme/theme-route-sync'
 import { FooterConditionalRenderer } from '@/components/layout/FooterConditionalRenderer'
 import { Analytics } from "@vercel/analytics/next"
-import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister' // Import the client component
+import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister'
+import { LiteModeProvider } from '@/lib/context/LiteModeProvider' // Import LiteModeProvider
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
   description: 'Find trusted ECD centres near you. Apply online, track applications, and connect with the best early childhood education for your child.',
   applicationName: 'CentreConnect',
-  manifest: '/manifest.json', // Updated manifest path
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/centreconnect-logo.svg?v=20260224-cc', type: 'image/svg+xml' },
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }, // Updated icon path
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' }, // Updated icon path
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [{ url: '/apple-touch-icon.png?v=20260224-cc', sizes: '180x180', type: 'image/png' }],
-    shortcut: ['/icons/icon-192.png'], // Updated icon path
+    shortcut: ['/icons/icon-192.png'],
   },
   appleWebApp: {
     capable: true,
@@ -33,7 +34,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#065A82', // Updated theme color
+  themeColor: '#065A82',
 }
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -75,15 +76,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-sans">
-        <ThemeProvider>
-          <ThemeRouteSync />
-            <FooterConditionalRenderer>
-              {children}
-            </FooterConditionalRenderer>
-          <SonnerToaster position="top-right" richColors />
-          <Analytics />
-          <ServiceWorkerRegister /> {/* Add the ServiceWorkerRegister component */}
-        </ThemeProvider>
+        <LiteModeProvider> {/* Wrap with LiteModeProvider */}
+          <ThemeProvider>
+            <ThemeRouteSync />
+              <FooterConditionalRenderer>
+                {children}
+              </FooterConditionalRenderer>
+            <SonnerToaster position="top-right" richColors />
+            <Analytics />
+            <ServiceWorkerRegister />
+          </ThemeProvider>
+        </LiteModeProvider>
       </body>
     </html>
   )

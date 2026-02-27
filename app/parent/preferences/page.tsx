@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PreferencesForm } from '@/components/parent/PreferencesForm'
+import { LiteModeToggle } from '@/components/parent/LiteModeToggle' // Assuming this component will be created
 
 export const metadata: Metadata = {
   title: 'Preferences | Parent Portal | CentreConnect',
@@ -46,6 +47,13 @@ export default async function ParentPreferencesPage() {
           preferred_start_month: parentProfile?.preferred_start_month ?? null,
         }}
       />
+
+      <section className="space-y-4">
+        <h2 className="text-2xl font-bold text-foreground">App Performance</h2>
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <LiteModeToggle />
+        </div>
+      </section>
     </div>
   )
 }
