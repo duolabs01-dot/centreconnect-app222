@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
@@ -17,6 +16,7 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { formatDate, formatLongDate } from '@/lib/utils'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 
 type CentrePageProps = {
   params: {
@@ -332,14 +332,13 @@ export default async function CentrePage({ params }: CentrePageProps) {
       <PageContainer>
         <section className="relative min-h-[60vh] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 text-white shadow-[var(--shadow-elevation-4)]">
           <div className="absolute inset-0">
-            <Image
+            <LiteImage // Changed to LiteImage
               src={heroImage}
               alt={`${centre.name} hero`}
               fill
               className="object-cover"
               priority
-              quality={75} // Added
-              sizes="100vw" // Added
+              sizes="100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           </div>
@@ -347,15 +346,14 @@ export default async function CentrePage({ params }: CentrePageProps) {
             {centre.logo_url ? (
               <div className="flex items-center gap-3">
                 <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/30 bg-slate-950 shadow-[var(--shadow-elevation-4)]">
-                  <Image
+                  <LiteImage // Changed to LiteImage
                     src={centre.logo_url}
                     alt={`${centre.name} logo`}
                     width={64}
                     height={64}
                     className="object-cover"
-                    quality={75} // Added
-                    loading="lazy" // Added
-                    sizes="64px" // Added
+                    loading="lazy"
+                    sizes="64px"
                   />
                 </div>
                 <div>
@@ -424,13 +422,12 @@ export default async function CentrePage({ params }: CentrePageProps) {
               const imageUrl = supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl
               return (
                 <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
-                  <Image
+                  <LiteImage // Changed to LiteImage
                     src={imageUrl}
                     alt={item.file_name ?? `${centre.name} gallery image`}
                     fill
                     sizes="(max-width: 768px) 33vw, 200px"
-                    quality={75} // Added
-                    loading="lazy" // Added
+                    loading="lazy"
                     className="object-cover"
                   />
                 </div>
@@ -453,7 +450,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
 
         <Section id="about" emoji="" title="About Us">
           <p className="text-foreground/80 text-lg leading-relaxed">{aboutText}</p>
-        </Section>
+        </section>
 
         {programs.length > 0 && (
           <section className="mt-10 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/80 to-emerald-50/80 p-6 shadow-[var(--shadow-elevation-4)] dark:from-cyan-950/20 dark:to-emerald-950/20">

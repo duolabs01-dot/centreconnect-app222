@@ -1,16 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState, type TouchEvent } => 'react'
+import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import Image from 'next/image' // Keep Image for badge, but use LiteImage for main images
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react' // Added Lucide icons
+import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
-import { OfflineBanner } from '@/components/public/OfflineBanner' // Import OfflineBanner
+import { OfflineBanner } from '@/components/public/OfflineBanner'
+import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 
 type ParentAppShellProps = {
   userName: string
@@ -173,13 +174,13 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
                           className="inline-flex h-4 w-4 items-center justify-center overflow-hidden rounded-[4px] border border-slate-200 bg-white shadow-sm"
                           title="CentreConnect affiliate badge"
                         >
-                          <Image
+                          <LiteImage // Changed to LiteImage
                             src="/centreconnect-logo.svg"
                             alt="CentreConnect verification badge"
                             width={16}
                             height={16}
                             className="h-full w-full object-cover"
-                            quality={75} loading="lazy" sizes="16px" // Added for this image
+                            sizes="16px"
                           />
                         </span>
                       </span>

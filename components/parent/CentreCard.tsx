@@ -5,10 +5,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore } from 'lucide-react'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
+import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 
 interface CentreCardProps {
   id: string
@@ -59,7 +59,7 @@ export default function CentreCard({
       <Link href={`/centre/${slug}`} className="centre-card centre-card--compact">
         <div className="centre-card__logo-sm">
           {logo_url ? (
-            <Image src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" quality={75} loading="lazy" sizes="40px" />
+            <LiteImage src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" sizes="40px" />
           ) : (
             <span className="centre-card__initials">{name.charAt(0)}</span>
           )}
@@ -121,13 +121,12 @@ export default function CentreCard({
       <Link href={`/centre/${slug}`} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
         {/* Cover image */}
         <div className="centre-card__cover">
-          <Image
+          <LiteImage
             src={heroImage}
             alt={`${name} cover`}
             fill
             className="object-cover"
             sizes="(max-width: 640px) 100vw, 50vw"
-            quality={75}
             loading="lazy"
           />
 
@@ -156,7 +155,7 @@ export default function CentreCard({
           <div className="centre-card__header">
             <div className="centre-card__logo">
               {logo_url ? (
-                <Image src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" quality={75} loading="lazy" sizes="44px" />
+                <LiteImage src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" loading="lazy" sizes="44px" />
               ) : (
                 <span className="centre-card__initials-lg">{name.charAt(0)}</span>
               )}
