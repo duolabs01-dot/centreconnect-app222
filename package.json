@@ -40,6 +40,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.2.0",
+    "docx": "^9.6.0",
     "framer-motion": "^12.34.0",
     "lucide-react": "^0.309.0",
     "maplibre-gl": "^5.18.0",
