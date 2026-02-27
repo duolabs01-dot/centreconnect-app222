@@ -20,6 +20,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 // import { LiteImage } from '@/components/ui/LiteImage' // Removed LiteImage import
 import { HeroPill } from '@/components/ui/hero-pill' // Added HeroPill import
 import { StatChip } from '@/components/ui/stat-chip'   // Added StatChip import
+import { Section } from '@/components/ui/section' // Added Section import
 
 type CentrePageProps = {
   params: {
@@ -313,25 +314,30 @@ export default async function CentrePage({ params }: CentrePageProps) {
           ? 'Contact centre for fees'
           : 'Contact centre for fees'
 
-  const statChips: Array<{ label: string; value: string; accent?: 'emerald' }> = [
-    {
-      label: 'Ages',
-      value: centre.age_groups && centre.age_groups.length ? centre.age_groups.join(', ') : 'Not specified',
-    },
-    {
-      label: 'Fees',
-      value: feesLabel,
-    },
-    {
-      label: 'Capacity',
-      value: centre.capacity ? `${centre.capacity} children` : 'Capacity varies',
-    },
-    {
-      label: 'Verified',
-      value: centre.subsidy_accepted ? 'Subsidy accepted' : 'Verification pending',
-      accent: centre.subsidy_accepted ? 'emerald' : undefined,
-    },
-  ]
+  // Removed local definition of StatChip
+  // function StatChip({
+  //   label,
+  //   value,
+  //   accent,
+  // }: {
+  //   label: string
+  //   value: string
+  //   accent?: 'emerald'
+  // }) {
+  //   return (
+  //     <div className="flex flex-col items-center min-w-[120px] text-center">
+  //       <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
+  //       <span
+  //         className={cn(
+  //           'mt-1 text-sm font-semibold whitespace-nowrap',
+  //           accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
+  //         )}
+  //       >
+  //         {value}
+  //       </span>
+  //     </div>
+  //   )
+  // }
 
   return (
     <main className="pb-28 bg-gradient-to-b from-cyan-50/40 via-white to-slate-50">
@@ -493,5 +499,101 @@ export default async function CentrePage({ params }: CentrePageProps) {
       </PageContainer>
 
     </main>
+  )
+}
+
+// Removed HeroPill local definition
+// function HeroPill({ children }: { children: React.ReactNode }) {
+//   return (
+//     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white">
+//       {children}
+//     </span>
+//   )
+// }
+
+// Removed StatChip local definition
+// function StatChip({
+//   label,
+//   value,
+//   accent,
+// }: {
+//   label: string
+//   value: string
+//   accent?: 'emerald'
+// }) {
+//   return (
+//     <div className="flex flex-col items-center min-w-[120px] text-center">
+//       <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
+//       <span
+//         className={cn(
+//           'mt-1 text-sm font-semibold whitespace-nowrap',
+//           accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
+//         )}
+//       >
+//         {value}
+//       </span>
+//     </div>
+  // )
+// }
+
+// Removed Section local definition
+// function SectionHeader({
+//   emoji,
+//   title,
+//   titleClass = 'text-foreground',
+//   emojiSize = 'text-2xl',
+// }: {
+//   emoji: string
+//   title: string
+//   titleClass?: string
+//   emojiSize?: string
+// }) {
+//   return (
+//     <div className="flex items-center gap-3">
+//       {!!emoji && <span className={emojiSize}>{emoji}</span>}
+//       <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
+//     </div>
+//   )
+// }
+
+// Removed Section local definition
+// function Section({
+//   id,
+//   emoji,
+//   title,
+//   className,
+//   children,
+// }: {
+//   id?: string
+//   emoji: string
+//   title: string
+//   className?: string
+//   children: React.ReactNode
+// }) {
+//   return (
+//     <section id={id} className={cn('mt-10 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
+//       <SectionHeader emoji={emoji} title={title} />
+//       <div className="mt-4 text-base text-foreground/80">{children}</div>
+//     </section>
+//   )
+// }
+
+function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
+  const isExpired = job.closes_at ? new Date(job.closes_at) < new Date() : false
+  if (isExpired) return null
+  return (
+    <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] transition-all hover:border-cyan-500/30 hover:bg-muted">
+        <div>
+          <p className="text-lg font-semibold text-slate-900 transition-colors group-hover:text-cyan-700">{job.title}</p>
+          {job.closes_at ? (
+            <p className="text-xs text-slate-500">Apply by {formatDate(job.closes_at)}</p>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-1 text-cyan-700 text-sm font-medium">
+          View & Apply <ArrowRight className="w-4 h-4" />
+        </div>
+      </div>
+    </Link>
   )
 }
