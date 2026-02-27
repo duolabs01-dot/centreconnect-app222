@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ecd/Button'
+import { toast } from 'sonner'
 
 type PickupVerifyClientProps = {
   ecdId: string
@@ -118,11 +120,15 @@ export function PickupVerifyClient({ ecdId }: PickupVerifyClientProps) {
       setResult({ success, message })
       if (success) {
         setCodeInput('')
+        toast.success(message)
         window.setTimeout(() => {
           setSelectedChildId(null)
           setSelectedChildName(null)
           setChildSearch('')
+          setResult(null); // Clear result after successful verification and timeout
         }, 3000)
+      } else {
+        toast.error(message);
       }
     } finally {
       setVerifying(false)
@@ -181,37 +187,25 @@ export function PickupVerifyClient({ ecdId }: PickupVerifyClientProps) {
         <p className="text-sm font-semibold text-slate-900">Pickup Code</p>
         <input
           type="text"
-          inputMode="numeric"
+          inputMode="numeric" // Added inputMode
           maxLength={6}
           placeholder="Enter 6-digit code"
           value={codeInput}
           onChange={(event) => setCodeInput(event.target.value.replace(/\D/g, ''))}
-          className="cc-native-field mt-2 text-center text-2xl font-black tracking-[0.3em]"
+          className="cc-native-field mt-2 h-16 text-center text-3xl font-black tracking-[0.3em]" // Updated h-16 and text-3xl
         />
 
-        <button
+        <Button // Changed to Button component for consistent styling
           type="button"
           onClick={verifyCode}
           disabled={!selectedChildId || codeInput.length !== 6 || verifying}
-          className="mt-3 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700 disabled:opacity-50"
+          className="mt-3 w-full py-3 text-base" // Made button large and full width
         >
           {verifying ? 'Checking...' : 'Verify Code'}
-        </button>
+        </Button>
       </section>
 
-      {result?.success ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-lg font-bold text-emerald-700">{'\u2713'} Code Valid</p>
-          <p className="text-sm text-emerald-600">{result.message}</p>
-        </div>
-      ) : null}
-
-      {result && !result.success ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-          <p className="text-lg font-bold text-rose-700">{'\u2717'} Invalid Code</p>
-          <p className="text-sm text-rose-600">{result.message}</p>
-        </div>
-      ) : null}
+      {/* Removed direct result display as toast handles it */}
     </div>
   )
 }

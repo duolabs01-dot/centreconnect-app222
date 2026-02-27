@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ecd/Button' // Assuming there is a Button component
 
 type AttendanceClientProps = {
   enrolledChildren: Array<{ id: string; first_name: string; last_name: string }>
@@ -184,35 +185,35 @@ export function AttendanceClient({
           {enrolledChildren.map((child) => {
             const childState = localAttendance[child.id] ?? { id: null, checked_in: false, picked_up: false }
             return (
-              <div key={child.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                <p className="text-sm font-semibold text-slate-900">
+              <div key={child.id} className="h-16 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4">
+                <p className="text-base font-semibold text-slate-900">
                   {child.first_name} {child.last_name}
                 </p>
-                <div className="flex gap-2">
-                  <button
+                <div className="flex gap-3"> {/* Updated gap-3 */}
+                  <Button
                     type="button"
                     onClick={() => toggleAttendance(child.id, 'checked_in')}
                     disabled={Boolean(saving[child.id])}
-                    className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                    className={`h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
                       childState.checked_in
                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
                         : 'bg-slate-100 text-slate-500 border border-slate-200'
                     }`}
                   >
                     {childState.checked_in ? '\u2713 Present' : 'Mark Present'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
                     onClick={() => toggleAttendance(child.id, 'picked_up')}
                     disabled={Boolean(saving[child.id])}
-                    className={`rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                    className={`h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
                       childState.picked_up
                         ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
                         : 'bg-slate-100 text-slate-500 border border-slate-200'
                     }`}
                   >
                     {childState.picked_up ? '\u2713 Picked Up' : 'Picked Up'}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )

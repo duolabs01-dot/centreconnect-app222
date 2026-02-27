@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { formatDate } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type PipelineStatus = 'submitted' | 'in_review' | 'waitlisted' | 'approved' | 'rejected'
 
@@ -143,6 +144,14 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
   const [dropTarget, setDropTarget] = useState<PipelineStatus | null>(null)
   const [saving, setSaving] = useState(false)
   const [tip, setTip] = useState(TIPS[0])
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     const previous = Number.parseInt(localStorage.getItem('ecd_pipeline_tip_idx') ?? '-1', 10)
@@ -263,7 +272,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
             parent_id: parent.id,
             ecd_id: ecdId,
             application_id: applicationId,
-            title: 'Application approved Ã°Å¸Å½â€°',
+            title: 'Application approved 🎉',
             message: `Hi ${parentName}, ${centreName} has approved the application for ${childName} (${application.application_number}).`,
           })
         }
@@ -346,100 +355,169 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
         </div>
       </div>
 
-      <section className="overflow-x-auto" id="pipeline-board">
-        <div className="grid min-w-[1200px] grid-cols-5 gap-4">
-          {grouped.map((column) => (
-          <Card
-            key={column.key}
-            className={`pipeline-card glass-card border border-border bg-card/90 ${column.pipelineClass} ${
-              dropTarget === column.key ? `ring-2 ${column.dropRing}` : ''
-            }`}
-            onDragOver={(event) => {
-              event.preventDefault()
-              setDropTarget(column.key)
-            }}
-              onDragLeave={() => setDropTarget((current) => (current === column.key ? null : current))}
-              onDrop={(event) => {
-                event.preventDefault()
-                const appId = event.dataTransfer.getData('text/application-id') || draggingId
-                if (!appId || saving) return
-                setDraggingId(null)
-                void handleDrop(appId, column.key)
-              }}
-            >
-              <CardHeader className="pipeline-column-header pb-3">
-              <CardTitle className="text-base font-bold text-foreground">
-                {column.label}
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                  ({column.items.length})
-                </span>
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">{column.helpText}</p>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {column.items.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-border bg-card/80 p-3 text-xs text-muted-foreground">
-                    No children in this stage.
-                  </div>
-                ) : (
-                  column.items.map((application) => {
-                    const child = normalizeOne(application.children)
-                    const parent = normalizeOne(application.parents)
-                    const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-                    const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
-                    const requestDocHref = buildWhatsAppLink(
-                      parentPhone,
-                      `Hello, please share outstanding documents for application ${application.application_number}.`
-                    )
+      {!isMobile ? (
+        <section className="overflow-x-auto" id="pipeline-board">
+          <div className="grid min-w-[1200px] grid-cols-5 gap-4">
+            {grouped.map((column) => (
+              <Card
+                key={column.key}
+                className={`pipeline-card glass-card border border-border bg-card/90 ${column.pipelineClass} ${
+                  dropTarget === column.key ? `ring-2 ${column.dropRing}` : ''
+                }`}
+                onDragOver={(event) => {
+                  event.preventDefault()
+                  setDropTarget(column.key)
+                }}
+                onDragLeave={() => setDropTarget((current) => (current === column.key ? null : current))}
+                onDrop={(event) => {
+                  event.preventDefault()
+                  const appId = event.dataTransfer.getData('text/application-id') || draggingId
+                  if (!appId || saving) return
+                  setDraggingId(null)
+                  void handleDrop(appId, column.key)
+                }}
+              >
+                <CardHeader className="pipeline-column-header pb-3">
+                  <CardTitle className="text-base font-bold text-foreground">
+                    {column.label}
+                    <span className="ml-2 text-sm font-normal text-muted-foreground">({column.items.length})</span>
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground">{column.helpText}</p>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {column.items.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-border bg-card/80 p-3 text-xs text-muted-foreground">
+                      No children in this stage.
+                    </div>
+                  ) : (
+                    column.items.map((application) => {
+                      const child = normalizeOne(application.children)
+                      const parent = normalizeOne(application.parents)
+                      const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+                      const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
+                      const requestDocHref = buildWhatsAppLink(
+                        parentPhone,
+                        `Hello, please share outstanding documents for application ${application.application_number}.`
+                      )
 
-                    return (
-                      <div
-                        key={application.id}
-                        className={`pipeline-item cursor-grab rounded-2xl border border-border bg-card/90 p-3 active:cursor-grabbing ${draggingId === application.id ? 'dragging' : ''}`}
-                        draggable={!saving}
-                        onDragStart={(event) => {
-                          setDraggingId(application.id)
-                          event.dataTransfer.setData('text/application-id', application.id)
-                          event.dataTransfer.effectAllowed = 'move'
-                        }}
-                        onDragEnd={() => {
-                          setDraggingId(null)
-                          setDropTarget(null)
-                        }}
-                      >
-                        <p className="text-sm font-semibold text-foreground">
-                          {child ? `${child.first_name} ${child.last_name}` : application.application_number}
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {application.application_number} | {formatDate(application.submitted_at)}
-                        </p>
-                        {application.admin_notes ? (
-                          <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">Notes: {application.admin_notes}</p>
-                        ) : (
-                          <p className="mt-2 text-xs text-muted-foreground">No notes yet.</p>
-                        )}
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" asChild>
-                            <Link href={`/ecd/applications/${application.id}`}>Open</Link>
-                          </Button>
-                          {requestDocHref ? (
+                      return (
+                        <div
+                          key={application.id}
+                          className={`pipeline-item cursor-grab rounded-2xl border border-border bg-card/90 p-3 active:cursor-grabbing ${draggingId === application.id ? 'dragging' : ''}`}
+                          draggable={!saving}
+                          onDragStart={(event) => {
+                            setDraggingId(application.id)
+                            event.dataTransfer.setData('text/application-id', application.id)
+                            event.dataTransfer.effectAllowed = 'move'
+                          }}
+                          onDragEnd={() => {
+                            setDraggingId(null)
+                            setDropTarget(null)
+                          }}
+                        >
+                          <p className="text-sm font-semibold text-foreground">
+                            {child ? `${child.first_name} ${child.last_name}` : application.application_number}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {application.application_number} | {formatDate(application.submitted_at)}
+                          </p>
+                          {application.admin_notes ? (
+                            <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">
+                              Notes: {application.admin_notes}
+                            </p>
+                          ) : (
+                            <p className="mt-2 text-xs text-muted-foreground">No notes yet.</p>
+                          )}
+                          <div className="mt-3 flex flex-wrap gap-2">
                             <Button size="sm" variant="outline" asChild>
-                              <a href={requestDocHref} target="_blank" rel="noreferrer">
-                                Request document
-                              </a>
+                              <Link href={`/ecd/applications/${application.id}`}>Open</Link>
                             </Button>
-                          ) : null}
+                            {requestDocHref ? (
+                              <Button size="sm" variant="outline" asChild>
+                                <a href={requestDocHref} target="_blank" rel="noreferrer">
+                                  Request document
+                                </a>
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
+                      )
+                    })
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-3">
+          {applications.map((application) => {
+            const child = normalizeOne(application.children)
+            const parent = normalizeOne(application.parents)
+            const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+            const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
+            const requestDocHref = buildWhatsAppLink(
+              parentPhone,
+              `Hello, please share outstanding documents for application ${application.application_number}.`
+            )
+            const columnInfo = COLUMNS.find(col => col.key === application.status);
+
+            return (
+              <Card key={application.id} className="glass-card border border-border bg-card/90 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-foreground">
+                      {child ? `${child.first_name} ${child.last_name}` : application.application_number}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {application.application_number} | {formatDate(application.submitted_at)}
+                    </p>
+                    {application.admin_notes ? (
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                        Notes: {application.admin_notes}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div
+                    className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider"
+                    style={{ backgroundColor: `${columnInfo?.accentColor}20`, color: columnInfo?.accentColor }}
+                  >
+                    {columnInfo?.shortLabel}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" asChild>
+                    <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                  </Button>
+                  {requestDocHref ? (
+                    <Button size="sm" variant="outline" asChild>
+                      <a href={requestDocHref} target="_blank" rel="noreferrer">
+                        Request document
+                      </a>
+                    </Button>
+                  ) : null}
+                  <Select
+                    value={application.status}
+                    onValueChange={(newStatus: PipelineStatus) => void handleDrop(application.id, newStatus)}
+                    disabled={saving}
+                  >
+                    <SelectTrigger className="w-[120px] h-9 text-xs">
+                      <SelectValue placeholder="Move to..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COLUMNS.map((col) => (
+                        <SelectItem key={col.key} value={col.key}>
+                          Move to {col.shortLabel}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </Card>
+            )
+          })}
+        </section>
+      )}
     </section>
   )
 }
-
