@@ -79,6 +79,48 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
       .eq('id', application.id)
     if (error) return { ok: false, error: error.message, statusCode: 400 }
 
+    // --- Start: Bookkeeping Assignment & Email Logic ---
+    if (application.service_name === 'Bookkeeping Service') {
+      const { data: assignment, error: assignmentError } = await admin
+        .from('bookkeeping_assignments')
+        .insert({
+          ecd_id: application.ecd_id,
+          service_application_id: application.id,
+          status: 'pending',
+          notes: `Bookkeeping service approved for ${application.centre_name}`,
+        })
+        .select('id')
+        .single()
+      
+      if (assignmentError) {
+        console.error('Failed to create bookkeeping assignment:', assignmentError);
+        // Continue with the main flow, but log the error
+      } else {
+        // Send email to bookkeeper
+        void sendPlatformAdminActionNotification({
+          subject: `New Bookkeeping Assignment: ${application.centre_name}`,
+          heading: 'A new bookkeeping service has been approved and requires assignment.',
+          lines: [
+            `Centre Name: ${application.centre_name}`,
+            `ECD ID: ${application.ecd_id}`,
+            `Service Application ID: ${application.id}`,
+            `Assignment ID: ${assignment?.id}`,
+            `Applicant Email: ${application.applicant_email}`,
+            `Notes: ${adminNotes || 'No additional notes provided.'}`,
+          ],
+          details: {
+            action: 'new_bookkeeping_assignment',
+            applicationId: application.id,
+            ecdId: application.ecd_id,
+            assignmentId: assignment?.id,
+          },
+          recipientEmail: process.env.BOOKKEEPER_EMAIL, // Use the new env variable
+        });
+      }
+    }
+    // --- End: Bookkeeping Assignment & Email Logic ---
+
+
     await writePlatformActivity(admin, {
       actorUserId,
       actorEmail,
