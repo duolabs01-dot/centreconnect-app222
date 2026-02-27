@@ -9,6 +9,7 @@ import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { ArrowLeft, Menu } from 'lucide-react'
+import { useAppNavLock } from '@/lib/hooks/useAppNavLock' // Import the hook
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -25,6 +26,8 @@ export function EcdPortalSidebar({
 }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  useAppNavLock() // Add the hook here
+
   const visibleNav = ECD_DASHBOARD_NAV.filter((item) => {
     if (userRole === 'ecd_admin') return true
     if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
@@ -69,7 +72,7 @@ export function EcdPortalSidebar({
         <item.icon className={cn('w-4 h-4 shrink-0', active ? 'text-primary' : 'text-muted-foreground')} />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         {badgeCount > 0 ? (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-rose-200">
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 ring-1 ring-200">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         ) : null}
@@ -159,5 +162,3 @@ export function EcdPortalSidebar({
     </>
   )
 }
-
-

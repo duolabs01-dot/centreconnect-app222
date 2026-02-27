@@ -9,6 +9,7 @@ import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, BadgeCheck } from 'lucide-react'
+import { useAppNavLock } from '@/lib/hooks/useAppNavLock' // Import the hook
 
 type ParentAppShellProps = {
   userName: string
@@ -77,6 +78,7 @@ function isMeTab(pathname: string) {
 export function ParentAppShell({ userName, isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  useAppNavLock() // Add the hook here
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
@@ -251,6 +253,3 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
     </div>
   )
 }
-
-
-
