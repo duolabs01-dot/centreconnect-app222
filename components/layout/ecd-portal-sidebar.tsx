@@ -69,6 +69,7 @@ export function EcdPortalSidebar({
         onClick={() => {
           onSelect?.()
         }}
+        aria-current={active ? 'page' : undefined} {/* Added aria-current */}
       >
         <item.icon className={cn('w-4 h-4 shrink-0', active ? 'text-primary' : 'text-muted-foreground')} />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -182,6 +183,7 @@ export function EcdPortalSidebar({
                 "flex flex-col items-center justify-center flex-1 min-h-[48px] py-3 text-xs font-medium text-gray-500 hover:text-gray-900",
                 active && "border-b-4 border-primary bg-primary/10 text-primary"
               )}
+              aria-current={active ? 'page' : undefined} {/* Added aria-current */}
             >
               <item.icon className="h-7 w-7" strokeWidth={1.75} />
               <span className="mt-1">{item.label}</span>

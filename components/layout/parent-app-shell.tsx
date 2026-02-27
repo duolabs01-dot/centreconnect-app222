@@ -230,7 +230,9 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
                       )}
                       asChild
                     >
-                      <Link href={item.href}>{item.label}</Link>
+                      <Link href={item.href} aria-current={active ? 'page' : undefined}> {/* Added aria-current */}
+                        {item.label}
+                      </Link>
                     </Button>
                   )
                 })}
@@ -240,7 +242,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
           {showProfileNudge ? (
             <section className="mb-3 rounded-2xl border border-amber-200 bg-amber-50/90 p-3 sm:mb-4 sm:p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Complete your profile</p>
                   <p className="mt-1 text-sm font-semibold text-amber-900">
                     You are {profileNudge?.completionPct ?? 0}% ready. Centres respond faster when details are complete.
@@ -293,6 +295,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
                 "flex flex-col items-center justify-center flex-1 min-h-[48px] py-3 text-xs font-medium text-gray-500 hover:text-gray-900",
                 active && "border-b-4 border-primary bg-primary/10 text-primary"
               )}
+              aria-current={active ? 'page' : undefined} {/* Added aria-current */}
             >
               <item.icon className="h-7 w-7" strokeWidth={1.75} />
               <span className="mt-1">{item.label}</span>
