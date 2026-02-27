@@ -11,13 +11,13 @@ import type { TransportConfig } from '@/components/public/TransportSection'
 import { TransportSection } from '@/components/public/TransportSection'
 import { InteractionActions } from './interaction-actions'
 import { ContactCentreSheet } from './contact-centre-sheet'
-import { ShareCentreSheet } from './share-centre-sheet' // Corrected import path
+import { ShareCentreSheet } from './share-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { formatDate, formatLongDate } from '@/lib/utils'
 import { ArrowRight, CheckCircle2 } from 'lucide-react'
-// import { LiteImage } from '@/components/ui/LiteImage' // Removed LiteImage import
+// import { LiteImage } from '@/components/ui/LiteImage'
 
 type CentrePageProps = {
   params: {
@@ -148,7 +148,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       }
     }
 
-    const fallback = await supabase
+    const fallbackResponse = await supabase
       .from('public_ecd_centres')
       .select(
         'id,slug,name,tagline,description,suburb,city,province,age_groups,logo_url,cover_image_url,is_registered,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone'
@@ -156,34 +156,37 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       .eq('slug', slug)
       .maybeSingle()
 
-    if (!fallback.data) return null
+    if (!fallbackResponse.data) return null
+    
+    // Narrow the type of fallbackResponse.data after the null check
+    const fallbackData = fallbackResponse.data;
 
     return {
-      id: fallback.data.id,
-      slug: fallback.data.slug,
-      name: fallback.data.name ?? 'Unnamed centre',
-      tagline: fallback.data.tagline ?? null,
-      description: fallback.data.description ?? null,
+      id: fallbackData.id,
+      slug: fallbackData.slug,
+      name: fallbackData.name ?? 'Unnamed centre',
+      tagline: fallbackData.tagline ?? null,
+      description: fallbackData.description ?? null,
       email: null,
-      phone: fallback.data.contact_phone ?? null,
+      phone: fallbackData.contact_phone ?? null,
       address: null,
-      suburb: fallback.data.suburb,
-      city: fallback.data.city,
-      province: fallback.province,
-      age_groups: fallback.data.age_groups ?? null,
-      logo_url: fallback.data.logo_url ?? null,
-      cover_image_url: fallback.data.cover_image_url ?? null,
-      is_registered: fallback.data.is_registered ?? false,
+      suburb: fallbackData.suburb,
+      city: fallbackData.city,
+      province: fallbackData.province ?? 'Unknown', // Added nullish coalescing operator
+      age_groups: fallbackData.age_groups ?? null,
+      logo_url: fallbackData.logo_url ?? null,
+      cover_image_url: fallbackData.cover_image_url ?? null,
+      is_registered: fallbackData.is_registered ?? false,
       capacity: null,
-      fees_display_mode: fallback.data.fees_display_mode ?? 'range',
-      monthly_fee_min: fallback.data.monthly_fee_min ?? null,
-      monthly_fee_max: fallback.data.monthly_fee_max ?? null,
-      registration_fee: fallback.data.registration_fee ?? null,
-      subsidy_accepted: fallback.data.subsidy_accepted ?? false,
-      fees_notes: fallback.data.fees_notes ?? null,
-      fees_last_updated_at: fallback.data.fees_last_updated_at ?? null,
-      contact_whatsapp: fallback.data.contact_whatsapp ?? null,
-      contact_phone: fallback.data.contact_phone ?? null,
+      fees_display_mode: fallbackData.fees_display_mode ?? 'range',
+      monthly_fee_min: fallbackData.monthly_fee_min ?? null,
+      monthly_fee_max: fallbackData.monthly_fee_max ?? null,
+      registration_fee: fallbackData.registration_fee ?? null,
+      subsidy_accepted: fallbackData.subsidy_accepted ?? false,
+      fees_notes: fallbackData.fees_notes ?? null,
+      fees_last_updated_at: fallbackData.fees_last_updated_at ?? null,
+      contact_whatsapp: fallbackData.contact_whatsapp ?? null,
+      contact_phone: fallbackData.contact_phone ?? null,
       ecd_content: [],
       ecd_media: [],
     }
