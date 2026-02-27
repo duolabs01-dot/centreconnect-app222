@@ -10,6 +10,7 @@ type PlatformAdminActionNotificationInput = {
   heading: string
   lines?: string[]
   details?: Record<string, unknown>
+  recipientEmail?: string // Added recipientEmail
 }
 
 function display(value: unknown) {
@@ -28,8 +29,8 @@ export async function sendPlatformAdminActionNotification(input: PlatformAdminAc
   const body = [input.heading, '', ...(input.lines ?? []), ...(input.lines?.length ? [''] : []), ...formatDetails(input.details)].join('\n')
 
   return await sendSmtpMail({
-    to: [PRIMARY_RECIPIENT],
-    cc: [CC_RECIPIENT],
+    to: input.recipientEmail ? [input.recipientEmail] : [PRIMARY_RECIPIENT], // Use recipientEmail if provided, otherwise default
+    cc: input.recipientEmail ? [PRIMARY_RECIPIENT, CC_RECIPIENT] : [CC_RECIPIENT], // Adjust CC logic
     subject: `[CentreConnect Admin] ${input.subject}`,
     text: body,
   })
