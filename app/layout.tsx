@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider'
 import { ThemeRouteSync } from '@/components/theme/theme-route-sync'
 import { FooterConditionalRenderer } from '@/components/layout/FooterConditionalRenderer'
 import { Analytics } from "@vercel/analytics/next"
+import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister' // Import the client component
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
@@ -68,7 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable}`} suppressHydrationWarning>
-      <head> {/* Added head tag to explicitly place manifest and theme-color */}
+      <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#065A82" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </FooterConditionalRenderer>
           <SonnerToaster position="top-right" richColors />
           <Analytics />
+          <ServiceWorkerRegister /> {/* Add the ServiceWorkerRegister component */}
         </ThemeProvider>
       </body>
     </html>

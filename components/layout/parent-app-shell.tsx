@@ -8,8 +8,9 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react' // Added Lucide icons
+import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
+import { OfflineBanner } from '@/components/public/OfflineBanner' // Import OfflineBanner
 
 type ParentAppShellProps = {
   userName: string
@@ -277,6 +278,8 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
           )
         })}
       </nav>
+
+      <OfflineBanner /> {/* Add OfflineBanner */}
     </div>
   )
 }

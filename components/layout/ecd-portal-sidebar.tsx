@@ -8,8 +8,9 @@ import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
-import { ArrowLeft, Menu, LayoutDashboard, ClipboardList, UserCheck, Settings2 } from 'lucide-react' // Added Lucide icons for bottom nav
+import { ArrowLeft, Menu, LayoutDashboard, ClipboardList, UserCheck, Settings2 } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
+import { OfflineBanner } from '@/components/public/OfflineBanner' // Import OfflineBanner
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -188,6 +189,8 @@ export function EcdPortalSidebar({
           )
         })}
       </nav>
+
+      <OfflineBanner /> {/* Add OfflineBanner */}
     </>
   )
 }
