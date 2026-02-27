@@ -10,6 +10,8 @@ interface ComingSoonCardProps {
   comingSoonText?: string
   backLinkHref?: string
   backLinkText?: string
+  roleLabel: string; // Added roleLabel
+  userEmail: string; // Added userEmail
 }
 
 export function ComingSoonCard({
@@ -18,9 +20,11 @@ export function ComingSoonCard({
   comingSoonText = 'Feature Coming Soon!',
   backLinkHref = '/ecd/dashboard',
   backLinkText = 'Back to Dashboard',
+  roleLabel, // Destructure roleLabel
+  userEmail, // Destructure userEmail
 }: ComingSoonCardProps) {
   return (
-    <EcdOsShell title={title} description={description}>
+    <EcdOsShell title={title} description={description} roleLabel={roleLabel} userEmail={userEmail}>
       <div className="flex min-h-[60vh] items-center justify-center p-4">
         <Card className="glass-card w-full max-w-md border border-border bg-card/90 text-foreground text-center shadow-lg">
           <CardHeader>
