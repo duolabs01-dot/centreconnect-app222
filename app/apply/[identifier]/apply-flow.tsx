@@ -178,14 +178,14 @@ function InlineChildForm({ onSuccess }: { onSuccess: (child: ChildProfile) => vo
           <Label htmlFor="first_name">First name</Label>
           <Input id="first_name" {...form.register('first_name')} />
           {form.formState.errors.first_name && (
-            <p className="text-xs text-destructive">{form.formState.errors.first_name.message}</p>
+            <p className="form-error">{form.formState.errors.first_name.message}</p> // Applied form-error class
           )}
         </div>
         <div className="space-y-1">
           <Label htmlFor="last_name">Last name</Label>
           <Input id="last_name" {...form.register('last_name')} />
           {form.formState.errors.last_name && (
-            <p className="text-xs text-destructive">{form.formState.errors.last_name.message}</p>
+            <p className="form-error">{form.formState.errors.last_name.message}</p> // Applied form-error class
           )}
         </div>
       </div>
@@ -195,7 +195,7 @@ function InlineChildForm({ onSuccess }: { onSuccess: (child: ChildProfile) => vo
           <Label htmlFor="date_of_birth">Date of birth</Label>
           <Input id="date_of_birth" type="date" {...form.register('date_of_birth')} />
           {form.formState.errors.date_of_birth && (
-            <p className="text-xs text-destructive">{form.formState.errors.date_of_birth.message}</p>
+            <p className="form-error">{form.formState.errors.date_of_birth.message}</p> // Applied form-error class
           )}
         </div>
         <div className="space-y-1">
@@ -211,7 +211,7 @@ function InlineChildForm({ onSuccess }: { onSuccess: (child: ChildProfile) => vo
             <option value="other">Other</option>
           </select>
           {form.formState.errors.gender && (
-            <p className="text-xs text-destructive">{form.formState.errors.gender.message}</p>
+            <p className="form-error">{form.formState.errors.gender.message}</p> // Applied form-error class
           )}
         </div>
       </div>
@@ -222,5 +222,3 @@ function InlineChildForm({ onSuccess }: { onSuccess: (child: ChildProfile) => vo
     </form>
   )
 }
-
-

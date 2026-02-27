@@ -88,6 +88,23 @@
 
 /* Custom styles specific to CentreConnect */
 
+/* Form error feedback */
+.form-error {
+  @apply text-destructive text-sm mt-1 flex items-center gap-1;
+}
+
+.form-error::before {
+  content: "⚠";
+  @apply text-destructive;
+}
+
+/* Theme Transition Smoothing */
+/* Using a general selector for now. More specific targeting can be done with data attributes if needed. */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+
 /* ECD Portal theme (glassmorphism/cyberpunk-lite) */
 .ecd-theme-body,
 .ecd-page-shell {
