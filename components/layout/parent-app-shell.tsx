@@ -8,12 +8,13 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User, Search, ClipboardList } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { InstallPrompt } from '@/components/public/InstallPrompt'
 import { createClient } from '@/lib/supabase/client'
+import { BottomNav, type NavItem } from './bottom-nav'
 
 type ParentAppShellProps = {
   userName?: string
@@ -25,11 +26,12 @@ type ParentAppShellProps = {
   children: React.ReactNode
 }
 
-const navItems = [
+// Updated navigation items to match requested "Mobile Finance" style
+const navItems: NavItem[] = [
   { href: '/parent/dashboard', label: 'Home', icon: LayoutDashboard },
-  { href: '/directory', label: 'Discover', icon: Compass },
-  { href: '/parent/notifications', label: 'Inbox', icon: Bell },
-  { href: '/parent/profile', label: 'Me', icon: User },
+  { href: '/directory', label: 'Search', icon: Search },
+  { href: '/parent/applications', label: 'Applications', icon: ClipboardList },
+  { href: '/parent/profile', label: 'Profile', icon: User },
 ]
 
 function getTitle(pathname: string) {
@@ -210,13 +212,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
               </div>
               <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
                 {navItems.map((item) => {
-                  const active =
-                    item.href === '/parent/profile'
-                      ? pathname.startsWith('/parent/profile') ||
-                        pathname.startsWith('/parent/preferences') ||
-                        pathname.startsWith('/parent/support') ||
-                        pathname.startsWith('/parent/children')
-                      : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
                   return (
                     <Button
                       key={item.href}
@@ -230,9 +226,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
                       )}
                       asChild
                     >
-                      <Link href={item.href} aria-current={active ? 'page' : undefined}>
-                        {item.label}
-                      </Link>
+                      <Link href={item.href}>{item.label}</Link>
                     </Button>
                   )
                 })}
@@ -276,25 +270,8 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
         </Container>
       </main>
 
-      {/* Floating Pill Bottom Nav */}
-      <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
-        <div className="flex items-center justify-around rounded-pill bg-nav-bg px-2 py-3 shadow-nav backdrop-blur-xl"
-             style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <Link key={item.href} href={item.href} prefetch={true}
-                className="relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-200">
-                {isActive && <span className="absolute -top-1 h-1 w-6 rounded-full bg-nav-indicator" />}
-                <item.icon className={`h-5 w-5 ${isActive ? 'text-nav-active' : 'text-nav-inactive'}`} />
-                <span className={`text-[10px] font-medium ${isActive ? 'text-nav-active' : 'text-nav-inactive'}`}>
-                  {item.label}
-                </span>
-              </Link>
-            )
-          })}
-        </div>
-      </nav>
+      {/* Overhauled Bottom Nav */}
+      <BottomNav items={navItems} />
 
       <OfflineBanner />
       <InstallPrompt hasSubmittedFirstApplication={hasSubmittedFirstApplication} />

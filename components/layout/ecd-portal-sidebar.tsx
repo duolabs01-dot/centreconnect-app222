@@ -8,9 +8,10 @@ import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
-import { ArrowLeft, Menu } from 'lucide-react'
+import { ArrowLeft, Menu, LayoutDashboard, ClipboardList, UserCheck, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner'
+import { BottomNav, type NavItem } from './bottom-nav'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -18,6 +19,14 @@ type EcdPortalSidebarProps = {
   userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
   attentionBadges?: Partial<Record<string, number>>
 }
+
+// Map ECD portal items for the shared BottomNav
+const ecdMobileNavItems: NavItem[] = [
+  { href: '/ecd/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/ecd/applications', label: 'Admissions', icon: ClipboardList },
+  { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck },
+  { href: '/ecd/profile', label: 'Profile', icon: User },
+]
 
 export function EcdPortalSidebar({
   userEmail,
@@ -135,7 +144,7 @@ export function EcdPortalSidebar({
             <nav className="mt-6 space-y-1 flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/10" aria-label="ECD portal navigation">
               {renderGroupedNav(visibleNav, () => setMobileOpen(false))}
             </nav>
-            <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-admin-border bg-admin-surface p-3">
+            <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-admin-border bg-admin-surface p-3 mb-16">
               <p className="truncate text-xs text-admin-text-muted">
                 Signed in as <span className="font-semibold text-admin-text">{userEmail ?? 'Unknown'}</span>
               </p>
@@ -162,6 +171,9 @@ export function EcdPortalSidebar({
           <SignOutButton redirectTo="/" className="w-full bg-admin-accent text-black hover:bg-admin-accent-hover font-bold rounded-xl" />
         </div>
       </aside>
+
+      {/* Redesigned Bottom Nav for ECD Portal */}
+      <BottomNav items={ecdMobileNavItems} />
 
       <OfflineBanner />
     </>
