@@ -1,6 +1,6 @@
 import { AdminSkeletonCard } from '@/components/ui/skeleton-card'
 
-export default function EcdLoading() {
+export default function AdminLoading() {
   return (
     <div className="space-y-6 px-6 py-6">
       <div className="space-y-2">
@@ -13,9 +13,9 @@ export default function EcdLoading() {
         <AdminSkeletonCard />
         <AdminSkeletonCard />
       </div>
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <AdminSkeletonCard className="xl:col-span-2 h-[300px]" />
-        <AdminSkeletonCard className="h-[300px]" />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <AdminSkeletonCard className="lg:col-span-2 h-[400px]" />
+        <AdminSkeletonCard className="h-[400px]" />
       </div>
     </div>
   )

@@ -90,10 +90,11 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       <main className="flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
         <div className="mx-auto max-w-[1600px] px-6 pb-6 pt-20 lg:p-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
-          {children}
+          <div className="animate-in fade-in duration-200">
+            {children}
+          </div>
         </div>
       </main>
     </div>
   )
 }
-

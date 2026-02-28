@@ -104,7 +104,9 @@ export default async function ParentLayout({ children }: { children: React.React
       <ParentLayoutProvider data={parentLayoutData}> {/* Wrap with provider */}
         <ParentAppShell> {/* ParentAppShell will now read from context */}
           <BrowserNotificationBridge mode="parent" parentId={user.id} />
-          {children}
+          <div className="animate-in fade-in duration-200">
+            {children}
+          </div>
         </ParentAppShell>
       </ParentLayoutProvider>
     </div>

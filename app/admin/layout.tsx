@@ -10,7 +10,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="admin-shell min-h-screen bg-slate-950 text-slate-100">
       <CommandPalette />
-      {children}
+      <div className="animate-in fade-in duration-200">
+        {children}
+      </div>
     </div>
   )
 }
