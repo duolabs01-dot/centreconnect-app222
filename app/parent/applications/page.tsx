@@ -191,7 +191,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const activeChild = childCards.find((child) => child.id === selectedChildId) ?? null
 
     return (
-      <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
+      <div className="bg-surface-secondary px-4 pt-4 min-h-screen">
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Application Journey</h1>
           <p className="mt-1 text-sm text-slate-600">Track each child, each status change, and your best next move from one clear timeline.</p>

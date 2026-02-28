@@ -10,7 +10,6 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { ArrowLeft, Menu, Home, ClipboardList, UserCheck, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
-import { OfflineBanner } from '@/components/public/OfflineBanner'
 import { BottomNav, type NavItem } from './bottom-nav'
 
 type EcdPortalSidebarProps = {
@@ -173,8 +172,6 @@ export function EcdPortalSidebar({
         </aside>
       {/* Redesigned Bottom Nav for ECD Portal */}
       <BottomNav items={ecdMobileNavItems} />
-
-      <OfflineBanner />
     </>
   )
 }

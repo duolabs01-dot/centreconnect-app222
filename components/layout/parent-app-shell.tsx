@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type TouchEvent } from 'react'
+import { useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
@@ -10,10 +10,7 @@ import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, BadgeCheck, Home, Compass, Bell, User, Search, ClipboardList } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
-import { OfflineBanner } from '@/components/public/OfflineBanner'
 import { LiteImage } from '@/components/ui/LiteImage'
-import { InstallPrompt } from '@/components/public/InstallPrompt'
-import { createClient } from '@/lib/supabase/client'
 import { BottomNav, type NavItem } from './bottom-nav'
 
 type ParentAppShellProps = {
@@ -88,26 +85,6 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
-  const [hasSubmittedFirstApplication, setHasSubmittedFirstApplication] = useState(false);
-
-  useEffect(() => {
-    const checkApplications = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { count, error } = await supabase
-          .from('applications')
-          .select('id', { count: 'exact', head: true })
-          .eq('parent_id', user.id);
-        if (error) {
-          console.error('Error checking applications for install prompt:', error);
-          return;
-        }
-        setHasSubmittedFirstApplication((count ?? 0) > 0);
-      }
-    };
-    checkApplications();
-  }, []);
 
   function onTouchStart(e: TouchEvent<HTMLDivElement>) {
     if (window.scrollY > 0) return
@@ -272,9 +249,6 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
 
       {/* Overhauled Bottom Nav */}
       <BottomNav items={navItems} />
-
-      <OfflineBanner />
-      <InstallPrompt hasSubmittedFirstApplication={hasSubmittedFirstApplication} />
     </div>
   )
 }

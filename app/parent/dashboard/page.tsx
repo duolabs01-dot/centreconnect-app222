@@ -345,7 +345,7 @@ export default async function ParentDashboardPage() {
     ]
 
     return (
-      <div className="bg-surface-secondary px-4 pt-4 pb-28">
+      <div className="bg-surface-secondary px-4 pt-4">
         {screenState === 'empty' ? (
           <SurfaceCard className="animate-fade-in relative overflow-hidden p-6 sm:p-8">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/70 via-cyan-50/40 to-white" />

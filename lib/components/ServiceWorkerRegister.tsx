@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { InstallPrompt } from '@/components/pwa/install-prompt'
-import { OfflineBanner } from '@/components/public/OfflineBanner'
+import { OfflineBanner } from '@/components/layout/offline-banner'
 
 export function ServiceWorkerRegister() {
   useEffect(() => {
