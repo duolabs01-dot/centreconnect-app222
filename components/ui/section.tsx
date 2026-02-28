@@ -1,11 +1,9 @@
-// components/ui/section.tsx
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-import { Sparkles } from "lucide-react"; // Example icon if emoji is not set
 
 interface SectionProps {
   id?: string;
-  emoji?: string; // Optional emoji string
+  emoji?: string;
   title: string;
   children: ReactNode;
   className?: string;
@@ -13,17 +11,12 @@ interface SectionProps {
 
 export function Section({ id, emoji, title, children, className }: SectionProps) {
   return (
-    <section id={id} className={cn("scroll-mt-20 mt-10 p-6 rounded-2xl border border-gray-100 bg-white shadow-lg", className)}>
-      <div className="flex items-center gap-3 mb-6">
-        {emoji ? (
-          <span className="text-3xl">{emoji}</span>
-        ) : (
-          // Default icon if no emoji is provided, matching teal accent
-          <Sparkles className="h-8 w-8 text-teal-500" />
-        )}
-        <h2 className="text-3xl font-bold tracking-tight text-gray-900">{title}</h2>
+    <section id={id} className={cn("scroll-mt-24 space-y-4", className)}>
+      <div className="flex items-center gap-3">
+        {emoji && <span className="text-3xl">{emoji}</span>}
+        <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
       </div>
-      <div className="prose prose-slate max-w-none">
+      <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
         {children}
       </div>
     </section>

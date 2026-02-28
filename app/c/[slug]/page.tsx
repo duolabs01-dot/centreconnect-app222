@@ -314,7 +314,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
           ? 'Contact centre for fees'
           : 'Contact centre for fees'
 
-  const statChips: Array<{ label: string; value: string; accent?: 'emerald' }> = [
+  const statChips: Array<{ label: string; value: string; accent?: 'teal' }> = [
     {
       label: 'Ages',
       value: centre.age_groups && centre.age_groups.length ? centre.age_groups.join(', ') : 'Not specified',
@@ -330,7 +330,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
     {
       label: 'Verified',
       value: centre.subsidy_accepted ? 'Subsidy accepted' : 'Verification pending',
-      accent: centre.subsidy_accepted ? 'emerald' : undefined,
+      accent: centre.subsidy_accepted ? 'teal' : undefined,
     },
   ]
 
@@ -483,7 +483,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
 
         {jobs.length > 0 && (
           <section className="mt-14 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]">
-            <SectionHeader title="Join Our Team" emoji="" />
+            <SectionHeader emoji="" title="Join Our Team" emojiSize="text-3xl" />
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
                 <JobTeaserCard key={job.id} job={job} centreSlug={centre.slug} />
@@ -496,40 +496,6 @@ export default async function CentrePage({ params }: CentrePageProps) {
     </main>
   )
 }
-
-// Removed HeroPill local definition
-// function HeroPill({ children }: { children: React.ReactNode }) {
-//   return (
-//     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-sm font-medium text-white">
-//       {children}
-//     </span>
-//   )
-// }
-
-// Removed StatChip local definition
-// function StatChip({
-//   label,
-//   value,
-//   accent,
-// }: {
-//   label: string
-//   value: string
-//   accent?: 'emerald'
-// }) {
-//   return (
-//     <div className="flex flex-col items-center min-w-[120px] text-center">
-//       <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
-//       <span
-//         className={cn(
-//           'mt-1 text-sm font-semibold whitespace-nowrap',
-//           accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
-//         )}
-//       >
-//         {value}
-//       </span>
-//     </div>
-  // )
-// }
 
 function SectionHeader({
   emoji,
@@ -549,28 +515,6 @@ function SectionHeader({
     </div>
   )
 }
-
-// Removed Section local definition
-// function Section({
-//   id,
-//   emoji,
-//   title,
-//   className,
-//   children,
-// }: {
-//   id?: string
-//   emoji: string
-//   title: string
-//   className?: string
-//   children: React.ReactNode
-// }) {
-//   return (
-//     <section id={id} className={cn('mt-10 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
-//       <SectionHeader emoji={emoji} title={title} />
-//       <div className="mt-4 text-base text-foreground/80">{children}</div>
-//     </section>
-//   )
-// }
 
 function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
   const isExpired = job.closes_at ? new Date(job.closes_at) < new Date() : false

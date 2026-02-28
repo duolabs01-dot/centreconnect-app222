@@ -4,26 +4,31 @@ import { ReactNode } from "react";
 interface StatChipProps {
   label: string;
   value: string | number;
-  icon?: ReactNode; // Made optional as per original usage in page.tsx
-  accent?: 'emerald'; // Kept from page.tsx usage
+  icon?: ReactNode;
+  className?: string;
+  accent?: 'teal' | 'default';
 }
 
-export function StatChip({ label, value, icon, accent }: StatChipProps) {
+export function StatChip({ label, value, icon, className, accent = 'default' }: StatChipProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center min-w-[120px] text-center", // Kept from original page.tsx usage
+        "flex items-center gap-3 rounded-2xl bg-white p-4 shadow-sm border border-slate-100 min-w-[140px]",
+        className
       )}
     >
-      <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
-      <span
-        className={cn(
-          'mt-1 text-sm font-semibold whitespace-nowrap',
-          accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
-        )}
-      >
-        {value}
-      </span>
+      {icon && (
+        <div className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-xl",
+          accent === 'teal' ? "bg-[#065A82]/10 text-[#065A82]" : "bg-slate-50 text-slate-500"
+        )}>
+          {icon}
+        </div>
+      )}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+        <p className="text-lg font-bold text-slate-900">{value}</p>
+      </div>
     </div>
   );
 }
