@@ -43,43 +43,61 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
 
     if (!mapInstanceRef.current) {
       try {
+        // Fix: Use OpenFreeMap Liberty style (Free, no API key needed)
+        // Ensure maplibre-gl is used correctly
         mapInstanceRef.current = new MapLibreMap({
           container: mapContainerRef.current,
           style: 'https://tiles.openfreemap.org/styles/liberty',
-          center: [28.0473, -26.2041],
+          center: [28.0473, -26.2041], // Johannesburg default
           zoom: 11,
+          antialias: true
         })
+
         mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+
         mapInstanceRef.current.on('error', (e) => {
-          console.warn('Map failed to load', e)
-          setMapError(true)
+          console.warn('MapLibre error:', e)
+          // Don't trigger full error UI for minor tile errors, only for fatal failures
+          if (!mapInstanceRef.current?.loaded()) {
+            setMapError(true)
+          }
         })
+
       } catch (err) {
-        console.error('Map initialization error:', err)
+        console.error('Map initialization failed:', err)
         setMapError(true)
       }
     }
 
-    mapInstanceRef.current?.resize()
+    // Force resize when visibility toggles
+    setTimeout(() => mapInstanceRef.current?.resize(), 100)
+
+    return () => {
+      // Cleanup if needed, though usually maplibre handles it
+    }
   }, [showMap])
 
   useEffect(() => {
     if (!showMap || !mapInstanceRef.current || mapError) return
 
+    // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove())
     markersRef.current = []
 
     centresWithLocation.forEach((centre) => {
+      if (!centre.longitude || !centre.latitude) return
+
       const popup = new Popup({ offset: 15 }).setHTML(
         `<strong>${centre.name}</strong><p class="text-xs text-slate-500">${centre.suburb}</p>`
       )
       const marker = new Marker({ color: '#06b6d4' })
-        .setLngLat([centre.longitude!, centre.latitude!])
+        .setLngLat([centre.longitude, centre.latitude])
         .setPopup(popup)
         .addTo(mapInstanceRef.current!)
       markersRef.current.push(marker)
     })
 
+    // Bounds fitting logic
     if (userLocation && centresWithLocation.length > 0) {
       const nearby = [...centresWithLocation]
         .sort((a, b) => {
@@ -144,13 +162,14 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         aria-label="ECD centres map near you"
         role="region"
       >
-        <div className="text-center">
-          <p className="text-sm font-medium text-slate-600">Map unavailable</p>
+        <div className="text-center px-6">
+          <p className="text-sm font-medium text-slate-600">Map visualization unavailable</p>
+          <p className="text-xs text-slate-400 mt-1 mb-4">Try refreshing or view results in external map provider.</p>
           <a 
             href={`https://www.google.com/maps/search/ECD+centres+near+${locationHint}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-block text-xs text-cyan-600 underline"
+            className="inline-flex items-center rounded-lg bg-[#065A82] px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#054a6b]"
           >
             Open in Google Maps
           </a>
@@ -161,37 +180,40 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
 
   return (
     <div 
-      className="relative h-[260px] sm:h-[420px] w-full rounded-2xl border border-border"
+      className="relative h-[260px] sm:h-[420px] w-full rounded-2xl border border-border overflow-hidden bg-slate-100"
       aria-label="ECD centres map near you"
       role="region"
     >
       <div ref={mapContainerRef} className="h-full w-full" />
+      
       {centresWithLocation.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-white/80">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
           <div className="px-4 text-center">
             <p className="text-sm font-semibold text-slate-700">Location data is being added</p>
             <p className="mt-1 text-xs text-slate-500">Centre coordinates are being verified. Check back soon.</p>
           </div>
         </div>
       )}
-      {userLocation ? (
+
+      {userLocation && (
         <button
           type="button"
           onClick={handleRecenter}
-          className="absolute left-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--shadow-elevation-1)] backdrop-blur hover:bg-white"
+          className="absolute left-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-all hover:bg-white active:scale-95"
         >
           Recenter
         </button>
-      ) : null}
-      <div className="pointer-events-none absolute inset-0 flex items-end justify-start p-3">
-        <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-[var(--shadow-elevation-3)] shadow-slate-900">
+      )}
+
+      <div className="pointer-events-none absolute bottom-3 left-3 flex items-end justify-start">
+        <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur">
           {locationHint}
         </span>
       </div>
 
       {/* Centre Count Badge */}
-      <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur">
-        {centresWithLocation.length} centres on map
+      <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur border border-slate-100">
+        {centresWithLocation.length} centres found
       </div>
     </div>
   )

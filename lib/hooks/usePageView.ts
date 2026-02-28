@@ -10,18 +10,33 @@ interface UsePageViewProps {
 
 /**
  * Hook to record page views and page duration analytics.
- * Works in both ECD and Parent portals as long as ecdId is provided.
+ * Extends telemetry with role segmentation and session tracking.
  */
 export function usePageView({ ecdId }: UsePageViewProps) {
   const pathname = usePathname()
   const { profile } = useUser()
   const startTimeRef = useRef<number>(Date.now())
-  const sessionIdRef = useRef<string>(Math.random().toString(36).substring(2, 15))
+  const sessionIdRef = useRef<string>('')
+
+  // Generate or retrieve persistent session ID for the browser session
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let sId = sessionStorage.getItem('cc_analytics_session')
+      if (!sId) {
+        sId = Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
+        sessionStorage.setItem('cc_analytics_session', sId)
+      }
+      sessionIdRef.current = sId
+    }
+  }, [])
 
   useEffect(() => {
     if (!ecdId) return
 
-    // Record page view on mount
+    const actorRole = profile?.role || 'anonymous'
+    const sessionId = sessionIdRef.current
+
+    // 1. Record Entry (Page View)
     const recordPageView = async () => {
       try {
         await fetch('/api/analytics/events', {
@@ -30,19 +45,19 @@ export function usePageView({ ecdId }: UsePageViewProps) {
           body: JSON.stringify({
             ecdId,
             eventType: 'page_view',
-            actorRole: profile?.role || 'anonymous',
+            actorRole,
             path: pathname,
-            sessionId: sessionIdRef.current,
+            sessionId,
             metadata: {
               referrer: document.referrer,
-              userAgent: navigator.userAgent
+              screen: `${window.innerWidth}x${window.innerHeight}`
             }
           })
         })
       } catch (err) {
-        // Silent fail for analytics
+        // Silent fail for analytics in production
         if (process.env.NODE_ENV === 'development') {
-          console.error('Failed to record page view:', err)
+          console.error('Analytics: Failed to record page view', err)
         }
       }
     }
@@ -50,29 +65,28 @@ export function usePageView({ ecdId }: UsePageViewProps) {
     recordPageView()
     startTimeRef.current = Date.now()
 
-    // Record page duration on unmount or visibility change
+    // 2. Record Exit (Page Duration)
     const recordDuration = () => {
       const duration = Date.now() - startTimeRef.current
-      if (duration < 1000) return // Skip very short views (likely bots or accidental)
+      if (duration < 500) return // Ignore "bounces" under 0.5s
 
       const payload = JSON.stringify({
         ecdId,
         eventType: 'page_duration',
-        actorRole: profile?.role || 'anonymous',
+        actorRole,
         path: pathname,
         durationMs: duration,
-        sessionId: sessionIdRef.current,
+        sessionId,
         metadata: {
-          timestamp: new Date().toISOString()
+          exit_at: new Date().toISOString()
         }
       })
 
-      // Use sendBeacon for reliable delivery during unmount/visibilitychange
+      // Use sendBeacon for reliable delivery on page close/navigation
       if (navigator.sendBeacon) {
         const blob = new Blob([payload], { type: 'application/json' })
         navigator.sendBeacon('/api/analytics/events', blob)
       } else {
-        // Fallback for older browsers
         fetch('/api/analytics/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -86,7 +100,7 @@ export function usePageView({ ecdId }: UsePageViewProps) {
       if (document.visibilityState === 'hidden') {
         recordDuration()
       } else {
-        // Reset start time when coming back to tab
+        // Reset timer when user returns to tab
         startTimeRef.current = Date.now()
       }
     }

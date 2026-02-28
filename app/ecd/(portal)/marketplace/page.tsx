@@ -52,6 +52,13 @@ export default async function EcdMarketplacePage() {
     const serviceId = String(formData.get('service_id') ?? '')
     if (!serviceId) return
 
+    // 1. Fetch service details to check if it's bookkeeping
+    const { data: service } = await session.supabase
+      .from('marketplace_services')
+      .select('service_name')
+      .eq('id', serviceId)
+      .single()
+
     const { data: existing } = await session.supabase
       .from('ecd_marketplace_orders')
       .select('id,status')
@@ -62,12 +69,44 @@ export default async function EcdMarketplacePage() {
       .maybeSingle()
 
     if (!existing) {
-      await session.supabase.from('ecd_marketplace_orders').insert({
+      const { data: order, error: orderError } = await session.supabase.from('ecd_marketplace_orders').insert({
         ecd_id: session.ecdId,
         service_id: serviceId,
         requested_by: session.user.id,
         status: 'requested',
-      })
+      }).select('id').single()
+
+      // 2. Human Workflow: If Bookkeeping, create an assignment for platform team
+      if (!orderError && order && service?.service_name.toLowerCase().includes('bookkeeping')) {
+        const { createAdminClient } = await import('@/lib/supabase/admin')
+        const admin = createAdminClient()
+        
+        await admin.from('bookkeeping_assignments').insert({
+          ecd_id: session.ecdId,
+          service_application_id: null, // This is a marketplace order, not a bootstrap app
+          status: 'pending',
+          priority: 'medium',
+          notes: `Marketplace Order: ${order.id}`
+        })
+
+        // 3. Notify Platform Admin
+        try {
+          const { sendServiceApplicationNotification } = await import('@/lib/email/service-application-notification')
+          const { data: centre } = await admin.from('ecd_centres').select('name').eq('id', session.ecdId).single()
+          
+          await sendServiceApplicationNotification({
+            applicationId: order.id,
+            submittedAt: new Date().toISOString(),
+            applicantFullName: session.user.email ?? 'Unknown',
+            applicantEmail: session.user.email ?? '',
+            centreName: centre?.name ?? 'Unknown Centre',
+            selectedTier: 'premium', // Hack: using existing notification type for speed
+            recommendedTier: 'premium',
+          })
+        } catch (err) {
+          console.error('Failed to send bookkeeping notification:', err)
+        }
+      }
     }
 
     revalidatePath('/ecd/marketplace')
