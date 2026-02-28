@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import Link from 'next/link'
-import Image from 'next/image' // Keep Image for badge, but use LiteImage for main images
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
@@ -11,9 +11,9 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner'
-import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
-import { InstallPrompt } from '@/components/public/InstallPrompt' // Import InstallPrompt
-import { createClient } from '@/lib/supabase/client' // Import Supabase client
+import { LiteImage } from '@/components/ui/LiteImage'
+import { InstallPrompt } from '@/components/public/InstallPrompt'
+import { createClient } from '@/lib/supabase/client'
 
 type ParentAppShellProps = {
   userName?: string
@@ -86,7 +86,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const pullStartY = useRef<number | null>(null)
-  const [hasSubmittedFirstApplication, setHasSubmittedFirstApplication] = useState(false); // State for application check
+  const [hasSubmittedFirstApplication, setHasSubmittedFirstApplication] = useState(false);
 
   useEffect(() => {
     const checkApplications = async () => {
@@ -128,7 +128,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
   }
 
   useEffect(() => {
-    // Prefetch only critical routes
+    // Prefetch critical routes
     router.prefetch('/directory')
     router.prefetch('/parent/dashboard')
   }, [router])
@@ -148,7 +148,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
   return (
     <div
       data-parent-theme="true"
-      className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)]"
+      className="min-h-screen overflow-x-hidden bg-surface-secondary"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -161,8 +161,8 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
       >
         {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
-      <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0 pb-20"> {/* Added pb-20 for bottom nav */}
-        <Container className="max-w-3xl">
+      <main className="flex-1 pb-28 md:pb-0">
+        <Container className="max-w-3xl px-4 pt-4">
           <div className="mb-3 px-1 pt-1 sm:mb-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
@@ -276,36 +276,28 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
         </Container>
       </main>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex items-center justify-around min-h-[64px] w-full border-t border-gray-200 bg-white shadow-lg pb-[env(safe-area-inset-bottom)]"> {/* Fixed position and added pb */}
-        {navItems.map((item) => {
-          const active =
-            item.href === '/parent/profile'
-              ? pathname.startsWith('/parent/profile') ||
-                pathname.startsWith('/parent/preferences') ||
-                pathname.startsWith('/parent/support') ||
-                pathname.startsWith('/parent/children')
-              : pathname === item.href || pathname.startsWith(`${item.href}/`)
-          
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 min-h-[48px] py-3 text-xs font-medium text-gray-500 hover:text-gray-900",
-                active && "border-b-4 border-primary bg-primary/10 text-primary"
-              )}
-              aria-current={active ? 'page' : undefined}
-            >
-              <item.icon className="h-7 w-7" strokeWidth={1.75} />
-              <span className="mt-1">{item.label}</span>
-            </Link>
-          )
-        })}
+      {/* Floating Pill Bottom Nav */}
+      <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
+        <div className="flex items-center justify-around rounded-pill bg-nav-bg px-2 py-3 shadow-nav backdrop-blur-xl"
+             style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+          {navItems.map((item) => {
+            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            return (
+              <Link key={item.href} href={item.href} prefetch={true}
+                className="relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-200">
+                {isActive && <span className="absolute -top-1 h-1 w-6 rounded-full bg-nav-indicator" />}
+                <item.icon className={`h-5 w-5 ${isActive ? 'text-nav-active' : 'text-nav-inactive'}`} />
+                <span className={`text-[10px] font-medium ${isActive ? 'text-nav-active' : 'text-nav-inactive'}`}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
       </nav>
 
-      <OfflineBanner /> {/* Add OfflineBanner */}
-      <InstallPrompt hasSubmittedFirstApplication={hasSubmittedFirstApplication} /> {/* Add InstallPrompt */}
+      <OfflineBanner />
+      <InstallPrompt hasSubmittedFirstApplication={hasSubmittedFirstApplication} />
     </div>
   )
 }

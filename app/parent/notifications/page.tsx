@@ -32,11 +32,11 @@ export default async function ParentNotificationsPage() {
     }>
 
     return (
-      <div className="cc-page">
-        <section>
-          <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Family Inbox</h1>
+      <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Family Inbox</h1>
           <p className="mt-1 text-sm text-slate-600">Messages from centres, announcements, and application updates.</p>
-        </section>
+        </header>
         <NotificationsInbox initialItems={items} />
       </div>
     )
@@ -44,5 +44,3 @@ export default async function ParentNotificationsPage() {
     logRoutePerf(perf)
   }
 }
-
-

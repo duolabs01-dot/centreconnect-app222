@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { updateParentPreferencesAction } from '@/lib/actions/parents/update-preferences'
+import { SurfaceCard } from '@/components/ui/surface-card'
 
 type PreferencesFormValues = {
   max_monthly_budget: string
@@ -70,68 +71,71 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-2xl border border-border bg-card/80 p-6">
-      <div className="space-y-1">
-        <Label htmlFor="preferred_start_month">Preferred start date</Label>
-        <Input id="preferred_start_month" type="date" {...register('preferred_start_month')} />
-        <p className="text-xs text-muted-foreground">Parents can tell you when they prefer the journey to begin for their child.</p>
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="max_monthly_budget">Maximum monthly budget (R)</Label>
-        <Input id="max_monthly_budget" type="number" min="0" step="1" {...register('max_monthly_budget')} />
-        <p className="text-xs text-muted-foreground">
-          Set the maximum fee you want to see; this keeps marketplace filters precise.
-        </p>
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="preferred_radius_km">Preferred radius (km)</Label>
-        <div className="space-y-2 rounded-2xl border border-border bg-white/5 p-3">
-          <input
-            id="preferred_radius_km"
-            type="range"
-            min="1"
-            max="40"
-            step="1"
-            defaultValue={radiusValue}
-            onChange={(event) => {
-              radiusOnChange(event)
-              setRadiusValue(event.target.value)
-            }}
-            onBlur={radiusOnBlur}
-            ref={radiusRef}
-            className="w-full accent-cyan-600"
-          />
-          <p className="text-sm font-semibold text-foreground">{radiusValue} km</p>
+    <SurfaceCard className="p-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-1">
+          <Label htmlFor="preferred_start_month">Preferred start date</Label>
+          <Input id="preferred_start_month" type="date" className="h-11 rounded-xl" {...register('preferred_start_month')} />
+          <p className="text-xs text-muted-foreground">Parents can tell you when they prefer the journey to begin for their child.</p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Distance is always weighted heavily in our recommendations—tune this slider first for the most relevant centres.
-        </p>
-      </div>
 
-      <div className="space-y-1">
-        <Label htmlFor="preferred_suburbs">Preferred suburbs</Label>
-        <Input
-          id="preferred_suburbs"
-          placeholder="e.g. Sandton, Alexandra"
-          {...register('preferred_suburbs')}
-        />
-        <p className="text-xs text-muted-foreground">
-          Separate multiple suburbs with commas so we only show the most relevant centres.
-        </p>
-      </div>
+        <div className="space-y-1">
+          <Label htmlFor="max_monthly_budget">Maximum monthly budget (R)</Label>
+          <Input id="max_monthly_budget" type="number" min="0" step="1" className="h-11 rounded-xl" {...register('max_monthly_budget')} />
+          <p className="text-xs text-muted-foreground">
+            Set the maximum fee you want to see; this keeps marketplace filters precise.
+          </p>
+        </div>
 
-      <label className="flex items-center gap-2 text-sm text-muted-foreground">
-        <input type="checkbox" {...register('transport_needed')} className="h-4 w-4 rounded border border-border bg-background text-cyan-500" />
-        Transport needed
-      </label>
+        <div className="space-y-1">
+          <Label htmlFor="preferred_radius_km">Preferred radius (km)</Label>
+          <div className="space-y-2 rounded-2xl border border-slate-100 bg-surface-secondary p-4">
+            <input
+              id="preferred_radius_km"
+              type="range"
+              min="1"
+              max="40"
+              step="1"
+              defaultValue={radiusValue}
+              onChange={(event) => {
+                radiusOnChange(event)
+                setRadiusValue(event.target.value)
+              }}
+              onBlur={radiusOnBlur}
+              ref={radiusRef}
+              className="w-full accent-cyan-600 h-6"
+            />
+            <p className="text-sm font-bold text-slate-900">{radiusValue} km</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Distance is always weighted heavily in our recommendations—tune this slider first for the most relevant centres.
+          </p>
+        </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? 'Saving…' : 'Save Preferences'}
-        </Button>
-      </div>
-    </form>
+        <div className="space-y-1">
+          <Label htmlFor="preferred_suburbs">Preferred suburbs</Label>
+          <Input
+            id="preferred_suburbs"
+            placeholder="e.g. Sandton, Alexandra"
+            className="h-11 rounded-xl"
+            {...register('preferred_suburbs')}
+          />
+          <p className="text-xs text-muted-foreground">
+            Separate multiple suburbs with commas so we only show the most relevant centres.
+          </p>
+        </div>
+
+        <label className="flex items-center gap-3 text-sm font-medium text-slate-700 min-h-[44px]">
+          <input type="checkbox" {...register('transport_needed')} className="h-5 w-5 rounded-lg border-slate-300 text-cyan-600 focus:ring-cyan-500" />
+          Transport needed
+        </label>
+
+        <div className="pt-2">
+          <Button type="submit" disabled={isPending} className="w-full h-12 rounded-xl text-base font-bold shadow-float bg-cyan-600 hover:bg-cyan-700">
+            {isPending ? 'Saving…' : 'Save Preferences'}
+          </Button>
+        </div>
+      </form>
+    </SurfaceCard>
   )
 }

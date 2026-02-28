@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SurfaceCard } from '@/components/ui/surface-card'
+import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Support | Parent Portal | CentreConnect',
@@ -87,105 +89,117 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
   const tickets = data ?? []
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-2">
-        <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Report an Issue</h1>
-        <p className="text-sm text-slate-600">Tell us what happened and the support team will follow up in your inbox.</p>
-        {searchParams?.created === '1' ? (
-          <p className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-            Ticket submitted successfully.
-          </p>
-        ) : null}
-        {searchParams?.created === '0' ? (
-          <p className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700">
-            We could not create your ticket. Please try again.
-          </p>
-        ) : null}
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <form action={createTicket} className="space-y-3">
-          <input
-            name="subject"
-            placeholder="Subject (example: Can't upload birth certificate)"
-            required
-            className="cc-native-field"
-          />
-          <select name="category" className="cc-native-field" defaultValue="general">
-            <option value="general">General</option>
-            <option value="technical">Technical</option>
-            <option value="application">Application</option>
-            <option value="billing">Billing</option>
-          </select>
-          <textarea
-            name="description"
-            required
-            placeholder="Describe the issue and what you expected to happen."
-            className="cc-native-field min-h-28 h-auto py-2"
-          />
-          <div className="flex justify-end">
-            <Button type="submit">Submit Ticket</Button>
-          </div>
-        </form>
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">My Tickets</h2>
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <Link
-              href="/parent/support?status=open"
-              className={`rounded-full px-3 py-1 ${
-                statusFilter === 'open' ? 'bg-cyan-100 text-cyan-800' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              Open
-            </Link>
-            <Link
-              href="/parent/support?status=resolved"
-              className={`rounded-full px-3 py-1 ${
-                statusFilter === 'resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              Resolved
-            </Link>
-            <Link
-              href="/parent/support?status=all"
-              className={`rounded-full px-3 py-1 ${
-                statusFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              All
-            </Link>
-          </div>
-        </div>
-
-        {tickets.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-            No tickets yet.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {tickets.map((ticket) => (
-              <div key={ticket.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-slate-900">{ticket.subject}</p>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                    {ticket.status}
-                  </span>
-                </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span>{ticket.ticket_number}</span>
-                  <span>|</span>
-                  <span>{ticket.category}</span>
-                  <span>|</span>
-                  <span>{formatDate(ticket.created_at)}</span>
-                </div>
-              </div>
-            ))}
+    <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Report an Issue</h1>
+        <p className="mt-1 text-sm text-slate-600">Tell us what happened and the support team will follow up in your inbox.</p>
+        {searchParams?.created === '1' && (
+          <div className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider">
+            Ticket submitted successfully
           </div>
         )}
-      </section>
+        {searchParams?.created === '0' && (
+          <div className="mt-3 inline-flex rounded-full border border-rose-200 bg-rose-50 px-4 py-1.5 text-xs font-bold text-rose-700 uppercase tracking-wider">
+            Submission failed. Please try again.
+          </div>
+        )}
+      </header>
+
+      <div className="space-y-8">
+        <SurfaceCard className="p-6">
+          <form action={createTicket} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Subject</label>
+              <input
+                name="subject"
+                placeholder="Can't upload documents..."
+                required
+                className="cc-native-field h-11 rounded-xl"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Category</label>
+              <select name="category" className="cc-native-field h-11 rounded-xl" defaultValue="general">
+                <option value="general">General Inquiry</option>
+                <option value="technical">Technical Issue</option>
+                <option value="application">Application Help</option>
+                <option value="billing">Billing & Fees</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Details</label>
+              <textarea
+                name="description"
+                required
+                placeholder="Describe the issue in detail..."
+                className="cc-native-field min-h-32 h-auto py-3 rounded-xl"
+              />
+            </div>
+            <div className="pt-2">
+              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-float bg-cyan-600">Submit Ticket</Button>
+            </div>
+          </form>
+        </SurfaceCard>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-lg font-bold text-slate-900">My Tickets</h2>
+            <div className="flex items-center gap-1.5 p-1 rounded-full bg-surface shadow-card">
+              {[
+                { label: 'Open', value: 'open' },
+                { label: 'Resolved', value: 'resolved' },
+                { label: 'All', value: 'all' }
+              ].map((tab) => (
+                <Link
+                  key={tab.value}
+                  href={`/parent/support?status=${tab.value}`}
+                  className={cn(
+                    'rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider transition-all',
+                    statusFilter === tab.value
+                      ? 'bg-nav-bg text-white shadow-nav'
+                      : 'text-slate-400 hover:text-slate-600'
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {tickets.length === 0 ? (
+            <SurfaceCard className="py-12 text-center text-sm font-medium text-slate-400 border-dashed">
+              No tickets found in this category.
+            </SurfaceCard>
+          ) : (
+            <div className="space-y-3">
+              {tickets.map((ticket) => (
+                <SurfaceCard key={ticket.id} className="p-4 group hover:ring-1 hover:ring-cyan-500/30 transition-all">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900 line-clamp-1">{ticket.subject}</p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                        <span className="text-cyan-600">{ticket.ticket_number}</span>
+                        <span>•</span>
+                        <span>{ticket.category}</span>
+                        <span>•</span>
+                        <span>{formatDate(ticket.created_at)}</span>
+                      </div>
+                    </div>
+                    <span className={cn(
+                      "shrink-0 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest border",
+                      ticket.status === 'open' ? "bg-cyan-50 text-cyan-700 border-cyan-100" :
+                      ticket.status === 'resolved' ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
+                      "bg-slate-50 text-slate-500 border-slate-100"
+                    )}>
+                      {ticket.status}
+                    </span>
+                  </div>
+                </SurfaceCard>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

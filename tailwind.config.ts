@@ -21,12 +21,23 @@ const config = {
 	                        ecd: ['var(--font-ecd)', 'sans-serif'],
 	                        admin: ['var(--font-admin)', 'sans-serif'],
  	                },
-  	                colors: {
-  	                        // Admin-only utility colors (used by cyber-* Tailwind classes).
-  	                        cyber: {
-  	                                bg: '#0B0E14',
-  	                                cyan: '#00F2FF',
-  	                                violet: '#8A2BE2',
+ 	                colors: {
+	                        surface: {
+	                                DEFAULT: '#FFFFFF',
+	                                secondary: '#F8F9FA',
+	                                tertiary: '#F1F3F5',
+	                        },
+	                        nav: {
+	                                bg: '#1A1A2E',
+	                                active: '#FFFFFF',
+	                                inactive: '#6B7280',
+	                                indicator: '#3B82F6',
+	                        },
+ 	                        // Admin-only utility colors (used by cyber-* Tailwind classes).
+ 	                        cyber: {
+ 	                                bg: '#0B0E14',
+ 	                                cyan: '#00F2FF',
+ 	                                violet: '#8A2BE2',
   	                                green: '#00FF94',
   	                                rose: '#FF4466',
   	                        },
@@ -73,10 +84,18 @@ const config = {
   			}
   		},
  		borderRadius: {
-  			lg: 'var(--radius-lg)',
-  			md: 'var(--radius-md)',
-  			sm: 'var(--radius-sm)'
+ 			lg: 'var(--radius-lg)',
+ 			md: 'var(--radius-md)',
+  			sm: 'var(--radius-sm)',
+	                        squircle: '1.25rem',
+	                        pill: '9999px',
  		},
+	                boxShadow: {
+	                        card: '0 2px 12px rgba(0, 0, 0, 0.06)',
+	                        'card-hover': '0 4px 20px rgba(0, 0, 0, 0.1)',
+	                        nav: '0 -4px 24px rgba(0, 0, 0, 0.12)',
+	                        float: '0 8px 32px rgba(0, 0, 0, 0.12)',
+	                },
   		keyframes: {
   			'accordion-down': {
   				from: {

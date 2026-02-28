@@ -69,7 +69,7 @@ export default async function ParentProfilePage() {
     const childCount = childrenCountResult.count ?? 0
 
     return (
-      <div className="cc-page space-y-4">
+      <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
         <ParentProfileHub
           initial={{
             full_name: parentName,
@@ -90,5 +90,3 @@ export default async function ParentProfilePage() {
     logRoutePerf(perf)
   }
 }
-
-
