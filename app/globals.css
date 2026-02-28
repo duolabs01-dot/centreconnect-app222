@@ -88,6 +88,36 @@
 
 /* Custom styles specific to CentreConnect */
 
+/* Admin/ECD Portal theme (High contrast dark) */
+.admin-theme {
+  background-color: #0F0F14;
+  color: #E8E8ED;
+}
+
+.admin-theme .admin-card {
+  @apply bg-admin-surface border border-admin-border rounded-squircle transition-all duration-200;
+}
+
+.admin-theme .admin-card:hover {
+  @apply bg-admin-surface-hover;
+}
+
+.admin-theme .admin-button-primary {
+  @apply bg-admin-accent text-black hover:bg-admin-accent-hover font-bold rounded-xl transition-all active:scale-[0.98];
+}
+
+.admin-theme .admin-table-header {
+  @apply bg-admin-surface border-b border-admin-border text-admin-text-muted text-[10px] font-bold uppercase tracking-widest px-4 py-3;
+}
+
+.admin-theme .admin-table-row {
+  @apply border-b border-admin-border hover:bg-admin-surface-hover transition-colors;
+}
+
+.admin-theme .admin-input {
+  @apply bg-admin-bg border border-admin-border text-admin-text rounded-xl focus:border-admin-accent focus:ring-1 focus:ring-admin-accent outline-none transition-all;
+}
+
 /* Form error feedback */
 .form-error {
   @apply text-destructive text-sm mt-1 flex items-center gap-1;

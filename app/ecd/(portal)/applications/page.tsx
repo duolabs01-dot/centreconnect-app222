@@ -11,6 +11,8 @@ import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { cn } from '@/lib/utils'
+import { Search, Filter, ChevronLeft, ChevronRight, FileText, ShieldAlert, Info } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Admissions Inbox - CentreConnect',
@@ -188,11 +190,11 @@ function renderApplicationList(
 ) {
   if (applications.length === 0) {
     return (
-      <div className="rounded-md border border-border bg-card/80 p-4 text-sm text-muted-foreground">
-        <p>No applications yet - complete your profile to attract parents.</p>
-        <div className="mt-3">
-          <Button size="sm" asChild>
-            <Link href="/ecd/website">Complete profile</Link>
+      <div className="rounded-xl border border-admin-border bg-admin-surface/50 p-8 text-center">
+        <p className="text-sm text-admin-text-muted">No applications found in this category.</p>
+        <div className="mt-4">
+          <Button asChild className="admin-button-primary h-10 px-6">
+            <Link href="/ecd/website">Complete Profile to attract parents</Link>
           </Button>
         </div>
       </div>
@@ -200,62 +202,60 @@ function renderApplicationList(
   }
 
   return (
-    <>
-      <div className="space-y-3 lg:hidden">
+    <div className="space-y-4">
+      <div className="lg:hidden space-y-3">
         {applications.map((application) => {
           const child = normalizeOne(application.children)
           const parent = normalizeOne(application.parents)
           const parentProfile = normalizeOne(parent?.user_profiles ?? null)
           const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
           const parentName = parentProfile?.full_name ?? 'Unknown parent'
-          const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? 'No phone'
           return (
-            <Card key={application.id} className="border-slate-200">
-              <CardContent className="p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{childName}</p>
-                    <p className="mt-1 text-xs text-slate-600">
-                      {parentName} | {formatDate(application.submitted_at)}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">Parent phone: {parentPhone}</p>
-                    <div className="mt-2">
-                      <StatusBadge status={application.status} />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 sm:items-end">
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/ecd/applications/${application.id}`}>Open application</Link>
-                    </Button>
-                    <QuickSendTemplate
-                      ecdId={context.ecdId}
-                      parentId={parent?.id ?? ''}
-                      applicationId={application.id}
-                      applicationNumber={application.application_number}
-                      centreName={context.centreName}
-                      childName={childName}
-                      parentName={parentName}
-                      status={application.status}
-                      templates={context.templates}
-                    />
+            <Card key={application.id} className="admin-card p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-admin-text truncate">{childName}</p>
+                  <p className="mt-1 text-xs text-admin-text-muted">
+                    {parentName} • {formatDate(application.submitted_at)}
+                  </p>
+                  <div className="mt-2">
+                    <StatusBadge status={application.status} />
                   </div>
                 </div>
-              </CardContent>
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-admin-text-muted hover:text-admin-accent hover:bg-admin-accent-glow" asChild>
+                  <Link href={`/ecd/applications/${application.id}`} title="View Application">
+                    <ChevronRight className="w-5 h-5" />
+                  </Link>
+                </Button>
+              </div>
+              <div className="mt-4 pt-4 border-t border-admin-border flex justify-end">
+                <QuickSendTemplate
+                  ecdId={context.ecdId}
+                  parentId={parent?.id ?? ''}
+                  applicationId={application.id}
+                  applicationNumber={application.application_number}
+                  centreName={context.centreName}
+                  childName={childName}
+                  parentName={parentName}
+                  status={application.status}
+                  templates={context.templates}
+                />
+              </div>
             </Card>
           )
         })}
       </div>
 
-      <div className="hidden lg:block">
+      <div className="hidden lg:block overflow-hidden rounded-xl border border-admin-border bg-admin-surface">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Application</TableHead>
-              <TableHead>Child</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Submitted</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+          <TableHeader className="bg-admin-surface-hover/50">
+            <TableRow className="hover:bg-transparent border-admin-border">
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12">No.</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12">Child</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12">Parent</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12">Status</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12">Date</TableHead>
+              <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-admin-text-muted h-12 pr-6">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -266,18 +266,31 @@ function renderApplicationList(
               const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
               const parentName = parentProfile?.full_name ?? 'Unknown parent'
               return (
-                <TableRow key={application.id}>
-                  <TableCell className="font-medium">{application.application_number}</TableCell>
-                  <TableCell>{childName}</TableCell>
-                  <TableCell>{parentName}</TableCell>
+                <TableRow key={application.id} className="border-admin-border hover:bg-admin-surface-hover/50 transition-colors group">
+                  <TableCell className="font-bold text-admin-text-muted group-hover:text-admin-accent transition-colors pl-6">{application.application_number}</TableCell>
+                  <TableCell className="font-bold text-admin-text">{childName}</TableCell>
+                  <TableCell className="text-admin-text-muted">{parentName}</TableCell>
                   <TableCell>
                     <StatusBadge status={application.status} />
                   </TableCell>
-                  <TableCell>{formatDate(application.submitted_at)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/ecd/applications/${application.id}`}>Open application</Link>
-                    </Button>
+                  <TableCell className="text-admin-text-muted text-xs">{formatDate(application.submitted_at)}</TableCell>
+                  <TableCell className="text-right pr-6">
+                    <div className="flex items-center justify-end gap-2">
+                      <QuickSendTemplate
+                        ecdId={context.ecdId}
+                        parentId={parent?.id ?? ''}
+                        applicationId={application.id}
+                        applicationNumber={application.application_number}
+                        centreName={context.centreName}
+                        childName={childName}
+                        parentName={parentName}
+                        status={application.status}
+                        templates={context.templates}
+                      />
+                      <Button size="sm" variant="ghost" className="h-9 px-3 text-admin-text-muted hover:text-admin-accent hover:bg-admin-accent-glow font-bold" asChild>
+                        <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )
@@ -285,7 +298,7 @@ function renderApplicationList(
           </TableBody>
         </Table>
       </div>
-    </>
+    </div>
   )
 }
 
@@ -502,150 +515,170 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
-      <section className="mb-4">
-        <p className="text-sm text-slate-600">{centre?.name ?? 'Your centre'}</p>
+      <section className="mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-admin-accent">{centre?.name ?? 'Admissions'}</p>
+          <h1 className="text-2xl font-black text-admin-text mt-1">Pipeline Management</h1>
+        </div>
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-admin-surface border border-admin-border">
+          <Filter className="w-4 h-4 text-admin-text-muted" />
+          <span className="text-xs font-bold text-admin-text-muted uppercase tracking-widest">Global Filter</span>
+        </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card/90 p-4 sm:p-6 text-foreground">
-        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="glass-card border-border bg-card/80 p-3 text-foreground">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pending review</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{filteredCounts.pending}</p>
+      <div className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="admin-card p-5 border-t-2 border-t-admin-accent">
+            <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Pending</p>
+            <p className="mt-2 text-3xl font-black text-admin-text">{filteredCounts.pending}</p>
           </div>
-          <div className="glass-card border-amber-400/30 bg-amber-100 p-3 text-amber-800">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Awaiting parent response</p>
-            <p className="mt-1 text-2xl font-semibold text-amber-800">{filteredCounts.awaitingOfferResponse}</p>
+          <div className="admin-card p-5 border-t-2 border-t-admin-warning">
+            <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Offers Out</p>
+            <p className="mt-2 text-3xl font-black text-admin-warning">{filteredCounts.awaitingOfferResponse}</p>
           </div>
-          <div className="glass-card border-emerald-200 bg-emerald-50 p-3 text-emerald-700">
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Enrolled</p>
-            <p className="mt-1 text-2xl font-semibold text-emerald-700">{filteredCounts.enrolled}</p>
+          <div className="admin-card p-5 border-t-2 border-t-admin-success">
+            <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Enrolled</p>
+            <p className="mt-2 text-3xl font-black text-admin-success">{filteredCounts.enrolled}</p>
           </div>
-          <div className="glass-card border-border bg-card/80 p-3 text-foreground">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total filtered</p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">
-              {filteredCounts.pending + filteredCounts.approved + filteredCounts.enrolled + filteredCounts.waitlisted + filteredCounts.rejected}
+          <div className="admin-card p-5 border-t-2 border-t-admin-border">
+            <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Total Filtered</p>
+            <p className="mt-2 text-3xl font-black text-admin-text">
+              {filteredCounts.pending + filteredCounts.approved + filteredCounts.enrolled}
             </p>
           </div>
         </div>
 
-        <form method="get" action="/ecd/applications" className="mb-4 grid gap-3 sm:grid-cols-[1fr_auto]">
-          {selectedTab !== 'pending' ? <input type="hidden" name="tab" value={selectedTab} /> : null}
-          <Input name="q" defaultValue={searchParams?.q ?? ''} placeholder="Search by child, parent, or application" />
-          <Button type="submit">Apply filter</Button>
-        </form>
+        <Card className="admin-card p-1">
+          <CardContent className="p-4 space-y-6">
+            <form method="get" action="/ecd/applications" className="flex gap-3">
+              {selectedTab !== 'pending' ? <input type="hidden" name="tab" value={selectedTab} /> : null}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-admin-text-muted" />
+                <input 
+                  name="q" 
+                  defaultValue={searchParams?.q ?? ''} 
+                  placeholder="Search applications..." 
+                  className="w-full h-11 bg-admin-bg border border-admin-border rounded-xl pl-10 pr-4 text-sm text-admin-text focus:border-admin-accent focus:ring-1 focus:ring-admin-accent outline-none"
+                />
+              </div>
+              <Button type="submit" className="admin-button-primary h-11 px-6 text-black font-bold">Search</Button>
+            </form>
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          {[
-            { key: 'pending', label: `Pending (${filteredCounts.pending})` },
-            { key: 'awaiting_offer_response', label: `Awaiting response (${filteredCounts.awaitingOfferResponse})` },
-            { key: 'approved', label: `Approved (${filteredCounts.approved})` },
-            { key: 'enrolled', label: `Enrolled (${filteredCounts.enrolled})` },
-            { key: 'waitlisted', label: `Waitlisted (${filteredCounts.waitlisted})` },
-            { key: 'rejected', label: `Rejected (${filteredCounts.rejected})` },
-          ].map((tab) => (
-            <Button
-              key={tab.key}
-              size="sm"
-              variant={selectedTab === tab.key ? 'default' : 'outline'}
-              asChild
-            >
-              <Link href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}>
-                {tab.label}
-              </Link>
-            </Button>
-          ))}
-        </div>
-        {selectedTab === 'pending' && blockedPendingApplications.length > 0 ? (
-          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-            <p className="text-sm font-semibold text-amber-900">
-              {blockedPendingApplications.length} application{blockedPendingApplications.length === 1 ? '' : 's'} moved
-              back to parents for missing details
-            </p>
-            <p className="mt-1 text-xs text-amber-800">
-              Ask parents to update their profile/documents. These applications reappear once required details are complete.
-            </p>
-            <div className="mt-2 space-y-1">
-              {blockedPendingApplications.slice(0, 3).map((item) => {
-                const child = normalizeOne(item.application.children)
-                const parent = normalizeOne(item.application.parents)
-                const profile = normalizeOne(parent?.user_profiles ?? null)
-                const childName = child ? `${child.first_name} ${child.last_name}` : 'Child profile'
-                return (
-                  <p key={item.application.id} className="text-xs text-amber-900">
-                    {childName} ({profile?.full_name ?? 'Parent'}): {item.missing.join(', ')}
-                  </p>
-                )
-              })}
+            <div className="flex flex-wrap gap-1.5 p-1 rounded-xl bg-admin-bg border border-admin-border w-fit">
+              {[
+                { key: 'pending', label: 'Pending', count: filteredCounts.pending },
+                { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
+                { key: 'approved', label: 'Approved', count: filteredCounts.approved },
+                { key: 'enrolled', label: 'Enrolled', count: filteredCounts.enrolled },
+                { key: 'waitlisted', label: 'Waitlist', count: filteredCounts.waitlisted },
+                { key: 'rejected', label: 'Rejected', count: filteredCounts.rejected },
+              ].map((tab) => (
+                <Link
+                  key={tab.key}
+                  href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                    selectedTab === tab.key 
+                      ? "bg-admin-accent text-black shadow-float" 
+                      : "text-admin-text-muted hover:text-admin-text hover:bg-admin-surface-hover"
+                  )}
+                >
+                  {tab.label} ({tab.count})
+                </Link>
+              ))}
             </div>
-          </div>
-        ) : null}
-        {renderApplicationList(selectedApplications, {
-          ecdId,
-          centreName: centre?.name ?? 'Your centre',
-          templates,
-        })}
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-slate-600">
-            Page {currentPage} of {totalPages} | {totalForSelected} results
-          </p>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" asChild disabled={!canPrev}>
-              <Link href={buildApplicationsHref({ page: currentPage - 1 })}>Previous</Link>
-            </Button>
-            <Button size="sm" variant="outline" asChild disabled={!canNext}>
-              <Link href={buildApplicationsHref({ page: currentPage + 1 })}>Next</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+            {selectedTab === 'pending' && blockedPendingApplications.length > 0 && (
+              <div className="rounded-xl bg-admin-warning/10 border border-admin-warning/20 p-4 flex items-start gap-3">
+                <div className="h-8 w-8 rounded-lg bg-admin-warning flex items-center justify-center shrink-0">
+                  <ShieldAlert className="w-5 h-5 text-black" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-admin-warning">
+                    {blockedPendingApplications.length} Blocked Applications
+                  </p>
+                  <p className="mt-1 text-xs text-admin-text-muted leading-relaxed">
+                    Some parents haven&apos;t finished their profile or document uploads. Ask them to update their details to resume the process.
+                  </p>
+                </div>
+              </div>
+            )}
 
-      <section id="details" className="mt-6 rounded-2xl border border-border bg-card/90 p-4 sm:p-6 text-foreground">
-        <h2 className="text-lg font-semibold">Application details</h2>
-        {focusedApplication ? (
-          <div className="mt-4 space-y-2 text-sm text-slate-700">
-            <p>
-              <span className="font-medium text-slate-900">Application:</span> {focusedApplication.application_number}
-            </p>
-            <p>
-              <span className="font-medium text-slate-900">Status:</span> {focusedApplication.status}
-            </p>
-            <p>
-              <span className="font-medium text-slate-900">Child:</span>{' '}
-              {focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'Unknown child'}
-            </p>
-            <p>
-              <span className="font-medium text-slate-900">Parent:</span>{' '}
-              {focusedParentProfile?.full_name ?? 'Unknown parent'}
-            </p>
-            <p>
-              <span className="font-medium text-slate-900">Parent phone:</span>{' '}
-              {focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}
-            </p>
-            <p>
-              <span className="font-medium text-slate-900">Submitted:</span>{' '}
-              {formatDate(focusedApplication.submitted_at)}
-            </p>
-            {focusedApplication.parent_message ? (
-              <p>
-                <span className="font-medium text-slate-900">Parent message:</span> {focusedApplication.parent_message}
+            {renderApplicationList(selectedApplications, {
+              ecdId,
+              centreName: centre?.name ?? 'Your centre',
+              templates,
+            })}
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-admin-border">
+              <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">
+                Showing Page {currentPage} of {totalPages}
               </p>
-            ) : null}
-            {focusedApplication.admin_notes ? (
-              <p>
-                <span className="font-medium text-slate-900">Admin notes:</span> {focusedApplication.admin_notes}
-              </p>
-            ) : null}
+              <div className="flex items-center gap-2">
+                <Button variant="outline" className="h-10 px-4 border-admin-border text-admin-text font-bold hover:bg-admin-surface-hover" asChild disabled={!canPrev}>
+                  <Link href={buildApplicationsHref({ page: currentPage - 1 })}>
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Prev
+                  </Link>
+                </Button>
+                <Button variant="outline" className="h-10 px-4 border-admin-border text-admin-text font-bold hover:bg-admin-surface-hover" asChild disabled={!canNext}>
+                  <Link href={buildApplicationsHref({ page: currentPage + 1 })}>
+                    Next <ChevronRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <section id="details" className="admin-card">
+          <div className="p-4 border-b border-admin-border flex items-center justify-between bg-admin-surface-hover/30">
+            <h2 className="text-sm font-bold text-admin-text flex items-center gap-2">
+              <FileText className="w-4 h-4 text-admin-accent" />
+              Application Intelligence
+            </h2>
           </div>
-        ) : (
-          <p className="mt-3 text-sm text-slate-600">Select an application to view full details.</p>
-        )}
-      </section>
+          <div className="p-6">
+            {focusedApplication ? (
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Reference</p>
+                    <p className="text-base font-bold text-admin-text mt-1">{focusedApplication.application_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Status</p>
+                    <div className="mt-1"><StatusBadge status={focusedApplication.status} /></div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Child Details</p>
+                    <p className="text-base font-bold text-admin-text mt-1">
+                      {focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Parent Contact</p>
+                    <p className="text-base font-bold text-admin-text mt-1">{focusedParentProfile?.full_name ?? 'N/A'}</p>
+                    <p className="text-sm text-admin-accent mt-0.5">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-admin-text-muted">Internal Notes</p>
+                    <p className="text-sm text-admin-text-muted italic mt-1 bg-admin-bg p-3 rounded-lg border border-admin-border">
+                      {focusedApplication.admin_notes || 'No private notes added yet.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Info className="w-8 h-8 text-admin-border mb-3" />
+                <p className="text-sm text-admin-text-muted">Select an application from the table above to view deep-dive details.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
     </EcdOsShell>
   )
 }
-
-
-
-
-

@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { cn, getJohannesburgNowParts, isSameJohannesburgDay } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { AdminStatCard } from '@/components/ui/admin-stat-card'
+import { Users, TrendingUp, UserCheck, ShieldAlert, Truck, Info, Zap, ChevronRight } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Daily Operations - CentreConnect',
@@ -29,36 +31,6 @@ type TransportConfigSnapshot = {
 function pct(part: number, total: number) {
   if (total <= 0) return 0
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)))
-}
-
-function trendLabel(current: number, previous: number, period = 'vs last week') {
-  const diff = current - previous
-  if (diff > 0) return `+${diff} ${period}`
-  if (diff < 0) return `${diff} ${period}`
-  return `No change ${period}`
-}
-
-function trendTone(current: number, previous: number) {
-  if (current > previous) return { arrow: '^', className: 'text-emerald-600' }
-  if (current < previous) return { arrow: 'v', className: 'text-rose-600' }
-  return { arrow: '-', className: 'text-slate-400' }
-}
-
-function TrendText({
-  current,
-  previous,
-  period = 'vs last week',
-}: {
-  current: number
-  previous: number
-  period?: string
-}) {
-  const trend = trendTone(current, previous)
-  return (
-    <p className={`mt-1 text-[11px] font-semibold ${trend.className}`}>
-      {trend.arrow} {trendLabel(current, previous, period)}
-    </p>
-  )
 }
 
 function formatTransportFee(cents: number | null | undefined) {
@@ -224,6 +196,12 @@ export default async function EcdDashboardPage() {
   }>
   const topActions = recommendationItems.slice(0, 3)
 
+  const revenueChange = revenueThisMonth - revenuePreviousMonth
+  const revenueTrend = revenueChange > 0 ? 'up' : revenueChange < 0 ? 'down' : 'neutral'
+  const revenueChangePct = revenuePreviousMonth > 0 
+    ? `${Math.abs(Math.round((revenueChange / revenuePreviousMonth) * 100))}%`
+    : '0%'
+
   return (
     <EcdOsShell
       title="Daily Operations"
@@ -232,13 +210,16 @@ export default async function EcdDashboardPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
-        <Card className="glass-card border border-border bg-card/95 shadow-[var(--shadow-elevation-4)] text-foreground">
-          <CardHeader>
-            <CardTitle className="text-foreground">Top 3 Actions Today</CardTitle>
+        <Card className="admin-card border-t-4 border-t-admin-accent overflow-hidden">
+          <CardHeader className="bg-admin-surface-hover/50 pb-4">
+            <CardTitle className="text-admin-text flex items-center gap-2">
+              <Zap className="w-5 h-5 text-admin-accent" />
+              Critical Actions
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="pt-4 space-y-3">
             {topActions.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card p-3 text-sm text-slate-300">
+            <div className="rounded-xl border border-admin-border bg-admin-bg p-4 text-sm text-admin-text-muted">
               No urgent blockers right now. Keep admissions moving and monitor pickup completion.
             </div>
             ) : (
@@ -246,219 +227,212 @@ export default async function EcdDashboardPage() {
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="flex items-start gap-3 rounded-2xl border border-border bg-card/80 p-3 text-foreground transition-colors hover:border-cyan-500/30 hover:bg-white/10"
+                  className="flex items-start gap-4 rounded-xl border border-admin-border bg-admin-bg p-4 text-admin-text transition-all hover:border-admin-accent/50 hover:bg-admin-surface-hover group"
                 >
                   <span
-                  className={`mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-foreground ${
-                      item.level === 'critical' ? 'bg-rose-600' : item.level === 'warning' ? 'bg-amber-600' : 'bg-cyan-700'
-                    }`}
+                  className={cn(
+                    "mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
+                    item.level === 'critical' ? 'bg-admin-danger text-white' : 
+                    item.level === 'warning' ? 'bg-admin-warning text-black' : 
+                    'bg-admin-accent text-black'
+                  )}
                   >
                     {index + 1}
                   </span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold group-hover:text-admin-accent transition-colors">{item.label}</p>
+                    <p className="mt-1 text-xs text-admin-text-muted leading-relaxed">{item.detail}</p>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-admin-border group-hover:text-admin-accent" />
                 </Link>
               ))
             )}
-            <p className="text-xs text-muted-foreground">
-              Good {nowJhb.hour < 12 ? 'morning' : 'afternoon'}. You have {pendingApplications} admissions to work through and{' '}
-              {pickupOutstanding} children still pending pickup today.
-            </p>
+            <div className="mt-4 pt-4 border-t border-admin-border flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-admin-text-muted">
+                Pulse: {pendingApplications} pending • {pickupOutstanding} remaining
+              </p>
+              <p className="text-[11px] font-bold text-admin-text-muted">
+                Good {nowJhb.hour < 12 ? 'morning' : 'afternoon'}
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Enrolled</p>
-            <p className="mt-2 text-3xl font-black text-cyan-700">{enrolledCount}</p>
-            <p className="text-xs text-slate-500">Active children</p>
-            <TrendText current={enrolledCount} previous={enrolledCount} />
-          </Card>
-          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Revenue</p>
-            <p className="mt-2 text-3xl font-black text-emerald-700">R{revenueThisMonth.toLocaleString()}</p>
-            <p className="text-xs text-slate-500">This month paid</p>
-            <TrendText current={revenueThisMonth} previous={revenuePreviousMonth} period="vs last month" />
-          </Card>
-          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Staff</p>
-            <p className="mt-2 text-3xl font-black text-foreground">{staffCount}</p>
-            <p className="text-xs text-slate-500">Team members</p>
-            <TrendText current={staffCount} previous={staffCount} />
-          </Card>
-          <Card className="glass-card rounded-2xl border border-border bg-card/90 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Attendance</p>
-            <p className="mt-2 text-3xl font-black text-amber-700">{attendanceCurrent7}</p>
-            <p className="text-xs text-slate-500">Logs this week</p>
-            <TrendText current={attendanceCurrent7} previous={attendancePrevious7} />
-          </Card>
+        <section className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <AdminStatCard
+            label="Enrolled"
+            value={enrolledCount}
+            icon={<Users className="w-4 h-4" />}
+            className="border-t-admin-accent"
+          />
+          <AdminStatCard
+            label="Revenue"
+            value={`R${revenueThisMonth.toLocaleString()}`}
+            change={`${revenueChangePct} vs last month`}
+            trend={revenueTrend as any}
+            icon={<TrendingUp className="w-4 h-4" />}
+          />
+          <AdminStatCard
+            label="Staff"
+            value={staffCount}
+            icon={<UserCheck className="w-4 h-4" />}
+          />
+          <AdminStatCard
+            label="Attendance"
+            value={attendanceCurrent7}
+            icon={<ShieldAlert className="w-4 h-4" />}
+          />
         </section>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Card className="glass-card border border-border bg-card/90">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <Card className="admin-card">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-foreground">New Admissions (7 days)</CardTitle>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-admin-text-muted">New Admissions (7d)</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black text-cyan-700">{admissionsCurrent7}</p>
-              <TrendText current={admissionsCurrent7} previous={admissionsPrevious7} />
-            </CardContent>
-          </Card>
-          <Card className="glass-card border border-border bg-card/90">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-foreground">Attendance Logged (7 days)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-black text-emerald-700">{attendanceCurrent7}</p>
-              <TrendText current={attendanceCurrent7} previous={attendancePrevious7} />
-            </CardContent>
-          </Card>
-          <Card className="glass-card border border-border bg-card/90">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-foreground">Pickup Completion Today</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-black text-amber-300">{pickupCompletionPct}%</p>
-              <p className="text-xs text-slate-400">
-                {pickedUpToday}/{attendanceToday} picked up, {activePickupCodes} active codes
+              <p className="text-4xl font-black text-admin-text">{admissionsCurrent7}</p>
+              <p className="mt-2 text-xs font-bold text-admin-accent flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                {admissionsCurrent7 - admissionsPrevious7} from previous week
               </p>
-              <TrendText current={pickupCompletionPct} previous={pickupCompletionPct} period="today" />
+            </CardContent>
+          </Card>
+          <Card className="admin-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-admin-text-muted">Attendance (7d)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-black text-admin-text">{attendanceCurrent7}</p>
+              <p className="mt-2 text-xs font-bold text-admin-success">
+                Healthy engagement
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="admin-card">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-admin-text-muted">Pickup Rate Today</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-black text-admin-accent">{pickupCompletionPct}%</p>
+              <p className="mt-2 text-xs font-bold text-admin-text-muted">
+                {pickedUpToday}/{attendanceToday} completed
+              </p>
             </CardContent>
           </Card>
         </div>
 
         {transportConfig?.offers_transport ? (
-          <Card className="glass-card border border-border bg-card/90 text-foreground">
-            <CardHeader>
-              <CardTitle>Transport Overview</CardTitle>
+          <Card className="admin-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-admin-text flex items-center gap-2">
+                <Truck className="w-5 h-5 text-admin-accent" />
+                Transport Status
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Status:</span>
-                <span
-                  className={cn(
-                    'rounded-full px-3 py-1 text-xs font-semibold',
-                    transportConfig?.offers_transport
-                      ? 'bg-emerald-600/20 text-emerald-700'
-                      : 'bg-amber-100 text-amber-800'
-                  )}
-                >
-                  {transportConfig?.offers_transport ? 'Active transport' : 'Not yet configured'}
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-admin-bg border border-admin-border">
+                <div>
+                  <p className="text-xl font-bold text-admin-text">{formatTransportFee(transportConfig?.fee_per_month)}</p>
+                  <p className="text-xs text-admin-text-muted mt-1">{transportConfig?.fee_description}</p>
+                </div>
+                <span className="px-3 py-1 rounded-full bg-admin-accent-glow text-admin-accent text-[10px] font-black uppercase tracking-widest">
+                  Active
                 </span>
               </div>
-              <p className="text-base font-semibold text-foreground">
-                {formatTransportFee(transportConfig?.fee_per_month)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {transportConfig?.fee_description ?? 'Publish a transparent monthly fee or keep it quote-based.'}
-              </p>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Coverage areas</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {transportConfig?.coverage_areas?.length ? (
-                    transportConfig.coverage_areas.map((area: string) => (
-                      <span key={area} className="rounded-full bg-white/10 px-3 py-1 text-xs text-foreground">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-admin-text-muted mb-2">Coverage</p>
+                  <div className="flex flex-wrap gap-2">
+                    {transportConfig?.coverage_areas?.map((area: string) => (
+                      <span key={area} className="px-2 py-1 rounded-md bg-admin-surface-hover text-admin-text text-xs border border-admin-border">
                         {area}
                       </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Define suburbs or zones so parents know if you cover their route.</span>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
-              {transportConfig?.notes ? (
-                <p className="text-xs text-muted-foreground">{transportConfig.notes}</p>
-              ) : null}
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button asChild>
-                  <Link href="/ecd/transport">Open Transport Desk</Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href="/ecd/communications">Message drivers</Link>
-                </Button>
+                <div className="flex flex-col gap-2 justify-end">
+                  <Button asChild className="admin-button-primary w-full h-11">
+                    <Link href="/ecd/transport">Transport Desk</Link>
+                  </Button>
+                  <Button variant="outline" asChild className="border-admin-border text-admin-text hover:bg-admin-surface-hover h-11 rounded-xl font-bold">
+                    <Link href="/ecd/communications">Message Drivers</Link>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <Card className="glass-card border border-border bg-card/90 text-foreground">
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Transport not configured</p>
-                <p className="text-xs text-muted-foreground">
-                  Set up transport to manage routes and drivers.
-                </p>
+          <Card className="admin-card p-6 flex items-center justify-between bg-gradient-to-r from-admin-surface to-admin-bg">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-admin-accent-glow flex items-center justify-center">
+                <Info className="w-6 h-6 text-admin-accent" />
               </div>
-              <Button asChild>
-                <Link href="/ecd/transport">Set Up Transport</Link>
-              </Button>
-            </CardContent>
+              <div>
+                <p className="text-base font-bold text-admin-text">Transport setup pending</p>
+                <p className="text-xs text-admin-text-muted">Set up routes and drivers to start tracking pickups.</p>
+              </div>
+            </div>
+            <Button asChild className="admin-button-primary h-11 px-6">
+              <Link href="/ecd/transport">Configure Now</Link>
+            </Button>
           </Card>
         )}
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <Card className="glass-card border border-border bg-card/90 text-foreground">
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-2">
-                    <CardTitle>Admissions at a Glance</CardTitle>
-                    <Link href="/ecd/applications" className="text-sm font-semibold text-cyan-700 hover:text-cyan-600">
-                      View All
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
-                      <p className="text-2xl font-black text-foreground">{submittedCount}</p>
-                      <p className="text-xs font-semibold text-slate-500">New</p>
-                    </div>
-                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
-                      <p className="text-2xl font-black text-amber-700">{inReviewCount}</p>
-                      <p className="text-xs font-semibold text-amber-700">In Review</p>
-                    </div>
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-center">
-                      <p className="text-2xl font-black text-rose-700">{stale24h}</p>
-                      <p className="text-xs font-semibold text-rose-700">Waiting over 24h</p>
-                    </div>
-                  </div>
-                  {stale72h > 0 ? (
-                    <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
-                      {stale72h} applications are waiting longer than 72h and need urgent review.
-                    </p>
-                  ) : null}
-                </CardContent>
-              </Card>
-            </div>
-          <div>
-            <ProfileCompleteness items={profileItems} />
-            <Card className="mt-4 glass-card border border-border bg-card/90 text-foreground">
-              <CardHeader>
-                <CardTitle>Operational Scorecard</CardTitle>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          <div className="xl:col-span-2">
+            <Card className="admin-card">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-admin-border pb-4">
+                <CardTitle className="text-admin-text">Admissions Pipeline</CardTitle>
+                <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-widest text-admin-accent hover:text-admin-accent-hover">
+                  Full Pipeline →
+                </Link>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
-                    <p className="text-2xl font-black text-cyan-700">{avgResponseHours}h</p>
-                    <p className="text-xs font-semibold text-slate-500">Avg Response</p>
-                    <TrendText current={avgResponseHours} previous={avgResponseHours} />
+              <CardContent className="pt-6 space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="p-4 rounded-xl bg-admin-bg border border-admin-border text-center">
+                    <p className="text-3xl font-black text-admin-text">{submittedCount}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-admin-text-muted mt-1">New</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
-                    <p className="text-2xl font-black text-foreground">{newToday}</p>
-                    <p className="text-xs font-semibold text-slate-500">New Today</p>
-                    <TrendText current={newToday} previous={newToday} />
+                  <div className="p-4 rounded-xl bg-admin-bg border border-admin-accent/20 text-center">
+                    <p className="text-3xl font-black text-admin-accent">{inReviewCount}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-admin-accent/60 mt-1">Review</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
-                    <p className="text-2xl font-black text-amber-700">{waitlistedApplications}</p>
-                    <p className="text-xs font-semibold text-slate-500">Waitlisted</p>
-                    <TrendText current={waitlistedApplications} previous={waitlistedApplications} />
+                  <div className="p-4 rounded-xl bg-admin-danger/5 border border-admin-danger/20 text-center">
+                    <p className="text-3xl font-black text-admin-danger">{stale24h}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-admin-danger/60 mt-1">Stale</p>
                   </div>
-                  <div className="rounded-xl border border-border bg-card/80 p-3 text-center">
-                    <p className="text-2xl font-black text-rose-700">{unverifiedGuardians}</p>
-                    <p className="text-xs font-semibold text-slate-500">Unverified</p>
-                    <TrendText current={unverifiedGuardians} previous={unverifiedGuardians} />
+                </div>
+                {stale72h > 0 && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-admin-danger text-black font-bold text-xs">
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>{stale72h} applications require immediate attention (over 72h)</span>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          <div className="space-y-6">
+            <ProfileCompleteness items={profileItems} />
+            <Card className="admin-card">
+              <CardHeader className="border-b border-admin-border pb-4">
+                <CardTitle className="text-sm font-bold text-admin-text uppercase tracking-widest">Efficiency Metrics</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-black text-admin-accent">{avgResponseHours}h</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted">Avg Response</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-admin-text">{newToday}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted">New Today</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-admin-warning">{waitlistedApplications}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted">Waitlisted</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-black text-admin-danger">{unverifiedGuardians}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted">Unverified</p>
                 </div>
               </CardContent>
             </Card>
@@ -468,6 +442,3 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
-
-
-

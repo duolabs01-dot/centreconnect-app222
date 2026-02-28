@@ -1,5 +1,3 @@
-
-
 import type { EcdNavItem } from './ecd-navigation'
 
 type EcdOsShellProps = {
@@ -13,6 +11,6 @@ type EcdOsShellProps = {
 
 export function EcdOsShell({ children }: EcdOsShellProps) {
   return (
-    <div className="ecd-page-shell">{children}</div>
+    <div className="ecd-page-shell admin-theme min-h-screen">{children}</div>
   )
 }

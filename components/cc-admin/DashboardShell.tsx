@@ -1,12 +1,12 @@
 // components/cc-admin/DashboardShell.tsx
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/cc-admin/Container'
 import { CyberSidebar } from './CyberSidebar'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Menu } from 'lucide-react'
 
 type NavItem = {
   href: string
@@ -29,7 +29,6 @@ export function DashboardShell({
   description,
   roleLabel,
   userEmail,
-  navItems = [],
   hideSidebar = false,
   wide = false,
   children,
@@ -38,7 +37,7 @@ export function DashboardShell({
   const showSidebar = !hideSidebar
 
   return (
-    <div className="admin-shell min-h-screen flex overflow-hidden">
+    <div className="admin-shell admin-theme min-h-screen flex overflow-hidden bg-admin-bg text-admin-text">
       {/* Sidebar - Desktop */}
       {showSidebar && (
         <div className="hidden lg:block">
@@ -64,7 +63,7 @@ export function DashboardShell({
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 left-0 z-50 lg:hidden"
             >
-              <CyberSidebar userEmail={userEmail} />
+              <CyberSidebar userEmail={userEmail} onSelect={() => setSidebarOpen(false)} />
             </motion.div>
           </>
         )}
@@ -73,21 +72,21 @@ export function DashboardShell({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Header */}
-        <header className="h-16 border-b border-white/5 bg-cyber-bg/50 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 z-30">
+        <header className="h-16 border-b border-admin-border bg-admin-bg/50 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 z-30">
           <div className="flex items-center gap-4">
             {showSidebar && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 text-slate-400 hover:text-white transition-colors"
+                className="lg:hidden p-2 text-admin-text-muted hover:text-admin-text transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
             <div>
-              <h2 className="font-orbitron text-sm font-bold text-white tracking-widest uppercase">
+              <h2 className="text-sm font-bold text-admin-text tracking-widest uppercase">
                 {title}
               </h2>
-              <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+              <p className="text-[10px] text-admin-text-muted font-bold uppercase tracking-wider">
                 {description}
               </p>
             </div>
@@ -95,14 +94,14 @@ export function DashboardShell({
 
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[10px] font-bold text-cyber-cyan uppercase tracking-widest">
+              <span className="text-[10px] font-bold text-admin-accent uppercase tracking-widest">
                 {roleLabel}
               </span>
-              <span className="text-[9px] text-slate-500 font-mono">
+              <span className="text-[9px] text-admin-text-muted font-mono">
                 SECURE_NODE_0V2
               </span>
             </div>
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyber-cyan/20 to-cyber-violet/20 border border-white/10 flex items-center justify-center font-orbitron text-xs text-white">
+            <div className="w-8 h-8 rounded-lg bg-admin-accent-glow border border-admin-accent/20 flex items-center justify-center text-xs font-bold text-admin-accent">
               {userEmail[0].toUpperCase()}
             </div>
           </div>
@@ -127,14 +126,14 @@ export function DashboardShell({
           width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
+          background: rgba(0, 0, 0, 0.02);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.1);
+          background: #2A2A3A;
           border-radius: var(--radius-sm);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(0, 242, 255, 0.2);
+          background: #F59E0B;
         }
       `}</style>
     </div>

@@ -33,6 +33,20 @@ const config = {
 	                                inactive: '#6B7280',
 	                                indicator: '#3B82F6',
 	                        },
+	                        admin: {
+	                                bg: '#0F0F14',
+	                                surface: '#1A1A24',
+	                                'surface-hover': '#22222E',
+	                                border: '#2A2A3A',
+	                                text: '#E8E8ED',
+	                                'text-muted': '#8888A0',
+	                                accent: '#F59E0B',
+	                                'accent-hover': '#D97706',
+	                                'accent-glow': 'rgba(245, 158, 11, 0.15)',
+	                                success: '#22C55E',
+	                                warning: '#EAB308',
+	                                danger: '#EF4444',
+	                        },
  	                        // Admin-only utility colors (used by cyber-* Tailwind classes).
  	                        cyber: {
  	                                bg: '#0B0E14',
