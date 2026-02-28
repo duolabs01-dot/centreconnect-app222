@@ -531,25 +531,24 @@ export default async function CentrePage({ params }: CentrePageProps) {
   // )
 // }
 
-// Removed Section local definition
-// function SectionHeader({
-//   emoji,
-//   title,
-//   titleClass = 'text-foreground',
-//   emojiSize = 'text-2xl',
-// }: {
-//   emoji: string
-//   title: string
-//   titleClass?: string
-//   emojiSize?: string
-// }) {
-//   return (
-//     <div className="flex items-center gap-3">
-//       {!!emoji && <span className={emojiSize}>{emoji}</span>}
-//       <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
-//     </div>
-//   )
-// }
+function SectionHeader({
+  emoji,
+  title,
+  titleClass = 'text-foreground',
+  emojiSize = 'text-2xl',
+}: {
+  emoji: string
+  title: string
+  titleClass?: string
+  emojiSize?: string
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      {!!emoji && <span className={emojiSize}>{emoji}</span>}
+      <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
+    </div>
+  )
+}
 
 // Removed Section local definition
 // function Section({

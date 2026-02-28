@@ -16,7 +16,7 @@ import { InstallPrompt } from '@/components/public/InstallPrompt' // Import Inst
 import { createClient } from '@/lib/supabase/client' // Import Supabase client
 
 type ParentAppShellProps = {
-  userName: string
+  userName?: string
   isVerified?: boolean
   profileNudge?: {
     completionPct: number
@@ -79,7 +79,7 @@ function isMeTab(pathname: string) {
   return pathname === '/parent/profile' || pathname.startsWith('/parent/profile/')
 }
 
-export function ParentAppShell({ userName, isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
+export function ParentAppShell({ userName = 'Parent', isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
   useAppNavLock()

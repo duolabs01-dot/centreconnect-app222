@@ -96,7 +96,7 @@ export function InstallPrompt({ hasSubmittedFirstApplication }: InstallPromptPro
         </button>
       </div>
       <p className="text-sm mb-4">
-        Get offline access to your child's attendance and quick pickups by installing the app.
+        Get offline access to your child&apos;s attendance and quick pickups by installing the app.
       </p>
       <Button onClick={handleInstallClick} className="w-full">
         Install App

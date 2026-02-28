@@ -10,8 +10,8 @@ interface ComingSoonCardProps {
   comingSoonText?: string
   backLinkHref?: string
   backLinkText?: string
-  roleLabel: string; // Added roleLabel
-  userEmail: string; // Added userEmail
+  roleLabel?: string
+  userEmail?: string
 }
 
 export function ComingSoonCard({
@@ -20,8 +20,8 @@ export function ComingSoonCard({
   comingSoonText = 'Feature Coming Soon!',
   backLinkHref = '/ecd/dashboard',
   backLinkText = 'Back to Dashboard',
-  roleLabel, // Destructure roleLabel
-  userEmail, // Destructure userEmail
+  roleLabel = 'ECD Team',
+  userEmail = 'team@centreconnect.app',
 }: ComingSoonCardProps) {
   return (
     <EcdOsShell title={title} description={description} roleLabel={roleLabel} userEmail={userEmail}>
@@ -33,7 +33,7 @@ export function ComingSoonCard({
             </div>
             <CardTitle className="text-2xl font-bold">{comingSoonText}</CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
-              {description} We're actively working on this feature to bring you the best experience.
+              {description} We&apos;re actively working on this feature to bring you the best experience.
             </CardDescription>
           </CardHeader>
           <CardContent>
