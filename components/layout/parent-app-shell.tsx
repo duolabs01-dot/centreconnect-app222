@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LayoutDashboard, Compass, Bell, User, Search, ClipboardList } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Home, Compass, Bell, User, Search, ClipboardList } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { OfflineBanner } from '@/components/public/OfflineBanner'
 import { LiteImage } from '@/components/ui/LiteImage'
@@ -28,7 +28,7 @@ type ParentAppShellProps = {
 
 // Updated navigation items to match requested "Mobile Finance" style
 const navItems: NavItem[] = [
-  { href: '/parent/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/parent/dashboard', label: 'Home', icon: Home },
   { href: '/directory', label: 'Search', icon: Search },
   { href: '/parent/applications', label: 'Applications', icon: ClipboardList },
   { href: '/parent/profile', label: 'Profile', icon: User },
@@ -163,7 +163,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
       >
         {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
-      <main className="flex-1 pb-28 md:pb-0">
+      <main className="flex-1 pb-20 md:pb-0">
         <Container className="max-w-3xl px-4 pt-4">
           <div className="mb-3 px-1 pt-1 sm:mb-4">
             <div className="flex items-start justify-between gap-3">

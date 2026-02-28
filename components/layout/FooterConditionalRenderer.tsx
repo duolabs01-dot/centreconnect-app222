@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { ReactNode } from 'react'
 import { GlobalDesktopFooter } from './global-desktop-footer'
 import { GlobalMobileLegalStrip } from './global-mobile-legal-strip'
-import { GlobalBottomNav } from '@/components/nav/GlobalBottomNav'
 import { PageTransition } from '@/components/ui/page-transition'
 
 interface FooterConditionalRendererProps {
@@ -23,7 +22,6 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
       <PageTransition>{children}</PageTransition>
       {!hideFooter && <GlobalMobileLegalStrip />}
       {!hideFooter && <GlobalDesktopFooter />}
-      <GlobalBottomNav />
     </>
   )
 }

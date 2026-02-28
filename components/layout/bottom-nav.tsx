@@ -1,7 +1,6 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { LucideIcon } from 'lucide-react'
 
@@ -11,47 +10,54 @@ export type NavItem = {
   icon: LucideIcon
 }
 
-export function BottomNav({ items }: { items: NavItem[] }) {
+interface BottomNavProps {
+  items: NavItem[]
+}
+
+export function BottomNav({ items }: BottomNavProps) {
+  const router = useRouter()
   const pathname = usePathname()
 
+  const handleNav = (href: string) => {
+    router.push(href)
+  }
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-100 bg-white/95 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-[100] border-t border-slate-100 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.03)] md:hidden">
       <div className="flex h-16 items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
         {items.map((item) => {
-          // Check for active state
-          const isActive = item.href === '/parent/dashboard' || item.href === '/ecd/dashboard' 
-            ? pathname === item.href 
+          const isActive = item.href === '/parent/dashboard' || item.href === '/ecd/dashboard'
+            ? pathname === item.href
             : pathname.startsWith(item.href)
-          
+
           return (
-            <Link
+            <button
               key={item.href}
-              href={item.href}
-              prefetch={true}
+              onClick={() => handleNav(item.href)}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-1 h-full transition-all duration-300",
-                isActive ? "bg-[#065A82]/5" : "text-slate-400 hover:text-slate-600"
+                "relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 transition-all duration-200",
+                isActive ? "bg-teal-50/80" : "text-slate-400 active:bg-slate-50"
               )}
             >
-              {/* Active Indicator Line - Thick 4px indicator */}
+              {/* Active Indicator Line - 4px solid teal bottom border */}
               {isActive && (
-                <div className="absolute top-0 h-1 w-10 rounded-b-full bg-[#065A82]" />
+                <div className="absolute bottom-0 h-1 w-full bg-teal-600" />
               )}
-              
-              <item.icon 
+
+              <item.icon
                 className={cn(
-                  "h-7 w-7 transition-all duration-300", 
-                  isActive ? "text-[#065A82] scale-110" : "text-slate-400"
-                )} 
+                  "h-[28px] w-[28px] transition-transform duration-200",
+                  isActive ? "text-teal-700 scale-105" : "text-slate-400"
+                )}
                 strokeWidth={isActive ? 2.5 : 2}
               />
               <span className={cn(
-                "text-[10px] font-black uppercase tracking-[0.1em] transition-colors",
-                isActive ? "text-[#065A82]" : "text-slate-400"
+                "text-[10px] font-bold transition-colors",
+                isActive ? "text-teal-800" : "text-slate-500"
               )}>
                 {item.label}
               </span>
-            </Link>
+            </button>
           )
         })}
       </div>

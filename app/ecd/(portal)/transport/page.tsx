@@ -65,98 +65,95 @@ export default async function EcdTransportPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
-        <Card className="bg-card border border-border rounded-2xl text-foreground">
-          <CardHeader>
+        <Card className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden text-slate-900">
+          <CardHeader className="bg-slate-50/50">
             <CardTitle>Transport Management</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-cyan-700">Current Status</p>
-              <p className="text-lg font-bold text-foreground">
+          <CardContent className="grid gap-6 md:grid-cols-3 pt-6">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-teal-600">Current Status</p>
+              <p className="text-lg font-bold text-slate-900">
                 {transportConfig?.offers_transport ? 'Offering transport' : 'Not configured'}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Continue to keep drivers updated through Communications.
+              <p className="text-xs font-medium text-slate-500">
+                Manage drivers through Communications.
               </p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-cyan-700">Fee</p>
-              <p className="text-lg font-bold text-foreground">
+              <p className="text-[10px] font-black uppercase tracking-widest text-teal-600">Fee</p>
+              <p className="text-lg font-bold text-slate-900">
                 {formatCents(transportConfig?.fee_per_month)}
               </p>
               {transportConfig?.fee_description && (
-                <p className="text-xs text-muted-foreground">{transportConfig.fee_description}</p>
+                <p className="text-xs font-medium text-slate-500">{transportConfig.fee_description}</p>
               )}
             </div>
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-cyan-700">Coverage</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-teal-600">Coverage</p>
               {transportConfig?.coverage_areas?.length ? (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {transportConfig.coverage_areas.map((area) => (
-                    <span key={area} className="rounded-full bg-muted px-3 py-1 text-xs text-foreground">
+                    <span key={area} className="rounded-lg bg-teal-50 border border-teal-100 px-2.5 py-1 text-xs font-bold text-teal-700">
                       {area}
                     </span>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-muted-foreground">Coverage not yet defined.</p>
+                <p className="text-xs font-medium text-slate-400">Coverage not yet defined.</p>
               )}
             </div>
           </CardContent>
-          <CardContent className="flex flex-col gap-3 border-t border-border pt-4">
-            <p className="text-sm text-muted-foreground">
+          <CardContent className="flex flex-col gap-4 border-t border-slate-50 pt-6">
+            <p className="text-sm font-medium text-slate-500 italic">
               {transportConfig?.notes ?? 'Capture notes about routes, drivers, or special pickups here.'}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild>
+              <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-6 rounded-xl shadow-sm">
                 <Link href="/ecd/communications">Message Drivers</Link>
               </Button>
-              <Button variant="outline" asChild>
-                <Link href="/ecd/transport/drivers">Manage Drivers {'->'}</Link>
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-xl">
+                <Link href="/ecd/transport/drivers">Manage Drivers</Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-xl">
                 <Link href="/ecd/calendar">Sync to Calendar</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/ecd/pipeline">View Pipeline</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card border border-border rounded-2xl text-foreground">
-          <CardHeader>
+        <Card className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden text-slate-900">
+          <CardHeader className="bg-slate-50/50">
             <div className="flex items-center justify-between">
-              <CardTitle>Enquiry Pipeline</CardTitle>
-              <span className="text-xs text-muted-foreground">{enquiries.length} recent enquiries</span>
+              <CardTitle className="text-base font-bold">Enquiry Pipeline</CardTitle>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{enquiries.length} total enquiries</span>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-3">
+          <CardContent className="space-y-6 pt-6">
+            <div className="grid gap-4 sm:grid-cols-3">
               {[
-                { label: 'Pending', status: 'pending' },
-                { label: 'Quoted', status: 'quoted' },
-                { label: 'Accepted', status: 'accepted' },
+                { label: 'Pending', status: 'pending', color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'Quoted', status: 'quoted', color: 'text-teal-600', bg: 'bg-teal-50' },
+                { label: 'Accepted', status: 'accepted', color: 'text-emerald-600', bg: 'bg-emerald-50' },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-border bg-card px-4 py-3">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="text-2xl font-semibold text-foreground">
+                <div key={item.label} className={cn("rounded-2xl border border-slate-100 p-5", item.bg)}>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{item.label}</p>
+                  <p className={cn("text-3xl font-black mt-1", item.color)}>
                     {statusRoster[item.status] ?? 0}
                   </p>
                 </div>
               ))}
             </div>
-            <div className="rounded-2xl border border-border bg-card p-3 text-sm text-muted-foreground">
-              <p className="font-semibold text-foreground">Recent enquiries</p>
-              <div className="mt-2 space-y-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Recent enquiries</p>
+              <div className="space-y-3">
                 {recentEnquiries.length === 0 ? (
-                  <p>No enquiries yet. Encourage parents to request a quote.</p>
+                  <p className="text-sm font-medium text-slate-400 py-2">No enquiries yet. Encourage parents to request a quote.</p>
                 ) : (
                   recentEnquiries.map((enquiry) => (
-                    <div key={enquiry.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card/80 px-3 py-2 text-sm transition hover:border-primary/30">
+                    <div key={enquiry.id} className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition-all hover:border-teal-200">
                       <div className="min-w-0">
-                        <p className="truncate text-foreground">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
-                        <p className="text-xs text-muted-foreground">{formatDate(enquiry.created_at)}</p>
+                        <p className="truncate text-sm font-bold text-slate-900">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{formatDate(enquiry.created_at)}</p>
                       </div>
                       <StatusBadge status={enquiry.status} />
                     </div>

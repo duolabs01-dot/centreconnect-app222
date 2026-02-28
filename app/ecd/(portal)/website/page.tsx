@@ -233,144 +233,134 @@ export default async function EcdWebsitePage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
-        <Card className="glass-card border border-border bg-gradient-to-br from-cyan-50/80 via-white/80 to-emerald-50/80 lg:col-span-2 shadow-[var(--shadow-elevation-4)] text-foreground">
-          <CardHeader>
-            <CardTitle className="text-foreground">Website Progress</CardTitle>
+        <Card className="border-slate-100 bg-white lg:col-span-2 shadow-sm text-slate-900 rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle>Website Progress</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-full bg-white/10 p-1">
-              <div className="h-2 rounded-full bg-cyan-400 transition-all" style={{ width: `${completionPct}%` }} />
+          <CardContent className="space-y-6 pt-6">
+            <div className="rounded-full bg-slate-100 p-1">
+              <div className="h-2.5 rounded-full bg-teal-600 transition-all duration-700" style={{ width: `${completionPct}%` }} />
             </div>
-            <p className="text-sm text-cyan-200">{completionPct}% complete</p>
+            <p className="text-sm font-bold text-teal-700">{completionPct}% complete</p>
             <div className="grid gap-3 sm:grid-cols-3">
               <div
                 className={cn(
-                  'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
+                  'rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-colors',
                   hasTagline
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
-                                         : 'border-border bg-card text-muted-foreground'                )}
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-100 bg-slate-50 text-slate-400'
+                )}
               >
                 Step 1: Add headline
               </div>
               <div
                 className={cn(
-                  'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
+                  'rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-colors',
                   hasAbout
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
-                                         : 'border-border bg-card text-muted-foreground'                )}
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-100 bg-slate-50 text-slate-400'
+                )}
               >
                 Step 2: Add about section
               </div>
               <div
                 className={cn(
-                  'rounded-2xl border px-4 py-3 text-xs font-semibold uppercase tracking-[0.3em] transition-colors',
+                  'rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-colors',
                   hasPrograms && hasVisibleSections
-                    ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-700'
-                                         : 'border-border bg-card text-muted-foreground'                )}
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-100 bg-slate-50 text-slate-400'
+                )}
               >
-                Step 3: Enable sections and publish
+                Step 3: Enable sections
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border border-border bg-card/90 text-foreground">
-          <CardHeader>
-            <CardTitle>Plan & Website Scope</CardTitle>
+        <Card className="border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Plan & Website Scope</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="rounded-2xl border border-border bg-card p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current package</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{guide.label}</p>
-              <p className="text-xs text-slate-400">
+          <CardContent className="space-y-4 pt-6">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current package</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{guide.label}</p>
+              <p className="text-xs font-medium text-slate-500 mt-1">
                 Status: {subscription?.status ?? 'trial'} {subscription?.monthly_price ? `| R${subscription.monthly_price}/month` : ''}
               </p>
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">Included now</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-300">
+              <p className="text-sm font-bold text-slate-900 mb-2">Included now</p>
+              <ul className="list-disc space-y-1.5 pl-5 text-xs text-slate-600 font-medium">
                 {guide.includes.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">Suggested add-ons</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-300">
-                {guide.suggestedAddOns.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="w-full border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
               <Link href="/ecd/marketplace">Open Marketplace Add-ons</Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border border-border bg-card/90 text-foreground">
-          <CardHeader>
-            <CardTitle>Edit Website Content</CardTitle>
+        <Card className="border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Edit Website Content</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={saveWebsiteContent} className="space-y-4">
+          <CardContent className="pt-6">
+            <form action={saveWebsiteContent} className="space-y-5">
               <div>
-                                 <label htmlFor="tagline" className="text-sm font-medium text-foreground">                  Hero tagline
-                </label>
+                <label htmlFor="tagline" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Hero tagline</label>
                 <input
                   id="tagline"
                   name="tagline"
                   defaultValue={centre?.tagline ?? ''}
                   placeholder="Example: Safe, caring learning for ages 2 to 6"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field mt-1.5 h-12 rounded-xl"
                 />
               </div>
 
               <div>
-                <label htmlFor="about" className="text-sm font-medium text-foreground">
-                  About section
-                </label>
+                <label htmlFor="about" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">About section</label>
                 <textarea
                   id="about"
                   name="about"
                   defaultValue={aboutText}
                   placeholder="Use plain language about your centre and daily routine."
-                  className="cc-native-field mt-1 h-auto min-h-28 py-2"
+                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-xl leading-relaxed"
                 />
               </div>
 
               <div>
-                <label htmlFor="programs" className="text-sm font-medium text-foreground">
-                  Programs (one per line: Title | Description)
-                </label>
+                <label htmlFor="programs" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Programs (Title | Description)</label>
                 <textarea
                   id="programs"
                   name="programs"
                   defaultValue={programsText}
                   placeholder="Toddler Group | Play-based learning for ages 2-3"
-                  className="cc-native-field mt-1 h-auto min-h-32 py-2"
+                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-xl leading-relaxed"
                 />
               </div>
 
               <div>
-                <p className="text-sm font-medium text-foreground">Visible sections</p>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-2">Visible sections</p>
+                <div className="grid gap-2 sm:grid-cols-2">
                   {sectionOptions.map((section) => (
                     <label
                       key={section.key}
-                      className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
                     >
-                      <input type="checkbox" name="sections" value={section.key} defaultChecked={enabledSections.includes(section.key)} />
+                      <input type="checkbox" name="sections" value={section.key} defaultChecked={enabledSections.includes(section.key)} className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
                       {section.label}
                     </label>
                   ))}
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit">Save Draft</Button>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Save Draft</Button>
                 {centre?.slug ? (
-                  <Button type="button" variant="outline" asChild>
+                  <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
                     <a href={`/centre/${centre.slug}`} target="_blank" rel="noreferrer">
                       Preview Public Page
                     </a>
@@ -381,83 +371,67 @@ export default async function EcdWebsitePage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border border-border bg-card/90 text-foreground">
-          <CardHeader>
-            <CardTitle>Publish Controls</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-2xl border border-border bg-card p-3">
-              <p className="text-sm font-semibold text-foreground">
-                Status: {centre?.is_active ? 'Published' : 'Draft'}
-              </p>
-              <p className="mt-1 text-xs text-slate-600">
-                {centre?.is_active
-                  ? 'Your centre page is visible to parents.'
-                  : 'Your centre page is hidden until you publish.'}
-              </p>
-              {centre?.updated_at ? (
-                <p className="mt-1 text-xs text-slate-500">Last updated: {new Date(centre.updated_at).toLocaleString()}</p>
-              ) : null}
-            </div>
-
-            <form action={setWebsitePublished}>
-              <input type="hidden" name="next_published" value={centre?.is_active ? 'false' : 'true'} />
-              <Button
-                type="submit"
-                variant={centre?.is_active ? 'outline' : 'default'}
-                className="w-full"
-              >
-                {centre?.is_active ? 'Unpublish Website' : 'Publish Website'}
-              </Button>
-            </form>
-
-            <p className="text-xs text-slate-600">
-              Tip: Save draft, preview, then publish.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-card border border-border bg-card/90 text-foreground lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Need a Full Website Setup?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={submitWebsiteBrief} className="grid gap-3 md:grid-cols-2">
-              <select name="site_type" className="cc-native-field">
-                <option value="mini-site">Mini website (quick launch)</option>
-                <option value="full-website">Full website (deeper build)</option>
-              </select>
-              <select name="domain_plan" className="cc-native-field">
-                <option value="platform-subdomain">Use platform subdomain</option>
-                <option value="bring-own-domain">I want my own domain</option>
-                <option value="need-domain-help">I need help buying a domain</option>
-              </select>
-              <input
-                name="pages"
-                className="cc-native-field md:col-span-2"
-                placeholder="Pages needed (e.g. Home, Admissions, Gallery, Careers)"
-              />
-              <input
-                name="style"
-                className="cc-native-field md:col-span-2"
-                placeholder="Style direction (e.g. warm, playful, premium)"
-              />
-              <textarea
-                name="goals"
-                className="cc-native-field md:col-span-2 h-auto min-h-24 py-2"
-                placeholder="What should this website achieve for your centre?"
-              />
-              <div className="md:col-span-2 flex flex-wrap gap-2">
-                <Button type="submit">Send Website Request</Button>
-                <Button type="button" variant="outline" asChild>
-                  <Link href="/ecd/support">Track in Support</Link>
-                </Button>
+        <div className="space-y-6">
+          <Card className="border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50">
+              <CardTitle className="text-base font-bold">Publish Controls</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5 pt-6">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-center">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Status</p>
+                <p className={cn("mt-1 text-xl font-black", centre?.is_active ? "text-emerald-600" : "text-amber-600")}>
+                  {centre?.is_active ? 'PUBLISHED' : 'DRAFT'}
+                </p>
+                <p className="mt-2 text-xs font-medium text-slate-500">
+                  {centre?.is_active
+                    ? 'Your centre page is live and visible to parents.'
+                    : 'Your centre page is hidden until you publish.'}
+                </p>
               </div>
-            </form>
-          </CardContent>
-        </Card>
+
+              <form action={setWebsitePublished}>
+                <input type="hidden" name="next_published" value={centre?.is_active ? 'false' : 'true'} />
+                <Button
+                  type="submit"
+                  variant={centre?.is_active ? 'outline' : 'default'}
+                  className={cn("w-full h-12 rounded-xl font-bold transition-all active:scale-95 shadow-sm", 
+                    !centre?.is_active && "bg-teal-600 hover:bg-teal-700 text-white")}
+                >
+                  {centre?.is_active ? 'Unpublish Website' : 'Publish Website'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50">
+              <CardTitle className="text-base font-bold">Custom Setup</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <form action={submitWebsiteBrief} className="space-y-4">
+                <select name="site_type" className="cc-native-field h-11 rounded-xl text-sm">
+                  <option value="mini-site">Mini website (quick launch)</option>
+                  <option value="full-website">Full website (deeper build)</option>
+                </select>
+                <select name="domain_plan" className="cc-native-field h-11 rounded-xl text-sm">
+                  <option value="platform-subdomain">Use platform subdomain</option>
+                  <option value="bring-own-domain">I want my own domain</option>
+                  <option value="need-domain-help">I need help buying a domain</option>
+                </select>
+                <textarea
+                  name="goals"
+                  className="cc-native-field h-auto min-h-24 py-3 rounded-xl text-sm leading-relaxed"
+                  placeholder="What should this website achieve for your centre?"
+                />
+                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-xl shadow-sm transition-all active:scale-95">Send Request</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </section>
     </EcdOsShell>
+  )
+}
   )
 }
 

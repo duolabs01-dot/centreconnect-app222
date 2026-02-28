@@ -11,6 +11,6 @@ type EcdOsShellProps = {
 
 export function EcdOsShell({ children }: EcdOsShellProps) {
   return (
-    <div className="ecd-page-shell admin-theme min-h-screen">{children}</div>
+    <div className="ecd-page-shell min-h-screen bg-[#F8FAFC] text-slate-900">{children}</div>
   )
 }

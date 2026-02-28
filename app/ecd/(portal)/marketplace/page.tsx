@@ -146,31 +146,31 @@ export default async function EcdMarketplacePage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
-        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 via-cyan-50 to-emerald-50">
+        <Card className="border-teal-100 bg-gradient-to-r from-teal-50/50 to-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader>
-            <CardTitle>Package Context</CardTitle>
+            <CardTitle className="text-base font-bold text-teal-900">Package Context</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-3">
-            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tier</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{tier}</p>
+          <CardContent className="grid gap-4 sm:grid-cols-3 pt-2">
+            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Tier</p>
+              <p className="mt-1 text-lg font-bold text-teal-700 capitalize">{tier}</p>
             </div>
-            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Billing status</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{subscription?.status ?? 'trial'}</p>
+            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Billing status</p>
+              <p className="mt-1 text-lg font-bold text-slate-900 capitalize">{subscription?.status ?? 'trial'}</p>
             </div>
-            <div className="glass-card border-border bg-card/80 p-3 text-foreground">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Monthly price</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{subscription?.monthly_price ? `R${subscription.monthly_price}` : 'R0'}</p>
+            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Monthly price</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{subscription?.monthly_price ? `R${subscription.monthly_price}` : 'R0'}</p>
             </div>
           </CardContent>
         </Card>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {services.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-card/80 p-10 text-center">
-              <p className="text-base font-semibold text-foreground">No add-ons available yet</p>
-              <p className="mt-2 max-w-sm mx-auto text-sm text-muted-foreground">
+            <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-sm">
+              <p className="text-base font-bold text-slate-900">No add-ons available yet</p>
+              <p className="mt-2 max-w-sm mx-auto text-sm text-slate-500">
                 Additional services will appear here once activated for your region.
                 Your current package already includes all core features.
               </p>
@@ -181,20 +181,20 @@ export default async function EcdMarketplacePage() {
               const requestPending = openRequestServiceIds.has(service.id)
 
               return (
-                <Card key={service.id} className="border-slate-200">
-                  <CardHeader>
-                    <CardTitle className="text-base">{service.service_name}</CardTitle>
+                <Card key={service.id} className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base font-bold">{service.service_name}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-2xl font-semibold text-slate-900">
+                  <CardContent className="pt-2">
+                    <p className="text-2xl font-black text-slate-900">
                       {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(service.price)}
                     </p>
-                    <p className="mt-2 text-sm text-slate-600">{service.description}</p>
+                    <p className="mt-2 text-sm text-slate-500 leading-relaxed min-h-[3rem]">{service.description}</p>
                     <div
-                      className={`mt-3 rounded-md border px-3 py-2 text-xs font-semibold ${
+                      className={`mt-4 rounded-xl border px-4 py-2.5 text-xs font-bold ${
                         included
-                          ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
-                          : 'border-amber-400/40 bg-amber-100 text-amber-800'
+                          ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                          : 'border-teal-100 bg-teal-50/50 text-teal-700'
                       }`}
                     >
                       {included
@@ -202,13 +202,13 @@ export default async function EcdMarketplacePage() {
                         : `Add-on for ${tier} package`}
                     </div>
                     {included ? (
-                      <Button className="mt-4 w-full" variant="outline" disabled>
+                      <Button className="mt-6 w-full h-11 rounded-xl font-bold" variant="outline" disabled>
                         Already Included
                       </Button>
                     ) : (
-                      <form action={requestService} className="mt-4">
+                      <form action={requestService} className="mt-6">
                         <input type="hidden" name="service_id" value={service.id} />
-                        <Button className="w-full" type="submit" disabled={requestPending}>
+                        <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95" type="submit" disabled={requestPending}>
                           {requestPending ? 'Request Sent' : 'Request Add-on'}
                         </Button>
                       </form>
@@ -220,22 +220,22 @@ export default async function EcdMarketplacePage() {
           )}
         </section>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>My Marketplace Requests</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">My Marketplace Requests</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {orders.length === 0 ? (
-              <p className="text-sm text-slate-600">No marketplace requests yet.</p>
+              <p className="text-sm text-slate-500 py-4">No marketplace requests yet.</p>
             ) : (
-              <div className="overflow-x-auto rounded-md border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-slate-100">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                      <TableHead>Service</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Requested</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Service</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Price</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Requested</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -244,15 +244,17 @@ export default async function EcdMarketplacePage() {
                         ? order.marketplace_services[0]
                         : order.marketplace_services
                       return (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">{service?.service_name ?? 'Unknown service'}</TableCell>
-                          <TableCell>{order.status}</TableCell>
+                        <TableRow key={order.id} className="hover:bg-slate-50/50">
+                          <TableCell className="font-bold text-slate-900">{service?.service_name ?? 'Unknown service'}</TableCell>
                           <TableCell>
+                            <StatusBadge status={order.status} />
+                          </TableCell>
+                          <TableCell className="font-bold text-slate-700">
                             {service?.price != null
                               ? new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(service.price)
                               : '--'}
                           </TableCell>
-                          <TableCell>{formatDate(order.created_at)}</TableCell>
+                          <TableCell className="text-xs text-slate-500">{formatDate(order.created_at)}</TableCell>
                         </TableRow>
                       )
                     })}

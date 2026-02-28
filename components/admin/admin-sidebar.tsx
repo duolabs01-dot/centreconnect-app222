@@ -18,6 +18,7 @@ import {
   Cpu
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { BottomNav, type NavItem } from '@/components/layout/bottom-nav'
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash' },
@@ -26,6 +27,14 @@ const NAV_ITEMS = [
   { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
   { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
+]
+
+// Map admin items for shared BottomNav
+const adminMobileNavItems: NavItem[] = [
+  { label: 'Home', href: '/admin/dashboard', icon: LayoutDashboard },
+  { label: 'Centres', href: '/admin/tenants', icon: Building2 },
+  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard },
+  { label: 'Security', href: '/admin/command', icon: ShieldCheck },
 ]
 
 export function AdminSidebar() {
@@ -106,28 +115,8 @@ export function AdminSidebar() {
         </div>
       </aside>
 
-      {/* Mobile Glass Bottom Navigation */}
-      <nav className="fixed bottom-6 left-6 right-6 h-20 bg-black/60 border border-white/10 backdrop-blur-2xl z-[100] rounded-3xl md:hidden shadow-2xl flex items-center justify-around px-2">
-        {NAV_ITEMS.slice(0, 4).map((item) => {
-          const isActive = pathname === item.href
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center gap-1.5 flex-1 h-full transition-all relative",
-                isActive ? "text-cyan-400 scale-110" : "text-slate-600"
-              )}
-            >
-              {isActive && (
-                <div className="absolute -top-1 h-1 w-6 bg-cyan-400 rounded-b-full shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
-              )}
-              <item.icon className={cn("w-5 h-5", isActive ? "drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" : "")} />
-              <span className="text-[8px] font-black uppercase tracking-widest">{item.id}</span>
-            </Link>
-          )
-        })}
-      </nav>
+      {/* Shared Bottom Nav */}
+      <BottomNav items={adminMobileNavItems} />
     </>
   )
 }

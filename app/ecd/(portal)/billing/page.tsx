@@ -65,42 +65,42 @@ export default async function EcdBillingPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="border-border lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Current Plan</CardTitle>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden lg:col-span-2">
+            <CardHeader className="bg-slate-50/50">
+              <CardTitle className="text-base font-bold">Current Plan</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {!subscription ? (
                 <EmptyState
                   title="No active subscription record"
                   description="Your subscription details will appear once billing is activated."
                 />
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-md border border-border bg-card/80 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tier</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">{subscription.tier}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tier</p>
+                    <p className="mt-1 text-lg font-bold text-teal-700 capitalize">{subscription.tier}</p>
                   </div>
-                  <div className="rounded-md border border-border bg-card/80 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">{subscription.status}</p>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900 capitalize">{subscription.status}</p>
                   </div>
-                  <div className="rounded-md border border-border bg-card/80 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Monthly Price</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">R{subscription.monthly_price}</p>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Price</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900">R{subscription.monthly_price}</p>
                   </div>
-                  <div className="rounded-md border border-border bg-card/80 p-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Setup Fee</p>
-                    <p className="mt-1 text-lg font-bold text-foreground">R{subscription.setup_fee}</p>
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Setup Fee</p>
+                    <p className="mt-1 text-lg font-bold text-slate-900">R{subscription.setup_fee}</p>
                   </div>
-                  <div className="rounded-md border border-border bg-card/80 p-3 sm:col-span-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Billing Period</p>
-                    <p className="mt-1 text-sm font-medium text-foreground">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:col-span-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Billing Period</p>
+                    <p className="mt-1 text-sm font-bold text-slate-700">
                       {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                     </p>
                     {subscription.trial_ends_at ? (
-                      <p className="mt-1 text-xs text-muted-foreground">Trial ends: {formatDate(subscription.trial_ends_at)}</p>
+                      <p className="mt-1 text-xs font-medium text-amber-600">Trial ends: {formatDate(subscription.trial_ends_at)}</p>
                     ) : null}
                   </div>
                 </div>
@@ -108,25 +108,22 @@ export default async function EcdBillingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-rose-200 bg-rose-50/50">
-            <CardHeader>
-              <CardTitle>Cancel Subscription</CardTitle>
+          <Card className="border-rose-100 bg-rose-50/30 shadow-sm rounded-3xl overflow-hidden">
+            <CardHeader className="bg-rose-50/50">
+              <CardTitle className="text-base font-bold text-rose-900">Cancel Subscription</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-rose-900">
+            <CardContent className="space-y-4 pt-6">
+              <p className="text-xs font-medium text-rose-800 leading-relaxed">
                 Cancellation creates a billing support ticket so the team can finalize your account and invoices safely.
               </p>
-              <form action={requestCancellationAction} className="space-y-3">
-                <label htmlFor="billing-cancellation-reason" className="text-sm font-medium text-rose-900">
-                  Reason (optional)
-                </label>
+              <form action={requestCancellationAction} className="space-y-4">
                 <textarea
                   id="billing-cancellation-reason"
                   name="reason"
-                  className="cc-native-field min-h-24 h-auto py-2"
-                  placeholder="Reason (optional)"
+                  className="cc-native-field min-h-24 h-auto py-3 rounded-xl text-sm"
+                  placeholder="Reason for cancellation (optional)"
                 />
-                <Button type="submit" variant="outline" className="border-rose-300 text-rose-800 hover:bg-rose-100">
+                <Button type="submit" variant="outline" className="w-full border-rose-200 text-rose-700 font-bold h-11 rounded-xl shadow-sm hover:bg-rose-50">
                   Request Cancellation
                 </Button>
               </form>
@@ -134,135 +131,135 @@ export default async function EcdBillingPage() {
           </Card>
         </div>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Business Snapshot (P&L)</CardTitle>
+        <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Business Snapshot (P&L)</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600">
+          <CardContent className="space-y-6 pt-6">
+            <p className="text-sm font-medium text-slate-500">
               Keep monthly financials updated to track profitability and operational health.
             </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-md border border-slate-200 bg-cyan-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Revenue</p>
-                <p className="mt-1 text-lg font-bold text-cyan-800">R{pnl.revenue.toLocaleString()}</p>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600">Revenue</p>
+                <p className="mt-1 text-xl font-black text-cyan-900">R{pnl.revenue.toLocaleString()}</p>
               </div>
-              <div className="rounded-md border border-rose-200 bg-rose-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-rose-700">Expenses</p>
-                <p className="mt-1 text-lg font-bold text-rose-800">R{pnl.expenses.toLocaleString()}</p>
+              <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-rose-600">Expenses</p>
+                <p className="mt-1 text-xl font-black text-rose-900">R{pnl.expenses.toLocaleString()}</p>
               </div>
-              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Profit / Loss</p>
-                <p className="mt-1 text-lg font-bold text-emerald-800">R{monthlyProfit.toLocaleString()}</p>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Profit / Loss</p>
+                <p className="mt-1 text-xl font-black text-emerald-900">R{monthlyProfit.toLocaleString()}</p>
               </div>
-              <div className="rounded-md border border-violet-200 bg-violet-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">Net Assets</p>
-                <p className="mt-1 text-lg font-bold text-violet-800">R{netWorth.toLocaleString()}</p>
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-violet-600">Net Assets</p>
+                <p className="mt-1 text-xl font-black text-violet-900">R{netWorth.toLocaleString()}</p>
               </div>
             </div>
-            <form action={saveFinancialSnapshotAction} className="grid gap-3 lg:grid-cols-2">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Month
-                <input type="date" name="period_month" className="cc-native-field mt-1" defaultValue={currentMonth} />
+            <form action={saveFinancialSnapshotAction} className="grid gap-4 lg:grid-cols-2 pt-4">
+              <label className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Month</span>
+                <input type="date" name="period_month" className="cc-native-field h-12 rounded-xl" defaultValue={currentMonth} />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Revenue (R)
+              <label className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Revenue (R)</span>
                 <input
                   type="number"
                   name="revenue_total"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field h-12 rounded-xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.revenue}
                 />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Expenses (R)
+              <label className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expenses (R)</span>
                 <input
                   type="number"
                   name="expenses_total"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field h-12 rounded-xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.expenses}
                 />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Assets (R)
+              <label className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Assets (R)</span>
                 <input
                   type="number"
                   name="assets_total"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field h-12 rounded-xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.assets}
                 />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Liabilities (R)
+              <label className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Liabilities (R)</span>
                 <input
                   type="number"
                   name="liabilities_total"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field h-12 rounded-xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.liabilities}
                 />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500 lg:col-span-2">
-                Notes
+              <label className="space-y-1.5 lg:col-span-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Internal Notes</span>
                 <textarea
                   name="notes"
-                  className="cc-native-field mt-1 h-auto min-h-20 py-2"
+                  className="cc-native-field h-auto min-h-24 py-3 rounded-xl leading-relaxed"
                   defaultValue={financialSnapshot?.notes ?? ''}
-                  placeholder="Add context for this month (seasonality, staffing changes, etc.)"
+                  placeholder="Add context for this month..."
                 />
               </label>
-              <Button type="submit" className="w-full sm:w-fit" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
                 Save Financial Snapshot
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Invoices</CardTitle>
+        <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Invoices</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {(invoices ?? []).length === 0 ? (
               <EmptyState
                 title="No invoices yet"
                 description="Invoices will appear here once generated."
               />
             ) : (
-              <div className="overflow-x-auto rounded-md border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-slate-50/50">
                     <TableRow>
-                      <TableHead>Invoice</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead className="hidden lg:table-cell">Issued</TableHead>
-                      <TableHead className="hidden lg:table-cell">Due</TableHead>
-                      <TableHead className="hidden lg:table-cell">Paid</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Invoice</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</TableHead>
+                      <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total</TableHead>
+                      <TableHead className="hidden lg:table-cell text-[10px] font-black uppercase tracking-widest text-slate-400">Issued</TableHead>
+                      <TableHead className="hidden lg:table-cell text-[10px] font-black uppercase tracking-widest text-slate-400">Due</TableHead>
+                      <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pr-6">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {(invoices ?? []).map((invoice) => (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
-                        <TableCell>{invoice.status}</TableCell>
-                        <TableCell>R{invoice.total}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{invoice.issued_at ? formatDate(invoice.issued_at) : '--'}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{invoice.due_at ? formatDate(invoice.due_at) : '--'}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{invoice.paid_at ? formatDate(invoice.paid_at) : '--'}</TableCell>
-                        <TableCell className="text-right">
+                      <TableRow key={invoice.id} className="hover:bg-slate-50/50 transition-colors">
+                        <TableCell className="font-bold text-slate-900">{invoice.invoice_number}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={invoice.status} />
+                        </TableCell>
+                        <TableCell className="font-bold text-slate-700">R{invoice.total}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs text-slate-500">{invoice.issued_at ? formatDate(invoice.issued_at) : '--'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-xs text-slate-500">{invoice.due_at ? formatDate(invoice.due_at) : '--'}</TableCell>
+                        <TableCell className="text-right pr-6">
                           {invoice.status !== 'paid' ? (
                             <PayInvoiceButton invoiceId={invoice.id} />
                           ) : (
-                            <span className="text-xs font-semibold text-emerald-600">Paid</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-md border border-emerald-100">Paid</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -274,20 +271,20 @@ export default async function EcdBillingPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Recent Billing Tickets</CardTitle>
+        <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Recent Billing Tickets</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {(billingTickets ?? []).length === 0 ? (
-              <p className="text-sm text-slate-600">No billing tickets yet.</p>
+              <p className="text-sm text-slate-500 py-4 italic">No billing tickets yet.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {(billingTickets ?? []).map((ticket) => (
-                  <div key={ticket.id} className="border border-border p-3 text-sm text-muted-foreground">
-                    <p className="font-medium text-foreground">{ticket.ticket_number}</p>
-                    <p className="text-xs text-slate-400">
-                      {ticket.status} | {formatDate(ticket.created_at)}
+                  <div key={ticket.id} className="rounded-2xl border border-slate-100 p-4 bg-slate-50/30 transition-all hover:bg-slate-50">
+                    <p className="text-sm font-bold text-slate-900">{ticket.ticket_number}</p>
+                    <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      {ticket.status} • {formatDate(ticket.created_at)}
                     </p>
                   </div>
                 ))}
@@ -297,6 +294,8 @@ export default async function EcdBillingPage() {
         </Card>
       </section>
     </EcdOsShell>
+  )
+}
   )
 }
 

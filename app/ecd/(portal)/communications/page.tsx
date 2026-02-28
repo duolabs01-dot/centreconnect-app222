@@ -107,26 +107,26 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
-        <Card className="glass-card border border-border bg-card/90 text-foreground">
-          <CardHeader>
-            <CardTitle>Quick Start</CardTitle>
+        <Card className="border border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Quick Start</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
+          <CardContent className="flex flex-wrap gap-3 pt-6">
             <Link
               href="/ecd/communications?mode=broadcast&template=application_update&audience=all"
-              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
+              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Broadcast general update
             </Link>
             <Link
               href="/ecd/communications?mode=broadcast&template=missing_documents&audience=pending"
-              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
+              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Ask pending parents for docs
             </Link>
             <Link
               href="/ecd/communications?mode=direct&template=application_update"
-              className="rounded-md border border-cyan-500/30 bg-muted px-3 py-2 text-sm font-semibold text-cyan-700 dark:text-cyan-200 transition-colors hover:bg-muted/80"
+              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Start direct parent chat
             </Link>
@@ -134,11 +134,11 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
         </Card>
 
         <section className="grid gap-6 xl:grid-cols-[2fr_1fr]">
-          <Card className="glass-card border border-border bg-card/90 text-foreground">
-            <CardHeader>
-              <CardTitle>Compose Message</CardTitle>
+          <Card className="border border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+            <CardHeader className="bg-slate-50/50">
+              <CardTitle className="text-base font-bold">Compose Message</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <CommunicationsComposer
                 ecdId={ecdId}
                 centreName={centre?.name ?? 'Your centre'}
@@ -155,38 +155,38 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
           </Card>
 
           <div className="space-y-6">
-            <Card className="glass-card border border-border bg-card/90 text-foreground">
-              <CardHeader>
-                <CardTitle>Recent Notifications</CardTitle>
+            <Card className="border border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-slate-50/50">
+                <CardTitle className="text-base font-bold">Recent Notifications</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3 pt-6">
                 {(recentNotifications ?? []).length === 0 ? (
                   <p className="text-sm text-slate-400">No notifications sent yet.</p>
                 ) : (
                   (recentNotifications ?? []).map((item) => (
-                    <div key={item.id} className="rounded-xl border border-border bg-card/80 p-3">
-                      <p className="text-sm font-medium text-foreground">{item.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {formatDate(item.created_at)} | {item.is_read ? 'Read' : 'Unread'}
+                    <div key={item.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
+                      <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                      <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        {formatDate(item.created_at)} • {item.is_read ? 'Read' : 'Unread'}
                       </p>
                     </div>
                   ))
                 )}
               </CardContent>
             </Card>
-            <Card className="glass-card border border-border bg-card/90 text-foreground">
-              <CardHeader>
-                <CardTitle>Recent Threads</CardTitle>
+            <Card className="border border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">
+              <CardHeader className="bg-slate-50/50">
+                <CardTitle className="text-base font-bold">Recent Threads</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-3 pt-6">
                 {(recentThreads ?? []).length === 0 ? (
                   <p className="text-sm text-slate-400">No thread activity yet.</p>
                 ) : (
                   (recentThreads ?? []).map((thread) => (
-                    <div key={thread.id} className="rounded-xl border border-border bg-card/80 p-3">
-                      <p className="text-sm font-medium text-foreground">Thread {thread.id.slice(0, 8)}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {thread.context_type ?? 'general'} | {formatDate(thread.created_at)}
+                    <div key={thread.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
+                      <p className="text-sm font-bold text-slate-900">Thread {thread.id.slice(0, 8)}</p>
+                      <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        {thread.context_type ?? 'general'} • {formatDate(thread.created_at)}
                       </p>
                     </div>
                   ))

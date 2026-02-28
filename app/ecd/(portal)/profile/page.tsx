@@ -288,24 +288,24 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
-        <Card className="border-border bg-gradient-to-br from-blue-50/80 via-white/80 to-emerald-50/80">
-          <CardHeader>
-            <CardTitle>Centre Readiness</CardTitle>
+        <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Centre Readiness</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-card/80">
-              <div className="h-full bg-blue-600" style={{ width: `${score}%` }} />
+          <CardContent className="pt-6">
+            <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-full bg-teal-600 transition-all duration-700" style={{ width: `${score}%` }} />
             </div>
-            <p className="text-sm font-semibold text-foreground">{score}% complete</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-sm font-bold text-slate-900">{score}% complete</p>
+            <p className="mt-1 text-xs text-slate-500 font-medium">
               Centre: {centre?.name ?? 'Your centre'} | Role:{' '}
               {role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}
             </p>
-            <div className="mt-3 space-y-2">
+            <div className="mt-6 space-y-3">
               {checks.map((item) => (
                 <div key={item.label} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700">{item.label}</span>
-                  <span className={item.done ? 'text-emerald-700' : 'text-slate-400'}>
+                  <span className="text-slate-600 font-medium">{item.label}</span>
+                  <span className={cn("font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider", item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400')}>
                     {item.done ? 'Done' : 'Pending'}
                   </span>
                 </div>
@@ -314,29 +314,31 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardContent>
         </Card>
 
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-2">
-            <Button asChild>
+          <CardContent className="grid gap-3 pt-6">
+            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-xl shadow-sm">
               <Link href="/ecd/website">Open Website Builder</Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/ecd/billing">Open Billing</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/ecd/support">Open Support</Link>
-            </Button>
-            <Button variant="outline" asChild>
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+                <Link href="/ecd/billing">Open Billing</Link>
+              </Button>
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+                <Link href="/ecd/support">Open Support</Link>
+              </Button>
+            </div>
+            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
               <Link href="/ecd/dashboard">Back to Today</Link>
             </Button>
-            <div className="rounded-md border border-border bg-card/80 p-3 text-xs text-muted-foreground">
-              <p className="font-semibold text-foreground">Public visibility</p>
-              <p className="mt-1">{centre?.is_active ? 'Visible on public pages' : 'Hidden from public pages'}</p>
-              <form action={setPublicVisibility} className="mt-2">
+            <div className="mt-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs">
+              <p className="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Public visibility</p>
+              <p className="mt-1.5 text-slate-500 font-medium">{centre?.is_active ? 'Visible on public pages' : 'Hidden from public pages'}</p>
+              <form action={setPublicVisibility} className="mt-3">
                 <input type="hidden" name="next_active" value={centre?.is_active ? 'false' : 'true'} />
-                <Button size="sm" type="submit" variant="outline">
+                <Button size="sm" type="submit" variant="outline" className="border-slate-200 text-slate-700 font-bold rounded-lg w-full">
                   {centre?.is_active ? 'Hide Public Profile' : 'Show Public Profile'}
                 </Button>
               </form>
@@ -344,162 +346,170 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Centre Basics</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Centre Basics</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={saveCentreBasics} className="grid gap-3 md:grid-cols-2">
-              <input name="name" className="cc-native-field md:col-span-2" defaultValue={centre?.name ?? ''} placeholder="Centre name" required />
-              <input name="tagline" className="cc-native-field md:col-span-2" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
-              <input name="email" type="email" className="cc-native-field" defaultValue={centre?.email ?? ''} placeholder="Centre email" />
-              <select name="fees_display_mode" className="cc-native-field" defaultValue={centre?.fees_display_mode ?? 'range'}>
+          <CardContent className="pt-6">
+            <form action={saveCentreBasics} className="grid gap-4 md:grid-cols-2">
+              <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.name ?? ''} placeholder="Centre name" required />
+              <input name="tagline" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
+              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.email ?? ''} placeholder="Centre email" />
+              <select name="fees_display_mode" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.fees_display_mode ?? 'range'}>
                 <option value="range">Fee display: Range</option>
                 <option value="exact">Fee display: Exact</option>
                 <option value="contact">Fee display: Contact centre</option>
               </select>
-              <input name="phone" className="cc-native-field" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
-              <input name="contact_phone" className="cc-native-field" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
-              <input name="contact_whatsapp" className="cc-native-field md:col-span-2" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
-              <Button type="submit" className="w-fit">
+              <input name="phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
+              <input name="contact_phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
+              <input name="contact_whatsapp" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
+              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
                 Save Basics
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Location & Address</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Location & Address</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={saveCentreLocation} className="grid gap-3 md:grid-cols-2">
-              <input name="address" className="cc-native-field md:col-span-2" defaultValue={centre?.address ?? ''} placeholder="Street address" />
-              <input name="suburb" className="cc-native-field" defaultValue={centre?.suburb ?? ''} placeholder="Suburb" />
-              <input name="city" className="cc-native-field" defaultValue={centre?.city ?? ''} placeholder="City" />
-              <input name="province" className="cc-native-field" defaultValue={centre?.province ?? ''} placeholder="Province" />
-              <input name="postal_code" className="cc-native-field" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
-              <Button type="submit" className="w-fit">
+          <CardContent className="pt-6">
+            <form action={saveCentreLocation} className="grid gap-4 md:grid-cols-2">
+              <input name="address" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.address ?? ''} placeholder="Street address" />
+              <input name="suburb" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.suburb ?? ''} placeholder="Suburb" />
+              <input name="city" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.city ?? ''} placeholder="City" />
+              <input name="province" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
+              <input name="postal_code" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
+              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
                 Save Location
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 xl:col-span-2">
-          <CardHeader>
-            <CardTitle>My Account</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">My Account</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={saveAccountDetails} className="grid gap-3 md:grid-cols-2">
-              <input name="full_name" className="cc-native-field" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
-              <input name="profile_phone" className="cc-native-field" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
-              <Button type="submit" className="w-fit">
+          <CardContent className="pt-6">
+            <form action={saveAccountDetails} className="grid gap-4 md:grid-cols-2">
+              <input name="full_name" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
+              <input name="profile_phone" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
+              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
                 Save Account
               </Button>
             </form>
             {centre?.updated_at ? (
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Last centre update: {new Date(centre.updated_at).toLocaleString()}
               </p>
             ) : null}
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Notification Preferences</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Notification Preferences</CardTitle>
           </CardHeader>
-          <CardContent>
-            <form action={saveNotificationPreferences} className="grid gap-3 md:grid-cols-2">
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="email_announcements" defaultChecked={prefs?.email_announcements ?? true} />
-                Email: Announcements
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="email_applications" defaultChecked={prefs?.email_applications ?? true} />
-                Email: Applications
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="email_job_applications" defaultChecked={prefs?.email_job_applications ?? true} />
-                Email: Job applications
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="push_announcements" defaultChecked={prefs?.push_announcements ?? true} />
-                In-app: Announcements
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="push_applications" defaultChecked={prefs?.push_applications ?? true} />
-                In-app: Applications
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input type="checkbox" name="push_pickup" defaultChecked={prefs?.push_pickup ?? true} />
-                In-app: Pickup
-              </label>
+          <CardContent className="pt-6">
+            <form action={saveNotificationPreferences} className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="email_announcements" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_announcements ?? true} />
+                  <span className="group-hover:text-slate-900">Email: Announcements</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="email_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_applications ?? true} />
+                  <span className="group-hover:text-slate-900">Email: Applications</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="email_job_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_job_applications ?? true} />
+                  <span className="group-hover:text-slate-900">Email: Job applications</span>
+                </label>
+              </div>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="push_announcements" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_announcements ?? true} />
+                  <span className="group-hover:text-slate-900">In-app: Announcements</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="push_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_applications ?? true} />
+                  <span className="group-hover:text-slate-900">In-app: Applications</span>
+                </label>
+                <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
+                  <input type="checkbox" name="push_pickup" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_pickup ?? true} />
+                  <span className="group-hover:text-slate-900">In-app: Pickup</span>
+                </label>
+              </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-slate-700">Digest frequency</label>
-                <select name="digest_frequency" className="cc-native-field" defaultValue={prefs?.digest_frequency ?? 'realtime'}>
+                <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Digest frequency</label>
+                <select name="digest_frequency" className="cc-native-field h-12 rounded-xl" defaultValue={prefs?.digest_frequency ?? 'realtime'}>
                   <option value="realtime">Realtime</option>
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="off">Off</option>
                 </select>
               </div>
-              <Button type="submit" className="w-fit">Save Notification Preferences</Button>
+              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">Save Notification Preferences</Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Staff Management</CardTitle>
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Staff Management</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 pt-6">
             {searchParams?.staffError ? (
-              <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700">
+              <p className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 uppercase tracking-tight">
                 {searchParams.staffError}
               </p>
             ) : null}
-            <form action={inviteStaff} className="grid gap-3 md:grid-cols-3">
-              <input name="name" className="cc-native-field" placeholder="Staff full name" required />
-              <input name="email" type="email" className="cc-native-field" placeholder="Staff email" required />
-              <select name="role" className="cc-native-field">
+            <form action={inviteStaff} className="grid gap-4 md:grid-cols-3">
+              <input name="name" className="cc-native-field h-12 rounded-xl" placeholder="Staff full name" required />
+              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" placeholder="Staff email" required />
+              <select name="role" className="cc-native-field h-12 rounded-xl">
                 <option value="ecd_staff">ECD Staff</option>
                 <option value="ecd_supervisor">ECD Supervisor</option>
                 <option value="ecd_admin">ECD Admin</option>
               </select>
-              <Button type="submit" className="w-fit md:col-span-3">Invite Staff (Support-assisted)</Button>
+              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Invite Staff (Support-assisted)</Button>
             </form>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {(staffMembers ?? []).length === 0 ? (
-                <p className="text-sm text-slate-600">No staff members listed yet.</p>
+                <p className="text-sm text-slate-500 py-4 italic">No staff members listed yet.</p>
               ) : (
                 (staffMembers ?? []).map((member: any) => (
-                  <div key={member.user_id} className="rounded-md border border-slate-200 p-3">
-                    <p className="text-sm font-semibold text-slate-900">
-                      {Array.isArray(member.user_profiles) ? member.user_profiles[0]?.full_name ?? member.user_id : member.user_profiles?.full_name ?? member.user_id}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600">Role: {member.role}</p>
-                    {role === 'ecd_admin' ? (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <form action={updateStaffRole} className="flex items-center gap-2">
-                          <input type="hidden" name="staff_user_id" value={member.user_id} />
-                          <select name="new_role" className="cc-native-field h-9">
-                            <option value="ecd_staff">Set staff</option>
-                            <option value="ecd_supervisor">Set supervisor</option>
-                            <option value="ecd_admin">Set admin</option>
-                          </select>
-                          <Button size="sm" variant="outline" type="submit">Change Role</Button>
-                        </form>
-                        <form action={removeStaff}>
-                          <input type="hidden" name="staff_user_id" value={member.user_id} />
-                          <Button size="sm" variant="outline" type="submit">Remove</Button>
-                        </form>
+                  <div key={member.user_id} className="rounded-2xl border border-slate-100 p-5 shadow-sm transition-all hover:border-teal-100">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">
+                          {Array.isArray(member.user_profiles) ? member.user_profiles[0]?.full_name ?? member.user_id : member.user_profiles?.full_name ?? member.user_id}
+                        </p>
+                        <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Role: {member.role.replace('ecd_', '')}</p>
                       </div>
-                    ) : null}
+                      {role === 'ecd_admin' ? (
+                        <div className="flex items-center gap-2">
+                          <form action={updateStaffRole} className="flex items-center gap-2">
+                            <input type="hidden" name="staff_user_id" value={member.user_id} />
+                            <select name="new_role" className="cc-native-field h-10 rounded-xl w-32 text-xs">
+                              <option value="ecd_staff">Set staff</option>
+                              <option value="ecd_supervisor">Set supervisor</option>
+                              <option value="ecd_admin">Set admin</option>
+                            </select>
+                            <Button size="sm" variant="outline" className="h-10 px-4 border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50" type="submit">Change Role</Button>
+                          </form>
+                          <form action={removeStaff}>
+                            <input type="hidden" name="staff_user_id" value={member.user_id} />
+                            <Button size="sm" variant="outline" className="h-10 px-4 border-rose-100 text-rose-600 font-bold rounded-xl shadow-sm hover:bg-rose-50" type="submit">Remove</Button>
+                          </form>
+                        </div>
+                      ) : null}
+                    </div>
                     {member.role === 'ecd_supervisor' && role === 'ecd_admin' ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-slate-50">
                         <form action={updateSupervisorPermissions}>
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
                           <input
@@ -514,10 +524,10 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                           />
                           <button
                             type="submit"
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                            className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
                               member.can_approve_applications
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                : 'border-slate-200 bg-slate-50 text-slate-600'
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-200 bg-slate-50 text-slate-400'
                             }`}
                           >
                             Approve Applications: {member.can_approve_applications ? 'On' : 'Off'}
@@ -537,10 +547,10 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                           />
                           <button
                             type="submit"
-                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                            className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
                               member.can_publish_announcements
-                                ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
-                                : 'border-slate-200 bg-slate-50 text-slate-600'
+                                ? 'border-teal-200 bg-teal-50 text-teal-700'
+                                : 'border-slate-200 bg-slate-50 text-slate-400'
                             }`}
                           >
                             Publish Announcements: {member.can_publish_announcements ? 'On' : 'Off'}
@@ -548,21 +558,21 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                         </form>
                       </div>
                     ) : member.role === 'ecd_supervisor' ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-4 flex flex-wrap gap-2 pt-4 border-t border-slate-50">
                         <span
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+                          className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${
                             member.can_approve_applications
-                              ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                              : 'border-slate-200 bg-slate-50 text-slate-600'
+                              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                              : 'border-slate-200 bg-slate-50 text-slate-400'
                           }`}
                         >
                           Approve Applications: {member.can_approve_applications ? 'On' : 'Off'}
                         </span>
                         <span
-                          className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
+                          className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest ${
                             member.can_publish_announcements
-                              ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
-                              : 'border-slate-200 bg-slate-50 text-slate-600'
+                              ? 'border-teal-200 bg-teal-50 text-teal-700'
+                              : 'border-slate-200 bg-slate-50 text-slate-400'
                           }`}
                         >
                           Publish Announcements: {member.can_publish_announcements ? 'On' : 'Off'}
@@ -581,6 +591,8 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
         </div>
       </section>
     </EcdOsShell>
+  )
+}
   )
 }
 
