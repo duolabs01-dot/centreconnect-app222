@@ -155,14 +155,14 @@ export function AddGuardianSheet({
                     type="button"
                     key={sourceOption.key}
                     onClick={sourceOption.action}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-white/10 bg-slate-900/40 px-4 py-3 text-left transition-colors hover:border-cyan-500/50 hover:bg-white/5"
+                    className="flex w-full items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-left transition-colors hover:border-cyan-200 hover:bg-slate-50"
                   >
                     <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${sourceOption.iconBg}`}>
                       <Icon className={`h-5 w-5 ${sourceOption.iconColor}`} />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{sourceOption.label}</p>
-                      <p className="text-xs text-slate-400">{sourceOption.sub}</p>
+                      <p className="text-sm font-semibold text-slate-900">{sourceOption.label}</p>
+                      <p className="text-xs text-slate-500">{sourceOption.sub}</p>
                     </div>
                   </button>
                 )
@@ -186,7 +186,7 @@ export function AddGuardianSheet({
                 <button
                   type="button"
                   onClick={() => setStep('pick')}
-                  className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-white transition-colors"
+                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-teal-700 transition-colors"
                 >
                   <ChevronLeft className="h-3 w-3" /> Change import method
                 </button>
@@ -207,7 +207,7 @@ export function AddGuardianSheet({
                 <Input {...form.register('relationship')} placeholder="e.g. Aunt, Co-parent" />
               </GField>
 
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">What they can do</p>
                 {[
                   [true, 'View application status'],
@@ -218,7 +218,7 @@ export function AddGuardianSheet({
                   [false, 'Accept enrolment offers'],
                 ].map(([allowed, label]) => (
                   <div key={label as string} className="flex items-center gap-2 pt-2 text-sm">
-                    <span className={allowed ? 'text-emerald-400' : 'text-slate-500'}>{allowed ? '✓' : '✗'}</span>
+                    <span className={allowed ? 'text-emerald-600' : 'text-slate-400'}>{allowed ? '✓' : '✗'}</span>
                     <span className={allowed ? '' : 'opacity-60'}>{label as string}</span>
                   </div>
                 ))}
@@ -234,7 +234,7 @@ export function AddGuardianSheet({
 function GField({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-slate-200">{label}</label>
+      <label className="text-sm font-medium text-slate-700">{label}</label>
       {children}
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>

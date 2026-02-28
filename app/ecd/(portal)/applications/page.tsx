@@ -561,7 +561,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                   className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 text-sm text-slate-900 focus:border-teal-400 focus:ring-4 focus:ring-teal-500/5 outline-none transition-all"
                 />
               </div>
-              <Button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white h-12 px-8 rounded-2xl font-bold transition-all active:scale-95">Search</Button>
+              <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold transition-all active:scale-95 shadow-sm">Search</Button>
             </form>
 
             <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-slate-50 border border-slate-100 w-fit">

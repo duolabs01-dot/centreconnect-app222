@@ -363,7 +363,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
               <input name="contact_phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
               <input name="contact_whatsapp" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
-              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
                 Save Basics
               </Button>
             </form>
@@ -381,7 +381,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="city" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.city ?? ''} placeholder="City" />
               <input name="province" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
               <input name="postal_code" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
-              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
                 Save Location
               </Button>
             </form>
@@ -396,7 +396,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <form action={saveAccountDetails} className="grid gap-4 md:grid-cols-2">
               <input name="full_name" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
               <input name="profile_phone" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
-              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
                 Save Account
               </Button>
             </form>
@@ -451,7 +451,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                   <option value="off">Off</option>
                 </select>
               </div>
-              <Button type="submit" className="w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95">Save Notification Preferences</Button>
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">Save Notification Preferences</Button>
             </form>
           </CardContent>
         </Card>

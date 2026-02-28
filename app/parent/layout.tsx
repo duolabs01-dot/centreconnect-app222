@@ -100,7 +100,7 @@ export default async function ParentLayout({ children }: { children: React.React
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F8FAFC]">
       <ParentLayoutProvider data={parentLayoutData}> {/* Wrap with provider */}
         <ParentAppShell> {/* ParentAppShell will now read from context */}
           <BrowserNotificationBridge mode="parent" parentId={user.id} />

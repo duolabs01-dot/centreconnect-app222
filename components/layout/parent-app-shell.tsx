@@ -1,14 +1,13 @@
 'use client'
 
-import { useRef, useState, type TouchEvent } from 'react'
+import { useRef, useState, type TouchEvent, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, Home, Compass, Bell, User, Search, ClipboardList } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { BottomNav, type NavItem } from './bottom-nav'
@@ -23,7 +22,6 @@ type ParentAppShellProps = {
   children: React.ReactNode
 }
 
-// Updated navigation items to match requested "Mobile Finance" style
 const navItems: NavItem[] = [
   { href: '/parent/dashboard', label: 'Home', icon: Home },
   { href: '/directory', label: 'Search', icon: Search },
@@ -107,7 +105,6 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
   }
 
   useEffect(() => {
-    // Prefetch critical routes
     router.prefetch('/directory')
     router.prefetch('/parent/dashboard')
   }, [router])
@@ -247,7 +244,6 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
         </Container>
       </main>
 
-      {/* Overhauled Bottom Nav */}
       <BottomNav items={navItems} />
     </div>
   )

@@ -37,7 +37,7 @@ export function DashboardShell({
   const showSidebar = !hideSidebar
 
   return (
-    <div className="admin-shell admin-theme min-h-screen flex overflow-hidden bg-admin-bg text-admin-text">
+    <div className="admin-shell platform-admin-dark-theme min-h-screen flex overflow-hidden bg-admin-bg text-admin-text">
       {/* Sidebar - Desktop */}
       {showSidebar && (
         <div className="hidden lg:block">

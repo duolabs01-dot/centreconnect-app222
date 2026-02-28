@@ -358,7 +358,7 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Save Draft</Button>
+                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Save Draft</Button>
                 {centre?.slug ? (
                   <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
                     <a href={`/centre/${centre.slug}`} target="_blank" rel="noreferrer">

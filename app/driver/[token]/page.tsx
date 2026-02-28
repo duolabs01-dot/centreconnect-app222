@@ -83,36 +83,36 @@ export default async function DriverPage({ params }: { params: { token: string }
   const rows = (stopsData ?? []) as StopRow[]
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-white/10 bg-slate-900 px-4 py-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">CentreConnect Driver</p>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900">
+      <header className="border-b border-slate-100 bg-white px-4 py-5 shadow-sm">
+        <p className="text-xs font-bold uppercase tracking-widest text-teal-600">CentreConnect Driver</p>
         <h1 className="mt-1 text-xl font-bold">{centreName}</h1>
-        <p className="text-sm font-medium text-slate-200">Driver: {driver.full_name}</p>
+        <p className="text-sm font-medium text-slate-600">Driver: {driver.full_name}</p>
         <p className="text-sm text-slate-400">{`Today's route - ${rows.length} stops`}</p>
       </header>
 
       <main className="space-y-3 p-4">
         {rows.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-slate-800 p-6 text-center text-slate-400">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 text-center text-slate-400 shadow-sm">
             No active pickups assigned for today.
           </div>
         ) : (
           rows.map((stop, i) => (
-            <div key={stop.id} className="rounded-2xl border border-white/10 bg-slate-800 p-4">
+            <div key={stop.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-cyan-400">Stop {i + 1}</p>
-                  <p className="mt-1 text-sm font-semibold text-cyan-100">
+                  <p className="text-xs font-bold uppercase tracking-wider text-teal-600">Stop {i + 1}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
                     {routeNameById.get(stop.route_id) ?? 'Route'}
                   </p>
-                  <p className="mt-1 text-base font-semibold text-white">
+                  <p className="mt-1 text-base font-semibold text-slate-900">
                     {Array.isArray(stop.children)
                       ? `${stop.children[0]?.first_name ?? ''} ${stop.children[0]?.last_name ?? ''}`.trim() ||
                         'Child not linked'
                       : `${stop.children?.first_name ?? ''} ${stop.children?.last_name ?? ''}`.trim() ||
                         'Child not linked'}
                   </p>
-                  <p className="mt-1 text-base font-semibold text-white">
+                  <p className="mt-1 text-base font-semibold text-slate-600">
                     {stop.pickup_address ?? 'Address pending'}
                   </p>
                 </div>

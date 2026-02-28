@@ -31,10 +31,10 @@ export function TransportSection({
 
   return (
     <section id="transport" className="mt-10 max-w-4xl px-4 md:px-0">
-      <div className="glass-card rounded-2xl border border-white/10 p-6">
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
         {transport.fee_per_month ? (
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/90 to-emerald-50/90 p-6 text-slate-900 shadow-[var(--shadow-elevation-3)] shadow-cyan-900/20">
-            <p className="text-3xl font-black text-cyan-700">{currencyLabel}</p>
+          <div className="rounded-2xl border border-teal-100 bg-gradient-to-br from-teal-50 to-white p-6 text-slate-900 shadow-sm">
+            <p className="text-3xl font-black text-teal-700">{currencyLabel}</p>
             {transport.fee_description && (
               <p className="mt-1 text-sm text-slate-700">{transport.fee_description}</p>
             )}
@@ -43,7 +43,7 @@ export function TransportSection({
                 {transport.coverage_areas.map((area) => (
                   <span
                     key={area}
-                    className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300"
+                    className="rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700"
                   >
                     {area}
                   </span>
@@ -52,18 +52,18 @@ export function TransportSection({
             ) : null}
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-slate-900/70 p-6 text-white shadow-[var(--shadow-elevation-4)]">
-            <p className="text-xl font-semibold text-white">
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 shadow-sm">
+            <p className="text-xl font-semibold text-slate-900">
               Transport quotes are calculated per route.
             </p>
-            <p className="mt-2 text-sm text-slate-300">
-              Submit your pickup location and weÃ¢â‚¬â„¢ll share a personalised quote within 1Ã¢â‚¬â€œ2 business days.
+            <p className="mt-2 text-sm text-slate-600">
+              Submit your pickup location and we'll share a personalised quote within 1-2 business days.
             </p>
           </div>
         )}
 
         {transport.notes && (
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+          <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 text-sm text-slate-600">
             {transport.notes}
           </div>
         )}
@@ -85,9 +85,9 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
 
   if (done) {
     return (
-        <div className="flex items-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-          <CheckCircle className="h-4 w-4 text-emerald-500" />
-          Enquiry sent! WeÃ¢â‚¬â„¢ll share a quote soon.
+        <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle className="h-4 w-4 text-emerald-600" />
+          Enquiry sent! We'll share a quote soon.
         </div>
     )
   }
@@ -97,7 +97,7 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:bg-cyan-500 active:scale-[0.98]"
+        className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white transition-all hover:bg-teal-700 active:scale-[0.98] shadow-sm"
       >
         <Bus className="h-4 w-4" />
         Request Transport Quote
@@ -132,27 +132,27 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
   return (
     <div className="mt-4 space-y-3">
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-white">Pickup address *</label>
+        <label className="text-sm font-bold text-slate-900">Pickup address *</label>
         <Input
           value={address}
           onChange={(event) => setAddress(event.target.value)}
           placeholder="e.g. 14 Oak Avenue, Sandton"
-          className="rounded-xl border-slate-700 bg-slate-900/80 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+          className="rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-sm font-semibold text-white">Any notes (optional)</label>
+        <label className="text-sm font-bold text-slate-900">Any notes (optional)</label>
         <Textarea
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           rows={2}
           placeholder="e.g. Morning only, siblings, specific area"
-          className="rounded-xl border-slate-700 bg-slate-900/80 text-white placeholder:text-slate-500 focus:border-cyan-500 focus:ring-cyan-500/20"
+          className="rounded-xl border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
         />
       </div>
 
-      <p className="text-xs text-white/60">
+      <p className="text-xs text-slate-500">
         Drop-off: {centreName} (centre address)
       </p>
 
@@ -161,7 +161,7 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
           type="button"
           onClick={() => setOpen(false)}
           disabled={loading}
-          className="flex-1 rounded-xl border border-white/30 px-5 py-2.5 text-sm font-semibold text-white/80 transition-colors hover:border-white/50 hover:text-white disabled:opacity-50"
+          className="flex-1 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
         >
           Cancel
         </button>
@@ -169,9 +169,9 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="flex-1 rounded-xl bg-cyan-600 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-cyan-500 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-teal-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         >
-          {loading ? 'SendingÃ¢â‚¬Â¦' : 'Send Enquiry'}
+          {loading ? 'Sending...' : 'Send Enquiry'}
         </button>
       </div>
     </div>

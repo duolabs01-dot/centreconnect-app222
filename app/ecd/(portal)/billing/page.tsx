@@ -215,7 +215,7 @@ export default async function EcdBillingPage() {
                   placeholder="Add context for this month..."
                 />
               </label>
-              <Button type="submit" className="w-full sm:w-fit bg-slate-900 hover:bg-slate-800 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
                 Save Financial Snapshot
               </Button>
             </form>
