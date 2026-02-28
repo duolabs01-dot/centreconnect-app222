@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { ParentLayoutProvider } from '@/components/layout/parent-layout-provider' // Import the provider
 
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -86,23 +87,26 @@ export default async function ParentLayout({ children }: { children: React.React
     (typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name.trim() : '') ||
     (user.email?.split('@')[0]?.replace(/[._-]+/g, ' ').trim() || 'Parent')
 
+  const parentLayoutData = {
+    userName: userName,
+    isVerified: isVerified,
+    profileNudge: readiness.ready
+      ? null
+      : {
+          completionPct: readiness.completionPct,
+          missing: readiness.missing.slice(0, 4),
+        },
+    userId: user.id,
+  };
+
   return (
     <div className="min-h-screen">
-      <ParentAppShell
-        userName={userName}
-        isVerified={isVerified}
-        profileNudge={
-          readiness.ready
-            ? null
-            : {
-                completionPct: readiness.completionPct,
-                missing: readiness.missing.slice(0, 4),
-              }
-        }
-      >
-        <BrowserNotificationBridge mode="parent" parentId={user.id} />
-        {children}
-      </ParentAppShell>
+      <ParentLayoutProvider data={parentLayoutData}> {/* Wrap with provider */}
+        <ParentAppShell> {/* ParentAppShell will now read from context */}
+          <BrowserNotificationBridge mode="parent" parentId={user.id} />
+          {children}
+        </ParentAppShell>
+      </ParentLayoutProvider>
     </div>
   )
 }
