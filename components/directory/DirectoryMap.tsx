@@ -50,7 +50,10 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
           zoom: 11,
         })
         mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-        mapInstanceRef.current.on('error', () => setMapError(true))
+        mapInstanceRef.current.on('error', (e) => {
+          console.warn('Map failed to load', e)
+          setMapError(true)
+        })
       } catch (err) {
         console.error('Map initialization error:', err)
         setMapError(true)
@@ -137,11 +140,21 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
   if (mapError) {
     return (
       <div 
-        className="h-[260px] sm:h-[420px] flex items-center justify-center bg-slate-100 rounded-2xl text-slate-500"
-        aria-label="ECD centre map"
+        className="flex h-[260px] flex-col items-center justify-center gap-4 rounded-2xl bg-slate-50 sm:h-[420px]"
+        aria-label="ECD centres map near you"
         role="region"
       >
-        Map temporarily unavailable • <a href="https://maps.google.com" className="underline">Open in Google Maps</a>
+        <div className="text-center">
+          <p className="text-sm font-medium text-slate-600">Map unavailable</p>
+          <a 
+            href={`https://www.google.com/maps/search/ECD+centres+near+${locationHint}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-xs text-cyan-600 underline"
+          >
+            Open in Google Maps
+          </a>
+        </div>
       </div>
     )
   }
@@ -149,7 +162,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
   return (
     <div 
       className="relative h-[260px] sm:h-[420px] w-full rounded-2xl border border-border"
-      aria-label="ECD centre map"
+      aria-label="ECD centres map near you"
       role="region"
     >
       <div ref={mapContainerRef} className="h-full w-full" />
@@ -174,6 +187,11 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         <span className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-[var(--shadow-elevation-3)] shadow-slate-900">
           {locationHint}
         </span>
+      </div>
+
+      {/* Centre Count Badge */}
+      <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur">
+        {centresWithLocation.length} centres on map
       </div>
     </div>
   )
