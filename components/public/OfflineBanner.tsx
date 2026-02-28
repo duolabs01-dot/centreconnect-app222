@@ -1,37 +1,32 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { cn } from '@/lib/utils'; // Assuming cn utility is available
+import { useState, useEffect } from 'react'
+import { WifiOff } from 'lucide-react'
 
 export function OfflineBanner() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOffline, setIsOffline] = useState(false)
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    setIsOffline(!navigator.onLine)
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    const goOnline = () => setIsOffline(false)
+    const goOffline = () => setIsOffline(true)
 
-    // Set initial status
-    setIsOnline(navigator.onLine);
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
-  if (isOnline) {
-    return null;
-  }
+  if (!isOffline) return null
 
   return (
-    <div className={cn(
-      "fixed bottom-20 left-4 right-4 bg-amber-600 text-white text-center py-2 rounded-xl text-sm z-50",
-      "md:bottom-4 md:left-auto md:right-4 md:max-w-xs md:text-left md:px-4 md:py-3 md:rounded-lg md:shadow-lg" // Optional: desktop styling
-    )}>
-      You are offline. Some features limited.
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-rose-600 text-white px-4 py-2 flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300">
+      <WifiOff className="h-4 w-4" />
+      <span className="text-xs font-bold uppercase tracking-widest">You are currently offline</span>
     </div>
-  );
+  )
 }
