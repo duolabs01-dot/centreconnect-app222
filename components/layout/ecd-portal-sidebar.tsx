@@ -10,7 +10,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { ArrowLeft, Menu, LayoutDashboard, ClipboardList, UserCheck, Settings2 } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
-import { OfflineBanner } from '@/components/public/OfflineBanner' // Import OfflineBanner
+import { OfflineBanner } from '@/components/public/OfflineBanner'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -102,13 +102,7 @@ export function EcdPortalSidebar({
     })
   }
 
-  // Define mobile bottom nav items for ECD
-  const ecdMobileNavItems = [
-    { href: '/ecd/dashboard', label: 'Home', icon: LayoutDashboard },
-    { href: '/ecd/applications', label: 'Applications', icon: ClipboardList },
-    { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck },
-    { href: '/ecd/profile', label: 'Settings', icon: Settings2 },
-  ];
+  // DELETED: ecdMobileNavItems array definition
 
 
   return (
@@ -171,28 +165,8 @@ export function EcdPortalSidebar({
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav for ECD Portal */}
-      <nav className="fixed sticky bottom-0 z-50 md:hidden flex items-center justify-around min-h-[64px] w-full border-t border-gray-200 bg-white shadow-lg">
-        {ecdMobileNavItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 min-h-[48px] py-3 text-xs font-medium text-gray-500 hover:text-gray-900",
-                active && "border-b-4 border-primary bg-primary/10 text-primary"
-              )}
-              aria-current={active ? 'page' : undefined}
-            >
-              <item.icon className="h-7 w-7" strokeWidth={1.75} />
-              <span className="mt-1">{item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
-
-      <OfflineBanner /> {/* Add OfflineBanner */}
+      {/* DELETED: Mobile Bottom Nav for ECD Portal */}
+      <OfflineBanner />
     </>
   )
 }

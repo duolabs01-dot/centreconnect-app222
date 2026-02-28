@@ -161,7 +161,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
       >
         {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
-      <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0">
+      <main className="overflow-x-hidden py-3 pb-24 sm:py-5 md:pb-0 pb-20"> {/* Added pb-20 for bottom nav */}
         <Container className="max-w-3xl">
           <div className="mb-3 px-1 pt-1 sm:mb-4">
             <div className="flex items-start justify-between gap-3">
@@ -277,7 +277,7 @@ export function ParentAppShell({ userName, isVerified = false, profileNudge = nu
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="fixed sticky bottom-0 z-50 md:hidden flex items-center justify-around min-h-[64px] w-full border-t border-gray-200 bg-white shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex items-center justify-around min-h-[64px] w-full border-t border-gray-200 bg-white shadow-lg pb-[env(safe-area-inset-bottom)]"> {/* Fixed position and added pb */}
         {navItems.map((item) => {
           const active =
             item.href === '/parent/profile'
