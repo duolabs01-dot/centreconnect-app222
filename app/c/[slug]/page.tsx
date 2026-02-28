@@ -1,21 +1,11 @@
-import type { Metadata } from 'next'
+'use client'
+
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { cache } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { useParams, notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { ApplyCTA } from '@/components/public/ApplyCTA'
-import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
-import type { TransportConfig } from '@/components/public/TransportSection'
-import { TransportSection } from '@/components/public/TransportSection'
-import { InteractionActions } from './interaction-actions'
-import { ContactCentreSheet } from './contact-centre-sheet'
-import { ShareCentreSheet } from './share-centre-sheet'
-import { CentreContactCard } from '@/components/public/CentreContactCard'
-import { PageContainer } from '@/components/layout/PageContainer'
-import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
-import { formatDate, formatLongDate } from '@/lib/utils'
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -27,7 +17,13 @@ import {
   ShieldCheck,
   ChevronRight,
   GraduationCap,
-  Sparkles
+  Sparkles,
+  Phone,
+  MessageCircle,
+  Mail,
+  Instagram,
+  Facebook,
+  Globe
 } from 'lucide-react'
 
 // Import premium UI components
@@ -36,12 +32,13 @@ import { StatChip } from '@/components/ui/stat-chip'
 import { Section } from '@/components/ui/section'
 import { ModernCard } from '@/components/ui/modern-card'
 import { ProgressBar } from '@/components/ui/progress-bar'
-
-type CentrePageProps = {
-  params: {
-    slug: string
-  }
-}
+import { PageContainer } from '@/components/layout/PageContainer'
+import { ApplyCTA } from '@/components/public/ApplyCTA'
+import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
+import { ContactCentreSheet } from './contact-centre-sheet'
+import { ShareCentreSheet } from './share-centre-sheet'
+import { CentreContactCard } from '@/components/public/CentreContactCard'
+import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
 type Centre = {
   id: string
@@ -69,170 +66,76 @@ type Centre = {
   fees_last_updated_at: string | null
   contact_whatsapp: string | null
   contact_phone: string | null
-  ecd_content: Array<{
-    id: string
-    section: string
-    content_blocks: unknown
-  }> | null
-  ecd_media: EcdMedia[] | null
 }
 
-type EcdMedia = {
-  id: string
-  title: string | null
-  alt_text: string | null
-  storage_path: string
-}
+export default function CentrePage() {
+  const params = useParams()
+  const slug = params.slug as string
+  const [centre, setCentre] = useState<Centre | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
-type Job = {
-  id: string
-  title: string
-  role_type: string
-  description: string | null
-  requirements: string | null
-  closes_at: string | null
-}
+  useEffect(() => {
+    async function fetchCentre() {
+      const supabase = createClient()
+      
+      // Get centre data
+      const { data, error } = await supabase
+        .from('ecd_centres')
+        .select('*')
+        .eq('slug', slug)
+        .single()
 
-function toWhatsAppHref(raw: string | null) {
-  if (!raw) return null
-  const digits = raw.replace(/[^\d]/g, '')
-  return digits ? `https://wa.me/${digits}` : null
-}
-
-function toCallHref(raw: string | null) {
-  if (!raw) return null
-  return `tel:${raw}`
-}
-
-const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
-  try {
-    const supabase = await createClient()
-    const { data: centre, error } = await supabase
-      .from('ecd_centres')
-      .select(
-        `id,slug,name,tagline,description,email,phone,address,suburb,city,province,age_groups,logo_url,cover_image_url,is_registered,capacity,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone,
-        ecd_content(id,section,content_blocks),
-        ecd_media(id,title,alt_text,storage_path)`
-      )
-      .eq('slug', slug)
-      .single()
-
-    if (!error && centre) {
-      return {
-        id: centre.id,
-        slug: centre.slug,
-        name: centre.name ?? 'Unnamed centre',
-        tagline: centre.tagline ?? null,
-        description: centre.description ?? null,
-        email: centre.email ?? null,
-        phone: centre.phone ?? null,
-        address: centre.address ?? null,
-        suburb: centre.suburb,
-        city: centre.city,
-        province: centre.province,
-        age_groups: centre.age_groups ?? null,
-        logo_url: centre.logo_url ?? null,
-        cover_image_url: centre.cover_image_url ?? null,
-        is_registered: centre.is_registered ?? false,
-        capacity: centre.capacity ?? null,
-        fees_display_mode: centre.fees_display_mode ?? 'range',
-        monthly_fee_min: centre.monthly_fee_min ?? null,
-        monthly_fee_max: centre.monthly_fee_max ?? null,
-        registration_fee: centre.registration_fee ?? null,
-        subsidy_accepted: centre.subsidy_accepted ?? false,
-        fees_notes: centre.fees_notes ?? null,
-        fees_last_updated_at: centre.fees_last_updated_at ?? null,
-        contact_whatsapp: centre.contact_whatsapp ?? null,
-        contact_phone: centre.contact_phone ?? null,
-        ecd_content: (centre.ecd_content ?? []) as Array<{
-          id: string
-          section: string
-          content_blocks: unknown
-        }>,
-        ecd_media: (centre.ecd_media ?? []) as EcdMedia[],
+      if (error || !data) {
+        // Try fallback table if needed
+        const { data: fallbackData } = await supabase
+          .from('public_ecd_centres')
+          .select('*')
+          .eq('slug', slug)
+          .maybeSingle()
+        
+        if (fallbackData) {
+          setCentre(fallbackData as any)
+        } else {
+          notFound()
+        }
+      } else {
+        setCentre(data)
       }
+
+      // Get user role if logged in
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        setUserRole(profile?.role ?? null)
+      }
+      
+      setLoading(false)
     }
 
-    const fallbackResponse = await supabase
-      .from('public_ecd_centres')
-      .select(
-        'id,slug,name,tagline,description,suburb,city,province,age_groups,logo_url,cover_image_url,is_registered,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,fees_notes,fees_last_updated_at,contact_whatsapp,contact_phone'
-      )
-      .eq('slug', slug)
-      .maybeSingle()
+    fetchCentre()
+  }, [slug])
 
-    if (!fallbackResponse.data) return null
-    const fallbackData = fallbackResponse.data
-
-    return {
-      id: fallbackData.id,
-      slug: fallbackData.slug,
-      name: fallbackData.name ?? 'Unnamed centre',
-      tagline: fallbackData.tagline ?? null,
-      description: fallbackData.description ?? null,
-      email: null,
-      phone: fallbackData.contact_phone ?? null,
-      address: null,
-      suburb: fallbackData.suburb,
-      city: fallbackData.city,
-      province: fallbackData.province ?? 'Unknown',
-      age_groups: fallbackData.age_groups ?? null,
-      logo_url: fallbackData.logo_url ?? null,
-      cover_image_url: fallbackData.cover_image_url ?? null,
-      is_registered: fallbackData.is_registered ?? false,
-      capacity: null,
-      fees_display_mode: fallbackData.fees_display_mode ?? 'range',
-      monthly_fee_min: fallbackData.monthly_fee_min ?? null,
-      monthly_fee_max: fallbackData.monthly_fee_max ?? null,
-      registration_fee: fallbackData.registration_fee ?? null,
-      subsidy_accepted: fallbackData.subsidy_accepted ?? false,
-      fees_notes: fallbackData.fees_notes ?? null,
-      fees_last_updated_at: fallbackData.fees_last_updated_at ?? null,
-      contact_whatsapp: fallbackData.contact_whatsapp ?? null,
-      contact_phone: fallbackData.contact_phone ?? null,
-      ecd_content: [],
-      ecd_media: [],
-    }
-  } catch {
-    return null
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#065A82] border-t-transparent" />
+      </div>
+    )
   }
-})
 
-export async function generateMetadata({ params }: CentrePageProps): Promise<Metadata> {
-  const centre = await getCentreBySlug(params.slug)
-  if (!centre) return { title: 'Centre Not Found' }
-
-  return {
-    title: `${centre.name} | CentreConnect`,
-    description: centre.tagline ?? centre.description ?? `Learn about ${centre.name}.`,
-  }
-}
-
-export default async function CentrePage({ params }: CentrePageProps) {
-  const centre = await getCentreBySlug(params.slug)
-  if (!centre) notFound()
+  if (!centre) return notFound()
 
   const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  const [mediaResult, jobsResult, transportResult, profileResult] = await Promise.all([
-    supabase.from('ecd_media').select('id,storage_path,file_name').eq('ecd_id', centre.id).limit(6),
-    supabase.from('jobs').select('id,title,role_type,description,requirements,closes_at').eq('ecd_id', centre.id).eq('is_published', true).limit(4),
-    supabase.from('transport_configs').select('offers_transport,fee_per_month,fee_description,coverage_areas,notes').eq('ecd_id', centre.id).maybeSingle(),
-    user ? supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle() : { data: null }
-  ])
-
-  const userRole = profileResult.data?.role ?? null
-  const transportConfig: TransportConfig | null = transportResult.data ?? null
-  const jobs: Job[] = jobsResult.data ?? []
-  const media = mediaResult.data ?? []
-
   const heroFacts = [
     centre.is_registered ? 'DSD Registered' : null,
     centre.subsidy_accepted ? 'Subsidy Friendly' : null,
-    transportConfig?.offers_transport ? 'Transport Available' : null,
-    'Verified Profile'
+    'Verified Profile',
+    'Open for 2026'
   ].filter(Boolean) as string[]
 
   const feesLabel = centre.fees_display_mode === 'exact' 
@@ -241,34 +144,32 @@ export default async function CentrePage({ params }: CentrePageProps) {
       ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max}` 
       : 'Contact Us'
 
-  const programs = (centre.ecd_content ?? []).find(s => s.section === 'programs')?.content_blocks as any[] ?? []
-
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-32">
-      {/* Hero Section */}
-      <section className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
+      {/* Premium Hero Section */}
+      <section className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
         <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
         
         <PageContainer className="relative h-full">
-          <div className="flex h-full flex-col justify-end pb-12">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/30">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                4.8 Premium
+          <div className="flex h-full flex-col justify-end pb-16">
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                4.8 Premium ECD
               </div>
-              <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/30">
-                <MapPin className="h-3 w-3" />
+              <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                <MapPin className="h-3.5 w-3.5" />
                 {centre.suburb}, {centre.city}
               </div>
             </div>
             
-            <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="text-5xl font-black tracking-tighter text-white sm:text-7xl lg:text-8xl leading-[0.9]">
               {centre.name}
             </h1>
             
             {centre.tagline && (
-              <p className="mt-4 max-w-2xl text-lg font-medium text-white/80 sm:text-xl">
+              <p className="mt-6 max-w-2xl text-xl font-medium text-white/90 sm:text-2xl leading-relaxed">
                 {centre.tagline}
               </p>
             )}
@@ -276,118 +177,140 @@ export default async function CentrePage({ params }: CentrePageProps) {
         </PageContainer>
       </section>
 
-      <PageContainer className="-mt-8 space-y-12">
-        {/* Quick Facts Pill Row */}
-        <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-none relative z-10">
+      <PageContainer className="-mt-12 space-y-16 relative z-10">
+        {/* Facts Row */}
+        <div className="flex flex-wrap gap-3 overflow-x-auto pb-4 scrollbar-none">
           {heroFacts.map((fact) => (
-            <HeroPill key={fact}>{fact}</HeroPill>
+            <HeroPill key={fact} className="whitespace-nowrap bg-white text-slate-900 border-none shadow-xl px-6 py-3 text-sm">
+              {fact}
+            </HeroPill>
           ))}
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatChip label="Ages" value={centre.age_groups?.join(', ') || 'All ages'} icon={<Users className="h-5 w-5" />} accent="teal" />
-          <StatChip label="Monthly Fee" value={feesLabel} icon={<Wallet className="h-5 w-5" />} accent="teal" />
-          <StatChip label="Capacity" value={centre.capacity || 'Varies'} icon={<GraduationCap className="h-5 w-5" />} accent="teal" />
-          <StatChip label="Hours" value="07:00 - 17:30" icon={<Clock className="h-5 w-5" />} accent="teal" />
+          <StatChip label="Age Groups" value={centre.age_groups?.join(', ') || '3m - 6y'} icon={<Users className="h-6 w-6" />} accent="teal" />
+          <StatChip label="Monthly Fee" value={feesLabel} icon={<Wallet className="h-6 w-6" />} accent="teal" />
+          <StatChip label="Capacity" value={centre.capacity || 'Varies'} icon={<GraduationCap className="h-6 w-6" />} accent="teal" />
+          <StatChip label="Hours" value="07:00 - 17:30" icon={<Clock className="h-6 w-6" />} accent="teal" />
         </div>
 
-        {/* Main Content Split */}
+        {/* Content Layout */}
         <div className="grid gap-12 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-12">
+          <div className="lg:col-span-2 space-y-16">
+            
             {/* About Section */}
-            <Section id="about" emoji="👋" title="About Us">
-              <p className="text-lg leading-relaxed">
-                {centre.description || 'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'}
-              </p>
-              
-              {centre.capacity && (
-                <div className="mt-8">
-                  <ProgressBar 
-                    value={85} 
-                    label="Current Enrollment" 
-                    subLabel={`${centre.capacity} total capacity available`} 
-                  />
-                </div>
-              )}
+            <Section id="about" emoji="👋" title="About Our Centre">
+              <div className="space-y-6">
+                <p className="text-xl leading-relaxed font-medium text-slate-700">
+                  {centre.description || 'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'}
+                </p>
+                
+                {centre.capacity && (
+                  <div className="pt-4">
+                    <ProgressBar 
+                      value={82} 
+                      label="Available Capacity" 
+                      subLabel="Applying early is recommended to secure your preferred intake date." 
+                    />
+                  </div>
+                )}
+              </div>
             </Section>
-
-            {/* Gallery Section */}
-            {media.length > 0 && (
-              <Section emoji="📸" title="Gallery">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {media.map((item) => (
-                    <ModernCard key={item.id} className="p-0 overflow-hidden aspect-square relative group">
-                      <Image 
-                        src={supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl} 
-                        alt={item.file_name || 'Gallery image'}
-                        fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    </ModernCard>
-                  ))}
-                </div>
-              </Section>
-            )}
 
             {/* Programs Section */}
-            {programs.length > 0 && (
-              <Section emoji="🎓" title="Our Programmes">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {programs.map((prog, i) => (
-                    <ModernCard key={i} className="flex flex-col gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#065A82]/10 text-[#065A82]">
-                        <Sparkles className="h-5 w-5" />
-                      </div>
-                      <h3 className="font-bold text-slate-900">{prog.title}</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed">{prog.description}</p>
-                    </ModernCard>
-                  ))}
-                </div>
-              </Section>
-            )}
-
-            {/* Transport Section */}
-            <Section emoji="🚐" title="Transport & Logistics">
-              <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
+            <Section id="programs" emoji="🎓" title="Programmes & Learning">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <ModernCard className="flex flex-col gap-4 border-l-4 border-l-[#065A82]">
+                  <div className="h-12 w-12 rounded-2xl bg-[#065A82]/10 flex items-center justify-center text-[#065A82]">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900">Holistic Curriculum</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    Our play-based learning approach focuses on social, emotional, and cognitive development for all ages.
+                  </p>
+                </ModernCard>
+                <ModernCard className="flex flex-col gap-4 border-l-4 border-l-cyan-500">
+                  <div className="h-12 w-12 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600">
+                    <CheckCircle2 className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-900">Age-Appropriate Groups</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    Children are grouped by developmental stage to ensure they receive the right level of care and stimulation.
+                  </p>
+                </ModernCard>
+              </div>
             </Section>
+
+            {/* Location & Trust */}
+            <Section id="location" emoji="📍" title="Location & Contact">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <ModernCard className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400">Address</p>
+                      <p className="text-sm font-bold text-slate-900">{centre.address || `${centre.suburb}, ${centre.city}`}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                      <Phone className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase text-slate-400">Phone</p>
+                      <p className="text-sm font-bold text-slate-900">{centre.contact_phone || 'Available on request'}</p>
+                    </div>
+                  </div>
+                </ModernCard>
+                <div className="h-[240px] rounded-[2rem] bg-slate-100 overflow-hidden relative group">
+                  <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Map View Coming Soon</p>
+                  </div>
+                </div>
+              </div>
+            </Section>
+
           </div>
 
-          {/* Sidebar Sidebar */}
-          <aside className="space-y-6">
-            <ModernCard className="sticky top-24 space-y-6 border-t-4 border-t-[#065A82]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Applications</p>
-                  <h3 className="text-xl font-black text-slate-900">Get a Spot</h3>
+          {/* Sidebar */}
+          <aside className="space-y-6 lg:block">
+            <ModernCard className="sticky top-24 space-y-8 border-t-8 border-t-[#065A82] shadow-2xl">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admissions</p>
+                  <ShieldCheck className="h-6 w-6 text-[#065A82]" />
                 </div>
-                <div className="h-12 w-12 rounded-2xl bg-[#065A82] flex items-center justify-center text-white shadow-lg">
-                  <ShieldCheck className="h-6 w-6" />
-                </div>
+                <h3 className="text-2xl font-black text-slate-900">Apply for a Spot</h3>
               </div>
               
-              <p className="text-sm text-slate-500 leading-relaxed">
-                We manage our applications through CentreConnect to ensure a fair and transparent process for all families.
-              </p>
-
-              <div className="space-y-3">
-                <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
-                <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
-                <SaveCentreButton centreId={centre.id} initialSaved={false} />
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Secure and transparent application process managed through CentreConnect.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 className="h-3 w-3" />
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    No application fees. Only pay once your child is accepted.
+                  </p>
+                </div>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <p className="text-xs font-bold text-slate-700">Instant application confirmation</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </div>
-                  <p className="text-xs font-bold text-slate-700">Secure document handling</p>
+              <div className="space-y-3 pt-4">
+                <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+                <div className="grid grid-cols-2 gap-2">
+                  <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
+                  <SaveCentreButton centreId={centre.id} initialSaved={false} />
                 </div>
               </div>
             </ModernCard>
@@ -395,72 +318,20 @@ export default async function CentrePage({ params }: CentrePageProps) {
             <CentreContactCard centreId={centre.id} centreName={centre.name} />
           </aside>
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex flex-col items-center justify-center gap-6 pt-12 text-center">
-          <Sparkles className="h-12 w-12 text-[#065A82]/20" />
-          <div className="space-y-2">
-            <h2 className="text-2xl font-black text-slate-900">Think this is the one?</h2>
-            <p className="text-slate-500">Secure your child&apos;s spot at {centre.name} today.</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-4">
-            <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
-            <ShareCentreSheet centreName={centre.name} centreSlug={centre.slug} suburb={centre.suburb} city={centre.city} />
-          </div>
-        </div>
       </PageContainer>
 
-      {/* Persistent Floating Bottom Actions */}
-      <div className="fixed bottom-24 inset-x-4 z-40 md:hidden">
-        <div className="bg-[#1A1A2E] rounded-pill p-2 shadow-2xl flex items-center gap-2 border border-white/10 backdrop-blur-xl">
-          <div className="flex-1 pl-4">
-            <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Starting from</p>
-            <p className="text-base font-bold text-white leading-tight">{feesLabel}</p>
+      {/* Floating Bottom Bar for Mobile */}
+      <div className="fixed bottom-8 inset-x-6 z-50 lg:hidden">
+        <div className="bg-[#1A1A2E] rounded-full p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 backdrop-blur-2xl flex items-center justify-between gap-4">
+          <div className="pl-6">
+            <p className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Fee Starts From</p>
+            <p className="text-lg font-black text-white leading-none">{feesLabel}</p>
           </div>
-          <div className="flex-1">
+          <div className="shrink-0 w-1/2">
             <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
           </div>
         </div>
       </div>
     </main>
-  )
-}
-
-function SectionHeader({
-  emoji,
-  title,
-  titleClass = 'text-foreground',
-  emojiSize = 'text-2xl',
-}: {
-  emoji: string
-  title: string
-  titleClass?: string
-  emojiSize?: string
-}) {
-  return (
-    <div className="flex items-center gap-3">
-      {!!emoji && <span className={emojiSize}>{emoji}</span>}
-      <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
-    </div>
-  )
-}
-
-function JobTeaserCard({ job, centreSlug }: { job: Job; centreSlug: string }) {
-  const isExpired = job.closes_at ? new Date(job.closes_at) < new Date() : false
-  if (isExpired) return null
-  return (
-    <Link href={`/c/${centreSlug}/jobs/${job.id}`} className="group">
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)] transition-all hover:border-cyan-500/30 hover:bg-muted">
-        <div>
-          <p className="text-lg font-semibold text-slate-900 transition-colors group-hover:text-cyan-700">{job.title}</p>
-          {job.closes_at ? (
-            <p className="text-xs text-slate-500">Apply by {formatDate(job.closes_at)}</p>
-          ) : null}
-        </div>
-        <div className="flex items-center gap-1 text-cyan-700 text-sm font-medium">
-          View & Apply <ArrowRight className="w-4 h-4" />
-        </div>
-      </div>
-    </Link>
   )
 }

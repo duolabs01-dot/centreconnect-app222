@@ -1,10 +1,11 @@
 export type AdminNavItem = { href: string; label: string }
 
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { href: '/admin/command', label: 'Control Tower' },
-  { href: '/admin/tenants', label: 'Tenants' },
-  { href: '/admin/revenue', label: 'Revenue' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/analytics', label: 'Analytics' },
-  { href: '/admin/support', label: 'Support' },
+  { label: 'Overview', href: '/admin/dashboard' },
+  { label: 'ECD Network', href: '/admin/tenants' },
+  { label: 'Directory', href: '/admin/users' },
+  { label: 'Revenue Ops', href: '/admin/revenue' },
+  { label: 'Platform Stats', href: '/admin/analytics' },
+  { label: 'Command Tower', href: '/admin/command' },
+  { label: 'Support', href: '/admin/support' },
 ]

@@ -11,18 +11,23 @@ interface AdminShellProps {
 
 export function AdminShell({ children, className }: AdminShellProps) {
   return (
-    <div className="flex min-h-screen bg-[#0B0E14] text-slate-200">
-      {/* Sidebar - Persistent on desktop, bottom nav on mobile */}
+    <div className="flex min-h-screen bg-[#04070D] text-slate-200 selection:bg-cyan-500/30">
+      {/* Sidebar - Fixed on desktop, Bottom nav on mobile */}
       <AdminSidebar />
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       <main className={cn(
-        "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        "pb-20 md:pb-0 md:pl-64", // Space for mobile bottom nav and desktop sidebar
+        "flex-1 flex flex-col min-w-0 transition-all duration-500",
+        "pb-24 md:pb-0 md:pl-72", // Space for mobile nav and desktop sidebar (72px width)
         className
       )}>
-        <div className="flex-1 px-4 py-6 md:px-8 md:py-10">
-          {children}
+        {/* Top subtle glow for futuristic feel */}
+        <div className="fixed top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent z-[60]" />
+        
+        <div className="flex-1 px-4 py-8 md:px-12 md:py-16">
+          <div className="max-w-7xl mx-auto w-full">
+            {children}
+          </div>
         </div>
       </main>
     </div>
