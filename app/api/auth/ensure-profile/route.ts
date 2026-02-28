@@ -18,6 +18,10 @@ function fallbackName(email?: string | null) {
   return clean || 'New User'
 }
 
+function generateUsernameFromId(id: string) {
+  return `user_${id.split('-')[0].toLowerCase()}`
+}
+
 export async function POST() {
   try {
     const supabase = await createClient()
@@ -30,46 +34,53 @@ export async function POST() {
     }
 
     const desiredRole = sanitizeRole(user.user_metadata?.role)
-    const fullName = user.user_metadata?.full_name ?? fallbackName(user.email)
+    const fullName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? fallbackName(user.email)
     const phone = user.user_metadata?.phone ?? null
+    const username = user.user_metadata?.username ?? generateUsernameFromId(user.id)
 
     const admin = createAdminClient()
 
+    // 1. Fetch existing profile to preserve role if already set
     const { data: existingProfile } = await admin
       .from('user_profiles')
-      .select('id,role')
+      .select('id,role,username')
       .eq('id', user.id)
       .maybeSingle()
 
     const roleToPersist = sanitizeRole(existingProfile?.role ?? desiredRole)
+    const usernameToPersist = existingProfile?.username ?? username
 
+    // 2. Upsert user profile
     const { error: profileError } = await admin.from('user_profiles').upsert(
       {
         id: user.id,
         role: roleToPersist,
         full_name: fullName,
         phone,
+        username: usernameToPersist,
       },
       { onConflict: 'id' }
     )
 
     if (profileError) {
+      console.error('[ensure-profile] Profile upsert error:', profileError)
       return NextResponse.json({ error: profileError.message }, { status: 400 })
     }
 
+    // 3. Ensure record in parents table if role is parent_user
     if (roleToPersist === 'parent_user') {
       const { error: parentError } = await admin.from('parents').upsert(
-        {
-          id: user.id,
-        },
+        { id: user.id },
         { onConflict: 'id' }
       )
 
       if (parentError) {
+        console.error('[ensure-profile] Parent upsert error:', parentError)
         return NextResponse.json({ error: parentError.message }, { status: 400 })
       }
     }
 
+    // 4. Handle invitations for ECD roles
     if (roleToPersist === 'ecd_admin' || roleToPersist === 'ecd_staff' || roleToPersist === 'ecd_supervisor') {
       const normalizedEmail = (user.email ?? '').trim().toLowerCase()
       const { data: memberships } = await admin
@@ -78,6 +89,7 @@ export async function POST() {
         .eq('user_id', user.id)
 
       const ecdIds = (memberships ?? []).map((row) => row.ecd_id).filter(Boolean) as string[]
+      
       if (ecdIds.length > 0) {
         const updatePayload = {
           auth_user_id: user.id,
@@ -93,19 +105,12 @@ export async function POST() {
             .eq('role', roleToPersist)
             .is('accepted_at', null)
         }
-
-        await admin
-          .from('ecd_admin_invitations')
-          .update(updatePayload)
-          .in('ecd_id', ecdIds)
-          .eq('auth_user_id', user.id)
-          .eq('role', roleToPersist)
-          .is('accepted_at', null)
       }
     }
 
-    return NextResponse.json({ ok: true, role: roleToPersist })
-  } catch {
+    return NextResponse.json({ ok: true, role: roleToPersist, username: usernameToPersist })
+  } catch (err: any) {
+    console.error('[ensure-profile] Unexpected error:', err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }

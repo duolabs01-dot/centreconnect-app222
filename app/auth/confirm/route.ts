@@ -69,6 +69,7 @@ async function provisionProfileWithAdmin(input: {
   role: AllowedRole
   fullName: string
   phone: string | null
+  username: string
 }) {
   try {
     const admin = createAdminClient()
@@ -78,6 +79,7 @@ async function provisionProfileWithAdmin(input: {
         role: input.role,
         full_name: input.fullName,
         phone: input.phone,
+        username: input.username,
       },
       { onConflict: 'id' }
     )
@@ -100,6 +102,7 @@ async function provisionProfileWithUserClient(input: {
   role: AllowedRole
   fullName: string
   phone: string | null
+  username: string
   supabase: Awaited<ReturnType<typeof createClient>>
 }) {
   try {
@@ -109,6 +112,7 @@ async function provisionProfileWithUserClient(input: {
         role: input.role,
         full_name: input.fullName,
         phone: input.phone,
+        username: input.username,
       },
       { onConflict: 'id' }
     )
@@ -173,8 +177,9 @@ export async function GET(request: NextRequest) {
     }
 
     const desiredRole = sanitizeRole(user.user_metadata?.role)
-    const fullName = user.user_metadata?.full_name ?? fallbackName(user.email)
+    const fullName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? fallbackName(user.email)
     const phone = user.user_metadata?.phone ?? null
+    const username = user.user_metadata?.username ?? `user_${user.id.split('-')[0].toLowerCase()}`
     const userId = user.id
 
     const {
@@ -193,6 +198,7 @@ export async function GET(request: NextRequest) {
       role: desiredRole,
       fullName,
       phone,
+      username,
     })
     const provisioned = provisionedWithAdmin
       ? true
@@ -201,6 +207,7 @@ export async function GET(request: NextRequest) {
         role: desiredRole,
         fullName,
         phone,
+        username,
         supabase,
       })
 

@@ -180,10 +180,45 @@
 
 
 /* Lite Mode global styles */
-html.lite-mode * {
-  transition: none !important;
+html.lite-mode {
+  --animation-duration: 0s !important;
+}
+
+html.lite-mode *,
+html.lite-mode *::before,
+html.lite-mode *::after {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+
+html.lite-mode .animate-pulse,
+html.lite-mode .animate-bounce,
+html.lite-mode .animate-spin {
   animation: none !important;
 }
-html.lite-mode img {
-  image-rendering: pixelated; /* Optional: further reduce visual complexity */
+
+html.lite-mode .glass-card,
+html.lite-mode .glass-card::before {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #f1f5f9 !important; /* Slate-100 fallback */
+  border-color: #cbd5e1 !important;
 }
+
+html.lite-mode .bg-gradient-to-br,
+html.lite-mode .bg-gradient-to-r,
+html.lite-mode .shadow-float,
+html.lite-mode .shadow-2xl,
+html.lite-mode .shadow-card {
+  background-image: none !important;
+  background-color: white !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+html.lite-mode .filter.blur-xl,
+html.lite-mode .filter.blur-3xl {
+  filter: none !important;
+}
+

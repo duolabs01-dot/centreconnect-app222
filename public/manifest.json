@@ -1,13 +1,14 @@
 {
   "name": "CentreConnect",
   "short_name": "CentreConnect",
-  "description": "ECD centres & parents connected",
+  "description": "Premium Early Childhood Development (ECD) platform connecting parents and centres.",
   "id": "/",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#FFFFFF",
+  "background_color": "#F8F9FA",
   "theme_color": "#065A82",
   "orientation": "portrait",
+  "categories": ["education", "parenting"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -32,6 +33,27 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/parent/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Search Centres",
+      "url": "/directory",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/hero-illustration.svg",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "CentreConnect Dashboard"
     }
   ]
 }

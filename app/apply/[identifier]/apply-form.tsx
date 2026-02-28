@@ -84,6 +84,9 @@ export function ApplyForm({
 
       if (error) throw error
 
+      // Mark first successful application for smart install prompt
+      localStorage.setItem('cc_first_action_complete', 'true')
+
       try {
         await fetch('/api/analytics/events', {
           method: 'POST',

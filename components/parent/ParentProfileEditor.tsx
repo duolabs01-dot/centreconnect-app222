@@ -16,6 +16,9 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 
+import { useLiteMode } from '@/lib/context/LiteModeProvider'
+import { Switch } from '@/components/ui/switch'
+
 const AVATAR_BUCKET = 'parent-avatars'
 const MAX_AVATAR_SIZE_BYTES = 3 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -281,6 +284,7 @@ type ParentProfileHubInitial = {
 export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial }) {
   const router = useRouter()
   const supabase = createClient()
+  const { isLiteMode, toggleLiteMode } = useLiteMode()
   const [profile, _setProfile] = useState(initial)
   const [_sheetOpen, _setSheetOpen] = useState(false)
   const [_activeField, _setActiveField] = useState<string | null>(null)
@@ -315,6 +319,18 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     {
       label: 'Preferences',
       items: [
+        { label: 'Lite Mode (Low Data)', icon: Zap, custom: (
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-surface-secondary flex items-center justify-center text-slate-400">
+              <Zap className="h-4 w-4" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-slate-900">Lite Mode</p>
+              <p className="text-[10px] text-slate-500 font-medium">Reduce data usage & animations</p>
+            </div>
+            <Switch checked={isLiteMode} onCheckedChange={toggleLiteMode} />
+          </div>
+        )},
         { label: 'Documents Vault', icon: FileText, href: '/parent/profile/documents' },
         { label: 'Discovery Settings', icon: Sliders, href: '/parent/preferences' },
         { label: 'Security & Privacy', icon: Lock, href: '/parent/profile/security' },
@@ -367,6 +383,14 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           <SurfaceCard className="p-0 overflow-hidden">
             <div className="divide-y divide-slate-50">
               {group.items.map(item => {
+                if ('custom' in item) {
+                  return (
+                    <div key={item.label} className="px-4 py-4 min-h-[56px]">
+                      {item.custom}
+                    </div>
+                  )
+                }
+
                 const Content = (
                   <div className="flex items-center justify-between w-full px-4 py-4 min-h-[56px]">
                     <div className="flex items-center gap-3">
