@@ -1,46 +1,31 @@
+// components/ui/section.tsx
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
-
-interface SectionHeaderProps {
-  emoji?: string;
-  title: string;
-  titleClass?: string;
-  emojiSize?: string;
-}
-
-export function SectionHeader({
-  emoji,
-  title,
-  titleClass = 'text-foreground',
-  emojiSize = 'text-2xl',
-}: SectionHeaderProps) {
-  return (
-    <div className="flex items-center gap-3">
-      {!!emoji && <span className={emojiSize}>{emoji}</span>}
-      <h2 className={cn('text-2xl font-bold', titleClass)}>{title}</h2>
-    </div>
-  );
-}
+import { Sparkles } from "lucide-react"; // Example icon if emoji is not set
 
 interface SectionProps {
   id?: string;
-  emoji?: string;
+  emoji?: string; // Optional emoji string
   title: string;
-  className?: string;
   children: ReactNode;
+  className?: string;
 }
 
-export function Section({
-  id,
-  emoji,
-  title,
-  className,
-  children,
-}: SectionProps) {
+export function Section({ id, emoji, title, children, className }: SectionProps) {
   return (
-    <section id={id} className={cn('mt-10 rounded-2xl border border-white/10 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]', className)}>
-      <SectionHeader emoji={emoji} title={title} />
-      <div className="mt-4 text-base text-foreground/80">{children}</div>
+    <section id={id} className={cn("scroll-mt-20 mt-10 p-6 rounded-2xl border border-gray-100 bg-white shadow-lg", className)}>
+      <div className="flex items-center gap-3 mb-6">
+        {emoji ? (
+          <span className="text-3xl">{emoji}</span>
+        ) : (
+          // Default icon if no emoji is provided, matching teal accent
+          <Sparkles className="h-8 w-8 text-teal-500" />
+        )}
+        <h2 className="text-3xl font-bold tracking-tight text-gray-900">{title}</h2>
+      </div>
+      <div className="prose prose-slate max-w-none">
+        {children}
+      </div>
     </section>
   );
 }

@@ -314,30 +314,25 @@ export default async function CentrePage({ params }: CentrePageProps) {
           ? 'Contact centre for fees'
           : 'Contact centre for fees'
 
-  // Removed local definition of StatChip
-  // function StatChip({
-  //   label,
-  //   value,
-  //   accent,
-  // }: {
-  //   label: string
-  //   value: string
-  //   accent?: 'emerald'
-  // }) {
-  //   return (
-  //     <div className="flex flex-col items-center min-w-[120px] text-center">
-  //       <span className="text-xs uppercase tracking-[0.3em] text-slate-500">{label}</span>
-  //       <span
-  //         className={cn(
-  //           'mt-1 text-sm font-semibold whitespace-nowrap',
-  //           accent === 'emerald' ? 'text-emerald-600' : 'text-foreground'
-  //         )}
-  //       >
-  //         {value}
-  //       </span>
-  //     </div>
-  //   )
-  // }
+  const statChips: Array<{ label: string; value: string; accent?: 'emerald' }> = [
+    {
+      label: 'Ages',
+      value: centre.age_groups && centre.age_groups.length ? centre.age_groups.join(', ') : 'Not specified',
+    },
+    {
+      label: 'Fees',
+      value: feesLabel,
+    },
+    {
+      label: 'Capacity',
+      value: centre.capacity ? `${centre.capacity} children` : 'Capacity varies',
+    },
+    {
+      label: 'Verified',
+      value: centre.subsidy_accepted ? 'Subsidy accepted' : 'Verification pending',
+      accent: centre.subsidy_accepted ? 'emerald' : undefined,
+    },
+  ]
 
   return (
     <main className="pb-28 bg-gradient-to-b from-cyan-50/40 via-white to-slate-50">
@@ -488,7 +483,7 @@ export default async function CentrePage({ params }: CentrePageProps) {
 
         {jobs.length > 0 && (
           <section className="mt-14 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]">
-            <SectionHeader emoji="" title="Join Our Team" emojiSize="text-3xl" />
+            <SectionHeader title="Join Our Team" emoji="" />
             <div className="mt-6 space-y-3">
               {jobs.map((job) => (
                 <JobTeaserCard key={job.id} job={job} centreSlug={centre.slug} />
