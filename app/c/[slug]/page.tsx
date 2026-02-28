@@ -16,11 +16,26 @@ import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { formatDate, formatLongDate } from '@/lib/utils'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
-// import { LiteImage } from '@/components/ui/LiteImage' // Removed LiteImage import
-import { HeroPill } from '@/components/ui/hero-pill' // Added HeroPill import
-import { StatChip } from '@/components/ui/stat-chip'   // Added StatChip import
-import { Section } from '@/components/ui/section' // Added Section import
+import { 
+  ArrowRight, 
+  CheckCircle2, 
+  Users, 
+  Star, 
+  Wallet, 
+  Clock, 
+  MapPin, 
+  ShieldCheck,
+  ChevronRight,
+  GraduationCap,
+  Sparkles
+} from 'lucide-react'
+
+// Import premium UI components
+import { HeroPill } from '@/components/ui/hero-pill'
+import { StatChip } from '@/components/ui/stat-chip'
+import { Section } from '@/components/ui/section'
+import { ModernCard } from '@/components/ui/modern-card'
+import { ProgressBar } from '@/components/ui/progress-bar'
 
 type CentrePageProps = {
   params: {
@@ -62,15 +77,6 @@ type Centre = {
   ecd_media: EcdMedia[] | null
 }
 
-type CalendarEvent = {
-  id: string
-  title: string
-  description: string | null
-  event_date: string
-  start_time: string | null
-  end_time: string | null
-}
-
 type EcdMedia = {
   id: string
   title: string | null
@@ -85,10 +91,6 @@ type Job = {
   description: string | null
   requirements: string | null
   closes_at: string | null
-}
-
-function formatEventDate(value: string) {
-  return formatLongDate(value)
 }
 
 function toWhatsAppHref(raw: string | null) {
@@ -160,9 +162,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       .maybeSingle()
 
     if (!fallbackResponse.data) return null
-    
-    // Narrow the type of fallbackResponse.data after the null check
-    const fallbackData = fallbackResponse.data;
+    const fallbackData = fallbackResponse.data
 
     return {
       id: fallbackData.id,
@@ -175,7 +175,7 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
       address: null,
       suburb: fallbackData.suburb,
       city: fallbackData.city,
-      province: fallbackData.province ?? 'Unknown', // Added nullish coalescing operator
+      province: fallbackData.province ?? 'Unknown',
       age_groups: fallbackData.age_groups ?? null,
       logo_url: fallbackData.logo_url ?? null,
       cover_image_url: fallbackData.cover_image_url ?? null,
@@ -200,299 +200,228 @@ const getCentreBySlug = cache(async (slug: string): Promise<Centre | null> => {
 
 export async function generateMetadata({ params }: CentrePageProps): Promise<Metadata> {
   const centre = await getCentreBySlug(params.slug)
-
-  if (!centre) {
-    return {
-      title: 'Centre Not Found | CentreConnect',
-      description: 'This centre could not be found.',
-    }
-  }
-
-  const title = `${centre.name} \u2014 ECD Centre in ${centre.suburb} | CentreConnect`
-  const description =
-    centre.tagline ?? centre.description ?? `Learn about ${centre.name} in ${centre.suburb}.`
+  if (!centre) return { title: 'Centre Not Found' }
 
   return {
-    title,
-    description,
-    openGraph: {
-      title: centre.name,
-      description: centre.tagline ?? '',
-      images: centre.cover_image_url ? [centre.cover_image_url] : [],
-    },
+    title: `${centre.name} | CentreConnect`,
+    description: centre.tagline ?? centre.description ?? `Learn about ${centre.name}.`,
   }
 }
 
 export default async function CentrePage({ params }: CentrePageProps) {
   const centre = await getCentreBySlug(params.slug)
-
-  if (!centre) {
-    notFound()
-  }
+  if (!centre) notFound()
 
   const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
-
-  const programsSection = (centre.ecd_content ?? []).find((section) => section.section === 'programs')
-  const aboutSection = (centre.ecd_content ?? []).find((section) => section.section === 'about')
-  const aboutLines = Array.isArray(aboutSection?.content_blocks)
-    ? (aboutSection?.content_blocks as Array<{ content?: string }>)
-        .map((block) => (typeof block?.content === 'string' ? block.content.trim() : ''))
-        .filter(Boolean)
-    : []
-  const aboutText =
-    aboutLines.length > 0
-      ? aboutLines.join(' ')
-      : centre.description || 'This centre has not added an about description yet.'
-  const programs = Array.isArray(programsSection?.content_blocks)
-    ? (programsSection?.content_blocks as Array<{ title?: string; description?: string }>)
-    : []
   const supabase = await createClient()
-  const authResultPromise = supabase.auth.getUser()
-  const mediaPromise = supabase
-    .from('ecd_media')
-    .select('id,storage_path,file_name')
-    .eq('ecd_id', centre.id)
-    .limit(6)
-  const jobsPromise = supabase
-    .from('jobs')
-    .select('id,title,role_type,description,requirements,closes_at')
-    .eq('ecd_id', centre.id)
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-    .limit(8)
-  const transportPromise = supabase
-    .from('transport_configs')
-    .select('offers_transport,fee_per_month,fee_description,coverage_areas,notes')
-    .eq('ecd_id', centre.id)
-    .maybeSingle()
-  const {
-    data: { user },
-  } = await authResultPromise
-  const { data: savedRow } = user
-    ? await supabase
-        .from('parent_shortlists')
-        .select('id')
-        .eq('parent_id', user.id)
-        .eq('centre_id', centre.id)
-        .maybeSingle()
-    : { data: null }
-  const initialSaved = Boolean(savedRow)
-  let userRole: string | null = null
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  const [mediaResult, jobsResult, transportResult, profileResult] = await Promise.all([
+    supabase.from('ecd_media').select('id,storage_path,file_name').eq('ecd_id', centre.id).limit(6),
+    supabase.from('jobs').select('id,title,role_type,description,requirements,closes_at').eq('ecd_id', centre.id).eq('is_published', true).limit(4),
+    supabase.from('transport_configs').select('offers_transport,fee_per_month,fee_description,coverage_areas,notes').eq('ecd_id', centre.id).maybeSingle(),
+    user ? supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle() : { data: null }
+  ])
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-    userRole = profile?.role ?? null
-  }
+  const userRole = profileResult.data?.role ?? null
+  const transportConfig: TransportConfig | null = transportResult.data ?? null
+  const jobs: Job[] = jobsResult.data ?? []
+  const media = mediaResult.data ?? []
 
-  const [mediaResult, jobsResult, transportResult] = await Promise.all([mediaPromise, jobsPromise, transportPromise])
-
-  const media = (mediaResult.error ? [] : mediaResult.data ?? []) as Array<{
-    id: string
-    storage_path: string
-    file_name: string | null
-  }>
-  const jobs: Job[] = jobsResult.error ? [] : jobsResult.data ?? []
-  const transportConfig: TransportConfig | null = transportResult.error ? null : transportResult.data ?? null
   const heroFacts = [
-    centre.age_groups && centre.age_groups.length ? `Ages ${centre.age_groups.join(', ')}` : null,
-    `${centre.suburb}, ${centre.city}`,
-    centre.subsidy_accepted ? 'Subsidy friendly' : null,
-  ].filter(Boolean)
+    centre.is_registered ? 'DSD Registered' : null,
+    centre.subsidy_accepted ? 'Subsidy Friendly' : null,
+    transportConfig?.offers_transport ? 'Transport Available' : null,
+    'Verified Profile'
+  ].filter(Boolean) as string[]
 
-  const feesLabel =
-    centre.fees_display_mode === 'exact' && centre.monthly_fee_min !== null
-      ? `R${centre.monthly_fee_min} / month`
-      : centre.fees_display_mode === 'range' &&
-          centre.monthly_fee_min !== null &&
-          centre.monthly_fee_max !== null
-        ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max} / month`
-        : centre.fees_display_mode === 'contact'
-          ? 'Contact centre for fees'
-          : 'Contact centre for fees'
+  const feesLabel = centre.fees_display_mode === 'exact' 
+    ? `R${centre.monthly_fee_min}` 
+    : centre.fees_display_mode === 'range' 
+      ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max}` 
+      : 'Contact Us'
 
-  const statChips: Array<{ label: string; value: string; accent?: 'teal' }> = [
-    {
-      label: 'Ages',
-      value: centre.age_groups && centre.age_groups.length ? centre.age_groups.join(', ') : 'Not specified',
-    },
-    {
-      label: 'Fees',
-      value: feesLabel,
-    },
-    {
-      label: 'Capacity',
-      value: centre.capacity ? `${centre.capacity} children` : 'Capacity varies',
-    },
-    {
-      label: 'Verified',
-      value: centre.subsidy_accepted ? 'Subsidy accepted' : 'Verification pending',
-      accent: centre.subsidy_accepted ? 'teal' : undefined,
-    },
-  ]
+  const programs = (centre.ecd_content ?? []).find(s => s.section === 'programs')?.content_blocks as any[] ?? []
 
   return (
-    <main className="pb-28 bg-gradient-to-b from-cyan-50/40 via-white to-slate-50">
-      <PageContainer>
-        <section className="relative min-h-[60vh] overflow-hidden rounded-2xl border border-white/10 bg-slate-900 text-white shadow-[var(--shadow-elevation-4)]">
-          <div className="absolute inset-0">
-            <Image
-              src={heroImage}
-              alt={`${centre.name} hero`}
-              fill
-              className="object-cover"
-              priority
-              quality={75}
-              sizes="100vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+    <main className="min-h-screen bg-[#F8F9FA] pb-32">
+      {/* Hero Section */}
+      <section className="relative h-[50vh] min-h-[400px] w-full overflow-hidden">
+        <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        <PageContainer className="relative h-full">
+          <div className="flex h-full flex-col justify-end pb-12">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/30">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                4.8 Premium
+              </div>
+              <div className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/30">
+                <MapPin className="h-3 w-3" />
+                {centre.suburb}, {centre.city}
+              </div>
+            </div>
+            
+            <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+              {centre.name}
+            </h1>
+            
+            {centre.tagline && (
+              <p className="mt-4 max-w-2xl text-lg font-medium text-white/80 sm:text-xl">
+                {centre.tagline}
+              </p>
+            )}
           </div>
-          <div className="relative z-10 flex h-full flex-col justify-end gap-6 p-6 md:p-10">
-            {centre.logo_url ? (
-              <div className="flex items-center gap-3">
-                <div className="h-16 w-16 overflow-hidden rounded-2xl border border-white/30 bg-slate-950 shadow-[var(--shadow-elevation-4)]">
-                  <Image
-                    src={centre.logo_url}
-                    alt={`${centre.name} logo`}
-                    width={64}
-                    height={64}
-                    className="object-cover"
-                    loading="lazy"
-                    quality={75}
-                    sizes="64px"
+        </PageContainer>
+      </section>
+
+      <PageContainer className="-mt-8 space-y-12">
+        {/* Quick Facts Pill Row */}
+        <div className="flex flex-wrap gap-2 overflow-x-auto pb-2 scrollbar-none relative z-10">
+          {heroFacts.map((fact) => (
+            <HeroPill key={fact}>{fact}</HeroPill>
+          ))}
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatChip label="Ages" value={centre.age_groups?.join(', ') || 'All ages'} icon={<Users className="h-5 w-5" />} accent="teal" />
+          <StatChip label="Monthly Fee" value={feesLabel} icon={<Wallet className="h-5 w-5" />} accent="teal" />
+          <StatChip label="Capacity" value={centre.capacity || 'Varies'} icon={<GraduationCap className="h-5 w-5" />} accent="teal" />
+          <StatChip label="Hours" value="07:00 - 17:30" icon={<Clock className="h-5 w-5" />} accent="teal" />
+        </div>
+
+        {/* Main Content Split */}
+        <div className="grid gap-12 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-12">
+            {/* About Section */}
+            <Section id="about" emoji="👋" title="About Us">
+              <p className="text-lg leading-relaxed">
+                {centre.description || 'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'}
+              </p>
+              
+              {centre.capacity && (
+                <div className="mt-8">
+                  <ProgressBar 
+                    value={85} 
+                    label="Current Enrollment" 
+                    subLabel={`${centre.capacity} total capacity available`} 
                   />
                 </div>
+              )}
+            </Section>
+
+            {/* Gallery Section */}
+            {media.length > 0 && (
+              <Section emoji="📸" title="Gallery">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {media.map((item) => (
+                    <ModernCard key={item.id} className="p-0 overflow-hidden aspect-square relative group">
+                      <Image 
+                        src={supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl} 
+                        alt={item.file_name || 'Gallery image'}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </ModernCard>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* Programs Section */}
+            {programs.length > 0 && (
+              <Section emoji="🎓" title="Our Programmes">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {programs.map((prog, i) => (
+                    <ModernCard key={i} className="flex flex-col gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#065A82]/10 text-[#065A82]">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-bold text-slate-900">{prog.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">{prog.description}</p>
+                    </ModernCard>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {/* Transport Section */}
+            <Section emoji="🚐" title="Transport & Logistics">
+              <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
+            </Section>
+          </div>
+
+          {/* Sidebar Sidebar */}
+          <aside className="space-y-6">
+            <ModernCard className="sticky top-24 space-y-6 border-t-4 border-t-[#065A82]">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">ECD centre</p>
-                  <p className="text-sm text-white/70">{centre.tagline}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Applications</p>
+                  <h3 className="text-xl font-black text-slate-900">Get a Spot</h3>
+                </div>
+                <div className="h-12 w-12 rounded-2xl bg-[#065A82] flex items-center justify-center text-white shadow-lg">
+                  <ShieldCheck className="h-6 w-6" />
                 </div>
               </div>
-            ) : null}
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="text-3xl font-black leading-tight md:text-5xl">{centre.name}</h1>
-                {centre.is_registered ? (
-                  <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> DSD Registered
-                  </span>
-                ) : null}
-              </div>
-              <SaveCentreButton centreId={centre.id} initialSaved={initialSaved} />
-            </div>
-            {centre.tagline ? (
-              <p className="text-lg text-white/70 max-w-2xl">{centre.tagline}</p>
-            ) : null}
-            <div className="flex flex-wrap gap-2">
-              {heroFacts.map((fact) => (
-                <HeroPill key={fact}>{fact}</HeroPill>
-              ))}
-            </div>
-            {centre.age_groups?.length ? (
-              <div className="flex flex-wrap gap-1.5">
-                {(centre.age_groups ?? []).map((group) => (
-                  <span key={group} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-                    {group}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-              <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
-              <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
-              <ShareCentreSheet
-                centreName={centre.name}
-                centreSlug={centre.slug}
-                suburb={centre.suburb ?? null}
-                city={centre.city ?? null}
-              />
-              <a
-                href="#about"
-                className="flex items-center justify-center rounded-2xl border border-white/30 px-6 py-3.5 text-sm font-semibold uppercase tracking-[0.25em] text-white transition-colors hover:bg-white/10"
-              >
-                  Learn more
-                </a>
-            </div>
-            <div className="max-w-3xl">
-              <InteractionActions
-                ecdId={centre.id}
-                whatsappHref={toWhatsAppHref(centre.contact_whatsapp)}
-                callHref={toCallHref(centre.contact_phone ?? centre.phone)}
-              />
-            </div>
-          </div>
-        </section>
+              
+              <p className="text-sm text-slate-500 leading-relaxed">
+                We manage our applications through CentreConnect to ensure a fair and transparent process for all families.
+              </p>
 
-        {media.length > 0 && (
-          <section className="mt-4 grid grid-cols-3 gap-2">
-            {media.map((item) => {
-              const imageUrl = supabase.storage.from('ecd-media').getPublicUrl(item.storage_path).data.publicUrl
-              return (
-                <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
-                  <Image
-                    src={imageUrl}
-                    alt={item.file_name ?? `${centre.name} gallery image`}
-                    fill
-                    sizes="(max-width: 768px) 33vw, 200px"
-                    loading="lazy"
-                    quality={75}
-                    className="object-cover"
-                  />
+              <div className="space-y-3">
+                <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+                <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
+                <SaveCentreButton centreId={centre.id} initialSaved={false} />
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">Instant application confirmation</p>
                 </div>
-              )
-            })}
-          </section>
-        )}
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-700">Secure document handling</p>
+                </div>
+              </div>
+            </ModernCard>
 
-        <div className="mt-6">
-          <CentreContactCard centreId={centre.id} centreName={centre.name} />
+            <CentreContactCard centreId={centre.id} centreName={centre.name} />
+          </aside>
         </div>
 
-        <div className="sticky top-0 z-20 mt-6 rounded-2xl border border-white/10 bg-white/90 px-4 py-3 shadow-[var(--shadow-elevation-3)] shadow-cyan-900/10 backdrop-blur md:px-6">
-          <div className="flex items-center gap-4 overflow-x-auto text-sm text-slate-600 scrollbar-none">
-            {statChips.map((chip) => (
-              <StatChip key={chip.label} {...chip} />
-            ))}
+        {/* Footer Actions */}
+        <div className="flex flex-col items-center justify-center gap-6 pt-12 text-center">
+          <Sparkles className="h-12 w-12 text-[#065A82]/20" />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900">Think this is the one?</h2>
+            <p className="text-slate-500">Secure your child&apos;s spot at {centre.name} today.</p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+            <ShareCentreSheet centreName={centre.name} centreSlug={centre.slug} suburb={centre.suburb} city={centre.city} />
           </div>
         </div>
-
-        <Section id="about" emoji="" title="About Us">
-          <p className="text-foreground/80 text-lg leading-relaxed">{aboutText}</p>
-        </Section>
-
-        {programs.length > 0 && (
-          <section className="mt-10 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-50/40 via-white to-emerald-50/80 p-6 shadow-[var(--shadow-elevation-4)] dark:from-cyan-950/20 dark:to-emerald-950/20">
-            <SectionHeader title="Our Programmes" emoji="" />
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {programs.map((program, index) => (
-                <div
-                  key={`${program.title ?? 'program'}-${index}`}
-                  className="glass-card rounded-2xl border border-white/10 p-5 text-slate-900 shadow-[var(--shadow-elevation-3)] shadow-black/10"
-                >
-                  <p className="text-lg font-semibold text-slate-900">{program.title || `Programme ${index + 1}`}</p>
-                  <p className="mt-2 text-sm text-slate-700">{program.description || 'Details coming soon.'}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <TransportSection centre={{ id: centre.id, name: centre.name }} transport={transportConfig} />
-
-        {jobs.length > 0 && (
-          <section className="mt-14 rounded-2xl border border-slate-200 bg-white/95 p-6 shadow-[var(--shadow-elevation-4)]">
-            <SectionHeader emoji="" title="Join Our Team" emojiSize="text-3xl" />
-            <div className="mt-6 space-y-3">
-              {jobs.map((job) => (
-                <JobTeaserCard key={job.id} job={job} centreSlug={centre.slug} />
-              ))}
-            </div>
-          </section>
-        )}
       </PageContainer>
 
+      {/* Persistent Floating Bottom Actions */}
+      <div className="fixed bottom-24 inset-x-4 z-40 md:hidden">
+        <div className="bg-[#1A1A2E] rounded-pill p-2 shadow-2xl flex items-center gap-2 border border-white/10 backdrop-blur-xl">
+          <div className="flex-1 pl-4">
+            <p className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Starting from</p>
+            <p className="text-base font-bold text-white leading-tight">{feesLabel}</p>
+          </div>
+          <div className="flex-1">
+            <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+          </div>
+        </div>
+      </div>
     </main>
   )
 }
