@@ -222,7 +222,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 pb-28 md:pb-12">
+      <main className="relative z-10 flex-1 pb-32 md:pb-12">
         <Container className="max-w-4xl px-4 pt-6 sm:px-6">
           {/* Mobile Title View */}
           <div className="md:hidden mb-6">

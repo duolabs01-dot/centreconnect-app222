@@ -15,7 +15,7 @@ const buttonVariants = cva(
         destructive:
           "hover-lift bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-3)] hover:bg-destructive/90",
         outline:
-          "hover-lift border-border/90 bg-card text-foreground shadow-[var(--shadow-elevation-1)] hover:bg-accent hover:text-accent-foreground hover:shadow-[var(--shadow-elevation-3)]",
+          "hover-lift border-border/90 bg-transparent text-foreground shadow-[var(--shadow-elevation-1)] hover:bg-accent/10 hover:text-accent-foreground hover:shadow-[var(--shadow-elevation-3)]",
         secondary:
           "hover-lift bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:bg-secondary/80",
         ghost: "hover-lift text-slate-700 hover:bg-accent/70 hover:text-accent-foreground",

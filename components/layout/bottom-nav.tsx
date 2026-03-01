@@ -1,63 +1,64 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 
 export type NavItem = {
   label: string
   href: string
   icon: LucideIcon
+  badge?: number
 }
 
 interface BottomNavProps {
   items: NavItem[]
 }
 
+function isTabActive(pathname: string, href: string) {
+  const exact = ['/parent/dashboard', '/ecd/dashboard', '/directory']
+  if (exact.includes(href)) return pathname === href
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
 export function BottomNav({ items }: BottomNavProps) {
-  const router = useRouter()
   const pathname = usePathname()
 
-  const handleNav = (href: string) => {
-    router.push(href)
-  }
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[100] border-t border-slate-100 bg-white/95 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] backdrop-blur-md md:hidden">
-      <div className="flex h-16 items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
+    <nav
+      className="fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 md:hidden"
+      aria-label="Main navigation"
+    >
+      <div className="flex items-center gap-1 rounded-full px-2 py-2 bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.14),0_2px_8px_rgba(0,0,0,0.08)]">
         {items.map((item) => {
-          const isActive = item.href === '/parent/dashboard' || item.href === '/ecd/dashboard'
-            ? pathname === item.href
-            : pathname.startsWith(item.href)
-
+          const active = isTabActive(pathname, item.href)
           return (
-            <button
+            <Link
               key={item.href}
-              onClick={() => handleNav(item.href)}
+              href={item.href}
+              aria-current={active ? 'page' : undefined}
               className={cn(
-                "relative flex h-full flex-1 flex-col items-center justify-center gap-0.5 transition-all duration-200",
-                isActive ? "bg-teal-50/80" : "text-slate-400 active:bg-slate-50"
+                'relative flex h-11 items-center justify-center gap-1.5 rounded-full px-4 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] select-none outline-none',
+                active
+                  ? 'bg-white text-teal-700 shadow-sm min-w-[96px]'
+                  : 'text-slate-700 hover:text-slate-900 min-w-[44px]',
               )}
             >
-              {/* Active Indicator Line - 4px solid teal bottom border */}
-              {isActive && (
-                <div className="absolute bottom-0 h-1 w-full bg-teal-600" />
+              {!active && (item.badge ?? 0) > 0 && (
+                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500" />
               )}
-
               <item.icon
-                className={cn(
-                  "h-[28px] w-[28px] transition-transform duration-200",
-                  isActive ? "text-teal-700 scale-105" : "text-slate-400"
-                )}
-                strokeWidth={isActive ? 2.5 : 2}
+                className={cn('shrink-0 transition-all duration-200', active ? 'h-[18px] w-[18px]' : 'h-5 w-5')}
+                strokeWidth={active ? 2.5 : 2}
+                aria-hidden
               />
-              <span className={cn(
-                "text-[10px] font-bold transition-colors",
-                isActive ? "text-teal-800" : "text-slate-500"
-              )}>
-                {item.label}
-              </span>
-            </button>
+              {active && (
+                <span className="whitespace-nowrap text-[13px] font-bold leading-none">
+                  {item.label}
+                </span>
+              )}
+            </Link>
           )
         })}
       </div>
