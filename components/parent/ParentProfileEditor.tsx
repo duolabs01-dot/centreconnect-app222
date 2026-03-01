@@ -354,7 +354,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
             <div className="grid grid-cols-1 gap-3">
               <Button 
-                className="inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap border border-transparent duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-50 [&svg]:pointer-events-none [&svg]:size-4 [&svg]:shrink-0 px-6 h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95" 
+                className="inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap border border-transparent duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-6 h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95" 
                 onClick={saveField}
                 disabled={isSaving}
               >
