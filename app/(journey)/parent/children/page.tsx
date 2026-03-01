@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ecd/Button'
 import { calculateAge } from '@/lib/utils'
@@ -92,7 +93,7 @@ export default async function ParentChildrenPage() {
                   <SurfaceCard key={child.id} className="p-6 flex flex-col items-center text-center group hover:border-cyan-200 transition-all">
                     <div className="mb-6 h-28 w-28 overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-50 to-slate-100 p-1 ring-4 ring-white shadow-float relative">
                       {child.photo_url ? (
-                        <img src={child.photo_url} alt={fullName} className="h-full w-full object-cover rounded-[2.2rem]" />
+                        <Image src={child.photo_url} alt={fullName} fill className="h-full w-full object-cover rounded-[2.2rem]" />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-3xl font-black text-slate-300">
                           {child.first_name[0]}{child.last_name[0]}

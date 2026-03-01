@@ -9,6 +9,8 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { StatCard } from '@/components/ui/StatCard'
 import { Users, TrendingUp, UserCheck, ShieldAlert, Truck, Info, Zap, ChevronRight } from 'lucide-react'
 
+export const revalidate = 30
+
 export async function generateMetadata(): Promise<Metadata> {
   const { supabase, ecdId } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()

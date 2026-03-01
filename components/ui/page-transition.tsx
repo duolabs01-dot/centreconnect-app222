@@ -23,12 +23,12 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, scale: 0.98, y: 12 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 1.02, y: -8 }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -4 }}
         transition={{ 
-          duration: 0.2, 
-          ease: [0.33, 1, 0.68, 1] // iOS-style Quint ease
+          duration: 0.15,
+          ease: [0.25, 1, 0.5, 1] 
         }}
         className="will-change-[transform,opacity]"
       >

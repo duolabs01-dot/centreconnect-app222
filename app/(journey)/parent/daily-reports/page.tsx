@@ -1,5 +1,6 @@
 // app/parent/daily-reports/page.tsx
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
@@ -124,9 +125,10 @@ export default async function ParentDailyReportsPage() {
                     {/* Photo if any */}
                     {report.photo_url && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-                        <img 
+                        <Image 
                           src={report.photo_url} 
                           alt="Today at the centre"
+                          fill
                           className="h-full w-full object-cover"
                         />
                       </div>

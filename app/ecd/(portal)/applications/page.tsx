@@ -14,6 +14,8 @@ import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-read
 import { cn } from '@/lib/utils'
 import { Search, Filter, ChevronLeft, ChevronRight, FileText, ShieldAlert, Info } from 'lucide-react'
 
+export const revalidate = 30
+
 export const metadata: Metadata = {
   title: 'Admissions Inbox - CentreConnect',
   description: 'Prioritized admissions inbox for pending reviews and approved offers awaiting parent confirmation.',

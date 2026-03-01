@@ -4,6 +4,8 @@ import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { AttendanceClient } from './attendance-client'
 
+export const revalidate = 30
+
 export const metadata: Metadata = {
   title: 'Attendance - CentreConnect',
   description: 'Mark daily check-ins and pickups for enrolled children.',

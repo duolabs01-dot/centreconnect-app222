@@ -93,7 +93,7 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header - Unified with Parent view */}
-      <div className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 px-4 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-[90] px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MobileNavMenu 
             items={ECD_DASHBOARD_NAV} 

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import { PublicJobApplyForm } from '@/components/public/public-job-apply-form'
@@ -68,8 +69,7 @@ export default async function PublicJobPage({ params }: PublicJobPageProps) {
       <div className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3">
           {centreLogoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={centreLogoUrl} alt={centreName} className="h-8 w-8 rounded-lg object-cover" />
+            <Image src={centreLogoUrl} alt={centreName} width={32} height={32} className="h-8 w-8 rounded-lg object-cover" />
           ) : null}
           <span className="text-sm font-medium text-slate-900">{centreName}</span>
         </div>

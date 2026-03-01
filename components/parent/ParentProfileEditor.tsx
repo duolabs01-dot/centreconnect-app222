@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { 
   ChevronRight, 
   Shield, 
@@ -195,9 +196,9 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-cyan-500/10 transition-colors" />
         
         <div className="flex items-center gap-5 relative z-10">
-          <div className="h-20 w-20 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-2xl font-black text-white shadow-float ring-4 ring-white">
+          <div className="h-20 w-20 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-2xl font-black text-white shadow-float ring-4 ring-white relative">
             {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+              <Image src={profile.avatar_url} alt="Profile" fill className="h-full w-full object-cover" />
             ) : initialsFromName(profile.full_name)}
           </div>
           <div className="min-w-0 flex-1">
