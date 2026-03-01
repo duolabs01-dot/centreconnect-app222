@@ -207,12 +207,6 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
             </div>
             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Family Account</p>
           </div>
-          <button 
-            onClick={() => openEdit('full_name', profile.full_name)}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-secondary text-slate-400 hover:text-cyan-600 transition-colors"
-          >
-            <Edit3 className="h-5 w-5" />
-          </button>
         </div>
       </SurfaceCard>
 
@@ -316,7 +310,10 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
       {/* Global Edit Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="bottom" className="rounded-t-[3rem] p-8 outline-none border-t-4 border-t-cyan-500 h-[auto] max-h-[90vh] overflow-y-auto">
+        <SheetContent 
+          side="bottom" 
+          className="inset-x-0 bottom-0 rounded-t-[3rem] p-8 outline-none border-t-4 border-t-cyan-500 h-[auto] max-h-[90vh] overflow-y-auto sm:bottom-8 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-md sm:rounded-[3rem] sm:border-none sm:shadow-[0_20px_50px_rgba(0,0,0,0.3)] sm:animate-in sm:slide-in-from-bottom-10"
+        >
           <SheetHeader className="mb-8 text-center">
             <div className="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mb-6" />
             <SheetTitle className="text-2xl font-black tracking-tighter text-slate-900">
@@ -337,7 +334,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
               </Label>
               {activeField === 'guardian_relationship' ? (
                 <select 
-                  className="cc-native-field h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 font-bold text-lg focus:ring-cyan-500/20 w-full" 
+                  className="flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full appearance-none" 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                 >
@@ -346,7 +343,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 </select>
               ) : (
                 <Input 
-                  className="h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full" 
+                  className="flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-slate-500/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm dark:border-slate-600/80 dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800/95 dark:text-slate-100 dark:placeholder:text-slate-400/90 dark:shadow-[var(--shadow-elevation-1)] h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full" 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                   placeholder={`Enter ${activeField?.replace(/_/g, ' ')}`}
@@ -357,11 +354,11 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
             <div className="grid grid-cols-1 gap-3">
               <Button 
-                className="h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95" 
+                className="inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap border border-transparent duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 active:translate-y-[1px] disabled:pointer-events-none disabled:opacity-50 [&svg]:pointer-events-none [&svg]:size-4 [&svg]:shrink-0 px-6 h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95" 
                 onClick={saveField}
                 disabled={isSaving}
               >
-                {isSigningOut ? 'Safeguarding...' : 'Verify & Save'}
+                {isSaving ? 'Safeguarding...' : 'Verify & Save'}
               </Button>
               <button 
                 className="h-12 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
