@@ -7,10 +7,11 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User, LogOut } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { BottomNav, type NavItem } from './bottom-nav'
+import { createClient } from '@/lib/supabase/client'
 
 type ParentAppShellProps = {
   userName?: string
@@ -79,9 +80,11 @@ function isMeTab(pathname: string) {
 export function ParentAppShell({ userName = 'Parent', isVerified = false, profileNudge = null, children }: ParentAppShellProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const supabase = createClient()
   useAppNavLock()
   const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const pullStartY = useRef<number | null>(null)
 
   function onTouchStart(e: TouchEvent<HTMLDivElement>) {
@@ -117,6 +120,13 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
     router.push(getBackFallback(pathname))
   }
 
+  async function handleSignOut() {
+    setIsSigningOut(true)
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
+
   const showMobileBack = shouldShowMobileBack(pathname)
   const onMeTab = isMeTab(pathname)
   const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !pathname.startsWith('/parent/profile'))
@@ -140,7 +150,7 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
       <main className="flex-1 pb-20 md:pb-0">
         <Container className="max-w-3xl px-4 pt-4">
           <div className="mb-3 px-1 pt-1 sm:mb-4">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2.5">
                   {showMobileBack ? (
@@ -156,7 +166,32 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
                     </div>
                   ) : null}
                   <BrandMark href="/parent/dashboard" compact hideLabelOnMobile className="shrink-0" />
-                  <p className="truncate text-sm font-semibold text-slate-900 sm:text-base">{getTitle(pathname)}</p>
+                  
+                  {/* Desktop Nav */}
+                  <nav className="hidden md:flex items-center gap-1 ml-4 mr-6">
+                    {navItems.map((item) => {
+                      const isActive = item.href === '/parent/dashboard'
+                        ? pathname === item.href
+                        : pathname.startsWith(item.href)
+                      
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-xs font-bold transition-all",
+                            isActive 
+                              ? "bg-cyan-100 text-cyan-700" 
+                              : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                          )}
+                        >
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </nav>
+
+                  <p className="truncate text-sm font-semibold text-slate-900 sm:text-base md:hidden">{getTitle(pathname)}</p>
                 </div>
                 {onMeTab ? (
                   <div className={cn('mt-1 flex items-center gap-2', showMobileBack ? 'ml-10 md:ml-0' : 'ml-[3.5rem] md:ml-0')}>
@@ -183,6 +218,19 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
                     ) : null}
                   </div>
                 ) : null}
+              </div>
+
+              <div className="hidden md:flex items-center gap-3">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  className="rounded-full text-slate-500 hover:text-rose-600 hover:bg-rose-50 font-bold"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
               </div>
             </div>
           </div>
