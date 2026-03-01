@@ -49,7 +49,7 @@ export default async function JourneyLayout({ children }: { children: React.Reac
   const pathname = headerList.get('x-invoke-path') || ''
   const isCurrentlyOnboarding = pathname.includes('/parent/onboarding')
   
-  if (isCurrentlyOnboarding === false && (childrenCount.count === 0 || !parentDetails.data?.guardian_relationship)) {
+  if (isCurrentlyOnboarding === false && ((childrenCount.count ?? 0) === 0 || !parentDetails.data?.guardian_relationship)) {
     redirect('/parent/onboarding')
   }
   

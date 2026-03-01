@@ -382,9 +382,9 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       return searchBlob.includes(searchValue)
     })
 
-    const grouped = {
+    const grouped: Record<TabKey, ApplicationRow[]> = {
       pending: filteredApplications.filter((app) => app.status === 'submitted' || app.status === 'in_review'),
-      awaitingOfferResponse: filteredApplications.filter((app) => app.status === 'approved' && !app.offer_accepted_at),
+      awaiting_offer_response: filteredApplications.filter((app) => app.status === 'approved' && !app.offer_accepted_at),
       approved: filteredApplications.filter((app) => app.status === 'approved'),
       enrolled: filteredApplications.filter((app) => app.status === 'enrolled'),
       waitlisted: filteredApplications.filter((app) => app.status === 'waitlisted'),
@@ -399,7 +399,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
     filteredCounts = {
       pending: grouped.pending.length,
-      awaitingOfferResponse: grouped.awaitingOfferResponse.length,
+      awaiting_offer_response: grouped.awaiting_offer_response.length,
       approved: grouped.approved.length,
       enrolled: grouped.enrolled.length,
       waitlisted: grouped.waitlisted.length,
@@ -410,7 +410,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       selectedTab === 'pending'
         ? grouped.pending
         : selectedTab === 'awaiting_offer_response'
-          ? grouped.awaitingOfferResponse
+          ? grouped.awaiting_offer_response
           : selectedTab === 'approved'
             ? grouped.approved
             : selectedTab === 'enrolled'
