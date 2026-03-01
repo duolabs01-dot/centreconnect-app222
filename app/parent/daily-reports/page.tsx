@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { getJohannesburgNowParts } from '@/lib/utils'
+import { cn, getJohannesburgNowParts } from '@/lib/utils'
 import { 
   Smile, 
   Laugh, 
