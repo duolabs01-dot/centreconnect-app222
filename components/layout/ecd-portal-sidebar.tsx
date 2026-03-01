@@ -7,9 +7,7 @@ import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
-import { Home, ClipboardList, UserCheck, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
-import { BottomNav, type NavItem } from './bottom-nav'
 import { MobileNavMenu } from './mobile-nav-menu'
 
 type EcdPortalSidebarProps = {
@@ -18,14 +16,6 @@ type EcdPortalSidebarProps = {
   userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
   attentionBadges?: Partial<Record<string, number>>
 }
-
-// Map ECD portal items for the shared BottomNav
-const ecdMobileNavItems: NavItem[] = [
-  { href: '/ecd/dashboard', label: 'Home', icon: Home },
-  { href: '/ecd/applications', label: 'Admissions', icon: ClipboardList },
-  { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck },
-  { href: '/ecd/profile', label: 'Profile', icon: User },
-]
 
 export function EcdPortalSidebar({
   userEmail,
@@ -136,8 +126,6 @@ export function EcdPortalSidebar({
           <SignOutButton redirectTo="/" className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold rounded-xl shadow-sm" />
         </div>
       </aside>
-
-      <BottomNav items={ecdMobileNavItems} />
     </>
   )
 }

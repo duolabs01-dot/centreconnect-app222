@@ -10,20 +10,13 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
-import { BottomNav, type NavItem } from './bottom-nav'
 import { createClient } from '@/lib/supabase/client'
 import { useParentLayout } from './parent-layout-provider'
+import { PARENT_NAV_ITEMS } from '@/lib/navigation-config'
 
 type ParentAppShellProps = {
   children: React.ReactNode
 }
-
-const navItems: NavItem[] = [
-  { href: '/parent/dashboard', label: 'Home', icon: Home },
-  { href: '/directory', label: 'Search', icon: Search },
-  { href: '/parent/applications', label: 'Applications', icon: ClipboardList },
-  { href: '/parent/profile', label: 'Profile', icon: User },
-]
 
 function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/applications')) return 'My Applications'
@@ -274,8 +267,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           <div className="parent-page-content animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
         </Container>
       </main>
-
-      <BottomNav items={navItems} />
     </div>
   )
 }

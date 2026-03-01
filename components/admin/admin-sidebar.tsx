@@ -19,28 +19,9 @@ import {
   LifeBuoy
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
-import { BottomNav, type NavItem } from '@/components/layout/bottom-nav'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
-  { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash' },
-  { label: 'ECD Network', href: '/admin/tenants', icon: Building2, id: 'ecd' },
-  { label: 'Directory', href: '/admin/users', icon: Users, id: 'users' },
-  { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
-  { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
-  { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
-  { label: 'Support Relay', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
-]
-
-// Map admin items for shared BottomNav
-const adminMobileNavItems: NavItem[] = [
-  { label: 'Home', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Centres', href: '/admin/tenants', icon: Building2 },
-  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard },
-  { label: 'Support', href: '/admin/support', icon: LifeBuoy },
-]
-
-export function AdminSidebar() {
   const pathname = usePathname()
 
   return (
@@ -133,9 +114,6 @@ export function AdminSidebar() {
           </div>
         </div>
       </aside>
-
-      {/* Shared Bottom Nav */}
-      <BottomNav items={adminMobileNavItems} />
     </>
   )
 }

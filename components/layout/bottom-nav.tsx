@@ -76,7 +76,7 @@ export function BottomNav({ items }: BottomNavProps) {
       >
         {/* Liquid Glass Container */}
         <div
-          className="flex items-center gap-1 rounded-[2rem] px-2 py-2 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.15)] overflow-hidden"
+          className="flex items-center gap-1 rounded-[2rem] px-2 py-2 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.15)]"
           style={{
             background: 'rgba(255,255,255,0.25)',
             backdropFilter: 'blur(40px) saturate(220%)',
