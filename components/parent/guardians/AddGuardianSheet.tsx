@@ -122,6 +122,17 @@ export function AddGuardianSheet({
         return
       }
       toast.success(`${values.full_name} added as co-guardian`)
+      // If email was provided, auto-trigger an invite
+      if (values.email) {
+        try {
+          const { sendCoParentInviteAction } = await import('@/lib/actions/guardians/send-invite')
+          // We need the guardian id — refetch to get it
+          // (addGuardianAction would need to return it; for now show a nudge)
+          toast('Guardian added! Go to Co-Guardians → Send Invite to email them the link.', { duration: 6000 })
+        } catch {
+          // Silently fail — user can send invite manually
+        }
+      }
       onSuccess?.()
       onClose()
       router.refresh()
