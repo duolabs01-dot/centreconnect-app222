@@ -10,7 +10,7 @@ type PublicShellProps = {
 
 export function PublicShell({ children }: PublicShellProps) {
   return (
-    <div className="min-h-screen bg-white pb-28 md:pb-0">
+    <div className="min-h-screen bg-white">
       {/* Premium Sticky Glass Nav */}
       <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">

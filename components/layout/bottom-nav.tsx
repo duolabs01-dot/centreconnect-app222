@@ -19,8 +19,7 @@ interface BottomNavProps {
 }
 
 function isTabActive(pathname: string, href: string) {
-  const exact = ['/parent/dashboard', '/ecd/dashboard', '/directory']
-  if (exact.includes(href)) return pathname === href
+  if (href === '/') return pathname === '/'
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
@@ -41,11 +40,14 @@ export function BottomNav({ items }: BottomNavProps) {
     [reducedMotion]
   )
 
+  // Don't show bottom nav on the landing page if called from a shell that wraps it
+  if (pathname === '/') return null
+
   return (
     // Entry animation — nav slides up from below on first mount
     <motion.nav
       aria-label="Main navigation"
-      className="fixed bottom-6 left-1/2 z-[200] -translate-x-1/2 md:hidden"
+      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 md:hidden"
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={getSpring(NAV_ENTRY)}
@@ -80,9 +82,9 @@ export function BottomNav({ items }: BottomNavProps) {
                 layoutId={undefined}
                 animate={{
                   backgroundColor: active ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)',
-                  minWidth: active ? 96 : 44,
-                  paddingLeft: active ? 16 : 12,
-                  paddingRight: active ? 16 : 12,
+                  minWidth: active ? 100 : 48,
+                  paddingLeft: active ? 18 : 14,
+                  paddingRight: active ? 18 : 14,
                 }}
                 transition={getSpring(PILL_SPRING)}
                 whileTap={{ scale: 0.88 }}

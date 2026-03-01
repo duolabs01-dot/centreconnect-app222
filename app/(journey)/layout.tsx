@@ -24,7 +24,11 @@ export default async function JourneyLayout({ children }: { children: React.Reac
     .maybeSingle()
 
   if (profile?.role !== 'parent_user') {
-    return <>{children}</>
+    return (
+      <PublicShell>
+        {children}
+      </PublicShell>
+    )
   }
 
   // Only proceed with full parent layout data if they are indeed a parent
