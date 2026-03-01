@@ -47,21 +47,21 @@ export function BottomNav({ items }: BottomNavProps) {
     // Entry animation — nav slides up from below on first mount
     <motion.nav
       aria-label="Main navigation"
-      className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 md:hidden"
+      className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 md:hidden"
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={getSpring(NAV_ENTRY)}
     >
       {/* Frosted glass pill container */}
       <div
-        className="flex items-center gap-1.5 rounded-full px-2 py-2 shadow-2xl"
+        className="flex items-center gap-1.5 rounded-full px-2.5 py-2.5 shadow-2xl"
         style={{
           background: 'rgba(255,255,255,0.22)',
           backdropFilter: 'blur(32px) saturate(200%)',
           WebkitBackdropFilter: 'blur(32px) saturate(200%)',
           border: '1px solid rgba(255,255,255,0.35)',
           boxShadow:
-            '0 12px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4)',
+            '0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)',
         }}
       >
         {items.map((item) => {
