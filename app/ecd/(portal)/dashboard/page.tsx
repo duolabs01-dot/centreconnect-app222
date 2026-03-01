@@ -218,6 +218,40 @@ export default async function EcdDashboardPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
+        {pendingApplications > 0 && (
+          <section className="animate-in fade-in slide-in-from-top-4 duration-500">
+            <Link href="/ecd/applications?tab=pending" className="block group">
+              <Card className="bg-slate-900 border-none shadow-2xl relative overflow-hidden ring-1 ring-white/10 group-hover:ring-teal-500/50 transition-all">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-[80px] -mr-32 -mt-32" />
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/10 blur-[60px] -ml-16 -mb-16" />
+                
+                <CardContent className="p-6 relative z-10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+                    <div className="flex items-center gap-5">
+                      <div className="h-14 w-14 rounded-2xl bg-teal-500/20 flex items-center justify-center border border-teal-500/30 shrink-0">
+                        <Zap className="w-7 h-7 text-teal-400 fill-teal-400/20" />
+                      </div>
+                      <div>
+                        <p className="text-teal-400 text-xs font-black uppercase tracking-[0.2em] mb-1">Priority Mission</p>
+                        <h2 className="text-xl font-black text-white tracking-tight">
+                          You have {pendingApplications} pending application{pendingApplications === 1 ? '' : 's'} waiting.
+                        </h2>
+                        <p className="text-slate-400 text-sm font-medium mt-1 group-hover:text-slate-300 transition-colors">
+                          Review and respond to new parents to grow your centre.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-white font-black text-sm uppercase tracking-widest bg-white/5 px-6 py-3 rounded-xl border border-white/10 group-hover:bg-teal-500 group-hover:text-slate-950 transition-all">
+                      Review Now
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </section>
+        )}
+
         <section className="mb-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
           <p className="text-xs font-bold uppercase tracking-wider text-teal-600">
             {getJohannesburgGreeting()}

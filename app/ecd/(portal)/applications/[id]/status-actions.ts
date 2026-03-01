@@ -179,7 +179,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         ecd_id: session.ecdId,
         application_id: applicationId,
         template_key: null,
-        title: status === 'approved' ? 'Great news from your centre' : 'A quick update on your application',
+        title: status === 'approved' ? 'Application approved 🎉' : 'A quick update on your application',
         message,
       })
 
