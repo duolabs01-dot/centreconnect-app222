@@ -31,7 +31,6 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/preferences')) return 'Preferences'
   if (pathname.startsWith('/parent/profile/security')) return 'Security'
   if (pathname.startsWith('/parent/profile/documents')) return 'Vault'
-  if (pathname.startsWith('/parent/profile/edit')) return 'Profile Studio'
   if (pathname.startsWith('/parent/profile')) return 'Profile'
   if (pathname.startsWith('/parent/children')) return 'Children'
   if (pathname.startsWith('/parent/notifications')) return 'Inbox'
