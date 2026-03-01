@@ -115,18 +115,12 @@ export async function updateSession(request: NextRequest) {
   if (!cachedRole) {
     const roleLookup = await withTimeout(
       getUserRole(supabase, user.id).then((value) => ({ value })),
-      1400
+      4000
     )
     if (!roleLookup) {
       clearRoleCache(response, request)
-      if (protectedArea) {
-        const loginUrl = new URL(getLoginPath(protectedArea), request.url)
-        const nextPath = `${pathname}${request.nextUrl.search}`
-        loginUrl.searchParams.set('next', nextPath)
-        loginUrl.searchParams.set('reason', 'role_check_timeout')
-        return finish(NextResponse.redirect(loginUrl), 'role-timeout-protected-redirect')
-      }
-      return finish(response, 'role-timeout-public-pass')
+      // Timeout on role check — don't kick authenticated users, let page handle it
+      return finish(response, 'role-timeout-pass')
     }
     role = roleLookup.value
     if (role) {
