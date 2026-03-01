@@ -45,26 +45,27 @@ export function BottomNav({ items }: BottomNavProps) {
 
   return (
     // Entry animation — nav slides up from below on first mount
-    <motion.nav
-      aria-label="Main navigation"
-      className="fixed bottom-10 left-1/2 z-[100] -translate-x-1/2 md:hidden w-max"
-      initial={{ y: 120, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={getSpring(NAV_ENTRY)}
-    >
-      {/* Frosted glass pill container */}
-      <div
-        className="flex items-center gap-1.5 rounded-full px-3 py-2.5 shadow-2xl"
-        style={{
-          background: 'rgba(255,255,255,0.25)',
-          backdropFilter: 'blur(32px) saturate(210%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(210%)',
-          border: '1.5px solid rgba(255,255,255,0.4)',
-          boxShadow:
-            '0 20px 50px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
-          touchAction: 'manipulation',
-        }}
+    <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
+      <motion.nav
+        aria-label="Main navigation"
+        className="pointer-events-auto mb-[calc(1.5rem+env(safe-area-inset-bottom))] mx-6"
+        initial={{ y: 120, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={getSpring(NAV_ENTRY)}
       >
+        {/* Premium floating glass container */}
+        <div
+          className="flex items-center gap-1.5 rounded-full px-2.5 py-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.3),0_0_0_1px_rgba(255,255,255,0.1)]"
+          style={{
+            background: 'rgba(255,255,255,0.28)',
+            backdropFilter: 'blur(36px) saturate(210%)',
+            WebkitBackdropFilter: 'blur(36px) saturate(210%)',
+            border: '1px solid rgba(255,255,255,0.45)',
+            boxShadow:
+              '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.5)',
+            touchAction: 'manipulation',
+          }}
+        >
         {items.map((item) => {
           const active = isTabActive(pathname, item.href)
           const hasBadge = !active && (item.badge ?? 0) > 0
