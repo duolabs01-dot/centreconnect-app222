@@ -39,6 +39,7 @@ type DailyReport = {
   activities?: string[]
   teacher_notes?: string
   published_at?: string
+  published_by?: string
 }
 
 type DailyReportsClientProps = {
