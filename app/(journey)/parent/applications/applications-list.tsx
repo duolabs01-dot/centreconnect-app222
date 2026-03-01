@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ChevronRight, Compass, Map } from 'lucide-react'
 import ApplicationTimeline, { type AppStatus, type TimelineEvent } from '@/components/parent/ApplicationTimeline'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -88,10 +89,11 @@ function ApplicationCard({
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white">
             {application.centreLogoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={application.centreLogoUrl}
                 alt={`${application.centreName} logo`}
+                width={44}
+                height={44}
                 className="h-full w-full object-cover"
               />
             ) : (

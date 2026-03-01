@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ecd/Card'
-import { Button } from '@/components/ecd/Button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'

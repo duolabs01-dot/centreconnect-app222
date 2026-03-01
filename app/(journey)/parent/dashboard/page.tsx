@@ -44,6 +44,16 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+interface RawApplicationRow {
+  id: string
+  status: string
+  updated_at: string | null
+  submitted_at: string
+  child_id: string
+  ecd_centres: { name: string | null; slug: string | null } | { name: string | null; slug: string | null }[] | null
+  children: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null
+}
+
 export default async function ParentDashboardPage() {
   const perf = startRoutePerf('/parent/dashboard')
   const supabase = await createClient()
@@ -76,7 +86,7 @@ export default async function ParentDashboardPage() {
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
     const greeting = getJohannesburgGreeting()
 
-    const applications = ((applicationsResult.data ?? []) as any[]).map((application) => {
+    const applications = ((applicationsResult.data ?? []) as unknown as RawApplicationRow[]).map((application) => {
       const centre = normalizeOne<{ name?: string | null; slug?: string | null }>(application.ecd_centres)
       const child = normalizeOne<{ first_name?: string | null; last_name?: string | null }>(application.children)
       const childName = `${child?.first_name ?? ''} ${child?.last_name ?? ''}`.trim() || 'Child profile'

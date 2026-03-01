@@ -1,10 +1,10 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { PageContainer } from '@/components/layout/PageContainer'
+import { Container } from '@/components/layout/container'
 
 export function DirectorySkeleton() {
   return (
     <main className="py-8 sm:py-10">
-      <PageContainer>
+      <Container>
         <div className="space-y-6">
           <div className="space-y-2">
             <Skeleton className="h-9 w-52" />
@@ -38,7 +38,7 @@ export function DirectorySkeleton() {
             ))}
           </div>
         </div>
-      </PageContainer>
+      </Container>
     </main>
   )
 }

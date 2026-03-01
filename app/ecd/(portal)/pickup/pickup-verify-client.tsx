@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 type PickupVerifyClientProps = {

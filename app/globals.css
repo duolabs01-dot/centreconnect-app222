@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    --font-display: var(--font-display-var);
+    --font-body: var(--font-inter);
+    
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
@@ -110,7 +113,7 @@
 .ecd-page-shell {
   background-color: #F8FAFC;
   color: #1E293B;
-  font-family: var(--font-ecd);
+  font-family: var(--font-body);
 }
 
 .glass-card {

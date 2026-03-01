@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 import { renderTemplate } from '@/lib/communications/templates'
 
 type Template = {

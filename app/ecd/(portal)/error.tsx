@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 
 type ErrorPageProps = {
   error: Error & { digest?: string }

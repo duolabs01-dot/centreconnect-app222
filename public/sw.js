@@ -1,13 +1,12 @@
-const CACHE_NAME = 'cc-v4-premium';
-const OFFLINE_URL = '/offline'; // Create a simple offline page or fallback
+const CACHE_NAME = 'cc-v5-ultra';
+const OFFLINE_URL = '/offline';
 
 const ASSETS = [
   '/',
   '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
   '/centreconnect-logo.svg',
-  '/globals.css',
   '/offline'
 ];
 
@@ -27,27 +26,39 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first for dynamic content, cache-first for assets
+// Advanced PWA Strategy: Stale-While-Revalidate for everything except API
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  if (request.method !== 'GET') return;
+  // Skip non-GET and API calls
+  if (request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
 
-  // For navigation requests, try network first, then cache, then offline page
-  if (request.mode === 'navigate') {
+  // For portal routes, use Stale-While-Revalidate for "Instant" feel
+  const isPortal = url.pathname.startsWith('/parent') || url.pathname.startsWith('/ecd') || url.pathname.startsWith('/directory');
+
+  if (isPortal || request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => {
-        return caches.match(request).then((response) => {
-          return response || caches.match('/offline');
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.match(request).then((cachedResponse) => {
+          const fetchedResponse = fetch(request).then((networkResponse) => {
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+          }).catch(() => {
+            // If network fails and no cache, fallback to offline
+            return cachedResponse || caches.match(OFFLINE_URL);
+          });
+
+          return cachedResponse || fetchedResponse;
         });
       })
     );
     return;
   }
 
-  // Cache-first for images/fonts, network-first for others
-  const isAsset = ['image', 'font', 'style', 'script'].includes(request.destination);
+  // Cache-first for static assets (images, fonts, styles)
+  const isAsset = ['image', 'font', 'style', 'script'].includes(request.destination) || 
+                  url.pathname.includes('/_next/static/');
 
   if (isAsset) {
     event.respondWith(
@@ -59,33 +70,23 @@ self.addEventListener('fetch', (event) => {
         });
       })
     );
-  } else {
-    event.respondWith(
-      fetch(request).catch(() => caches.match(request))
-    );
   }
 });
 
-// Background Sync for failed applications (example)
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-applications') {
-    event.waitUntil(sendPendingApplications());
+// Listen for messages to clear cache (e.g., on sign out)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    caches.delete(CACHE_NAME);
   }
 });
 
-async function sendPendingApplications() {
-  // Logic to read from IndexedDB and send to API
-  console.log('Background Sync: Sending pending applications...');
-}
-
-// Push notifications support
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {};
   const title = data.title ?? 'CentreConnect';
   const options = {
     body: data.body ?? 'Update from your ECD centre',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
     data: { url: data.url ?? '/' }
   };
   event.waitUntil(self.registration.showNotification(title, options));

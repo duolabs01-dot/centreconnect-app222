@@ -32,7 +32,7 @@ import { StatChip } from '@/components/ui/stat-chip'
 import { Section } from '@/components/ui/section'
 import { ModernCard } from '@/components/ui/modern-card'
 import { ProgressBar } from '@/components/ui/progress-bar'
-import { PageContainer } from '@/components/layout/PageContainer'
+import { Container } from '@/components/layout/container'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { ContactCentreSheet } from './contact-centre-sheet'
@@ -151,7 +151,7 @@ export default function CentrePage() {
         <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
         
-        <PageContainer className="relative h-full">
+        <Container className="relative h-full">
           <div className="flex h-full flex-col justify-end pb-16">
             <div className="flex flex-wrap items-center gap-3 mb-6">
               <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
@@ -174,10 +174,10 @@ export default function CentrePage() {
               </p>
             )}
           </div>
-        </PageContainer>
+        </Container>
       </section>
 
-      <PageContainer className="-mt-12 space-y-16 relative z-10">
+      <Container className="-mt-12 space-y-16 relative z-10">
         {/* Facts Row */}
         <div className="flex flex-wrap gap-3 overflow-x-auto pb-4 scrollbar-none">
           {heroFacts.map((fact) => (
@@ -318,7 +318,7 @@ export default function CentrePage() {
             <CentreContactCard centreId={centre.id} centreName={centre.name} />
           </aside>
         </div>
-      </PageContainer>
+      </Container>
 
       {/* Floating Bottom Bar for Mobile */}
       <div className="fixed bottom-8 inset-x-6 z-50 lg:hidden">

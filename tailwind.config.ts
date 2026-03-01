@@ -105,10 +105,10 @@ const config = {
 	                        pill: '9999px',
  		},
 	                boxShadow: {
-	                        card: '0 2px 12px rgba(0, 0, 0, 0.06)',
-	                        'card-hover': '0 4px 20px rgba(0, 0, 0, 0.1)',
-	                        nav: '0 -4px 24px rgba(0, 0, 0, 0.12)',
-	                        float: '0 8px 32px rgba(0, 0, 0, 0.12)',
+	                        'card': '0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.05)',
+	                        'card-hover': '0 4px 12px 0 rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.06)',
+	                        'float': '0 8px 24px -4px rgb(0 0 0 / 0.12), 0 4px 8px -4px rgb(0 0 0 / 0.08)',
+	                        'nav': '0 -4px 24px rgba(0, 0, 0, 0.12)',
 	                },
   		keyframes: {
   			'accordion-down': {
@@ -134,7 +134,23 @@ const config = {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    function({ addUtilities }: any) {
+      addUtilities({
+        '.hover-lift': {
+          'transition': 'transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 150ms ease',
+          '&:hover': {
+            'transform': 'translateY(-1px)',
+            'will-change': 'transform',
+          },
+          '&:active': {
+            'transform': 'translateY(0px)',
+          },
+        },
+      })
+    },
+  ],
 } satisfies Config
 
 export default config

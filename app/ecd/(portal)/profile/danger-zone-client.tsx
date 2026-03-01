@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
-import { Button } from '@/components/ecd/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 type DangerZoneClientProps = {
   action: (formData: FormData) => void | Promise<void>

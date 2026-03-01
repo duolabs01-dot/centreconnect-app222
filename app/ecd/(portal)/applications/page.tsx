@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
-import { Button } from '@/components/ecd/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { QuickSendTemplate } from './quick-send-template'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
@@ -364,11 +364,11 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       .order('submitted_at', { ascending: false })
       .limit(500)
 
-    const applications = ((searchRows ?? []) as ApplicationRow[]) || []
+    const applications = (searchRows ?? []) || []
     const filteredApplications = applications.filter((application) => {
-      const child = normalizeOne(application.children)
-      const parent = normalizeOne(application.parents)
-      const profile = normalizeOne(parent?.user_profiles ?? null)
+      const child = normalizeOne<{ first_name: string | null; last_name: string | null }>(application.children as any)
+      const parent = normalizeOne<{ user_profiles: { full_name: string | null } | { full_name: string | null }[] | null }>(application.parents as any)
+      const profile = normalizeOne<{ full_name: string | null }>(parent?.user_profiles ?? null)
       const searchBlob = [
         application.application_number,
         child?.first_name,

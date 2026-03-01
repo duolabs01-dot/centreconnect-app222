@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
-import { Button } from '@/components/ecd/Button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { formatDate } from '@/lib/utils'
 import { StatusBadge } from "@/components/ui/status-badge"

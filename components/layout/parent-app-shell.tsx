@@ -183,7 +183,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
               {showUserDropdown && (
                 <>
                   <div className="fixed inset-0 z-0" onClick={() => setShowUserDropdown(false)} />
-                  <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl animate-in zoom-in-95 duration-100 z-10">
+                  <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] animate-in zoom-in-95 duration-100 z-[60]">
                     <div className="px-3 py-2 border-b border-slate-50 mb-1">
                       <p className="text-xs font-semibold text-slate-400">Signed in</p>
                       <div className="flex items-center gap-2 mt-1">
@@ -264,7 +264,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             </section>
           ) : null}
 
-          <div className="parent-page-content animate-in fade-in slide-in-from-bottom-2 duration-500">{children}</div>
+          <div className="parent-page-content">{children}</div>
         </Container>
       </main>
     </div>

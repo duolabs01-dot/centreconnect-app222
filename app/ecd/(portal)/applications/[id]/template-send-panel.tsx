@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 import { renderTemplate, toStatusLabel } from '@/lib/communications/templates'
 
 type Template = {

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ecd/Button' // Assuming there is a Button component
+import { Button } from '@/components/ui/button' // Assuming there is a Button component
 
 type AttendanceClientProps = {
   enrolledChildren: Array<{ id: string; first_name: string; last_name: string }>

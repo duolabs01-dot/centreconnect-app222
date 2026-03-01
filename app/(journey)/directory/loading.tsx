@@ -1,4 +1,4 @@
-﻿export default function DirectoryLoading() {
+export default function DirectoryLoading() {
   return (
     <div className="p-4">
       <div className="w-full h-12 rounded-2xl bg-gray-200 animate-pulse-slow mb-4" />

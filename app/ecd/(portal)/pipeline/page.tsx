@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 import { PipelineBoard } from './pipeline-board'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'

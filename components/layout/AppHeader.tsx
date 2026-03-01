@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { PageContainer } from './PageContainer'
+import { Container } from './container'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
 
 type HeaderLink = {
@@ -34,7 +34,7 @@ export function AppHeader({
 
   return (
     <header className="glass-nav sticky top-0 z-40 border-b border-cyan-100/60">
-      <PageContainer className="flex items-center justify-between py-4">
+      <Container className="flex items-center justify-between py-4">
         <BrandMark href={brandHref} label={brandLabel} compact hideLabelOnMobile />
         <nav className="hidden items-center gap-5 md:flex">
           {links.map((link) =>
@@ -108,7 +108,7 @@ export function AppHeader({
             </Button>
           ) : null}
         </div>
-      </PageContainer>
+      </Container>
     </header>
   )
 }

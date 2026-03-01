@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CommunicationsComposer } from './composer'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'

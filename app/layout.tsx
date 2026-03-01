@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Plus_Jakarta_Sans, Inter, Nunito, DM_Sans } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
 import "./globals.css"
 import { Toaster as SonnerToaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
@@ -7,8 +7,8 @@ import { ThemeRouteSync } from '@/components/theme/theme-route-sync'
 import { FooterConditionalRenderer } from '@/components/layout/FooterConditionalRenderer'
 import { Analytics } from "@vercel/analytics/next"
 import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister'
-import { LiteModeProvider } from '@/lib/context/LiteModeProvider' // Import LiteModeProvider
-import { SessionTimeoutProvider } from '@/lib/context/SessionTimeoutProvider' // Import SessionTimeoutProvider
+import { LiteModeProvider } from '@/lib/context/LiteModeProvider'
+import { SessionTimeoutProvider } from '@/lib/context/SessionTimeoutProvider'
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
@@ -52,32 +52,17 @@ const inter = Inter({
   weight: ['300', '400', '500', '600', '700'],
 })
 
-const nunito = Nunito({
-  subsets: ['latin'],
-  variable: '--font-parent',
-  display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-ecd',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-})
-
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable} ${nunito.variable} ${dmSans.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#065A82" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-sans">
-        <LiteModeProvider> {/* Wrap with LiteModeProvider */}
+        <LiteModeProvider>
           <SessionTimeoutProvider>
             <ThemeProvider>
               <ThemeRouteSync />

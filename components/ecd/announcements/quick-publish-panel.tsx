@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 import {
   QUICK_PUBLISH_TEMPLATES,
   QuickPublishDrawer,

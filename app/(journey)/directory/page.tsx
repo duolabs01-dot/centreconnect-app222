@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
-import { PageContainer } from '@/components/layout/PageContainer'
+import { Container } from '@/components/layout/container'
 import { Sparkles, MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
 import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-centre'
@@ -201,7 +201,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   ).sort((a, b) => a.localeCompare(b))
 
   return (
-    <PageContainer>
+    <Container>
       <div className="space-y-6 pb-20">
         {/* Simplified, Premium Header */}
         <header className="px-1">
@@ -233,6 +233,6 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           }}
         />
       </div>
-    </PageContainer>
+    </Container>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ecd/Button'
+import { Button } from '@/components/ui/button'
 
 type CopyRouteLinkButtonProps = {
   driverToken: string

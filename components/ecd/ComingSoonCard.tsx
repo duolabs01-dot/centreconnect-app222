@@ -1,8 +1,8 @@
 'use client'
 
 import { LucideIcon } from 'lucide-react'
-import { Card, CardContent } from '@/components/ecd/Card'
-import { Button } from '@/components/ecd/Button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 type ComingSoonCardProps = {

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { PageContainer } from './PageContainer'
+import { Container } from './container'
 
 type SectionProps = {
   children: React.ReactNode
@@ -10,7 +10,7 @@ type SectionProps = {
 export function Section({ children, className, containerClassName, ...props }: SectionProps) {
   return (
     <section className={cn('py-10 sm:py-12 lg:py-14', className)} {...props}>
-      <PageContainer className={containerClassName}>{children}</PageContainer>
+      <Container className={containerClassName}>{children}</Container>
     </section>
   )
 }
