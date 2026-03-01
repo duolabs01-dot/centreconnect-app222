@@ -2,12 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DashboardShell } from '@/components/cc-admin/DashboardShell'
+import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { TenantsIndexTable, type TenantRow } from '@/components/admin/tenants-index-table'
-import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
 import { cn } from '@/lib/utils'
-import { Building2, CheckCircle2, AlertCircle, Zap } from 'lucide-react'
+import { Building2, AlertCircle, Zap } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,13 +140,11 @@ export default async function AdminTenantsPage() {
   const noPlanCount = tenants.filter((tenant) => !tenant.subscription).length
 
   return (
-    <DashboardShell
+    <AdminPageLayout
       title="Centres"
       description="Operational telemetry for every tenant workspace."
       roleLabel="Architect Console"
-      userEmail={user.email ?? 'Unknown email'}
       wide
-      navItems={ADMIN_NAV_ITEMS}
     >
       <section className="grid gap-4 md:grid-cols-3 mb-8">
         <CyberCard accent="green" glow className="p-5">
@@ -192,6 +189,6 @@ export default async function AdminTenantsPage() {
           <TenantsIndexTable tenants={tenants} />
         </div>
       </CyberCard>
-    </DashboardShell>
+    </AdminPageLayout>
   )
 }

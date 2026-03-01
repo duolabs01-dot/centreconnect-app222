@@ -15,7 +15,8 @@ import {
   LogOut,
   Zap,
   Activity,
-  Cpu
+  Cpu,
+  LifeBuoy
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
 import { BottomNav, type NavItem } from '@/components/layout/bottom-nav'
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
   { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
+  { label: 'Support Relay', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
 ]
 
 // Map admin items for shared BottomNav
@@ -35,7 +37,7 @@ const adminMobileNavItems: NavItem[] = [
   { label: 'Home', href: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Centres', href: '/admin/tenants', icon: Building2 },
   { label: 'Revenue', href: '/admin/revenue', icon: CreditCard },
-  { label: 'Security', href: '/admin/command', icon: ShieldCheck },
+  { label: 'Support', href: '/admin/support', icon: LifeBuoy },
 ]
 
 export function AdminSidebar() {

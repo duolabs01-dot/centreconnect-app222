@@ -2,11 +2,10 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DashboardShell } from '@/components/cc-admin/DashboardShell'
+import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { Button } from '@/components/cc-admin/Button'
-import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
 import { cn } from '@/lib/utils'
 import { Users, UserCheck, Shield, Zap } from 'lucide-react'
 
@@ -68,13 +67,11 @@ export default async function AdminUsersPage() {
   const monthlyActiveParents = authUsers.users.filter(u => u.last_sign_in_at && new Date(u.last_sign_in_at) >= thirtyDaysAgo).length
 
   return (
-    <DashboardShell
+    <AdminPageLayout
       title="Operatives"
       description="System-wide identity protocols and access management."
       roleLabel="Architect Console"
-      userEmail={user.email ?? 'Unknown email'}
       wide
-      navItems={ADMIN_NAV_ITEMS}
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
         <CyberCard accent="cyan" glow className="p-5">
@@ -173,6 +170,6 @@ export default async function AdminUsersPage() {
           </Table>
         </div>
       </CyberCard>
-    </DashboardShell>
+    </AdminPageLayout>
   )
 }

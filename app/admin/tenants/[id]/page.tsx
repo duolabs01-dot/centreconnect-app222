@@ -2,12 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DashboardShell } from '@/components/cc-admin/DashboardShell'
+import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
-import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
 import { ROOT_DOMAIN } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
@@ -135,21 +134,12 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
     closed: tickets.filter((t) => t.status === 'closed').length,
   }
 
-  const tenantNavItems = [
-    ADMIN_NAV_ITEMS[0],
-    ADMIN_NAV_ITEMS[1],
-    { href: `/admin/tenants/${tenantId}`, label: 'Tenant 360' },
-    ...ADMIN_NAV_ITEMS.slice(2),
-  ]
-
   return (
-    <DashboardShell
+    <AdminPageLayout
       title={`Tenant 360 | ${centre.name}`}
       description="Operational, billing, user access, analytics, and support view for one tenant."
       roleLabel="Architect Console"
-      userEmail={user.email ?? 'Unknown email'}
       wide
-      navItems={tenantNavItems}
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Subdomain</CardTitle></CardHeader><CardContent><p className="font-mono text-sm">{centre.slug}.{ROOT_DOMAIN}</p></CardContent></Card>
@@ -261,6 +251,6 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </section>
-    </DashboardShell>
+    </AdminPageLayout>
   )
 }

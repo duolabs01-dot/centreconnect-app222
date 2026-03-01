@@ -2,13 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DashboardShell } from '@/components/cc-admin/DashboardShell'
+import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
-import { Button } from '@/components/cc-admin/Button'
-import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
 import { cn } from '@/lib/utils'
-import { TrendingUp, TrendingDown, CreditCard, DollarSign, Clock, AlertCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, CreditCard, Clock } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,13 +66,11 @@ export default async function AdminRevenuePage() {
   const failedRevenue = failedInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0)
 
   return (
-    <DashboardShell
-      title="Revenue"
+    <AdminPageLayout
+      title="Revenue Ops"
       description="Real-time financial protocols and subscription telemetry."
       roleLabel="Architect Console"
-      userEmail={user.email ?? 'Unknown email'}
       wide
-      navItems={ADMIN_NAV_ITEMS}
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
         <CyberCard accent="cyan" glow className="p-5">
@@ -188,6 +184,6 @@ export default async function AdminRevenuePage() {
           </div>
         </CyberCard>
       </div>
-    </DashboardShell>
+    </AdminPageLayout>
   )
 }

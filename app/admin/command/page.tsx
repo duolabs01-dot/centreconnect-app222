@@ -2,14 +2,11 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { DashboardShell } from '@/components/cc-admin/DashboardShell'
-import { ADMIN_NAV_ITEMS } from '@/components/admin/admin-nav'
-import { CyberCard } from '@/components/cc-admin/CyberCard'
+import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { AdminStatCard } from '@/components/ui/admin-stat-card'
 import { NeuralMap } from '@/components/cc-admin/NeuralMap'
 import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
 import { SystemHealthWidget } from '@/components/cc-admin/SystemHealthWidget'
-import { MeshAreaChart } from '@/components/cc-admin/MeshAreaChart'
 import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
 import { Building2, Users, Activity, TrendingUp, Globe, Zap } from 'lucide-react'
 
@@ -111,11 +108,10 @@ export default async function AdminDashboardPage() {
   const mrrFormatted = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(mrrValue)
 
   return (
-    <DashboardShell
+    <AdminPageLayout
       title="Control Tower"
       description="System protocols and neural platform activity."
       roleLabel="Architect Console"
-      userEmail={user.email ?? 'Unknown'}
       wide
     >
       <div className="space-y-6">
@@ -183,6 +179,6 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
-    </DashboardShell>
+    </AdminPageLayout>
   )
 }
