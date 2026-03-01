@@ -56,7 +56,7 @@ export default async function ParentSecurityPage() {
           <Globe className="h-4 w-4 text-cyan-600" />
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">Current Session</p>
         </div>
-        
+
         <SurfaceCard className="p-6 border-t-4 border-t-cyan-500">
           <div className="space-y-6">
             <div className="flex items-start justify-between">
@@ -96,8 +96,8 @@ export default async function ParentSecurityPage() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Last Seen</p>
                   <p className="text-sm font-bold text-slate-700">
-                    {session?.last_seen_at ? new Date(session.last_seen_at).toLocaleString('en-ZA', { 
-                      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                    {session?.last_seen_at ? new Date(session.last_seen_at).toLocaleString('en-ZA', {
+                      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                     }) : 'Just now'}
                   </p>
                 </div>
@@ -113,7 +113,7 @@ export default async function ParentSecurityPage() {
           <ShieldCheck className="h-4 w-4 text-emerald-500" />
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">Security History</p>
         </div>
-        
+
         <SurfaceCard className="p-0 overflow-hidden">
           <div className="divide-y divide-slate-100">
             {(events ?? []).length === 0 ? (
@@ -131,8 +131,8 @@ export default async function ParentSecurityPage() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-black text-slate-900">{event.event_type}</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">
-                        {new Date(event.created_at).toLocaleString('en-ZA', { 
-                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                        {new Date(event.created_at).toLocaleString('en-ZA', {
+                          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
                         })}
                       </p>
                     </div>
@@ -162,7 +162,7 @@ export default async function ParentSecurityPage() {
           </div>
         </SurfaceCard>
         <p className="text-[9px] text-slate-400 text-center px-10 leading-relaxed italic">
-          If you see activity you don't recognise, please reset your password immediately and contact support.
+          If you see activity you don&apos;t recognise, please reset your password immediately and contact support.
         </p>
       </section>
     </div>

@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const { supabase, ecdId } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
   const centreName = centre?.name ?? "Centre"
-  
+
   return {
     title: `${centreName} — CentreConnect`,
     description: 'Daily operations first: attendance, pickup security, and admissions inbox.',
@@ -145,8 +145,8 @@ export default async function EcdDashboardPage() {
   const reviewedApps = applications?.filter((a) => a.reviewed_at) ?? []
   const avgResponseHours = reviewedApps.length > 0
     ? Math.round(reviewedApps.reduce((sum, a) => {
-        return sum + (new Date(a.reviewed_at as string).getTime() - new Date(a.submitted_at).getTime()) / 3600000
-      }, 0) / reviewedApps.length)
+      return sum + (new Date(a.reviewed_at as string).getTime() - new Date(a.submitted_at).getTime()) / 3600000
+    }, 0) / reviewedApps.length)
     : 0
 
   const profileItems = [
@@ -161,39 +161,39 @@ export default async function EcdDashboardPage() {
   const recommendationItems = [
     stale72h > 0
       ? {
-          id: 'sla-critical',
-          label: `${stale72h} applications older than 72h`,
-          detail: 'Prioritize these first to reduce parent churn risk.',
-          href: '/ecd/applications?tab=pending',
-          level: 'critical' as const,
-        }
+        id: 'sla-critical',
+        label: `${stale72h} applications older than 72h`,
+        detail: 'Prioritize these first to reduce parent churn risk.',
+        href: '/ecd/applications?tab=pending',
+        level: 'critical' as const,
+      }
       : null,
     stale24h > 0
       ? {
-          id: 'sla-warning',
-          label: `${stale24h} applications older than 24h`,
-          detail: 'Respond today to keep response-time metrics healthy.',
-          href: '/ecd/applications?tab=pending',
-          level: 'warning' as const,
-        }
+        id: 'sla-warning',
+        label: `${stale24h} applications older than 24h`,
+        detail: 'Respond today to keep response-time metrics healthy.',
+        href: '/ecd/applications?tab=pending',
+        level: 'warning' as const,
+      }
       : null,
     unverifiedGuardians > 0
       ? {
-          id: 'guardian-verification',
-          label: `${unverifiedGuardians} unverified guardian records`,
-          detail: 'Verification reduces pickup-day friction and risk.',
-          href: '/ecd/profile',
-          level: 'warning' as const,
-        }
+        id: 'guardian-verification',
+        label: `${unverifiedGuardians} unverified guardian records`,
+        detail: 'Verification reduces pickup-day friction and risk.',
+        href: '/ecd/profile',
+        level: 'warning' as const,
+      }
       : null,
     profilePct < 100
       ? {
-          id: 'profile-readiness',
-          label: `Profile completeness is ${profilePct}%`,
-          detail: 'Complete profile details to improve parent conversion.',
-          href: '/ecd/website',
-          level: 'info' as const,
-        }
+        id: 'profile-readiness',
+        label: `Profile completeness is ${profilePct}%`,
+        detail: 'Complete profile details to improve parent conversion.',
+        href: '/ecd/website',
+        level: 'info' as const,
+      }
       : null,
   ].filter(Boolean) as Array<{
     id: string
@@ -206,7 +206,7 @@ export default async function EcdDashboardPage() {
 
   const revenueChange = revenueThisMonth - revenuePreviousMonth
   const revenueTrend = revenueChange > 0 ? 'up' : revenueChange < 0 ? 'down' : 'neutral'
-  const revenueChangePct = revenuePreviousMonth > 0 
+  const revenueChangePct = revenuePreviousMonth > 0
     ? `${Math.abs(Math.round((revenueChange / revenuePreviousMonth) * 100))}%`
     : '0%'
 
@@ -241,7 +241,7 @@ export default async function EcdDashboardPage() {
             {getJohannesburgGreeting()}
           </p>
           <p className="mt-1 text-xl font-bold text-slate-900">
-            {centreName} — Today's Overview
+            {centreName} — Today&apos;s Overview
           </p>
           <p className="mt-1 text-sm text-slate-500">
             {attendanceToday} children in today · {pendingApplications} pending applications
@@ -257,9 +257,9 @@ export default async function EcdDashboardPage() {
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             {topActions.length === 0 ? (
-            <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
-              No urgent blockers right now. Keep admissions moving and monitor pickup completion.
-            </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
+                No urgent blockers right now. Keep admissions moving and monitor pickup completion.
+              </div>
             ) : (
               topActions.map((item, index) => (
                 <Link
@@ -268,12 +268,12 @@ export default async function EcdDashboardPage() {
                   className="flex items-start gap-4 rounded-xl border border-slate-100 bg-white p-4 text-slate-900 transition-all hover:border-teal-200 hover:bg-teal-50/30 group"
                 >
                   <span
-                  className={cn(
-                    "mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
-                    item.level === 'critical' ? 'bg-rose-100 text-rose-700' : 
-                    item.level === 'warning' ? 'bg-amber-100 text-amber-700' : 
-                    'bg-teal-100 text-teal-700'
-                  )}
+                    className={cn(
+                      "mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
+                      item.level === 'critical' ? 'bg-rose-100 text-rose-700' :
+                        item.level === 'warning' ? 'bg-amber-100 text-amber-700' :
+                          'bg-teal-100 text-teal-700'
+                    )}
                   >
                     {index + 1}
                   </span>

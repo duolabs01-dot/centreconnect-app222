@@ -85,9 +85,9 @@ export function MonthlyInvoicesCard({
 
         <div className="space-y-3">
           <p className="text-xs font-medium text-slate-600 leading-relaxed">
-            Generate recurring invoices for all enrolled children with a fee agreement. This will create 'sent' invoices and notify parents immediately.
+            Generate recurring invoices for all enrolled children with a fee agreement. This will create &apos;sent&apos; invoices and notify parents immediately.
           </p>
-          <Button 
+          <Button
             onClick={handleGenerate}
             disabled={isGenerating || enrolledWithFeesCount === 0}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-xl shadow-md transition-all active:scale-95"

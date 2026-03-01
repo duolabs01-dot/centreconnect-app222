@@ -17,5 +17,5 @@ export function LiteImage(props: LiteImageProps) {
       ? 30 // Lower quality for lite mode
       : props.quality ?? 75; // Default to 75 if not specified and not in lite mode
 
-  return <Image {...props} quality={effectiveQuality} />;
+  return <Image {...props} alt={props.alt} quality={effectiveQuality} />;
 }

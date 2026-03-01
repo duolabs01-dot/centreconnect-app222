@@ -46,7 +46,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
       preferred_start_month: initial.preferred_start_month ?? '',
     },
   })
-  
+
   const transportNeeded = watch('transport_needed')
 
   const {
@@ -78,7 +78,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-12">
       <div className="grid gap-6">
-        
+
         {/* Timeline Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-1">
@@ -88,13 +88,13 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
           <SurfaceCard className="p-6">
             <div className="space-y-2">
               <Label htmlFor="preferred_start_month" className="text-sm font-bold text-slate-900">Preferred Start Date</Label>
-              <Input 
-                id="preferred_start_month" 
-                type="date" 
-                className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold px-4" 
-                {...register('preferred_start_month')} 
+              <Input
+                id="preferred_start_month"
+                type="date"
+                className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold px-4"
+                {...register('preferred_start_month')}
               />
-              <p className="text-[10px] text-slate-500 font-medium px-1">Helps centres plan for your child's entry.</p>
+              <p className="text-[10px] text-slate-500 font-medium px-1">Helps centres plan for your child&apos;s entry.</p>
             </div>
           </SurfaceCard>
         </div>
@@ -110,18 +110,18 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
               <Label htmlFor="max_monthly_budget" className="text-sm font-bold text-slate-900">Max Monthly Fee (R)</Label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-black">R</div>
-                <Input 
-                  id="max_monthly_budget" 
-                  type="number" 
-                  min="0" 
-                  step="1" 
+                <Input
+                  id="max_monthly_budget"
+                  type="number"
+                  min="0"
+                  step="1"
                   placeholder="e.g. 3500"
-                  className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold pl-10" 
-                  {...register('max_monthly_budget')} 
+                  className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold pl-10"
+                  {...register('max_monthly_budget')}
                 />
               </div>
               <p className="text-[10px] text-slate-500 font-medium px-1">
-                We'll prioritise centres that fit within your budget.
+                We&apos;ll prioritise centres that fit within your budget.
               </p>
             </div>
           </SurfaceCard>
@@ -193,7 +193,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
             <Truck className="h-4 w-4 text-cyan-600" />
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Logistics</p>
           </div>
-          <SurfaceCard 
+          <SurfaceCard
             className={cn(
               "p-6 transition-all duration-300 border-l-4",
               transportNeeded ? "border-l-emerald-500 bg-emerald-50/10" : "border-l-transparent"
@@ -222,9 +222,9 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
       </div>
 
       <div className="pt-4 sticky bottom-24 z-10 px-1">
-        <Button 
-          type="submit" 
-          disabled={isPending} 
+        <Button
+          type="submit"
+          disabled={isPending}
           size="lg"
           className="w-full h-16 rounded-[2rem] text-lg font-black shadow-float bg-slate-900 hover:bg-slate-800 text-white transition-all active:scale-[0.98]"
         >

@@ -83,7 +83,7 @@ export function JoinClient({
           <div className="text-center space-y-3">
             <CheckCircle2 className="h-12 w-12 text-emerald-400 mx-auto" />
             <h1 className="text-xl font-bold text-slate-900">Already joined</h1>
-            <p className="text-sm text-slate-500">Your account is already linked to {childName}'s profile.</p>
+            <p className="text-sm text-slate-500">Your account is already linked to {childName}&apos;s profile.</p>
             <Button asChild className="w-full mt-2"><Link href="/parent/dashboard">Go to your dashboard</Link></Button>
           </div>
         )}
@@ -112,7 +112,7 @@ export function JoinClient({
           <div className="space-y-4">
             <div className="text-center">
               <h1 className="text-xl font-bold text-slate-900">
-                {inviterName} invited you to {childName}'s profile
+                {inviterName} invited you to {childName}&apos;s profile
               </h1>
               {guardianName && (
                 <p className="text-sm text-slate-500 mt-1">Invited as: <strong>{guardianName}</strong></p>

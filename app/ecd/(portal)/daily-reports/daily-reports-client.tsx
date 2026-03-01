@@ -8,14 +8,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { 
-  Coffee, 
-  Utensils, 
-  Cookie, 
-  Smile, 
-  Laugh, 
-  Moon, 
-  CloudRain, 
+import {
+  Coffee,
+  Utensils,
+  Cookie,
+  Smile,
+  Laugh,
+  Moon,
+  CloudRain,
   Frown,
   CheckCircle2,
   Share
@@ -125,7 +125,7 @@ export function DailyReportsClient({
         ...prev,
         [selectedChildId]: data
       }))
-      
+
       toast.success(publish ? 'Report published to parents!' : 'Draft saved successfully')
     } catch (err) {
       console.error('Error saving report:', err)
@@ -218,7 +218,7 @@ export function DailyReportsClient({
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Smile className="h-5 w-5 text-cyan-600" />
-                    Today's Mood
+                    Today&apos;s Mood
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -301,7 +301,7 @@ export function DailyReportsClient({
               {/* Notes Section */}
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Teacher's Notes</CardTitle>
+                  <CardTitle className="text-lg">Teacher&apos;s Notes</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Textarea
@@ -310,9 +310,9 @@ export function DailyReportsClient({
                     onChange={(e) => updateReport(selectedChild.id, { teacher_notes: e.target.value })}
                     className="min-h-[120px] rounded-2xl border-slate-200 bg-slate-50/50"
                   />
-                  
+
                   <div className="mt-6 flex flex-col gap-3">
-                    <Button 
+                    <Button
                       onClick={() => handleSave(false)}
                       disabled={isSaving}
                       variant="outline"
@@ -321,7 +321,7 @@ export function DailyReportsClient({
                     >
                       {isSaving ? 'Saving...' : 'Save as Draft'}
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => handleSave(true)}
                       disabled={isSaving}
                       size="lg"
@@ -331,7 +331,7 @@ export function DailyReportsClient({
                       {currentReport.published_at ? 'Update Published Report' : 'Publish to Parents'}
                     </Button>
                   </div>
-                  
+
                   {currentReport.published_at && (
                     <p className="mt-3 text-center text-[10px] font-bold uppercase tracking-widest text-emerald-600">
                       Last published {new Date(currentReport.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

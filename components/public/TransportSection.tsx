@@ -57,7 +57,7 @@ export function TransportSection({
               Transport quotes are calculated per route.
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Submit your pickup location and we'll share a personalised quote within 1-2 business days.
+              Submit your pickup location and we&apos;ll share a personalised quote within 1-2 business days.
             </p>
           </div>
         )}
@@ -85,10 +85,10 @@ function TransportEnquiryForm({ centreId, centreName }: { centreId: string; cent
 
   if (done) {
     return (
-        <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          <CheckCircle className="h-4 w-4 text-emerald-600" />
-          Enquiry sent! We'll share a quote soon.
-        </div>
+      <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <CheckCircle className="h-4 w-4 text-emerald-600" />
+        Enquiry sent! We&apos;ll share a quote soon.
+      </div>
     )
   }
 

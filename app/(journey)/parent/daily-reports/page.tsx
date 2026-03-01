@@ -6,16 +6,16 @@ import { redirect } from 'next/navigation'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { cn, getJohannesburgNowParts } from '@/lib/utils'
-import { 
-  Smile, 
-  Laugh, 
-  Moon, 
-  CloudRain, 
-  Frown, 
-  Utensils, 
-  Coffee, 
-  Cookie, 
-  CheckCircle2, 
+import {
+  Smile,
+  Laugh,
+  Moon,
+  CloudRain,
+  Frown,
+  Utensils,
+  Coffee,
+  Cookie,
+  CheckCircle2,
   Info
 } from 'lucide-react'
 
@@ -60,7 +60,7 @@ export default async function ParentDailyReportsPage() {
   }
 
   const childIds = applications.map(a => a.child_id)
-  
+
   // 2. Get published reports for today
   const { data: reports } = await supabase
     .from('child_daily_reports')
@@ -76,7 +76,7 @@ export default async function ParentDailyReportsPage() {
     <ParentAppShell>
       <div className="space-y-6">
         <header>
-          <h1 className="text-2xl font-bold text-slate-900">Today's Reports</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Today&apos;s Reports</h1>
           <p className="text-sm text-slate-500">{new Date().toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
         </header>
 
@@ -101,7 +101,7 @@ export default async function ParentDailyReportsPage() {
                 {!report ? (
                   <div className="py-8 text-center">
                     <Moon className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500">Today's report hasn't been posted yet.</p>
+                    <p className="text-sm font-medium text-slate-500">Today&apos;s report hasn&apos;t been posted yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-8">
@@ -117,7 +117,7 @@ export default async function ParentDailyReportsPage() {
                       )}
                       <div className="flex-1">
                         <p className="text-sm italic text-slate-700 leading-relaxed">
-                          "{report.teacher_notes || "Your child had a productive day at the centre today!"}"
+                          &quot;{report.teacher_notes || "Your child had a productive day at the centre today!"}&quot;
                         </p>
                       </div>
                     </div>
@@ -125,8 +125,8 @@ export default async function ParentDailyReportsPage() {
                     {/* Photo if any */}
                     {report.photo_url && (
                       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-                        <Image 
-                          src={report.photo_url} 
+                        <Image
+                          src={report.photo_url}
                           alt="Today at the centre"
                           fill
                           className="h-full w-full object-cover"
