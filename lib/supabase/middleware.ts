@@ -77,15 +77,12 @@ export async function updateSession(request: NextRequest) {
     return finish(response, 'anon-pass')
   }
 
-  const userResult = await withTimeout(supabase.auth.getUser(), 1400)
+  const userResult = await withTimeout(supabase.auth.getUser(), 4000)
   if (!userResult) {
     clearRoleCache(response, request)
     if (protectedArea) {
-      const loginUrl = new URL(getLoginPath(protectedArea), request.url)
-      const nextPath = `${pathname}${request.nextUrl.search}`
-      loginUrl.searchParams.set('next', nextPath)
-      loginUrl.searchParams.set('reason', 'auth_check_timeout')
-      return finish(NextResponse.redirect(loginUrl), 'user-timeout-protected-redirect')
+      // Timeout: don't kick user out — just let them through and let the page handle auth
+      return finish(response, 'user-timeout-public-pass')
     }
     return finish(response, 'user-timeout-public-pass')
   }

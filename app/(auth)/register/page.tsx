@@ -200,7 +200,7 @@ export default function RegisterPage() {
           <BrandMark compact className="invert brightness-200 h-16 w-auto mx-auto mb-8" />
           <h1 className="text-4xl font-black text-white tracking-tight leading-tight">
             Start your family&apos;s <br />
-            <span className="text-cyan-400">Digital ECD Journey</span>
+            <span className="text-cyan-400">Early Childhood Platform</span>
           </h1>
           <p className="mt-6 text-slate-400 text-lg max-w-md mx-auto">
             The simplest way to discover, compare, and apply to quality centres for your children.
@@ -218,8 +218,8 @@ export default function RegisterPage() {
         <div className="w-full max-w-md my-8">
           <div className="bg-white rounded-[2rem] shadow-xl p-8 sm:p-10 border border-slate-100">
             <header className="mb-8">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 mb-2">New Operative Profile</p>
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Create Account</h2>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 mb-2">CentreConnect</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight">Create your account</h2>
               <p className="text-slate-500 mt-2 font-medium">Join the next generation of child care</p>
             </header>
 
@@ -258,7 +258,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Protocol</Label>
+                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -270,7 +270,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Contact Signal (Phone)</Label>
+                <Label htmlFor="phone" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone number</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -283,7 +283,7 @@ export default function RegisterPage() {
               </div>
               
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Security Key</Label>
+                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -305,7 +305,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm Key</Label>
+                <Label htmlFor="confirmPassword" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Confirm password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -327,7 +327,7 @@ export default function RegisterPage() {
               </div>
               
               <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98] mt-4" disabled={loading}>
-                {loading ? 'Encrypting...' : 'Establish Profile'}
+                {loading ? 'Safeguarding...' : 'Sign up'}
               </Button>
             </form>
 
@@ -336,7 +336,7 @@ export default function RegisterPage() {
                 <div className="w-full border-t border-slate-100" />
               </div>
               <span className="relative px-4 bg-white text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Neural Handshake
+                or
               </span>
             </div>
 
@@ -361,9 +361,9 @@ export default function RegisterPage() {
             </Button>
 
             <footer className="mt-8 text-center">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Active Operative? </span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Already have an account? </span>
               <Link href={loginHref()} className="text-xs font-black uppercase tracking-widest text-cyan-600 hover:underline">
-                Initiate Login
+                Sign in
               </Link>
             </footer>
           </div>

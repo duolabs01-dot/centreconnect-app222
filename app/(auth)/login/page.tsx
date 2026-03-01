@@ -140,9 +140,9 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="bg-white rounded-[2rem] shadow-xl p-8 sm:p-10 border border-slate-100">
             <header className="mb-8">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 mb-2">Authenticated Node</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 mb-2">CentreConnect</p>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
-              <p className="text-slate-500 mt-2 font-medium">Please sign in to your operative profile</p>
+              <p className="text-slate-500 mt-2 font-medium">Sign in to your account</p>
             </header>
 
             {confirmationErrorMessage(authError) && (
@@ -158,7 +158,7 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Protocol</Label>
+                <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -171,9 +171,9 @@ export default function LoginPage() {
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between ml-1">
-                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Key</Label>
+                  <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Password</Label>
                   <Link href="/forgot-password" className="text-[10px] font-black uppercase tracking-widest text-cyan-600 hover:underline">
-                    Forgot Key?
+                    Forgot password?
                   </Link>
                 </div>
                 <div className="relative">
@@ -196,7 +196,7 @@ export default function LoginPage() {
               </div>
               
               <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98]" disabled={loading}>
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Initiate Session'}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign in'}
               </Button>
             </form>
 
@@ -205,7 +205,7 @@ export default function LoginPage() {
                 <div className="w-full border-t border-slate-100" />
               </div>
               <span className="relative px-4 bg-white text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Neural Handshake
+                or
               </span>
             </div>
 
@@ -230,7 +230,7 @@ export default function LoginPage() {
             </Button>
 
             <footer className="mt-8 text-center">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">New Operative? </span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Don&apos;t have an account? </span>
               <Link href="/register" className="text-xs font-black uppercase tracking-widest text-cyan-600 hover:underline">
                 Create Profile
               </Link>
