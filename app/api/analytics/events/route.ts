@@ -21,10 +21,11 @@ const eventSchema = z.object({
     'parent_invite_sent',
     'invoice_paid',
     'marketplace_requested',
-    'referral_used'
+    'referral_used',
+    'daily_report_published'
   ]),
   applicationId: z.string().uuid().optional(),
-  actorRole: z.string().optional(),
+  actorRole: z.enum(['parent_user', 'ecd_admin', 'ecd_supervisor', 'ecd_staff', 'anonymous']).optional(),
   path: z.string().optional(),
   durationMs: z.number().int().optional(),
   sessionId: z.string().optional(),
@@ -36,9 +37,9 @@ export async function POST(request: Request) {
     const ip = getClientIp(request)
     const agent = getClientAgent(request)
     const rateLimit = await enforceRateLimit({
-      scope: 'analytics-events-ip',
+      scope: 'analytics-event',
       key: `${ip}:${agent}`,
-      max: 300, // Increased for heartbeat/page_view events
+      max: 60,
       windowMs: 60 * 1000,
     })
     if (!rateLimit.ok) {
