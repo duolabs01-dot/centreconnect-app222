@@ -1,22 +1,33 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check, X, MapPin, Sparkles } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
 import type { DirectoryCentre } from '@/types/directory-centre'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet"
 
 const DirectoryMap = dynamic(
   () => import('./DirectoryMap'),
   {
     ssr: false,
     loading: () => (
-      <div className="h-96 rounded-2xl bg-slate-100 animate-pulse-slow
-                      flex items-center justify-center">
+      <div className="h-96 rounded-[2.5rem] bg-slate-100 animate-pulse-slow
+                      flex items-center justify-center border-2 border-dashed border-slate-200">
         <p className="text-slate-400 text-sm font-medium">
           Loading map...
         </p>
@@ -51,39 +62,6 @@ const FEE_OPTIONS = [
   { label: 'Under R2000', value: '2000' },
 ]
 
-function toFiniteNumber(value: unknown): number | null {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
-  if (typeof value === 'string' && value.trim() !== '') {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-  return null
-}
-
-function distanceKm(
-  userLng: number,
-  userLat: number,
-  centreLng: number,
-  centreLat: number
-): number {
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const R = 6371
-  const dLat = toRad(centreLat - userLat)
-  const dLon = toRad(centreLng - userLng)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(userLat)) * Math.cos(toRad(centreLat)) * Math.sin(dLon / 2) ** 2
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-function formatDistance(km: number): string {
-  if (km < 1) return `${Math.round(km * 1000)}m`
-  if (km < 10) return `${km.toFixed(1)} km`
-  return `${Math.round(km)} km`
-}
-
 export default function DirectoryExplorer({
   initialCentres,
   totalResults: initialTotal,
@@ -96,139 +74,43 @@ export default function DirectoryExplorer({
   const router = useRouter()
   const pathname = usePathname()
 
-  const initialSearch = (initialFilters.search ?? '').trim()
-  const initialSuburb = initialFilters.suburb ?? ''
-  const initialAge = initialFilters.age ?? ''
-  const initialFee = initialFilters.fee ?? ''
-  const initialSubsidy = initialFilters.subsidy ? 'true' : ''
-
   const [centres, setCentres] = useState(initialCentres)
   const [totalResults, setTotalResults] = useState(initialTotal)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
 
-  const [search, setSearch] = useState(initialSearch)
-  const [selectedSuburb, setSelectedSuburb] = useState(initialSuburb)
-  const [selectedAge, setSelectedAge] = useState(initialAge)
-  const [selectedFee, setSelectedFee] = useState(initialFee)
-  const [selectedSubsidy, setSelectedSubsidy] = useState(initialSubsidy)
-  const [filtersOpen, setFiltersOpen] = useState(false)
-
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch)
+  const [search, setSearch] = useState(initialFilters.search ?? '')
+  const [selectedSuburb, setSelectedSuburb] = useState(initialFilters.suburb ?? '')
+  const [selectedAge, setSelectedAge] = useState(initialFilters.age ?? '')
+  const [selectedFee, setSelectedFee] = useState(initialFilters.fee ?? '')
+  const [selectedSubsidy, setSelectedSubsidy] = useState(initialFilters.subsidy ? 'true' : '')
   const [currentPage, setCurrentPage] = useState(initialPage)
+  const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search ?? '')
   const [isPending, startTransition] = useTransition()
-  const fetchMountedRef = useRef(false)
-  const urlSyncMountedRef = useRef(false)
-
+  
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
-  const [geoStatus, setGeoStatus] = useState<'pending' | 'granted' | 'denied'>('pending')
-  const [geoMessage, setGeoMessage] = useState<string | null>(null)
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'pending' | 'granted' | 'denied'>('idle')
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
 
-  const filtered = useMemo(() => {
-    const searchValue = search.trim().toLowerCase()
-    const feeCap = Number(selectedFee)
+  // Quick Filters
+  const quickFilters = [
+    { label: '📍 Near Me', active: geoStatus === 'granted', onClick: () => activateMapView() },
+    { label: '🏢 Alexandra', active: selectedSuburb === 'Alexandra', onClick: () => { setSelectedSuburb('Alexandra'); setCurrentPage(1); } },
+    { label: '💸 Subsidy', active: selectedSubsidy === 'true', onClick: () => { setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true'); setCurrentPage(1); } },
+    { label: '👶 Infants', active: selectedAge === 'Infants (0-1 year)', onClick: () => { setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)'); setCurrentPage(1); } },
+  ]
 
-    return centres.filter((centre) => {
-      if (
-        searchValue &&
-        !centre.name.toLowerCase().includes(searchValue) &&
-        !centre.suburb?.toLowerCase().includes(searchValue)
-      ) {
-        return false
-      }
-
-      if (selectedSuburb && centre.suburb !== selectedSuburb) {
-        return false
-      }
-
-      if (selectedAge && !centre.age_groups?.includes(selectedAge)) {
-        return false
-      }
-
-      if (!Number.isNaN(feeCap) && selectedFee) {
-        const minFee = centre.monthly_fee_min
-        const maxFee = centre.monthly_fee_max
-        const matchesFee =
-          (typeof minFee === 'number' && minFee <= feeCap) ||
-          (typeof maxFee === 'number' && maxFee <= feeCap)
-
-        if (!matchesFee) {
-          return false
-        }
-      }
-
-      if (selectedSubsidy === 'true' && !centre.subsidy_accepted) {
-        return false
-      }
-
-      return true
-    })
-  }, [centres, search, selectedSuburb, selectedAge, selectedFee, selectedSubsidy])
-
-  const centresWithLocation = useMemo(() => {
-    return filtered.flatMap((centre) => {
-      const latitude = toFiniteNumber(centre.latitude)
-      const longitude = toFiniteNumber(centre.longitude)
-      if (latitude == null || longitude == null) return []
-      return [{ ...centre, latitude, longitude }]
-    })
-  }, [filtered])
-
-  const showMap = viewMode === 'map'
-  const locationHint =
-    centresWithLocation.length === 0
-      ? 'No mapped centres for these filters yet. Try resetting filters.'
-      : geoStatus === 'granted'
-        ? 'Showing centres closest to your location. Your pin is yellow.'
-        : geoStatus === 'pending'
-          ? 'Requesting location access...'
-          : geoMessage ?? 'Allow location access to showcase your pin.'
-
-  const buildFetchUrl = useCallback(
-    (query: DirectoryFilters) => {
-      const params = new URLSearchParams()
-      if (query.search) params.set('search', query.search)
-      if (query.suburb) params.set('suburb', query.suburb)
-      if (query.age) params.set('age', query.age)
-      if (query.fee) params.set('fee', query.fee)
-      if (query.subsidy) params.set('subsidy', 'true')
-      params.set('page', String(query.page ?? 1))
-      return `/api/directory/search?${params.toString()}`
-    },
-    []
-  )
-
-  const apiFilters = useMemo<DirectoryFilters>(
-    () => ({
-      search: debouncedSearch || undefined,
-      suburb: selectedSuburb || undefined,
-      age: selectedAge || undefined,
-      fee: selectedFee || undefined,
-      subsidy: selectedSubsidy === 'true' ? true : undefined,
-      page: currentPage,
-    }),
-    [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage]
-  )
-
+  // Debounce search
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(search.trim())
-    }, 300)
-
+    const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300)
     return () => clearTimeout(timeout)
   }, [search])
 
+  // Sync URL
   useEffect(() => {
-    if (!urlSyncMountedRef.current) {
-      urlSyncMountedRef.current = true
-      return
-    }
-
     const params = new URLSearchParams()
-    const trimmedSearch = search.trim()
-    if (trimmedSearch) params.set('search', trimmedSearch)
+    if (debouncedSearch) params.set('search', debouncedSearch)
     if (selectedSuburb) params.set('suburb', selectedSuburb)
     if (selectedAge) params.set('age', selectedAge)
     if (selectedFee) params.set('fee', selectedFee)
@@ -237,329 +119,304 @@ export default function DirectoryExplorer({
 
     const next = params.toString()
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false })
-  }, [search, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage, pathname, router])
+  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage, pathname, router])
 
+  // Fetch Data
   useEffect(() => {
-    if (!fetchMountedRef.current) {
-      fetchMountedRef.current = true
-      return
-    }
-
     const controller = new AbortController()
     startTransition(async () => {
       try {
-        const url = buildFetchUrl(apiFilters)
-        const response = await fetch(url, {
-          cache: 'no-store',
-          signal: controller.signal,
-        })
+        const params = new URLSearchParams()
+        if (debouncedSearch) params.set('search', debouncedSearch)
+        if (selectedSuburb) params.set('suburb', selectedSuburb)
+        if (selectedAge) params.set('age', selectedAge)
+        if (selectedFee) params.set('fee', selectedFee)
+        if (selectedSubsidy === 'true') params.set('subsidy', 'true')
+        params.set('page', String(currentPage))
 
-        if (!response.ok) return
-
-        const payload = await response.json()
+        const res = await fetch(`/api/directory/search?${params.toString()}`, { signal: controller.signal })
+        if (!res.ok) return
+        const payload = await res.json()
         setCentres(payload.centres ?? [])
         setTotalResults(payload.totalResults ?? 0)
-      } catch {
-        // ignore
-      }
+      } catch {}
     })
-
     return () => controller.abort()
-  }, [apiFilters, buildFetchUrl])
-
-  const resetFilters = () => {
-    setSearch('')
-    setDebouncedSearch('')
-    setSelectedSuburb('')
-    setSelectedAge('')
-    setSelectedFee('')
-    setSelectedSubsidy('')
-    setFiltersOpen(false)
-    setCurrentPage(1)
-  }
+  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage])
 
   const activateMapView = () => {
-    setViewMode('map')
-
-    if (!('geolocation' in navigator)) {
-      setGeoStatus('denied')
-      setGeoMessage('Geolocation not supported on this device')
-      return
+    if (geoStatus === 'granted') {
+        setViewMode('map')
+        return
     }
-
+    setGeoStatus('pending')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation([pos.coords.longitude, pos.coords.latitude])
         setGeoStatus('granted')
-        setGeoMessage(null)
+        setViewMode('map')
       },
-      (err) => {
-        setGeoStatus('denied')
-        setGeoMessage(err.message || 'Location access denied.')
-      },
-      { enableHighAccuracy: true, timeout: 9000, maximumAge: 180000 }
+      () => setGeoStatus('denied'),
+      { enableHighAccuracy: true, timeout: 5000 }
     )
   }
 
-  const handlePageChange = (next: number) => {
-    setCurrentPage(next)
+  const resetFilters = () => {
+    setSearch(''); setDebouncedSearch(''); setSelectedSuburb(''); setSelectedAge(''); 
+    setSelectedFee(''); setSelectedSubsidy(''); setCurrentPage(1);
   }
 
   return (
-    <section
-      className="overflow-hidden rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[var(--shadow-elevation-3)] backdrop-blur-sm sm:p-4 lg:p-5"
-      aria-live="polite"
-    >
-      <div className="space-y-2.5 sm:space-y-3">
-        <div className="sticky top-2 z-30 -mx-1 rounded-2xl border border-cyan-100/80 bg-white/95 p-2 shadow-[var(--shadow-elevation-2)] backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search centres or suburbs..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value)
-                  setCurrentPage(1)
-                }}
-                className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-9 pr-4 text-sm font-medium focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((prev) => !prev)}
-              className="inline-flex h-[46px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 transition-colors hover:border-cyan-300 hover:text-cyan-700 md:hidden"
-            >
-              <span className="relative inline-flex">
-                <SlidersHorizontal className="h-4 w-4" />
-                {hasActiveFilters ? (
-                  <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-blue-500" />
-                ) : null}
-              </span>
-              Filter
-            </button>
+    <div className="cc-stack">
+      {/* Search & Mode Switcher */}
+      <div className="sticky top-0 z-[60] -mx-4 bg-white/80 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0">
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search crèches or suburbs..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-bold shadow-sm focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 transition-all outline-none"
+            />
           </div>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-cyan-400 active:scale-90 transition-all">
+                <SlidersHorizontal className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-[2.5rem] px-6 pb-12 pt-8">
+              <SheetHeader className="mb-6">
+                <SheetTitle className="text-2xl font-black text-slate-900 tracking-tight">Filters</SheetTitle>
+              </SheetHeader>
+              
+              <div className="cc-stack gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Suburb</label>
+                  <select 
+                    value={selectedSuburb} 
+                    onChange={(e) => setSelectedSuburb(e.target.value)}
+                    className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500"
+                  >
+                    <option value="">All Areas</option>
+                    {suburbs.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
 
-          <div
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Age Group</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['All', ...ageGroups].map(age => (
+                      <button
+                        key={age}
+                        onClick={() => setSelectedAge(age === 'All' ? '' : age)}
+                        className={cn(
+                          "px-4 py-2 rounded-xl text-sm font-bold border transition-all",
+                          (age === 'All' ? !selectedAge : selectedAge === age)
+                            ? "bg-cyan-600 border-cyan-600 text-white"
+                            : "bg-white border-slate-200 text-slate-600"
+                        )}
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Monthly Budget</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FEE_OPTIONS.map(opt => (
+                      <button
+                        key={opt.value}
+                        onClick={() => setSelectedFee(opt.value)}
+                        className={cn(
+                          "px-4 py-3 rounded-xl text-sm font-bold border transition-all text-left",
+                          selectedFee === opt.value
+                            ? "bg-cyan-50 border-cyan-600 text-cyan-700"
+                            : "bg-white border-slate-200 text-slate-600"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <label className="flex items-center justify-between h-16 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 cursor-pointer">
+                  <span className="text-sm font-bold text-slate-700">Accepts Subsidy Only</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedSubsidy === 'true'}
+                    onChange={(e) => setSelectedSubsidy(e.target.checked ? 'true' : '')}
+                    className="h-6 w-6 rounded-lg border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                </label>
+              </div>
+
+              <SheetFooter className="mt-8 gap-3">
+                <Button variant="outline" onClick={resetFilters} className="h-14 rounded-2xl font-bold flex-1">Reset All</Button>
+                <SheetClose asChild>
+                  <Button className="h-14 rounded-2xl bg-cyan-600 font-bold flex-1">Show Results</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Quick Filter Horizontal Scroll */}
+        <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
             className={cn(
-              'grid gap-3 overflow-hidden transition-all duration-300 ease-out md:grid-cols-3 md:overflow-visible',
-              filtersOpen
-                ? 'mt-2 max-h-96 border-t border-slate-100 pt-2 opacity-100 md:mt-0 md:max-h-none md:border-0 md:pt-0'
-                : 'max-h-0 opacity-0 md:mt-2 md:max-h-none md:opacity-100'
+              "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition-all shadow-sm border",
+              viewMode === 'map' ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-slate-200 text-slate-600"
             )}
           >
-            <select
-              value={selectedSuburb}
-              onChange={(event) => {
-                setSelectedSuburb(event.target.value)
-                setCurrentPage(1)
-              }}
-              className="cc-native-field"
-            >
-              <option value="">All suburbs</option>
-              {suburbs.map((suburb) => (
-                <option key={suburb} value={suburb}>
-                  {suburb}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedAge}
-              onChange={(event) => {
-                setSelectedAge(event.target.value)
-                setCurrentPage(1)
-              }}
-              className="cc-native-field"
-            >
-              <option value="">All age groups</option>
-              {ageGroups.map((group) => (
-                <option key={group} value={group}>
-                  {group}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedFee}
-              onChange={(event) => {
-                setSelectedFee(event.target.value)
-                setCurrentPage(1)
-              }}
-              className="cc-native-field"
-            >
-              {FEE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-
-            <label className="flex h-10 items-center gap-2 rounded-md border border-border px-3 text-xs font-semibold md:col-span-3">
-              <input
-                type="checkbox"
-                checked={selectedSubsidy === 'true'}
-                onChange={(event) => {
-                  setSelectedSubsidy(event.target.checked ? 'true' : '')
-                  setCurrentPage(1)
-                }}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              Subsidy accepted
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3.5 flex flex-col gap-2.5 md:mt-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            onClick={() => setViewMode('list')}
-          >
-            List view
-          </Button>
-          <Button
-            size="sm"
-            variant={viewMode === 'map' ? 'default' : 'outline'}
-            onClick={activateMapView}
-          >
-            Map view
-          </Button>
-          <Button size="sm" variant="ghost" onClick={resetFilters}>
-            Reset filters
-          </Button>
-        </div>
-        <p className="text-xs text-slate-500 md:text-right">
-          {isPending ? 'Searching results...' : 'Results update instantly as you type.'}
-        </p>
-      </div>
-
-      <div className="mt-3.5 flex flex-col gap-2.5 border-t border-slate-100 pt-3 sm:mt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
-          <p className="text-xs text-slate-500">
-            Showing {filtered.length} of {totalResults} centre{totalResults === 1 ? '' : 's'}
-          </p>
-          <p className="text-xs text-slate-500">
-            Page {currentPage} of {totalPages}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
-          >
-            Previous
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage >= totalPages}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-
-      <div className="relative mt-3.5 sm:mt-4">
-        {isPending && (
-          <div className="pointer-events-none absolute inset-0 z-20 rounded-2xl bg-white/80">
-            <p className="m-4 text-sm font-semibold text-slate-700">Updating results...</p>
-          </div>
-        )}
-
-        {showMap && (
-          <DirectoryMap
-            centresWithLocation={centresWithLocation}
-            userLocation={userLocation}
-            locationHint={locationHint}
-            showMap={showMap}
-          />
-        )}
-        {showMap && userLocation && centresWithLocation.length > 0 && (
-          <button
-            type="button"
-            className="mt-3 w-full rounded-xl border border-cyan-200 bg-cyan-50 py-3 text-sm font-semibold text-cyan-700 transition-colors hover:bg-cyan-100"
-            onClick={() => {
-              const nearest = [...centresWithLocation]
-                .filter((c) => c.latitude && c.longitude)
-                .sort(
-                  (a, b) =>
-                    distanceKm(userLocation[0], userLocation[1], a.longitude!, a.latitude!) -
-                    distanceKm(userLocation[0], userLocation[1], b.longitude!, b.latitude!)
-                )[0]
-
-              if (nearest) {
-                setViewMode('list')
-                setSelectedSuburb(nearest.suburb ?? '')
-                setCurrentPage(1)
-              }
-            }}
-          >
-            Show nearest centres first
+            {viewMode === 'list' ? <MapIcon className="h-3 w-3" /> : <LayoutGrid className="h-3 w-3" />}
+            {viewMode === 'list' ? 'Map' : 'List'}
           </button>
-        )}
+          
+          <div className="h-8 w-px bg-slate-200 shrink-0 mx-1 self-center" />
 
-        {filtered.length === 0 && !showMap ? (
-          <div className="mt-4 space-y-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-            <p className="text-sm font-semibold text-slate-700">No centres match that search</p>
-            <p className="text-xs text-slate-500">
-              Try another suburb, age group, or uncheck the subsidy filter to broaden the results.
-            </p>
-            <div className="flex justify-center">
-              <Button variant="outline" size="sm" onClick={resetFilters}>
-                Reset filters
+          {quickFilters.map((q, i) => (
+            <button
+              key={i}
+              onClick={q.onClick}
+              className={cn(
+                "shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all shadow-sm border whitespace-nowrap",
+                q.active ? "bg-cyan-50 border-cyan-300 text-cyan-700" : "bg-white border-slate-200 text-slate-600"
+              )}
+            >
+              {q.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="relative min-h-[400px]">
+        {/* Loading Overlay */}
+        <AnimatePresence>
+          {isPending && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-x-0 top-0 z-10 flex justify-center py-8 bg-white/40 backdrop-blur-[2px] rounded-3xl h-full"
+            >
+              <div className="flex h-10 items-center gap-2 rounded-full bg-slate-900 px-4 text-xs font-bold text-white shadow-xl">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Updating Results...
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {viewMode === 'map' ? (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+            <div className="mb-4 flex items-center justify-between px-1">
+              <p className="text-xs font-bold text-slate-400">
+                {geoStatus === 'granted' ? 'Showing centres near you' : 'Mappable centres in this area'}
+              </p>
+              <button 
+                onClick={activateMapView}
+                className="text-xs font-black text-cyan-600 uppercase tracking-widest hover:text-cyan-800"
+              >
+                Refresh Location
+              </button>
+            </div>
+            <DirectoryMap
+              centresWithLocation={centres.filter(c => c.latitude && c.longitude)}
+              userLocation={userLocation}
+              locationHint={geoStatus === 'granted' ? '' : 'Allow location for better results'}
+              showMap={true}
+            />
+          </div>
+        ) : (
+          <div className="cc-stack">
+            {centres.length === 0 ? (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-20 text-center px-6"
+              >
+                <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+                  <Search className="h-8 w-8 text-slate-300" />
+                </div>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight">No crèches found here.</h3>
+                <p className="mt-2 text-sm text-slate-500 max-w-xs">Try adjusting your filters or expanding your search to other suburbs.</p>
+                <Button variant="outline" onClick={resetFilters} className="mt-6 rounded-2xl h-12 font-bold border-slate-200">Clear All Filters</Button>
+              </motion.div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {centres.map((centre, i) => (
+                  <motion.div
+                    key={centre.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    <CentreCard
+                      {...centre}
+                      capacity={centre.capacity ?? undefined}
+                      age_groups={centre.age_groups ?? []}
+                      tagline={centre.tagline ?? undefined}
+                      logo_url={centre.logo_url ?? undefined}
+                      cover_image_url={centre.cover_image_url ?? undefined}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="mt-12 flex items-center justify-between border-t border-slate-100 pt-6">
+                <p className="text-xs font-bold text-slate-400">
+                  Page <span className="text-slate-900">{currentPage}</span> of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <button 
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => p - 1)}
+                    className="h-10 px-4 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 disabled:opacity-30 active:scale-95 transition-all"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(p => p + 1)}
+                    className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold disabled:opacity-30 active:scale-95 transition-all shadow-lg shadow-slate-900/10"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Auth Nudge for Guest Users */}
+      {!initialCentres.length && (
+         <div className="mt-12 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-teal-950 p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12">
+              <Sparkles className="h-24 w-24" />
+            </div>
+            <div className="relative z-10">
+              <h3 className="text-2xl font-black tracking-tight leading-none mb-2">Finding a crèche is hard.</h3>
+              <p className="text-teal-100/70 text-sm max-w-sm mb-6 font-medium">Create a free profile to save your budget, see which crèches are along your commute, and apply with one tap.</p>
+              <Button asChild className="h-12 rounded-xl bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400">
+                <Link href="/register">Join CentreConnect</Link>
               </Button>
             </div>
-          </div>
-        ) : !showMap ? (
-          <>
-            <p className="px-1 text-xs font-medium text-slate-400">
-              {filtered.length} {filtered.length === 1 ? 'centre' : 'centres'} found
-            </p>
-
-            <div className="mt-3.5 grid gap-3 sm:mt-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
-              {filtered.map((centre) => {
-                const latitude = toFiniteNumber(centre.latitude)
-                const longitude = toFiniteNumber(centre.longitude)
-                const distanceLabel =
-                  userLocation && latitude != null && longitude != null
-                    ? `${formatDistance(distanceKm(userLocation[0], userLocation[1], longitude, latitude))} away`
-                    : null
-
-                return (
-                  <CentreCard
-                    key={centre.id}
-                    id={centre.id}
-                    slug={centre.slug}
-                    name={centre.name}
-                    tagline={centre.tagline ?? undefined}
-                    suburb={centre.suburb}
-                    city={centre.city}
-                    capacity={centre.capacity ?? undefined}
-                    age_groups={centre.age_groups ?? []}
-                    is_registered={centre.is_registered}
-                    logo_url={centre.logo_url ?? undefined}
-                    cover_image_url={centre.cover_image_url ?? undefined}
-                    subsidy_accepted={centre.subsidy_accepted}
-                    fees_display_mode={centre.fees_display_mode}
-                    distanceLabel={distanceLabel ?? undefined}
-                  />
-                )
-              })}
-            </div>
-          </>
-        ) : null}
-      </div>
-    </section>
+         </div>
+      )}
+    </div>
   )
 }
-
-
-

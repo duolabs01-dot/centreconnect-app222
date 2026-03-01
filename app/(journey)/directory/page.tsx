@@ -1,20 +1,19 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { PageContainer } from '@/components/layout/PageContainer'
-import { Sparkles } from 'lucide-react'
-import { DirectoryAuthCta } from '@/components/directory/auth-cta'
+import { Sparkles, MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
 import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-centre'
 
 export const metadata: Metadata = {
-  title: 'Directory - CentreConnect',
-  description: 'Find and filter ECD centres by suburb, age group, fees, and subsidy support.',
+  title: 'Find a Crèche - CentreConnect',
+  description: 'Search and compare trusted ECD centres in Alexandra and surrounding areas.',
   openGraph: {
     images: ['/og-image.png'],
   },
 }
 
-export const revalidate = 120
+export const revalidate = 60 // Faster revalidation for a "live" feel
 
 type DirectoryPageProps = {
   searchParams?: {
@@ -36,21 +35,6 @@ type CentreGeoRow = {
   id: string
   latitude: number | string | null
   longitude: number | string | null
-}
-
-type ParentPreferences = {
-  max_monthly_budget: number | null
-  preferred_radius_km: number | null
-  preferred_suburbs: string[] | null
-  transport_needed: boolean | null
-}
-
-function getFeeOptionFromBudget(value: number | null | undefined) {
-  if (!value) return ''
-  if (value <= 800) return '800'
-  if (value <= 1200) return '1200'
-  if (value <= 2000) return '2000'
-  return ''
 }
 
 function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
@@ -99,7 +83,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const selectedAgeGroup = rawAgeGroup.toLowerCase() === 'all' ? '' : rawAgeGroup
   const selectedFee = rawFee.toLowerCase() === 'any' ? '' : rawFee
   const selectedSubsidy = rawSubsidy === 'true'
-  const pageSize = 24
+  
+  const pageSize = 20 // Slightly smaller for faster initial paint
   const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
   const currentPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
   const pageFrom = (currentPage - 1) * pageSize
@@ -108,9 +93,14 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let centres: DirectoryCentre[] = []
   let allActiveCentres: DirectoryFacetSource[] = []
   let totalResults = 0
+  
   try {
     const supabase = await createClient()
 
+    // 1. Get user profile if it exists to help with default logic
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 2. Fetch facets and centres in parallel
     const facetsQuery = supabase
       .from('public_ecd_centres')
       .select('suburb,age_groups')
@@ -121,6 +111,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       .select(
         'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted'
       )
+      .order('is_registered', { ascending: false }) // Prioritize registered centres
       .order('name', { ascending: true })
       .range(pageFrom, pageTo)
 
@@ -128,12 +119,25 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       .from('public_ecd_centres')
       .select('id', { count: 'exact', head: true })
 
-    if (search) centresQuery = centresQuery.ilike('name', `%${search}%`)
-    if (search) countQuery = countQuery.ilike('name', `%${search}%`)
-    if (selectedSuburb) centresQuery = centresQuery.eq('suburb', selectedSuburb)
-    if (selectedSuburb) countQuery = countQuery.eq('suburb', selectedSuburb)
-    if (selectedAgeGroup) centresQuery = centresQuery.contains('age_groups', [selectedAgeGroup])
-    if (selectedAgeGroup) countQuery = countQuery.contains('age_groups', [selectedAgeGroup])
+    // Apply filters
+    if (search) {
+      centresQuery = centresQuery.ilike('name', `%${search}%`)
+      countQuery = countQuery.ilike('name', `%${search}%`)
+    }
+    
+    // PILOT LOGIC: Default to Alexandra if no suburb is selected and user is unauthenticated
+    const effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
+    
+    if (effectiveSuburb) {
+      centresQuery = centresQuery.eq('suburb', effectiveSuburb)
+      countQuery = countQuery.eq('suburb', effectiveSuburb)
+    }
+    
+    if (selectedAgeGroup) {
+      centresQuery = centresQuery.contains('age_groups', [selectedAgeGroup])
+      countQuery = countQuery.contains('age_groups', [selectedAgeGroup])
+    }
+    
     if (selectedFee) {
       const feeCap = Number(selectedFee)
       if (!Number.isNaN(feeCap)) {
@@ -141,22 +145,13 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         countQuery = countQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
       }
     }
-    if (selectedSubsidy) centresQuery = centresQuery.eq('subsidy_accepted', true)
-    if (selectedSubsidy) countQuery = countQuery.eq('subsidy_accepted', true)
+    
+    if (selectedSubsidy) {
+      centresQuery = centresQuery.eq('subsidy_accepted', true)
+      countQuery = countQuery.eq('subsidy_accepted', true)
+    }
 
     const [facetsResult, centresResult, countResult] = await Promise.all([facetsQuery, centresQuery, countQuery])
-
-    if (facetsResult.error) {
-      console.error('Error fetching facets:', facetsResult.error)
-    }
-    if (centresResult.error) {
-      console.error('Error fetching centres:', centresResult.error)
-    }
-    if (countResult.error) {
-      console.error('Error counting centres:', countResult.error)
-    }
-
-
 
     allActiveCentres = (facetsResult.data ?? []) as DirectoryFacetSource[]
     totalResults = countResult.count ?? 0
@@ -166,18 +161,14 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     const geoById = new Map<string, { latitude: number | string | null; longitude: number | string | null }>()
 
     if (centreIds.length > 0) {
-      const { data: geoRows, error: geoError } = await supabase
+      const { data: geoRows } = await supabase
         .from('ecd_centres')
         .select('id,latitude,longitude')
         .in('id', centreIds)
 
-      if (geoError) {
-        console.error('Error fetching centre coordinates:', geoError)
-      } else {
-        ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
-          geoById.set(row.id, { latitude: row.latitude, longitude: row.longitude })
-        })
-      }
+      ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+        geoById.set(row.id, { latitude: row.latitude, longitude: row.longitude })
+      })
     }
 
     centres = centreRows.map((centre) => {
@@ -189,17 +180,10 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       } as RawDirectoryCentre)
     })
   } catch (err) {
-    console.error('Unexpected error in DirectoryPage:', err)
-    centres = []
-    allActiveCentres = []
-    totalResults = 0
+    console.error('DirectoryPage error:', err)
   }
 
-
-  const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
-  const canPrev = currentPage > 1
-  const canNext = currentPage < totalPages
-
+  // Facet processing
   const suburbs = Array.from(
     new Set(
       allActiveCentres
@@ -216,64 +200,39 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     )
   ).sort((a, b) => a.localeCompare(b))
 
-  const defaultFilters = {
-    search,
-    suburb: selectedSuburb,
-    age: selectedAgeGroup,
-    fee: selectedFee,
-    subsidy: selectedSubsidy,
-  }
-
-  const centresWithCoords = centres
-
   return (
     <PageContainer>
-      <div className="cc-page space-y-4 sm:space-y-6">
-          <section className="cc-section-block">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Trusted Discovery
-            </div>
-            <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl lg:text-3xl">
-              Find Centres That Actually Fit Your Family
-            </h1>
-            <p className="text-sm text-slate-600">
-              Filter by what matters: suburb, age group, fees, and subsidy support. Then compare confidently.
-            </p>
-          </section>
+      <div className="space-y-6 pb-20">
+        {/* Simplified, Premium Header */}
+        <header className="px-1">
+          <div className="flex items-center gap-2 text-cyan-600 mb-2">
+            <MapPin className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-widest">Alexandra Pilot</span>
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+            Find the right crèche.
+          </h1>
+          <p className="mt-2 text-slate-500 max-w-lg">
+            Compare trusted centres in Alexandra by price, age group, and government subsidy.
+          </p>
+        </header>
 
-          <section className="rounded-2xl border border-cyan-100/80 bg-white/90 p-3.5 shadow-[var(--shadow-elevation-3)] sm:p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-cyan-800">
-                  <Sparkles className="h-4 w-4" />
-                  <p className="text-xs font-semibold uppercase tracking-[0.08em]">
-                    Personalized for your family
-                  </p>
-                </div>
-                <p className="mt-1 text-sm font-semibold text-slate-900">
-                  Get personalized centre recommendations
-                </p>
-                <p className="text-xs text-slate-600">
-                  Sign in to use saved suburb, budget, and profile preferences.
-                </p>
-              </div>
-              <DirectoryAuthCta />
-            </div>
-          </section>
-
-          <DirectoryExplorer
-            initialCentres={centresWithCoords}
-            suburbs={suburbs}
-            ageGroups={ageGroups}
-            totalResults={totalResults}
-            pageSize={pageSize}
-            initialPage={currentPage}
-            initialFilters={defaultFilters}
-          />
-        </div>
-      </PageContainer>
-    )
+        <DirectoryExplorer
+          initialCentres={centres}
+          suburbs={suburbs}
+          ageGroups={ageGroups}
+          totalResults={totalResults}
+          pageSize={pageSize}
+          initialPage={currentPage}
+          initialFilters={{
+            search,
+            suburb: selectedSuburb, // Don't pass effectiveSuburb here so the UI shows current filter state
+            age: selectedAgeGroup,
+            fee: selectedFee,
+            subsidy: selectedSubsidy,
+          }}
+        />
+      </div>
+    </PageContainer>
+  )
 }
-
-
