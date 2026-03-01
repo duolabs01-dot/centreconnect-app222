@@ -100,7 +100,7 @@ export default async function ParentDailyReportsPage() {
                 {!report ? (
                   <div className="py-8 text-center">
                     <Moon className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500">Today's report is being prepared by the teacher.</p>
+                    <p className="text-sm font-medium text-slate-500">Today's report hasn't been posted yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-8">
@@ -120,6 +120,17 @@ export default async function ParentDailyReportsPage() {
                         </p>
                       </div>
                     </div>
+
+                    {/* Photo if any */}
+                    {report.photo_url && (
+                      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
+                        <img 
+                          src={report.photo_url} 
+                          alt="Today at the centre"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    )}
 
                     {/* Meals Grid */}
                     <div className="grid grid-cols-3 gap-3">

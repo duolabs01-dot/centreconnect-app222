@@ -74,7 +74,7 @@ export default async function AdminDashboardPage() {
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses).gte('created_at', thirtyDaysAgo.toISOString()),
       admin.from('subscriptions').select('monthly_price').in('status', activeStatuses),
       admin.from('applications').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'in_review']),
-      admin.from('ecd_centres').select('province').not('province', 'is', null),
+      admin.from('ecd_centres').select('province').eq('is_active', true).not('province', 'is', null),
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'ecd_admin'),
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).in('role', ['ecd_staff', 'ecd_supervisor']),
@@ -88,11 +88,18 @@ export default async function AdminDashboardPage() {
     totalParents = parents.count ?? 0
     totalStaff = staff.count ?? 0
 
-    const provinceCounts: any = {}
-    centresProv.data?.forEach(c => {
-      const code = normalizeProvinceToCode(c.province)
-      if (code) provinceCounts[code] = (provinceCounts[code] ?? 0) + 1
-    })
+    const regionRows = centresProv.data ?? []
+    const provinceCounts = regionRows.reduce<Record<string, number>>((acc, row) => {
+      const p = normalizeProvinceToCode(row.province) || "Unknown"
+      acc[p] = (acc[p] || 0) + 1
+      return acc
+    }, {})
+
+    const regionalData = Object.entries(provinceCounts).map(([province, count]) => ({
+      province,
+      count
+    }))
+
     const max = Math.max(...SA_PROVINCES.map(p => provinceCounts[p.shortLabel] ?? 0), 1)
     realRegionalData = SA_PROVINCES.map(p => ({
       ...p,

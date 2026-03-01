@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ecd/Card'
+import { Button } from '@/components/ecd/Button'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
@@ -35,7 +35,6 @@ type DailyReport = {
   mood?: string
   nap_start?: string
   nap_end?: string
-  nap_quality?: string
   activities?: string[]
   teacher_notes?: string
   published_at?: string
@@ -68,7 +67,7 @@ const EATEN_OPTIONS = [
 ]
 
 const ACTIVITIES = [
-  'Painting', 'Outdoor Play', 'Story Time', 'Music', 'Numbers', 'Art', 'Games', 'Other'
+  'Painting', 'Outdoor Play', 'Story Time', 'Music', 'Numbers', 'Art', 'Games'
 ]
 
 export function DailyReportsClient({
@@ -101,12 +100,11 @@ export function DailyReportsClient({
     if (!selectedChildId) return
     setIsSaving(true)
 
-    const reportToSave = {
+    const reportToSave: any = {
       ecd_id: ecdId,
       child_id: selectedChildId,
       report_date: todayDate,
-      ...currentReport,
-      updated_at: new Date().toISOString()
+      ...currentReport
     }
 
     if (publish) {
@@ -200,7 +198,7 @@ export function DailyReportsClient({
                             key={opt.value}
                             onClick={() => updateReport(selectedChild.id, { [meal.key]: opt.value })}
                             className={cn(
-                              "h-11 rounded-lg text-xs font-bold transition-all",
+                              "h-12 rounded-xl text-xs font-bold transition-all",
                               (currentReport as any)[meal.key] === opt.value
                                 ? "bg-cyan-100 text-cyan-800 border-2 border-cyan-300"
                                 : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"
@@ -286,7 +284,7 @@ export function DailyReportsClient({
                           key={act}
                           onClick={() => toggleActivity(act)}
                           className={cn(
-                            "h-10 px-4 rounded-full text-xs font-bold transition-all border",
+                            "h-12 px-5 rounded-full text-xs font-bold transition-all border",
                             currentReport.activities?.includes(act)
                               ? "bg-cyan-600 text-white border-cyan-600 shadow-sm"
                               : "bg-white text-slate-600 border-slate-200 hover:border-cyan-300"
@@ -310,7 +308,7 @@ export function DailyReportsClient({
                     placeholder="Share some highlights about their day..."
                     value={currentReport.teacher_notes || ''}
                     onChange={(e) => updateReport(selectedChild.id, { teacher_notes: e.target.value })}
-                    className="min-h-[120px] rounded-xl border-slate-200 bg-slate-50/50"
+                    className="min-h-[120px] rounded-2xl border-slate-200 bg-slate-50/50"
                   />
                   
                   <div className="mt-6 flex flex-col gap-3">
@@ -318,14 +316,16 @@ export function DailyReportsClient({
                       onClick={() => handleSave(false)}
                       disabled={isSaving}
                       variant="outline"
-                      className="h-12 rounded-xl font-bold border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+                      size="lg"
+                      className="rounded-2xl font-bold border-cyan-200 text-cyan-700 hover:bg-cyan-50"
                     >
                       {isSaving ? 'Saving...' : 'Save as Draft'}
                     </Button>
                     <Button 
                       onClick={() => handleSave(true)}
                       disabled={isSaving}
-                      className="h-14 rounded-xl font-bold bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-900/20"
+                      size="lg"
+                      className="rounded-2xl font-bold bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-900/20 h-14"
                     >
                       <Share className="mr-2 h-5 w-5" />
                       {currentReport.published_at ? 'Update Published Report' : 'Publish to Parents'}
@@ -342,11 +342,10 @@ export function DailyReportsClient({
             </div>
           </div>
         ) : (
-          <div className="flex h-64 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-white">
+          <div className="flex h-64 flex-col items-center justify-center rounded-[32px] border-2 border-dashed border-slate-200 bg-white">
             <p className="text-sm font-semibold text-slate-500">No enrolled children found to report on.</p>
           </div>
         )}
       </div>
     </EcdOsShell>
   )
-}
