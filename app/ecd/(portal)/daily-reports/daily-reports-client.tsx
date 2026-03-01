@@ -349,3 +349,4 @@ export function DailyReportsClient({
       </div>
     </EcdOsShell>
   )
+}
