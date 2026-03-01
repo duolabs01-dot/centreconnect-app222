@@ -187,7 +187,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                   <div className="fixed inset-0 z-0" onClick={() => setShowUserDropdown(false)} />
                   <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-2xl animate-in zoom-in-95 duration-100 z-10">
                     <div className="px-3 py-2 border-b border-slate-50 mb-1">
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Active Operative</p>
+                      <p className="text-xs font-semibold text-slate-400">Signed in</p>
                       <div className="flex items-center gap-2 mt-1">
                         <p className="text-sm font-bold text-slate-900">{userName}</p>
                         {isVerified && <BadgeCheck className="h-4 w-4 text-cyan-500 fill-cyan-50" />}
