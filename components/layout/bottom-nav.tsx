@@ -62,6 +62,8 @@ export function BottomNav({ items }: BottomNavProps) {
           border: '1px solid rgba(255,255,255,0.35)',
           boxShadow:
             '0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)',
+          touchAction: 'manipulation',
+          paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom) / 2)',
         }}
       >
         {items.map((item) => {
