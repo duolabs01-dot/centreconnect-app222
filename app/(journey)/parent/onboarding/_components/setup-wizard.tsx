@@ -63,7 +63,7 @@ export function SetupWizard() {
           parent_id: user.id,
           first_name: child.firstName,
           last_name: child.lastName,
-          date_of_birth: child.child_dob || new Date().toISOString().split('T')[0] // Fallback
+          date_of_birth: child.dob || new Date().toISOString().split('T')[0] // Fallback
         } as any)
 
       if (childError) throw childError
