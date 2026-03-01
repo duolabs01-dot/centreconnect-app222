@@ -227,9 +227,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const centresWithCoords = centres
 
   return (
-    <main className="bg-gradient-to-b from-cyan-50/50 via-white to-sky-50/30 py-4 sm:py-6 lg:py-8">
-      <PageContainer>
-        <div className="cc-page space-y-4 sm:space-y-6">
+    <PageContainer>
+      <div className="cc-page space-y-4 sm:space-y-6">
           <section className="cc-section-block">
             <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
               <Sparkles className="h-3.5 w-3.5" />
