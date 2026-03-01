@@ -49,8 +49,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
           container: mapContainerRef.current,
           style: 'https://tiles.openfreemap.org/styles/liberty',
           center: [28.0473, -26.2041], // Johannesburg default
-          zoom: 11,
-          antialias: true
+          zoom: 11
         })
 
         mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
