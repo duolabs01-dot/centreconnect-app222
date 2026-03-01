@@ -3,7 +3,6 @@ import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { NextResponse } from 'next/server'
 import { ROOT_DOMAIN } from '@/lib/config'
-import { validateSession } from '@/lib/session-guard'
 
 const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'admin', 'api'])
 const ROLE_CACHE_COOKIES = ['cc_role', 'cc_role_uid', 'cc_role_exp']
@@ -52,69 +51,53 @@ function clearSessionCookies(response: NextResponse, request: NextRequest) {
   for (const cookieName of ROLE_CACHE_COOKIES) {
     response.cookies.set({ name: cookieName, value: '', ...options })
   }
+  
+  // Also clear the activity cookie
+  response.cookies.set({ name: 'cc_last_activity', value: '', ...options })
 }
 
-async function getAuthFromRequest(request: NextRequest) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseAnonKey) return { user: null, session: null }
-
-  let response = NextResponse.next({ request: { headers: request.headers } })
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
-
-  const [{ data: sessionData }, { data: userData }] = await Promise.all([
-    supabase.auth.getSession(),
-    supabase.auth.getUser(),
-  ])
-
-  return {
-    session: sessionData.session,
-    user: userData.user,
-  }
-}
+const ACTIVITY_COOKIE = 'cc_last_activity'
+const INACTIVITY_LIMIT = 10 * 60 * 1000 // 10 minutes
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
   const subdomain = resolveTenantSubdomain(getHostname(request))
-  if (subdomain && request.nextUrl.pathname === '/') {
+  
+  if (subdomain && pathname === '/') {
     const rewriteUrl = request.nextUrl.clone()
     rewriteUrl.pathname = `/c/${subdomain}`
     return NextResponse.rewrite(rewriteUrl)
   }
 
-  if (isProtectedPath(request.nextUrl.pathname) && hasSupabaseSessionCookie(request)) {
-    const { user, session } = await getAuthFromRequest(request)
-    if (user) {
-      const isValid = await validateSession(
-        user.id,
-        session?.access_token ?? ''
-      )
+  // Handle inactivity timeout for protected paths
+  if (isProtectedPath(pathname) && hasSupabaseSessionCookie(request)) {
+    const lastActivity = request.cookies.get(ACTIVITY_COOKIE)?.value
+    const now = Date.now()
 
-      if (!isValid) {
-        // Redirect to landing page as requested
+    if (lastActivity) {
+      const lastTime = parseInt(lastActivity)
+      if (now - lastTime > INACTIVITY_LIMIT) {
         const redirectUrl = new URL('/?reason=session_expired', request.url)
         const response = NextResponse.redirect(redirectUrl)
         clearSessionCookies(response, request)
+        response.cookies.delete(ACTIVITY_COOKIE)
         return response
       }
     }
+
+    // Session is valid or fresh, update session and activity timestamp
+    const response = await updateSession(request)
+    
+    // Don't set activity cookie if we're being redirected (e.g. by updateSession)
+    if (!response.headers.get('location')) {
+      response.cookies.set(ACTIVITY_COOKIE, now.toString(), {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: request.nextUrl.protocol === 'https:' || process.env.NODE_ENV === 'production'
+      })
+    }
+    return response
   }
 
   return await updateSession(request)
