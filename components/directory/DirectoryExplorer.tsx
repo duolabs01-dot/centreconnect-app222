@@ -402,20 +402,57 @@ export default function DirectoryExplorer({
         )}
       </div>
 
-      {/* Auth Nudge for Guest Users */}
-      {!initialCentres.length && (
-         <div className="mt-12 rounded-[2.5rem] bg-gradient-to-br from-slate-900 to-teal-950 p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-20 rotate-12">
-              <Sparkles className="h-24 w-24" />
+      {/* Auth Nudge for Guest Users — Shown at the bottom when they have results to encourage conversion */}
+      {!initialFilters.search && !hasActiveFilters && centres.length > 0 && (
+         <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 rounded-[2.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950 p-10 text-white relative overflow-hidden shadow-2xl"
+         >
+            <div className="absolute -top-12 -right-12 p-8 opacity-10 rotate-12">
+              <Sparkles className="h-48 w-48 text-cyan-400" />
             </div>
-            <div className="relative z-10">
-              <h3 className="text-2xl font-black tracking-tight leading-none mb-2">Finding a crèche is hard.</h3>
-              <p className="text-teal-100/70 text-sm max-w-sm mb-6 font-medium">Create a free profile to save your budget, see which crèches are along your commute, and apply with one tap.</p>
-              <Button asChild className="h-12 rounded-xl bg-cyan-500 text-slate-900 font-bold hover:bg-cyan-400">
-                <Link href="/register">Join CentreConnect</Link>
-              </Button>
+            
+            <div className="relative z-10 grid gap-8 md:grid-cols-2 md:items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-cyan-400 mb-4 border border-cyan-500/30">
+                  <Sparkles className="h-3 w-3" />
+                  Premium Features
+                </div>
+                <h3 className="text-3xl font-black tracking-tight leading-[1.1] mb-4">
+                  Find the perfect crèche, then let us handle the rest.
+                </h3>
+                <p className="text-slate-300 text-lg mb-8 font-medium leading-relaxed">
+                  Join 500+ parents who use CentreConnect to manage documents, get daily reports, and track applications in real-time.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button asChild size="lg" className="h-14 rounded-2xl bg-cyan-500 text-slate-900 font-black hover:bg-cyan-400 shadow-xl shadow-cyan-500/20 px-8">
+                    <Link href="/register">Create Free Account</Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-white/20 text-white font-bold hover:bg-white/10 px-8">
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { icon: Check, label: "1-Tap Applications" },
+                  { icon: Check, label: "Document Vault" },
+                  { icon: Check, label: "Daily Reports" },
+                  { icon: Check, label: "Instant Messaging" }
+                ].map((f, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-white/5 rounded-2xl p-4 border border-white/10">
+                    <div className="h-6 w-6 rounded-full bg-cyan-500 flex items-center justify-center shrink-0">
+                      <f.icon className="h-3.5 w-3.5 text-slate-900 stroke-[3]" />
+                    </div>
+                    <span className="text-sm font-bold text-slate-200">{f.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-         </div>
+         </motion.div>
       )}
     </div>
   )
