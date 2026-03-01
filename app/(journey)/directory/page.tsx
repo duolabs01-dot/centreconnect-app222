@@ -273,8 +273,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           />
         </div>
       </PageContainer>
-    </main>
-  )
+    )
 }
 
 
