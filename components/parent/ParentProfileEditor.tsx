@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronRight, Camera, Bell, Shield, Users, FileText, Heart, Sliders, HelpCircle, LogOut, UserRound, Phone, Mail, Lock } from 'lucide-react'
+import { ChevronRight, Camera, Bell, Shield, Users, FileText, Heart, Sliders, HelpCircle, LogOut, UserRound, Phone, Mail, Lock, Zap } from 'lucide-react'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
