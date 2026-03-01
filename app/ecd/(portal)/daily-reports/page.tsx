@@ -6,7 +6,7 @@ import { DailyReportsClient } from './daily-reports-client'
 
 export const metadata: Metadata = {
   title: 'Daily Reports - CentreConnect',
-  description: 'Provide daily updates for parents on their children's meals, mood, and activities.',
+  description: 'Provide daily updates for parents on their children\'s meals, mood, and activities.',
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {

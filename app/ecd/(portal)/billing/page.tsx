@@ -319,7 +319,3 @@ export default async function EcdBillingPage() {
     </EcdOsShell>
   )
 }
-  )
-}
-
-

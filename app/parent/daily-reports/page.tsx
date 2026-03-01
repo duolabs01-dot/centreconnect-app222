@@ -21,7 +21,7 @@ import {
 
 export const metadata: Metadata = {
   title: 'Daily Reports - CentreConnect',
-  description: 'View today's progress, meals, and activities for your children.',
+  description: 'View today\'s progress, meals, and activities for your children.',
 }
 
 const MOOD_MAP: Record<string, { label: string, icon: any, color: string }> = {

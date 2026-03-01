@@ -593,6 +593,3 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     </EcdOsShell>
   )
 }
-  )
-}
-
