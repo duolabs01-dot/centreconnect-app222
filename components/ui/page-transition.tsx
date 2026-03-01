@@ -7,23 +7,30 @@ import { usePathname } from 'next/navigation'
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const reducedMotion = useReducedMotion()
+  
+  // Only animate main portal areas for consistent iOS feel
   const shouldAnimateTabs =
     pathname?.startsWith('/parent') ||
-    pathname?.startsWith('/directory')
+    pathname?.startsWith('/directory') ||
+    pathname?.startsWith('/ecd') ||
+    pathname?.startsWith('/admin')
 
   if (reducedMotion || !shouldAnimateTabs) {
     return <div key={pathname}>{children}</div>
   }
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 10, scale: 0.992, filter: 'blur(2px)' }}
-        animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-        exit={{ opacity: 0, y: -6, scale: 0.996, filter: 'blur(1px)' }}
-        transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-        className="will-change-transform"
+        initial={{ opacity: 0, scale: 0.98, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 1.02, y: -8 }}
+        transition={{ 
+          duration: 0.2, 
+          ease: [0.33, 1, 0.68, 1] // iOS-style Quint ease
+        }}
+        className="will-change-[transform,opacity]"
       >
         {children}
       </motion.div>

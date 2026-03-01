@@ -41,6 +41,13 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     setOptimisticPath(pathname)
   }, [pathname])
 
+  // AGGRESSIVE PREFETCHING: Prefetch all items in the nav bar on mount
+  useEffect(() => {
+    items.forEach(item => {
+      router.prefetch(item.href)
+    })
+  }, [items, router])
+
   // Visual tilt effect based on drag
   const rotate = useTransform(dragX, [-100, 100], [-5, 5])
   const opacity = useTransform(dragX, [-150, -100, 0, 100, 150], [0.4, 0.8, 1, 0.8, 0.4])
@@ -70,7 +77,9 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     }
   }
 
-  if (pathname === '/') return null
+  // Hide on auth pages or where explicitly requested via search params
+  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
+  if (pathname === '/' || isAuthPage) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
