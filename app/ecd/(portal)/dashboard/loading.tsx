@@ -1,4 +1,4 @@
-﻿export default function EcdDashboardLoading() {
+export default function EcdDashboardLoading() {
   return (
     <div style={{ fontFamily: 'var(--font-ecd)', padding: '24px' }}>
       <div className="w-56 h-7 bg-gray-200 rounded animate-pulse-slow mb-6" />
