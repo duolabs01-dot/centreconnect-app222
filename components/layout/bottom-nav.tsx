@@ -47,23 +47,22 @@ export function BottomNav({ items }: BottomNavProps) {
     // Entry animation — nav slides up from below on first mount
     <motion.nav
       aria-label="Main navigation"
-      className="fixed bottom-[calc(2rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 md:hidden"
+      className="fixed bottom-10 left-1/2 z-[100] -translate-x-1/2 md:hidden w-max"
       initial={{ y: 120, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={getSpring(NAV_ENTRY)}
     >
       {/* Frosted glass pill container */}
       <div
-        className="flex items-center gap-1.5 rounded-full px-2.5 py-2.5 shadow-2xl"
+        className="flex items-center gap-1.5 rounded-full px-3 py-2.5 shadow-2xl"
         style={{
-          background: 'rgba(255,255,255,0.22)',
-          backdropFilter: 'blur(32px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
-          border: '1px solid rgba(255,255,255,0.35)',
+          background: 'rgba(255,255,255,0.25)',
+          backdropFilter: 'blur(32px) saturate(210%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(210%)',
+          border: '1.5px solid rgba(255,255,255,0.4)',
           boxShadow:
-            '0 12px 40px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)',
+            '0 20px 50px rgba(0,0,0,0.2), 0 8px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.5)',
           touchAction: 'manipulation',
-          paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom) / 2)',
         }}
       >
         {items.map((item) => {
