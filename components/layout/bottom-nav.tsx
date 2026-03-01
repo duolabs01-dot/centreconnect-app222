@@ -54,14 +54,14 @@ export function BottomNav({ items }: BottomNavProps) {
     >
       {/* Frosted glass pill container */}
       <div
-        className="flex items-center gap-1 rounded-full px-2 py-2"
+        className="flex items-center gap-1.5 rounded-full px-2 py-2 shadow-2xl"
         style={{
-          background: 'rgba(255,255,255,0.18)',
-          backdropFilter: 'blur(28px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(180%)',
-          border: '1px solid rgba(255,255,255,0.32)',
+          background: 'rgba(255,255,255,0.22)',
+          backdropFilter: 'blur(32px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(200%)',
+          border: '1px solid rgba(255,255,255,0.35)',
           boxShadow:
-            '0 8px 32px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,255,255,0.4)',
+            '0 12px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.4)',
         }}
       >
         {items.map((item) => {
@@ -78,32 +78,35 @@ export function BottomNav({ items }: BottomNavProps) {
             >
               <motion.div
                 // Morphing pill: width expands when active, collapses when not
-                layout
-                layoutId={undefined}
                 animate={{
-                  backgroundColor: active ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)',
-                  minWidth: active ? 100 : 48,
+                  minWidth: active ? 110 : 48,
                   paddingLeft: active ? 18 : 14,
                   paddingRight: active ? 18 : 14,
                 }}
                 transition={getSpring(PILL_SPRING)}
-                whileTap={{ scale: 0.88 }}
+                whileTap={{ scale: 0.9 }}
                 style={{
-                  height: 44,
+                  height: 46,
                   borderRadius: 9999,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 6,
-                  boxShadow: active
-                    ? '0 2px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)'
-                    : 'none',
+                  gap: 8,
                   cursor: 'pointer',
                   userSelect: 'none',
                   position: 'relative',
-                  overflow: 'hidden',
                 }}
               >
+                {/* Shared Background — Slides smoothly between items */}
+                {active && (
+                  <motion.div
+                    layoutId="nav-active-pill"
+                    className="absolute inset-0 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.12),0_2px_4px_rgba(0,0,0,0.08)]"
+                    style={{ borderRadius: 9999, zIndex: 0 }}
+                    transition={getSpring(PILL_SPRING)}
+                  />
+                )}
+
                 {/* Badge dot — pops in with spring */}
                 <AnimatePresence>
                   {hasBadge && (
@@ -117,11 +120,12 @@ export function BottomNav({ items }: BottomNavProps) {
                         position: 'absolute',
                         top: 8,
                         right: 8,
-                        width: 8,
-                        height: 8,
+                        width: 9,
+                        height: 9,
                         borderRadius: '50%',
                         background: '#f43f5e',
-                        border: '1.5px solid rgba(255,255,255,0.6)',
+                        border: '2px solid rgba(255,255,255,0.8)',
+                        zIndex: 10,
                       }}
                       aria-hidden
                     />
@@ -130,17 +134,18 @@ export function BottomNav({ items }: BottomNavProps) {
 
                 {/* Icon — bounces up when becoming active */}
                 <motion.div
+                  className="relative z-10"
                   animate={{
                     color: active ? '#0f766e' : '#475569',
-                    scale: active ? 1 : 1,
-                    y: active ? -1 : 0,
+                    scale: active ? 1.05 : 1,
+                    y: active ? -0.5 : 0,
                   }}
                   transition={getSpring(ICON_SPRING)}
                 >
                   <item.icon
                     style={{
-                      width: active ? 18 : 20,
-                      height: active ? 18 : 20,
+                      width: active ? 19 : 21,
+                      height: active ? 19 : 21,
                       strokeWidth: active ? 2.5 : 2,
                       flexShrink: 0,
                     }}
@@ -153,17 +158,17 @@ export function BottomNav({ items }: BottomNavProps) {
                   {active && (
                     <motion.span
                       key="label"
-                      initial={{ opacity: 0, x: -8, width: 0 }}
-                      animate={{ opacity: 1, x: 0, width: 'auto' }}
-                      exit={{ opacity: 0, x: -4, width: 0 }}
+                      initial={{ opacity: 0, x: -4 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -2 }}
                       transition={getSpring(LABEL_SPRING)}
+                      className="relative z-10"
                       style={{
                         fontSize: 13,
-                        fontWeight: 700,
+                        fontWeight: 800,
                         lineHeight: 1,
                         whiteSpace: 'nowrap',
                         color: '#0f766e',
-                        overflow: 'hidden',
                       }}
                     >
                       {item.label}
