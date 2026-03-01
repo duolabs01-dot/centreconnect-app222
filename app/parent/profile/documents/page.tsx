@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { DocumentsVaultManager } from '@/components/parent/DocumentsVaultManager'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import { ShieldCheck } from 'lucide-react'
+import { SurfaceCard } from '@/components/ui/surface-card'
 
 export const metadata: Metadata = {
   title: 'Documents Vault | Parent Portal | CentreConnect',
