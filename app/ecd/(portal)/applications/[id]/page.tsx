@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
 import { StatusUpdateForm } from './status-update-form'
 import { TemplateSendPanel } from './template-send-panel'
+import { FeeAgreementCard } from './fee-agreement-card'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
@@ -37,7 +38,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
   const { data: application } = await supabase
     .from('applications')
     .select(
-      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+      'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,multiple_threshold_reached,share_multiple_flag,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,monthly_fee_cents,fee_notes,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
     )
     .eq('id', params.id)
     .eq('ecd_id', ecdId)
@@ -296,6 +297,16 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
               />
             </CardContent>
           </Card>
+
+          {['approved', 'enrolled'].includes(application.status) && (
+            <div className="mt-4">
+              <FeeAgreementCard
+                applicationId={application.id}
+                initialMonthlyFeeCents={application.monthly_fee_cents ?? 0}
+                initialFeeNotes={application.fee_notes}
+              />
+            </div>
+          )}
 
           <Card className="mt-4 border-slate-200">
             <CardHeader>

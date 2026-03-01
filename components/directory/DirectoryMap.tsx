@@ -56,11 +56,8 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         mapInstanceRef.current.addControl(new NavigationControl({ showCompass: false }), 'top-right')
 
         mapInstanceRef.current.on('error', (e) => {
-          console.warn('MapLibre error:', e)
-          // Don't trigger full error UI for minor tile errors, only for fatal failures
-          if (!mapInstanceRef.current?.loaded()) {
-            setMapError(true)
-          }
+          console.warn('Map failed to load', e)
+          setMapError(true)
         })
 
       } catch (err) {
@@ -157,23 +154,16 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
 
   if (mapError) {
     return (
-      <div 
-        className="flex h-[260px] flex-col items-center justify-center gap-4 rounded-2xl bg-slate-50 sm:h-[420px]"
-        aria-label="ECD centres map near you"
-        role="region"
-      >
-        <div className="text-center px-6">
-          <p className="text-sm font-medium text-slate-600">Map visualization unavailable</p>
-          <p className="text-xs text-slate-400 mt-1 mb-4">Try refreshing or view results in external map provider.</p>
-          <a 
-            href={`https://www.google.com/maps/search/ECD+centres+near+${locationHint}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center rounded-lg bg-[#065A82] px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#054a6b]"
-          >
-            Open in Google Maps
-          </a>
-        </div>
+      <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-2xl bg-slate-50 text-center sm:h-[420px]">
+        <p className="text-sm font-semibold text-slate-600">Map unavailable</p>
+        <a 
+          href={`https://www.google.com/maps/search/ECD+centres+near+${locationHint}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-bold text-cyan-600 underline"
+        >
+          Open in Google Maps
+        </a>
       </div>
     )
   }
@@ -212,8 +202,8 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
       </div>
 
       {/* Centre Count Badge */}
-      <div className="absolute bottom-3 right-3 z-10 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-700 shadow-sm backdrop-blur border border-slate-100">
-        {centresWithLocation.length} centres found
+      <div className="absolute top-3 right-3 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur">
+        {centresWithLocation.length} centres on map
       </div>
     </div>
   )

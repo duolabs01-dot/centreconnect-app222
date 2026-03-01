@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
+import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
 export const metadata: Metadata = {
@@ -18,8 +19,11 @@ export default async function EcdBillingPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const monthName = now.toLocaleString('en-ZA', { month: 'long' })
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
 
-  const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }] = await Promise.all([
+  const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }, { data: enrolledApps }] = await Promise.all([
     supabase
       .from('subscriptions')
       .select('id,tier,status,monthly_price,setup_fee,current_period_start,current_period_end,trial_ends_at')
@@ -46,7 +50,16 @@ export default async function EcdBillingPage() {
       .eq('ecd_id', ecdId)
       .eq('period_month', currentMonth)
       .maybeSingle(),
+    supabase
+      .from('applications')
+      .select('monthly_fee_cents')
+      .eq('ecd_id', ecdId)
+      .eq('status', 'enrolled')
+      .gt('monthly_fee_cents', 0)
   ])
+
+  const enrolledWithFeesCount = enrolledApps?.length ?? 0
+  const totalExpectedMonthlyRevenue = (enrolledApps?.reduce((acc, app) => acc + (app.monthly_fee_cents ?? 0), 0) ?? 0) / 100
 
   const pnl = {
     revenue: Number(financialSnapshot?.revenue_total ?? 0),
@@ -65,6 +78,16 @@ export default async function EcdBillingPage() {
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
+        {role === 'ecd_admin' && (
+          <MonthlyInvoicesCard 
+            ecdId={ecdId}
+            enrolledWithFeesCount={enrolledWithFeesCount}
+            totalExpectedMonthlyRevenue={totalExpectedMonthlyRevenue}
+            currentMonthName={monthName}
+            year={year}
+            month={month}
+          />
+        )}
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden lg:col-span-2">
             <CardHeader className="bg-slate-50/50">

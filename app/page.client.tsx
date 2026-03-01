@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Sparkles, Map, FileCheck2, Activity, MessageCircle, FolderLock, Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PwaInstallCard } from '@/components/pwa/pwa-install-card'
-import { formatDate, getDisplayNameFromEmail, getJohannesburgGreeting } from '@/lib/utils'
+import { formatDate, getJohannesburgGreeting } from '@/lib/utils'
 
 type HomeClientPageProps = {
   userEmail: string | null
@@ -38,24 +37,15 @@ type HomeClientPageProps = {
   }>
 }
 
-const features = [
-  { icon: Map, title: 'Find Centres', desc: 'Browse ECDs near you' },
-  { icon: FileCheck2, title: 'Apply Online', desc: 'No paperwork needed' },
-  { icon: Activity, title: 'Track Progress', desc: 'Real-time status updates' },
-  { icon: MessageCircle, title: 'Communicate', desc: 'Direct centre messaging' },
-  { icon: FolderLock, title: 'Store Documents', desc: 'Secure document vault' },
-  { icon: Bell, title: 'Get Notified', desc: 'Instant decision alerts' },
-]
-
-export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClientPageProps) {
+export default function HomeClientPage({ userEmail, jobOpportunities, shortlistCentres }: HomeClientPageProps) {
   const isSignedIn = Boolean(userEmail)
-  const parentName = getDisplayNameFromEmail(userEmail)
-  const [timeGreeting, setTimeGreeting] = useState(getJohannesburgGreeting())
+  const [, setTimeGreeting] = useState(getJohannesburgGreeting())
   const activeJobs = jobOpportunities.slice(0, 6)
-  const title = useMemo(
-    () => (isSignedIn ? `Welcome back, ${parentName}` : 'Find the right ECD for your child'),
-    [isSignedIn, parentName]
-  )
+  
+  // Use first centre's suburb as location hint if available, else Alexandra
+  const locationHint = shortlistCentres.length > 0 && shortlistCentres[0].suburb 
+    ? shortlistCentres[0].suburb 
+    : 'Alexandra'
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -65,91 +55,170 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
   }, [])
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_-10%,rgba(14,165,233,0.16),transparent_55%),linear-gradient(to_bottom,#f0f9ff,#f8fafc_35%,#ffffff)] pb-28 md:pb-0">
-      <header className="glass-nav sticky top-0 z-30 border-b border-cyan-100/60">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-700">CentreConnect</p>
-            <h1 className="mt-1 truncate text-lg font-semibold text-slate-900 sm:text-xl">{title}</h1>
-            {isSignedIn ? (
-              <p className="text-xs text-slate-600">{timeGreeting}</p>
-            ) : (
-              <p className="text-sm font-semibold uppercase tracking-wider text-cyan-600">South Africa&apos;s ECD Platform</p>
-            )}
+    <div className="min-h-screen bg-white pb-28 md:pb-0">
+      {/* SECTION 1 — Sticky Glass Nav */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/60 backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+          <Link href="/" className="flex items-center gap-1.5">
+            <span className="font-display text-xl font-bold tracking-tight text-white">CentreConnect</span>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mt-1" />
+          </Link>
+          
+          <nav className="hidden items-center gap-8 md:flex">
+            <Link href="/directory" className="text-sm font-medium text-white/70 transition hover:text-white">Find a Centre</Link>
+            <Link href="/for-centres" className="text-sm font-medium text-white/70 transition hover:text-white">For ECDs</Link>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <Button size="sm" className="font-bold" asChild>
+              <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>
+                {isSignedIn ? 'Dashboard' : 'Sign In'}
+              </Link>
+            </Button>
           </div>
-          <Button size="sm" className="shrink-0 font-semibold" variant={isSignedIn ? 'outline' : 'default'} asChild>
-            <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>{isSignedIn ? 'Open Dashboard' : 'Sign in'}</Link>
-          </Button>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="cc-page">
-          <section className="glass-card rounded-2xl p-5 sm:p-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-              <Sparkles className="h-3.5 w-3.5" />
-              Parent Hub
-            </div>
-            <h2 className="mt-3 text-[2.6rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 md:text-5xl lg:text-6xl">
-              Finally, a parent experience that actually understands the pressure.
-            </h2>
-            <p className="mt-3 max-w-2xl text-lg font-medium leading-relaxed text-slate-700/90 md:text-xl">
-              Compare with confidence, track every response, and know your next best move without chasing updates.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button className="font-semibold" asChild>
-                <Link href="/directory">Browse Centres</Link>
-              </Button>
-              {isSignedIn ? (
-                <Button className="font-semibold" variant="outline" asChild>
-                  <Link href="/parent/applications">My Applications</Link>
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <div className="space-y-12 sm:space-y-20">
+          
+          {/* SECTION 2 — New Hero */}
+          <section className="relative overflow-hidden rounded-3xl bg-[#001E2B] px-8 py-16 sm:px-12 sm:py-24">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(6,182,212,0.15),transparent_60%)]" />
+            
+            <div className="relative z-10 max-w-4xl">
+              <h2 className="font-display text-5xl font-extrabold tracking-[-0.04em] text-white leading-[1.03] sm:text-6xl lg:text-7xl">
+                Every child deserves a <span className="text-cyan-400 italic">great start</span> in life.
+              </h2>
+              <p className="mt-6 max-w-xl text-lg text-white/60 leading-relaxed sm:text-xl">
+                CentreConnect connects <span className="text-white font-semibold">{locationHint}</span> families with quality ECD centres — and gives centres the tools to run better.
+              </p>
+              
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Button size="lg" className="h-14 px-8 text-base font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl" asChild>
+                  <Link href="/directory">Find a Centre</Link>
                 </Button>
-              ) : (
-                <Button className="font-semibold" variant="outline" asChild>
-                  <Link href="/register">Create Free Account &rarr;</Link>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold border-white/20 text-white hover:bg-white/10 rounded-xl" asChild>
+                  <Link href="/for-centres">I Run a Centre &rarr;</Link>
                 </Button>
-              )}
+              </div>
+
+              {/* Stats row */}
+              <div className="mt-16 grid grid-cols-2 gap-8 border-t border-white/10 pt-10 sm:grid-cols-3">
+                <div>
+                  <p className="font-display text-3xl font-bold text-white">300+</p>
+                  <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">Centres Listed</p>
+                </div>
+                <div>
+                  <p className="font-display text-3xl font-bold text-white">{locationHint}</p>
+                  <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">Starting Here</p>
+                </div>
+                <div className="hidden sm:block">
+                  <p className="font-display text-3xl font-bold text-white">R0</p>
+                  <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">For Parents</p>
+                </div>
+              </div>
             </div>
-            <div className="mx-auto mt-12 grid max-w-2xl grid-cols-2 gap-4 text-left sm:grid-cols-3">
-              {features.map((item) => (
-                <div key={item.title} className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/60 p-4 backdrop-blur-sm">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
-                    <item.icon className="h-4 w-4" />
+          </section>
+
+          {/* SECTION 3 — Parent journey strip */}
+          <section className="py-8">
+            <div className="grid gap-12 md:grid-cols-3">
+              <div className="relative">
+                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">1</span>
+                <div className="absolute top-8 left-2">
+                  <p className="text-xl font-bold text-slate-900">Search your area</p>
+                  <p className="mt-1 text-slate-600">Find verified centres in Johannesburg and beyond.</p>
+                </div>
+              </div>
+              <div className="relative">
+                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">2</span>
+                <div className="absolute top-8 left-2">
+                  <p className="text-xl font-bold text-slate-900">Apply in 5 minutes</p>
+                  <p className="mt-1 text-slate-600">One profile, multiple applications. No paperwork.</p>
+                </div>
+              </div>
+              <div className="relative">
+                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">3</span>
+                <div className="absolute top-8 left-2">
+                  <p className="text-xl font-bold text-slate-900">Track every update</p>
+                  <p className="mt-1 text-slate-600">Know exactly where your application stands.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 4 — Safety feature callout */}
+          <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-8 py-12 text-white sm:px-12 sm:py-16">
+            <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
+              <div>
+                <h3 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Every child is verified before leaving.</h3>
+                <p className="mt-6 text-lg text-teal-100/70 leading-relaxed sm:text-xl">
+                  Our secure pickup code system means only authorised guardians can collect. Parents get notified instantly on their phones.
+                </p>
+              </div>
+              
+              {/* Mock UI for pickup verify */}
+              <div className="relative mx-auto w-full max-w-[320px] rounded-[2.5rem] border-[8px] border-slate-800 bg-slate-950 p-4 shadow-2xl">
+                <div className="h-6 w-24 mx-auto mb-6 rounded-full bg-slate-800" />
+                <div className="space-y-4">
+                  <div className="rounded-2xl bg-white/5 p-4 border border-white/10">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-teal-400">Security Check</p>
+                    <p className="mt-1 text-sm font-bold">Child Pickup Verification</p>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-800">{item.title}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-slate-600">{item.desc}</p>
+                  <div className="flex justify-center py-6">
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="h-12 w-10 rounded-lg border-2 border-teal-500/50 flex items-center justify-center text-xl font-bold text-teal-400">
+                          {i === 1 ? '8' : i === 2 ? '4' : '•'}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-teal-500/20 p-3 text-center border border-teal-500/30">
+                    <p className="text-xs font-bold text-teal-200">Guardian Verified: Sipho Gumede</p>
+                  </div>
+                  <div className="h-10 w-full rounded-xl bg-teal-500 flex items-center justify-center text-xs font-bold text-slate-950">
+                    Confirm Release
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </section>
 
           <PwaInstallCard />
 
-          <section className="rounded-2xl bg-gradient-to-br from-cyan-700 via-sky-700 to-blue-800 p-6 text-white">
-            <p className="text-xs font-bold uppercase tracking-widest text-cyan-200">For ECD Centres</p>
-            <h3 className="mt-2 text-2xl font-extrabold tracking-tight">Get found by parents in your area</h3>
-            <p className="mt-2 max-w-lg text-sm leading-relaxed text-cyan-100">
-              Manage applications, communicate with parents, and run your centre — from one dashboard.
-              Built for South African ECD owners.
-            </p>
-            <Link
-              href="/for-centres"
-              className="mt-4 inline-block rounded-full bg-white px-6 py-2.5 text-sm font-bold text-cyan-800 transition-colors hover:bg-cyan-50"
-            >
-              Register Your Centre &rarr;
-            </Link>
+          {/* SECTION 5 — For ECD Owners */}
+          <section className="rounded-3xl bg-[#001E2B] p-8 text-white sm:p-16">
+            <div className="max-w-3xl">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Professional ECD Management</p>  
+              <h3 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Built for South African ECD centres. Starting in Alexandra.</h3>
+              <p className="mt-6 text-lg text-white/60 leading-relaxed sm:text-xl">
+                Not imported. Not adapted. Built from scratch for how ECDs actually work here. Manage your entire operation from one screen.
+              </p>
+              <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
+                {['Applications', 'Compliance', 'Communication', 'Transport', 'Marketplace'].map(feat => (
+                  <div key={feat} className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                    <span className="text-sm font-semibold text-white/80">{feat}</span>
+                  </div>
+                ))}
+              </div>
+              <Button size="lg" className="mt-12 h-14 px-8 text-base font-bold bg-white text-slate-950 hover:bg-cyan-50 rounded-xl" asChild>
+                <Link href="/for-centres">Register Your Centre &rarr;</Link>
+              </Button>
+            </div>
           </section>
 
-          <section id="active-jobs" className="rounded-2xl border border-slate-200/80 bg-white/70 p-4 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-xl font-bold text-slate-800">Employment Opportunities (Optional)</h3>
-              <span className="text-sm text-slate-500">{activeJobs.length} open</span>
+          {/* SECTION 6 — Jobs strip */}
+          <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-8 sm:p-12">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h3 className="font-display text-3xl font-bold text-slate-900">Work in Early Childhood Education</h3>   
+              <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-10 grid gap-4 sm:grid-cols-2">
               {activeJobs.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:col-span-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:col-span-2">
                   <p className="text-base font-bold text-slate-900">No active jobs yet</p>
                   <p className="mt-1 text-sm leading-relaxed text-slate-600">Check back soon for new centre opportunities.</p>
                 </div>
@@ -162,37 +231,33 @@ export default function HomeClientPage({ userEmail, jobOpportunities }: HomeClie
                     <Link
                       key={job.id}
                       href={jobHref}
-                      className="group block rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-cyan-300 hover:shadow-[var(--shadow-elevation-1)]"
+                      className="group block rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-cyan-400 hover:shadow-xl hover:shadow-cyan-900/5"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-base font-bold text-slate-900">{job.title}</p>
-                          <p className="mt-1 text-sm text-slate-600">{job.centreName}</p>
+                          <p className="truncate text-lg font-bold text-slate-900">{job.title}</p>      
+                          <p className="mt-1 text-sm text-slate-500 font-medium">{job.centreName}</p>
                         </div>
-                        <span className="shrink-0 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-semibold text-cyan-700">
-                          Details
+                        <span className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+                          View
                         </span>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                           {job.roleType.replace(/_/g, ' ')}
                         </span>
                         {location ? (
-                          <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-500">
+                          <span className="rounded-lg border border-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-400">
                             {location}
                           </span>
                         ) : null}
                         {job.closesAt ? (
-                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-700">
+                          <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
                             Closes {formatDate(job.closesAt)}
                           </span>
                         ) : null}
                       </div>
-
-                      <p className="mt-3 text-sm font-semibold text-cyan-700 transition-colors group-hover:text-cyan-800">
-                        Open full role details and apply -&gt;
-                      </p>
                     </Link>
                   )
                 })

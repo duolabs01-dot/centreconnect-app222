@@ -16,6 +16,7 @@ import {
   Truck,
   TrendingUp,
   UserCheck,
+  ClipboardCheck, // For Daily Reports
   FileText, // For Report Cards
   Receipt, // For Parent Invoicing
   Bot, // For AI Upload
@@ -38,6 +39,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/applications', label: 'Applications', icon: ClipboardList, group: 'daily', supervisorAllowed: true },
   { href: '/ecd/pipeline', label: 'Pipeline', icon: GitFork, group: 'daily', supervisorAllowed: true },
   { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck, group: 'daily', supervisorAllowed: true },
+  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: ClipboardCheck, group: 'daily', supervisorAllowed: true },
   { href: '/ecd/pickup', label: 'Pickup Verify', icon: ShieldCheck, group: 'daily', supervisorAllowed: true },
   { href: '/ecd/billing', label: 'Billing', icon: CreditCard, group: 'daily', adminOnly: true },
   { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'daily' },

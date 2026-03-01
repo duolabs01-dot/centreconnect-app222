@@ -319,10 +319,10 @@ export default async function ParentDashboardPage() {
 
     const quickActions = [
       {
-        label: 'Check-in',
-        description: "See today's attendance and drop-off updates.",
-        href: '/parent/applications',
-        icon: CheckCircle2,
+        label: "Today's Report",
+        description: "See meals, mood, and activities for today.",
+        href: '/parent/daily-reports',
+        icon: Sparkles,
       },
       {
         label: 'Messages',
