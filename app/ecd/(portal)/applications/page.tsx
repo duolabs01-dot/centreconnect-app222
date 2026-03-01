@@ -637,47 +637,69 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               Application Intelligence
             </h2>
           </div>
-          <div className="p-8">
+          <div className="p-0">
             {focusedApplication ? (
-              <div className="grid gap-10 md:grid-cols-2">
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{focusedApplication.application_number}</p>
+              <div className="flex flex-col md:flex-row">
+                <div className="flex-1 p-8 space-y-8">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</p>
+                      <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{focusedApplication.application_number}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
+                      <div className="mt-2"><StatusBadge status={focusedApplication.status} /></div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
-                    <div className="mt-2"><StatusBadge status={focusedApplication.status} /></div>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Child Details</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">
-                      {focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Parent Contact</p>
-                    <p className="text-lg font-bold text-slate-900 mt-1">{focusedParentProfile?.full_name ?? 'N/A'}</p>
-                    <p className="text-sm font-bold text-teal-600 mt-1">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Internal Notes</p>
-                    <div className="mt-2 p-5 rounded-2xl bg-slate-50 border border-slate-100">
-                      <p className="text-sm text-slate-600 italic leading-relaxed">
-                        {focusedApplication.admin_notes || 'No private notes added yet.'}
-                      </p>
+                  
+                  <div className="h-px bg-slate-100" />
+                  
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-lg">
+                          {focusedChild?.first_name?.[0] ?? 'C'}
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-slate-900">{focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'N/A'}</p>
+                          <p className="text-xs text-slate-500 font-medium">Applicant</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Primary Guardian</p>
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
+                          {focusedParentProfile?.full_name?.[0] ?? 'P'}
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'N/A'}</p>
+                          <p className="text-xs text-teal-600 font-bold">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
+                
+                <div className="w-full md:w-80 bg-slate-50/50 border-l border-slate-50 p-8">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Internal Notes</p>
+                  <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm min-h-[120px]">
+                    <p className="text-sm text-slate-600 italic leading-relaxed">
+                      {focusedApplication.admin_notes || 'No private notes added yet.'}
+                    </p>
+                  </div>
+                  <Button variant="outline" className="w-full mt-4 h-12 rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
+                    <Link href={`/ecd/applications/${focusedApplication.id}`}>Full Case File →</Link>
+                  </Button>
+                </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="h-16 w-16 rounded-3xl bg-slate-50 flex items-center justify-center mb-4">
-                  <Info className="w-8 h-8 text-slate-200" />
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mb-6 shadow-sm">
+                  <Info className="w-8 h-8 text-slate-300" />
                 </div>
-                <p className="text-sm font-bold text-slate-400 max-w-xs uppercase tracking-widest">Select an application from the table above to view deep-dive details.</p>
+                <p className="text-sm font-bold text-slate-400 max-w-xs uppercase tracking-widest leading-relaxed">Select an application from the table above to view deep-dive details.</p>
               </div>
             )}
           </div>
