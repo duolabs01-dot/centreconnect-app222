@@ -57,20 +57,20 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
   return (
     <div className="min-h-screen bg-white pb-28 md:pb-0">
       {/* SECTION 1 — Sticky Glass Nav */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/60 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-xl shadow-sm">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-1.5">
-            <span className="font-display text-xl font-bold tracking-tight text-white">CentreConnect</span>
+            <span className="font-display text-xl font-bold tracking-tight text-slate-900">CentreConnect</span>
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mt-1" />
           </Link>
           
           <nav className="hidden items-center gap-8 md:flex">
-            <Link href="/directory" className="text-sm font-medium text-white/70 transition hover:text-white">Find a Centre</Link>
-            <Link href="/for-centres" className="text-sm font-medium text-white/70 transition hover:text-white">For ECDs</Link>
+            <Link href="/directory" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">Find a Centre</Link>
+            <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">For ECDs</Link>
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button size="sm" className="font-bold" asChild>
+            <Button size="sm" variant="default" className="font-bold bg-cyan-600 hover:bg-cyan-700 text-white" asChild>
               <Link href={isSignedIn ? '/parent/dashboard' : '/login'}>
                 {isSignedIn ? 'Dashboard' : 'Sign In'}
               </Link>
@@ -83,20 +83,20 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
         <div className="space-y-12 sm:space-y-20">
           
           {/* SECTION 2 — New Hero */}
-          <section className="relative overflow-hidden rounded-3xl bg-[#001E2B] px-8 py-16 sm:px-12 sm:py-24">
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-teal-900 px-8 py-16 sm:px-12 sm:py-24">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(6,182,212,0.15),transparent_60%)]" />
             
             <div className="relative z-10 max-w-4xl">
               <h2 className="font-display text-5xl font-extrabold tracking-[-0.04em] text-white leading-[1.03] sm:text-6xl lg:text-7xl">
-                Every child deserves a <span className="text-cyan-400 italic">great start</span> in life.
+                Every child deserves a great start in life.
               </h2>
               <p className="mt-6 max-w-xl text-lg text-white/60 leading-relaxed sm:text-xl">
-                CentreConnect connects <span className="text-white font-semibold">{locationHint}</span> families with quality ECD centres — and gives centres the tools to run better.
+                Find the right crèche for your child — compare, apply, and track updates. Free for parents.
               </p>
               
               <div className="mt-10 flex flex-wrap gap-4">
                 <Button size="lg" className="h-14 px-8 text-base font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl" asChild>
-                  <Link href="/directory">Find a Centre</Link>
+                  <Link href="/directory">Find a Crèche Near You</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold border-white/20 text-white hover:bg-white/10 rounded-xl" asChild>
                   <Link href="/for-centres">I Run a Centre &rarr;</Link>
@@ -128,21 +128,21 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 <span className="font-display text-7xl font-black text-cyan-50 opacity-50">1</span>
                 <div className="absolute top-8 left-2">
                   <p className="text-xl font-bold text-slate-900">Search your area</p>
-                  <p className="mt-1 text-slate-600">Find verified centres in Johannesburg and beyond.</p>
+                  <p className="mt-1 text-slate-600">Find trusted crèches in your area.</p>
                 </div>
               </div>
               <div className="relative">
                 <span className="font-display text-7xl font-black text-cyan-50 opacity-50">2</span>
                 <div className="absolute top-8 left-2">
                   <p className="text-xl font-bold text-slate-900">Apply in 5 minutes</p>
-                  <p className="mt-1 text-slate-600">One profile, multiple applications. No paperwork.</p>
+                  <p className="mt-1 text-slate-600">Apply in 5 minutes. One profile. Multiple crèches.</p>
                 </div>
               </div>
               <div className="relative">
                 <span className="font-display text-7xl font-black text-cyan-50 opacity-50">3</span>
                 <div className="absolute top-8 left-2">
                   <p className="text-xl font-bold text-slate-900">Track every update</p>
-                  <p className="mt-1 text-slate-600">Know exactly where your application stands.</p>
+                  <p className="mt-1 text-slate-600">Track every update. Know the moment a crèche responds.</p>
                 </div>
               </div>
             </div>
@@ -189,7 +189,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           <PwaInstallCard />
 
           {/* SECTION 5 — For ECD Owners */}
-          <section className="rounded-3xl bg-[#001E2B] p-8 text-white sm:p-16">
+          <section className="rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-8 text-white sm:p-16">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Professional ECD Management</p>  
               <h3 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Built for South African ECD centres. Starting in Alexandra.</h3>
@@ -197,7 +197,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 Not imported. Not adapted. Built from scratch for how ECDs actually work here. Manage your entire operation from one screen.
               </p>
               <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
-                {['Applications', 'Compliance', 'Communication', 'Transport', 'Marketplace'].map(feat => (
+                {['Applications', 'Compliance', 'DSD Subsidy Export', 'Transport', 'Marketplace', 'Daily Reports'].map(feat => (
                   <div key={feat} className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
                     <span className="text-sm font-semibold text-white/80">{feat}</span>
