@@ -368,16 +368,27 @@ export default async function ParentDashboardPage() {
           <SurfaceCard className="animate-fade-in relative overflow-hidden p-6 sm:p-8">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/70 via-cyan-50/40 to-white" />
             <div className="relative">
-              <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50">
-                <Heart className="h-7 w-7 text-cyan-600" />
+              <div className="mb-4 flex items-center justify-between">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50">
+                  <Heart className="h-7 w-7 text-cyan-600" />
+                </div>
+                {/* WhatsApp Help Shortcut */}
+                <a 
+                  href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20crèche%20in%20Alexandra."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  WhatsApp Help
+                </a>
               </div>
               <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
               <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                {`Let's find the right ECD`}<br />for {firstChildName}.
+                {`Find a crèche near you`}<br />in Alexandra.
               </h1>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                Browse trusted centres nearby, compare your options, and apply — all in one place. Most families find
-                their match within a week.
+                Browse trusted centres in Alexandra, compare options, and apply for {firstChildName} — all in one place. 
               </p>
 
               {/* Journey steps */}
