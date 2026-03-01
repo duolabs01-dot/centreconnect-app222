@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Button } from './Button'
+import { Button } from '@/components/ui/button'
 
 type SignOutButtonProps = {
   redirectTo?: string
