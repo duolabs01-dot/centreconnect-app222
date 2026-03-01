@@ -277,33 +277,38 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                     <Link
                       key={job.id}
                       href={jobHref}
-                      className="group block rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-cyan-400 hover:shadow-xl hover:shadow-cyan-900/5"
+                      className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-cyan-400 hover:shadow-xl hover:shadow-cyan-900/5 min-h-[160px]"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-bold text-slate-900">{job.title}</p>      
-                          <p className="mt-1 text-sm text-slate-500 font-medium">{job.centreName}</p>
+                      <div className="min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-lg font-bold text-slate-900">{job.title}</p>      
+                            <p className="mt-1 text-sm text-slate-500 font-medium">{job.centreName}</p>
+                          </div>
+                          <span className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+                            View
+                          </span>
                         </div>
-                        <span className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
-                          View
-                        </span>
+
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <span className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                            {job.roleType.replace(/_/g, ' ')}
+                          </span>
+                          {location ? (
+                            <span className="rounded-lg border border-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-400">
+                              {location}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
 
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                          {job.roleType.replace(/_/g, ' ')}
-                        </span>
-                        {location ? (
-                          <span className="rounded-lg border border-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-400">
-                            {location}
-                          </span>
-                        ) : null}
-                        {job.closesAt ? (
+                      {job.closesAt ? (
+                        <div className="mt-4 pt-4 border-t border-slate-50">
                           <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
                             Closes {formatDate(job.closesAt)}
                           </span>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
                     </Link>
                   )
                 })

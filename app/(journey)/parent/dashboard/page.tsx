@@ -20,6 +20,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 import { DashboardSummary, DashboardSummarySkeleton } from './_sections/summary-section'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
+import { ParentJobsSection } from './_sections/parent-jobs-section'
 
 export const metadata: Metadata = {
   title: 'Parent Command Centre | CentreConnect',
@@ -188,82 +189,97 @@ export default async function ParentDashboardPage() {
                 </div>
               </SurfaceCard>
 
-              {/* Suggestions for new users */}
-              <Suspense fallback={<div className="h-48 animate-pulse bg-slate-100 rounded-3xl" />}>
-                <SuggestedCentresSection />
-              </Suspense>
-            </div>
-          ) : screenState === 'pending' ? (
-            <div className="cc-stack">
-              <SurfaceCard className="animate-fade-in p-5 sm:p-6">
-                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
-                <p className="mt-2 text-sm text-slate-600">
-                  Keep an eye on updates from each centre while decisions are pending.
-                </p>
-              </SurfaceCard>
-
-              <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
-                <ActivityFeedSection />
-              </Suspense>
-
-              <div className="animate-fade-in" style={{ animationDelay: '180ms' }}>
-                <Link href="/directory" className="group block">
-                  <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
-                    <div className="flex items-center gap-3">
-                      <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
-                      <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more centres</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
-                  </SurfaceCard>
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="cc-stack">
-              <SurfaceCard className="animate-fade-in relative overflow-hidden p-5 sm:p-6">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
-                <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
-                <div className="relative">
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
-                  <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-                    {enrolledChildName} is learning at {enrolledCentreName}!
-                  </h1>
-                  <p className="mt-2 text-sm text-slate-600">
-                    You are all set. Use the shortcuts below to stay connected every day.
-                  </p>
-                </div>
-              </SurfaceCard>
-
-              <section className="grid grid-cols-2 gap-3 sm:gap-4">
-                {quickActions.map((action, index) => {
-                  const Icon = action.icon
-                  return (
-                    <Link
-                      key={action.label}
-                      href={action.href}
-                      className="animate-fade-in group block min-h-[44px]"
-                      style={{ animationDelay: `${80 + index * 60}ms` }}
-                    >
-                      <SurfaceCard className="p-4 transition-all duration-300 hover:border-cyan-300 h-full">
-                        <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700">
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <p className="text-sm font-semibold text-slate-900">{action.label}</p>
-                        <p className="mt-1 text-xs text-slate-600">{action.description}</p>
-                      </SurfaceCard>
-                    </Link>
-                  )
-                })}
-              </section>
-
-              <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
-                <ActivityFeedSection />
-              </Suspense>
-            </div>
-          )}
+                            {/* Suggestions for new users */}
+                            <Suspense fallback={<div className="h-48 animate-pulse bg-slate-100 rounded-3xl" />}>
+                              <SuggestedCentresSection />
+                            </Suspense>
+              
+                            {/* Tertiary: Jobs for community */}
+                            <Suspense fallback={null}>
+                              <ParentJobsSection />
+                            </Suspense>
+                          </div>
+                        ) : screenState === 'pending' ? (
+                          <div className="cc-stack">
+                            <SurfaceCard className="animate-fade-in p-5 sm:p-6">
+                              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
+                              <p className="mt-2 text-sm text-slate-600">
+                                Keep an eye on updates from each centre while decisions are pending.
+                              </p>
+                            </SurfaceCard>
+              
+                            <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
+                              <ActivityFeedSection />
+                            </Suspense>
+              
+                            <div className="animate-fade-in" style={{ animationDelay: '180ms' }}>
+                              <Link href="/directory" className="group block">
+                                <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
+                                  <div className="flex items-center gap-3">
+                                    <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
+                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more centres</span>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
+                                </SurfaceCard>
+                              </Link>
+                            </div>
+              
+                            {/* Tertiary: Jobs for community */}
+                            <Suspense fallback={null}>
+                              <ParentJobsSection />
+                            </Suspense>
+                          </div>
+                        ) : (
+                          <div className="cc-stack">
+                            <SurfaceCard className="animate-fade-in relative overflow-hidden p-5 sm:p-6">
+                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
+                              <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
+                              <div className="relative">
+                                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
+                                  <Sparkles className="h-5 w-5" />
+                                </div>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
+                                <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                                  {enrolledChildName} is learning at {enrolledCentreName}!
+                                </h1>
+                                <p className="mt-2 text-sm text-slate-600">
+                                  You are all set. Use the shortcuts below to stay connected every day.
+                                </p>
+                              </div>
+                            </SurfaceCard>
+              
+                            <section className="grid grid-cols-2 gap-3 sm:gap-4">
+                              {quickActions.map((action, index) => {
+                                const Icon = action.icon
+                                return (
+                                  <Link
+                                    key={action.label}
+                                    href={action.href}
+                                    className="animate-fade-in group block min-h-[44px]"
+                                    style={{ animationDelay: `${80 + index * 60}ms` }}
+                                  >
+                                    <SurfaceCard className="p-4 transition-all duration-300 hover:border-cyan-300 h-full">
+                                      <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                                        <Icon className="h-4 w-4" />
+                                      </div>
+                                      <p className="text-sm font-semibold text-slate-900">{action.label}</p>
+                                      <p className="mt-1 text-xs text-slate-600">{action.description}</p>
+                                    </SurfaceCard>
+                                  </Link>
+                                )
+                              })}
+                            </section>
+              
+                            <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
+                              <ActivityFeedSection />
+                            </Suspense>
+              
+                            {/* Tertiary: Jobs for community */}
+                            <Suspense fallback={null}>
+                              <ParentJobsSection />
+                            </Suspense>
+                          </div>
+                        ) }
         </div>
       </div>
     )
