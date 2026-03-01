@@ -10,6 +10,8 @@ import { Button } from '@/components/ecd/Button'
 import { formatDate } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
+import { buildWarmApplicationUpdateMessage } from '@/lib/communications/templates'
+
 type PipelineStatus = 'submitted' | 'in_review' | 'waitlisted' | 'approved' | 'rejected'
 
 type ApplicationRow = {
@@ -269,17 +271,20 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
 
         if (parent?.id) {
           let title = 'Application Update'
-          let message = `Hi ${parentName}, there is a new update on the application for ${childName} at ${centreName}.`
+          const message = buildWarmApplicationUpdateMessage({
+            centreName,
+            childName,
+            parentName,
+            applicationNumber: application.application_number,
+            status: toStatus,
+          })
 
           if (toStatus === 'approved') {
             title = 'Application approved 🎉'
-            message = `Great news ${parentName}! ${centreName} has approved the application for ${childName}. You can now proceed with the next steps in your dashboard.`
           } else if (toStatus === 'waitlisted') {
             title = 'Joined the Waiting List'
-            message = `Hi ${parentName}, ${childName} has been added to the waiting list at ${centreName}. We will notify you as soon as a space becomes available.`
           } else if (toStatus === 'rejected') {
             title = 'Application Status'
-            message = `Hi ${parentName}, ${centreName} has completed the review for ${childName}'s application and decided not to move forward at this time.`
           }
 
           await supabase.from('parent_notifications').insert({
