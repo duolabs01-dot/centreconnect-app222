@@ -10,6 +10,7 @@ import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { Home, ClipboardList, UserCheck, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { BottomNav, type NavItem } from './bottom-nav'
+import { MobileNavMenu } from './mobile-nav-menu'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -101,6 +102,23 @@ export function EcdPortalSidebar({
 
   return (
     <>
+      {/* Mobile Top Header - Unified with Parent view */}
+      <div className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-40 px-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <MobileNavMenu 
+            items={ECD_DASHBOARD_NAV} 
+            userEmail={userEmail} 
+            roleLabel={roleLabel} 
+            userRole={userRole} 
+            attentionBadges={attentionBadges}
+          />
+          <BrandMark compact className="brightness-100" />
+        </div>
+        <div className="flex items-center gap-2">
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
+        </div>
+      </div>
+
       <aside
         className="hidden w-64 shrink-0 sticky top-0 h-screen overflow-y-auto border-r border-slate-100 bg-white px-4 py-8 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col"
       >

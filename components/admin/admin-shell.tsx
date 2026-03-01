@@ -24,7 +24,7 @@ export function AdminShell({ children, className }: AdminShellProps) {
         {/* Top subtle glow for futuristic feel */}
         <div className="fixed top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent z-[60]" />
         
-        <div className="flex-1 px-4 py-8 md:px-12 md:py-16">
+        <div className="flex-1 px-4 py-8 mt-16 md:mt-0 md:px-12 md:py-16">
           <div className="max-w-7xl mx-auto w-full">
             {children}
           </div>

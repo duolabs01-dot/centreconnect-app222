@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
 import { BottomNav, type NavItem } from '@/components/layout/bottom-nav'
+import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash' },
@@ -42,6 +43,22 @@ export function AdminSidebar() {
 
   return (
     <>
+      {/* Mobile Top Header - Unified look */}
+      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-[#080B13]/80 backdrop-blur-md border-b border-white/5 z-40 px-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <MobileNavMenu 
+            items={NAV_ITEMS} 
+            type="admin"
+            roleLabel="Platform Admin"
+            userRole="platform_admin"
+          />
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white">
+            <Cpu className="w-4 h-4 animate-pulse" />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/80 leading-none">CentreConnect</p>
+        </div>
+      </div>
+
       {/* Desktop Persistent Sidebar */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/5 z-50 overflow-hidden">
         {/* Subtle background glow */}
