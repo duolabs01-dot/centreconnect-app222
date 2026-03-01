@@ -16,6 +16,7 @@ export type NavItem = {
 
 interface BottomNavProps {
   items: NavItem[]
+  pathname: string
 }
 
 function isTabActive(pathname: string, href: string) {
@@ -28,8 +29,7 @@ const IOS_SPRING = { type: 'spring', stiffness: 600, damping: 38, mass: 0.5 }
 const BOUNCE_SPRING = { type: 'spring', stiffness: 800, damping: 25, mass: 0.4 }
 const NAV_ENTRY = { type: 'spring', stiffness: 400, damping: 40, mass: 1, delay: 0.1 }
 
-export function BottomNav({ items }: BottomNavProps) {
-  const pathname = usePathname()
+export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()
   const reducedMotion = useReducedMotion()
   const dragX = useMotionValue(0)

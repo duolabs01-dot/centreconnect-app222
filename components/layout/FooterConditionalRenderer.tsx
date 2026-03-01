@@ -30,9 +30,9 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
         PageTransition uses transforms which creates a new containing block, 
         breaking 'fixed' positioning and causing nav to sit at bottom of page.
       */}
-      {isParentPortal && <BottomNav items={PARENT_NAV_ITEMS} />}
-      {isEcdPortal && <BottomNav items={ECD_MOBILE_NAV_ITEMS} />}
-      {isAdminPortal && <BottomNav items={ADMIN_MOBILE_NAV_ITEMS} />}
+      {isParentPortal && <BottomNav items={PARENT_NAV_ITEMS} pathname={pathname} />}
+      {isEcdPortal && <BottomNav items={ECD_MOBILE_NAV_ITEMS} pathname={pathname} />}
+      {isAdminPortal && <BottomNav items={ADMIN_MOBILE_NAV_ITEMS} pathname={pathname} />}
 
       {!hideFooter && <GlobalMobileLegalStrip />}
       {!hideFooter && <GlobalDesktopFooter />}
