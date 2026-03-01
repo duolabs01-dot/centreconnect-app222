@@ -6,6 +6,7 @@ import { Button } from '@/components/ecd/Button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ecd/Table'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { formatDate } from '@/lib/utils'
+import { StatusBadge } from "@/components/ui/status-badge"
 
 export const metadata: Metadata = {
   title: 'Marketplace - CentreConnect',

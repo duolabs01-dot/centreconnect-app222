@@ -5,7 +5,7 @@ import { Button } from '@/components/ecd/Button'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { StatusBadge } from "@/components/ui/status-badge"
 export const metadata: Metadata = {
   title: 'Transport Desk | CentreConnect',
   description: 'Manage transport requests, fees, and driver communications in one place.',

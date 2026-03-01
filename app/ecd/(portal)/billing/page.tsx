@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 import { MonthlyInvoicesCard } from './monthly-invoices-card'
+import { StatusBadge } from "@/components/ui/status-badge"
 import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
 export const metadata: Metadata = {
