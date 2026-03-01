@@ -3,6 +3,7 @@ import { createContext, useContext, type ReactNode } from 'react'
 
 type ParentLayoutData = {
   userName: string
+  avatarUrl?: string | null
   isVerified: boolean
   profileNudge: { completionPct: number; missing: string[] } | null
   userId: string

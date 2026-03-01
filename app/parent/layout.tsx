@@ -17,7 +17,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   const { data: existingProfile } = await supabase
     .from('user_profiles')
-    .select('role,full_name,phone')
+    .select('role,full_name,phone,avatar_url')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -89,6 +89,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   const parentLayoutData = {
     userName: userName,
+    avatarUrl: existingProfile?.avatar_url,
     isVerified: isVerified,
     profileNudge: readiness.ready
       ? null
