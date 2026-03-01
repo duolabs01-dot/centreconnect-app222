@@ -1,16 +1,23 @@
-import type { Metadata } from 'next'
+// app/ecd/report-cards/page.tsx
+import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ComingSoonCard } from '@/components/ecd/ComingSoonCard'
+import { FileText } from 'lucide-react'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
-export const metadata: Metadata = {
-  title: 'Report Cards - CentreConnect',
-  description: 'Manage and generate report cards for children in your centre.',
-}
-
-export default function ReportCardsPage() {
+export default async function ReportCardsComingSoon() {
+  const { user, role } = await requireEcdPortalSession()
   return (
-    <ComingSoonCard
+    <EcdOsShell
       title="Report Cards"
-      description="This section will allow you to generate and manage report cards for the children in your centre."
-    />
+      description="Digital developmental tracking and parent feedback."
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : 'Staff'}
+      userEmail={user.email ?? ''}
+    >
+      <ComingSoonCard 
+        title="Digital Report Cards"
+        description="Automated developmental tracking and professional report cards for parents. Launching in Phase 5."
+        icon={FileText}
+      />
+    </EcdOsShell>
   )
 }

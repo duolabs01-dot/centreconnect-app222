@@ -1,48 +1,37 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ecd/Card'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
-import { BuildingIcon } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '@/components/ecd/Button'
+'use client'
 
-interface ComingSoonCardProps {
+import { LucideIcon } from 'lucide-react'
+import { Card, CardContent } from '@/components/ecd/Card'
+import { Button } from '@/components/ecd/Button'
+import Link from 'next/link'
+
+type ComingSoonCardProps = {
   title: string
   description: string
-  comingSoonText?: string
-  backLinkHref?: string
-  backLinkText?: string
-  roleLabel?: string
-  userEmail?: string
+  icon: LucideIcon
+  backHref?: string
 }
 
-export function ComingSoonCard({
-  title,
-  description,
-  comingSoonText = 'Feature Coming Soon!',
-  backLinkHref = '/ecd/dashboard',
-  backLinkText = 'Back to Dashboard',
-  roleLabel = 'ECD Team',
-  userEmail = 'team@centreconnect.app',
-}: ComingSoonCardProps) {
+export function ComingSoonCard({ title, description, icon: Icon, backHref = '/ecd/dashboard' }: ComingSoonCardProps) {
   return (
-    <EcdOsShell title={title} description={description} roleLabel={roleLabel} userEmail={userEmail}>
-      <div className="flex min-h-[60vh] items-center justify-center p-4">
-        <Card className="glass-card w-full max-w-md border border-border bg-card/90 text-foreground text-center shadow-lg">
-          <CardHeader>
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <BuildingIcon className="h-8 w-8" />
-            </div>
-            <CardTitle className="text-2xl font-bold">{comingSoonText}</CardTitle>
-            <CardDescription className="text-muted-foreground mt-2">
-              {description} We&apos;re actively working on this feature to bring you the best experience.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <Link href={backLinkHref}>{backLinkText}</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </EcdOsShell>
+    <Card className="max-w-2xl mx-auto mt-12 border-dashed border-2 border-slate-200 shadow-none">
+      <CardContent className="pt-12 pb-12 flex flex-col items-center text-center">
+        <div className="h-20 w-20 rounded-3xl bg-cyan-50 flex items-center justify-center mb-6">
+          <Icon className="h-10 w-10 text-cyan-600" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
+        <p className="mt-2 text-slate-500 font-medium max-w-sm">
+          {description}
+        </p>
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <Button asChild className="bg-cyan-600 hover:bg-cyan-700 text-white font-bold h-11 px-8 rounded-xl">
+            <Link href={backHref}>Back to Dashboard</Link>
+          </Button>
+          <Button variant="outline" className="border-slate-200 text-slate-700 font-bold h-11 px-8 rounded-xl">
+            Notify Me When Ready
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

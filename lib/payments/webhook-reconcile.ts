@@ -49,6 +49,8 @@ export async function reconcilePaystackWebhookEvent(input: ReconcilePaystackWebh
           paid_at: new Date().toISOString(),
           payment_last_event: input.eventType,
           payment_currency: asString(input.payload.data?.currency) ?? 'ZAR',
+          paystack_reference: input.reference,
+          paystack_event_processed_at: new Date().toISOString()
         })
         .eq('id', invoice.id)
       if (invoiceUpdateError) throw new Error(invoiceUpdateError.message)

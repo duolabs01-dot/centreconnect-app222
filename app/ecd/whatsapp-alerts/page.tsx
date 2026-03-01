@@ -1,16 +1,23 @@
-import type { Metadata } from 'next'
+// app/ecd/whatsapp-alerts/page.tsx
+import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ComingSoonCard } from '@/components/ecd/ComingSoonCard'
+import { MessageCircleMore } from 'lucide-react'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
-export const metadata: Metadata = {
-  title: 'WhatsApp Alerts - CentreConnect',
-  description: 'Send automated WhatsApp alerts and notifications to parents.',
-}
-
-export default function WhatsappAlertsPage() {
+export default async function WhatsappAlertsComingSoon() {
+  const { user, role } = await requireEcdPortalSession()
   return (
-    <ComingSoonCard
+    <EcdOsShell
       title="WhatsApp Alerts"
-      description="This section will enable you to send automated WhatsApp alerts and notifications to parents for important updates, events, and emergencies."
-    />
+      description="Automated parent notifications via WhatsApp."
+      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : 'Staff'}
+      userEmail={user.email ?? ''}
+    >
+      <ComingSoonCard 
+        title="Official WhatsApp API Alerts"
+        description="Send automated updates, reminders, and emergencies directly to parents on WhatsApp. Launching in Phase 6."
+        icon={MessageCircleMore}
+      />
+    </EcdOsShell>
   )
 }

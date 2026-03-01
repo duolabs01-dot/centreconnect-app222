@@ -81,21 +81,35 @@ function formatAgeFromNow(iso: string | null) {
   return `${Math.floor(diff / day)}d ago`
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, { label: string; classes: string }> = {
-    submitted: { label: 'Submitted', classes: 'border-blue-200 bg-blue-50 text-blue-700' },
-    in_review: { label: 'In Review', classes: 'border-amber-200 bg-amber-50 text-amber-700' },
-    waitlisted: { label: 'Waitlisted', classes: 'border-orange-200 bg-orange-50 text-orange-700' },
-    approved: { label: 'Approved ✓', classes: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-    enrolled: { label: 'Enrolled ', classes: 'border-green-200 bg-green-50 text-green-700' },
-    rejected: { label: 'Unsuccessful', classes: 'border-rose-200 bg-rose-50 text-rose-700' },
-    offer_pending: { label: 'Offer Waiting', classes: 'border-violet-200 bg-violet-50 text-violet-700' },
-    withdrawn: { label: 'Withdrawn', classes: 'border-slate-200 bg-slate-50 text-slate-500' },
+function getStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    submitted: "Waiting for Crèche Response",
+    in_review: "Crèche is Reviewing",
+    approved: "Offer Received!",
+    rejected: "Not Accepted This Time",
+    enrolled: "Enrolled ✓",
+    waitlisted: "On the Waiting List",
+    withdrawn: "Application Withdrawn",
+    offered: "Place Offered — Action Needed",
   }
-  const pill = map[status] ?? { label: status, classes: 'border-slate-200 bg-slate-50 text-slate-600' }
+  return map[status.toLowerCase()] ?? status
+}
+
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, { classes: string }> = {
+    submitted: { classes: 'border-blue-200 bg-blue-50 text-blue-700' },
+    in_review: { classes: 'border-amber-200 bg-amber-50 text-amber-700' },
+    waitlisted: { classes: 'border-orange-200 bg-orange-50 text-orange-700' },
+    approved: { classes: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+    enrolled: { classes: 'border-green-200 bg-green-50 text-green-700' },
+    rejected: { classes: 'border-rose-200 bg-rose-50 text-rose-700' },
+    offer_pending: { classes: 'border-violet-200 bg-violet-50 text-violet-700' },
+    withdrawn: { classes: 'border-slate-200 bg-slate-50 text-slate-500' },
+  }
+  const pill = map[status] ?? { classes: 'border-slate-200 bg-slate-50 text-slate-600' }
   return (
     <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${pill.classes}`}>
-      {pill.label}
+      {getStatusLabel(status)}
     </span>
   )
 }
@@ -107,6 +121,10 @@ function ApplicationStatusCard({
   application: DashboardApplication
   delayMs?: number
 }) {
+  const displayTitle = !application.centreName || application.centreName === 'Centre pending' 
+    ? 'Crèche Application' 
+    : application.centreName
+
   return (
     <Link
       href={`/parent/applications/${application.id}`}
@@ -118,7 +136,7 @@ function ApplicationStatusCard({
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-slate-900">{application.centreName}</p>
+            <p className="truncate text-base font-semibold text-slate-900">{displayTitle}</p>
             <p className="mt-1 truncate text-sm text-slate-600">{application.childName}</p>
             <p className="mt-2 text-xs text-slate-500">Last updated {formatDate(application.lastUpdatedAt)}</p>
           </div>

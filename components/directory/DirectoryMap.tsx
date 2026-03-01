@@ -153,7 +153,11 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
 
   if (mapError) {
     return (
-      <div className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-2xl bg-slate-50 text-center sm:h-[420px]">
+      <div 
+        className="flex h-[260px] w-full flex-col items-center justify-center gap-2 rounded-2xl bg-slate-50 text-center sm:h-[420px]"
+        aria-label="Crèche centres map"
+        role="region"
+      >
         <p className="text-sm font-semibold text-slate-600">Map unavailable</p>
         <a 
           href={`https://www.google.com/maps/search/ECD+centres+near+${locationHint}`}
@@ -170,10 +174,15 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
   return (
     <div 
       className="relative h-[260px] sm:h-[420px] w-full rounded-2xl border border-border overflow-hidden bg-slate-100"
-      aria-label="ECD centres map near you"
+      aria-label="Crèche centres map"
       role="region"
     >
       <div ref={mapContainerRef} className="h-full w-full" />
+
+      {/* Centre Count Badge */}
+      <div className="absolute top-3 left-3 z-10 rounded-full bg-white/90 backdrop-blur px-3 py-1 text-xs font-semibold text-slate-700 shadow-sm">
+        {centresWithLocation.length} crèches on map
+      </div>
       
       {centresWithLocation.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-[2px]">
@@ -188,7 +197,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         <button
           type="button"
           onClick={handleRecenter}
-          className="absolute left-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-all hover:bg-white active:scale-95"
+          className="absolute right-3 top-3 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-[var(--shadow-elevation-1)] backdrop-blur transition-all hover:bg-white active:scale-95"
         >
           Recenter
         </button>
@@ -198,11 +207,6 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
         <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur">
           {locationHint}
         </span>
-      </div>
-
-      {/* Centre Count Badge */}
-      <div className="absolute top-3 right-3 z-10 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-900 shadow-sm backdrop-blur">
-        {centresWithLocation.length} centres on map
       </div>
     </div>
   )

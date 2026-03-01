@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
 ]
 
 function getTitle(pathname: string) {
-  if (pathname.startsWith('/parent/applications')) return 'Application Journey'
+  if (pathname.startsWith('/parent/applications')) return 'My Crèche Applications'
   if (pathname.startsWith('/parent/support')) return 'Support'
   if (pathname.startsWith('/parent/preferences')) return 'Preferences'
   if (pathname.startsWith('/parent/profile/security')) return 'Security & Sign-in Activity'
@@ -45,7 +45,7 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/shortlist')) return 'Saved Centres'
   if (pathname.startsWith('/parent/notifications')) return 'Family Inbox'
   if (pathname.startsWith('/parent/compare')) return 'Centre Comparison'
-  return 'Parent Command Centre'
+  return 'Home'
 }
 
 function getBackFallback(pathname: string) {

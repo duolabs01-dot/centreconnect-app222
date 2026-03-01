@@ -4,14 +4,20 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ecd/Card'
 import { Button } from '@/components/ecd/Button'
-import { cn, getJohannesburgNowParts, isSameJohannesburgDay } from '@/lib/utils'
+import { cn, getJohannesburgNowParts, isSameJohannesburgDay, getJohannesburgGreeting } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { StatCard } from '@/components/ui/StatCard'
 import { Users, TrendingUp, UserCheck, ShieldAlert, Truck, Info, Zap, ChevronRight } from 'lucide-react'
 
-export const metadata: Metadata = {
-  title: 'Daily Operations - CentreConnect',
-  description: 'Daily operations first: attendance, pickup security, and admissions inbox.',
+export async function generateMetadata(): Promise<Metadata> {
+  const { supabase, ecdId } = await requireEcdPortalSession()
+  const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
+  const centreName = centre?.name ?? "Centre"
+  
+  return {
+    title: `${centreName} — CentreConnect`,
+    description: 'Daily operations first: attendance, pickup security, and admissions inbox.',
+  }
 }
 
 type PendingApplicationRow = {
@@ -42,7 +48,7 @@ export default async function EcdDashboardPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')
-    .select('logo_url,cover_image_url,description,phone,address,suburb')
+    .select('name,logo_url,cover_image_url,description,phone,address,suburb')
     .eq('id', ecdId)
     .maybeSingle()
   const nowJhb = getJohannesburgNowParts()
@@ -202,14 +208,28 @@ export default async function EcdDashboardPage() {
     ? `${Math.abs(Math.round((revenueChange / revenuePreviousMonth) * 100))}%`
     : '0%'
 
+  const centreName = centre?.name ?? "Your Centre"
+
   return (
     <EcdOsShell
-      title="Daily Operations"
+      title={`${centreName} — CentreConnect`}
       description="Attendance, pickup flow, and admissions in one operational view."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-6">
+        <section className="mb-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+          <p className="text-xs font-bold uppercase tracking-wider text-teal-600">
+            {getJohannesburgGreeting()}
+          </p>
+          <p className="mt-1 text-xl font-bold text-slate-900">
+            {centreName} — Today's Overview
+          </p>
+          <p className="mt-1 text-sm text-slate-500">
+            {attendanceToday} children in today · {pendingApplications} pending applications
+          </p>
+        </section>
+
         <Card className="border-t-4 border-t-teal-600 overflow-hidden shadow-sm">
           <CardHeader className="bg-slate-50/50 pb-4">
             <CardTitle className="text-slate-900 flex items-center gap-2">

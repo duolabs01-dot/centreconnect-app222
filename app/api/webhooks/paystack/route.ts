@@ -51,6 +51,22 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient()
+
+  // TASK 1 & 2: Idempotency check against invoices
+  const ref = reference
+  if (ref) {
+    const { data: existing } = await admin
+      .from("invoices")
+      .select("id, status")
+      .eq("paystack_reference", ref)
+      .maybeSingle()
+
+    if (existing?.status === "paid") {
+      console.log(`[paystack-webhook] Duplicate event for ref ${ref}, skipping.`)
+      return NextResponse.json({ received: true, duplicate: true }, { status: 200 })
+    }
+  }
+
   const { data: eventRow, error: insertError } = await admin
     .from('payment_webhook_events')
     .insert({
