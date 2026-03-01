@@ -184,27 +184,6 @@ export function ParentAppShell({ userName = 'Parent', isVerified = false, profil
                   </div>
                 ) : null}
               </div>
-              <nav className="hidden shrink-0 items-center gap-1.5 md:flex">
-                {navItems.map((item) => {
-                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-                  return (
-                    <Button
-                      key={item.href}
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        'rounded-full',
-                        active
-                          ? 'bg-cyan-100/80 text-cyan-800 shadow-[var(--shadow-elevation-1)] hover:bg-cyan-100'
-                          : 'text-slate-600 hover:bg-cyan-50/70 hover:text-slate-900'
-                      )}
-                      asChild
-                    >
-                      <Link href={item.href}>{item.label}</Link>
-                    </Button>
-                  )
-                })}
-              </nav>
             </div>
           </div>
           {showProfileNudge ? (
