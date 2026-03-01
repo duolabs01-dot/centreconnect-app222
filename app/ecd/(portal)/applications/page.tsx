@@ -399,7 +399,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
     filteredCounts = {
       pending: grouped.pending.length,
-      awaiting_offer_response: grouped.awaiting_offer_response.length,
+      awaitingOfferResponse: grouped.awaiting_offer_response.length,
       approved: grouped.approved.length,
       enrolled: grouped.enrolled.length,
       waitlisted: grouped.waitlisted.length,
