@@ -135,7 +135,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             
             {/* Desktop Navigation Menu */}
             <nav className="hidden md:flex items-center gap-1 ml-6">
-              {navItems.map((item) => {
+              {PARENT_NAV_ITEMS.map((item) => {
                 const isActive = item.href === '/parent/dashboard'
                   ? pathname === item.href
                   : pathname.startsWith(item.href)
