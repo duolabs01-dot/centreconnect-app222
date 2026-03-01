@@ -38,17 +38,6 @@ export default function EcdLoginPage() {
       })
       if (error) throw error
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session?.access_token && data.user) {
-        await registerSession(
-          data.user.id,
-          session.access_token,
-          typeof window !== 'undefined' ? navigator.userAgent.slice(0, 100) : 'server'
-        )
-      }
-
       const ensureProfileResponse = await fetch('/api/auth/ensure-profile', { method: 'POST' })
       if (!ensureProfileResponse.ok) {
         const payload = (await ensureProfileResponse.json().catch(() => ({}))) as { error?: string }

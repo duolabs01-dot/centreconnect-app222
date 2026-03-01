@@ -186,10 +186,19 @@ export async function GET(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
     if (session?.access_token) {
+      const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      const city = request.headers.get('x-vercel-ip-city')
+      const country = request.headers.get('x-vercel-ip-country')
+      const region = city && country ? `${city}, ${country}` : country || 'unknown'
+      const ua = request.headers.get('user-agent') || 'unknown'
+
       await registerSession(
         userId,
         session.access_token,
-        request.headers.get('user-agent')?.slice(0, 100) ?? 'auth-confirm'
+        ua.slice(0, 100),
+        ip,
+        region,
+        ua
       )
     }
 

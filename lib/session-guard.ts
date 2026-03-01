@@ -22,7 +22,10 @@ function withAuthHeaders(sessionToken?: string, includeJson = false) {
 export async function registerSession(
   userId: string,
   sessionToken: string,
-  deviceHint?: string
+  deviceHint?: string,
+  ipAddress?: string,
+  region?: string,
+  userAgent?: string
 ) {
   const { supabaseUrl } = getSupabaseConfig()
   if (!supabaseUrl || !userId || !sessionToken) return false
@@ -39,6 +42,9 @@ export async function registerSession(
         user_id: userId,
         session_token: sessionToken,
         device_hint: deviceHint ?? 'unknown',
+        ip_address: ipAddress,
+        region: region,
+        user_agent: userAgent,
         last_seen_at: new Date().toISOString(),
       }),
       cache: 'no-store',

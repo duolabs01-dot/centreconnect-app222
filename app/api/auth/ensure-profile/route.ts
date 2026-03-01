@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { registerSession } from '@/lib/session-guard'
 
 type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
@@ -22,7 +23,7 @@ function generateUsernameFromId(id: string) {
   return `user_${id.split('-')[0].toLowerCase()}`
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const {
@@ -31,6 +32,25 @@ export async function POST() {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: { session } } = await supabase.auth.getSession()
+    
+    if (session?.access_token) {
+      const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      const city = request.headers.get('x-vercel-ip-city')
+      const country = request.headers.get('x-vercel-ip-country')
+      const region = city && country ? `${city}, ${country}` : country || 'unknown'
+      const ua = request.headers.get('user-agent') || 'unknown'
+
+      await registerSession(
+        user.id,
+        session.access_token,
+        ua.slice(0, 100),
+        ip,
+        region,
+        ua
+      )
     }
 
     const desiredRole = sanitizeRole(user.user_metadata?.role)

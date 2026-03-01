@@ -69,20 +69,7 @@ export default function LoginPage() {
       })
       if (error) throw error
 
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (session?.access_token && data.user) {
-        await registerSession(
-          data.user.id,
-          session.access_token,
-          typeof window !== 'undefined'
-            ? navigator.userAgent.slice(0, 100)
-            : 'server'
-        )
-      }
-
-      // Sync profile
+      // Sync profile & register session
       await fetch('/api/auth/ensure-profile', { method: 'POST' })
       
       const { data: profile } = await supabase

@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { logSecurityEvent } from '@/lib/security/events'
 
 const preferencesSchema = z.object({
   max_monthly_budget: z
@@ -70,6 +71,8 @@ export async function updateParentPreferencesAction(input: PreferencesPayload) {
   if (error) {
     return { error: error.message }
   }
+
+  await logSecurityEvent(user.id, 'preferences_update', 'Parent updated discovery and budget preferences.')
 
   return { success: true }
 }
