@@ -24,10 +24,10 @@ function isTabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-// Ultra-snappy iOS Spring Presets
-const IOS_SPRING = { type: 'spring', stiffness: 600, damping: 38, mass: 0.5 }
-const BOUNCE_SPRING = { type: 'spring', stiffness: 800, damping: 25, mass: 0.4 }
-const NAV_ENTRY = { type: 'spring', stiffness: 400, damping: 40, mass: 1, delay: 0.1 }
+// Ultra-snappy iOS Spring Presets - Optimized for extreme speed
+const IOS_SPRING = { type: 'spring', stiffness: 900, damping: 45, mass: 0.3 }
+const BOUNCE_SPRING = { type: 'spring', stiffness: 1000, damping: 30, mass: 0.3 }
+const NAV_ENTRY = { type: 'spring', stiffness: 500, damping: 35, mass: 0.8, delay: 0 }
 
 export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()

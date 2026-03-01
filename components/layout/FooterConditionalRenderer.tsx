@@ -15,7 +15,7 @@ interface FooterConditionalRendererProps {
 export function FooterConditionalRenderer({ children }: FooterConditionalRendererProps) {
   const pathname = usePathname()
   
-  const isParentPortal = pathname?.startsWith('/parent') || pathname?.startsWith('/directory')
+  const isParentPortal = pathname?.startsWith('/parent') || pathname?.startsWith('/directory') || pathname?.startsWith('/c/') || pathname?.startsWith('/apply/')
   const isEcdPortal = pathname?.startsWith('/ecd') && !pathname?.startsWith('/ecd/login') && !pathname?.startsWith('/ecd/register')
   const isAdminPortal = pathname?.startsWith('/admin')
 
