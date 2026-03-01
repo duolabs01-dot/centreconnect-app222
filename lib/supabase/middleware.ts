@@ -81,8 +81,10 @@ export async function updateSession(request: NextRequest) {
   if (!userResult) {
     clearRoleCache(response, request)
     if (protectedArea) {
-      // Timeout: don't kick user out — just let them through and let the page handle auth
-      return finish(response, 'user-timeout-public-pass')
+      // Timeout on auth check for protected path — redirect to login for safety
+      const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+      loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
+      return finish(NextResponse.redirect(loginUrl), 'user-timeout-protected-redirect')
     }
     return finish(response, 'user-timeout-public-pass')
   }
@@ -119,7 +121,12 @@ export async function updateSession(request: NextRequest) {
     )
     if (!roleLookup) {
       clearRoleCache(response, request)
-      // Timeout on role check — don't kick authenticated users, let page handle it
+      if (protectedArea) {
+        // Timeout on role check for protected path — redirect to login for safety
+        const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+        loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
+        return finish(NextResponse.redirect(loginUrl), 'role-timeout-protected-redirect')
+      }
       return finish(response, 'role-timeout-pass')
     }
     role = roleLookup.value
@@ -166,7 +173,8 @@ function isRoleAllowed(area: ProtectedArea, role: UserRole): boolean {
 }
 
 function getDashboardPath(role: UserRole | null): string {
-     if (role === 'platform_admin') return '/admin/command';  if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
+  if (role === 'platform_admin') return '/admin/command'
+  if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
   return '/parent/dashboard'
 }
 

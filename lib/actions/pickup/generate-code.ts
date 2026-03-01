@@ -24,6 +24,14 @@ export async function generatePickupCode(
 ): Promise<GeneratePickupCodeResult> {
   const supabase = await createClient()
 
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Not authenticated' }
+
+  // When a parent generates, ensure they can only generate for themselves
+  if (input.generatedByRole === 'parent' && input.parentId !== user.id) {
+    return { success: false, error: 'Unauthorized: parent ID mismatch' }
+  }
+
   const code = randomSixDigitCode()
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
 

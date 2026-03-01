@@ -14,8 +14,8 @@ export async function payInvoiceAction(invoiceId: string) {
     .eq('ecd_id', ecdId)
     .maybeSingle()
 
-  if (!invoice) throw new Error('Invoice not found')
-  if (invoice.status === 'paid') throw new Error('Invoice already paid')
+  if (!invoice) return { error: 'Invoice not found' }
+  if (invoice.status === 'paid') return { error: 'Invoice already paid' }
 
   const { data: centre } = await supabase
     .from('ecd_centres')
@@ -24,15 +24,21 @@ export async function payInvoiceAction(invoiceId: string) {
     .maybeSingle()
 
   const email = centre?.email ?? user.email ?? ''
-  if (!email) throw new Error('No email on file to process payment')
+  if (!email) return { error: 'No email on file to process payment' }
 
-  const result = await initializePaystackInvoicePayment({
-    invoiceId: invoice.id,
-    invoiceNumber: invoice.invoice_number,
-    amountZar: invoice.total,
-    customerEmail: email,
-    metadata: { ecd_id: ecdId },
-  })
+  try {
+    const result = await initializePaystackInvoicePayment({
+      invoiceId: invoice.id,
+      invoiceNumber: invoice.invoice_number,
+      amountZar: invoice.total,
+      customerEmail: email,
+      metadata: { ecd_id: ecdId },
+    })
 
-  redirect(result.authorizationUrl)
+    redirect(result.authorizationUrl)
+  } catch (err) {
+    // Re-throw redirect (Next.js uses throw for redirects)
+    if (err && typeof err === 'object' && 'digest' in err) throw err
+    return { error: 'Failed to initialize payment. Please try again.' }
+  }
 }
