@@ -87,6 +87,11 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     router.prefetch('/parent/dashboard')
   }, [router])
 
+  useEffect(() => {
+    document.documentElement.setAttribute('data-app-shell', 'true')
+    return () => document.documentElement.removeAttribute('data-app-shell')
+  }, [])
+
   async function handleSignOut() {
     setIsSigningOut(true)
     await supabase.auth.signOut()

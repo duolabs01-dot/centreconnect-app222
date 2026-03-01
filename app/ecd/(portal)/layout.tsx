@@ -81,7 +81,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen overflow-hidden flex bg-[#F8FAFC] text-slate-900">
+    <div className="flex min-h-screen bg-[#F8FAFC] text-slate-900">
       <EcdPortalSidebar
         userEmail={user.email ?? null}
         userRole={role}

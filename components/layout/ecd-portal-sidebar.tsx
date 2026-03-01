@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/ecd/BrandMark'
@@ -34,6 +34,11 @@ export function EcdPortalSidebar({
 }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   useAppNavLock()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-app-shell', 'true')
+    return () => document.documentElement.removeAttribute('data-app-shell')
+  }, [])
 
   const visibleNav = ECD_DASHBOARD_NAV.filter((item) => {
     if (userRole === 'ecd_admin') return true
@@ -97,7 +102,7 @@ export function EcdPortalSidebar({
   return (
     <>
       <aside
-        className="hidden h-screen w-64 shrink-0 overflow-y-auto border-r border-slate-100 bg-white px-4 py-8 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col"
+        className="hidden w-64 shrink-0 sticky top-0 h-screen overflow-y-auto border-r border-slate-100 bg-white px-4 py-8 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col"
       >
         <div className="px-2 mb-4">
           <BrandMark compact className="brightness-100" />

@@ -194,3 +194,8 @@ html.lite-mode *:after {
 html.lite-mode img {
   image-rendering: pixelated; /* Optional: further reduce visual complexity */
 }
+
+/* Prevent browser back gesture on portal routes */
+html[data-app-shell] {
+  overscroll-behavior-x: none;
+}
