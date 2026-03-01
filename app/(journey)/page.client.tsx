@@ -165,6 +165,75 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
 
           <PwaInstallCard />
 
+          {/* SECTION 4.5 — Testimonials */}
+          <section className="py-12 border-t border-slate-100">
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">Trusted by families across Alexandra</h3>
+              <p className="mt-4 text-slate-600">Join hundreds of parents who found the right crèche through CentreConnect.</p>
+            </div>
+            
+            <div className="grid gap-8 md:grid-cols-3">
+              {[
+                {
+                  quote: "I found a crèche just 5 minutes from my house that I didn't even know existed. The pickup codes give me such peace of mind.",
+                  author: "Lerato M.",
+                  sub: "Parent in Alex"
+                },
+                {
+                  quote: "Usually, applying to crèches is a headache of paperwork. With CentreConnect, I did it all from my phone in one afternoon.",
+                  author: "Sipho K.",
+                  sub: "Father of two"
+                },
+                {
+                  quote: "Seeing the daily reports and photos of my daughter makes my workday so much better. I feel connected to her even when I'm away.",
+                  author: "Nomsa Z.",
+                  sub: "Parent"
+                }
+              ].map((t, i) => (
+                <div key={i} className="rounded-2xl bg-slate-50 p-8 border border-slate-100 italic text-slate-700 relative">
+                  <span className="absolute -top-4 left-6 text-6xl text-cyan-200 font-serif opacity-50">“</span>
+                  <p className="relative z-10 text-lg leading-relaxed mb-6">{t.quote}</p>
+                  <div className="not-italic">
+                    <p className="font-bold text-slate-900">{t.author}</p>
+                    <p className="text-sm text-slate-500">{t.sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* SECTION 4.6 — FAQ */}
+          <section className="py-12 border-t border-slate-100">
+            <div className="max-w-3xl mx-auto">
+              <h3 className="font-display text-3xl font-bold text-slate-900 mb-10 text-center">Frequently Asked Questions</h3>
+              <div className="space-y-6">
+                {[
+                  {
+                    q: "Is CentreConnect free for parents?",
+                    a: "Yes! Searching for centres, submitting applications, and receiving updates is 100% free for parents and guardians."
+                  },
+                  {
+                    q: "How do I know the centres are safe?",
+                    a: "We list centres that are registered or in the process of registration. We also provide safety features like verified pickup codes for added security."
+                  },
+                  {
+                    q: "Can I apply to more than one crèche?",
+                    a: "Absolutely. You create one child profile and can use it to apply to as many centres as you like with just a few taps."
+                  },
+                  {
+                    q: "What if I don't have a smartphone?",
+                    a: "Our platform is designed to work on basic smartphones and uses very little data. You can also access it from a computer or tablet."
+                  }
+                ].map((faq, i) => (
+                  <div key={i} className="rounded-2xl border border-slate-200 p-6 hover:border-cyan-400 transition-colors">
+                    <h4 className="font-bold text-slate-900 text-lg mb-2">{faq.q}</h4>
+                    <p className="text-slate-600 leading-relaxed">{faq.a}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* SECTION 5 — For ECD Owners */}
           <section className="rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-8 text-white sm:p-16">
             <div className="max-w-3xl">
