@@ -108,7 +108,8 @@ export async function middleware(request: NextRequest) {
       )
 
       if (!isValid) {
-        const redirectUrl = new URL('/login?reason=session_expired', request.url)
+        // Redirect to landing page as requested
+        const redirectUrl = new URL('/?reason=session_expired', request.url)
         const response = NextResponse.redirect(redirectUrl)
         clearSessionCookies(response, request)
         return response

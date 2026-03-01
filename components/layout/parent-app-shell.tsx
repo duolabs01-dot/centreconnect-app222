@@ -69,7 +69,7 @@ function shouldShowMobileBack(pathname: string) {
   if (pathname.startsWith('/parent/shortlist')) return true
   if (pathname.startsWith('/parent/compare')) return true
 
-  return false
+  return true // Default to showing back button for deep paths
 }
 
 function isMeTab(pathname: string) {

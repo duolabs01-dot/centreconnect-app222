@@ -183,9 +183,13 @@
 
 
 /* Lite Mode global styles */
-html.lite-mode * {
+html.lite-mode *,
+html.lite-mode *:before,
+html.lite-mode *:after {
   transition: none !important;
   animation: none !important;
+  transition-duration: 0s !important;
+  animation-duration: 0s !important;
 }
 html.lite-mode img {
   image-rendering: pixelated; /* Optional: further reduce visual complexity */

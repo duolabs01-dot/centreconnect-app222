@@ -285,9 +285,11 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
   const router = useRouter()
   const supabase = createClient()
   const { isLiteMode, toggleLiteMode } = useLiteMode()
-  const [profile, _setProfile] = useState(initial)
-  const [_sheetOpen, _setSheetOpen] = useState(false)
-  const [_activeField, _setActiveField] = useState<string | null>(null)
+  const [profile, setProfile] = useState(initial)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const [activeField, setActiveField] = useState<'full_name' | 'phone' | 'guardian_relationship' | 'emergency_contact_name' | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
 
   const completionPct = Math.round(([profile.full_name, profile.phone, profile.guardian_relationship, profile.emergency_contact_name].filter(Boolean).length / 4) * 100)
@@ -299,20 +301,54 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     router.refresh()
   }
 
+  function openEdit(field: typeof activeField, current: string) {
+    setActiveField(field)
+    setEditValue(current)
+    setSheetOpen(true)
+  }
+
+  async function saveField() {
+    if (!activeField) return
+    setIsSaving(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+
+      const isUserProfileField = ['full_name', 'phone'].includes(activeField)
+      const table = isUserProfileField ? 'user_profiles' : 'parents'
+
+      const { error } = await supabase
+        .from(table)
+        .update({ [activeField]: editValue })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      setProfile(prev => ({ ...prev, [activeField]: editValue }))
+      setSheetOpen(false)
+      toast.success('Updated successfully')
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const menuGroups = [
     {
       label: 'Account',
       items: [
-        { label: 'Full Name', value: profile.full_name, icon: UserRound, href: '/parent/profile/edit' },
-        { label: 'Phone', value: profile.phone, icon: Phone, href: '/parent/profile/edit' },
+        { label: 'Full Name', value: profile.full_name, icon: UserRound, onClick: () => openEdit('full_name', profile.full_name) },
+        { label: 'Phone', value: profile.phone, icon: Phone, onClick: () => openEdit('phone', profile.phone) },
         { label: 'Email', value: profile.email, icon: Mail, readonly: true },
       ]
     },
     {
       label: 'Family',
       items: [
-        { label: 'Role', value: profile.guardian_relationship, icon: Heart, href: '/parent/profile/edit' },
-        { label: 'Emergency Contact', value: profile.emergency_contact_name, icon: Shield, href: '/parent/profile/edit' },
+        { label: 'Role', value: profile.guardian_relationship, icon: Heart, onClick: () => openEdit('guardian_relationship', profile.guardian_relationship) },
+        { label: 'Emergency Contact', value: profile.emergency_contact_name, icon: Shield, onClick: () => openEdit('emergency_contact_name', profile.emergency_contact_name) },
         { label: 'My Children', value: `${profile.child_count} children`, icon: Users, href: '/parent/children' },
       ]
     },
@@ -406,11 +442,19 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                   </div>
                 )
 
-                if (item.href) {
+                if ('href' in item && item.href) {
                   return (
                     <Link key={item.label} href={item.href} className="block group hover:bg-slate-50 transition-colors">
                       {Content}
                     </Link>
+                  )
+                }
+
+                if ('onClick' in item && item.onClick) {
+                  return (
+                    <button key={item.label} onClick={item.onClick} className="w-full text-left block group hover:bg-slate-50 transition-colors">
+                      {Content}
+                    </button>
                   )
                 }
 
@@ -429,6 +473,58 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         <LogOut className="h-4 w-4" />
         {isSigningOut ? 'Signing Out...' : 'Sign Out'}
       </button>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-[2rem] p-6 outline-none">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-xl font-black tracking-tight">
+              Edit {activeField === 'full_name' ? 'Full Name' : 
+                    activeField === 'phone' ? 'Phone Number' : 
+                    activeField === 'guardian_relationship' ? 'Your Role' : 
+                    'Emergency Contact'}
+            </SheetTitle>
+          </SheetHeader>
+          
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                {activeField === 'guardian_relationship' ? 'Relationship to Child' : 'New Value'}
+              </Label>
+              {activeField === 'guardian_relationship' ? (
+                <select 
+                  className="cc-native-field h-14 rounded-2xl" 
+                  value={editValue} 
+                  onChange={(e) => setEditValue(e.target.value)}
+                >
+                  <option value="">Select relationship</option>
+                  {RELATIONSHIP_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              ) : (
+                <Input 
+                  className="h-14 rounded-2xl text-lg font-medium" 
+                  value={editValue} 
+                  onChange={(e) => setEditValue(e.target.value)}
+                  placeholder={`Enter ${activeField?.replace(/_/g, ' ')}`}
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Button variant="outline" className="h-14 rounded-2xl font-bold" onClick={() => setSheetOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="h-14 rounded-2xl font-bold bg-cyan-600 shadow-float" 
+                onClick={saveField}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save Change'}
+              </Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
+
