@@ -21,6 +21,7 @@ import { DashboardSummary, DashboardSummarySkeleton } from './_sections/summary-
 import { ActivityFeedSection } from './_sections/activity-feed-section'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ParentJobsSection } from './_sections/parent-jobs-section'
+import { PushPermissionRequest } from '@/components/notifications/PushPermissionRequest'
 
 export const metadata: Metadata = {
   title: 'Parent Command Centre | CentreConnect',
@@ -144,6 +145,9 @@ export default async function ParentDashboardPage() {
     return (
       <div className="bg-surface-secondary px-4 pt-4 pb-24 min-h-screen">
         <div className="cc-stack">
+          {/* Push Notification Nudge */}
+          <PushPermissionRequest />
+
           {/* Header Section — Suspended for instant shell */}
           <Suspense fallback={<DashboardSummarySkeleton />}>
             <DashboardSummary />

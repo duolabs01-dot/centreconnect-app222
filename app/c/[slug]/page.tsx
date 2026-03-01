@@ -39,6 +39,34 @@ import { ContactCentreSheet } from './contact-centre-sheet'
 import { ShareCentreSheet } from './share-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
+import type { Metadata } from 'next'
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const slug = params.slug
+  const supabase = createClient()
+  const { data: centre } = await supabase
+    .from('ecd_centres')
+    .select('name, tagline')
+    .eq('slug', slug)
+    .maybeSingle()
+
+  if (!centre) return { title: 'Centre Not Found' }
+
+  return {
+    title: `${centre.name} — CentreConnect`,
+    description: centre.tagline || `View ${centre.name} details and apply online.`,
+    openGraph: {
+      images: [
+        {
+          url: `/api/og/centre/${slug}`,
+          width: 1200,
+          height: 630,
+          alt: centre.name,
+        },
+      ],
+    },
+  }
+}
 
 type Centre = {
   id: string

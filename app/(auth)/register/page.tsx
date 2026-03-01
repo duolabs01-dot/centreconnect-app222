@@ -90,7 +90,7 @@ export default function RegisterPage() {
   }
 
   function authDestinationPath() {
-    return sanitizeNextPath(requestedNext) ?? '/parent/dashboard'
+    return sanitizeNextPath(requestedNext) ?? '/parent/onboarding'
   }
 
   function loginHref() {
