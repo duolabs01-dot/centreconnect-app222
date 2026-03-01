@@ -193,10 +193,19 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                         {isVerified && <BadgeCheck className="h-4 w-4 text-cyan-500 fill-cyan-50" />}
                       </div>
                     </div>
-                    <Link href="/parent/profile" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                      <User className="h-4 w-4" />
-                      Manage Profile
+                    
+                    <Link href="/parent/profile/documents" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                      <FileText className="h-4 w-4" />
+                      Documents Vault
                     </Link>
+                    
+                    <Link href="/parent/profile/security" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                      <Lock className="h-4 w-4" />
+                      Account Security
+                    </Link>
+
+                    <div className="h-px bg-slate-50 my-1" />
+
                     <button 
                       onClick={() => { handleSignOut(); setShowUserDropdown(false); }}
                       disabled={isSigningOut}
