@@ -14,7 +14,7 @@ import {
   Cookie, 
   Smile, 
   Laugh, 
-  Zzz, 
+  Moon, 
   CloudRain, 
   Frown,
   CheckCircle2,
@@ -54,7 +54,7 @@ type DailyReportsClientProps = {
 const MOODS = [
   { value: 'happy', label: 'Happy', icon: Laugh },
   { value: 'good', label: 'Good', icon: Smile },
-  { value: 'tired', label: 'Tired', icon: Zzz },
+  { value: 'tired', label: 'Tired', icon: Moon },
   { value: 'unsettled', label: 'Unsettled', icon: CloudRain },
   { value: 'upset', label: 'Upset', icon: Frown },
 ]

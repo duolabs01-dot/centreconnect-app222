@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Eye, EyeOff, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { cn } from '@/lib/utils'
 
 export default function RegisterPage() {
   const router = useRouter()

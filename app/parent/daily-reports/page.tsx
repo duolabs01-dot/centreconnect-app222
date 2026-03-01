@@ -8,14 +8,13 @@ import { getJohannesburgNowParts } from '@/lib/utils'
 import { 
   Smile, 
   Laugh, 
-  Zzz, 
+  Moon, 
   CloudRain, 
   Frown, 
   Utensils, 
   Coffee, 
   Cookie, 
   CheckCircle2, 
-  Moon,
   Info
 } from 'lucide-react'
 
@@ -27,7 +26,7 @@ export const metadata: Metadata = {
 const MOOD_MAP: Record<string, { label: string, icon: any, color: string }> = {
   happy: { label: 'Happy', icon: Laugh, color: 'text-amber-500' },
   good: { label: 'Good', icon: Smile, color: 'text-emerald-500' },
-  tired: { label: 'Tired', icon: Zzz, color: 'text-slate-500' },
+  tired: { label: 'Tired', icon: Moon, color: 'text-slate-500' },
   unsettled: { label: 'Unsettled', icon: CloudRain, color: 'text-blue-500' },
   upset: { label: 'Upset', icon: Frown, color: 'text-rose-500' },
 }
@@ -100,7 +99,7 @@ export default async function ParentDailyReportsPage() {
               <CardContent className="pt-6">
                 {!report ? (
                   <div className="py-8 text-center">
-                    <Zzz className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+                    <Moon className="h-10 w-10 text-slate-200 mx-auto mb-3" />
                     <p className="text-sm font-medium text-slate-500">Today's report is being prepared by the teacher.</p>
                   </div>
                 ) : (
