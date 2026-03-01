@@ -18,7 +18,9 @@ import {
   Sliders,
   HelpCircle,
   BadgeCheck,
-  CheckCircle2
+  CheckCircle2,
+  Edit3,
+  Sparkles
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -26,7 +28,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ecd/Button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useLiteMode } from '@/lib/context/LiteModeProvider'
 import { Switch } from '@/components/ui/switch'
@@ -56,7 +58,7 @@ function initialsFromName(name: string) {
 export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial }) {
   const router = useRouter()
   const supabase = createClient()
-  const { isLiteMode, toggleLiteMode } = useLiteMode()
+  const { isLiteMode, setLiteMode } = useLiteMode()
   
   const [profile, setProfile] = useState(initial)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -104,7 +106,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
       setProfile(prev => ({ ...prev, [activeField]: editValue }))
       setSheetOpen(false)
-      toast.success('Protocol updated successfully')
+      toast.success('Information updated successfully')
       router.refresh()
     } catch (error: any) {
       toast.error(error.message || 'Failed to update field')
@@ -175,7 +177,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 <p className="text-sm font-bold text-slate-900">Lite Mode</p>
                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tight mt-0.5">Reduce data & animations</p>
               </div>
-              <Switch checked={isLiteMode} onCheckedChange={toggleLiteMode} />
+              <Switch checked={isLiteMode} onCheckedChange={(val) => setLiteMode(val)} />
             </div>
           )
         },
@@ -205,6 +207,12 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
             </div>
             <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Family Account</p>
           </div>
+          <button 
+            onClick={() => openEdit('full_name', profile.full_name)}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-secondary text-slate-400 hover:text-cyan-600 transition-colors"
+          >
+            <Edit3 className="h-5 w-5" />
+          </button>
         </div>
       </SurfaceCard>
 
@@ -280,7 +288,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
                   if ('onClick' in item && item.onClick) {
                     return (
-                      <button key={item.label} onClick={item.onClick} className="w-full block hover:bg-slate-50/50 transition-colors">
+                      <button key={item.label} onClick={item.onClick} className="w-full block hover:bg-slate-50/50 transition-colors text-left">
                         {Content}
                       </button>
                     )
@@ -309,14 +317,17 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       {/* Global Edit Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="bottom" className="rounded-t-[3rem] p-8 outline-none border-t-4 border-t-cyan-500 h-[auto] max-h-[90vh] overflow-y-auto">
-          <SheetHeader className="mb-8">
+          <SheetHeader className="mb-8 text-center">
             <div className="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mb-6" />
-            <SheetTitle className="text-2xl font-black tracking-tighter text-slate-900 text-center">
+            <SheetTitle className="text-2xl font-black tracking-tighter text-slate-900">
               Update {activeField === 'full_name' ? 'Identity' : 
                     activeField === 'phone' ? 'Telemetry' : 
                     activeField === 'guardian_relationship' ? 'Architecture' : 
                     'Security Protocol'}
             </SheetTitle>
+            <SheetDescription className="sr-only">
+              Modify your profile details securely.
+            </SheetDescription>
           </SheetHeader>
           
           <div className="space-y-8 max-w-md mx-auto">
@@ -326,7 +337,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
               </Label>
               {activeField === 'guardian_relationship' ? (
                 <select 
-                  className="cc-native-field h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 font-bold text-lg focus:ring-cyan-500/20" 
+                  className="cc-native-field h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 font-bold text-lg focus:ring-cyan-500/20 w-full" 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                 >
@@ -335,7 +346,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 </select>
               ) : (
                 <Input 
-                  className="h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20" 
+                  className="h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full" 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                   placeholder={`Enter ${activeField?.replace(/_/g, ' ')}`}
@@ -350,7 +361,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 onClick={saveField}
                 disabled={isSaving}
               >
-                {isSaving ? 'Safeguarding...' : 'Verify & Save'}
+                {isSigningOut ? 'Safeguarding...' : 'Verify & Save'}
               </Button>
               <button 
                 className="h-12 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
@@ -363,22 +374,5 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         </SheetContent>
       </Sheet>
     </div>
-  )
-}
-
-function Sparkles({ className }: { className?: string }) {
-  return (
-    <svg 
-      className={className}
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
-      <path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>
-    </svg>
   )
 }

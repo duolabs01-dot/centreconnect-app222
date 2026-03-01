@@ -54,27 +54,31 @@ export default async function ParentDocumentsPage() {
     ])
 
     return (
-      <div className="space-y-6 overflow-x-hidden">
-        <div className="space-y-4">
-          <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-5 text-white">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="font-bold">Document Vault</p>
-                <p className="text-slate-400 text-xs">
-                  Encrypted - Private - POPIA compliant
-                </p>
-              </div>
-            </div>
-            <p className="text-slate-300 text-sm leading-relaxed">
-              Only you control your documents. We log every
-              view and download so you always know who accessed
-              your files.
-            </p>
+      <div className="space-y-8 overflow-x-hidden pb-12">
+        <header>
+          <div className="flex items-center gap-2 mb-1">
+            <ShieldCheck className="h-4 w-4 text-cyan-600" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-1">Security Vault</p>
           </div>
-        </div>
+          <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents Vault</h1>
+          <p className="mt-2 text-sm text-slate-500 font-medium max-w-xl">
+            Securely store and manage your official identity documents. Authorised centres only receive access during active enrolment protocols.
+          </p>
+        </header>
+
+        <SurfaceCard className="p-6 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-3xl -mr-16 -mt-16 group-hover:bg-cyan-500/20 transition-colors" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center">
+              <ShieldCheck className="h-6 w-6 text-cyan-400" />
+            </div>
+            <div>
+              <p className="font-black text-white leading-tight">POPIA Compliant Storage</p>
+              <p className="text-xs text-slate-400 font-medium mt-1">End-to-end encrypted - Private - Controlled Access</p>
+            </div>
+          </div>
+        </SurfaceCard>
+
         <DocumentsVaultManager
           initialDocuments={(documentsData ?? []) as ParentDocumentRow[]}
           initialAuditLog={(auditLogData ?? []) as DocumentAuditLogRow[]}
