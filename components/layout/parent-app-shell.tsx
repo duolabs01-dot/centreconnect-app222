@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User, LogOut, ChevronDown, Sparkles, FileText } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { BottomNav, type NavItem } from './bottom-nav'
@@ -200,7 +200,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                     </Link>
                     
                     <Link href="/parent/profile/security" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                      <Lock className="h-4 w-4" />
+                      <LockIcon className="h-4 w-4" />
                       Account Security
                     </Link>
 
