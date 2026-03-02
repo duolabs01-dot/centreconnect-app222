@@ -170,6 +170,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
       description="Simple view of where each application is right now. Pipeline means stage-by-stage flow."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <section className="mb-4 space-y-3">
         <p className="text-sm text-slate-600">{centre?.name ?? 'Your centre'}</p>

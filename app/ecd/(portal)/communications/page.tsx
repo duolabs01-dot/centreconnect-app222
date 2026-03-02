@@ -105,6 +105,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
       description="Choose Broadcast or Direct first, then send quickly using templates."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <section className="space-y-6">
         <Card className="border border-slate-100 bg-white text-slate-900 shadow-sm rounded-3xl overflow-hidden">

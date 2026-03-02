@@ -145,6 +145,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       description="Publish jobs in seconds and keep your hiring pipeline active."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <section className="space-y-6">
         {successMessage ? (

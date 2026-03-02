@@ -49,6 +49,7 @@ type DailyReportsClientProps = {
   staffId: string
   userRoleLabel: string
   userEmail: string
+  userRole: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
 }
 
 const MOODS = [
@@ -77,7 +78,8 @@ export function DailyReportsClient({
   todayDate,
   staffId,
   userRoleLabel,
-  userEmail
+  userEmail,
+  userRole
 }: DailyReportsClientProps) {
   const supabase = createClient()
   const [selectedChildId, setSelectedChildId] = useState<string | null>(
@@ -150,6 +152,7 @@ export function DailyReportsClient({
       description="Update parents on their child's daily progress."
       roleLabel={userRoleLabel}
       userEmail={userEmail}
+      userRole={userRole}
     >
       <div className="space-y-6">
         {/* Child Selector */}
@@ -165,7 +168,7 @@ export function DailyReportsClient({
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
               )}
             >
-              {child.first_name} {reports[child.id]?.published_at ? '✅' : ''}
+              {child.first_name} {reports[child.id]?.published_at ? '(Published)' : ''}
             </button>
           ))}
         </div>

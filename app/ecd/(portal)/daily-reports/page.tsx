@@ -64,6 +64,7 @@ export default async function EcdDailyReportsPage() {
       staffId={user.id}
       userRoleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? ''}
+      userRole={role}
     />
   )
 }

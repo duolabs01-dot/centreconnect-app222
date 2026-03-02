@@ -138,6 +138,7 @@ export default async function EcdTransportDriversPage() {
       description="Manage transport drivers and route links."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">

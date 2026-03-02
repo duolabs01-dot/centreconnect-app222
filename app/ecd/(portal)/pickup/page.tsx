@@ -17,6 +17,7 @@ export default async function EcdPickupPage() {
       description="Verify a parent's pickup code before releasing a child."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <div className="space-y-4">
         <section>

@@ -63,6 +63,7 @@ export default async function EcdTransportPage() {
       description="Shipments, routes, and driver enquiries."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <div className="space-y-6">
         <Card className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden text-slate-900">

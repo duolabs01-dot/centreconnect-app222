@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { cn, getJohannesburgNowParts, isSameJohannesburgDay, getJohannesburgGreeting } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { StatCard } from '@/components/ui/StatCard'
-import { Users, TrendingUp, UserCheck, ShieldAlert, Truck, Info, Zap, ChevronRight } from 'lucide-react'
+import { Users, TrendingUp, UserCheck, ShieldAlert, Zap, ChevronRight } from 'lucide-react'
 
 export const revalidate = 30
 
@@ -17,8 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const centreName = centre?.name ?? "Centre"
 
   return {
-    title: `${centreName} — CentreConnect`,
-    description: 'Daily operations first: attendance, pickup security, and admissions inbox.',
+    title: `${centreName} Command Centre | CentreConnect`,
+    description: 'Attendance, security protocols, and admissions pipeline management.',
   }
 }
 
@@ -29,21 +29,9 @@ type PendingApplicationRow = {
   reviewed_at: string | null
 }
 
-type TransportConfigSnapshot = {
-  offers_transport: boolean
-  fee_per_month: number | null
-  fee_description: string | null
-  coverage_areas: string[] | null
-  notes: string | null
-}
 function pct(part: number, total: number) {
   if (total <= 0) return 0
   return Math.max(0, Math.min(100, Math.round((part / total) * 100)))
-}
-
-function formatTransportFee(cents: number | null | undefined) {
-  if (cents === null || cents === undefined) return 'Quote-based'
-  return `R${(cents / 100).toFixed(0)} / month`
 }
 
 export default async function EcdDashboardPage() {
@@ -69,7 +57,6 @@ export default async function EcdDashboardPage() {
   const [
     pendingApplicationsResult,
     snapshotResult,
-    transportResult,
     enrolledResult,
     revenueResult,
     staffResult,
@@ -77,11 +64,6 @@ export default async function EcdDashboardPage() {
   ] = await Promise.all([
     pendingQuery,
     supabase.rpc('get_ecd_dashboard_snapshot', { p_ecd_id: ecdId, p_today: todayDate }),
-    supabase
-      .from('transport_configs')
-      .select('offers_transport,fee_per_month,fee_description,coverage_areas,notes')
-      .eq('ecd_id', ecdId)
-      .maybeSingle(),
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId).eq('status', 'enrolled'),
     supabase.from('invoices').select('total').eq('ecd_id', ecdId).eq('status', 'paid').gte('paid_at', monthStartIso),
     supabase.from('ecd_admins').select('user_id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
@@ -106,7 +88,6 @@ export default async function EcdDashboardPage() {
     attendance_previous_7_count?: number
     unverified_guardians_count?: number
   }
-  const transportConfig = (transportResult.data ?? null) as TransportConfigSnapshot | null
   const enrolledCount = enrolledResult.count ?? 0
   const revenueThisMonth = (revenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
   const revenuePreviousMonth = (previousRevenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
@@ -127,16 +108,9 @@ export default async function EcdDashboardPage() {
   const inReviewCount = snapshot.in_review_count ?? 0
   const waitlistedApplications = snapshot.waitlisted_count ?? 0
   const attendanceToday = snapshot.attendance_today_count ?? 0
-  const pickedUpToday = snapshot.picked_up_today_count ?? 0
-  const activePickupCodes = snapshot.active_pickup_codes_count ?? 0
   const unverifiedGuardians = snapshot.unverified_guardians_count ?? 0
   const pendingApplications = submittedCount + inReviewCount
-  const pickupCompletionPct = pct(pickedUpToday, attendanceToday)
-  const pickupOutstanding = Math.max(0, attendanceToday - pickedUpToday)
-  const admissionsCurrent7 = snapshot.admissions_current_7_count ?? 0
-  const admissionsPrevious7 = snapshot.admissions_previous_7_count ?? 0
   const attendanceCurrent7 = snapshot.attendance_current_7_count ?? 0
-  const attendancePrevious7 = snapshot.attendance_previous_7_count ?? 0
 
   const newToday = applications?.filter(
     (a) => isSameJohannesburgDay(a.submitted_at)
@@ -205,7 +179,6 @@ export default async function EcdDashboardPage() {
   const topActions = recommendationItems.slice(0, 3)
 
   const revenueChange = revenueThisMonth - revenuePreviousMonth
-  const revenueTrend = revenueChange > 0 ? 'up' : revenueChange < 0 ? 'down' : 'neutral'
   const revenueChangePct = revenuePreviousMonth > 0
     ? `${Math.abs(Math.round((revenueChange / revenuePreviousMonth) * 100))}%`
     : '0%'
@@ -214,62 +187,96 @@ export default async function EcdDashboardPage() {
 
   return (
     <EcdOsShell
-      title={`${centreName} — CentreConnect`}
-      description="Attendance, pickup flow, and admissions in one operational view."
+      title={`${centreName} Command Centre`}
+      description="Operational overview: security, attendance and admissions."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
-      <div className="space-y-6">
+      <div className="space-y-8 pb-12">
+        <section className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-10 text-white shadow-2xl">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-3xl -mr-32 -mt-32" />
+          <div className="relative z-10">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-400">
+              {getJohannesburgGreeting()}
+            </p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+              {centreName}
+            </h1>
+            <div className="mt-6 flex flex-wrap gap-6 items-center border-t border-white/10 pt-6">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-sm font-bold text-slate-300">{attendanceToday} Children In Today</p>
+              </div>
+              <div className="h-4 w-px bg-white/10 hidden sm:block" />
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-teal-400" />
+                <p className="text-sm font-bold text-slate-300">{pendingApplications} Applications Pending</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Primary Action Hub */}
+        <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {[
+            { label: 'Attendance', icon: UserCheck, href: '/ecd/attendance', color: 'bg-teal-50 text-teal-700 border-teal-100', desc: 'Sign-in/out' },
+            { label: 'Security', icon: ShieldAlert, href: '/ecd/pickup', color: 'bg-rose-50 text-rose-700 border-rose-100', desc: 'Verify pickups' },
+            { label: 'Pipeline', icon: TrendingUp, href: '/ecd/applications', color: 'bg-blue-50 text-blue-700 border-blue-100', desc: 'New admissions' },
+            { label: 'Reports', icon: Zap, href: '/ecd/daily-reports', color: 'bg-amber-50 text-amber-700 border-amber-100', desc: 'Parent updates' },
+          ].map(act => (
+            <Link key={act.label} href={act.href} className="group transition-all active:scale-95">
+              <Card className={cn("h-full border-none shadow-sm group-hover:shadow-md transition-all rounded-[2rem]", act.color)}>
+                <CardContent className="p-6">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm transition-transform group-hover:-rotate-6">
+                    <act.icon className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-black uppercase tracking-widest">{act.label}</p>
+                  <p className="mt-1 text-[10px] font-bold opacity-60 uppercase tracking-tight">{act.desc}</p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </section>
+
         {applications.length > 0 && (
-          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between gap-4">
+          <div className="rounded-3xl border border-amber-200 bg-amber-50/50 p-6 flex items-center justify-between gap-6 shadow-sm">
             <div>
-              <p className="text-sm font-bold text-amber-900">
-                {applications.length} application{applications.length !== 1 ? 's' : ''} waiting for your response
+              <p className="text-lg font-black text-amber-900 leading-tight">
+                {applications.length} Inbox Item{applications.length !== 1 ? 's' : ''}
               </p>
-              <p className="text-xs text-amber-700 mt-0.5">
-                {stale24h > 0 ? `${stale24h} waiting more than 24 hours.` : 'All received recently.'}
+              <p className="text-sm text-amber-700 font-bold mt-1">
+                {stale24h > 0 ? `${stale24h} waiting more than 24 hours.` : 'All enquiries are fresh.'}
               </p>
             </div>
-            <Link href="/ecd/applications" className="shrink-0 rounded-xl bg-amber-600 px-4 py-2 text-sm font-bold text-white hover:bg-amber-700 transition-colors">
-              Review Now
-            </Link>
+            <Button asChild size="lg" className="shrink-0 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black shadow-lg shadow-amber-900/20">
+              <Link href="/ecd/applications">Process Now</Link>
+            </Button>
           </div>
         )}
 
-        <section className="mb-4 rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
-          <p className="text-xs font-bold uppercase tracking-wider text-teal-600">
-            {getJohannesburgGreeting()}
-          </p>
-          <p className="mt-1 text-xl font-bold text-slate-900">
-            {centreName} — Today&apos;s Overview
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            {attendanceToday} children in today · {pendingApplications} pending applications
-          </p>
-        </section>
-
-        <Card className="border-t-4 border-t-teal-600 overflow-hidden shadow-sm">
-          <CardHeader className="bg-slate-50/50 pb-4">
-            <CardTitle className="text-slate-900 flex items-center gap-2">
+        <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 px-8 py-6">
+            <CardTitle className="text-slate-900 flex items-center gap-3 text-lg font-black uppercase tracking-wider">
               <Zap className="w-5 h-5 text-teal-600" />
-              Critical Actions
+              Critical Protocol List
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-4 space-y-3">
+          <CardContent className="p-4 space-y-3">
             {topActions.length === 0 ? (
-              <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-500">
-                No urgent blockers right now. Keep admissions moving and monitor pickup completion.
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-slate-500 font-bold italic">
+                All operational protocols are green. No urgent blockers.
               </div>
             ) : (
               topActions.map((item, index) => (
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="flex items-start gap-4 rounded-xl border border-slate-100 bg-white p-4 text-slate-900 transition-all hover:border-teal-200 hover:bg-teal-50/30 group"
+                  className="flex items-center gap-5 rounded-2xl border border-slate-50 bg-white p-5 text-slate-900 transition-all hover:bg-teal-50/30 hover:border-teal-100 group"
                 >
                   <span
                     className={cn(
-                      "mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black shadow-sm",
                       item.level === 'critical' ? 'bg-rose-100 text-rose-700' :
                         item.level === 'warning' ? 'bg-amber-100 text-amber-700' :
                           'bg-teal-100 text-teal-700'
@@ -278,21 +285,13 @@ export default async function EcdDashboardPage() {
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold group-hover:text-teal-700 transition-colors">{item.label}</p>
-                    <p className="mt-1 text-xs text-slate-500 leading-relaxed">{item.detail}</p>
+                    <p className="text-sm font-black group-hover:text-teal-900 transition-colors tracking-tight">{item.label}</p>
+                    <p className="mt-0.5 text-xs text-slate-500 font-medium leading-relaxed">{item.detail}</p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-teal-600" />
+                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-teal-600 transition-transform group-hover:translate-x-1" />
                 </Link>
               ))
             )}
-            <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                Pulse: {pendingApplications} pending • {pickupOutstanding} remaining
-              </p>
-              <p className="text-[11px] font-bold text-slate-400">
-                Good {nowJhb.hour < 12 ? 'morning' : 'afternoon'}
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -313,134 +312,42 @@ export default async function EcdDashboardPage() {
             helper="Active personnel"
           />
           <StatCard
-            title="Attendance"
-            value={attendanceCurrent7}
-            helper="Last 7 days"
+            title="Engagement"
+            value={`${attendanceCurrent7}`}
+            helper="7-day attendance"
           />
         </section>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500">New Admissions (7d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-black text-slate-900">{admissionsCurrent7}</p>
-              <p className="mt-2 text-xs font-bold text-teal-600 flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                {admissionsCurrent7 - admissionsPrevious7} from previous week
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500">Attendance (7d)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-black text-slate-900">{attendanceCurrent7}</p>
-              <p className="mt-2 text-xs font-bold text-emerald-600">
-                Healthy engagement
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500">Pickup Rate Today</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-black text-teal-600">{pickupCompletionPct}%</p>
-              <p className="mt-2 text-xs font-bold text-slate-500">
-                {pickedUpToday}/{attendanceToday} completed
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {transportConfig?.offers_transport ? (
-          <Card className="shadow-sm border-slate-200">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-slate-900 flex items-center gap-2">
-                <Truck className="w-5 h-5 text-teal-600" />
-                Transport Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <p className="text-xl font-bold text-slate-900">{formatTransportFee(transportConfig?.fee_per_month)}</p>
-                  <p className="text-xs text-slate-500 mt-1">{transportConfig?.fee_description}</p>
-                </div>
-                <span className="px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-[10px] font-black uppercase tracking-widest border border-teal-100">
-                  Active
-                </span>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Coverage</p>
-                  <div className="flex flex-wrap gap-2">
-                    {transportConfig?.coverage_areas?.map((area: string) => (
-                      <span key={area} className="px-2 py-1 rounded-md bg-white text-slate-700 text-xs border border-slate-200">
-                        {area}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 justify-end">
-                  <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white w-full h-11 rounded-xl font-bold shadow-sm">
-                    <Link href="/ecd/transport">Transport Desk</Link>
-                  </Button>
-                  <Button variant="outline" asChild className="border-slate-200 text-slate-700 hover:bg-slate-50 h-11 rounded-xl font-bold">
-                    <Link href="/ecd/communications">Message Drivers</Link>
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="p-6 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white border-slate-200 shadow-sm rounded-3xl">
-            <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-2xl bg-teal-50 flex items-center justify-center border border-teal-100">
-                <Info className="w-6 h-6 text-teal-600" />
-              </div>
-              <div>
-                <p className="text-base font-bold text-slate-900">Transport setup pending</p>
-                <p className="text-xs text-slate-500">Set up routes and drivers to start tracking pickups.</p>
-              </div>
-            </div>
-            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white h-11 px-6 rounded-xl font-bold shadow-sm">
-              <Link href="/ecd/transport">Configure Now</Link>
-            </Button>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <div className="xl:col-span-2">
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 pb-4">
-                <CardTitle className="text-slate-900">Admissions Pipeline</CardTitle>
-                <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-widest text-teal-600 hover:text-teal-700">
-                  Full Pipeline →
+            <Card className="shadow-sm border-none rounded-[2.5rem] bg-white overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 px-8 py-6">
+                <CardTitle className="text-slate-900 font-black uppercase tracking-widest text-sm">Admissions Pipeline</CardTitle>
+                <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100 transition-all">
+                  Full Pipeline ->
                 </Link>
               </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                    <p className="text-3xl font-black text-slate-900">{submittedCount}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">New</p>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 text-center shadow-inner">
+                    <p className="text-4xl font-black text-slate-900">{submittedCount}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mt-2">New</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-teal-50/30 border border-teal-100 text-center">
-                    <p className="text-3xl font-black text-teal-700">{inReviewCount}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600/60 mt-1">Review</p>
+                  <div className="p-6 rounded-[2rem] bg-teal-50/40 border border-teal-100 text-center shadow-inner">
+                    <p className="text-4xl font-black text-teal-700">{inReviewCount}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-teal-600/60 mt-2">Review</p>
                   </div>
-                  <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-center">
-                    <p className="text-3xl font-black text-rose-600">{stale24h}</p>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500/60 mt-1">Stale</p>
+                  <div className="p-6 rounded-[2rem] bg-rose-50/50 border border-rose-100 text-center shadow-inner">
+                    <p className="text-4xl font-black text-rose-600">{stale24h}</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-rose-500/60 mt-2">Stale</p>
                   </div>
                 </div>
                 {stale72h > 0 && (
-                  <div className="flex items-center gap-3 p-4 rounded-2xl bg-rose-600 text-white font-bold text-xs shadow-lg shadow-rose-200">
-                    <ShieldAlert className="w-4 h-4" />
-                    <span>{stale72h} applications require immediate attention (over 72h)</span>
+                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-rose-600 text-white font-black text-sm shadow-xl shadow-rose-900/20">
+                    <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
+                      <ShieldAlert className="w-5 h-5" />
+                    </div>
+                    <span>{stale72h} applications require immediate attention (72h SLA breach)</span>
                   </div>
                 )}
               </CardContent>
@@ -448,26 +355,26 @@ export default async function EcdDashboardPage() {
           </div>
           <div className="space-y-6">
             <ProfileCompleteness items={profileItems} />
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader className="border-b border-slate-50 pb-4">
-                <CardTitle className="text-sm font-bold text-slate-900 uppercase tracking-widest">Efficiency Metrics</CardTitle>
+            <Card className="shadow-sm border-none rounded-[2.5rem] bg-white overflow-hidden">
+              <CardHeader className="border-b border-slate-50 px-8 py-6">
+                <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Efficiency Metrics</CardTitle>
               </CardHeader>
-              <CardContent className="pt-6 grid grid-cols-2 gap-4">
+              <CardContent className="p-8 grid grid-cols-2 gap-8">
                 <div className="text-center">
-                  <p className="text-2xl font-black text-teal-600">{avgResponseHours}h</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Avg Response</p>
+                  <p className="text-3xl font-black text-teal-600">{avgResponseHours}h</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Avg Response</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-black text-slate-900">{newToday}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">New Today</p>
+                  <p className="text-3xl font-black text-slate-900">{newToday}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">New Today</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-black text-amber-600">{waitlistedApplications}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Waitlisted</p>
+                  <p className="text-3xl font-black text-amber-600">{waitlistedApplications}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Waitlisted</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-2xl font-black text-rose-600">{unverifiedGuardians}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Unverified</p>
+                  <p className="text-3xl font-black text-rose-600">{unverifiedGuardians}</p>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1">Unverified</p>
                 </div>
               </CardContent>
             </Card>

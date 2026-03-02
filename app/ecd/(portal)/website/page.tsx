@@ -231,6 +231,7 @@ export default async function EcdWebsitePage() {
       description="Build your page, publish when ready, and request custom website setup."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <Card className="border-slate-100 bg-white lg:col-span-2 shadow-sm text-slate-900 rounded-3xl overflow-hidden">

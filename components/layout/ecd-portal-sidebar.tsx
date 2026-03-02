@@ -52,20 +52,28 @@ export function EcdPortalSidebar({
         key={item.href}
         href={item.href}
         className={cn(
-          'flex items-center gap-2.5 px-3 py-2.5 text-sm font-semibold transition-all duration-150 rounded-xl',
+          'flex items-center gap-3 px-4 py-3 text-sm font-bold transition-all duration-200 rounded-2xl group relative',
           active
-            ? 'text-teal-700 bg-teal-50 shadow-sm'
-            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+            ? 'text-teal-900 bg-teal-50/80 shadow-sm border border-teal-100/50'
+            : 'text-slate-600 hover:text-teal-700 hover:bg-teal-50/30'
         )}
         aria-current={active ? 'page' : undefined}
       >
-        <item.icon className={cn('w-4 h-4 shrink-0', active ? 'text-teal-600' : 'text-slate-400')} />
-        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        <div className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
+          active ? "bg-teal-600 text-white shadow-lg shadow-teal-900/20" : "bg-slate-100 text-slate-400 group-hover:bg-teal-100 group-hover:text-teal-600"
+        )}>
+          <item.icon className="w-4 h-4 shrink-0" />
+        </div>
+        <span className="min-w-0 flex-1 truncate tracking-tight">{item.label}</span>
         {badgeCount > 0 ? (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white ring-1 ring-white/10">
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-black text-white ring-2 ring-white">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         ) : null}
+        {active && (
+          <div className="absolute left-0 w-1 h-6 bg-teal-600 rounded-r-full" />
+        )}
       </Link>
     )
   }
@@ -80,7 +88,7 @@ export function EcdPortalSidebar({
       return (
         <Fragment key={item.href}>
           {showHeader ? (
-            <p className="mt-4 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            <p className="mt-6 mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
               {GROUP_LABELS[itemGroup] ?? itemGroup}
             </p>
           ) : null}
@@ -110,20 +118,23 @@ export function EcdPortalSidebar({
       </div>
 
       <aside
-        className="hidden w-64 shrink-0 sticky top-0 h-screen overflow-y-auto border-r border-slate-100 bg-white px-4 py-8 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col"
+        className="hidden w-72 shrink-0 sticky top-0 h-screen overflow-y-auto border-r border-slate-100 bg-white px-5 py-8 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col shadow-[1px_0_10px_rgba(0,0,0,0.02)]"
       >
-        <div className="px-2 mb-4">
+        <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />
-          <p className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
+          <div className="mt-3 inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
+          </div>
         </div>
-        <nav className="mt-6 space-y-1" aria-label="ECD portal navigation">
+        <nav className="mt-2 space-y-1.5" aria-label="ECD portal navigation">
           {renderGroupedNav(visibleNav)}
         </nav>
-        <div className="mt-auto shrink-0 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-          <p className="truncate text-xs text-slate-500 font-medium">
-            Signed in as <span className="font-bold text-slate-900">{userEmail ?? 'Unknown'}</span>  
-          </p>
-          <SignOutButton redirectTo="/" className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold rounded-xl shadow-sm" />
+        <div className="mt-auto shrink-0 space-y-4 rounded-[2rem] border border-slate-100 bg-slate-50/50 p-6">
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operator</p>
+            <p className="truncate text-sm text-slate-900 font-bold">{userEmail ?? 'Unknown'}</p>  
+          </div>
+          <SignOutButton redirectTo="/" className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all font-bold rounded-2xl py-3 shadow-sm text-sm" />
         </div>
       </aside>
     </>

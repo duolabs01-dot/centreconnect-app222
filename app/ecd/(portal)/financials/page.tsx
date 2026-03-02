@@ -86,6 +86,7 @@ export default async function EcdFinancialsPage({ searchParams }: FinancialsPage
       description="Track monthly P&L, manage line items, and monitor 6-month trends."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? ''}
+      userRole={role}
     >
       <div className="space-y-8">
         <FinancialEntryClient

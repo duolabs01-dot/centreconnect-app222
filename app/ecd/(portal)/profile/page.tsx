@@ -287,6 +287,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
       description="Update centre, account, and operational settings from one place."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">

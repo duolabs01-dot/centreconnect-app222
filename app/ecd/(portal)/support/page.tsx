@@ -70,6 +70,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
       description="Track support requests and follow-ups."
       roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
     >
       <Card className="mb-6 border-border bg-card/80 text-foreground">
         <CardHeader>
