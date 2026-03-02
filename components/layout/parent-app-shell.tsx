@@ -7,12 +7,11 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, Home, Search, ClipboardList, User, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { createClient } from '@/lib/supabase/client'
 import { useParentLayout } from './parent-layout-provider'
-import { PARENT_NAV_ITEMS } from '@/lib/navigation-config'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -28,12 +27,6 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/children')) return 'Children'
   if (pathname.startsWith('/parent/notifications')) return 'Inbox'
   return 'Home'
-}
-
-function getBackFallback(pathname: string) {
-  if (pathname.startsWith('/directory')) return '/directory'
-  if (pathname.startsWith('/parent')) return '/parent/dashboard'
-  return '/'
 }
 
 function shouldShowMobileBack(pathname: string) {
@@ -133,30 +126,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             
             <BrandMark href="/parent/dashboard" compact className="shrink-0" />
             
-            {/* Desktop Navigation Menu */}
-            <nav className="hidden md:flex items-center gap-1 ml-6">
-              {PARENT_NAV_ITEMS.map((item) => {
-                const isActive = item.href === '/parent/dashboard'
-                  ? pathname === item.href
-                  : pathname.startsWith(item.href)
-                
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "px-4 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2",
-                      isActive 
-                        ? "bg-cyan-600 text-white shadow-lg shadow-cyan-900/20" 
-                        : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                )
-              })}
-            </nav>
           </div>
 
           <div className="flex items-center gap-3">

@@ -1,9 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from 'framer-motion'
 import { type LucideIcon } from 'lucide-react'
-import { useCallback, useTransition, useState, useEffect, memo } from 'react'
+import { useCallback, useEffect, useRef, memo } from 'react'
+import { cn } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
 export type NavItem = {
@@ -23,100 +23,76 @@ function isTabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-const NAV_SPRING = { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 }
-
 const NavButton = memo(({
   item,
   active,
-  onClick,
-  reducedMotion
+  onPress
 }: {
-  item: NavItem,
-  active: boolean,
-  onClick: () => void,
-  reducedMotion: boolean
+  item: NavItem
+  active: boolean
+  onPress: (href: string) => void
 }) => {
   const Icon = item.icon
   const hasBadge = !active && (item.badge ?? 0) > 0
+  const handleClick = useCallback(() => {
+    onPress(item.href)
+  }, [item.href, onPress])
 
   return (
-    <motion.button
-      whileTap={{ scale: 0.9 }}
-      onClick={onClick}
-      className="relative flex h-12 flex-1 items-center justify-center outline-none tap-highlight-transparent"
+    <button
+      onClick={handleClick}
+      className="relative flex h-12 flex-1 items-center justify-center rounded-2xl outline-none transition-transform active:scale-95"
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
       <div className="relative flex flex-col items-center justify-center gap-1">
-        <motion.div
-          animate={{
-            color: active ? '#0d9488' : '#64748b',
-            scale: active ? 1.25 : 1,
-            y: active ? -4 : 0
-          }}
-          transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
-          className="relative z-10"
+        <div
+          className={cn(
+            'relative z-10 transition-all duration-150',
+            active ? '-translate-y-0.5 scale-110 text-teal-600' : 'text-slate-500'
+          )}
         >
           <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+          {hasBadge ? (
+            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+          ) : null}
+        </div>
 
-          <AnimatePresence>
-            {hasBadge && (
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"
-              />
-            )}
-          </AnimatePresence>
-        </motion.div>
-
-        <motion.span
-          animate={{
-            opacity: active ? 1 : 0.6,
-            scale: active ? 1 : 0.9,
-            color: active ? '#0d9488' : '#64748b'
-          }}
-          transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
-          className="text-[10px] font-bold uppercase tracking-widest"
+        <span
+          className={cn(
+            'text-[10px] font-bold uppercase tracking-widest transition-colors duration-150',
+            active ? 'text-teal-600' : 'text-slate-500'
+          )}
         >
           {item.label}
-        </motion.span>
+        </span>
 
-        {active && (
-          <motion.div
-            layoutId="active-pill"
-            className="absolute -inset-x-4 -inset-y-2 z-0 rounded-2xl bg-teal-50/50"
-            transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
-          />
-        )}
+        <span
+          className={cn(
+            'absolute -inset-x-3 -inset-y-2 -z-0 rounded-2xl transition-colors duration-150',
+            active ? 'bg-teal-50/70' : 'bg-transparent'
+          )}
+        />
       </div>
-    </motion.button>
+    </button>
   )
 })
 NavButton.displayName = 'NavButton'
 
 export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [optimisticPath, setOptimisticPath] = useState(pathname)
-  const reducedMotion = useReducedMotion()
   const { isVisible } = useBottomNav()
+  const prefetchedRef = useRef(false)
 
   useEffect(() => {
-    setOptimisticPath(pathname)
-  }, [pathname])
-
-  useEffect(() => {
+    if (prefetchedRef.current) return
+    prefetchedRef.current = true
     items.forEach(item => router.prefetch(item.href))
   }, [items, router])
 
   const handleNav = useCallback((href: string) => {
-    if (href === optimisticPath) return
-    setOptimisticPath(href)
-    startTransition(() => {
-      router.push(href)
-    })
-  }, [optimisticPath, router])
+    if (href === pathname) return
+    router.push(href)
+  }, [pathname, router])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
   if (!isVisible || pathname === '/' || isAuthPage) return null
@@ -127,30 +103,16 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
         <nav
           className="flex items-center gap-1 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl"
         >
-          <LayoutGroup>
-            {items.map((item) => (
-              <NavButton
-                key={item.href}
-                item={item}
-                active={isTabActive(optimisticPath, item.href)}
-                onClick={() => handleNav(item.href)}
-                reducedMotion={reducedMotion ?? false}
-              />
-            ))}
-          </LayoutGroup>
+          {items.map((item) => (
+            <NavButton
+              key={item.href}
+              item={item}
+              active={isTabActive(pathname, item.href)}
+              onPress={handleNav}
+            />
+          ))}
         </nav>
       </div>
-
-      <AnimatePresence>
-        {isPending && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed top-0 left-0 right-0 h-1 bg-cyan-500 z-[200]"
-          />
-        )}
-      </AnimatePresence>
     </div>
   )
 }
