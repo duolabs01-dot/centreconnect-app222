@@ -19,6 +19,7 @@ type ApplicationRow = {
   id: string
   application_number: string
   status: string
+  missing_documents: unknown
   submitted_at: string
   child_id: string
   ecd_id: string
@@ -43,6 +44,11 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function normalizeMissingDocuments(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
 export default async function ParentApplicationDetailPage({ params }: ApplicationDetailPageProps) {
   const supabase = await createClient()
   const {
@@ -53,7 +59,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
   const { data: application } = await supabase
     .from('applications')
     .select(`
-      id, application_number, status, submitted_at, child_id, ecd_id,
+      id, application_number, status, missing_documents, submitted_at, child_id, ecd_id,
       start_date, parent_message, admin_notes, offer_accepted_at, share_multiple_flag,
       ecd_centres (name, suburb, slug),
       children (first_name, last_name),
@@ -101,6 +107,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       childFirstName={resolvedChildFirstName}
       childLastName={resolvedChildLastName}
       history={history}
+      missingDocuments={normalizeMissingDocuments(appRow.missing_documents)}
       showMultipleApplicationsNotice={showMultipleApplicationsNotice}
     />
   )

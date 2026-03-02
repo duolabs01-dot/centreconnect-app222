@@ -12,6 +12,10 @@ export default async function ParentNotificationsPage() {
   const perf = startRoutePerf('/parent/notifications')
   const supabase = await createClient()
   try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
     const { data } = await supabase
       .from('parent_notifications')
       .select('id,title,message,is_read,created_at,template_key,ecd_centres(name,contact_whatsapp,contact_phone)')
@@ -37,7 +41,7 @@ export default async function ParentNotificationsPage() {
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Family Inbox</h1>
           <p className="mt-1 text-sm text-slate-600">Messages from crèches, announcements, and application updates.</p>
         </header>
-        <NotificationsInbox initialItems={items} />
+        <NotificationsInbox initialItems={items} parentId={user?.id ?? ''} />
       </div>
     )
   } finally {

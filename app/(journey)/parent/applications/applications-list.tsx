@@ -1,9 +1,11 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { ChevronRight, Compass, Map } from 'lucide-react'
+import { toast } from 'sonner'
 import ApplicationTimeline, { type AppStatus, type TimelineEvent } from '@/components/parent/ApplicationTimeline'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -11,6 +13,7 @@ import { ApprovalActions } from './approval-actions'
 import { ApprovalReceivedToast } from './approval-received-toast'
 import { cn, formatDate } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { createClient } from '@/lib/supabase/client'
 
 type ApplicationItem = {
   id: string
@@ -26,6 +29,7 @@ type ApplicationItem = {
   centreLogoUrl: string | null
   centreLocation: string
   childName: string
+  missingDocuments: string[]
   history: Array<{
     status: string
     created_at: string
@@ -45,6 +49,7 @@ function normalizeStatus(status: string): AppStatus {
   ) {
     return status
   }
+  if (status === 'draft' || status === 'partial') return 'submitted'
   if (status === 'pending_review') return 'in_review'
   if (status === 'provisioned') return 'enrolled'
   return 'submitted'
@@ -65,7 +70,7 @@ function cardStatusConfig(status: string) {
     }
   }
   return {
-    label: 'Pending',
+    label: status === 'partial' ? 'Partial' : 'Pending',
     className: 'bg-amber-50 text-amber-700 border-amber-200',
   }
 }
@@ -162,14 +167,29 @@ function TimelinePanel({ application }: { application: ApplicationItem }) {
   )
 }
 
-export function ApplicationsList({ applications }: { applications: ApplicationItem[] }) {
-  const pendingApprovalIds = applications
-    .filter((application) => application.status === 'approved' && !application.offer_accepted_at)
-    .map((application) => application.id)
-
+export function ApplicationsList({
+  applications,
+  parentId,
+}: {
+  applications: ApplicationItem[]
+  parentId: string
+}) {
+  const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [activeApplicationId, setActiveApplicationId] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(false)
+  const [applicationItems, setApplicationItems] = useState(applications)
   const { setVisible } = useBottomNav()
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const knownApplicationIdsRef = useRef<Set<string>>(new Set(applications.map((application) => application.id)))
+
+  useEffect(() => {
+    setApplicationItems(applications)
+  }, [applications])
+
+  useEffect(() => {
+    knownApplicationIdsRef.current = new Set(applicationItems.map((application) => application.id))
+  }, [applicationItems])
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 768px)')
@@ -188,12 +208,104 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     return () => setVisible(true)
   }, [activeApplicationId, isDesktop, setVisible])
 
-  const activeApplication = useMemo(
-    () => applications.find((application) => application.id === activeApplicationId) ?? null,
-    [activeApplicationId, applications]
+  useEffect(() => {
+    if (!parentId) return
+
+    const scheduleRefresh = () => {
+      if (refreshTimeoutRef.current) return
+      refreshTimeoutRef.current = setTimeout(() => {
+        refreshTimeoutRef.current = null
+        router.refresh()
+      }, 350)
+    }
+
+    const channel = supabase
+      .channel(`parent-applications-live-${parentId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'applications', filter: `parent_id=eq.${parentId}` },
+        (payload) => {
+          const nextRow = payload.new as {
+            id?: string
+            status?: string
+            offer_accepted_at?: string | null
+            missing_documents?: unknown
+          }
+          if (!nextRow.id || !knownApplicationIdsRef.current.has(nextRow.id)) return
+
+          setApplicationItems((current) =>
+            current.map((application) => {
+              if (application.id !== nextRow.id) return application
+              return {
+                ...application,
+                status: nextRow.status ?? application.status,
+                offer_accepted_at:
+                  nextRow.offer_accepted_at === undefined ? application.offer_accepted_at : nextRow.offer_accepted_at,
+                missingDocuments: Array.isArray(nextRow.missing_documents)
+                  ? nextRow.missing_documents.map((entry) => String(entry).trim()).filter(Boolean)
+                  : application.missingDocuments,
+              }
+            })
+          )
+          scheduleRefresh()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'application_status_history' },
+        (payload) => {
+          const nextHistory = payload.new as { application_id?: string; new_status?: string }
+          if (!nextHistory.application_id || !knownApplicationIdsRef.current.has(nextHistory.application_id)) return
+          if (nextHistory.new_status) {
+            toast.success(`✨ Update: your application is now "${String(nextHistory.new_status).replaceAll('_', ' ')}"`)
+          }
+          scheduleRefresh()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        (payload) => {
+          const nextNotification = payload.new as {
+            application_id?: string | null
+            title?: string
+            message?: string
+          }
+          if (!nextNotification.application_id) return
+          if (!knownApplicationIdsRef.current.has(nextNotification.application_id)) return
+
+          toast(nextNotification.title ?? 'New crèche update', {
+            description: nextNotification.message ?? 'Tap into your Application Journey for details.',
+          })
+          scheduleRefresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current)
+        refreshTimeoutRef.current = null
+      }
+      void supabase.removeChannel(channel)
+    }
+  }, [parentId, router, supabase])
+
+  const pendingApprovalIds = applicationItems
+    .filter((application) => application.status === 'approved' && !application.offer_accepted_at)
+    .map((application) => application.id)
+  const incompleteApplications = applicationItems.filter(
+    (application) =>
+      application.status === 'partial' ||
+      (['submitted', 'in_review'].includes(application.status) && application.missingDocuments.length > 0)
   )
 
-  if (applications.length === 0) {
+  const activeApplication = useMemo(
+    () => applicationItems.find((application) => application.id === activeApplicationId) ?? null,
+    [activeApplicationId, applicationItems]
+  )
+
+  if (applicationItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-50">
@@ -221,8 +333,25 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     <>
       <ApprovalReceivedToast approvalIds={pendingApprovalIds} />
 
+      {incompleteApplications.length > 0 ? (
+        <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <p className="text-sm font-semibold text-amber-900">
+            You&apos;re close! {incompleteApplications.length} application{incompleteApplications.length === 1 ? '' : 's'} still need a few documents 📄
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            Upload now and we&apos;ll instantly notify the crèche team 🎉
+          </p>
+          <Link
+            href="/parent/profile/documents"
+            className="mt-3 inline-flex min-h-[40px] items-center rounded-2xl border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+          >
+            Upload missing documents
+          </Link>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-4">
-        {applications.map((application) => (
+        {applicationItems.map((application) => (
           <div key={application.id} className="space-y-2">
             <ApplicationCard application={application} onOpen={setActiveApplicationId} />
 

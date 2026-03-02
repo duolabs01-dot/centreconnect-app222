@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -32,6 +32,7 @@ type ApplicationDetailClientProps = {
   childFirstName: string
   childLastName: string
   history: TimelineEvent[]
+  missingDocuments: string[]
   showMultipleApplicationsNotice: boolean
 }
 
@@ -161,7 +162,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
 export default function ApplicationDetailClient({
   id,
   applicationNumber,
-  status,
+  status: initialStatus,
   submittedAt,
   childId,
   ecdId,
@@ -173,16 +174,23 @@ export default function ApplicationDetailClient({
   centreSuburb,
   childFirstName,
   childLastName,
-  history,
+  history: initialHistory,
+  missingDocuments: initialMissingDocuments,
   showMultipleApplicationsNotice,
 }: ApplicationDetailClientProps) {
   const router = useRouter()
-  const [decisionOpen, setDecisionOpen] = useState(status === 'approved' && !acceptedAt)
+  const supabase = useMemo(() => createClient(), [])
+  const [liveStatus, setLiveStatus] = useState(initialStatus)
+  const [liveAcceptedAt, setLiveAcceptedAt] = useState(acceptedAt)
+  const [liveHistory, setLiveHistory] = useState<TimelineEvent[]>(initialHistory)
+  const [liveMissingDocuments, setLiveMissingDocuments] = useState(initialMissingDocuments)
+  const [decisionOpen, setDecisionOpen] = useState(initialStatus === 'approved' && !acceptedAt)
   const [isEditing, setIsEditing] = useState(false)
   const [parentMessage, setParentMessage] = useState(initialParentMessage ?? '')
   const [editMessage, setEditMessage] = useState(initialParentMessage ?? '')
   const [isSaving, startSave] = useTransition()
   const [isWithdrawing, startWithdraw] = useTransition()
+  const statusRef = useRef(initialStatus)
 
   const childName = useMemo(
     () => `${childFirstName}${childLastName ? ` ${childLastName}` : ''}`.trim(),
@@ -190,6 +198,8 @@ export default function ApplicationDetailClient({
   )
 
   const normalizeStatus = (value: string): TimelineEvent['status'] =>
+    value === 'draft' ||
+    value === 'partial' ||
     value === 'submitted' ||
     value === 'in_review' ||
     value === 'approved' ||
@@ -197,20 +207,106 @@ export default function ApplicationDetailClient({
     value === 'waitlisted' ||
     value === 'rejected' ||
     value === 'withdrawn'
-      ? value
+      ? value === 'draft' || value === 'partial'
+        ? 'submitted'
+        : value
       : 'submitted'
 
-  const currentStatus = normalizeStatus(status)
+  const currentStatus = normalizeStatus(liveStatus)
   const timelineHistory =
-    history.length > 0
-      ? history.map((item) => ({
+    liveHistory.length > 0
+      ? liveHistory.map((item) => ({
           ...item,
           status: normalizeStatus(item.status),
           notes: item.notes ?? undefined,
         }))
       : [{ status: currentStatus, created_at: submittedAt }]
-  const canWithdraw = ['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(status)
-  const withdrawLabel = status === 'approved' ? 'Cancel application' : 'Withdraw application'
+  const canWithdraw = ['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(liveStatus)
+  const withdrawLabel = liveStatus === 'approved' ? 'Cancel application' : 'Withdraw application'
+
+  useEffect(() => {
+    statusRef.current = liveStatus
+    if (liveStatus === 'approved' && !liveAcceptedAt) {
+      setDecisionOpen(true)
+    }
+  }, [liveAcceptedAt, liveStatus])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`parent-application-detail-${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'applications', filter: `id=eq.${id}` },
+        (payload) => {
+          const nextApplication = payload.new as {
+            status?: string
+            offer_accepted_at?: string | null
+            parent_message?: string | null
+            missing_documents?: unknown
+          }
+
+          if (nextApplication.status && nextApplication.status !== statusRef.current) {
+            toast.success(`✨ Good news! Status is now "${nextApplication.status.replaceAll('_', ' ')}"`)
+            setLiveStatus(nextApplication.status)
+          }
+          if (nextApplication.offer_accepted_at !== undefined) {
+            setLiveAcceptedAt(nextApplication.offer_accepted_at ?? null)
+          }
+          if (nextApplication.parent_message !== undefined && typeof nextApplication.parent_message === 'string') {
+            setParentMessage(nextApplication.parent_message)
+            setEditMessage(nextApplication.parent_message)
+          }
+          if (Array.isArray(nextApplication.missing_documents)) {
+            setLiveMissingDocuments(
+              nextApplication.missing_documents.map((entry) => String(entry).trim()).filter(Boolean)
+            )
+          }
+          router.refresh()
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'application_status_history', filter: `application_id=eq.${id}` },
+        (payload) => {
+          const nextHistory = payload.new as {
+            new_status?: string
+            created_at?: string
+            notes?: string | null
+          }
+          const nextStatus = nextHistory.new_status
+          const nextCreatedAt = nextHistory.created_at
+          if (!nextStatus || !nextCreatedAt) return
+          setLiveHistory((current) => [
+            ...current,
+            {
+              status: normalizeStatus(nextStatus),
+              created_at: nextCreatedAt,
+              notes: nextHistory.notes ?? undefined,
+            },
+          ])
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        (payload) => {
+          const nextNotification = payload.new as {
+            application_id?: string | null
+            title?: string
+            message?: string
+          }
+          if (nextNotification.application_id !== id) return
+          toast(nextNotification.title ?? 'New update from your crèche', {
+            description: nextNotification.message ?? 'Open your Application Journey for details.',
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [id, parentId, router, supabase])
 
   async function onAccept() {
     const response = await fetch(`/api/parent/applications/${id}/decision`, {
@@ -300,6 +396,26 @@ export default function ApplicationDetailClient({
           This crèche can see that this child has multiple active applications because you enabled this sharing preference.
         </p>
       ) : null}
+      {liveMissingDocuments.length > 0 ? (
+        <div className="mt-2 rounded-2xl border border-teal-200 bg-teal-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Friendly reminder ✨</p>
+          <p className="mt-1 text-sm text-teal-900">
+            You&apos;re almost done! Upload the final documents and this application can move faster 🚀
+          </p>
+          <ul className="mt-2 space-y-1 text-xs text-teal-800">
+            {liveMissingDocuments.slice(0, 5).map((document) => (
+              <li key={document}>- {document.replaceAll('_', ' ')}</li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() => router.push('/parent/profile/documents')}
+            className="mt-3 rounded-2xl bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700"
+          >
+            Upload documents now
+          </button>
+        </div>
+      ) : null}
       <div className="glass-card rounded-2xl p-4 sm:p-5">
         <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Application Summary</p>
         <div className="space-y-3">
@@ -324,7 +440,7 @@ export default function ApplicationDetailClient({
                 No message added yet.
               </p>
             )}
-            {status === 'submitted' && (
+            {liveStatus === 'submitted' && (
               <div className="mt-2">
                 {!isEditing ? (
                   <button
@@ -378,7 +494,7 @@ export default function ApplicationDetailClient({
                 )}
               </div>
             )}
-            {status !== 'submitted' && (
+            {liveStatus !== 'submitted' && (
               <p className="mt-1 text-xs text-slate-400">
                 Contact the crèche directly to request changes after review starts.
               </p>
@@ -386,7 +502,7 @@ export default function ApplicationDetailClient({
           </div>
         </div>
       </div>
-      {status === 'enrolled' && (
+      {liveStatus === 'enrolled' && (
         <PickupCodeSection
           applicationId={id}
           childId={childId || ''}

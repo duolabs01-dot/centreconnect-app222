@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -39,10 +39,74 @@ function toWhatsappHref(phone: string | null, message: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
-export function NotificationsInbox({ initialItems }: { initialItems: NotificationItem[] }) {
-  const supabase = createClient()
+export function NotificationsInbox({
+  initialItems,
+  parentId,
+}: {
+  initialItems: NotificationItem[]
+  parentId: string
+}) {
+  const supabase = useMemo(() => createClient(), [])
   const [items, setItems] = useState(initialItems)
   const [activeTab, setActiveTab] = useState<InboxTab>('All')
+  const seenRealtimeIdsRef = useRef(new Set(initialItems.map((item) => item.id)))
+
+  useEffect(() => {
+    seenRealtimeIdsRef.current = new Set(items.map((item) => item.id))
+  }, [items])
+
+  useEffect(() => {
+    if (!parentId) return
+
+    const channel = supabase
+      .channel(`parent-notifications-live-${parentId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        (payload) => {
+          const next = payload.new as {
+            id?: string
+            title?: string
+            message?: string
+            is_read?: boolean
+            created_at?: string
+            template_key?: string | null
+          }
+          if (!next.id || seenRealtimeIdsRef.current.has(next.id)) return
+
+          const nextItem: NotificationItem = {
+            id: next.id,
+            title: next.title ?? 'New update',
+            message: next.message ?? 'Your crèche shared a new update.',
+            is_read: Boolean(next.is_read),
+            created_at: next.created_at ?? new Date().toISOString(),
+            template_key: next.template_key ?? null,
+            ecd_centres: null,
+          }
+
+          setItems((current) => [nextItem, ...current].slice(0, 100))
+          toast(nextItem.title, {
+            description: `${nextItem.message} 😊`,
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        (payload) => {
+          const next = payload.new as { id?: string; is_read?: boolean }
+          if (!next.id) return
+          setItems((current) =>
+            current.map((item) => (item.id === next.id ? { ...item, is_read: Boolean(next.is_read) } : item))
+          )
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [parentId, supabase])
 
   const filteredItems = useMemo(() => {
     if (activeTab === 'All') return items

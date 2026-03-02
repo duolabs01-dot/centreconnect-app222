@@ -25,6 +25,7 @@ type ApplicationRow = {
   child_id: string | null
   application_number: string
   status: string
+  missing_documents: unknown
   offer_made_at: string | null
   offer_accepted_at: string | null
   priority: number | null
@@ -70,6 +71,11 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function normalizeMissingDocuments(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
 export default async function ParentApplicationsPage({ searchParams }: ParentApplicationsPageProps) {
   const perf = startRoutePerf('/parent/applications')
   const supabase = await createClient()
@@ -81,7 +87,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     const [applicationsResult, childrenResult] = await Promise.all([
       supabase
         .from('applications')
-        .select('id,ecd_id,child_id,application_number,status,offer_made_at,offer_accepted_at,priority,submitted_at,updated_at,ecd_centres(name,slug,logo_url,suburb,city),children(first_name,last_name),application_status_history(new_status,created_at,notes)')
+        .select('id,ecd_id,child_id,application_number,status,missing_documents,offer_made_at,offer_accepted_at,priority,submitted_at,updated_at,ecd_centres(name,slug,logo_url,suburb,city),children(first_name,last_name),application_status_history(new_status,created_at,notes)')
         .eq('parent_id', user?.id ?? '')
         .order('submitted_at', { ascending: false })
         .limit(100),
@@ -161,6 +167,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
               .join(', ') || 'Location pending',
           childName,
           childId: application.child_id,
+          missingDocuments: normalizeMissingDocuments(application.missing_documents),
           history:
             [...(application.application_status_history ?? [])]
               .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
@@ -276,7 +283,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             </SurfaceCard>
 
             <section className="cc-section-block">
-              <ApplicationsList applications={filteredApplications} />
+              <ApplicationsList applications={filteredApplications} parentId={user?.id ?? ''} />
             </section>
 
             <div className="md:hidden">

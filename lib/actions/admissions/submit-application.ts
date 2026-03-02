@@ -162,7 +162,7 @@ export async function submitApplicationAction(input: unknown) {
     const childName = [childInfo?.first_name, childInfo?.last_name].filter(Boolean).join(' ').trim() || 'a child'
     const centreName = centreInfo?.name?.trim() || 'your centre'
     const parentName = parentProfile?.full_name?.trim() || user.email?.split('@')[0] || 'A parent'
-    const notificationTitle = nextStatus === 'partial' ? 'New partial application submitted' : 'New application submitted'
+    const notificationTitle = nextStatus === 'partial' ? 'Partial application in pipeline' : 'New application submitted'
     const notificationMessage =
       nextStatus === 'partial'
         ? `${parentName} started a partial application for ${childName} at ${centreName}. Missing docs: ${documentChecklist.missingLabels.join(', ')}.`
@@ -182,6 +182,19 @@ export async function submitApplicationAction(input: unknown) {
       },
       is_read: false,
     })
+
+    if (nextStatus === 'partial' && applicationId) {
+      const missingSummary = documentChecklist.missingLabels.slice(0, 5).join(', ')
+      await admin.from('parent_notifications').insert({
+        parent_id: user.id,
+        ecd_id: parsed.data.ecd_id,
+        application_id: applicationId,
+        template_key: 'missing_documents',
+        title: 'Almost there! 📄✨',
+        message: `Great start, ${parentName}! We saved ${childName}'s application at ${centreName}. Please upload the remaining documents (${missingSummary}) so the crèche can review quickly 😊.`,
+        is_read: false,
+      })
+    }
   } catch {
     // Non-blocking: ECD notifications should not fail application submission.
   }

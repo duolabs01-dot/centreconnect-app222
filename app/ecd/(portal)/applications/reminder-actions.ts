@@ -141,14 +141,14 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
 
   const missingLabels = toApplicationDocumentLabels(missingCodes)
   const directLink = `${getAppOrigin()}/parent/profile/documents?applicationId=${application.id}`
-  const message = `Hi ${parentName}, your application for ${childName} at ${centreName} is almost ready! Please upload the missing documents: ${missingLabels.join(', ')}. Tap here: ${directLink}`
+  const message = `Hi ${parentName} 👋 Your application for ${childName} at ${centreName} is almost complete 🎉. Please upload the missing documents: ${missingLabels.join(', ')}. Tap here: ${directLink} We’re cheering you on 😊`
 
   const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
     parent_id: parent.id,
     ecd_id: session.ecdId,
     application_id: application.id,
     template_key: 'missing_documents',
-    title: 'Missing documents reminder',
+    title: 'Friendly reminder 📄',
     message,
     is_read: false,
   })
