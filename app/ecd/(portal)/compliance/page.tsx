@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { addStaffCheckAction, markDocumentUploadedAction } from './actions'
+import { ComplianceDocumentRow } from './compliance-document-row'
+import { addStaffCheckAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Compliance Toolkit - CentreConnect',
@@ -27,6 +28,7 @@ type ComplianceDocument = {
   id: string
   document_type: string
   label: string
+  file_url?: string | null
   expires_at: string | null
   status: 'missing' | 'uploaded' | 'verified' | 'expired'
   notes: string | null
@@ -104,7 +106,7 @@ export default async function EcdCompliancePage() {
     supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
     supabase
       .from('compliance_documents')
-      .select('id,document_type,label,expires_at,status,notes')
+      .select('id,document_type,label,file_url,expires_at,status,notes')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: true }),
     supabase
@@ -153,34 +155,12 @@ export default async function EcdCompliancePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {documents.map((doc) => (
-              <form key={doc.id} action={markDocumentUploadedAction} className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-                <input type="hidden" name="id" value={doc.id} />
-                <input type="hidden" name="current_status" value={doc.status} />
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-900">{doc.label}</p>
-                  <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusChipClass(doc.status)}`}>
-                    {doc.status}
-                  </span>
-                </div>
-                <div className="mt-3 grid gap-2 lg:grid-cols-[200px_1fr_auto]">
-                  <input
-                    type="date"
-                    name="expires_at"
-                    defaultValue={doc.expires_at ?? ''}
-                    className="cc-native-field"
-                  />
-                  <input
-                    type="text"
-                    name="notes"
-                    defaultValue={doc.notes ?? ''}
-                    className="cc-native-field"
-                    placeholder="Notes"
-                  />
-                  <Button type="submit" disabled={role === 'ecd_staff'} className="w-full lg:w-auto">
-                    Mark as Uploaded
-                  </Button>
-                </div>
-              </form>
+              <ComplianceDocumentRow
+                key={doc.id}
+                doc={doc}
+                canEdit={role !== 'ecd_staff'}
+                statusClassName={statusChipClass(doc.status)}
+              />
             ))}
           </CardContent>
         </Card>

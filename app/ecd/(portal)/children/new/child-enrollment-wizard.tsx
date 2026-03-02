@@ -1,0 +1,769 @@
+'use client'
+
+import { useMemo, useState, useTransition, type ComponentType } from 'react'
+import Link from 'next/link'
+import { toast } from 'sonner'
+import { Bot, CheckCircle2, FileImage, HeartPulse, ShieldCheck, Sparkles, UserRoundPlus, Users } from 'lucide-react'
+import { AiSuggestedBadge } from '@/components/ui/ai-suggested-badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
+import {
+  extractChildDocumentWithGeminiAction,
+  saveTempChildProfileAndInviteParentAction,
+  type GeminiExtractionResult,
+} from './actions'
+
+type ChildEnrollmentWizardProps = {
+  centreName: string
+}
+
+type WizardStep = 'basic' | 'medical' | 'guardians' | 'documents'
+type ChildDocumentType = 'birth_certificate' | 'medical_card' | 'immunization_record'
+type ChildConfidenceMap = NonNullable<GeminiExtractionResult['confidence']>
+
+const STEPS: Array<{ id: WizardStep; label: string; hint: string; icon: ComponentType<{ className?: string }> }> = [
+  { id: 'basic', label: 'Basic Info', hint: 'Child profile core details', icon: UserRoundPlus },
+  { id: 'medical', label: 'Medical', hint: 'Health and support fields', icon: HeartPulse },
+  { id: 'guardians', label: 'Guardians', hint: 'Parent and caregiver contacts', icon: Users },
+  { id: 'documents', label: 'Documents', hint: 'Gemini extraction + review', icon: FileImage },
+]
+
+type WizardState = {
+  first_name: string
+  last_name: string
+  date_of_birth: string
+  gender: string
+  blood_type: string
+  doctor_name: string
+  medical_aid_number: string
+  emergency_contact_name: string
+  emergency_contact_phone: string
+  dietary_restrictions: string
+  special_needs_notes: string
+  development_notes: string
+  last_checkup_date: string
+  allergies_text: string
+  medical_conditions_text: string
+  medications_text: string
+  parent_name: string
+  parent_phone: string
+  parent_email: string
+  secondary_guardian_name: string
+  secondary_guardian_phone: string
+  secondary_guardian_email: string
+  ai_review_notes: string
+}
+
+const DEFAULT_STATE: WizardState = {
+  first_name: '',
+  last_name: '',
+  date_of_birth: '',
+  gender: '',
+  blood_type: '',
+  doctor_name: '',
+  medical_aid_number: '',
+  emergency_contact_name: '',
+  emergency_contact_phone: '',
+  dietary_restrictions: '',
+  special_needs_notes: '',
+  development_notes: '',
+  last_checkup_date: '',
+  allergies_text: '',
+  medical_conditions_text: '',
+  medications_text: '',
+  parent_name: '',
+  parent_phone: '',
+  parent_email: '',
+  secondary_guardian_name: '',
+  secondary_guardian_phone: '',
+  secondary_guardian_email: '',
+  ai_review_notes: '',
+}
+
+function listToArray(value: string) {
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function arrayToCsv(value?: string[]) {
+  return value && value.length > 0 ? value.join(', ') : ''
+}
+
+function mergeAiSuggestions(
+  current: GeminiExtractionResult['prefill'],
+  incoming: GeminiExtractionResult['prefill']
+) {
+  return {
+    ...(current ?? {}),
+    ...(incoming ?? {}),
+    allergies: incoming?.allergies ?? current?.allergies,
+    medical_conditions: incoming?.medical_conditions ?? current?.medical_conditions,
+    medications: incoming?.medications ?? current?.medications,
+  }
+}
+
+function mergeAiConfidence(current: GeminiExtractionResult['confidence'], incoming: GeminiExtractionResult['confidence']) {
+  return {
+    ...(current ?? {}),
+    ...(incoming ?? {}),
+  }
+}
+
+function getInputAiClass(confidence: number | undefined) {
+  return confidence ? 'border-teal-300 ring-2 ring-teal-100' : ''
+}
+
+export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps) {
+  const [stepIndex, setStepIndex] = useState(0)
+  const [form, setForm] = useState<WizardState>(DEFAULT_STATE)
+  const [birthCertificateFile, setBirthCertificateFile] = useState<File | null>(null)
+  const [medicalCardFile, setMedicalCardFile] = useState<File | null>(null)
+  const [immunizationRecordFile, setImmunizationRecordFile] = useState<File | null>(null)
+  const [aiSuggestion, setAiSuggestion] = useState<GeminiExtractionResult['prefill']>()
+  const [aiConfidence, setAiConfidence] = useState<GeminiExtractionResult['confidence']>()
+  const [documentUrls, setDocumentUrls] = useState<Partial<Record<ChildDocumentType, string>>>({})
+  const [savedResult, setSavedResult] = useState<{ tempProfileId?: string; whatsappHref?: string } | null>(null)
+  const [isExtracting, startExtractTransition] = useTransition()
+  const [isSaving, startSaveTransition] = useTransition()
+
+  const activeStep = STEPS[stepIndex]
+  const progress = useMemo(() => Math.round(((stepIndex + 1) / STEPS.length) * 100), [stepIndex])
+  const confidenceMap = aiConfidence as ChildConfidenceMap | undefined
+
+  function fieldConfidence(field: keyof ChildConfidenceMap) {
+    return confidenceMap?.[field]
+  }
+
+  function updateField<K extends keyof WizardState>(field: K, value: WizardState[K]) {
+    setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function goToNextStep() {
+    if (activeStep.id === 'basic') {
+      if (!form.first_name.trim() || !form.last_name.trim()) {
+        toast.error('Add first name and last name before moving on.')
+        return
+      }
+    }
+
+    if (activeStep.id === 'guardians') {
+      if (!form.parent_phone.trim()) {
+        toast.error('Parent WhatsApp number is required to send the completion link.')
+        return
+      }
+    }
+
+    setStepIndex((prev) => Math.min(prev + 1, STEPS.length - 1))
+  }
+
+  function goToPreviousStep() {
+    setStepIndex((prev) => Math.max(prev - 1, 0))
+  }
+
+  function applyAiPrefill() {
+    if (!aiSuggestion) {
+      toast.error('No AI suggestion to apply yet.')
+      return
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      first_name: aiSuggestion.first_name ?? prev.first_name,
+      last_name: aiSuggestion.last_name ?? prev.last_name,
+      date_of_birth: aiSuggestion.date_of_birth ?? prev.date_of_birth,
+      blood_type: aiSuggestion.blood_type ?? prev.blood_type,
+      doctor_name: aiSuggestion.doctor_name ?? prev.doctor_name,
+      medical_aid_number: aiSuggestion.medical_aid_number ?? prev.medical_aid_number,
+      emergency_contact_name: aiSuggestion.emergency_contact_name ?? prev.emergency_contact_name,
+      emergency_contact_phone: aiSuggestion.emergency_contact_phone ?? prev.emergency_contact_phone,
+      dietary_restrictions: aiSuggestion.dietary_restrictions ?? prev.dietary_restrictions,
+      special_needs_notes: aiSuggestion.special_needs_notes ?? prev.special_needs_notes,
+      development_notes: aiSuggestion.development_notes ?? prev.development_notes,
+      last_checkup_date: aiSuggestion.last_checkup_date ?? prev.last_checkup_date,
+      allergies_text: aiSuggestion.allergies ? arrayToCsv(aiSuggestion.allergies) : prev.allergies_text,
+      medical_conditions_text: aiSuggestion.medical_conditions
+        ? arrayToCsv(aiSuggestion.medical_conditions)
+        : prev.medical_conditions_text,
+      medications_text: aiSuggestion.medications ? arrayToCsv(aiSuggestion.medications) : prev.medications_text,
+    }))
+
+    toast.success('AI pre-fill applied. Review all fields before saving.')
+  }
+
+  function runGeminiExtraction(documentType: ChildDocumentType) {
+    const file =
+      documentType === 'birth_certificate'
+        ? birthCertificateFile
+        : documentType === 'medical_card'
+          ? medicalCardFile
+          : immunizationRecordFile
+
+    if (!file) {
+      const label =
+        documentType === 'birth_certificate'
+          ? 'birth certificate'
+          : documentType === 'medical_card'
+            ? 'medical card'
+            : 'immunization record'
+      toast.error(`Upload the ${label} first.`)
+      return
+    }
+
+    startExtractTransition(async () => {
+      const formData = new FormData()
+      formData.set('documentType', documentType)
+      formData.set('file', file)
+
+      const result = await extractChildDocumentWithGeminiAction(formData)
+      if (result.storagePublicUrl) {
+        setDocumentUrls((current) => ({ ...current, [documentType]: result.storagePublicUrl! }))
+      }
+      if (!result.success || !result.prefill) {
+        toast.error(result.message)
+        return
+      }
+
+      setAiSuggestion((current) => mergeAiSuggestions(current, result.prefill))
+      setAiConfidence((current) => mergeAiConfidence(current, result.confidence))
+      toast.success(
+        documentType === 'birth_certificate'
+          ? 'Birth certificate uploaded and extracted.'
+          : documentType === 'medical_card'
+            ? 'Medical card uploaded and extracted.'
+            : 'Immunization record uploaded and extracted.'
+      )
+    })
+  }
+
+  function handleSaveAndShare() {
+    if (!form.first_name.trim() || !form.last_name.trim() || !form.parent_phone.trim()) {
+      toast.error('Child names and parent WhatsApp number are required.')
+      return
+    }
+
+    startSaveTransition(async () => {
+      const payload = {
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
+        date_of_birth: form.date_of_birth || null,
+        gender: form.gender || null,
+        blood_type: form.blood_type.trim() || null,
+        doctor_name: form.doctor_name.trim() || null,
+        medical_aid_number: form.medical_aid_number.trim() || null,
+        emergency_contact_name: form.emergency_contact_name.trim() || null,
+        emergency_contact_phone: form.emergency_contact_phone.trim() || null,
+        dietary_restrictions: form.dietary_restrictions.trim() || null,
+        special_needs_notes: form.special_needs_notes.trim() || null,
+        development_notes: form.development_notes.trim() || null,
+        last_checkup_date: form.last_checkup_date || null,
+        allergies: listToArray(form.allergies_text),
+        medical_conditions: listToArray(form.medical_conditions_text),
+        medications: listToArray(form.medications_text),
+        parent_name: form.parent_name.trim() || null,
+        parent_phone: form.parent_phone.trim(),
+        parent_email: form.parent_email.trim() || null,
+        secondary_guardian_name: form.secondary_guardian_name.trim() || null,
+        secondary_guardian_phone: form.secondary_guardian_phone.trim() || null,
+        secondary_guardian_email: form.secondary_guardian_email.trim() || null,
+        birth_certificate_file_name: birthCertificateFile?.name ?? null,
+        birth_certificate_file_url: documentUrls.birth_certificate ?? null,
+        medical_card_file_name: medicalCardFile?.name ?? null,
+        medical_card_file_url: documentUrls.medical_card ?? null,
+        immunization_record_file_name: immunizationRecordFile?.name ?? null,
+        immunization_record_file_url: documentUrls.immunization_record ?? null,
+        ai_review_notes: form.ai_review_notes.trim() || null,
+      }
+
+      const result = await saveTempChildProfileAndInviteParentAction(payload)
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      setSavedResult({
+        tempProfileId: result.tempProfileId,
+        whatsappHref: result.whatsappHref,
+      })
+      toast.success(result.message)
+
+      if (result.whatsappHref) {
+        const popup = window.open(result.whatsappHref, '_blank', 'noopener,noreferrer')
+        if (!popup) {
+          await navigator.clipboard.writeText(result.whatsappHref)
+          toast.info('WhatsApp link copied. Paste it into WhatsApp to continue.')
+        }
+      }
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card className="rounded-3xl border-teal-100 bg-gradient-to-br from-teal-50 via-white to-cyan-50 shadow-[0_20px_50px_rgba(13,148,136,0.12)]">
+        <CardHeader className="pb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="text-2xl font-black text-slate-900">Add New Child</CardTitle>
+              <CardDescription className="mt-1 text-slate-600">
+                Manual enrollment wizard for {centreName}. AI assists with document extraction and parent handoff.
+              </CardDescription>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-3xl border border-teal-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-teal-700">
+              <Sparkles className="h-4 w-4" />
+              Step {stepIndex + 1} of {STEPS.length}
+            </div>
+          </div>
+          <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-teal-100">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-4">
+            {STEPS.map((step, idx) => {
+              const Icon = step.icon
+              const active = idx === stepIndex
+              const complete = idx < stepIndex
+              return (
+                <button
+                  key={step.id}
+                  type="button"
+                  onClick={() => setStepIndex(idx)}
+                  className={cn(
+                    'flex min-h-[60px] items-center gap-3 rounded-3xl border px-4 py-3 text-left transition-all',
+                    complete && 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                    active && 'border-teal-400 bg-teal-600 text-white shadow-[0_10px_26px_rgba(13,148,136,0.34)]',
+                    !active && !complete && 'border-slate-200 bg-white text-slate-600 hover:border-teal-200'
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-wider">{step.label}</p>
+                    <p className={cn('text-[11px] font-medium', active ? 'text-teal-100' : 'text-slate-500')}>{step.hint}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </CardHeader>
+      </Card>
+
+      {activeStep.id === 'basic' ? (
+        <Card className="rounded-3xl border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-slate-900">Basic Information</CardTitle>
+            <CardDescription className="text-slate-600">
+              Start with identity details. Gemini can pre-fill some of these from uploaded documents later.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                First Name *
+                <AiSuggestedBadge confidence={fieldConfidence('first_name')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('first_name')))}
+                value={form.first_name}
+                onChange={(e) => updateField('first_name', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Last Name *
+                <AiSuggestedBadge confidence={fieldConfidence('last_name')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('last_name')))}
+                value={form.last_name}
+                onChange={(e) => updateField('last_name', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Date of Birth
+                <AiSuggestedBadge confidence={fieldConfidence('date_of_birth')} />
+              </label>
+              <Input
+                type="date"
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('date_of_birth')))}
+                value={form.date_of_birth}
+                onChange={(e) => updateField('date_of_birth', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Gender</label>
+              <select
+                className="cc-native-field h-12 rounded-3xl"
+                value={form.gender}
+                onChange={(e) => updateField('gender', e.target.value)}
+              >
+                <option value="">Select gender</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other / Prefer not to say</option>
+              </select>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {activeStep.id === 'medical' ? (
+        <Card className="rounded-3xl border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-slate-900">Medical & Development</CardTitle>
+            <CardDescription className="text-slate-600">
+              Capture richer health details for safer onboarding and classroom planning.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Blood Type
+                <AiSuggestedBadge confidence={fieldConfidence('blood_type')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('blood_type')))}
+                placeholder="Blood Type (e.g. O+)"
+                value={form.blood_type}
+                onChange={(e) => updateField('blood_type', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Doctor Name
+                <AiSuggestedBadge confidence={fieldConfidence('doctor_name')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('doctor_name')))}
+                placeholder="Doctor Name"
+                value={form.doctor_name}
+                onChange={(e) => updateField('doctor_name', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Medical Aid Number
+                <AiSuggestedBadge confidence={fieldConfidence('medical_aid_number')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('medical_aid_number')))}
+                placeholder="Medical Aid Number"
+                value={form.medical_aid_number}
+                onChange={(e) => updateField('medical_aid_number', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Last Checkup Date
+                <AiSuggestedBadge confidence={fieldConfidence('last_checkup_date')} />
+              </label>
+              <Input
+                type="date"
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('last_checkup_date')))}
+                value={form.last_checkup_date}
+                onChange={(e) => updateField('last_checkup_date', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Emergency Contact Name
+                <AiSuggestedBadge confidence={fieldConfidence('emergency_contact_name')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('emergency_contact_name')))}
+                placeholder="Emergency Contact Name"
+                value={form.emergency_contact_name}
+                onChange={(e) => updateField('emergency_contact_name', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
+                Emergency Contact Phone
+                <AiSuggestedBadge confidence={fieldConfidence('emergency_contact_phone')} />
+              </label>
+              <Input
+                className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('emergency_contact_phone')))}
+                placeholder="Emergency Contact Phone"
+                value={form.emergency_contact_phone}
+                onChange={(e) => updateField('emergency_contact_phone', e.target.value)}
+              />
+            </div>
+            <Textarea
+              className={cn('min-h-[110px] rounded-3xl md:col-span-2', getInputAiClass(fieldConfidence('allergies')))}
+              placeholder="Allergies (comma separated)"
+              value={form.allergies_text}
+              onChange={(e) => updateField('allergies_text', e.target.value)}
+            />
+            <Textarea
+              className={cn(
+                'min-h-[110px] rounded-3xl md:col-span-2',
+                getInputAiClass(fieldConfidence('medical_conditions'))
+              )}
+              placeholder="Medical conditions (comma separated)"
+              value={form.medical_conditions_text}
+              onChange={(e) => updateField('medical_conditions_text', e.target.value)}
+            />
+            <Textarea
+              className={cn('min-h-[110px] rounded-3xl md:col-span-2', getInputAiClass(fieldConfidence('medications')))}
+              placeholder="Medications (comma separated)"
+              value={form.medications_text}
+              onChange={(e) => updateField('medications_text', e.target.value)}
+            />
+            <Textarea
+              className={cn(
+                'min-h-[110px] rounded-3xl md:col-span-2',
+                getInputAiClass(fieldConfidence('dietary_restrictions'))
+              )}
+              placeholder="Dietary restrictions"
+              value={form.dietary_restrictions}
+              onChange={(e) => updateField('dietary_restrictions', e.target.value)}
+            />
+            <Textarea
+              className={cn(
+                'min-h-[120px] rounded-3xl md:col-span-2',
+                getInputAiClass(fieldConfidence('special_needs_notes'))
+              )}
+              placeholder="Special needs notes"
+              value={form.special_needs_notes}
+              onChange={(e) => updateField('special_needs_notes', e.target.value)}
+            />
+            <Textarea
+              className={cn(
+                'min-h-[120px] rounded-3xl md:col-span-2',
+                getInputAiClass(fieldConfidence('development_notes'))
+              )}
+              placeholder="Development notes"
+              value={form.development_notes}
+              onChange={(e) => updateField('development_notes', e.target.value)}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {activeStep.id === 'guardians' ? (
+        <Card className="rounded-3xl border-slate-200 bg-white">
+          <CardHeader>
+            <CardTitle className="text-xl font-black text-slate-900">Parent & Guardians</CardTitle>
+            <CardDescription className="text-slate-600">
+              Parent WhatsApp number is mandatory for completion handoff.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2">
+            <Input className="h-12 rounded-3xl" placeholder="Parent Full Name" value={form.parent_name} onChange={(e) => updateField('parent_name', e.target.value)} />
+            <Input className="h-12 rounded-3xl" placeholder="Parent WhatsApp Number *" value={form.parent_phone} onChange={(e) => updateField('parent_phone', e.target.value)} />
+            <Input className="h-12 rounded-3xl md:col-span-2" placeholder="Parent Email" value={form.parent_email} onChange={(e) => updateField('parent_email', e.target.value)} />
+            <Input className="h-12 rounded-3xl" placeholder="Secondary Guardian Name" value={form.secondary_guardian_name} onChange={(e) => updateField('secondary_guardian_name', e.target.value)} />
+            <Input className="h-12 rounded-3xl" placeholder="Secondary Guardian Phone" value={form.secondary_guardian_phone} onChange={(e) => updateField('secondary_guardian_phone', e.target.value)} />
+            <Input className="h-12 rounded-3xl md:col-span-2" placeholder="Secondary Guardian Email" value={form.secondary_guardian_email} onChange={(e) => updateField('secondary_guardian_email', e.target.value)} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {activeStep.id === 'documents' ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card className="rounded-3xl border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-900">
+                <Bot className="h-5 w-5 text-teal-600" />
+                Document Upload + Gemini Vision
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                Upload birth certificate, medical card, and immunization photos. Each extract uploads to Supabase Storage and returns confidence-scored pre-fill.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-3xl border border-dashed border-teal-200 bg-teal-50/50 p-4">
+                <label className="text-xs font-black uppercase tracking-wider text-teal-700">Birth Certificate</label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="mt-2 h-12 rounded-3xl"
+                  onChange={(e) => setBirthCertificateFile(e.target.files?.[0] ?? null)}
+                />
+                {birthCertificateFile ? <p className="mt-2 text-xs font-semibold text-slate-600">Selected: {birthCertificateFile.name}</p> : null}
+                <Button
+                  type="button"
+                  className="mt-3 h-12 w-full rounded-3xl bg-teal-600 text-white hover:bg-teal-700"
+                  onClick={() => runGeminiExtraction('birth_certificate')}
+                  disabled={isExtracting || !birthCertificateFile}
+                >
+                  {isExtracting ? 'Extracting...' : 'Extract from Photo'}
+                </Button>
+                {documentUrls.birth_certificate ? (
+                  <p className="mt-2 text-[11px] font-semibold text-teal-700">Uploaded to storage</p>
+                ) : null}
+              </div>
+
+              <div className="rounded-3xl border border-dashed border-cyan-200 bg-cyan-50/50 p-4">
+                <label className="text-xs font-black uppercase tracking-wider text-cyan-700">Medical Card</label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="mt-2 h-12 rounded-3xl"
+                  onChange={(e) => setMedicalCardFile(e.target.files?.[0] ?? null)}
+                />
+                {medicalCardFile ? <p className="mt-2 text-xs font-semibold text-slate-600">Selected: {medicalCardFile.name}</p> : null}
+                <Button
+                  type="button"
+                  className="mt-3 h-12 w-full rounded-3xl bg-cyan-600 text-white hover:bg-cyan-700"
+                  onClick={() => runGeminiExtraction('medical_card')}
+                  disabled={isExtracting || !medicalCardFile}
+                >
+                  {isExtracting ? 'Extracting...' : 'Extract from Photo'}
+                </Button>
+                {documentUrls.medical_card ? (
+                  <p className="mt-2 text-[11px] font-semibold text-cyan-700">Uploaded to storage</p>
+                ) : null}
+              </div>
+
+              <div className="rounded-3xl border border-dashed border-indigo-200 bg-indigo-50/50 p-4">
+                <label className="text-xs font-black uppercase tracking-wider text-indigo-700">Immunization Record</label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  className="mt-2 h-12 rounded-3xl"
+                  onChange={(e) => setImmunizationRecordFile(e.target.files?.[0] ?? null)}
+                />
+                {immunizationRecordFile ? (
+                  <p className="mt-2 text-xs font-semibold text-slate-600">Selected: {immunizationRecordFile.name}</p>
+                ) : null}
+                <Button
+                  type="button"
+                  className="mt-3 h-12 w-full rounded-3xl bg-indigo-600 text-white hover:bg-indigo-700"
+                  onClick={() => runGeminiExtraction('immunization_record')}
+                  disabled={isExtracting || !immunizationRecordFile}
+                >
+                  {isExtracting ? 'Extracting...' : 'Extract from Photo'}
+                </Button>
+                {documentUrls.immunization_record ? (
+                  <p className="mt-2 text-[11px] font-semibold text-indigo-700">Uploaded to storage</p>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-slate-200 bg-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-900">
+                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                AI Pre-fill Review
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                Review AI suggestions, apply them, then save a temporary profile and send the parent WhatsApp link.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                {aiSuggestion ? (
+                  <div className="space-y-2 text-xs text-slate-700">
+                    <p className="font-black uppercase tracking-wider text-slate-500">Detected fields</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {Object.entries(aiSuggestion)
+                        .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '')
+                        .map(([key, value]) => (
+                          <div key={key} className="rounded-2xl border border-slate-200 bg-white px-3 py-2">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{key.replaceAll('_', ' ')}</p>
+                              <AiSuggestedBadge confidence={fieldConfidence(key as keyof ChildConfidenceMap)} />
+                            </div>
+                            <p className="mt-1 font-semibold text-slate-700">
+                              {Array.isArray(value) ? value.join(', ') : String(value)}
+                            </p>
+                          </div>
+                        ))}
+                    </div>
+                    <Button type="button" className="mt-2 h-12 w-full rounded-3xl" onClick={applyAiPrefill}>
+                      Apply AI Pre-fill To Form
+                    </Button>
+                    <p className="text-[11px] font-semibold text-slate-500">
+                      Fields marked with AI badges stay fully editable for manual override.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    No AI suggestions yet. Upload documents and click Extract from Photo to pre-fill fields.
+                  </p>
+                )}
+              </div>
+
+              <Textarea
+                className="min-h-[120px] rounded-3xl"
+                placeholder="Review notes (what was auto-filled, what still needs parent confirmation)"
+                value={form.ai_review_notes}
+                onChange={(e) => updateField('ai_review_notes', e.target.value)}
+              />
+
+              <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-xs font-black uppercase tracking-wider text-emerald-700">Ready to finalize?</p>
+                <p className="mt-1 text-sm font-medium text-emerald-800">
+                  This saves a temporary child profile and opens WhatsApp with a parent completion link.
+                </p>
+                <Button
+                  type="button"
+                  className="mt-3 h-12 w-full rounded-3xl bg-emerald-600 text-white hover:bg-emerald-700"
+                  onClick={handleSaveAndShare}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving Temp Profile...' : 'Save Temp Profile + Send WhatsApp Link'}
+                </Button>
+              </div>
+
+              {savedResult ? (
+                <div className="rounded-3xl border border-teal-200 bg-teal-50 p-4">
+                  <p className="flex items-center gap-2 text-sm font-bold text-teal-800">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Temporary profile saved
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-teal-700">Profile ID: {savedResult.tempProfileId}</p>
+                  {savedResult.whatsappHref ? (
+                    <Button variant="outline" asChild className="mt-3 h-11 w-full rounded-3xl border-teal-300 bg-white text-teal-700">
+                      <a href={savedResult.whatsappHref} target="_blank" rel="noreferrer">
+                        Open WhatsApp Link Again
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
+
+      <Card className="rounded-3xl border-slate-200 bg-white">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+            Active step: {activeStep.label}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" className="h-12 rounded-3xl px-6" onClick={goToPreviousStep} disabled={stepIndex === 0}>
+              Back
+            </Button>
+            {stepIndex < STEPS.length - 1 ? (
+              <Button type="button" className="h-12 rounded-3xl bg-teal-600 px-8 text-white hover:bg-teal-700" onClick={goToNextStep}>
+                Next
+              </Button>
+            ) : (
+              <Button type="button" className="h-12 rounded-3xl bg-teal-600 px-8 text-white hover:bg-teal-700" onClick={handleSaveAndShare} disabled={isSaving}>
+                {isSaving ? 'Saving...' : 'Finalize Enrollment'}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button variant="outline" asChild className="h-11 rounded-3xl">
+          <Link href="/ecd/dashboard">Back to Dashboard</Link>
+        </Button>
+        <Button variant="outline" asChild className="h-11 rounded-3xl">
+          <Link href="/ecd/applications">Open Applications</Link>
+        </Button>
+      </div>
+    </div>
+  )
+}

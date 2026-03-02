@@ -1,0 +1,35 @@
+import type { Metadata } from 'next'
+import { EcdOsShell } from '@/components/layout/ecd-os-shell'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { ChildEnrollmentWizard } from './child-enrollment-wizard'
+
+export const metadata: Metadata = {
+  title: 'Add New Child | CentreConnect',
+  description: 'Manual child enrollment wizard with AI document extraction and WhatsApp parent handoff.',
+}
+
+export default async function EcdAddChildWizardPage() {
+  const { supabase, user, role, ecdId } = await requireEcdPortalSession()
+
+  const { data: centre } = await supabase
+    .from('ecd_centres')
+    .select('name')
+    .eq('id', ecdId)
+    .maybeSingle()
+
+  const centreName = centre?.name?.trim() || 'Your Centre'
+
+  return (
+    <EcdOsShell
+      title="Add New Child"
+      description="Create a rich temporary child profile for manual enrollment and handoff completion to parents."
+      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
+    >
+      <section className="mx-auto w-full max-w-7xl space-y-6 px-1 py-2 sm:py-3">
+        <ChildEnrollmentWizard centreName={centreName} />
+      </section>
+    </EcdOsShell>
+  )
+}
