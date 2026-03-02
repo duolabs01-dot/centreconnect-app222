@@ -19,7 +19,7 @@ const createCentreSchema = z.object({
   province: z.string().min(2).max(120).default('Gauteng'),
   postalCode: z.string().max(20).optional(),
   monthlyPrice: z.number().min(0).default(0),
-  tier: z.enum(['basic', 'standard', 'premium']).default('basic'),
+  tier: z.enum(['pilot', 'basic', 'standard', 'premium']).default('basic'),
   contractSigned: z.boolean(),
   onboardingFeePaid: z.boolean(),
 })
@@ -41,6 +41,9 @@ export async function POST(request: Request) {
 
   const adminClient = createAdminClient()
   const data = parsed.data
+  const isPilotPlan = data.tier === 'pilot'
+  const normalizedTier = isPilotPlan ? 'basic' : data.tier
+  const normalizedMonthlyPrice = isPilotPlan ? 0 : data.monthlyPrice
 
   const { data: centre, error: centreError } = await adminClient
     .from('ecd_centres')
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
       postal_code: data.postalCode ?? null,
       contract_signed: data.contractSigned,
       onboarding_fee_paid: data.onboardingFeePaid,
-      is_active: false, // Initially set to false for pending activation
+      is_active: false,
     })
     .select('id,slug,name,city,province')
     .single()
@@ -66,18 +69,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: centreError.message }, { status: 400 })
   }
 
-  // Generate a cryptographically strong temporary password for the new ECD admin user
   const tempPassword = `Cc!${randomBytes(16).toString('base64url')}a1`
 
-  // Create the auth user in Supabase
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
     email: data.email,
-    password: tempPassword, // Temporary password, user will set their own
+    password: tempPassword,
     email_confirm: true,
   })
 
   if (authError) {
-    // If auth user creation fails, roll back centre creation
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
       { error: `Failed to create primary admin user: ${authError.message}` },
@@ -85,7 +85,6 @@ export async function POST(request: Request) {
     )
   }
 
-  // Create user_profile for the new ECD admin
   const { error: profileError } = await adminClient.from('user_profiles').insert({
     id: authUser.user.id,
     full_name: data.primaryContactName,
@@ -95,7 +94,6 @@ export async function POST(request: Request) {
   })
 
   if (profileError) {
-    // Roll back auth user and centre creation
     await adminClient.auth.admin.deleteUser(authUser.user.id)
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
@@ -104,7 +102,6 @@ export async function POST(request: Request) {
     )
   }
 
-  // Link the ECD admin to the centre
   const { error: ecdAdminError } = await adminClient.from('ecd_admins').insert({
     ecd_id: centre.id,
     user_id: authUser.user.id,
@@ -112,7 +109,6 @@ export async function POST(request: Request) {
   })
 
   if (ecdAdminError) {
-    // Roll back all previous creations
     await adminClient.auth.admin.deleteUser(authUser.user.id)
     await adminClient.from('user_profiles').delete().eq('id', authUser.user.id)
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
@@ -121,12 +117,12 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-  
+
   const { error: subscriptionError } = await adminClient.from('subscriptions').insert({
     ecd_id: centre.id,
-    tier: data.tier,
+    tier: normalizedTier,
     status: 'trial',
-    monthly_price: data.monthlyPrice,
+    monthly_price: normalizedMonthlyPrice,
   })
 
   if (subscriptionError) {
@@ -150,13 +146,30 @@ export async function POST(request: Request) {
     entityId: centre.id,
     action: 'create_tenant',
     summary: `Created tenant ${centre.name}`,
-    details: { slug: centre.slug, tier: data.tier, monthlyPrice: data.monthlyPrice, primaryContactEmail: data.email },
+    details: {
+      slug: centre.slug,
+      requestedPlan: data.tier,
+      tier: normalizedTier,
+      monthlyPrice: normalizedMonthlyPrice,
+      primaryContactEmail: data.email,
+      isPilotPlan,
+    },
   })
 
-  // Queue welcome email to primary contact
-  const paymentLink = `${APP_URL}/onboarding/pay?centre=${centre.slug}` // TODO: Replace with real Stripe payment link
-  const emailSubject = "Welcome to CentreConnect — Set up your account"
-  const emailBody = `Dear ${data.primaryContactName},
+  const paymentLink = `${APP_URL}/onboarding/pay?centre=${centre.slug}`
+  const emailSubject = isPilotPlan
+    ? 'Welcome to CentreConnect Pilot - Your trial is live'
+    : 'Welcome to CentreConnect - Set up your account'
+  const emailBody = isPilotPlan
+    ? `Dear ${data.primaryContactName},
+
+Welcome to CentreConnect Pilot! Your ECD Centre, ${data.name}, has been set up in trial mode.
+
+No card details are needed right now. You can sign in and begin enrollment immediately.
+
+Best regards,
+The CentreConnect Team`
+    : `Dear ${data.primaryContactName},
 
 Welcome to CentreConnect! Your ECD Centre, ${data.name}, has been set up.
 
@@ -169,20 +182,19 @@ Best regards,
 The CentreConnect Team`
 
   await queueEmail(data.email, emailSubject, emailBody)
-  // TODO: Add a specific log if queuing fails, though queueEmail already logs.
 
-  // Create admin task for activation
   const { error: taskError } = await adminClient.from('admin_tasks').insert({
     type: 'activate_tenant',
     title: `Activate ${centre.name}`,
-    description: `Onboarding fee confirmed. One-click activation ready.`,
+    description: isPilotPlan
+      ? 'Pilot tenant created. Activate workspace and monitor onboarding.'
+      : 'Onboarding fee confirmed. One-click activation ready.',
     ecd_id: centre.id,
     status: 'pending',
     created_by: platformAdmin.userId,
   })
 
   if (taskError) {
-    // This is a non-critical error, log it but don't roll back the whole transaction
     console.error(`Failed to create admin task for centre ${centre.id}: ${taskError.message}`)
   }
 
@@ -190,6 +202,7 @@ The CentreConnect Team`
     {
       centre,
       createdBy: platformAdmin.userId,
+      pilot: isPilotPlan,
     },
     { status: 201 }
   )

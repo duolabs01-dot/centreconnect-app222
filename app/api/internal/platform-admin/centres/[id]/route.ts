@@ -6,6 +6,24 @@ import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
+
+function normalizeRequestedTier(
+  tier: RequestedTier,
+  status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended',
+  monthlyPrice: number
+) {
+  if (tier === 'pilot') {
+    return {
+      tier: 'basic' as const,
+      status: 'trial' as const,
+      monthlyPrice: 0,
+      isPilotPlan: true,
+    }
+  }
+
+  return { tier, status, monthlyPrice, isPilotPlan: false }
+}
 
 const actionSchema = z.discriminatedUnion('action', [
   z.object({
@@ -22,13 +40,13 @@ const actionSchema = z.discriminatedUnion('action', [
   }),
   z.object({
     action: z.literal('set_subscription'),
-    tier: z.enum(['basic', 'standard', 'premium']),
+    tier: z.enum(['pilot', 'basic', 'standard', 'premium']),
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']),
     monthlyPrice: z.number().min(0).max(100000),
   }),
   z.object({
     action: z.literal('bootstrap_tenant'),
-    tier: z.enum(['basic', 'standard', 'premium']).default('basic'),
+    tier: z.enum(['pilot', 'basic', 'standard', 'premium']).default('basic'),
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']).default('trial'),
     monthlyPrice: z.number().min(0).max(100000).default(199),
   }),
@@ -138,6 +156,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
 
   if (payload.action === 'bootstrap_tenant') {
+    const normalizedPlan = normalizeRequestedTier(payload.tier, payload.status, payload.monthlyPrice)
     const { error: centreEnableError } = await admin
       .from('ecd_centres')
       .update({ is_active: true })
@@ -147,9 +166,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const { error: subscriptionError } = await admin.from('subscriptions').upsert(
       {
         ecd_id: centreId,
-        tier: payload.tier,
-        status: payload.status,
-        monthly_price: payload.monthlyPrice,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthly_price: normalizedPlan.monthlyPrice,
       },
       { onConflict: 'ecd_id' }
     )
@@ -161,8 +180,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       entityType: 'tenant',
       entityId: centreId,
       action: 'bootstrap_tenant',
-      summary: `Converted centre into tenant (${payload.tier}/${payload.status})`,
-      details: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+      summary: `Converted centre into tenant (${normalizedPlan.tier}/${normalizedPlan.status})`,
+      details: {
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
+        isPilotPlan: normalizedPlan.isPilotPlan,
+      },
     })
     void sendPlatformAdminActionNotification({
       subject: 'Centre Converted To Tenant',
@@ -173,26 +198,34 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         `Centre ID: ${centreId}`,
         `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
       ],
-      details: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+      details: {
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
+        isPilotPlan: normalizedPlan.isPilotPlan,
+      },
     })
 
     return NextResponse.json({
       ok: true,
       tenant: {
-        tier: payload.tier,
-        status: payload.status,
-        monthlyPrice: payload.monthlyPrice,
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
         active: true,
       },
     })
   }
 
+  const normalizedPlan = normalizeRequestedTier(payload.tier, payload.status, payload.monthlyPrice)
   const { error } = await admin.from('subscriptions').upsert(
     {
       ecd_id: centreId,
-      tier: payload.tier,
-      status: payload.status,
-      monthly_price: payload.monthlyPrice,
+      tier: normalizedPlan.tier,
+      status: normalizedPlan.status,
+      monthly_price: normalizedPlan.monthlyPrice,
     },
     { onConflict: 'ecd_id' }
   )
@@ -204,8 +237,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     entityType: 'subscription',
     entityId: centreId,
     action: 'set_subscription',
-    summary: `Updated subscription to ${payload.tier}/${payload.status}`,
-    details: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+    summary: `Updated subscription to ${normalizedPlan.tier}/${normalizedPlan.status}`,
+    details: {
+      requestedPlan: payload.tier,
+      tier: normalizedPlan.tier,
+      status: normalizedPlan.status,
+      monthlyPrice: normalizedPlan.monthlyPrice,
+      isPilotPlan: normalizedPlan.isPilotPlan,
+    },
   })
   void sendPlatformAdminActionNotification({
     subject: 'Subscription Package Updated',
@@ -216,11 +255,22 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       `Centre ID: ${centreId}`,
       `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
     ],
-    details: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+    details: {
+      requestedPlan: payload.tier,
+      tier: normalizedPlan.tier,
+      status: normalizedPlan.status,
+      monthlyPrice: normalizedPlan.monthlyPrice,
+      isPilotPlan: normalizedPlan.isPilotPlan,
+    },
   })
 
   return NextResponse.json({
     ok: true,
-    subscription: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+    subscription: {
+      requestedPlan: payload.tier,
+      tier: normalizedPlan.tier,
+      status: normalizedPlan.status,
+      monthlyPrice: normalizedPlan.monthlyPrice,
+    },
   })
 }

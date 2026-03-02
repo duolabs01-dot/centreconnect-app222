@@ -28,10 +28,14 @@ const submitSchema = z.object({
   additionalContext: z.string().max(1200).optional(),
   monthlyBudget: z.number().min(0).max(100000).optional(),
   expectedChildren: z.number().int().min(0).max(5000).optional(),
-  selectedTier: z.enum(['basic', 'standard', 'premium']),
+  selectedTier: z.enum(['pilot', 'basic', 'standard', 'premium']),
   recommendedTier: z.enum(['basic', 'standard', 'premium']),
   captchaToken: z.string().max(2048).optional(),
 })
+
+function normalizeRequestedTier(tier: 'pilot' | 'basic' | 'standard' | 'premium') {
+  return tier === 'pilot' ? 'basic' : tier
+}
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
@@ -203,7 +207,11 @@ export async function POST(request: Request) {
       operatingHours: data.operatingHours?.trim() || null,
       keyNeeds: data.keyNeeds ?? [],
       additionalContext: data.additionalContext?.trim() || null,
+      requestedPlan: data.selectedTier,
+      pilotRequested: data.selectedTier === 'pilot',
     }
+
+    const normalizedSelectedTier = normalizeRequestedTier(data.selectedTier)
 
     const { data: insertedApplication, error: insertApplicationError } = await admin
       .from('ecd_service_applications')
@@ -220,7 +228,7 @@ export async function POST(request: Request) {
         centre_province: data.centreProvince?.trim() || 'Gauteng',
         monthly_budget: data.monthlyBudget ?? null,
         expected_children: data.expectedChildren ?? null,
-        selected_tier: data.selectedTier,
+        selected_tier: normalizedSelectedTier,
         recommended_tier: data.recommendedTier,
         admin_notes: `ECD intake profile\n${JSON.stringify(applicationNotes, null, 2)}`,
         status: 'pending_review',
@@ -249,6 +257,7 @@ export async function POST(request: Request) {
       centreProvince: data.centreProvince?.trim() || 'Gauteng',
       selectedTier: data.selectedTier,
       recommendedTier: data.recommendedTier,
+      requestedPlan: data.selectedTier,
       monthlyBudget: data.monthlyBudget ?? null,
       expectedChildren: data.expectedChildren ?? null,
     })

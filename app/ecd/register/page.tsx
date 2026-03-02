@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,19 +13,24 @@ import { Section } from '@/components/layout/Section'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
 type Tier = 'basic' | 'standard' | 'premium'
+type RequestedTier = 'pilot' | Tier
 type WizardStep = 1 | 2 | 3 | 4
 
-const TIER_PRICES: Record<Tier, number> = {
+const TIER_PRICES: Record<RequestedTier, number> = {
+  pilot: 0,
   basic: 199,
   standard: 299,
   premium: 499,
 }
 
-const TIER_DESCRIPTIONS: Record<Tier, string> = {
+const TIER_DESCRIPTIONS: Record<RequestedTier, string> = {
+  pilot: 'Pilot trial workspace for onboarding and enrollment. No card details required to start.',
   basic: 'Listings, enquiries, and essential workflow setup for smaller centres.',
   standard: 'Everything in Basic plus stronger admissions handling and operations support.',
   premium: 'Full platform depth for high-volume centres managing larger teams and pipelines.',
 }
+
+const PLAN_OPTIONS: RequestedTier[] = ['pilot', 'basic', 'standard', 'premium']
 
 const STEP_TITLES: Record<WizardStep, string> = {
   1: 'Contact and Centre',
@@ -57,7 +62,12 @@ function toggleArrayValue(values: string[], value: string): string[] {
 
 export default function EcdRegisterPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || ''
+  const requestedPlanParam = (searchParams.get('plan') || '').toLowerCase()
+  const initialSelectedTier: RequestedTier = PLAN_OPTIONS.includes(requestedPlanParam as RequestedTier)
+    ? (requestedPlanParam as RequestedTier)
+    : 'standard'
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
@@ -80,7 +90,7 @@ export default function EcdRegisterPage() {
     operatingHours: '',
     monthlyBudget: '299',
     expectedChildren: '60',
-    selectedTier: 'standard' as Tier,
+    selectedTier: initialSelectedTier,
     keyNeeds: ['Admissions pipeline', 'Parent communications'] as string[],
     additionalContext: '',
   })
@@ -226,13 +236,13 @@ export default function EcdRegisterPage() {
               <CardDescription>All monthly prices are disclosed upfront.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {(['basic', 'standard', 'premium'] as Tier[]).map((tier) => (
+              {PLAN_OPTIONS.map((tier) => (
                 <div key={tier} className="rounded-2xl border border-border bg-card/90 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
                     <p className="text-xl font-bold text-foreground">R{TIER_PRICES[tier]}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">per month</p>
+                  <p className="text-xs text-muted-foreground">{tier === 'pilot' ? 'trial' : 'per month'}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                 </div>
               ))}
@@ -383,8 +393,12 @@ export default function EcdRegisterPage() {
                     <p className="mt-1 text-xs text-emerald-800">{TIER_DESCRIPTIONS[recommendedTier]}</p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {(['basic', 'standard', 'premium'] as Tier[]).map((tier) => {
+                  <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-900">
+                    Pilot plan is available for trial onboarding. No card details are required during Pilot.
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {PLAN_OPTIONS.map((tier) => {
                       const active = form.selectedTier === tier
                       return (
                         <button
@@ -399,7 +413,9 @@ export default function EcdRegisterPage() {
                         >
                           <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
                           <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
-                          <p className="text-[11px] font-medium text-muted-foreground">per month</p>
+                          <p className="text-[11px] font-medium text-muted-foreground">
+                            {tier === 'pilot' ? 'trial' : 'per month'}
+                          </p>
                           <p className="mt-1 text-xs text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                         </button>
                       )
@@ -435,7 +451,8 @@ export default function EcdRegisterPage() {
                   <p className="text-muted-foreground">Registration status: {form.registrationStatus}</p>
                   <p className="text-muted-foreground">Current children / staff: {form.currentChildren} / {form.staffCount}</p>
                   <p className="text-muted-foreground">
-                    Selected package: {form.selectedTier.toUpperCase()} (R{TIER_PRICES[form.selectedTier]}/month)
+                    Selected package: {form.selectedTier.toUpperCase()} (
+                    {form.selectedTier === 'pilot' ? 'trial / no card details required' : `R${TIER_PRICES[form.selectedTier]}/month`})
                   </p>
                   <p className="text-muted-foreground">Recommended package: {recommendedTier.toUpperCase()}</p>
                   <p className="text-muted-foreground">Key needs: {form.keyNeeds.join(', ')}</p>

@@ -45,7 +45,8 @@ type TenantsIndexTableProps = {
   tenants: TenantRow[]
 }
 
-const TIER_MONTHLY_PRICE: Record<'basic' | 'standard' | 'premium', number> = {
+const TIER_MONTHLY_PRICE: Record<'pilot' | 'basic' | 'standard' | 'premium', number> = {
+  pilot: 0,
   basic: 199,
   standard: 299,
   premium: 499,
@@ -108,8 +109,8 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
     city: 'Johannesburg',
     province: 'Gauteng',
     postalCode: '',
-    monthlyPrice: String(TIER_MONTHLY_PRICE.basic),
-    tier: 'basic',
+    monthlyPrice: String(TIER_MONTHLY_PRICE.pilot),
+    tier: 'pilot',
     contractSigned: false,
     onboardingFeePaid: false,
   })
@@ -240,7 +241,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
       toast.error('Contract must be signed before proceeding.')
       return
     }
-    if (!createForm.onboardingFeePaid) {
+    if (createForm.tier !== 'pilot' && !createForm.onboardingFeePaid) {
       toast.error('Onboarding fee must be paid before proceeding.')
       return
     }
@@ -289,8 +290,8 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         city: 'Johannesburg',
         province: 'Gauteng',
         postalCode: '',
-        monthlyPrice: String(TIER_MONTHLY_PRICE.basic),
-        tier: 'basic',
+        monthlyPrice: String(TIER_MONTHLY_PRICE.pilot),
+        tier: 'pilot',
         contractSigned: false,
         onboardingFeePaid: false,
       })
@@ -372,6 +373,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           </SelectTrigger>
           <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
             <SelectItem value="all">All Tiers</SelectItem>
+            <SelectItem value="pilot">Pilot</SelectItem>
             <SelectItem value="basic">Basic</SelectItem>
             <SelectItem value="standard">Standard</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
@@ -613,6 +615,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
                   <SelectItem value="basic" className="focus:bg-cyan-500/20 focus:text-cyan-100">Basic R199/mo</SelectItem>
                   <SelectItem value="standard" className="focus:bg-cyan-500/20 focus:text-cyan-100">Standard R299/mo</SelectItem>
                   <SelectItem value="premium" className="focus:bg-cyan-500/20 focus:text-cyan-100">Premium R499/mo</SelectItem>
+                  <SelectItem value="pilot" className="focus:bg-cyan-500/20 focus:text-cyan-100">Pilot Trial (No card) R0</SelectItem>
                 </SelectContent>
               </Select>
             </div>

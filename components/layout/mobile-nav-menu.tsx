@@ -131,7 +131,7 @@ export function MobileNavMenu({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 transition-all md:hidden">
+        <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 transition-all lg:hidden">
           <Menu className="h-6 w-6" />
         </button>
       </SheetTrigger>

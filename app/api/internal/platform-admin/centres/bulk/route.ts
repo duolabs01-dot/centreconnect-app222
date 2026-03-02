@@ -5,6 +5,25 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 
+type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
+
+function normalizeRequestedTier(
+  tier: RequestedTier,
+  status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended',
+  monthlyPrice: number
+) {
+  if (tier === 'pilot') {
+    return {
+      tier: 'basic' as const,
+      status: 'trial' as const,
+      monthlyPrice: 0,
+      isPilotPlan: true,
+    }
+  }
+
+  return { tier, status, monthlyPrice, isPilotPlan: false }
+}
+
 const bulkSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('set_verification'),
@@ -24,7 +43,7 @@ const bulkSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('bootstrap_tenant'),
     ids: z.array(z.string().uuid()).min(1).max(200),
-    tier: z.enum(['basic', 'standard', 'premium']).default('basic'),
+    tier: z.enum(['pilot', 'basic', 'standard', 'premium']).default('basic'),
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']).default('trial'),
     monthlyPrice: z.number().min(0).max(100000).default(199),
   }),
@@ -68,14 +87,15 @@ export async function PATCH(request: Request) {
   }
 
   if (payload.action === 'bootstrap_tenant') {
+    const normalizedPlan = normalizeRequestedTier(payload.tier, payload.status, payload.monthlyPrice)
     const { error: activateError } = await admin.from('ecd_centres').update({ is_active: true }).in('id', payload.ids)
     if (activateError) return NextResponse.json({ error: activateError.message }, { status: 400 })
 
     const rows = payload.ids.map((id) => ({
       ecd_id: id,
-      tier: payload.tier,
-      status: payload.status,
-      monthly_price: payload.monthlyPrice,
+      tier: normalizedPlan.tier,
+      status: normalizedPlan.status,
+      monthly_price: normalizedPlan.monthlyPrice,
     }))
     const { error: subscriptionError } = await admin.from('subscriptions').upsert(rows, { onConflict: 'ecd_id' })
     if (subscriptionError) return NextResponse.json({ error: subscriptionError.message }, { status: 400 })
@@ -88,9 +108,11 @@ export async function PATCH(request: Request) {
       summary: `Bulk converted ${payload.ids.length} centres to tenants`,
       details: {
         ids: payload.ids,
-        tier: payload.tier,
-        status: payload.status,
-        monthlyPrice: payload.monthlyPrice,
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
+        isPilotPlan: normalizedPlan.isPilotPlan,
       },
     })
     void sendPlatformAdminActionNotification({
@@ -102,9 +124,11 @@ export async function PATCH(request: Request) {
       ],
       details: {
         action: 'bulk_bootstrap_tenant',
-        tier: payload.tier,
-        status: payload.status,
-        monthlyPrice: payload.monthlyPrice,
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
+        isPilotPlan: normalizedPlan.isPilotPlan,
         ids: payload.ids,
       },
     })
@@ -112,7 +136,12 @@ export async function PATCH(request: Request) {
     return NextResponse.json({
       ok: true,
       count: payload.ids.length,
-      tenant: { tier: payload.tier, status: payload.status, monthlyPrice: payload.monthlyPrice },
+      tenant: {
+        requestedPlan: payload.tier,
+        tier: normalizedPlan.tier,
+        status: normalizedPlan.status,
+        monthlyPrice: normalizedPlan.monthlyPrice,
+      },
     })
   }
 

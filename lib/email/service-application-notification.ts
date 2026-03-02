@@ -19,6 +19,7 @@ type ServiceApplicationNotificationInput = {
   centreProvince?: string | null
   selectedTier: 'basic' | 'standard' | 'premium'
   recommendedTier: 'basic' | 'standard' | 'premium'
+  requestedPlan?: 'pilot' | 'basic' | 'standard' | 'premium'
   monthlyBudget?: number | null
   expectedChildren?: number | null
 }
@@ -51,6 +52,7 @@ export async function sendServiceApplicationNotification(input: ServiceApplicati
     `- Province: ${display(input.centreProvince)}`,
     '',
     'Commercial',
+    `- Requested plan: ${display(input.requestedPlan ?? input.selectedTier)}`,
     `- Selected tier: ${input.selectedTier}`,
     `- Recommended tier: ${input.recommendedTier}`,
     `- Monthly budget: ${display(input.monthlyBudget)}`,
