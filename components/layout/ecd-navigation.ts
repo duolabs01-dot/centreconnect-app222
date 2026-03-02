@@ -56,7 +56,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/marketplace', label: 'Marketplace', icon: Store, group: 'growth_tools', adminOnly: true },
   { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
   { href: '/ecd/parent-invoicing', label: 'Parent Invoicing', icon: Receipt, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
-  { href: '/ecd/ai-upload', label: 'AI Document Upload', icon: Bot, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
+  { href: '/ecd/ai-upload', label: 'AI Register Import', icon: Bot, group: 'compliance_team', supervisorAllowed: true },
   { href: '/ecd/whatsapp-alerts', label: 'WhatsApp Alerts', icon: MessageCircleMore, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
   { href: '/ecd/dsd-export', label: 'DSD Subsidy Export', icon: Download, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
   { href: '/ecd/transport', label: 'Transport Management', icon: Truck, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
