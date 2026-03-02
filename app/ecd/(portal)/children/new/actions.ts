@@ -65,6 +65,8 @@ const tempChildProfileSchema = z.object({
   immunization_record_file_name: z.string().optional().nullable(),
   immunization_record_file_url: z.string().url().optional().or(z.literal('')).nullable(),
   ai_review_notes: z.string().optional().nullable(),
+  ai_prefill_snapshot: z.record(z.any()).optional().nullable(),
+  ai_confidence_snapshot: z.record(z.any()).optional().nullable(),
 })
 
 export type GeminiExtractionResult = {
@@ -275,7 +277,70 @@ export async function saveTempChildProfileAndInviteParentAction(
   }
 
   const payload = parsed.data
-  const tempProfileId = randomUUID()
+  const normalizedParentName = payload.parent_name?.trim() || null
+  const normalizedParentPhone = payload.parent_phone.trim()
+  const normalizedParentEmail = payload.parent_email?.trim() || null
+
+  const guardianContacts = [
+    normalizedParentName || normalizedParentPhone || normalizedParentEmail
+      ? {
+          role: 'primary_parent',
+          full_name: normalizedParentName,
+          phone: normalizedParentPhone,
+          email: normalizedParentEmail,
+          can_pickup: true,
+        }
+      : null,
+    payload.secondary_guardian_name?.trim() ||
+    payload.secondary_guardian_phone?.trim() ||
+    payload.secondary_guardian_email?.trim()
+      ? {
+          role: 'secondary_guardian',
+          full_name: payload.secondary_guardian_name?.trim() || null,
+          phone: payload.secondary_guardian_phone?.trim() || null,
+          email: payload.secondary_guardian_email?.trim() || null,
+          can_pickup: true,
+        }
+      : null,
+  ].filter(Boolean)
+
+  const emergencyContacts = [
+    payload.emergency_contact_name?.trim() || payload.emergency_contact_phone?.trim()
+      ? {
+          full_name: payload.emergency_contact_name?.trim() || null,
+          phone: payload.emergency_contact_phone?.trim() || null,
+          source: 'medical_step',
+        }
+      : null,
+    normalizedParentName || normalizedParentPhone
+      ? {
+          full_name: normalizedParentName,
+          phone: normalizedParentPhone,
+          source: 'parent_contact',
+        }
+      : null,
+  ].filter(Boolean)
+
+  const intakeDocuments = {
+    birth_certificate: payload.birth_certificate_file_url
+      ? {
+          file_name: payload.birth_certificate_file_name ?? null,
+          file_url: payload.birth_certificate_file_url,
+        }
+      : null,
+    medical_card: payload.medical_card_file_url
+      ? {
+          file_name: payload.medical_card_file_name ?? null,
+          file_url: payload.medical_card_file_url,
+        }
+      : null,
+    immunization_record: payload.immunization_record_file_url
+      ? {
+          file_name: payload.immunization_record_file_name ?? null,
+          file_url: payload.immunization_record_file_url,
+        }
+      : null,
+  }
 
   const { data: centre } = await session.supabase
     .from('ecd_centres')
@@ -283,30 +348,81 @@ export async function saveTempChildProfileAndInviteParentAction(
     .eq('id', session.ecdId)
     .maybeSingle()
 
-  const { error: saveError } = await session.supabase.from('audit_logs').insert({
-    user_id: session.user.id,
-    ecd_id: session.ecdId,
-    action: 'temp_child_profile_saved',
-    resource_type: 'temp_child_profile',
-    resource_id: tempProfileId,
-    changes: {
-      status: 'pending_parent_completion',
-      temp_profile_id: tempProfileId,
+  const { data: insertedChild, error: insertChildError } = await session.supabase
+    .from('children')
+    .insert({
       ecd_id: session.ecdId,
-      created_by: session.user.id,
-      created_at: new Date().toISOString(),
-      ...payload,
-    },
-  })
+      parent_id: null,
+      first_name: payload.first_name.trim(),
+      last_name: payload.last_name.trim(),
+      date_of_birth: payload.date_of_birth || null,
+      gender: payload.gender || null,
+      allergies: payload.allergies.length > 0 ? payload.allergies : null,
+      medical_conditions: payload.medical_conditions.length > 0 ? payload.medical_conditions : null,
+      medications: payload.medications.length > 0 ? payload.medications : null,
+      blood_type: payload.blood_type?.trim() || null,
+      doctor_name: payload.doctor_name?.trim() || null,
+      medical_aid_number: payload.medical_aid_number?.trim() || null,
+      immunization_record: intakeDocuments.immunization_record
+        ? {
+            ...intakeDocuments.immunization_record,
+            uploaded_via: 'ecd_manual_enrollment',
+          }
+        : null,
+      emergency_contact_name: payload.emergency_contact_name?.trim() || null,
+      emergency_contact_phone: payload.emergency_contact_phone?.trim() || null,
+      dietary_restrictions: payload.dietary_restrictions?.trim() || null,
+      special_needs_notes: payload.special_needs_notes?.trim() || null,
+      special_needs: payload.special_needs_notes?.trim() || null,
+      last_checkup_date: payload.last_checkup_date || null,
+      development_notes: payload.development_notes?.trim() || null,
+      birth_certificate_url: payload.birth_certificate_file_url || null,
+      immunization_record_url: payload.immunization_record_file_url || null,
+      guardian_contacts: guardianContacts,
+      emergency_contacts: emergencyContacts,
+      intake_documents: intakeDocuments,
+      ai_prefill_snapshot: payload.ai_prefill_snapshot ?? null,
+      ai_confidence_snapshot: payload.ai_confidence_snapshot ?? null,
+      enrollment_source: 'ecd_manual',
+      enrollment_status: 'pending_parent',
+      onboarding_link_sent_at: new Date().toISOString(),
+      enrollment_notes: payload.ai_review_notes?.trim() || null,
+    })
+    .select('id')
+    .single()
 
-  if (saveError) {
-    return {
-      success: false,
-      message: saveError.message || 'Failed to save temporary profile.',
+  let tempProfileId = insertedChild?.id ?? null
+
+  if (insertChildError || !tempProfileId) {
+    const fallbackId = randomUUID()
+    const { error: fallbackSaveError } = await session.supabase.from('audit_logs').insert({
+      user_id: session.user.id,
+      ecd_id: session.ecdId,
+      action: 'temp_child_profile_saved_fallback',
+      resource_type: 'temp_child_profile',
+      resource_id: fallbackId,
+      changes: {
+        status: 'pending_parent_completion',
+        temp_profile_id: fallbackId,
+        ecd_id: session.ecdId,
+        created_by: session.user.id,
+        created_at: new Date().toISOString(),
+        insert_error: insertChildError?.message ?? null,
+        payload,
+      },
+    })
+
+    if (fallbackSaveError) {
+      return {
+        success: false,
+        message: fallbackSaveError.message || 'Failed to save temporary profile.',
+      }
     }
+
+    tempProfileId = fallbackId
   }
 
-  const parentPhone = normalizePhoneForWhatsapp(payload.parent_phone)
+  const parentPhone = normalizePhoneForWhatsapp(normalizedParentPhone)
   if (!parentPhone) {
     return {
       success: false,
@@ -315,16 +431,17 @@ export async function saveTempChildProfileAndInviteParentAction(
     }
   }
 
-  const parentOnboardingUrl = `${getAppUrl()}/register?tempChildProfile=${tempProfileId}`
+  const parentOnboardingUrl = `${getAppUrl()}/register?next=${encodeURIComponent('/parent/children/new')}&manualChildId=${tempProfileId}`
   const centreName = centre?.name?.trim() || 'your ECD centre'
   const childName = `${payload.first_name} ${payload.last_name}`.trim()
-  const greetingName = payload.parent_name?.trim() || 'Parent'
+  const greetingName = normalizedParentName || 'Parent'
 
   const whatsappMessage = [
     `Hi ${greetingName},`,
-    `${centreName} has started a manual enrollment profile for ${childName}.`,
-    `Please review and complete the child profile here: ${parentOnboardingUrl}`,
-    'Reply to this message if you need help.',
+    `${centreName} started a child profile for ${childName}.`,
+    'Please complete the details and documents here:',
+    parentOnboardingUrl,
+    'Thank you! We are ready to help if you get stuck.',
   ].join('\n')
 
   const whatsappHref = `https://wa.me/${parentPhone}?text=${encodeURIComponent(whatsappMessage)}`
@@ -332,22 +449,22 @@ export async function saveTempChildProfileAndInviteParentAction(
   await session.supabase.from('audit_logs').insert({
     user_id: session.user.id,
     ecd_id: session.ecdId,
-    action: 'temp_child_profile_whatsapp_link_generated',
-    resource_type: 'temp_child_profile',
+    action: 'manual_child_profile_whatsapp_link_generated',
+    resource_type: 'children',
     resource_id: tempProfileId,
     changes: {
-      parent_phone: payload.parent_phone,
+      parent_phone: normalizedParentPhone,
       whatsapp_href: whatsappHref,
       parent_onboarding_url: parentOnboardingUrl,
+      fallback_mode: Boolean(insertChildError),
     },
   })
 
   return {
     success: true,
-    message: 'Temporary profile saved. Open WhatsApp to send the parent completion link.',
+    message: 'Child profile saved. Open WhatsApp to send the parent completion link.',
     tempProfileId,
     whatsappHref,
     parentOnboardingUrl,
   }
 }
-

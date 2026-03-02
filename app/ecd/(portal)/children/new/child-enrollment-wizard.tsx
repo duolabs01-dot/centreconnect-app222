@@ -277,6 +277,8 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         immunization_record_file_name: immunizationRecordFile?.name ?? null,
         immunization_record_file_url: documentUrls.immunization_record ?? null,
         ai_review_notes: form.ai_review_notes.trim() || null,
+        ai_prefill_snapshot: aiSuggestion ?? null,
+        ai_confidence_snapshot: aiConfidence ?? null,
       }
 
       const result = await saveTempChildProfileAndInviteParentAction(payload)
@@ -309,7 +311,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
             <div>
               <CardTitle className="text-2xl font-black text-slate-900">Add New Child</CardTitle>
               <CardDescription className="mt-1 text-slate-600">
-                Manual enrollment wizard for {centreName}. AI assists with document extraction and parent handoff.
+                Fast manual enrollment for {centreName}. Capture essentials in minutes, then send the parent handoff link.
               </CardDescription>
             </div>
             <div className="inline-flex items-center gap-2 rounded-3xl border border-teal-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-teal-700">
@@ -573,7 +575,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                 Document Upload + Gemini Vision
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Upload birth certificate, medical card, and immunization photos. Each extract uploads to Supabase Storage and returns confidence-scored pre-fill.
+                Upload birth certificate, medical card, and immunization photos. AI extracts details, pre-fills fields, and keeps confidence scores visible.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

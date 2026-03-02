@@ -5,7 +5,7 @@ import { ChildEnrollmentWizard } from './child-enrollment-wizard'
 
 export const metadata: Metadata = {
   title: 'Add New Child | CentreConnect',
-  description: 'Manual child enrollment wizard with AI document extraction and WhatsApp parent handoff.',
+  description: 'Rich manual child enrollment wizard with medical details, guardians, immunization records, and AI photo extraction.',
 }
 
 export default async function EcdAddChildWizardPage() {
@@ -22,7 +22,7 @@ export default async function EcdAddChildWizardPage() {
   return (
     <EcdOsShell
       title="Add New Child"
-      description="Create a rich temporary child profile for manual enrollment and handoff completion to parents."
+      description="Create a complete child profile with medical, guardians, immunization, and AI-assisted document pre-fill."
       roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
