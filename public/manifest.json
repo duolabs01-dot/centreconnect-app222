@@ -3,7 +3,7 @@
   "short_name": "CentreConnect",
   "description": "Premium Early Childhood Development (ECD) platform connecting parents and centres.",
   "id": "/",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F9FA",
   "theme_color": "#065A82",

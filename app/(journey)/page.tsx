@@ -36,7 +36,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams?: { source?: string }
+}) {
+  if (searchParams?.source === 'pwa') {
+    redirect('/')
+  }
+
   let supabase: Awaited<ReturnType<typeof createClient>> | null = null
   let user: { id: string; email?: string | null } | null = null
 
