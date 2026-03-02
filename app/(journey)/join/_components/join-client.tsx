@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, XCircle, Clock, Users, Baby } from 'lucide-react'
@@ -12,6 +12,7 @@ type Props = {
   alreadyLinked: boolean
   isLoggedIn: boolean
   childName: string
+  childNames: string[]
   inviterName: string
   guardianName: string
 }
@@ -22,6 +23,7 @@ export function JoinClient({
   alreadyLinked,
   isLoggedIn,
   childName,
+  childNames,
   inviterName,
   guardianName,
 }: Props) {
@@ -51,10 +53,12 @@ export function JoinClient({
     }
   }
 
-  // Auto-accept if already logged in and invite is valid
-  if (isLoggedIn && !expired && !alreadyLinked && status === 'idle') {
-    acceptInvite()
-  }
+  useEffect(() => {
+    if (isLoggedIn && !expired && !alreadyLinked && status === 'idle') {
+      void acceptInvite()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, expired, alreadyLinked, status])
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -114,6 +118,11 @@ export function JoinClient({
               <h1 className="text-xl font-bold text-slate-900">
                 {inviterName} invited you to {childName}&apos;s profile
               </h1>
+              {childNames.length > 1 ? (
+                <p className="mt-2 text-xs text-slate-500">
+                  Included children: {childNames.join(', ')}
+                </p>
+              ) : null}
               {guardianName && (
                 <p className="text-sm text-slate-500 mt-1">Invited as: <strong>{guardianName}</strong></p>
               )}

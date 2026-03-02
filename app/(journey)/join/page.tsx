@@ -20,24 +20,41 @@ export default async function JoinPage({ searchParams }: PageProps) {
     redirect('/')
   }
 
-  // Look up the guardian record so we can show child name before login
+  // Look up all guardian rows using the token (single invite can cover multiple children).
   const admin = createAdminClient()
-  const { data: guardian } = await admin
+  const { data: guardians } = await admin
     .from('guardians')
-    .select('id, full_name, child_id, linked_user_id, invite_token_expires_at, children(first_name, last_name), parents:parent_id(user_profiles(full_name))')
+    .select(
+      'id, full_name, child_id, linked_user_id, invite_token_expires_at, children(first_name, last_name), parents:parent_id(user_profiles(full_name))'
+    )
     .eq('invite_token', token)
-    .maybeSingle()
+    .limit(50)
 
-  const expired = !guardian || !guardian.invite_token_expires_at || new Date(guardian.invite_token_expires_at) < new Date()
-  const alreadyLinked = !!guardian?.linked_user_id
+  const rows = guardians ?? []
+  const expired =
+    rows.length === 0 ||
+    rows.every((row) => !row.invite_token_expires_at || new Date(row.invite_token_expires_at) < new Date())
+  const alreadyLinked = rows.length > 0 && rows.every((row) => Boolean(row.linked_user_id))
 
-  // Get inviter name and child name
-  const rawChild = guardian?.children
-  const child = Array.isArray(rawChild) ? rawChild[0] : rawChild
-  const rawParent = (guardian as any)?.parents
+  const childNames = Array.from(
+    new Set(
+      rows
+        .map((row) => {
+          const rawChild = row.children
+          const child = Array.isArray(rawChild) ? rawChild[0] : rawChild
+          if (!child) return null
+          return `${child.first_name} ${child.last_name}`.trim()
+        })
+        .filter((value): value is string => Boolean(value))
+    )
+  )
+  const childName =
+    childNames.length === 0 ? 'your child' : childNames.length === 1 ? childNames[0] : `${childNames.length} children`
+
+  const firstGuardian = rows[0] ?? null
+  const rawParent = (firstGuardian as any)?.parents
   const parentProfile = Array.isArray(rawParent) ? rawParent[0]?.user_profiles : rawParent?.user_profiles
   const inviterName = (Array.isArray(parentProfile) ? parentProfile[0]?.full_name : parentProfile?.full_name) || 'Your co-parent'
-  const childName = child ? `${(child as any).first_name} ${(child as any).last_name}`.trim() : 'your child'
 
   // Check if user is already logged in
   const supabase = await createClient()
@@ -50,8 +67,9 @@ export default async function JoinPage({ searchParams }: PageProps) {
       alreadyLinked={alreadyLinked}
       isLoggedIn={!!user}
       childName={childName}
+      childNames={childNames}
       inviterName={inviterName}
-      guardianName={guardian?.full_name ?? ''}
+      guardianName={firstGuardian?.full_name ?? ''}
     />
   )
 }

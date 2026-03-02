@@ -162,6 +162,21 @@
   will-change: auto;
 }
 
+/* Mobile fast mode: remove expensive motion across pages */
+@media (max-width: 768px) {
+  html,
+  body {
+    scroll-behavior: auto !important;
+  }
+
+  body *,
+  body *::before,
+  body *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* ECD-specific theme properties */
 .text-cyber-cyan {
   color: #06b6d4;

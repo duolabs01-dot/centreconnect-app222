@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: '/centreconnect-logo.svg?v=20260224-cc', type: 'image/svg+xml' },
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '192x192', type: 'image/svg+xml' },
+      { url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '512x512', type: 'image/svg+xml' },
     ],
-    apple: [{ url: '/apple-touch-icon.png?v=20260224-cc', sizes: '180x180', type: 'image/png' }],
-    shortcut: ['/icons/icon-192.png'],
+    apple: [{ url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '180x180', type: 'image/svg+xml' }],
+    shortcut: ['/centreconnect-logo.svg?v=20260224-cc'],
   },
   appleWebApp: {
     capable: true,

@@ -1,16 +1,19 @@
 'use server'
 
+import { randomBytes } from 'crypto'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { sendEmail } from '@/lib/email/send'
-import { randomBytes } from 'crypto'
 import { requireSupabasePublicEnv } from '@/lib/supabase/env'
 
 const schema = z.object({
   guardian_id: z.string().uuid(),
-  child_id: z.string().uuid(),
-  email: z.string().email('A valid email address is required'),
+  email: z
+    .string()
+    .email('A valid email address is required')
+    .optional()
+    .nullable(),
 })
 
 function getAppUrl() {
@@ -18,18 +21,34 @@ function getAppUrl() {
   return url.trim().replace(/\/+$/, '')
 }
 
+function normalizePhoneForWhatsapp(rawPhone: string | null | undefined) {
+  if (!rawPhone) return null
+  const digits = rawPhone.replace(/[^\d+]/g, '')
+  const withoutPlus = digits.replace(/\+/g, '')
+  if (!withoutPlus) return null
+  if (withoutPlus.startsWith('0')) return `27${withoutPlus.slice(1)}`
+  if (withoutPlus.startsWith('27')) return withoutPlus
+  return withoutPlus
+}
+
+function toWhatsappShareUrl(message: string, phone?: string | null) {
+  const digits = normalizePhoneForWhatsapp(phone)
+  if (!digits) return `https://wa.me/?text=${encodeURIComponent(message)}`
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+}
+
 function buildInviteEmail({
   inviterName,
-  childName,
+  childLabel,
   acceptUrl,
   expiresHours,
 }: {
   inviterName: string
-  childName: string
+  childLabel: string
   acceptUrl: string
   expiresHours: number
 }): { subject: string; html: string } {
-  const subject = `${inviterName} invited you to co-manage ${childName}'s profile on CentreConnect`
+  const subject = `${inviterName} invited you to co-manage ${childLabel} on CentreConnect`
 
   const html = `
     <div style="font-family: 'DM Sans', Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
@@ -38,17 +57,17 @@ function buildInviteEmail({
       </div>
       <div style="background: white; border: 1px solid #e2e8f0; border-top: none; padding: 32px 24px; border-radius: 0 0 12px 12px;">
         <h1 style="color: #0f172a; font-size: 22px; font-weight: 700; margin: 0 0 12px; line-height: 1.3;">
-          You've been invited to co-manage ${childName}'s profile
+          You've been invited to co-manage ${childLabel}
         </h1>
         <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 8px;">
           <strong>${inviterName}</strong> has invited you as a co-parent on CentreConnect.
         </p>
         <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
-          Once you join, you'll be able to see ${childName}'s application status, daily reports, and centre updates — all in one place.
+          Once you join, you'll be able to see applications, daily reports, and centre updates for ${childLabel}.
         </p>
         <a href="${acceptUrl}"
           style="display: inline-block; background: #0891b2; color: white; font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 10px; text-decoration: none;">
-          Accept invitation →
+          Accept invitation ->
         </a>
         <p style="color: #94a3b8; font-size: 12px; margin: 24px 0 0;">
           This link expires in ${expiresHours} hours. If you did not expect this, you can safely ignore it.
@@ -60,9 +79,31 @@ function buildInviteEmail({
   return { subject, html }
 }
 
+type PendingGuardianRow = {
+  id: string
+  full_name: string | null
+  email: string | null
+  phone: string | null
+  linked_user_id: string | null
+  child_id: string
+  children:
+    | {
+        first_name: string
+        last_name: string
+      }
+    | Array<{
+        first_name: string
+        last_name: string
+      }>
+    | null
+}
+
 export async function sendCoParentInviteAction(input: unknown): Promise<{
   success?: boolean
   inviteUrl?: string
+  whatsappShareUrl?: string
+  shareText?: string
+  childNames?: string[]
   error?: string
 }> {
   const parsed = schema.safeParse(input)
@@ -72,37 +113,29 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
 
   const cookieStore = await cookies()
   const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('send-coparent-invite-action')
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    { cookies: { getAll: () => cookieStore.getAll() } }
-  )
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: { getAll: () => cookieStore.getAll() },
+  })
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) return { error: 'You must be signed in to send invites.' }
 
-  // Verify this guardian belongs to a child owned by the current user
   const { data: guardian } = await supabase
     .from('guardians')
-    .select('id, full_name, child_id, email, invite_token, linked_user_id, children(first_name, last_name)')
+    .select('id, full_name, child_id, parent_id, email, phone, linked_user_id, children(first_name, last_name, parent_id)')
     .eq('id', parsed.data.guardian_id)
-    .eq('child_id', parsed.data.child_id)
     .maybeSingle()
 
   if (!guardian) return { error: 'Guardian not found.' }
+  const rawGuardianChild = guardian.children
+  const guardianChild = Array.isArray(rawGuardianChild) ? rawGuardianChild[0] : rawGuardianChild
+  if (!guardianChild || guardianChild.parent_id !== user.id || guardian.parent_id !== user.id) {
+    return { error: 'Child not found.' }
+  }
   if (guardian.linked_user_id) return { error: 'This person has already joined.' }
 
-  // Verify child ownership
-  const { data: child } = await supabase
-    .from('children')
-    .select('id, first_name, last_name, parent_id')
-    .eq('id', parsed.data.child_id)
-    .eq('parent_id', user.id)
-    .maybeSingle()
-
-  if (!child) return { error: 'Child not found.' }
-
-  // Get inviter name
   const { data: inviterProfile } = await supabase
     .from('user_profiles')
     .select('full_name')
@@ -110,36 +143,84 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
     .maybeSingle()
 
   const inviterName = inviterProfile?.full_name?.trim() || user.email?.split('@')[0] || 'Your co-parent'
-  const childName = `${child.first_name} ${child.last_name}`.trim()
+  const normalizedEmail = parsed.data.email?.trim().toLowerCase() || guardian.email?.trim().toLowerCase() || null
+  const normalizedPhone = normalizePhoneForWhatsapp(guardian.phone) || guardian.phone?.trim() || null
 
-  // Generate a secure token (48 random hex chars = 192 bits)
+  if (!normalizedEmail && !normalizedPhone) {
+    return { error: 'Add an email or phone number before sending the invite.' }
+  }
+
+  const { data: pendingGuardians } = await supabase
+    .from('guardians')
+    .select('id,full_name,email,phone,linked_user_id,child_id,children(first_name,last_name)')
+    .eq('parent_id', user.id)
+    .is('linked_user_id', null)
+
+  const inviteTargets = ((pendingGuardians ?? []) as PendingGuardianRow[]).filter((row) => {
+    const rowEmail = row.email?.trim().toLowerCase() || null
+    const rowPhone = normalizePhoneForWhatsapp(row.phone) || row.phone?.trim() || null
+    if (normalizedEmail && rowEmail === normalizedEmail) return true
+    if (normalizedPhone && rowPhone === normalizedPhone) return true
+    return row.id === guardian.id
+  })
+
+  const uniqueTargets = Array.from(new Map(inviteTargets.map((row) => [row.id, row])).values())
+  if (uniqueTargets.length === 0) {
+    return { error: 'No matching pending co-parent records were found for this contact.' }
+  }
+
   const token = randomBytes(24).toString('hex')
-  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString() // 72 hours
+  const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
   const expiresHours = 72
 
-  // Save token to DB
   const { error: updateError } = await supabase
     .from('guardians')
     .update({
-      email: parsed.data.email,
+      email: normalizedEmail,
       invite_token: token,
       invite_token_expires_at: expiresAt,
       invite_sent_at: new Date().toISOString(),
     })
-    .eq('id', guardian.id)
+    .in('id', uniqueTargets.map((row) => row.id))
 
   if (updateError) return { error: 'Failed to generate invite. Please try again.' }
 
   const acceptUrl = `${getAppUrl()}/join?token=${token}`
-  const { subject, html } = buildInviteEmail({ inviterName, childName, acceptUrl, expiresHours })
+  const childNames = Array.from(
+    new Set(
+      uniqueTargets
+        .map((row) => {
+          const rawChild = row.children
+          const child = Array.isArray(rawChild) ? rawChild[0] : rawChild
+          if (!child) return null
+          return `${child.first_name} ${child.last_name}`.trim()
+        })
+        .filter((name): name is string => Boolean(name))
+    )
+  )
+  const childLabel = childNames.length <= 1 ? (childNames[0] ?? 'your child') : `${childNames.length} children`
+  const { subject, html } = buildInviteEmail({ inviterName, childLabel, acceptUrl, expiresHours })
 
-  // Send email (fire and forget — we still return the URL even if email fails)
-  const emailResult = await sendEmail({ to: parsed.data.email, subject, html })
+  const shareText = [
+    `Hi! ${inviterName} invited you to co-manage ${childLabel} on CentreConnect.`,
+    `Use this secure link to join: ${acceptUrl}`,
+    `This invite expires in ${expiresHours} hours.`,
+  ].join('\n')
+
+  const emailResult = normalizedEmail
+    ? await sendEmail({ to: normalizedEmail, subject, html })
+    : { success: false as const }
 
   return {
     success: true,
     inviteUrl: acceptUrl,
-    // If email failed, we still show the link so they can share manually
-    error: emailResult.success ? undefined : 'Email could not be sent — use the link below to share manually.',
+    shareText,
+    childNames,
+    whatsappShareUrl: toWhatsappShareUrl(shareText, normalizedPhone),
+    error:
+      normalizedEmail && !emailResult.success
+        ? 'Email could not be sent - use WhatsApp or copy link below.'
+        : undefined,
   }
 }
+
