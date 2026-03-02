@@ -562,7 +562,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       <section className="mb-8 flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-600">{centre?.name ?? 'Admissions'}</p>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pipeline Management</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Applications</h1>
         </div>
         <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-100 shadow-sm">
           <Filter className="w-4 h-4 text-slate-400" />
@@ -730,7 +730,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-4 h-4 text-teal-600" />
-              Application Intelligence
+              Application Insights
             </h2>
           </div>
           <div className="p-0">

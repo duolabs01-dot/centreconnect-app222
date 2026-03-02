@@ -43,6 +43,8 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const [
     pendingApplicationsCount,
+    staleApplications72hCount,
+    partialApplicationsCount,
     unreadEcdNotificationsCount,
     pendingTransportCount,
     complianceOutstandingCount,
@@ -52,6 +54,19 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       .select('id', { count: 'exact', head: true })
       .eq('ecd_id', ecdId)
       .in('status', ['submitted', 'in_review', 'partial', 'draft'])
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .in('status', ['submitted', 'in_review'])
+      .lt('submitted_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+      .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .in('status', ['partial', 'draft'])
       .then(({ count, error }) => (error ? 0 : count ?? 0)),
     admin
       .from('ecd_notifications')
@@ -75,6 +90,8 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const attentionBadges: Partial<Record<string, number>> = {
     '/ecd/applications': pendingApplicationsCount,
+    '/ecd/applications:stale72h': staleApplications72hCount,
+    '/ecd/applications:partial': partialApplicationsCount,
     '/ecd/communications': unreadEcdNotificationsCount,
     '/ecd/transport': pendingTransportCount,
     '/ecd/compliance': complianceOutstandingCount,
