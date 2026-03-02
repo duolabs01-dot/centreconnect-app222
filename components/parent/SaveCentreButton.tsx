@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { useEffect } from 'react'
 
 type SaveCentreButtonProps = {
   centreId: string
@@ -26,6 +28,12 @@ export function SaveCentreButton({ centreId, initialSaved = false }: SaveCentreB
   const [saved, setSaved] = useState(initialSaved)
   const [isPending, startTransition] = useTransition()
   const [showAuthSheet, setShowAuthSheet] = useState(false)
+  const { setVisible } = useBottomNav()
+
+  useEffect(() => {
+    setVisible(!showAuthSheet)
+    return () => setVisible(true)
+  }, [showAuthSheet, setVisible])
 
   const handleClick = () => {
     startTransition(async () => {

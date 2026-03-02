@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { GuardiansManager, type GuardianChild } from '@/components/parent/GuardiansManager'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
+import { ArrowLeft, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Co-Guardians | Parent Portal | CentreConnect',
@@ -27,17 +28,27 @@ export default async function ParentGuardiansPage() {
       .order('created_at', { ascending: false })
 
     return (
-      <div className="space-y-6">
-        <section className="flex items-center justify-between">
+      <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen space-y-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-2">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Co-Guardian Access</h1>
-            <p className="mt-1 text-sm text-slate-600">Add reliable adults who can view updates and pick up your child.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600 mb-1 flex items-center gap-2">
+              <Users className="h-3 w-3" />
+              Family Architecture
+            </p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">Co-Guardian Access</h1>
+            <p className="mt-1 text-sm text-slate-500 font-medium">Invite trusted adults to help manage child profiles.</p>
           </div>
-          <Button variant="outline" asChild>
-            <Link href="/parent/profile">Back</Link>
+          <Button variant="outline" className="rounded-xl font-bold h-11 self-start sm:self-auto" asChild>
+            <Link href="/parent/profile">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Link>
           </Button>
-        </section>
-        <GuardiansManager childList={(children ?? []) as GuardianChild[]} />
+        </header>
+
+        <div className="max-w-4xl">
+          <GuardiansManager childList={(children ?? []) as GuardianChild[]} />
+        </div>
       </div>
     )
   } finally {

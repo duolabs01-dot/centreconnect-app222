@@ -3,8 +3,10 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DocumentsVaultManager } from '@/components/parent/DocumentsVaultManager'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck, ArrowLeft } from 'lucide-react'
 import { SurfaceCard } from '@/components/ui/surface-card'
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
   title: 'Documents Vault | Parent Portal | CentreConnect',
@@ -55,16 +57,22 @@ export default async function ParentDocumentsPage() {
     ])
 
     return (
-      <div className="space-y-8 overflow-x-hidden pb-12">
-        <header>
-          <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck className="h-4 w-4 text-cyan-600" />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-1">Security Vault</p>
+      <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen space-y-8">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-2">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <ShieldCheck className="h-3 w-3 text-cyan-600" />
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-1">Security Vault</p>
+            </div>
+            <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents Vault</h1>
+            <p className="mt-1 text-sm text-slate-500 font-medium">Securely manage your family documents.</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents Vault</h1>
-          <p className="mt-2 text-sm text-slate-500 font-medium max-w-xl">
-            Securely store and manage your official identity documents. Authorised centres only receive access during active enrolment protocols.
-          </p>
+          <Button variant="outline" className="rounded-xl font-bold h-11 self-start sm:self-auto" asChild>
+            <Link href="/parent/profile">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Link>
+          </Button>
         </header>
 
         <SurfaceCard className="p-6 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden group">

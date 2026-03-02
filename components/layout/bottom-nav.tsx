@@ -5,7 +5,6 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { type LucideIcon } from 'lucide-react'
 import { useCallback, useTransition, useState, useEffect, memo } from 'react'
-import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
 export type NavItem = {
   label: string
@@ -24,7 +23,7 @@ function isTabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-const IOS_SPRING = { type: 'spring' as const, stiffness: 1200, damping: 60, mass: 0.1 }
+const NAV_SPRING = { type: 'spring' as const, stiffness: 400, damping: 25, mass: 0.8 }
 
 const NavButton = memo(({
   item,
@@ -41,7 +40,8 @@ const NavButton = memo(({
   const hasBadge = !active && (item.badge ?? 0) > 0
 
   return (
-    <button
+    <motion.button
+      whileTap={{ scale: 0.9 }}
       onClick={onClick}
       className="relative flex h-12 flex-1 items-center justify-center outline-none tap-highlight-transparent"
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
@@ -50,10 +50,10 @@ const NavButton = memo(({
         <motion.div
           animate={{
             color: active ? '#0d9488' : '#64748b',
-            scale: active ? 1.1 : 1,
-            y: active ? -2 : 0
+            scale: active ? 1.25 : 1,
+            y: active ? -4 : 0
           }}
-          transition={reducedMotion ? { duration: 0.1 } : IOS_SPRING}
+          transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
           className="relative z-10"
         >
           <Icon size={20} strokeWidth={active ? 2.5 : 2} />
@@ -76,7 +76,7 @@ const NavButton = memo(({
             scale: active ? 1 : 0.9,
             color: active ? '#0d9488' : '#64748b'
           }}
-          transition={reducedMotion ? { duration: 0.1 } : IOS_SPRING}
+          transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
           className="text-[10px] font-bold uppercase tracking-widest"
         >
           {item.label}
@@ -86,11 +86,11 @@ const NavButton = memo(({
           <motion.div
             layoutId="active-pill"
             className="absolute -inset-x-4 -inset-y-2 z-0 rounded-2xl bg-teal-50/50"
-            transition={reducedMotion ? { duration: 0.1 } : IOS_SPRING}
+            transition={reducedMotion ? { duration: 0.1 } : NAV_SPRING}
           />
         )}
       </div>
-    </button>
+    </motion.button>
   )
 })
 NavButton.displayName = 'NavButton'
@@ -100,7 +100,6 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const [isPending, startTransition] = useTransition()
   const [optimisticPath, setOptimisticPath] = useState(pathname)
   const reducedMotion = useReducedMotion()
-  const { isVisible } = useBottomNav()
 
   useEffect(() => {
     setOptimisticPath(pathname)
@@ -119,7 +118,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [optimisticPath, router])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
-  if (pathname === '/' || isAuthPage || !isVisible) return null
+  if (pathname === '/' || isAuthPage) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">

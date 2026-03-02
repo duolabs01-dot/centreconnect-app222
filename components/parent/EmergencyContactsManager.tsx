@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { SurfaceCard } from '@/components/ui/surface-card'
+import { UserPlus, Shield, Trash2, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 const RELATIONSHIP_OPTIONS = ['Parent', 'Grandparent', 'Sibling', 'Aunt/Uncle', 'Family Friend', 'Other']
 
@@ -88,56 +91,115 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <form onSubmit={addContact} className="grid gap-3 rounded-xl border border-slate-200 bg-white/80 p-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Full Name</Label>
-          <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
+    <div className="cc-stack space-y-8">
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <UserPlus className="h-4 w-4 text-cyan-600" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Add Protocol</p>
         </div>
-        <div className="space-y-2">
-          <Label>Phone</Label>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>Relationship</Label>
-          <select value={relationship} onChange={(e) => setRelationship(e.target.value)} className="cc-native-field">
-            <option value="">Select relationship</option>
-            {RELATIONSHIP_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-700">
-          <input type="checkbox" checked={isPrimary} onChange={(e) => setIsPrimary(e.target.checked)} />
-          Set as primary
-        </label>
-        <Button type="submit" disabled={saving} className="sm:col-span-2">
-          {saving ? 'Saving...' : 'Add Contact'}
-        </Button>
-      </form>
-
-      <div className="space-y-2">
-        {contacts.length === 0 ? (
-          <p className="text-sm text-slate-600">No emergency contacts yet.</p>
-        ) : (
-          contacts.map((contact) => (
-            <div key={contact.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3">
-              <div>
-                <p className="font-medium text-slate-900">
-                  {contact.full_name} {contact.is_primary ? <span className="text-xs text-emerald-600">(Primary)</span> : null}
-                </p>
-                <p className="text-sm text-slate-600">{contact.phone}</p>
-                {contact.relationship ? <p className="text-xs text-slate-500">{contact.relationship}</p> : null}
+        <SurfaceCard className="p-6">
+          <form onSubmit={addContact} className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-900 ml-1">Full Name</Label>
+                <Input 
+                  className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold px-4"
+                  value={fullName} 
+                  onChange={(e) => setFullName(e.target.value)} 
+                  placeholder="e.g. Sipho Gumede"
+                />
               </div>
-              <Button variant="outline" onClick={() => removeContact(contact.id)} disabled={saving}>
-                Remove
-              </Button>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-900 ml-1">Phone</Label>
+                <Input 
+                  className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold px-4"
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value)} 
+                  placeholder="082 000 0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-900 ml-1">Relationship</Label>
+                <select 
+                  value={relationship} 
+                  onChange={(e) => setRelationship(e.target.value)} 
+                  className="flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 h-14 rounded-2xl border-slate-100 bg-slate-50 px-4 text-sm font-bold text-slate-900 focus:ring-cyan-500/20 w-full appearance-none"
+                >
+                  <option value="">Select status</option>
+                  {RELATIONSHIP_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end pb-3">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={isPrimary} 
+                      onChange={(e) => setIsPrimary(e.target.checked)} 
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                  </div>
+                  <span className="text-sm font-bold text-slate-700">Set as Primary Contact</span>
+                </label>
+              </div>
             </div>
-          ))
-        )}
-      </div>
+            <Button 
+              type="submit" 
+              disabled={saving} 
+              className="w-full h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95"
+            >
+              {saving ? 'Safeguarding...' : 'Register Contact'}
+            </Button>
+          </form>
+        </SurfaceCard>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <Shield className="h-4 w-4 text-emerald-600" />
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Trusted Network</p>
+        </div>
+        <div className="space-y-3">
+          {contacts.length === 0 ? (
+            <SurfaceCard className="p-12 text-center border-dashed border-2 bg-slate-50/50">
+              <Shield className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+              <p className="text-sm font-bold text-slate-500 italic">No emergency protocols defined yet.</p>
+            </SurfaceCard>
+          ) : (
+            contacts.map((contact) => (
+              <SurfaceCard key={contact.id} className={cn("p-5 border-l-4 transition-all", contact.is_primary ? "border-l-emerald-500 bg-emerald-50/5" : "border-l-slate-200")}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-black text-slate-900 tracking-tight">{contact.full_name}</p>
+                      {contact.is_primary && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700">
+                          Primary
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                      {contact.relationship || 'Verified Contact'} · {contact.phone}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => removeContact(contact.id)} 
+                    disabled={saving}
+                    className="h-10 w-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors active:scale-90"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </SurfaceCard>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   )
 }

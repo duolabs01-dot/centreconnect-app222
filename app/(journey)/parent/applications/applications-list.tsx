@@ -10,6 +10,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { ApprovalActions } from './approval-actions'
 import { ApprovalReceivedToast } from './approval-received-toast'
 import { cn, formatDate } from '@/lib/utils'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
 type ApplicationItem = {
   id: string
@@ -168,6 +169,7 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
 
   const [activeApplicationId, setActiveApplicationId] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(false)
+  const { setVisible } = useBottomNav()
 
   useEffect(() => {
     const media = window.matchMedia('(min-width: 768px)')
@@ -176,6 +178,15 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     media.addEventListener('change', sync)
     return () => media.removeEventListener('change', sync)
   }, [])
+
+  useEffect(() => {
+    if (activeApplicationId && !isDesktop) {
+      setVisible(false)
+    } else {
+      setVisible(true)
+    }
+    return () => setVisible(true)
+  }, [activeApplicationId, isDesktop, setVisible])
 
   const activeApplication = useMemo(
     () => applications.find((application) => application.id === activeApplicationId) ?? null,

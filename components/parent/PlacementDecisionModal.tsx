@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { AlertTriangle, Calendar, CheckCircle2, ChevronRight, MapPin, PartyPopper } from 'lucide-react'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { formatDate } from '@/lib/utils'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { useEffect } from 'react'
 
 interface PlacementDecisionModalProps {
   open: boolean
@@ -40,6 +42,12 @@ export default function PlacementDecisionModal({
 }: PlacementDecisionModalProps) {
   const [step, setStep] = useState<'decision' | 'confirm-accept' | 'confirm-decline' | 'done'>('decision')
   const [loading, setLoading] = useState(false)
+  const { setVisible } = useBottomNav()
+
+  useEffect(() => {
+    setVisible(!open)
+    return () => setVisible(true)
+  }, [open, setVisible])
 
   const daysLeft = placementExpiresAt
     ? Math.ceil((new Date(placementExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))

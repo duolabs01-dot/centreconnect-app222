@@ -32,7 +32,9 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { useLiteMode } from '@/lib/context/LiteModeProvider'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import { Switch } from '@/components/ui/switch'
+import { useEffect } from 'react'
 
 const RELATIONSHIP_OPTIONS = ['Mother', 'Father', 'Guardian', 'Grandparent', 'Aunt/Uncle', 'Other']
 
@@ -60,6 +62,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
   const router = useRouter()
   const supabase = createClient()
   const { isLiteMode, setLiteMode } = useLiteMode()
+  const { setVisible } = useBottomNav()
   
   const [profile, setProfile] = useState(initial)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -67,6 +70,11 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
   const [editValue, setEditValue] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+
+  useEffect(() => {
+    setVisible(!sheetOpen)
+    return () => setVisible(true)
+  }, [sheetOpen, setVisible])
 
   const completionPct = Math.round(([
     profile.full_name, 
@@ -151,9 +159,9 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         },
         { 
           label: 'Emergency Contact', 
-          value: profile.emergency_contact_name || 'Not set', 
+          value: 'Manage contacts', 
           icon: Shield, 
-          onClick: () => openEdit('emergency_contact_name', profile.emergency_contact_name) 
+          href: '/parent/profile/emergency' 
         },
         { 
           label: 'Co-Guardian Access', 

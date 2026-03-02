@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
 import type { DirectoryCentre } from '@/types/directory-centre'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import {
   Sheet,
   SheetContent,
@@ -86,9 +87,16 @@ export default function DirectoryExplorer({
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search ?? '')
   const [isPending, startTransition] = useTransition()
+  const { setVisible } = useBottomNav()
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
   
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'idle' | 'pending' | 'granted' | 'denied'>('idle')
+
+  useEffect(() => {
+    setVisible(!isFilterSheetOpen)
+    return () => setVisible(true)
+  }, [isFilterSheetOpen, setVisible])
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
@@ -182,7 +190,7 @@ export default function DirectoryExplorer({
             />
           </div>
           
-          <Sheet>
+          <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
             <SheetTrigger asChild>
               <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-cyan-400 active:scale-90 transition-all">
                 <SlidersHorizontal className="h-5 w-5" />
