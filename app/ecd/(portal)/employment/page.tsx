@@ -129,7 +129,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
         : null
 
   const errorMessage =
-    searchParams?.error === 'admin-only'
+    searchParams?.error === 'owner-only'
       ? 'Only ECD admins can create or publish jobs.'
       : searchParams?.error === 'invalid-job'
         ? 'Please check job fields and try again.'

@@ -32,7 +32,7 @@ async function requireEcdAdminContext() {
 export async function createJobAction(formData: FormData) {
   const ctx = await requireEcdAdminContext()
   if (!ctx.user) redirect('/ecd/login')
-  if (!ctx.ecdId) redirect('/ecd/employment?error=admin-only')
+  if (!ctx.ecdId) redirect('/ecd/employment?error=owner-only')
 
   const parsed = createJobSchema.safeParse({
     title: formData.get('title'),
@@ -76,7 +76,7 @@ export async function createJobAction(formData: FormData) {
 export async function toggleJobPublishAction(formData: FormData) {
   const ctx = await requireEcdAdminContext()
   if (!ctx.user) redirect('/ecd/login')
-  if (!ctx.ecdId) redirect('/ecd/employment?error=admin-only')
+  if (!ctx.ecdId) redirect('/ecd/employment?error=owner-only')
 
   const jobId = String(formData.get('job_id') ?? '').trim()
   const nextPublished = String(formData.get('next_published') ?? '').trim() === 'true'
