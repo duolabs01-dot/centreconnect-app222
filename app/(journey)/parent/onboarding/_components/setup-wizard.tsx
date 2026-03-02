@@ -188,7 +188,7 @@ export function SetupWizard() {
                   <select 
                     value={suburb}
                     onChange={e => setSuburb(e.target.value)}
-                    className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500 appearance-none"
+                    className="cc-native-field h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500 appearance-none"
                   >
                     <option value="Alexandra">Alexandra</option>
                     <option value="Wynberg">Wynberg</option>

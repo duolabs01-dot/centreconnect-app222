@@ -1,10 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { cn } from '@/lib/utils'
+import { motion, AnimatePresence, useReducedMotion, LayoutGroup } from 'framer-motion'
 import { type LucideIcon } from 'lucide-react'
 import { useCallback, useTransition, useState, useEffect, memo } from 'react'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
 export type NavItem = {
   label: string
@@ -100,6 +100,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const [isPending, startTransition] = useTransition()
   const [optimisticPath, setOptimisticPath] = useState(pathname)
   const reducedMotion = useReducedMotion()
+  const { isVisible } = useBottomNav()
 
   useEffect(() => {
     setOptimisticPath(pathname)
@@ -118,7 +119,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [optimisticPath, router])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
-  if (pathname === '/' || isAuthPage) return null
+  if (!isVisible || pathname === '/' || isAuthPage) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
@@ -126,15 +127,17 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
         <nav
           className="flex items-center gap-1 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl"
         >
-          {items.map((item) => (
-            <NavButton
-              key={item.href}
-              item={item}
-              active={isTabActive(optimisticPath, item.href)}
-              onClick={() => handleNav(item.href)}
-              reducedMotion={reducedMotion ?? false}
-            />
-          ))}
+          <LayoutGroup>
+            {items.map((item) => (
+              <NavButton
+                key={item.href}
+                item={item}
+                active={isTabActive(optimisticPath, item.href)}
+                onClick={() => handleNav(item.href)}
+                reducedMotion={reducedMotion ?? false}
+              />
+            ))}
+          </LayoutGroup>
         </nav>
       </div>
 

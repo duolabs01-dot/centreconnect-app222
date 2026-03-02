@@ -207,7 +207,7 @@ export default function DirectoryExplorer({
                   <select 
                     value={selectedSuburb} 
                     onChange={(e) => setSelectedSuburb(e.target.value)}
-                    className="h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500"
+                    className="cc-native-field h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500"
                   >
                     <option value="">All Areas</option>
                     {suburbs.map(s => <option key={s} value={s}>{s}</option>)}

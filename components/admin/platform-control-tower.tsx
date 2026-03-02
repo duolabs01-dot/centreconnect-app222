@@ -593,7 +593,7 @@ export function PlatformControlTower({ metrics, centres, analytics, activity, us
               </div>
             ))}
             <div className="rounded-2xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-3 text-sm text-slate-100">
-              {upgradeCandidates.length} starter/growth centres trending premium Ã¢â‚¬â€œ flag them now.
+              {upgradeCandidates.length} starter/growth centres trending premium - flag them now.
             </div>
           </CardContent>
         </Card>

@@ -170,7 +170,7 @@ export function GuardiansManager({ childList }: Props) {
           <select
             value={selectedChildId}
             onChange={(e) => setSelectedChildId(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
+            className="cc-native-field mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-100"
           >
             {childList.length === 0 ? (
               <option value="">No child linked</option>

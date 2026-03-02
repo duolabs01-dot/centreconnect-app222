@@ -349,7 +349,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
               </Label>
               {activeField === 'guardian_relationship' ? (
                 <select 
-                  className="flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full appearance-none" 
+                  className="cc-native-field flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 h-16 rounded-[1.5rem] border-slate-100 bg-slate-50 px-6 text-xl font-bold text-slate-900 focus:ring-cyan-500/20 w-full appearance-none" 
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                 >

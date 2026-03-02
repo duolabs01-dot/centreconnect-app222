@@ -545,7 +545,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-t-4 border-t-slate-200">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Filtered</p>
             <p className="mt-2 text-3xl font-black text-slate-900">
-              {filteredCounts.pending + filteredCounts.approved + filteredCounts.enrolled}
+              {filteredCounts.pending + filteredCounts.awaitingOfferResponse + filteredCounts.approved + filteredCounts.enrolled + filteredCounts.waitlisted + filteredCounts.rejected}
             </p>
           </div>
         </div>
