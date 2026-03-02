@@ -324,7 +324,7 @@ export default async function EcdDashboardPage() {
               <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 px-8 py-6">
                 <CardTitle className="text-slate-900 font-black uppercase tracking-widest text-sm">Admissions Pipeline</CardTitle>
                 <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100 transition-all">
-                  Full Pipeline ->
+                  Full Pipeline &rarr;
                 </Link>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
