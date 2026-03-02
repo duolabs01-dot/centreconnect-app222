@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cc-v5-ultra';
+const CACHE_NAME = 'cc-v6-ultra';
 const OFFLINE_URL = '/offline';
 
 const ASSETS = [
@@ -26,7 +26,9 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Advanced PWA Strategy: Stale-While-Revalidate for everything except API
+// Advanced PWA Strategy:
+// - Network-first for page navigations (prevents stale portal shells after deploy)
+// - Cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -34,24 +36,23 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and API calls
   if (request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
 
-  // For portal routes, use Stale-While-Revalidate for "Instant" feel
   const isPortal = url.pathname.startsWith('/parent') || url.pathname.startsWith('/ecd') || url.pathname.startsWith('/directory');
+  const isNavigation = request.mode === 'navigate' || request.destination === 'document';
 
-  if (isPortal || request.mode === 'navigate') {
+  // Always prefer fresh HTML for navigations and portal routes.
+  // This avoids desktop/mobile mismatch where an old cached shell persists.
+  if (isPortal || isNavigation) {
     event.respondWith(
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.match(request).then((cachedResponse) => {
-          const fetchedResponse = fetch(request).then((networkResponse) => {
+      caches.open(CACHE_NAME).then((cache) =>
+        fetch(request)
+          .then((networkResponse) => {
             cache.put(request, networkResponse.clone());
             return networkResponse;
-          }).catch(() => {
-            // If network fails and no cache, fallback to offline
-            return cachedResponse || caches.match(OFFLINE_URL);
-          });
-
-          return cachedResponse || fetchedResponse;
-        });
-      })
+          })
+          .catch(() =>
+            cache.match(request).then((cachedResponse) => cachedResponse || caches.match(OFFLINE_URL))
+          )
+      )
     );
     return;
   }
