@@ -11,7 +11,13 @@ import { LiteModeProvider } from '@/lib/context/LiteModeProvider'
 import { SessionTimeoutProvider } from '@/lib/context/SessionTimeoutProvider'
 import { BottomNavProvider } from '@/lib/context/BottomNavProvider'
 
+const metadataBaseUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
 export const metadata: Metadata = {
+  metadataBase: new URL(metadataBaseUrl),
   title: 'CentreConnect',
   description: 'Find trusted ECD centres near you. Apply online, track applications, and connect with the best early childhood education for your child.',
   applicationName: 'CentreConnect',

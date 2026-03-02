@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
 
+export const dynamic = 'force-dynamic'
+
 type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
 function sanitizeRole(role: unknown): AllowedRole {
