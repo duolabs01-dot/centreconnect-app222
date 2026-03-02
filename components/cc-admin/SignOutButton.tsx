@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from './Button'
+import { toast } from 'sonner'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
 
 type SignOutButtonProps = {
   redirectTo?: string
@@ -22,11 +24,18 @@ export function SignOutButton({
   const handleSignOut = async () => {
     if (isLoading) return
     setIsLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push(redirectTo)
-    router.refresh()
-    setIsLoading(false)
+    try {
+      const supabase = createClient()
+      const { clientError, serverError } = await robustSignOut(supabase)
+      if (clientError && serverError) {
+        toast.error('Could not sign out. Please try again.')
+        return
+      }
+      router.replace(redirectTo)
+      router.refresh()
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

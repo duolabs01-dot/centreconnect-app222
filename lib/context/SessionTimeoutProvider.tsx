@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
 
 const INACTIVITY_LIMIT = 10 * 60 * 1000 // 10 minutes
 const CHECK_INTERVAL = 30 * 1000 // 30 seconds
@@ -22,11 +23,11 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
   }
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut()
+    await robustSignOut(supabase)
     // Redirect to landing page as requested
-    router.push('/')
+    router.replace('/')
     router.refresh()
-  }, [router, supabase.auth])
+  }, [router, supabase])
 
   useEffect(() => {
     if (!isProtectedRoute(pathname)) return

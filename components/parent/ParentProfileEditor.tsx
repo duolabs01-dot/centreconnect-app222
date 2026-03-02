@@ -35,6 +35,7 @@ import { useLiteMode } from '@/lib/context/LiteModeProvider'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import { Switch } from '@/components/ui/switch'
 import { useEffect } from 'react'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
 
 const RELATIONSHIP_OPTIONS = ['Mother', 'Father', 'Guardian', 'Grandparent', 'Aunt/Uncle', 'Other']
 
@@ -84,10 +85,15 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
   ].filter(Boolean).length / 4) * 100)
 
   async function handleSignOut() {
+    if (isSigningOut) return
     setIsSigningOut(true)
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    try {
+      await robustSignOut(supabase)
+      router.replace('/')
+      router.refresh()
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   function openEdit(field: typeof activeField, current: string) {

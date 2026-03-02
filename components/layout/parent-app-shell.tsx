@@ -12,6 +12,7 @@ import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { createClient } from '@/lib/supabase/client'
 import { useParentLayout } from './parent-layout-provider'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -79,10 +80,15 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   }, [])
 
   async function handleSignOut() {
+    if (isSigningOut) return
     setIsSigningOut(true)
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    try {
+      await robustSignOut(supabase)
+      router.replace('/')
+      router.refresh()
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   const showMobileBack = shouldShowMobileBack(pathname)
