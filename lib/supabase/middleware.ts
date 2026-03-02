@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { readSupabasePublicEnv } from './env'
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
   let timeoutHandle: ReturnType<typeof setTimeout> | undefined
@@ -30,8 +31,7 @@ export async function updateSession(request: NextRequest) {
     return response
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
 
   if (!supabaseUrl || !supabaseAnonKey) {
     return finish(NextResponse.next({ request: { headers: request.headers } }), 'missing-env')

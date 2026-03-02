@@ -1,5 +1,6 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { readSupabasePublicEnv } from '@/lib/supabase/env'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export type PlatformAdminIdentity = {
@@ -19,8 +20,7 @@ function getBearerToken(request?: Request): string | null {
 }
 
 async function getUserFromBearerToken(token: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
   if (!supabaseUrl || !supabaseAnonKey) {
     return null
   }

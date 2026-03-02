@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { readSupabasePublicEnv } from '@/lib/supabase/env'
 import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
 
 const schema = z.object({
@@ -49,8 +50,7 @@ export async function submitApplicationAction(input: unknown) {
   const hasSessionContext = Boolean(userData.user || sessionData.session?.user)
   const usingTokenScopedClient = !hasSessionContext && Boolean(parsed.data.access_token)
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
   if (usingTokenScopedClient && (!supabaseUrl || !supabaseAnonKey)) {
     return { error: 'Server configuration error. Please contact support.' }
   }

@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { sendEmail } from '@/lib/email/send'
 import { randomBytes } from 'crypto'
+import { requireSupabasePublicEnv } from '@/lib/supabase/env'
 
 const schema = z.object({
   guardian_id: z.string().uuid(),
@@ -70,9 +71,10 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
   }
 
   const cookieStore = await cookies()
+  const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('send-coparent-invite-action')
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     { cookies: { getAll: () => cookieStore.getAll() } }
   )
 

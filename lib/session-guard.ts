@@ -1,6 +1,7 @@
+import { readSupabasePublicEnv, readSupabaseServiceRoleKey } from '@/lib/supabase/env'
+
 function getSupabaseConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
   return { supabaseUrl, supabaseAnonKey }
 }
 
@@ -86,7 +87,7 @@ export async function validateSession(
 
 export async function clearSession(userId: string) {
   const { supabaseUrl } = getSupabaseConfig()
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const serviceRoleKey = readSupabaseServiceRoleKey()
 
   if (!supabaseUrl || !serviceRoleKey || !userId) return
 

@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { requireSupabasePublicEnv } from '@/lib/supabase/env'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -18,9 +19,10 @@ export async function submitTransportEnquiryAction(input: unknown) {
     return { error: 'Invalid input' }
   }
 
+  const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('submit-transport-enquiry-action')
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     { cookies: { getAll: () => cookies().getAll() } }
   )
 
