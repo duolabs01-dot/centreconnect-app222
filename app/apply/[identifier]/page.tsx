@@ -139,11 +139,14 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     redirect(`/login?next=${next}`)
   }
 
-  const { data: children } = await supabase
-    .from('children')
-    .select('id,first_name,last_name,date_of_birth,gender')
-    .eq('parent_id', user.id)
-    .order('created_at', { ascending: false })
+  const [{ data: children }, { data: parentDocuments }] = await Promise.all([
+    supabase
+      .from('children')
+      .select('id,first_name,last_name,date_of_birth,gender')
+      .eq('parent_id', user.id)
+      .order('created_at', { ascending: false }),
+    supabase.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(80),
+  ])
 
   if (!children || children.length === 0) {
     redirect('/parent/children/new')
@@ -182,11 +185,11 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
               last_name: child.last_name,
               date_of_birth: child.date_of_birth,
             }))}
+            initialDocumentTypes={(parentDocuments ?? []).map((doc) => doc.doc_type)}
           />
         </CardContent>
       </Card>
     </main>
   )
 }
-
 

@@ -8,7 +8,7 @@ import { applicationStatusEmail } from '@/lib/email/templates'
 
 const statusUpdateSchema = z.object({
   applicationId: z.string().uuid(),
-  status: z.enum(['submitted', 'in_review', 'approved', 'enrolled', 'waitlisted', 'rejected', 'withdrawn']),
+  status: z.enum(['draft', 'partial', 'submitted', 'in_review', 'approved', 'enrolled', 'waitlisted', 'rejected', 'withdrawn']),
   notes: z.string().max(2000).optional(),
 })
 

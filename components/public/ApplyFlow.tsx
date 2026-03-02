@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { submitApplicationAction } from '@/lib/actions/admissions/submit-application'
 import { CreateChildInput, createChildAction, createChildSchema } from '@/lib/actions/parents/create-child'
+import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
 import { createClient as createBrowserClient } from '@/lib/supabase/client'
 import { calculateAge, cn } from '@/lib/utils'
 
@@ -34,19 +35,20 @@ type CentreSummary = {
 type ApplyFlowProps = {
   centre: CentreSummary
   childProfiles: ParentChild[]
+  initialDocumentTypes: string[]
 }
 
 type ChildFormValues = CreateChildInput
 
-export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
+export function ApplyFlow({ centre, childProfiles, initialDocumentTypes }: ApplyFlowProps) {
   const [childList, setChildList] = useState(childProfiles)
   const [selectedChildId, setSelectedChildId] = useState<string | null>(childProfiles[0]?.id ?? null)
   const [step, setStep] = useState<'existing' | 'new'>(childProfiles.length > 0 ? 'existing' : 'new')
   const [shareMultiple, setShareMultiple] = useState(true)
   const [parentMessage, setParentMessage] = useState('')
-  const [missingRequirements, setMissingRequirements] = useState<string[]>([])
-  const [readinessPct, setReadinessPct] = useState<number | null>(null)
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle')
+  const [submissionState, setSubmissionState] = useState<'submitted' | 'partial'>('submitted')
+  const [submittedMissingDocuments, setSubmittedMissingDocuments] = useState<string[]>([])
   const [isPending, startTransition] = useTransition()
   const [isChildPending, startAddChild] = useTransition()
 
@@ -64,6 +66,10 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
   const centreLocation = useMemo(
     () => [centre.suburb, centre.city].filter(Boolean).join(', ') || 'Location pending',
     [centre.city, centre.suburb]
+  )
+  const documentChecklist = useMemo(
+    () => evaluateApplicationDocumentChecklist(initialDocumentTypes),
+    [initialDocumentTypes]
   )
 
   const childForm = useForm<ChildFormValues>({
@@ -112,24 +118,24 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
       })
 
       if (result?.error) {
-        const missing = Array.isArray((result as { missingRequirements?: unknown }).missingRequirements)
-          ? (((result as { missingRequirements?: string[] }).missingRequirements ?? []).filter(Boolean) as string[])
-          : []
-        setMissingRequirements(missing)
-        setReadinessPct(
-          typeof (result as { readinessPct?: unknown }).readinessPct === 'number'
-            ? ((result as { readinessPct?: number }).readinessPct ?? null)
-            : null
-        )
         toast.error(result.error)
         setStatus('idle')
         return
       }
 
-      setMissingRequirements([])
-      setReadinessPct(null)
+      const nextStatus = (result as { status?: 'submitted' | 'partial' }).status ?? 'submitted'
+      const missingDocs = Array.isArray((result as { missingDocuments?: unknown }).missingDocuments)
+        ? (((result as { missingDocuments?: string[] }).missingDocuments ?? []).filter(Boolean) as string[])
+        : []
+
+      setSubmissionState(nextStatus)
+      setSubmittedMissingDocuments(missingDocs)
       setStatus('success')
-      toast.success('Application submitted. We will update you via email.')
+      if (nextStatus === 'partial') {
+        toast.success('Partial application saved. Upload the missing documents to complete it.')
+      } else {
+        toast.success('Application submitted. We will update you via email.')
+      }
     })
   }
 
@@ -138,14 +144,37 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
       <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-cyan-50">
         <CardContent className="space-y-4 px-4 py-5 text-center sm:px-6 sm:py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">Next step</p>
-          <h3 className="text-2xl font-bold text-slate-900 sm:text-3xl">Application sent</h3>
-          <p className="text-sm text-slate-600">
-            We have forwarded your application to {centre.name}. Expect a confirmation email soon.
-          </p>
+          <h3 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            {submissionState === 'partial' ? 'Partial application saved' : 'Application sent'}
+          </h3>
+          {submissionState === 'partial' ? (
+            <div className="space-y-2 text-sm text-slate-700">
+              <p>We saved your application to {centre.name} and marked it as incomplete.</p>
+              {submittedMissingDocuments.length > 0 ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-left">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Missing documents</p>
+                  <ul className="mt-1.5 space-y-1 text-xs text-amber-900 sm:text-sm">
+                    {submittedMissingDocuments.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">
+              We have forwarded your application to {centre.name}. Expect a confirmation email soon.
+            </p>
+          )}
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
             <Button asChild>
               <Link href="/parent/applications">Go to Application Journey</Link>
             </Button>
+            {submissionState === 'partial' ? (
+              <Button variant="outline" asChild>
+                <Link href="/parent/profile/documents">Upload Missing Documents</Link>
+              </Button>
+            ) : null}
             <Button variant="outline" asChild>
               <Link href="/directory">Browse other centres</Link>
             </Button>
@@ -315,38 +344,47 @@ export function ApplyFlow({ centre, childProfiles }: ApplyFlowProps) {
               <p className="mt-0.5 text-slate-500">Please add or select a child to continue.</p>
             )}
           </div>
-
-          {missingRequirements.length > 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-              <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Almost there</p>
-              {readinessPct !== null ? (
-                <p className="mt-1 text-xs font-semibold text-amber-700">Application readiness: {readinessPct}%</p>
-              ) : null}
-              <p className="mt-1">Complete these before submission:</p>
-              <ul className="mt-2 space-y-1 text-xs sm:text-sm">
-                {missingRequirements.map((item) => (
-                  <li key={item}>- {item}</li>
-                ))}
-              </ul>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/parent/profile">Open Profile</Link>
-                </Button>
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/parent/profile/documents">Open Documents</Link>
-                </Button>
-              </div>
+          <div className="rounded-xl border border-teal-200 bg-teal-50 p-3 text-sm text-teal-900">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-teal-700">Document progress</p>
+              <p className="text-xs font-semibold text-teal-700">
+                {documentChecklist.uploadedCount}/{documentChecklist.totalRequired} uploaded
+              </p>
             </div>
-          ) : null}
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-teal-100">
+              <div
+                className="h-full rounded-full bg-teal-600 transition-all"
+                style={{
+                  width: `${Math.round(
+                    (documentChecklist.uploadedCount / Math.max(1, documentChecklist.totalRequired)) * 100
+                  )}%`,
+                }}
+              />
+            </div>
+            {documentChecklist.missingLabels.length > 0 ? (
+              <div className="mt-2">
+                <p className="text-xs text-teal-800">Missing documents can be uploaded after submitting a partial application:</p>
+                <ul className="mt-1 space-y-1 text-xs sm:text-sm">
+                  {documentChecklist.missingLabels.slice(0, 4).map((item) => (
+                    <li key={item}>- {item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="mt-2 text-xs text-teal-800">Great, your required documents are complete.</p>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Ready to submit?</p>
-            <p className="text-sm text-slate-600">One active application per child per centre.</p>
+            <p className="text-sm text-slate-600">
+              One active application per child per centre. Incomplete documents will save as a partial application.
+            </p>
           </div>
           <Button onClick={handleSubmit} disabled={isPending || !selectedChild} size="lg" className="w-full sm:w-auto">
-            {isPending || status === 'submitting' ? 'Submitting...' : 'Submit Application'}
+            {isPending || status === 'submitting' ? 'Submitting...' : 'Submit Application (Allow Partial)'}
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createClient } from '@/lib/supabase/server'
 
-const ACTIVE_APPLICATION_STATUSES = ['submitted', 'in_review', 'approved', 'waitlisted'] as const
+const ACTIVE_APPLICATION_STATUSES = ['draft', 'partial', 'submitted', 'in_review', 'approved', 'waitlisted'] as const
 
 export async function canShowMultipleApplicationsFlag(
   parentId: string,

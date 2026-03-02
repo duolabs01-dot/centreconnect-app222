@@ -96,7 +96,7 @@ export function CommunicationsComposer({
       let appsQuery = supabase.from('applications').select('parent_id,status').eq('ecd_id', ecdId)
 
       if (audience === 'pending') {
-        appsQuery = appsQuery.in('status', ['submitted', 'in_review', 'waitlisted'])
+        appsQuery = appsQuery.in('status', ['draft', 'partial', 'submitted', 'in_review', 'waitlisted'])
       }
 
       const { data: applications, error: appsError } = await appsQuery

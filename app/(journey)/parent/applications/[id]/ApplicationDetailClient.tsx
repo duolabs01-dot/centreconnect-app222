@@ -209,7 +209,7 @@ export default function ApplicationDetailClient({
           notes: item.notes ?? undefined,
         }))
       : [{ status: currentStatus, created_at: submittedAt }]
-  const canWithdraw = ['submitted', 'in_review', 'waitlisted', 'approved'].includes(status)
+  const canWithdraw = ['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(status)
   const withdrawLabel = status === 'approved' ? 'Cancel application' : 'Withdraw application'
 
   async function onAccept() {

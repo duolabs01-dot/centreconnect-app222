@@ -67,6 +67,8 @@ export function StatusUpdateForm({
           className="cc-native-field"
           disabled={Boolean(currentOfferAcceptedAt)}
         >
+          <option value="draft">Draft</option>
+          <option value="partial">Partial</option>
           <option value="submitted">Submitted</option>
           <option value="in_review">In Review</option>
           <option value="approved">Approved</option>

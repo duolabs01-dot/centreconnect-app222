@@ -14,7 +14,7 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 
 function mapApplicationStatusToBadge(status: string): BadgeStatus {
   const normalized = status.toLowerCase()
-  if (['submitted', 'in_review', 'waitlisted', 'under_review', 'pending'].includes(normalized)) return 'pending'
+  if (['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'under_review', 'pending'].includes(normalized)) return 'pending'
   if (['approved', 'accepted', 'enrolled', 'confirmed', 'active'].includes(normalized)) return 'paid'
   if (['rejected', 'declined', 'withdrawn', 'cancelled', 'expired'].includes(normalized)) return 'overdue'
   return 'draft'

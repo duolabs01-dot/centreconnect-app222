@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { QuickSendTemplate } from './quick-send-template'
+import { SendReminderButton } from './send-reminder-button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { cn } from '@/lib/utils'
 import { Search, Filter, ChevronLeft, ChevronRight, FileText, ShieldAlert, Info } from 'lucide-react'
 
@@ -38,6 +40,7 @@ type ApplicationRow = {
   child_id: string
   application_number: string
   status: string
+  missing_documents: unknown
   submitted_at: string
   offer_accepted_at: string | null
   parent_message: string | null
@@ -101,6 +104,11 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function normalizeMissingDocuments(value: unknown) {
+  if (!Array.isArray(value)) return [] as string[]
+  return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
 type Template = {
   template_key: string
   title: string
@@ -108,6 +116,11 @@ type Template = {
 }
 
 type IntakeBlockedApplication = {
+  application: ApplicationRow
+  missing: string[]
+}
+
+type IncompleteApplication = {
   application: ApplicationRow
   missing: string[]
 }
@@ -352,13 +365,14 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
   let selectedApplications: ApplicationRow[] = []
   let blockedPendingApplications: IntakeBlockedApplication[] = []
+  let incompleteApplications: IncompleteApplication[] = []
   let filteredCounts = dbCounts
 
   if (searchValue) {
     const { data: searchRows } = await supabase
       .from('applications')
       .select(
-        'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
       )
       .eq('ecd_id', ecdId)
       .order('submitted_at', { ascending: false })
@@ -391,6 +405,16 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       rejected: filteredApplications.filter((app) => app.status === 'rejected'),
     }
 
+    incompleteApplications = filteredApplications
+      .filter((application) => application.status === 'partial' || application.status === 'draft')
+      .map((application) => {
+        const missingCodes = normalizeMissingDocuments(application.missing_documents)
+        return {
+          application,
+          missing: toApplicationDocumentLabels(missingCodes).slice(0, 5),
+        }
+      })
+
     if (grouped.pending.length > 0) {
       const pendingPartition = await partitionPendingForReview(grouped.pending)
       grouped.pending = pendingPartition.ready
@@ -421,11 +445,29 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
     selectedApplications = selectedPool.slice(pageFrom, pageTo + 1)
   } else {
+    const { data: incompleteRows } = await supabase
+      .from('applications')
+      .select(
+        'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+      )
+      .eq('ecd_id', ecdId)
+      .in('status', ['partial', 'draft'])
+      .order('submitted_at', { ascending: false })
+      .limit(100)
+
+    incompleteApplications = ((incompleteRows ?? []) as ApplicationRow[]).map((application) => {
+      const missingCodes = normalizeMissingDocuments(application.missing_documents)
+      return {
+        application,
+        missing: toApplicationDocumentLabels(missingCodes).slice(0, 5),
+      }
+    })
+
     if (selectedTab === 'pending') {
       const { data: pendingRows } = await supabase
         .from('applications')
         .select(
-          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+          'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
         )
         .eq('ecd_id', ecdId)
         .in('status', ['submitted', 'in_review'])
@@ -444,7 +486,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       const { data: rows } = await supabase
         .from('applications')
         .select(
-          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+          'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
         )
         .eq('ecd_id', ecdId)
         .eq('status', 'approved')
@@ -456,7 +498,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       const { data: rows } = await supabase
         .from('applications')
         .select(
-          'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+          'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
         )
         .eq('ecd_id', ecdId)
         .eq('status', selectedTab)
@@ -499,7 +541,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     const { data: focusedRow } = await supabase
       .from('applications')
       .select(
-        'id,parent_id,child_id,application_number,status,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
       )
       .eq('ecd_id', ecdId)
       .eq('id', searchParams.focus)
@@ -602,6 +644,58 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                   <p className="mt-1 text-xs text-amber-800/80 leading-relaxed font-medium">
                     Some parents haven&apos;t finished their profile or document uploads. Ask them to update their details to resume the process.
                   </p>
+                </div>
+              </div>
+            )}
+
+            {selectedTab === 'pending' && incompleteApplications.length > 0 && (
+              <div className="rounded-3xl border border-teal-100 bg-teal-50/70 p-4 sm:p-5">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-teal-700">Incomplete Applications</p>
+                    <p className="text-xs text-teal-800">Applications saved as partial or draft waiting for missing documents.</p>
+                  </div>
+                  <span className="inline-flex items-center rounded-full border border-teal-200 bg-white px-2.5 py-1 text-xs font-bold text-teal-700">
+                    {incompleteApplications.length}
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {incompleteApplications.map(({ application, missing }) => {
+                    const child = normalizeOne(application.children)
+                    const parent = normalizeOne(application.parents)
+                    const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+                    const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
+                    const parentName = parentProfile?.full_name ?? 'Unknown parent'
+                    return (
+                      <div
+                        key={application.id}
+                        className="rounded-2xl border border-teal-200 bg-white p-3.5 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-slate-900">{childName}</p>
+                            <p className="mt-0.5 text-xs text-slate-500">{parentName}</p>
+                            <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
+                              {application.application_number} • {formatDate(application.submitted_at)}
+                            </p>
+                          </div>
+                          <StatusBadge status={application.status} />
+                        </div>
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Missing Docs</p>
+                          <p className="mt-1 text-xs text-amber-900">
+                            {missing.length > 0 ? missing.join(', ') : 'Document list not available yet.'}
+                          </p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <SendReminderButton applicationId={application.id} />
+                          <Button size="sm" variant="outline" className="h-10 rounded-2xl" asChild>
+                            <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}

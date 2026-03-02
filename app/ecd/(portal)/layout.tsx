@@ -51,7 +51,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       .from('applications')
       .select('id', { count: 'exact', head: true })
       .eq('ecd_id', ecdId)
-      .in('status', ['submitted', 'in_review'])
+      .in('status', ['submitted', 'in_review', 'partial', 'draft'])
       .then(({ count, error }) => (error ? 0 : count ?? 0)),
     admin
       .from('ecd_notifications')

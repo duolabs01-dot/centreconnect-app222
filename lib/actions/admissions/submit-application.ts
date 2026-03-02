@@ -4,10 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import {
-  evaluateApplicationIntakeReadiness,
-  formatMissingRequirementsList,
-} from '@/lib/admissions/intake-readiness'
+import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -79,71 +76,10 @@ export async function submitApplicationAction(input: unknown) {
     return { error: 'Child not found' }
   }
 
-  const [{ data: parentRow }, { data: userProfile }, { data: documents }] = await Promise.all([
-    db
-      .from('parents')
-      .select('guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status')
-      .eq('id', user.id)
-      .maybeSingle(),
-    db.from('user_profiles').select('full_name,phone').eq('id', user.id).maybeSingle(),
-    db.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(50),
-  ])
-
-  const readiness = evaluateApplicationIntakeReadiness({
-    parent: {
-      fullName: userProfile?.full_name,
-      phone: userProfile?.phone,
-      guardianRelationship: parentRow?.guardian_relationship,
-      emergencyContactName: parentRow?.emergency_contact_name,
-      emergencyContactPhone: parentRow?.emergency_contact_phone,
-      idVerificationStatus: parentRow?.id_verification_status,
-    },
-    child: {
-      firstName: child.first_name,
-      lastName: child.last_name,
-      dateOfBirth: child.date_of_birth,
-      gender: child.gender,
-    },
-    docTypes: (documents ?? []).map((doc) => doc.doc_type),
-  })
-
-  if (!readiness.ready) {
-    const missingList = readiness.missing.slice(0, 6)
-    const missingText = formatMissingRequirementsList(missingList)
-
-    try {
-      const admin = createAdminClient()
-      const cutoffIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      const { data: recentNudge } = await admin
-        .from('parent_notifications')
-        .select('id')
-        .eq('parent_id', user.id)
-        .eq('ecd_id', parsed.data.ecd_id)
-        .eq('title', 'Almost there - one quick profile update')
-        .gte('created_at', cutoffIso)
-        .limit(1)
-        .maybeSingle()
-
-      if (!recentNudge?.id) {
-        await admin.from('parent_notifications').insert({
-          parent_id: user.id,
-          ecd_id: parsed.data.ecd_id,
-          title: 'Almost there - one quick profile update',
-          message: `You are very close to submitting. Please complete:\n${missingText}\n\nYou can do this in Me > Profile and Documents.`,
-          is_read: false,
-        })
-      }
-    } catch {
-      // Non-blocking: intake nudges should not fail application flow.
-    }
-
-    return {
-      error:
-        'Before we send this to the centre, please complete the missing profile and document details in Me > Profile and Me > Documents.',
-      missingRequirements: missingList,
-      readinessPct: readiness.completionPct,
-    }
-  }
+  const { data: documents } = await db.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(80)
+  const documentChecklist = evaluateApplicationDocumentChecklist((documents ?? []).map((doc) => doc.doc_type))
+  const hasMissingDocuments = documentChecklist.missingCodes.length > 0
+  const nextStatus = hasMissingDocuments ? 'partial' : 'submitted'
 
   const { data: duplicate } = await db
     .from('applications')
@@ -170,7 +106,8 @@ export async function submitApplicationAction(input: unknown) {
         ecd_id: parsed.data.ecd_id,
         parent_id: user.id,
         child_id: parsed.data.child_id,
-        status: 'submitted',
+        status: nextStatus,
+        missing_documents: documentChecklist.missingCodes,
         share_multiple_flag: parsed.data.share_multiple_flag,
         parent_message: parsed.data.parent_message ?? null,
         submitted_at: new Date().toISOString(),
@@ -225,17 +162,23 @@ export async function submitApplicationAction(input: unknown) {
     const childName = [childInfo?.first_name, childInfo?.last_name].filter(Boolean).join(' ').trim() || 'a child'
     const centreName = centreInfo?.name?.trim() || 'your centre'
     const parentName = parentProfile?.full_name?.trim() || user.email?.split('@')[0] || 'A parent'
+    const notificationTitle = nextStatus === 'partial' ? 'New partial application submitted' : 'New application submitted'
+    const notificationMessage =
+      nextStatus === 'partial'
+        ? `${parentName} started a partial application for ${childName} at ${centreName}. Missing docs: ${documentChecklist.missingLabels.join(', ')}.`
+        : `${parentName} submitted an application for ${childName} at ${centreName}.`
 
     await admin.from('ecd_notifications').insert({
       ecd_id: parsed.data.ecd_id,
       application_id: applicationId,
-      title: 'New application submitted',
-      message: `${parentName} submitted an application for ${childName} at ${centreName}.`,
+      title: notificationTitle,
+      message: notificationMessage,
       metadata: {
-        kind: 'application_submitted',
+        kind: nextStatus === 'partial' ? 'application_partial_submitted' : 'application_submitted',
         application_id: applicationId,
         parent_id: user.id,
         child_id: parsed.data.child_id,
+        missing_documents: documentChecklist.missingCodes,
       },
       is_read: false,
     })
@@ -243,5 +186,12 @@ export async function submitApplicationAction(input: unknown) {
     // Non-blocking: ECD notifications should not fail application submission.
   }
 
-  return { success: true, applicationId }
+  return {
+    success: true,
+    applicationId,
+    status: nextStatus,
+    missingDocuments: documentChecklist.missingLabels,
+    uploadedDocumentsCount: documentChecklist.uploadedCount,
+    totalRequiredDocuments: documentChecklist.totalRequired,
+  }
 }

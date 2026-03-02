@@ -49,7 +49,7 @@ export async function POST(request: Request, context: RouteContext) {
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
     } else {
-      if (!['submitted', 'in_review', 'waitlisted', 'approved'].includes(targetApp.status)) {
+      if (!['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(targetApp.status)) {
         return NextResponse.json({ error: 'Application cannot be withdrawn in its current status' }, { status: 400 })
       }
 
