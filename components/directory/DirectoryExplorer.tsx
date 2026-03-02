@@ -430,7 +430,7 @@ export default function DirectoryExplorer({
                   <Button asChild size="lg" className="h-14 rounded-2xl bg-cyan-500 text-slate-900 font-black hover:bg-cyan-400 shadow-xl shadow-cyan-500/20 px-8">
                     <Link href="/register">Create Free Account</Link>
                   </Button>
-                  <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-white/20 text-white font-bold hover:bg-white/10 px-8">
+                  <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-white/20 text-white bg-transparent font-bold hover:bg-white/10 px-8">
                     <Link href="/login">Sign In</Link>
                   </Button>
                 </div>

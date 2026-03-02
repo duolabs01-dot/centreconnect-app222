@@ -75,7 +75,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 <Button size="lg" className="h-14 px-8 text-base font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl" asChild>
                   <Link href="/directory">Find a Crèche Near You</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold border-white/20 text-white hover:bg-white/10 rounded-xl" asChild>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold border-white/20 text-white bg-transparent hover:bg-white/10 rounded-xl" asChild>
                   <Link href="/for-centres">I Run a Centre &rarr;</Link>
                 </Button>
               </div>
