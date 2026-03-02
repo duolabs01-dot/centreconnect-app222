@@ -21,12 +21,12 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     return path.startsWith('/admin') || path.startsWith('/ecd') || path.startsWith('/parent')
   }
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await supabase.auth.signOut()
     // Redirect to landing page as requested
     router.push('/')
     router.refresh()
-  }
+  }, [router, supabase.auth])
 
   useEffect(() => {
     if (!isProtectedRoute(pathname)) return
@@ -52,7 +52,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
       events.forEach(event => window.removeEventListener(event, handleActivity))
       clearInterval(interval)
     }
-  }, [pathname, router, supabase])
+  }, [pathname, router, supabase, logout])
 
   // Also handle coming back online / tab focus
   useEffect(() => {
@@ -70,7 +70,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
     window.addEventListener('visibilitychange', handleVisibilityChange)
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [pathname, router, supabase])
+  }, [pathname, router, supabase, logout])
 
   return (
     <SessionTimeoutContext.Provider value={{}}>

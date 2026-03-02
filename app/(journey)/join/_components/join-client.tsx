@@ -93,7 +93,7 @@ export function JoinClient({
           <div className="text-center space-y-4">
             <Baby className="h-12 w-12 text-cyan-400 mx-auto" />
             <h1 className="text-xl font-bold text-slate-900">
-              {status === 'success' ? `You're in!` : `Joining ${childName}'s family…`}
+              {status === 'success' ? "You're in!" : `Joining ${childName}'s family…`}
             </h1>
             {status === 'success' && (
               <>

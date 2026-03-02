@@ -131,7 +131,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
               item={item}
               active={isTabActive(optimisticPath, item.href)}
               onClick={() => handleNav(item.href)}
-              reducedMotion={reducedMotion}
+              reducedMotion={reducedMotion ?? false}
             />
           ))}
         </nav>
