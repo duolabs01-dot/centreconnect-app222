@@ -16,11 +16,11 @@ function isStoredPaystackPayload(value: unknown): value is StoredPaystackPayload
   return Boolean(value) && typeof value === 'object'
 }
 
-export async function POST(request: Request, context: { params: { id: string } }) {
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const webhookEventId = context.params.id
+  const { id: webhookEventId } = await context.params
   if (!webhookEventId) return NextResponse.json({ error: 'Missing webhook event id' }, { status: 400 })
 
   const admin = createAdminClient()

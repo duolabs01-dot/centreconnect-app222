@@ -34,7 +34,7 @@ const actionSchema = z.discriminatedUnion('action', [
   }),
 ])
 
-export async function PATCH(request: Request, context: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -43,7 +43,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
     return NextResponse.json({ error: 'Invalid payload', issues: parsed.error.flatten() }, { status: 400 })
   }
 
-  const centreId = context.params.id
+  const { id: centreId } = await context.params
   if (!centreId) return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })
 
   const admin = createAdminClient()

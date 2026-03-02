@@ -9,14 +9,14 @@ const payloadSchema = z.object({
   status: z.enum(['draft', 'sent', 'paid', 'overdue', 'canceled']),
 })
 
-export async function PATCH(request: Request, context: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const parsed = payloadSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: 'Invalid payload', issues: parsed.error.flatten() }, { status: 400 })
 
-  const invoiceId = context.params.id
+  const { id: invoiceId } = await context.params
   if (!invoiceId) return NextResponse.json({ error: 'Missing invoice id' }, { status: 400 })
 
   const admin = createAdminClient()

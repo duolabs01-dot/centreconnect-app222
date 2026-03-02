@@ -5,12 +5,13 @@ import { acceptOffer } from '@/lib/actions/admissions/accept-offer'
 type DecisionAction = 'accept' | 'decline' | 'withdraw'
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export async function POST(request: Request, { params }: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
+  const { id: applicationId } = await context.params
   try {
     const supabase = await createClient()
     const {
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const { data: targetApp, error: targetError } = await supabase
       .from('applications')
       .select('id,parent_id,child_id,status')
-      .eq('id', params.id)
+      .eq('id', applicationId)
       .eq('parent_id', user.id)
       .maybeSingle()
 
@@ -38,12 +39,12 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
 
     if (action === 'accept') {
-      const result = await acceptOffer(params.id)
+      const result = await acceptOffer(applicationId)
       if (!result.success) {
         return NextResponse.json({ error: result.error }, { status: 400 })
       }
     } else if (action === 'decline') {
-      const { error } = await supabase.rpc('parent_decline_offer', { p_application_id: params.id })
+      const { error } = await supabase.rpc('parent_decline_offer', { p_application_id: applicationId })
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 })
       }
@@ -60,7 +61,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           withdrawn_at: now,
           withdraw_reason: 'parent_manual',
         })
-        .eq('id', params.id)
+        .eq('id', applicationId)
         .eq('parent_id', user.id)
 
       if (error) {

@@ -9,7 +9,7 @@ const actionSchema = z.object({
   adminNotes: z.string().max(2000).optional(),
 })
 
-export async function PATCH(request: Request, context: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
@@ -18,7 +18,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
     return NextResponse.json({ error: 'Invalid payload', issues: parsed.error.flatten() }, { status: 400 })
   }
 
-  const applicationId = context.params.id
+  const { id: applicationId } = await context.params
   if (!applicationId) return NextResponse.json({ error: 'Missing application id' }, { status: 400 })
 
   const admin = createAdminClient()

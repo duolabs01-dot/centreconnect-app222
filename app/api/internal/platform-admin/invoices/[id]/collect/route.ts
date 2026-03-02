@@ -9,11 +9,11 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
-export async function POST(_request: Request, context: { params: { id: string } }) {
+export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(_request)
   if (!platformAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const invoiceId = context.params.id
+  const { id: invoiceId } = await context.params
   if (!invoiceId) return NextResponse.json({ error: 'Missing invoice id' }, { status: 400 })
 
   const admin = createAdminClient()

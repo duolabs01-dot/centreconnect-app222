@@ -7,14 +7,14 @@ import { APP_URL } from '@/lib/config'
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const centreId = params.id
+  const { id: centreId } = await context.params
   if (!centreId) {
     return NextResponse.json({ error: 'Centre ID is required' }, { status: 400 })
   }

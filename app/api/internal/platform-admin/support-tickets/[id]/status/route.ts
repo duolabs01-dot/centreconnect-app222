@@ -8,13 +8,13 @@ const updateTicketStatusSchema = z.object({
   status: z.enum(['open', 'in_progress', 'waiting_response', 'resolved', 'closed']),
 })
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const ticketId = params.id
+  const { id: ticketId } = await context.params
   const payload = await request.json().catch(() => null)
   const parsed = updateTicketStatusSchema.safeParse(payload)
 

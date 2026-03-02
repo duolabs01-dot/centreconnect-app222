@@ -5,10 +5,10 @@ export const runtime = 'edge'
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const slug = params.slug
+    const { slug } = await context.params
     const admin = createAdminClient()
     
     const { data: centre } = await admin
