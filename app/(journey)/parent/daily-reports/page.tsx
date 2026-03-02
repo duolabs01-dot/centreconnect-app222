@@ -141,7 +141,7 @@ export default async function ParentDailyReportsPage() {
                         { label: 'Lunch', key: 'lunch_eaten', icon: Utensils },
                         { label: 'Snack', key: 'snack_eaten', icon: Cookie },
                       ].map(meal => (
-                        <div key={meal.key} className="rounded-xl bg-slate-50 p-3 text-center">
+                        <div key={meal.key} className="rounded-2xl bg-slate-50 p-3 text-center">
                           <meal.icon className="h-4 w-4 text-slate-400 mx-auto mb-2" />
                           <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">{meal.label}</p>
                           <p className="text-xs font-black text-cyan-700 uppercase tracking-tight">
@@ -173,7 +173,7 @@ export default async function ParentDailyReportsPage() {
                             <Moon className="h-4 w-4 text-amber-500" />
                             Rest & Nap
                           </div>
-                          <p className="text-xs text-slate-600 font-medium bg-amber-50/50 p-2 rounded-lg border border-amber-100/50">
+                          <p className="text-xs text-slate-600 font-medium bg-amber-50/50 p-2 rounded-2xl border border-amber-100/50">
                             Slept from <span className="font-bold">{report.nap_start}</span> to <span className="font-bold">{report.nap_end || '...'}</span>
                           </p>
                         </div>
@@ -189,4 +189,5 @@ export default async function ParentDailyReportsPage() {
     </ParentAppShell>
   )
 }
+
 

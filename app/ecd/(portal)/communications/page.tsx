@@ -115,19 +115,19 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
           <CardContent className="flex flex-wrap gap-3 pt-6">
             <Link
               href="/ecd/communications?mode=broadcast&template=application_update&audience=all"
-              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
+              className="rounded-2xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Broadcast general update
             </Link>
             <Link
               href="/ecd/communications?mode=broadcast&template=missing_documents&audience=pending"
-              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
+              className="rounded-2xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Ask pending parents for docs
             </Link>
             <Link
               href="/ecd/communications?mode=direct&template=application_update"
-              className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
+              className="rounded-2xl border border-teal-100 bg-teal-50/50 px-4 py-2.5 text-sm font-bold text-teal-700 transition-all hover:bg-teal-50"
             >
               Start direct parent chat
             </Link>
@@ -165,7 +165,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                   <p className="text-sm text-slate-400">No notifications sent yet.</p>
                 ) : (
                   (recentNotifications ?? []).map((item) => (
-                    <div key={item.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
+                    <div key={item.id} className="rounded-2xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
                       <p className="text-sm font-bold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
                         {formatDate(item.created_at)} â€¢ {item.is_read ? 'Read' : 'Unread'}
@@ -184,7 +184,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                   <p className="text-sm text-slate-400">No thread activity yet.</p>
                 ) : (
                   (recentThreads ?? []).map((thread) => (
-                    <div key={thread.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
+                    <div key={thread.id} className="rounded-2xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
                       <p className="text-sm font-bold text-slate-900">Thread {thread.id.slice(0, 8)}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
                         {thread.context_type ?? 'general'} â€¢ {formatDate(thread.created_at)}
@@ -200,6 +200,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     </EcdOsShell>
   )
 }
+
 
 
 

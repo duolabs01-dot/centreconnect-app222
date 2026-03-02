@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -322,7 +322,7 @@ export default function EcdOnboardingPage() {
                 type="button"
                 onClick={saveStepOne}
                 disabled={saving}
-                className="w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                className="w-full rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Save and Continue'}
               </button>
@@ -355,14 +355,14 @@ export default function EcdOnboardingPage() {
                   type="button"
                   onClick={saveStepTwo}
                   disabled={saving}
-                  className="flex-1 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                  className="flex-1 rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save and Continue'}
                 </button>
                 <button
                   type="button"
                   onClick={() => skipTo(3)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   Skip for now
                 </button>
@@ -399,14 +399,14 @@ export default function EcdOnboardingPage() {
                   type="button"
                   onClick={saveStepThree}
                   disabled={saving}
-                  className="flex-1 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                  className="flex-1 rounded-2xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
                 >
                   {saving ? 'Sending...' : 'Send Invite and Continue'}
                 </button>
                 <button
                   type="button"
                   onClick={() => skipTo(4)}
-                  className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                 >
                   Skip for now
                 </button>
@@ -418,7 +418,7 @@ export default function EcdOnboardingPage() {
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-slate-900">You&apos;re live!</h2>
               <p className="text-sm text-slate-600">Your centre is ready on CentreConnect.</p>
-              <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3">
+              <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Public Profile URL</p>
                 <p className="mt-1 break-all text-sm font-semibold text-cyan-900">{publicUrl}</p>
               </div>
@@ -432,14 +432,14 @@ export default function EcdOnboardingPage() {
                     toast.error('Could not copy link')
                   }
                 }}
-                className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Copy Link
               </button>
               <form action={completeOnboarding}>
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-cyan-600 px-4 py-3 text-base font-bold text-white hover:bg-cyan-700"
+                  className="w-full rounded-2xl bg-cyan-600 px-4 py-3 text-base font-bold text-white hover:bg-cyan-700"
                 >
                   Open My Dashboard \u2192
                 </button>
@@ -451,3 +451,4 @@ export default function EcdOnboardingPage() {
     </div>
   )
 }
+

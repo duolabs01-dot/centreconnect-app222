@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -238,7 +238,7 @@ export default function RegisterPage() {
                   onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
                   placeholder="unique_handle"
                   className={cn(
-                    "h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 outline-none",
+                    "h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none",
                     usernameStatus === 'available' && "border-emerald-200 bg-emerald-50/30",
                     (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-rose-200 bg-rose-50/30"
                   )}
@@ -253,7 +253,7 @@ export default function RegisterPage() {
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   placeholder="John Doe"
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                  className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
                   required
                 />
               </div>
@@ -265,7 +265,7 @@ export default function RegisterPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="name@domain.com"
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                  className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
                   required
                 />
               </div>
@@ -277,7 +277,7 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+27..."
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                  className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
                   required
                 />
               </div>
@@ -290,7 +290,7 @@ export default function RegisterPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl pr-10 focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                    className="h-12 bg-slate-50 border-slate-200 rounded-2xl pr-10 focus:ring-2 focus:ring-cyan-500/20 outline-none"
                     required
                     minLength={8}
                   />
@@ -312,7 +312,7 @@ export default function RegisterPage() {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl pr-10 focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                    className="h-12 bg-slate-50 border-slate-200 rounded-2xl pr-10 focus:ring-2 focus:ring-cyan-500/20 outline-none"
                     required
                     minLength={8}
                   />
@@ -326,7 +326,7 @@ export default function RegisterPage() {
                 </div>
               </div>
               
-              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98] mt-4" disabled={loading}>
+              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98] mt-4" disabled={loading}>
                 {loading ? 'Safeguarding...' : 'Sign up'}
               </Button>
             </form>
@@ -343,7 +343,7 @@ export default function RegisterPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-12 w-full bg-white border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+              className="h-12 w-full bg-white border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
               onClick={handleGoogleSignUp}
               disabled={googleLoading || loading}
             >
@@ -372,3 +372,4 @@ export default function RegisterPage() {
     </div>
   )
 }
+

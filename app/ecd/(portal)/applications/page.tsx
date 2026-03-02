@@ -195,7 +195,7 @@ function renderApplicationList(
       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-12 text-center">
         <p className="text-sm text-slate-500">No applications found in this category.</p>
         <div className="mt-4">
-          <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 rounded-xl font-bold shadow-sm">
+          <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 rounded-2xl font-bold shadow-sm">
             <Link href="/ecd/website">Complete Profile to attract parents</Link>
           </Button>
         </div>
@@ -289,7 +289,7 @@ function renderApplicationList(
                         status={application.status}
                         templates={context.templates}
                       />
-                      <Button size="sm" variant="ghost" className="h-9 px-4 text-slate-500 hover:text-teal-700 hover:bg-teal-50 font-bold rounded-lg" asChild>
+                      <Button size="sm" variant="ghost" className="h-9 px-4 text-slate-500 hover:text-teal-700 hover:bg-teal-50 font-bold rounded-2xl" asChild>
                         <Link href={`/ecd/applications/${application.id}`}>Open</Link>
                       </Button>
                     </div>
@@ -522,7 +522,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-600">{centre?.name ?? 'Admissions'}</p>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pipeline Management</h1>
         </div>
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-slate-100 shadow-sm">
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-100 shadow-sm">
           <Filter className="w-4 h-4 text-slate-400" />
           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Global Filter</span>
         </div>
@@ -579,7 +579,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                   key={tab.key}
                   href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
                   className={cn(
-                    "px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                    "px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all",
                     selectedTab === tab.key 
                       ? "bg-white text-teal-700 shadow-sm border border-slate-100" 
                       : "text-slate-500 hover:text-slate-900"
@@ -592,7 +592,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
             {selectedTab === 'pending' && blockedPendingApplications.length > 0 && (
               <div className="rounded-2xl bg-amber-50 border border-amber-100 p-5 flex items-start gap-4 shadow-sm shadow-amber-100/50">
-                <div className="h-10 w-10 rounded-xl bg-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
+                <div className="h-10 w-10 rounded-2xl bg-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-200">
                   <ShieldAlert className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -617,12 +617,12 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                 Showing Page {currentPage} of {totalPages}
               </p>
               <div className="flex items-center gap-2">
-                <Button variant="outline" className="h-11 px-5 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl shadow-sm" asChild disabled={!canPrev}>
+                <Button variant="outline" className="h-11 px-5 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-2xl shadow-sm" asChild disabled={!canPrev}>
                   <Link href={buildApplicationsHref({ page: currentPage - 1 })}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Prev
                   </Link>
                 </Button>
-                <Button variant="outline" className="h-11 px-5 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-xl shadow-sm" asChild disabled={!canNext}>
+                <Button variant="outline" className="h-11 px-5 border-slate-200 text-slate-700 font-bold hover:bg-slate-50 rounded-2xl shadow-sm" asChild disabled={!canNext}>
                   <Link href={buildApplicationsHref({ page: currentPage + 1 })}>
                     Next <ChevronRight className="w-4 h-4 ml-1" />
                   </Link>
@@ -660,7 +660,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-lg">
+                        <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-lg">
                           {focusedChild?.first_name?.[0] ?? 'C'}
                         </div>
                         <div>
@@ -672,7 +672,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Primary Guardian</p>
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
+                        <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
                           {focusedParentProfile?.full_name?.[0] ?? 'P'}
                         </div>
                         <div>
@@ -691,7 +691,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                       {focusedApplication.admin_notes || 'No private notes added yet.'}
                     </p>
                   </div>
-                  <Button variant="outline" className="w-full mt-4 h-12 rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
+                  <Button variant="outline" className="w-full mt-4 h-12 rounded-2xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
                     <Link href={`/ecd/applications/${focusedApplication.id}`}>Full Case File â†’</Link>
                   </Button>
                 </div>
@@ -710,5 +710,6 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     </EcdOsShell>
   )
 }
+
 
 

@@ -1,4 +1,4 @@
-import * as React from "react"
+﻿import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Loader2 } from 'lucide-react'
@@ -23,7 +23,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-11 px-6",
-        sm: "h-9 rounded-xl px-4 text-xs",
+        sm: "h-9 rounded-2xl px-4 text-xs",
         lg: "h-14 rounded-2xl px-8",
         icon: "h-11 w-11",
       },
@@ -71,3 +71,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
+

@@ -298,7 +298,7 @@ export default async function EcdWebsitePage() {
                 ))}
               </ul>
             </div>
-            <Button variant="outline" asChild className="w-full border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+            <Button variant="outline" asChild className="w-full border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
               <Link href="/ecd/marketplace">Open Marketplace Add-ons</Link>
             </Button>
           </CardContent>
@@ -317,7 +317,7 @@ export default async function EcdWebsitePage() {
                   name="tagline"
                   defaultValue={centre?.tagline ?? ''}
                   placeholder="Example: Safe, caring learning for ages 2 to 6"
-                  className="cc-native-field mt-1.5 h-12 rounded-xl"
+                  className="cc-native-field mt-1.5 h-12 rounded-2xl"
                 />
               </div>
 
@@ -328,7 +328,7 @@ export default async function EcdWebsitePage() {
                   name="about"
                   defaultValue={aboutText}
                   placeholder="Use plain language about your crèche and daily routine."
-                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-xl leading-relaxed"
+                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-2xl leading-relaxed"
                 />
               </div>
 
@@ -339,7 +339,7 @@ export default async function EcdWebsitePage() {
                   name="programs"
                   defaultValue={programsText}
                   placeholder="Toddler Group | Play-based learning for ages 2-3"
-                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-xl leading-relaxed"
+                  className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-2xl leading-relaxed"
                 />
               </div>
 
@@ -349,7 +349,7 @@ export default async function EcdWebsitePage() {
                   {sectionOptions.map((section) => (
                     <label
                       key={section.key}
-                      className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
                     >
                       <input type="checkbox" name="sections" value={section.key} defaultChecked={enabledSections.includes(section.key)} className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
                       {section.label}
@@ -359,9 +359,9 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Save Draft</Button>
+                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-all active:scale-95">Save Draft</Button>
                 {centre?.slug ? (
-                  <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+                  <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
                     <a href={`/centre/${centre.slug}`} target="_blank" rel="noreferrer">
                       Preview Public Page
                     </a>
@@ -395,7 +395,7 @@ export default async function EcdWebsitePage() {
                 <Button
                   type="submit"
                   variant={centre?.is_active ? 'outline' : 'default'}
-                  className={cn("w-full h-12 rounded-xl font-bold transition-all active:scale-95 shadow-sm", 
+                  className={cn("w-full h-12 rounded-2xl font-bold transition-all active:scale-95 shadow-sm", 
                     !centre?.is_active && "bg-teal-600 hover:bg-teal-700 text-white")}
                 >
                   {centre?.is_active ? 'Unpublish Website' : 'Publish Website'}
@@ -410,21 +410,21 @@ export default async function EcdWebsitePage() {
             </CardHeader>
             <CardContent className="pt-6">
               <form action={submitWebsiteBrief} className="space-y-4">
-                <select name="site_type" className="cc-native-field h-11 rounded-xl text-sm">
+                <select name="site_type" className="cc-native-field h-11 rounded-2xl text-sm">
                   <option value="mini-site">Mini website (quick launch)</option>
                   <option value="full-website">Full website (deeper build)</option>
                 </select>
-                <select name="domain_plan" className="cc-native-field h-11 rounded-xl text-sm">
+                <select name="domain_plan" className="cc-native-field h-11 rounded-2xl text-sm">
                   <option value="platform-subdomain">Use platform subdomain</option>
                   <option value="bring-own-domain">I want my own domain</option>
                   <option value="need-domain-help">I need help buying a domain</option>
                 </select>
                 <textarea
                   name="goals"
-                  className="cc-native-field h-auto min-h-24 py-3 rounded-xl text-sm leading-relaxed"
+                  className="cc-native-field h-auto min-h-24 py-3 rounded-2xl text-sm leading-relaxed"
                   placeholder="What should this website achieve for your crèche?"
                 />
-                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-xl shadow-sm transition-all active:scale-95">Send Request</Button>
+                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-all active:scale-95">Send Request</Button>
               </form>
             </CardContent>
           </Card>
@@ -433,6 +433,7 @@ export default async function EcdWebsitePage() {
     </EcdOsShell>
   )
 }
+
 
 
 

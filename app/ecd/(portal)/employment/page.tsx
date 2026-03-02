@@ -149,12 +149,12 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     >
       <section className="space-y-6">
         {successMessage ? (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {successMessage}
           </div>
         ) : null}
         {errorMessage ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {errorMessage}
           </div>
         ) : null}
@@ -250,7 +250,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                 {applicationRows.map((application) => {
                   const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs
                   return (
-                    <div key={application.id} className="pipeline-item rounded-md border border-slate-200 p-3">
+                    <div key={application.id} className="pipeline-item rounded-2xl border border-slate-200 p-3">
                       <p className="text-sm font-semibold text-slate-900">{application.applicant_name}</p>
                       <p className="mt-1 text-xs text-slate-600">
                         {job?.title ?? 'Job role'} | Applied {formatDate(application.created_at)}
@@ -389,7 +389,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
               </p>
             ) : (
               jobRows.map((job) => (
-                <div key={job.id} className="rounded-md border border-slate-200 p-3">
+                <div key={job.id} className="rounded-2xl border border-slate-200 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium text-slate-900">{job.title}</p>
@@ -425,4 +425,5 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     </EcdOsShell>
   )
 }
+
 

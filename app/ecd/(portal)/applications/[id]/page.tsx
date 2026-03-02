@@ -132,7 +132,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                 <span className="font-medium text-slate-900">Current status:</span> {application.status}
               </p>
               {application.status === 'approved' && !application.offer_accepted_at ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
                   <p>
                     <span className="font-medium text-slate-900">Awaiting parent response:</span> Yes
                   </p>
@@ -147,7 +147,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                 </div>
               ) : null}
               {application.status === 'enrolled' || application.offer_accepted_at ? (
-                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
                   <p>
                     <span className="font-medium text-slate-900">Enrollment:</span> Confirmed
                   </p>
@@ -159,7 +159,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                 </div>
               ) : null}
               {application.share_multiple_flag && application.multiple_threshold_reached ? (
-                <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
                   <p>
                     <span className="font-medium text-slate-900">Multiple Applications:</span> Yes
                   </p>
@@ -332,6 +332,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     </EcdOsShell>
   )
 }
+
 
 
 

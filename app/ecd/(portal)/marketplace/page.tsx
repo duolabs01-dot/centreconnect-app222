@@ -192,7 +192,7 @@ export default async function EcdMarketplacePage() {
                     </p>
                     <p className="mt-2 text-sm text-slate-500 leading-relaxed min-h-[3rem]">{service.description}</p>
                     <div
-                      className={`mt-4 rounded-xl border px-4 py-2.5 text-xs font-bold ${
+                      className={`mt-4 rounded-2xl border px-4 py-2.5 text-xs font-bold ${
                         included
                           ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
                           : 'border-teal-100 bg-teal-50/50 text-teal-700'
@@ -203,13 +203,13 @@ export default async function EcdMarketplacePage() {
                         : `Add-on for ${tier} package`}
                     </div>
                     {included ? (
-                      <Button className="mt-6 w-full h-11 rounded-xl font-bold" variant="outline" disabled>
+                      <Button className="mt-6 w-full h-11 rounded-2xl font-bold" variant="outline" disabled>
                         Already Included
                       </Button>
                     ) : (
                       <form action={requestService} className="mt-6">
                         <input type="hidden" name="service_id" value={service.id} />
-                        <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-sm transition-all active:scale-95" type="submit" disabled={requestPending}>
+                        <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-sm transition-all active:scale-95" type="submit" disabled={requestPending}>
                           {requestPending ? 'Request Sent' : 'Request Add-on'}
                         </Button>
                       </form>
@@ -269,6 +269,7 @@ export default async function EcdMarketplacePage() {
     </EcdOsShell>
   )
 }
+
 
 
 

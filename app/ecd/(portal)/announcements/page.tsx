@@ -172,7 +172,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
                 description="Use Quick Publish above for the fastest flow."
               />
             ) : (
-              <div className="overflow-x-auto rounded-md border border-slate-200">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -225,6 +225,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     </EcdOsShell>
   )
 }
+
 
 
 

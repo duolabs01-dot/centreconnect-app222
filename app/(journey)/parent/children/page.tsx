@@ -106,7 +106,7 @@ export default async function ParentChildrenPage() {
                     </div>
                     
                     <div className="mt-8 w-full grid grid-cols-1 gap-2 pt-6 border-t border-slate-50">
-                      <Button variant="outline" className="w-full h-12 rounded-xl text-slate-600 font-bold hover:bg-slate-50" asChild>
+                      <Button variant="outline" className="w-full h-12 rounded-2xl text-slate-600 font-bold hover:bg-slate-50" asChild>
                         <Link href={`/parent/children/${child.id}/edit`}>Edit Identity</Link>
                       </Button>
                     </div>
@@ -122,4 +122,5 @@ export default async function ParentChildrenPage() {
     logRoutePerf(perf)
   }
 }
+
 

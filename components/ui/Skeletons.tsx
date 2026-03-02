@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+﻿import { Skeleton } from '@/components/ui/skeleton'
 import { Container } from '@/components/layout/container'
 
 export function DirectorySkeleton() {
@@ -11,7 +11,7 @@ export function DirectorySkeleton() {
             <Skeleton className="h-4 w-80 max-w-full" />
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
             <div className="grid gap-3 md:grid-cols-6">
               <Skeleton className="h-10 md:col-span-2" />
               <Skeleton className="h-10" />
@@ -27,8 +27,8 @@ export function DirectorySkeleton() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="rounded-xl border border-slate-200 bg-white p-4">
-                <Skeleton className="h-20 w-20 rounded-md" />
+              <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <Skeleton className="h-20 w-20 rounded-2xl" />
                 <Skeleton className="mt-3 h-5 w-3/4" />
                 <Skeleton className="mt-2 h-4 w-1/2" />
                 <Skeleton className="mt-4 h-4 w-2/3" />
@@ -53,7 +53,7 @@ export function ApplicationsSkeleton() {
 
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="rounded-xl border border-slate-200 bg-white p-4">
+          <div key={index} className="rounded-2xl border border-slate-200 bg-white p-4">
             <Skeleton className="h-5 w-40" />
             <Skeleton className="mt-2 h-4 w-56 max-w-full" />
             <Skeleton className="mt-3 h-6 w-24" />
@@ -68,3 +68,4 @@ export function ApplicationsSkeleton() {
     </div>
   )
 }
+

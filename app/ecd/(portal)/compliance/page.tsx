@@ -153,7 +153,7 @@ export default async function EcdCompliancePage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {documents.map((doc) => (
-              <form key={doc.id} action={markDocumentUploadedAction} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+              <form key={doc.id} action={markDocumentUploadedAction} className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
                 <input type="hidden" name="id" value={doc.id} />
                 <input type="hidden" name="current_status" value={doc.status} />
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -240,7 +240,7 @@ export default async function EcdCompliancePage() {
                   {staffChecks.map((row) => {
                     const warning = expiryWarning(row.first_aid_cert_expires)
                     return (
-                      <div key={row.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                      <div key={row.id} className="rounded-2xl border border-slate-200 bg-white p-3">
                         <p className="text-sm font-semibold text-slate-900">{row.staff_name}</p>
                         <p className="mt-1 text-xs text-slate-600">{row.staff_role ?? '--'}</p>
                         <p className="mt-2 text-xs text-slate-600">Medical: {formatDate(row.medical_clearance_date)}</p>
@@ -252,7 +252,7 @@ export default async function EcdCompliancePage() {
                   })}
                 </div>
 
-                <div className="hidden overflow-x-auto rounded-xl border border-slate-200 md:block">
+                <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -288,7 +288,7 @@ export default async function EcdCompliancePage() {
           </CardContent>
         </Card>
 
-        <footer className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+        <footer className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
           CentreConnect tracks what you report. We do not verify or certify compliance status. Consult your provincial
           DBE or DSD office for official guidance.
         </footer>
@@ -296,6 +296,7 @@ export default async function EcdCompliancePage() {
     </EcdOsShell>
   )
 }
+
 
 
 

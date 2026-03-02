@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -114,12 +114,12 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
                 name="subject"
                 placeholder="Can't upload documents..."
                 required
-                className="cc-native-field h-11 rounded-xl"
+                className="cc-native-field h-11 rounded-2xl"
               />
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Category</label>
-              <select name="category" className="cc-native-field h-11 rounded-xl" defaultValue="general">
+              <select name="category" className="cc-native-field h-11 rounded-2xl" defaultValue="general">
                 <option value="general">General Inquiry</option>
                 <option value="technical">Technical Issue</option>
                 <option value="application">Application Help</option>
@@ -132,11 +132,11 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
                 name="description"
                 required
                 placeholder="Describe the issue in detail..."
-                className="cc-native-field min-h-32 h-auto py-3 rounded-xl"
+                className="cc-native-field min-h-32 h-auto py-3 rounded-2xl"
               />
             </div>
             <div className="pt-2">
-              <Button type="submit" className="w-full h-12 rounded-xl font-bold shadow-float bg-cyan-600">Submit Ticket</Button>
+              <Button type="submit" className="w-full h-12 rounded-2xl font-bold shadow-float bg-cyan-600">Submit Ticket</Button>
             </div>
           </form>
         </SurfaceCard>
@@ -179,9 +179,9 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
                       <p className="text-sm font-bold text-slate-900 line-clamp-1">{ticket.subject}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         <span className="text-cyan-600">{ticket.ticket_number}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>{ticket.category}</span>
-                        <span>•</span>
+                        <span>â€¢</span>
                         <span>{formatDate(ticket.created_at)}</span>
                       </div>
                     </div>
@@ -203,3 +203,4 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
     </div>
   )
 }
+

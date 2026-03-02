@@ -160,7 +160,7 @@ export default async function EcdTransportDriversPage() {
             </CardHeader>
             <CardContent>
               <details className="group">
-                <summary className="inline-flex cursor-pointer items-center rounded-lg border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground">
+                <summary className="inline-flex cursor-pointer items-center rounded-2xl border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground">
                   Open form
                 </summary>
                 <form action={createDriver} className="mt-4 grid gap-3 md:grid-cols-2">
@@ -243,7 +243,7 @@ export default async function EcdTransportDriversPage() {
                     <CopyRouteLinkButton driverToken={driver.driver_token} />
                     {canManage ? (
                       <details>
-                        <summary className="inline-flex h-8 cursor-pointer items-center rounded-md border border-border bg-card px-3 text-xs font-semibold text-foreground shadow-[var(--shadow-elevation-1)]">
+                        <summary className="inline-flex h-8 cursor-pointer items-center rounded-2xl border border-border bg-card px-3 text-xs font-semibold text-foreground shadow-[var(--shadow-elevation-1)]">
                           Edit
                         </summary>
                         <form action={updateDriver} className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -309,5 +309,6 @@ export default async function EcdTransportDriversPage() {
     </EcdOsShell>
   )
 }
+
 
 

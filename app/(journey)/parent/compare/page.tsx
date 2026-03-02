@@ -89,11 +89,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       </section>
 
       {orderedCentres.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
           Select crèches first by adding ids in the URL, for example: <code>/parent/compare?centres=id1,id2,id3</code>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
           <Table className="min-w-[720px]">
             <TableHeader className="bg-slate-50">
               <TableRow>
@@ -159,6 +159,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
     </main>
   )
 }
+
 
 
 

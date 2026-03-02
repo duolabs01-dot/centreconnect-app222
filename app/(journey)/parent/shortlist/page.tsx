@@ -93,7 +93,7 @@ export default async function ParentShortlistPage() {
                     <Link
                       href={`/apply/${centre.slug}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-xs font-bold text-cyan-700 hover:bg-cyan-100 min-h-[32px] flex items-center"
+                      className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-xs font-bold text-cyan-700 hover:bg-cyan-100 min-h-[32px] flex items-center"
                     >
                       Apply
                     </Link>
@@ -105,10 +105,10 @@ export default async function ParentShortlistPage() {
         )}
 
         <section className="flex flex-wrap gap-3 pt-2">
-          <Button variant="outline" className="min-h-[44px] rounded-xl flex-1 sm:flex-none" asChild>
+          <Button variant="outline" className="min-h-[44px] rounded-2xl flex-1 sm:flex-none" asChild>
             <Link href="/directory">Find more crèches</Link>
           </Button>
-          <Button variant="outline" className="min-h-[44px] rounded-xl flex-1 sm:flex-none" asChild>
+          <Button variant="outline" className="min-h-[44px] rounded-2xl flex-1 sm:flex-none" asChild>
             <Link href="/parent/compare">Compare selected</Link>
           </Button>
         </section>
@@ -116,6 +116,7 @@ export default async function ParentShortlistPage() {
     </div>
   )
 }
+
 
 
 

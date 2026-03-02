@@ -111,19 +111,19 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
           <div className="mb-4 flex gap-2">
             <Link
               href="/ecd/support?status=open"
-              className={`rounded-md px-3 py-2 text-sm font-medium ${statusFilter === 'open' ? 'bg-blue-700 text-blue-50' : 'bg-blue-50 text-blue-800'}`}
+              className={`rounded-2xl px-3 py-2 text-sm font-medium ${statusFilter === 'open' ? 'bg-blue-700 text-blue-50' : 'bg-blue-50 text-blue-800'}`}
             >
               Open
             </Link>
             <Link
               href="/ecd/support?status=resolved"
-              className={`rounded-md px-3 py-2 text-sm font-medium ${statusFilter === 'resolved' ? 'bg-emerald-700 text-emerald-50' : 'bg-emerald-50 text-emerald-800'}`}
+              className={`rounded-2xl px-3 py-2 text-sm font-medium ${statusFilter === 'resolved' ? 'bg-emerald-700 text-emerald-50' : 'bg-emerald-50 text-emerald-800'}`}
             >
               Resolved
             </Link>
             <Link
               href="/ecd/support?status=all"
-              className={`rounded-md px-3 py-2 text-sm font-medium ${statusFilter === 'all' ? 'bg-cyan-600 text-cyan-50' : 'border border-border bg-background text-muted-foreground'}`}
+              className={`rounded-2xl px-3 py-2 text-sm font-medium ${statusFilter === 'all' ? 'bg-cyan-600 text-cyan-50' : 'border border-border bg-background text-muted-foreground'}`}
             >
               All
             </Link>
@@ -140,7 +140,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
               ]}
             />
           ) : (
-            <div className="overflow-x-auto rounded-md border border-slate-200">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -181,6 +181,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
     </EcdOsShell>
   )
 }
+
 
 
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -146,12 +146,12 @@ export default function LoginPage() {
             </header>
 
             {confirmationErrorMessage(authError) && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 mb-6 uppercase tracking-wider">
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 mb-6 uppercase tracking-wider">
                 {confirmationErrorMessage(authError)}
               </div>
             )}
             {reason === 'session_expired' && (
-              <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-bold text-amber-700 mb-6 uppercase tracking-wider text-center">
+              <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-bold text-amber-700 mb-6 uppercase tracking-wider text-center">
                 Session expired. Sign in again to resume.
               </div>
             )}
@@ -165,7 +165,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@domain.com"
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                  className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
                   required
                 />
               </div>
@@ -182,7 +182,7 @@ export default function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-12 bg-slate-50 border-slate-200 rounded-xl pr-12 focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                    className="h-12 bg-slate-50 border-slate-200 rounded-2xl pr-12 focus:ring-2 focus:ring-cyan-500/20 outline-none"
                     required
                   />
                   <button
@@ -195,7 +195,7 @@ export default function LoginPage() {
                 </div>
               </div>
               
-              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98]" disabled={loading}>
+              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98]" disabled={loading}>
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign in'}
               </Button>
             </form>
@@ -212,7 +212,7 @@ export default function LoginPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-12 w-full bg-white border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
+              className="h-12 w-full bg-white border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
               onClick={handleGoogleSignIn}
               disabled={googleLoading || loading}
             >
@@ -241,3 +241,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

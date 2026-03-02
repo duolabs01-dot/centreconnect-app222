@@ -144,10 +144,10 @@ export default async function EcdBillingPage() {
                 <textarea
                   id="billing-cancellation-reason"
                   name="reason"
-                  className="cc-native-field min-h-24 h-auto py-3 rounded-xl text-sm"
+                  className="cc-native-field min-h-24 h-auto py-3 rounded-2xl text-sm"
                   placeholder="Reason for cancellation (optional)"
                 />
-                <Button type="submit" variant="outline" className="w-full border-rose-200 text-rose-700 font-bold h-11 rounded-xl shadow-sm hover:bg-rose-50">
+                <Button type="submit" variant="outline" className="w-full border-rose-200 text-rose-700 font-bold h-11 rounded-2xl shadow-sm hover:bg-rose-50">
                   Request Cancellation
                 </Button>
               </form>
@@ -184,14 +184,14 @@ export default async function EcdBillingPage() {
             <form action={saveFinancialSnapshotAction} className="grid gap-4 lg:grid-cols-2 pt-4">
               <label className="space-y-1.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Month</span>
-                <input type="date" name="period_month" className="cc-native-field h-12 rounded-xl" defaultValue={currentMonth} />
+                <input type="date" name="period_month" className="cc-native-field h-12 rounded-2xl" defaultValue={currentMonth} />
               </label>
               <label className="space-y-1.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Revenue (R)</span>
                 <input
                   type="number"
                   name="revenue_total"
-                  className="cc-native-field h-12 rounded-xl"
+                  className="cc-native-field h-12 rounded-2xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.revenue}
@@ -202,7 +202,7 @@ export default async function EcdBillingPage() {
                 <input
                   type="number"
                   name="expenses_total"
-                  className="cc-native-field h-12 rounded-xl"
+                  className="cc-native-field h-12 rounded-2xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.expenses}
@@ -213,7 +213,7 @@ export default async function EcdBillingPage() {
                 <input
                   type="number"
                   name="assets_total"
-                  className="cc-native-field h-12 rounded-xl"
+                  className="cc-native-field h-12 rounded-2xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.assets}
@@ -224,7 +224,7 @@ export default async function EcdBillingPage() {
                 <input
                   type="number"
                   name="liabilities_total"
-                  className="cc-native-field h-12 rounded-xl"
+                  className="cc-native-field h-12 rounded-2xl"
                   min="0"
                   step="0.01"
                   defaultValue={pnl.liabilities}
@@ -234,12 +234,12 @@ export default async function EcdBillingPage() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Internal Notes</span>
                 <textarea
                   name="notes"
-                  className="cc-native-field h-auto min-h-24 py-3 rounded-xl leading-relaxed"
+                  className="cc-native-field h-auto min-h-24 py-3 rounded-2xl leading-relaxed"
                   defaultValue={financialSnapshot?.notes ?? ''}
                   placeholder="Add context for this month..."
                 />
               </label>
-              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
                 Save Financial Snapshot
               </Button>
             </form>
@@ -283,7 +283,7 @@ export default async function EcdBillingPage() {
                           {invoice.status !== 'paid' ? (
                             <PayInvoiceButton invoiceId={invoice.id} />
                           ) : (
-                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-md border border-emerald-100">Paid</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1 rounded-2xl border border-emerald-100">Paid</span>
                           )}
                         </TableCell>
                       </TableRow>
@@ -320,4 +320,5 @@ export default async function EcdBillingPage() {
     </EcdOsShell>
   )
 }
+
 

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -38,7 +38,7 @@ export default async function ParentGuardiansPage() {
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Co-Guardian Access</h1>
             <p className="mt-1 text-sm text-slate-500 font-medium">Invite trusted adults to help manage child profiles.</p>
           </div>
-          <Button variant="outline" className="rounded-xl font-bold h-11 self-start sm:self-auto" asChild>
+          <Button variant="outline" className="rounded-2xl font-bold h-11 self-start sm:self-auto" asChild>
             <Link href="/parent/profile">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -55,3 +55,4 @@ export default async function ParentGuardiansPage() {
     logRoutePerf(perf)
   }
 }
+

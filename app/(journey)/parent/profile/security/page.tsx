@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -42,7 +42,7 @@ export default async function ParentSecurityPage() {
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Account Security</h1>
           <p className="mt-1 text-sm text-slate-500 font-medium">Review active sessions and security history.</p>
         </div>
-        <Button variant="outline" className="rounded-xl font-bold h-11" asChild>
+        <Button variant="outline" className="rounded-2xl font-bold h-11" asChild>
           <Link href="/parent/profile">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
@@ -124,7 +124,7 @@ export default async function ParentSecurityPage() {
             ) : (
               (events ?? []).map((event: any) => (
                 <div key={event.id} className="px-6 py-4 flex items-start gap-4 hover:bg-slate-50 transition-colors">
-                  <div className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                  <div className="h-10 w-10 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
                     <ShieldCheck className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -168,4 +168,5 @@ export default async function ParentSecurityPage() {
     </div>
   )
 }
+
 

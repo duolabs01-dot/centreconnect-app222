@@ -276,7 +276,7 @@ export default async function EcdDashboardPage() {
                 >
                   <span
                     className={cn(
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-black shadow-sm",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-sm font-black shadow-sm",
                       item.level === 'critical' ? 'bg-rose-100 text-rose-700' :
                         item.level === 'warning' ? 'bg-amber-100 text-amber-700' :
                           'bg-teal-100 text-teal-700'
@@ -384,5 +384,6 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
+
 
 

@@ -307,7 +307,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               {checks.map((item) => (
                 <div key={item.label} className="flex items-center justify-between text-sm">
                   <span className="text-slate-600 font-medium">{item.label}</span>
-                  <span className={cn("font-bold px-2 py-0.5 rounded-md text-[10px] uppercase tracking-wider", item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400')}>
+                  <span className={cn("font-bold px-2 py-0.5 rounded-2xl text-[10px] uppercase tracking-wider", item.done ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-400')}>
                     {item.done ? 'Done' : 'Pending'}
                   </span>
                 </div>
@@ -321,18 +321,18 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <CardTitle className="text-base font-bold">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-3 pt-6">
-            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-xl shadow-sm">
+            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm">
               <Link href="/ecd/website">Open Website Builder</Link>
             </Button>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
                 <Link href="/ecd/billing">Open Billing</Link>
               </Button>
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
                 <Link href="/ecd/support">Open Support</Link>
               </Button>
             </div>
-            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-xl">
+            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
               <Link href="/ecd/dashboard">Back to Today</Link>
             </Button>
             <div className="mt-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs">
@@ -340,7 +340,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <p className="mt-1.5 text-slate-500 font-medium">{centre?.is_active ? 'Visible on public pages' : 'Hidden from public pages'}</p>
               <form action={setPublicVisibility} className="mt-3">
                 <input type="hidden" name="next_active" value={centre?.is_active ? 'false' : 'true'} />
-                <Button size="sm" type="submit" variant="outline" className="border-slate-200 text-slate-700 font-bold rounded-lg w-full">
+                <Button size="sm" type="submit" variant="outline" className="border-slate-200 text-slate-700 font-bold rounded-2xl w-full">
                   {centre?.is_active ? 'Hide Public Profile' : 'Show Public Profile'}
                 </Button>
               </form>
@@ -354,18 +354,18 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardHeader>
           <CardContent className="pt-6">
             <form action={saveCentreBasics} className="grid gap-4 md:grid-cols-2">
-              <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.name ?? ''} placeholder="Crèche name" required />
-              <input name="tagline" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
-              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.email ?? ''} placeholder="Crèche email" />
-              <select name="fees_display_mode" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.fees_display_mode ?? 'range'}>
+              <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.name ?? ''} placeholder="Crèche name" required />
+              <input name="tagline" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
+              <input name="email" type="email" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.email ?? ''} placeholder="Crèche email" />
+              <select name="fees_display_mode" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.fees_display_mode ?? 'range'}>
                 <option value="range">Fee display: Range</option>
                 <option value="exact">Fee display: Exact</option>
                 <option value="contact">Fee display: Contact crèche</option>
               </select>
-              <input name="phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
-              <input name="contact_phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
-              <input name="contact_whatsapp" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
+              <input name="phone" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
+              <input name="contact_phone" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
+              <input name="contact_whatsapp" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
                 Save Basics
               </Button>
             </form>
@@ -378,12 +378,12 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardHeader>
           <CardContent className="pt-6">
             <form action={saveCentreLocation} className="grid gap-4 md:grid-cols-2">
-              <input name="address" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.address ?? ''} placeholder="Street address" />
-              <input name="suburb" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.suburb ?? ''} placeholder="Suburb" />
-              <input name="city" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.city ?? ''} placeholder="City" />
-              <input name="province" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
-              <input name="postal_code" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
+              <input name="address" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.address ?? ''} placeholder="Street address" />
+              <input name="suburb" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.suburb ?? ''} placeholder="Suburb" />
+              <input name="city" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.city ?? ''} placeholder="City" />
+              <input name="province" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
+              <input name="postal_code" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
                 Save Location
               </Button>
             </form>
@@ -396,9 +396,9 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardHeader>
           <CardContent className="pt-6">
             <form action={saveAccountDetails} className="grid gap-4 md:grid-cols-2">
-              <input name="full_name" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
-              <input name="profile_phone" className="cc-native-field h-12 rounded-xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">
+              <input name="full_name" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
+              <input name="profile_phone" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
                 Save Account
               </Button>
             </form>
@@ -418,42 +418,42 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <form action={saveNotificationPreferences} className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3">
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="email_announcements" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_announcements ?? true} />
+                  <input type="checkbox" name="email_announcements" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_announcements ?? true} />
                   <span className="group-hover:text-slate-900">Email: Announcements</span>
                 </label>
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="email_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_applications ?? true} />
+                  <input type="checkbox" name="email_applications" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_applications ?? true} />
                   <span className="group-hover:text-slate-900">Email: Applications</span>
                 </label>
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="email_job_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_job_applications ?? true} />
+                  <input type="checkbox" name="email_job_applications" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.email_job_applications ?? true} />
                   <span className="group-hover:text-slate-900">Email: Job applications</span>
                 </label>
               </div>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="push_announcements" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_announcements ?? true} />
+                  <input type="checkbox" name="push_announcements" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_announcements ?? true} />
                   <span className="group-hover:text-slate-900">In-app: Announcements</span>
                 </label>
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="push_applications" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_applications ?? true} />
+                  <input type="checkbox" name="push_applications" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_applications ?? true} />
                   <span className="group-hover:text-slate-900">In-app: Applications</span>
                 </label>
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
-                  <input type="checkbox" name="push_pickup" className="h-5 w-5 rounded-md border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_pickup ?? true} />
+                  <input type="checkbox" name="push_pickup" className="h-5 w-5 rounded-2xl border-slate-300 text-teal-600 focus:ring-teal-500" defaultChecked={prefs?.push_pickup ?? true} />
                   <span className="group-hover:text-slate-900">In-app: Pickup</span>
                 </label>
               </div>
               <div className="md:col-span-2">
                 <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">Digest frequency</label>
-                <select name="digest_frequency" className="cc-native-field h-12 rounded-xl" defaultValue={prefs?.digest_frequency ?? 'realtime'}>
+                <select name="digest_frequency" className="cc-native-field h-12 rounded-2xl" defaultValue={prefs?.digest_frequency ?? 'realtime'}>
                   <option value="realtime">Realtime</option>
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
                   <option value="off">Off</option>
                 </select>
               </div>
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl transition-all active:scale-95 shadow-sm">Save Notification Preferences</Button>
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">Save Notification Preferences</Button>
             </form>
           </CardContent>
         </Card>
@@ -464,19 +464,19 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             {searchParams?.staffError ? (
-              <p className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 uppercase tracking-tight">
+              <p className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 uppercase tracking-tight">
                 {searchParams.staffError}
               </p>
             ) : null}
             <form action={inviteStaff} className="grid gap-4 md:grid-cols-3">
-              <input name="name" className="cc-native-field h-12 rounded-xl" placeholder="Staff full name" required />
-              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" placeholder="Staff email" required />
-              <select name="role" className="cc-native-field h-12 rounded-xl">
+              <input name="name" className="cc-native-field h-12 rounded-2xl" placeholder="Staff full name" required />
+              <input name="email" type="email" className="cc-native-field h-12 rounded-2xl" placeholder="Staff email" required />
+              <select name="role" className="cc-native-field h-12 rounded-2xl">
                 <option value="ecd_staff">ECD Staff</option>
                 <option value="ecd_supervisor">ECD Supervisor</option>
                 <option value="ecd_admin">ECD Admin</option>
               </select>
-              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-xl shadow-sm transition-all active:scale-95">Invite Staff (Support-assisted)</Button>
+              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-all active:scale-95">Invite Staff (Support-assisted)</Button>
             </form>
 
             <div className="space-y-3">
@@ -496,16 +496,16 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                         <div className="flex items-center gap-2">
                           <form action={updateStaffRole} className="flex items-center gap-2">
                             <input type="hidden" name="staff_user_id" value={member.user_id} />
-                            <select name="new_role" className="cc-native-field h-10 rounded-xl w-32 text-xs">
+                            <select name="new_role" className="cc-native-field h-10 rounded-2xl w-32 text-xs">
                               <option value="ecd_staff">Set staff</option>
                               <option value="ecd_supervisor">Set supervisor</option>
                               <option value="ecd_admin">Set admin</option>
                             </select>
-                            <Button size="sm" variant="outline" className="h-10 px-4 border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50" type="submit">Change Role</Button>
+                            <Button size="sm" variant="outline" className="h-10 px-4 border-slate-200 text-slate-700 font-bold rounded-2xl shadow-sm hover:bg-slate-50" type="submit">Change Role</Button>
                           </form>
                           <form action={removeStaff}>
                             <input type="hidden" name="staff_user_id" value={member.user_id} />
-                            <Button size="sm" variant="outline" className="h-10 px-4 border-rose-100 text-rose-600 font-bold rounded-xl shadow-sm hover:bg-rose-50" type="submit">Remove</Button>
+                            <Button size="sm" variant="outline" className="h-10 px-4 border-rose-100 text-rose-600 font-bold rounded-2xl shadow-sm hover:bg-rose-50" type="submit">Remove</Button>
                           </form>
                         </div>
                       ) : null}
@@ -595,5 +595,6 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     </EcdOsShell>
   )
 }
+
 
 

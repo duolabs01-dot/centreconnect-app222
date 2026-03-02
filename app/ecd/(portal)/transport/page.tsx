@@ -94,7 +94,7 @@ export default async function EcdTransportPage() {
               {transportConfig?.coverage_areas?.length ? (
                 <div className="flex flex-wrap gap-1.5">
                   {transportConfig.coverage_areas.map((area) => (
-                    <span key={area} className="rounded-lg bg-teal-50 border border-teal-100 px-2.5 py-1 text-xs font-bold text-teal-700">
+                    <span key={area} className="rounded-2xl bg-teal-50 border border-teal-100 px-2.5 py-1 text-xs font-bold text-teal-700">
                       {area}
                     </span>
                   ))}
@@ -109,13 +109,13 @@ export default async function EcdTransportPage() {
               {transportConfig?.notes ?? 'Capture notes about routes, drivers, or special pickups here.'}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-6 rounded-xl shadow-sm">
+              <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-6 rounded-2xl shadow-sm">
                 <Link href="/ecd/communications">Message Drivers</Link>
               </Button>
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-xl">
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-2xl">
                 <Link href="/ecd/transport/drivers">Manage Drivers</Link>
               </Button>
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-xl">
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 px-6 rounded-2xl">
                 <Link href="/ecd/calendar">Sync to Calendar</Link>
               </Button>
             </div>
@@ -151,7 +151,7 @@ export default async function EcdTransportPage() {
                   <p className="text-sm font-medium text-slate-400 py-2">No enquiries yet. Encourage parents to request a quote.</p>
                 ) : (
                   recentEnquiries.map((enquiry) => (
-                    <div key={enquiry.id} className="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition-all hover:border-teal-200">
+                    <div key={enquiry.id} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition-all hover:border-teal-200">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-slate-900">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{formatDate(enquiry.created_at)}</p>
@@ -168,6 +168,7 @@ export default async function EcdTransportPage() {
     </EcdOsShell>
   )
 }
+
 
 
 

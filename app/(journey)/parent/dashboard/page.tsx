@@ -189,12 +189,12 @@ export default async function ParentDashboardPage() {
                           name="q"
                           type="search"
                           placeholder="Search by suburb or crèche name"
-                          className="cc-native-field h-11 w-full rounded-xl pl-10"
+                          className="cc-native-field h-11 w-full rounded-2xl pl-10"
                         />
                       </label>
                       <button
                         type="submit"
-                        className="inline-flex h-11 min-h-[44px] shrink-0 items-center justify-center rounded-xl bg-cyan-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                        className="inline-flex h-11 min-h-[44px] shrink-0 items-center justify-center rounded-2xl bg-cyan-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
                       >
                         Browse
                       </button>
@@ -249,7 +249,7 @@ export default async function ParentDashboardPage() {
                               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
                               <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
                               <div className="relative">
-                                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600">
+                                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
                                   <Sparkles className="h-5 w-5" />
                                 </div>
                                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
@@ -273,7 +273,7 @@ export default async function ParentDashboardPage() {
                                     style={{ animationDelay: `${80 + index * 60}ms` }}
                                   >
                                     <SurfaceCard className="p-4 transition-all duration-300 hover:border-cyan-300 h-full">
-                                      <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                                      <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
                                         <Icon className="h-4 w-4" />
                                       </div>
                                       <p className="text-sm font-semibold text-slate-900">{action.label}</p>
@@ -301,6 +301,7 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
 
 
 

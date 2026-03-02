@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -227,7 +227,7 @@ export default function EcdRegisterPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {(['basic', 'standard', 'premium'] as Tier[]).map((tier) => (
-                <div key={tier} className="rounded-xl border border-border bg-card/90 p-4">
+                <div key={tier} className="rounded-2xl border border-border bg-card/90 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
                     <p className="text-xl font-bold text-foreground">R{TIER_PRICES[tier]}</p>
@@ -349,7 +349,7 @@ export default function EcdRegisterPage() {
                       <Label>Age Groups Served</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {AGE_GROUP_OPTIONS.map((option) => (
-                          <label key={option} className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
+                          <label key={option} className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
                             <input
                               type="checkbox"
                               checked={form.ageGroups.includes(option)}
@@ -376,7 +376,7 @@ export default function EcdRegisterPage() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
                     <p className="text-sm font-semibold text-emerald-900">
                       Recommended package: {recommendedTier.toUpperCase()} (R{TIER_PRICES[recommendedTier]}/month)
                     </p>
@@ -391,7 +391,7 @@ export default function EcdRegisterPage() {
                           key={tier}
                           type="button"
                           onClick={() => setField('selectedTier', tier)}
-                          className={`rounded-xl border p-3 text-left transition ${
+                          className={`rounded-2xl border p-3 text-left transition ${
                             active
                               ? 'border-cyan-400 bg-cyan-50 shadow-[var(--shadow-elevation-1)]'
                               : 'border-border bg-card/90 text-foreground hover:border-cyan-200 hover:bg-background'
@@ -410,7 +410,7 @@ export default function EcdRegisterPage() {
                       <Label>What do you need most right now?</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {NEED_OPTIONS.map((need) => (
-                          <label key={need} className="flex items-center gap-2 rounded-lg border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
+                          <label key={need} className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
                             <input
                               type="checkbox"
                               checked={form.keyNeeds.includes(need)}
@@ -425,7 +425,7 @@ export default function EcdRegisterPage() {
               ) : null}
 
               {step === 4 ? (
-                <div className="space-y-3 rounded-xl border border-border bg-card/90 p-4 text-sm text-muted-foreground">
+                <div className="space-y-3 rounded-2xl border border-border bg-card/90 p-4 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Review your application</p>
                   <p className="text-muted-foreground">Contact: {form.fullName} ({form.email})</p>
                   <p className="text-muted-foreground">Centre: {form.centreName}</p>
@@ -491,5 +491,6 @@ export default function EcdRegisterPage() {
     </div>
   )
 }
+
 
 

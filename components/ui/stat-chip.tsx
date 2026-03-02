@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+﻿import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 
 interface StatChipProps {
@@ -19,7 +19,7 @@ export function StatChip({ label, value, icon, className, accent = 'default' }: 
     >
       {icon && (
         <div className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-xl",
+          "flex h-10 w-10 items-center justify-center rounded-2xl",
           accent === 'teal' ? "bg-[#065A82]/10 text-[#065A82]" : "bg-slate-50 text-slate-500"
         )}>
           {icon}
@@ -32,3 +32,4 @@ export function StatChip({ label, value, icon, className, accent = 'default' }: 
     </div>
   );
 }
+
