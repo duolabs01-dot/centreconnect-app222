@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
 import { GlobalDesktopFooter } from './global-desktop-footer'
 import { GlobalMobileLegalStrip } from './global-mobile-legal-strip'
-import { PageTransition } from '@/components/ui/page-transition'
 import { BottomNav } from './bottom-nav'
 import { PARENT_NAV_ITEMS, ADMIN_MOBILE_NAV_ITEMS } from '@/lib/navigation-config'
 
@@ -38,7 +37,7 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
 
   return (
     <>
-      <PageTransition>{children}</PageTransition>
+      {children}
 
       {isSignedIn && (
         <>

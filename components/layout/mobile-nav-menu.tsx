@@ -108,7 +108,7 @@ export function MobileNavMenu({
         scroll={false}
         onClick={() => setOpen(false)}
         className={cn(
-          'flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition-all duration-200',
+          'mobile-nav-item flex items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold',
           active
             ? 'border-teal-200 bg-teal-50 text-teal-700'
             : 'border-transparent text-slate-600 hover:border-teal-100 hover:bg-teal-50 hover:text-teal-700'
@@ -131,7 +131,7 @@ export function MobileNavMenu({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 transition-all md:hidden">
+        <button className="mobile-nav-item flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 md:hidden">
           <Menu className="h-6 w-6" />
         </button>
       </SheetTrigger>

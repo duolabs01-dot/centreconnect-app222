@@ -150,6 +150,18 @@
   transform: scale(1.02);
 }
 
+/* Fast mobile navigation: no animation/transition overhead */
+.mobile-nav-fast,
+.mobile-nav-fast * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.mobile-nav-item {
+  transform: translateZ(0);
+  will-change: auto;
+}
+
 /* ECD-specific theme properties */
 .text-cyber-cyan {
   color: #06b6d4;

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, type TouchEvent, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -43,31 +43,9 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   const supabase = createClient()
   useAppNavLock()
   
-  const [pullDistance, setPullDistance] = useState(0)
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
-  const pullStartY = useRef<number | null>(null)
-
-  function onTouchStart(e: TouchEvent<HTMLDivElement>) {
-    if (window.scrollY > 0) return
-    pullStartY.current = e.touches[0]?.clientY ?? null
-  }
-
-  function onTouchMove(e: TouchEvent<HTMLDivElement>) {
-    if (pullStartY.current === null || window.scrollY > 0) return
-    const currentY = e.touches[0]?.clientY ?? pullStartY.current
-    const distance = Math.max(0, currentY - pullStartY.current)
-    setPullDistance(Math.min(distance, 120))
-  }
-
-  function onTouchEnd() {
-    if (pullDistance >= 90 && window.scrollY <= 0) {
-      router.refresh()
-    }
-    setPullDistance(0)
-    pullStartY.current = null
-  }
 
   useEffect(() => {
     router.prefetch('/directory')
@@ -98,23 +76,11 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     <div
       data-parent-theme="true"
       className="min-h-screen bg-card font-sans text-foreground"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
     >
       {/* Premium Background Illustration */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.03]">
         <div className="absolute -left-20 -top-20 h-[500px] w-[500px] rounded-full bg-cyan-500 blur-[120px]" />
         <div className="absolute -right-20 top-1/2 h-[400px] w-[400px] rounded-full bg-teal-500 blur-[100px]" />
-      </div>
-
-      <div
-        className={cn(
-          'pointer-events-none fixed inset-x-0 top-3 z-50 mx-auto w-fit rounded-full border border-cyan-200/70 bg-white/85 px-3 py-1 text-xs font-semibold text-cyan-700 shadow-xl backdrop-blur transition-opacity',
-          pullDistance > 8 ? 'opacity-100' : 'opacity-0'
-        )}
-      >
-        {pullDistance >= 90 ? 'Release to refresh' : 'Pull to refresh'}
       </div>
 
       {/* Premium Sticky Header */}
