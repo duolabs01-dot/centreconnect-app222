@@ -1,4 +1,4 @@
-// app/parent/daily-reports/page.tsx
+﻿// app/parent/daily-reports/page.tsx
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
@@ -117,7 +117,7 @@ export default async function ParentDailyReportsPage() {
                       )}
                       <div className="flex-1">
                         <p className="text-sm italic text-slate-700 leading-relaxed">
-                          &quot;{report.teacher_notes || "Your child had a productive day at the centre today!"}&quot;
+                          &quot;{report.teacher_notes || "Your child had a productive day at the crèche today!"}&quot;
                         </p>
                       </div>
                     </div>
@@ -127,7 +127,7 @@ export default async function ParentDailyReportsPage() {
                       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                         <Image
                           src={report.photo_url}
-                          alt="Today at the centre"
+                          alt="Today at the crèche"
                           fill
                           className="h-full w-full object-cover"
                         />
@@ -189,3 +189,4 @@ export default async function ParentDailyReportsPage() {
     </ParentAppShell>
   )
 }
+

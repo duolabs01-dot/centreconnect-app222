@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import HomeClientPage from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -27,8 +27,8 @@ type ShortlistCentre = {
 }
 
 export const metadata: Metadata = {
-  title: 'CentreConnect - Find ECD Centres Near You',
-  description: 'Browse trusted ECD centres, compare options, and track your applications in one place.',
+  title: 'CentreConnect - Find ECD Crèches Near You',
+  description: 'Browse trusted ECD crèches, compare options, and track your applications in one place.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -101,7 +101,7 @@ export default async function HomePage() {
           title: (job.title as string | undefined) ?? 'Job opportunity',
           roleType: (job.role_type as string | undefined) ?? 'other',
           closesAt: (job.closes_at as string | null | undefined) ?? null,
-          centreName: (centre?.name as string | undefined) ?? 'ECD Centre',
+          centreName: (centre?.name as string | undefined) ?? 'ECD Crèche',
           centreSlug: (centre?.slug as string | undefined) ?? null,
           suburb: (centre?.suburb as string | undefined) ?? '',
           city: (centre?.city as string | null | undefined) ?? null,
@@ -111,7 +111,7 @@ export default async function HomePage() {
     shortlistCentres =
       (shortlistRows ?? []).map((centre: any) => ({
         id: centre.id as string,
-        name: (centre.name as string | undefined) ?? 'ECD Centre',
+        name: (centre.name as string | undefined) ?? 'ECD Crèche',
         slug: (centre.slug as string | undefined) ?? '',
         suburb: (centre.suburb as string | null | undefined) ?? null,
         city: (centre.city as string | null | undefined) ?? null,
@@ -144,3 +144,5 @@ export default async function HomePage() {
     </div>
   )
 }
+
+

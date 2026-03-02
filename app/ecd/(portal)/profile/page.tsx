@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -14,7 +14,7 @@ import { DangerZoneClient } from './danger-zone-client'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
-  description: 'Manage centre, account, and operational settings.',
+  description: 'Manage crèche, account, and operational settings.',
 }
 
 type ProfilePageProps = {
@@ -52,7 +52,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .limit(20)
 
   const checks = [
-    { label: 'Centre description', done: Boolean(centre?.description) },
+    { label: 'Crèche description', done: Boolean(centre?.description) },
     { label: 'Logo', done: Boolean(centre?.logo_url) },
     { label: 'Cover image', done: Boolean(centre?.cover_image_url) },
     { label: 'Contact phone', done: Boolean(centre?.contact_phone || centre?.phone) },
@@ -65,7 +65,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
     const patch = {
-      name: String(formData.get('name') ?? '').trim() || 'My ECD Centre',
+      name: String(formData.get('name') ?? '').trim() || 'My ECD Crèche',
       tagline: String(formData.get('tagline') ?? '').trim() || null,
       phone: String(formData.get('phone') ?? '').trim() || null,
       contact_phone: String(formData.get('contact_phone') ?? '').trim() || null,
@@ -284,15 +284,15 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
   return (
     <EcdOsShell
       title="Settings"
-      description="Update centre, account, and operational settings from one place."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      description="Update crèche, account, and operational settings from one place."
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
       <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Centre Readiness</CardTitle>
+            <CardTitle className="text-base font-bold">Crèche Readiness</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
@@ -300,7 +300,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             </div>
             <p className="text-sm font-bold text-slate-900">{score}% complete</p>
             <p className="mt-1 text-xs text-slate-500 font-medium">
-              Centre: {centre?.name ?? 'Your centre'} | Role:{' '}
+              Crèche: {centre?.name ?? 'Your crèche'} | Role:{' '}
               {role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}
             </p>
             <div className="mt-6 space-y-3">
@@ -350,17 +350,17 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
 
         <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Centre Basics</CardTitle>
+            <CardTitle className="text-base font-bold">Crèche Basics</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <form action={saveCentreBasics} className="grid gap-4 md:grid-cols-2">
-              <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.name ?? ''} placeholder="Centre name" required />
+              <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.name ?? ''} placeholder="Crèche name" required />
               <input name="tagline" className="cc-native-field md:col-span-2 h-12 rounded-xl" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
-              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.email ?? ''} placeholder="Centre email" />
+              <input name="email" type="email" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.email ?? ''} placeholder="Crèche email" />
               <select name="fees_display_mode" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.fees_display_mode ?? 'range'}>
                 <option value="range">Fee display: Range</option>
                 <option value="exact">Fee display: Exact</option>
-                <option value="contact">Fee display: Contact centre</option>
+                <option value="contact">Fee display: Contact crèche</option>
               </select>
               <input name="phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
               <input name="contact_phone" className="cc-native-field h-12 rounded-xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
@@ -404,7 +404,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             </form>
             {centre?.updated_at ? (
               <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                Last centre update: {new Date(centre.updated_at).toLocaleString()}
+                Last crèche update: {new Date(centre.updated_at).toLocaleString()}
               </p>
             ) : null}
           </CardContent>
@@ -595,3 +595,5 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     </EcdOsShell>
   )
 }
+
+

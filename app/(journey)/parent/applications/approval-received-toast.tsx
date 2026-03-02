@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 import { toast } from 'sonner'
@@ -10,9 +10,10 @@ export function ApprovalReceivedToast({ approvalIds }: { approvalIds: string[] }
     if (sessionStorage.getItem(key)) return
     sessionStorage.setItem(key, '1')
     toast.success('Application approved', {
-      description: 'A centre approved this application. Open it to confirm or decline placement.',
+      description: 'A crèche approved this application. Open it to confirm or decline placement.',
     })
   }, [approvalIds])
 
   return null
 }
+

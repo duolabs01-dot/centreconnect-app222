@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/ui/status-badge"
 
 export const metadata: Metadata = {
   title: 'Marketplace - CentreConnect',
-  description: 'Plan-aware add-ons and service requests for your ECD centre.',
+  description: 'Plan-aware add-ons and service requests for your ECD crèche.',
 }
 
 type ServiceRow = {
@@ -100,7 +100,7 @@ export default async function EcdMarketplacePage() {
             submittedAt: new Date().toISOString(),
             applicantFullName: session.user.email ?? 'Unknown',
             applicantEmail: session.user.email ?? '',
-            centreName: centre?.name ?? 'Unknown Centre',
+            centreName: centre?.name ?? 'Unknown Crèche',
             selectedTier: 'premium', // Hack: using existing notification type for speed
             recommendedTier: 'premium',
           })
@@ -143,7 +143,7 @@ export default async function EcdMarketplacePage() {
     <EcdOsShell
       title="Marketplace"
       description="See what your package already includes and request add-ons only where needed."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -269,6 +269,7 @@ export default async function EcdMarketplacePage() {
     </EcdOsShell>
   )
 }
+
 
 
 

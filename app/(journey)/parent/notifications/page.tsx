@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { NotificationsInbox } from './notifications-inbox'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 
 export const metadata: Metadata = {
-  title: 'Family Inbox — Messages, Announcements & Updates',
-  description: 'All centre messages, announcements, and application updates in one inbox.',
+  title: 'Family Inbox â€” Messages, Announcements & Updates',
+  description: 'All crèche messages, announcements, and application updates in one inbox.',
 }
 
 export default async function ParentNotificationsPage() {
@@ -35,7 +35,7 @@ export default async function ParentNotificationsPage() {
       <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Family Inbox</h1>
-          <p className="mt-1 text-sm text-slate-600">Messages from centres, announcements, and application updates.</p>
+          <p className="mt-1 text-sm text-slate-600">Messages from crèches, announcements, and application updates.</p>
         </header>
         <NotificationsInbox initialItems={items} />
       </div>
@@ -44,3 +44,5 @@ export default async function ParentNotificationsPage() {
     logRoutePerf(perf)
   }
 }
+
+

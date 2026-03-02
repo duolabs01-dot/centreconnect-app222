@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -36,7 +36,7 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
         setTimeout(() => setShowSuccessBurst(false), 1500)
         triggerFirstTimeConfetti('parent-first-approval-accept', 'approval')
         toast.success('Enrollment confirmed', {
-          description: 'Enrollment is now finalized for this centre.',
+          description: 'Enrollment is now finalized for this crèche.',
         })
         if ((payload.withdrawnCount ?? 0) > 0) {
           toast.success('Auto-withdraw completed', {
@@ -58,7 +58,7 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
     <div className="relative mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3">
       <p className="text-sm font-semibold text-emerald-900">Application approved</p>
       <p className="mt-1 text-xs text-emerald-800">
-        This centre approved this application. Confirm enrollment to finalize and automatically withdraw other active applications for this child.
+        This crèche approved this application. Confirm enrollment to finalize and automatically withdraw other active applications for this child.
       </p>
       <div className="mt-3 flex gap-2">
         <Button size="sm" onClick={() => void submit('accept')} disabled={Boolean(loadingAction)}>
@@ -99,5 +99,6 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
     </div>
   )
 }
+
 
 

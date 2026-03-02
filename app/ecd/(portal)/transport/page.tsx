@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -61,7 +61,7 @@ export default async function EcdTransportPage() {
     <EcdOsShell
       title="Transport Desk"
       description="Shipments, routes, and driver enquiries."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
@@ -168,5 +168,6 @@ export default async function EcdTransportPage() {
     </EcdOsShell>
   )
 }
+
 
 

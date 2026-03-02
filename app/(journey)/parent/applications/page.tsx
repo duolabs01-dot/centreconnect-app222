@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Compass, Map as MapIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -123,7 +123,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
 
       ;(fallbackCentres ?? []).forEach((centre) => {
         fallbackCentresById.set(centre.id as string, {
-          name: (centre.name as string | undefined) ?? 'Centre details pending',
+          name: (centre.name as string | undefined) ?? 'Crèche details pending',
           slug: (centre.slug as string | null | undefined) ?? null,
           logoUrl: (centre.logo_url as string | null | undefined) ?? null,
           suburb: (centre.suburb as string | null | undefined) ?? null,
@@ -152,7 +152,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
           priority: application.priority,
           submitted_at: application.submitted_at,
           updated_at: application.updated_at,
-          centreName: centre?.name ?? fallbackCentre?.name ?? 'Centre details pending',
+          centreName: centre?.name ?? fallbackCentre?.name ?? 'Crèche details pending',
           centreSlug: centre?.slug ?? fallbackCentre?.slug ?? null,
           centreLogoUrl: centre?.logo_url ?? fallbackCentre?.logoUrl ?? null,
           centreLocation:
@@ -209,7 +209,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" className="min-h-[44px]" asChild>
-                    <Link href="/directory">Apply to a centre</Link>
+                    <Link href="/directory">Apply to a crèche</Link>
                   </Button>
                   <Button size="sm" variant="outline" className="min-h-[44px]" asChild>
                     <Link href="/parent/children">Manage children</Link>
@@ -272,7 +272,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
             </div>
 
             <SurfaceCard variant="outlined" className="p-4 text-xs text-slate-500 border-dashed border-cyan-500/30">
-              Need more options? Apply to more centres and keep every response in one place.
+              Need more options? Apply to more crèches and keep every response in one place.
             </SurfaceCard>
 
             <section className="cc-section-block">
@@ -281,7 +281,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
 
             <div className="md:hidden">
               <Button size="lg" className="h-12 w-full min-h-[44px]" asChild>
-                <Link href="/directory">Find More Centres</Link>
+                <Link href="/directory">Find More Crèches</Link>
               </Button>
             </div>
           </div>
@@ -294,13 +294,13 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
               <div>
                 <p className="text-lg font-bold text-slate-900">Your journey starts here</p>
                 <p className="mt-1 text-sm text-slate-500 max-w-xs mx-auto">
-                  Apply to centres and every response, update, and decision will appear here in one place.
+                  Apply to crèches and every response, update, and decision will appear here in one place.
                 </p>
               </div>
               <Button asChild className="min-h-[44px] px-8">
                 <Link href="/directory">
                   <Compass className="mr-2 h-4 w-4" />
-                  Find a Centre
+                  Find a Crèche
                 </Link>
               </Button>
             </SurfaceCard>
@@ -338,3 +338,5 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     logRoutePerf(perf)
   }
 }
+
+

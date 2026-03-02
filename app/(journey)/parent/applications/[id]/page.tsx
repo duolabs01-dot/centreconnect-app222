@@ -1,4 +1,4 @@
-import { notFound, redirect } from 'next/navigation'
+﻿import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ApplicationDetailClient from './ApplicationDetailClient'
 import { canShowMultipleApplicationsFlag } from '@/lib/utils/applications/privacy'
@@ -95,7 +95,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       parentMessage={appRow.parent_message ?? null}
       adminNotes={appRow.admin_notes}
       acceptedAt={appRow.offer_accepted_at}
-      centreName={centre?.name ?? 'Unknown centre'}
+      centreName={centre?.name ?? 'Unknown crèche'}
       centreSuburb={centre?.suburb ?? 'Unknown suburb'}
       centreSlug={centre?.slug ?? ''}
       childFirstName={resolvedChildFirstName}
@@ -105,3 +105,4 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
     />
   )
 }
+

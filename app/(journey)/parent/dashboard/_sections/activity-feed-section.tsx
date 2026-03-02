@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
@@ -38,7 +38,7 @@ export async function ActivityFeedSection() {
         id: activity.id as string,
         createdAt: activity.created_at as string,
         newStatus: (activity.new_status as string | null) ?? 'submitted',
-        centreName: (centre?.name as string | undefined) ?? 'Unknown centre',
+        centreName: (centre?.name as string | undefined) ?? 'Unknown crèche',
         centreSlug: (centre?.slug as string | undefined) ?? null,
         childFirstName: (child?.first_name as string | undefined) ?? 'A child',
         childLastName: (child?.last_name as string | undefined) ?? '',
@@ -86,4 +86,5 @@ export async function ActivityFeedSection() {
     </section>
   )
 }
+
 

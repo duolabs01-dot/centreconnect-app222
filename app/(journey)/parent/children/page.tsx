@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
@@ -64,7 +64,7 @@ export default async function ParentChildrenPage() {
               </div>
               <div>
                 <p className="font-black text-white leading-tight">{children.length} Registered Profiles</p>
-                <p className="text-xs text-cyan-100 font-medium mt-1">One profile works for all centre applications.</p>
+                <p className="text-xs text-cyan-100 font-medium mt-1">One profile works for all crèche applications.</p>
               </div>
             </div>
           </SurfaceCard>
@@ -78,7 +78,7 @@ export default async function ParentChildrenPage() {
                 No children registered yet
               </p>
               <p className="mt-2 text-sm text-slate-500 max-w-xs mx-auto mb-8 font-medium">
-                Add your first child to start applying to trusted centres in your area.
+                Add your first child to start applying to trusted crèches in your area.
               </p>
               <Button size="lg" asChild className="h-14 px-10 rounded-2xl font-black bg-cyan-600">
                 <Link href="/parent/children/new">Register First Child</Link>
@@ -122,3 +122,4 @@ export default async function ParentChildrenPage() {
     logRoutePerf(perf)
   }
 }
+

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
@@ -166,7 +166,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
       },
       parent_meeting: {
         title: 'Parent Meeting',
-        description: 'Monthly centre-parent update and Q&A.',
+        description: 'Monthly crèche-parent update and Q&A.',
         start_time: '17:30',
         end_time: '18:30',
         is_public: true,
@@ -268,7 +268,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     <EcdOsShell
       title="Full Calendar"
       description="View your month at a glance. Public and internal events appear in one calendar."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <CalendarInteractiveView
@@ -408,6 +408,8 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     </EcdOsShell>
   )
 }
+
+
 
 
 

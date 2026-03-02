@@ -1,4 +1,4 @@
-// app/ecd/(portal)/daily-reports/page.tsx
+﻿// app/ecd/(portal)/daily-reports/page.tsx
 import type { Metadata } from 'next'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getJohannesburgNowParts } from '@/lib/utils'
@@ -62,9 +62,10 @@ export default async function EcdDailyReportsPage() {
       ecdId={ecdId}
       todayDate={todayDate}
       staffId={user.id}
-      userRoleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      userRoleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? ''}
       userRole={role}
     />
   )
 }
+

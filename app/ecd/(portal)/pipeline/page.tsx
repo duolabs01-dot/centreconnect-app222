@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
@@ -168,12 +168,12 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
     <EcdOsShell
       title="Children Journey (Pipeline)"
       description="Simple view of where each application is right now. Pipeline means stage-by-stage flow."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
       <section className="mb-4 space-y-3">
-        <p className="text-sm text-slate-600">{centre?.name ?? 'Your centre'}</p>
+        <p className="text-sm text-slate-600">{centre?.name ?? 'Your crèche'}</p>
         <p className="rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
           Tip: move children stage-by-stage. The board will guide and correct where needed.
         </p>
@@ -210,13 +210,15 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
       ) : (
         <PipelineBoard
           ecdId={ecdId}
-          centreName={centre?.name ?? 'Your centre'}
+          centreName={centre?.name ?? 'Your crèche'}
           initialApplications={visibleApplications}
         />
       )}
     </EcdOsShell>
   )
 }
+
+
 
 
 

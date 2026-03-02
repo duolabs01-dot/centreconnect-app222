@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
@@ -14,10 +14,10 @@ export const revalidate = 30
 export async function generateMetadata(): Promise<Metadata> {
   const { supabase, ecdId } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
-  const centreName = centre?.name ?? "Centre"
+  const centreName = centre?.name ?? "Crèche"
 
   return {
-    title: `${centreName} Command Centre | CentreConnect`,
+    title: `${centreName} Command Crèche | CentreConnect`,
     description: 'Attendance, security protocols, and admissions pipeline management.',
   }
 }
@@ -124,9 +124,9 @@ export default async function EcdDashboardPage() {
     : 0
 
   const profileItems = [
-    { id: 'logo', label: 'Upload centre logo', done: !!centre?.logo_url, href: '/ecd/website' },
+    { id: 'logo', label: 'Upload crèche logo', done: !!centre?.logo_url, href: '/ecd/website' },
     { id: 'cover', label: 'Add cover photo', done: !!centre?.cover_image_url, href: '/ecd/website' },
-    { id: 'desc', label: 'Write centre bio', done: !!centre?.description, href: '/ecd/website' },
+    { id: 'desc', label: 'Write crèche bio', done: !!centre?.description, href: '/ecd/website' },
     { id: 'phone', label: 'Add phone number', done: !!centre?.phone, href: '/ecd/profile' },
     { id: 'address', label: 'Complete address', done: !!(centre?.address && centre?.suburb), href: '/ecd/profile' },
   ]
@@ -183,13 +183,13 @@ export default async function EcdDashboardPage() {
     ? `${Math.abs(Math.round((revenueChange / revenuePreviousMonth) * 100))}%`
     : '0%'
 
-  const centreName = centre?.name ?? "Your Centre"
+  const centreName = centre?.name ?? "Your Crèche"
 
   return (
     <EcdOsShell
-      title={`${centreName} Command Centre`}
+      title={`${centreName} Command Crèche`}
       description="Operational overview: security, attendance and admissions."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
@@ -384,3 +384,5 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
+
+

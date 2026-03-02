@@ -89,7 +89,7 @@ export default function NewChildPage() {
       <Card className="border-slate-200">
         <CardHeader>
           <CardTitle>Add Child</CardTitle>
-          <CardDescription>Create a child profile to start applying to centres.</CardDescription>
+          <CardDescription>Create a child profile to start applying to crèches.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">

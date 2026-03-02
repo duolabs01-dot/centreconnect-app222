@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -132,7 +132,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
           <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">{`Today's Pickup Code`}</p>
           <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
           <p className="mt-1 text-xs text-slate-500">
-            Show this to the centre staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
+            Show this to the crèche staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
           </p>
         </div>
       </section>
@@ -287,7 +287,7 @@ export default function ApplicationDetailClient({
       ) : null}
       {showMultipleApplicationsNotice ? (
         <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
-          This centre can see that this child has multiple active applications because you enabled this sharing preference.
+          This crèche can see that this child has multiple active applications because you enabled this sharing preference.
         </p>
       ) : null}
       <div className="glass-card rounded-2xl p-4 sm:p-5">
@@ -306,7 +306,7 @@ export default function ApplicationDetailClient({
             </div>
           )}
           <div>
-            <p className="mb-1 text-sm text-slate-600">Your message to the centre</p>
+            <p className="mb-1 text-sm text-slate-600">Your message to the crèche</p>
             {parentMessage ? (
               <p className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-800">{parentMessage}</p>
             ) : (
@@ -326,7 +326,7 @@ export default function ApplicationDetailClient({
                       value={editMessage}
                       onChange={(e) => setEditMessage(e.target.value)}
                       className="cc-native-field min-h-[80px] w-full rounded-xl p-3 text-sm"
-                      placeholder="Your message to the centre..."
+                      placeholder="Your message to the crèche..."
                     />
                     <div className="flex gap-2">
                       <button
@@ -367,7 +367,7 @@ export default function ApplicationDetailClient({
             )}
             {status !== 'submitted' && (
               <p className="mt-1 text-xs text-slate-400">
-                Contact the centre directly to request changes after review starts.
+                Contact the crèche directly to request changes after review starts.
               </p>
             )}
           </div>
@@ -401,3 +401,5 @@ export default function ApplicationDetailClient({
     </div>
   )
 }
+
+

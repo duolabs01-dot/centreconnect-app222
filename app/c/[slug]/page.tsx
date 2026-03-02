@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     .eq('slug', slug)
     .maybeSingle()
 
-  if (!centre) return { title: 'Centre Not Found' }
+  if (!centre) return { title: 'Crèche Not Found' }
 
   return {
     title: `${centre.name} — CentreConnect`,

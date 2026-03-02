@@ -1,4 +1,4 @@
-'use server'
+﻿'use server'
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
@@ -99,7 +99,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
     if (!membership?.can_approve_applications) {
       return {
         ok: false,
-        error: 'Contact the centre admin to grant approval rights before making final decisions.',
+        error: 'Contact the crèche admin to grant approval rights before making final decisions.',
       }
     }
   }
@@ -162,7 +162,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
 
     if (parent?.id) {
       const centreNameResult = await session.supabase.from('ecd_centres').select('name').eq('id', session.ecdId).maybeSingle()
-      const centreName = centreNameResult.data?.name ?? 'Your centre'
+      const centreName = centreNameResult.data?.name ?? 'Your crèche'
       const parentName = parentProfile?.full_name ?? 'Parent'
       const childName = [child?.first_name, child?.last_name].filter(Boolean).join(' ').trim() || 'your child'
 
@@ -179,7 +179,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         ecd_id: session.ecdId,
         application_id: applicationId,
         template_key: null,
-        title: status === 'approved' ? 'Application approved 🎉' : 'A quick update on your application',
+        title: status === 'approved' ? 'Application approved ðŸŽ‰' : 'A quick update on your application',
         message,
       })
 
@@ -216,3 +216,5 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
     ? { ok: true, warning: `Application updated, but follow-up actions failed: ${warnings.join(', ')}` }
     : { ok: true }
 }
+
+

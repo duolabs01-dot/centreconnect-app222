@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
@@ -6,8 +6,8 @@ import { Heart, Compass } from 'lucide-react'
 import { SurfaceCard } from '@/components/ui/surface-card'
 
 export const metadata: Metadata = {
-  title: 'Saved Centres | CentreConnect',
-  description: 'Your shortlisted ECD centres.',
+  title: 'Saved Crèches | CentreConnect',
+  description: 'Your shortlisted ECD crèches.',
 }
 
 export default async function ParentShortlistPage() {
@@ -31,10 +31,10 @@ export default async function ParentShortlistPage() {
     <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-          Saved Centres
+          Saved Crèches
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Centres you have saved for later. Apply when ready.
+          Crèches you have saved for later. Apply when ready.
         </p>
       </header>
 
@@ -46,16 +46,16 @@ export default async function ParentShortlistPage() {
             </div>
             <div>
               <p className="text-base font-bold text-slate-800">
-                No saved centres yet
+                No saved crèches yet
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Tap the heart icon on any centre to save it here.
+                Tap the heart icon on any crèche to save it here.
               </p>
             </div>
             <Button asChild className="min-h-[44px] px-8">
               <Link href="/directory">
                 <Compass className="mr-2 h-4 w-4" />
-                Browse Centres
+                Browse Crèches
               </Link>
             </Button>
           </SurfaceCard>
@@ -88,7 +88,7 @@ export default async function ParentShortlistPage() {
                   )}
                   <div className="mt-4 flex items-center justify-between">
                     <span className="text-xs font-bold text-cyan-700 group-hover:text-cyan-800 uppercase tracking-widest">
-                      View Centre
+                      View Crèche
                     </span>
                     <Link
                       href={`/apply/${centre.slug}`}
@@ -106,7 +106,7 @@ export default async function ParentShortlistPage() {
 
         <section className="flex flex-wrap gap-3 pt-2">
           <Button variant="outline" className="min-h-[44px] rounded-xl flex-1 sm:flex-none" asChild>
-            <Link href="/directory">Find more centres</Link>
+            <Link href="/directory">Find more crèches</Link>
           </Button>
           <Button variant="outline" className="min-h-[44px] rounded-xl flex-1 sm:flex-none" asChild>
             <Link href="/parent/compare">Compare selected</Link>
@@ -116,3 +116,7 @@ export default async function ParentShortlistPage() {
     </div>
   )
 }
+
+
+
+

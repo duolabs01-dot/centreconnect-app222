@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { Briefcase, ChevronRight } from 'lucide-react'
@@ -30,7 +30,7 @@ export async function ParentJobsSection() {
     return {
       id: job.id,
       title: job.title,
-      centreName: centre?.name || 'ECD Centre',
+      centreName: centre?.name || 'ECD Crèche',
       suburb: centre?.suburb || '',
       closesAt: job.closes_at,
       slug: centre?.slug
@@ -49,7 +49,7 @@ export async function ParentJobsSection() {
       <SurfaceCard className="overflow-hidden p-0">
         <div className="bg-slate-50/50 px-5 py-3 border-b border-slate-100">
           <p className="text-xs font-medium text-slate-500 italic">
-            Know someone looking for work? Or interested yourself? Here are recent openings at local centres.
+            Know someone looking for work? Or interested yourself? Here are recent openings at local crèches.
           </p>
         </div>
         <div className="divide-y divide-slate-100">
@@ -61,7 +61,7 @@ export async function ParentJobsSection() {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-slate-900 truncate group-hover:text-cyan-700 transition-colors">{job.title}</p>
-                <p className="text-xs text-slate-500 truncate">{job.centreName} • {job.suburb}</p>
+                <p className="text-xs text-slate-500 truncate">{job.centreName} â€¢ {job.suburb}</p>
               </div>
               <div className="flex items-center gap-3 ml-4">
                 {job.closesAt && (
@@ -83,3 +83,5 @@ export async function ParentJobsSection() {
     </section>
   )
 }
+
+

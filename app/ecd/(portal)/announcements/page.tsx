@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
@@ -24,23 +24,23 @@ type AnnouncementsPageProps = {
 
 const announcementTemplates: Record<string, { title: string; message: string; commsTemplate?: string }> = {
   pickup: {
-    title: '🚗 Pickup Reminder',
+    title: 'ðŸš— Pickup Reminder',
     message: 'Friendly reminder: please bring your pickup code and arrive before closing time today.',
     commsTemplate: 'application_update',
   },
   fee: {
-    title: '💳 Fee Reminder',
+    title: 'ðŸ’³ Fee Reminder',
     message: 'Monthly fees are due soon. Please check your billing tab for invoice status and support options.',
     commsTemplate: 'application_update',
   },
   event: {
-    title: '📅 Event Update',
-    message: 'Please note an upcoming centre event. Full details are available in the calendar section.',
+    title: 'ðŸ“… Event Update',
+    message: 'Please note an upcoming crèche event. Full details are available in the calendar section.',
     commsTemplate: 'open_day_invite',
   },
   health: {
-    title: '🩺 Health Notice',
-    message: 'Please keep children at home if unwell and notify the centre if symptoms start.',
+    title: 'ðŸ©º Health Notice',
+    message: 'Please keep children at home if unwell and notify the crèche if symptoms start.',
     commsTemplate: 'application_update',
   },
 }
@@ -139,13 +139,13 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     <EcdOsShell
       title="Announcements"
       description="This page is for creating and publishing announcements quickly."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
         <AnnouncementComposer
           ecdId={ecdId}
-          centreName={centre?.name ?? 'Your centre'}
+          centreName={centre?.name ?? 'Your crèche'}
           defaultTitle={selectedTemplate?.title ?? ''}
           defaultMessage={selectedTemplate?.message ?? ''}
           sendSimilarHref={sendSimilarHref}
@@ -225,4 +225,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
     </EcdOsShell>
   )
 }
+
+
+
 

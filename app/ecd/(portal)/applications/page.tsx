@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -218,7 +218,7 @@ function renderApplicationList(
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-900 truncate">{childName}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {parentName} • {formatDate(application.submitted_at)}
+                    {parentName} â€¢ {formatDate(application.submitted_at)}
                   </p>
                   <div className="mt-2">
                     <StatusBadge status={application.status} />
@@ -514,7 +514,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     <EcdOsShell
       title="Admissions Inbox"
       description="Prioritize pending reviews and approved offers awaiting parent acceptance."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-8 flex items-center justify-between">
@@ -608,7 +608,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
             {renderApplicationList(selectedApplications, {
               ecdId,
-              centreName: centre?.name ?? 'Your centre',
+              centreName: centre?.name ?? 'Your crèche',
               templates,
             })}
 
@@ -692,7 +692,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                     </p>
                   </div>
                   <Button variant="outline" className="w-full mt-4 h-12 rounded-xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
-                    <Link href={`/ecd/applications/${focusedApplication.id}`}>Full Case File →</Link>
+                    <Link href={`/ecd/applications/${focusedApplication.id}`}>Full Case File â†’</Link>
                   </Button>
                 </div>
               </div>
@@ -710,3 +710,5 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     </EcdOsShell>
   )
 }
+
+

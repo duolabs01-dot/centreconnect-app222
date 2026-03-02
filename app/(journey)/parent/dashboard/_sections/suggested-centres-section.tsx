@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -20,11 +20,11 @@ export async function SuggestedCentresSection() {
 
   return (
     <section className="glass-card rounded-2xl p-4 sm:p-6">
-      <h2 className="text-lg font-semibold">Suggested centres</h2>
-      <p className="mt-1 text-sm text-slate-600">Explore popular centres you can apply to next.</p>
+      <h2 className="text-lg font-semibold">Suggested crèches</h2>
+      <p className="mt-1 text-sm text-slate-600">Explore popular crèches you can apply to next.</p>
       <div className="mt-4 space-y-3">
         {suggestedCentres.length === 0 ? (
-          <EmptyState title="No suggestions yet" description="Check back soon for centre recommendations." />
+          <EmptyState title="No suggestions yet" description="Check back soon for crèche recommendations." />
         ) : (
           suggestedCentres.map((centre) => (
             <div
@@ -36,7 +36,7 @@ export async function SuggestedCentresSection() {
                 <p className="mt-1 text-xs text-slate-600">{centre.suburb ?? 'Suburb not listed'}</p>
               </div>
               <Button size="sm" variant="outline" asChild>
-                <Link href={`/centre/${centre.slug}`}>View centre</Link>
+                <Link href={`/centre/${centre.slug}`}>View crèche</Link>
               </Button>
             </div>
           ))
@@ -45,4 +45,6 @@ export async function SuggestedCentresSection() {
     </section>
   )
 }
+
+
 

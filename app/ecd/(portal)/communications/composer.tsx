@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -62,7 +62,7 @@ export function CommunicationsComposer({
   const finalMessage = customMessage.trim() || resolvedBody
   const quickTip = useMemo(() => {
     const tips = [
-      'Tip: Use Broadcast for centre-wide updates.',
+      'Tip: Use Broadcast for crèche-wide updates.',
       'Tip: Use Direct for one parent conversation.',
       'Tip: Keep the first sentence clear and action-focused.',
       'Tip: Templates save time; edit only final details.',
@@ -112,14 +112,14 @@ export function CommunicationsComposer({
         parent_id: parentId,
         ecd_id: ecdId,
         template_key: selectedTemplate?.template_key ?? null,
-        title: selectedTemplate?.title ?? 'Centre update',
+        title: selectedTemplate?.title ?? 'Crèche update',
         message: finalMessage,
       }))
 
       const { error: insertError } = await supabase.from('parent_notifications').insert(payload)
       if (insertError) throw insertError
 
-      toast.success(`Broadcast sent to ${parentIds.length} parents 🎉`)
+      toast.success(`Broadcast sent to ${parentIds.length} parents ðŸŽ‰`)
       if (!selectedTemplate) setCustomMessage('')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send notification')
@@ -181,7 +181,7 @@ export function CommunicationsComposer({
       })
       if (messageError) throw messageError
 
-      toast.success(existingThread ? 'Direct message sent ✉️' : 'Conversation created and message sent ✉️')
+      toast.success(existingThread ? 'Direct message sent âœ‰ï¸' : 'Conversation created and message sent âœ‰ï¸')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send message')
     } finally {
@@ -276,11 +276,11 @@ export function CommunicationsComposer({
       <div className="flex flex-wrap gap-2">
         {mode === 'broadcast' ? (
           <Button type="button" onClick={sendInApp} disabled={sending}>
-            {sending ? 'Sending...' : 'Broadcast to Parents 📣'}
+            {sending ? 'Sending...' : 'Broadcast to Parents ðŸ“£'}
           </Button>
         ) : (
           <Button type="button" onClick={sendThreadMessage} disabled={sending || recipients.length === 0}>
-            {sending ? 'Sending...' : 'Send Direct Message ✉️'}
+            {sending ? 'Sending...' : 'Send Direct Message âœ‰ï¸'}
           </Button>
         )}
         <Button type="button" variant="outline" onClick={copyMessage}>
@@ -295,9 +295,11 @@ export function CommunicationsComposer({
 }
 
 function labelWithEmoji(template: Template) {
-  if (template.template_key === 'missing_documents') return `📄 ${template.title}`
-  if (template.template_key === 'open_day_invite') return `📅 ${template.title}`
-  if (template.template_key === 'application_update') return `🔔 ${template.title}`
-  if (template.template_key === 'spot_available') return `🎉 ${template.title}`
-  return `💬 ${template.title}`
+  if (template.template_key === 'missing_documents') return `ðŸ“„ ${template.title}`
+  if (template.template_key === 'open_day_invite') return `ðŸ“… ${template.title}`
+  if (template.template_key === 'application_update') return `ðŸ”” ${template.title}`
+  if (template.template_key === 'spot_available') return `ðŸŽ‰ ${template.title}`
+  return `ðŸ’¬ ${template.title}`
 }
+
+

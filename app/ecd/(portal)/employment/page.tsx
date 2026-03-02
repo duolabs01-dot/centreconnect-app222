@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -73,7 +73,7 @@ const jobTemplates: Record<string, { title: string; roleType: string; descriptio
     requirements: 'Experience with ages 4-6. Reliable attendance and positive behaviour guidance.',
   },
   cleaner: {
-    title: 'Centre Cleaner',
+    title: 'Crèche Cleaner',
     roleType: 'cleaner',
     description: 'Maintain clean and safe classrooms, bathrooms, and shared play areas.',
     requirements: 'Attention to hygiene standards and dependable attendance.',
@@ -143,7 +143,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     <EcdOsShell
       title="Employment"
       description="Publish jobs in seconds and keep your hiring pipeline active."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
@@ -200,7 +200,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                   const name = profile?.full_name ?? 'Team Member'
                   const memberRoleLabel =
                     member.role === 'ecd_admin'
-                      ? 'Centre Admin'
+                      ? 'Crèche Admin'
                       : member.role === 'ecd_supervisor'
                         ? 'Supervisor'
                         : 'Staff Member'
@@ -425,3 +425,4 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     </EcdOsShell>
   )
 }
+

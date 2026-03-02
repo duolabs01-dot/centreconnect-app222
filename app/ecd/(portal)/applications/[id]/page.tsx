@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
@@ -102,7 +102,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     <EcdOsShell
       title="Application Details"
       description="Review child and parent information, then update application status."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-4">
@@ -119,7 +119,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-slate-700">
               <p>
-                <span className="font-medium text-slate-900">Centre:</span> {centre?.name ?? 'Unknown centre'}
+                <span className="font-medium text-slate-900">Crèche:</span> {centre?.name ?? 'Unknown crèche'}
               </p>
               <p>
                 <span className="font-medium text-slate-900">Application #:</span> {application.application_number}
@@ -164,7 +164,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                     <span className="font-medium text-slate-900">Multiple Applications:</span> Yes
                   </p>
                   <p className="mt-1 text-xs text-slate-600">
-                    Parents may apply to multiple centres. This does not indicate lack of commitment.
+                    Parents may apply to multiple crèches. This does not indicate lack of commitment.
                   </p>
                 </div>
               ) : (
@@ -317,7 +317,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                 ecdId={application.ecd_id}
                 parentId={parent?.id ?? ''}
                 applicationId={application.id}
-                centreName={centre?.name ?? 'Your centre'}
+                centreName={centre?.name ?? 'Your crèche'}
                 childName={childName}
                 parentName={parentName}
                 applicationNumber={application.application_number}
@@ -332,6 +332,10 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     </EcdOsShell>
   )
 }
+
+
+
+
 
 
 

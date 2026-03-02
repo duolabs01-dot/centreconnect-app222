@@ -1,4 +1,4 @@
-import { Metadata } from 'next'
+﻿import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PreferencesForm } from '@/components/parent/PreferencesForm'
@@ -7,7 +7,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 
 export const metadata: Metadata = {
   title: 'Preferences | Parent Portal | CentreConnect',
-  description: 'Tell us your budget, distance, and transport preferences to get smarter centre suggestions.',
+  description: 'Tell us your budget, distance, and transport preferences to get smarter crèche suggestions.',
 }
 
 export default async function ParentPreferencesPage() {
@@ -34,7 +34,7 @@ export default async function ParentPreferencesPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-600 mb-1">Smart Preferences</p>
         <h1 className="text-3xl font-bold text-slate-900">Set Preferences</h1>
         <p className="mt-2 text-sm text-slate-600 max-w-2xl">
-          Distance, budget, and transport filters help us recommend the exact centres you want to see. Update
+          Distance, budget, and transport filters help us recommend the exact crèches you want to see. Update
           them whenever your needs shift.
         </p>
       </header>
@@ -60,3 +60,4 @@ export default async function ParentPreferencesPage() {
     </div>
   )
 }
+

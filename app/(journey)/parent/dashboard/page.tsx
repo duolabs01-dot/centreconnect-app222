@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
@@ -24,7 +24,7 @@ import { ParentJobsSection } from './_sections/parent-jobs-section'
 import { PushPermissionRequest } from '@/components/notifications/PushPermissionRequest'
 
 export const metadata: Metadata = {
-  title: 'Parent Command Centre | CentreConnect',
+  title: 'Parent Command Crèche | CentreConnect',
   description: 'Your parent home for applications, enrolment milestones, and quick actions.',
   openGraph: {
     images: ['/og-image.png'],
@@ -96,7 +96,7 @@ export default async function ParentDashboardPage() {
         id: String(application.id ?? ''),
         status: String(application.status ?? ''),
         lastUpdatedAt: String(application.updated_at ?? application.submitted_at ?? ''),
-        centreName: centre?.name?.trim() || 'Centre pending',
+        centreName: centre?.name?.trim() || 'Crèche pending',
         centreSlug: centre?.slug ?? null,
         childName,
       } satisfies DashboardApplication
@@ -112,7 +112,7 @@ export default async function ParentDashboardPage() {
       applications[0]?.childName ||
       'your child'
     const enrolledChildName = enrolledApplication?.childName ?? firstChildName
-    const enrolledCentreName = enrolledApplication?.centreName ?? 'their centre'
+    const enrolledCentreName = enrolledApplication?.centreName ?? 'their crèche'
     const centreInfoHref = enrolledApplication?.centreSlug ? `/c/${enrolledApplication.centreSlug}` : '/directory'
 
     const quickActions = [
@@ -124,12 +124,12 @@ export default async function ParentDashboardPage() {
       },
       {
         label: 'Messages',
-        description: 'Open your parent inbox and centre notifications.',
+        description: 'Open your parent inbox and crèche notifications.',
         href: '/parent/notifications',
         icon: MessageSquare,
       },
       {
-        label: 'Centre Info',
+        label: 'Crèche Info',
         description: 'View hours, contacts, and programme details.',
         href: centreInfoHref,
         icon: Building2,
@@ -148,7 +148,7 @@ export default async function ParentDashboardPage() {
           {/* Push Notification Nudge */}
           <PushPermissionRequest />
 
-          {/* Header Section — Suspended for instant shell */}
+          {/* Header Section â€” Suspended for instant shell */}
           <Suspense fallback={<DashboardSummarySkeleton />}>
             <DashboardSummary />
           </Suspense>
@@ -164,7 +164,7 @@ export default async function ParentDashboardPage() {
                     </div>
                     {/* WhatsApp Help Shortcut */}
                     <a 
-                      href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20crèche%20in%20Alexandra."
+                      href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20crÃ¨che%20in%20Alexandra."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
@@ -175,10 +175,10 @@ export default async function ParentDashboardPage() {
                   </div>
                   <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
                   <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                    {`Find a crèche near you`}<br />in Alexandra.
+                    {`Find a crÃ¨che near you`}<br />in Alexandra.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Browse trusted centres in Alexandra, compare options, and apply for {firstChildName} — all in one place. 
+                    Browse trusted crèches in Alexandra, compare options, and apply for {firstChildName} â€” all in one place. 
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -188,7 +188,7 @@ export default async function ParentDashboardPage() {
                         <input
                           name="q"
                           type="search"
-                          placeholder="Search by suburb or centre name"
+                          placeholder="Search by suburb or crèche name"
                           className="cc-native-field h-11 w-full rounded-xl pl-10"
                         />
                       </label>
@@ -218,7 +218,7 @@ export default async function ParentDashboardPage() {
                             <SurfaceCard className="animate-fade-in p-5 sm:p-6">
                               <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
                               <p className="mt-2 text-sm text-slate-600">
-                                Keep an eye on updates from each centre while decisions are pending.
+                                Keep an eye on updates from each crèche while decisions are pending.
                               </p>
                             </SurfaceCard>
               
@@ -231,7 +231,7 @@ export default async function ParentDashboardPage() {
                                 <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
                                   <div className="flex items-center gap-3">
                                     <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
-                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more centres</span>
+                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more crèches</span>
                                   </div>
                                   <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
                                 </SurfaceCard>
@@ -301,3 +301,6 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
+
+

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Website - CentreConnect',
-  description: 'Build your centre website and submit website upgrade requests.',
+  description: 'Build your crèche website and submit website upgrade requests.',
 }
 
 const sectionOptions = [
@@ -28,7 +28,7 @@ const tierGuide: Record<
 > = {
   basic: {
     label: 'Basic',
-    includes: ['Centre profile page', 'Contact details + map', 'Programs + about sections'],
+    includes: ['Crèche profile page', 'Contact details + map', 'Programs + about sections'],
     suggestedAddOns: ['Custom domain setup', 'Extra gallery/content design'],
   },
   standard: {
@@ -229,7 +229,7 @@ export default async function EcdWebsitePage() {
     <EcdOsShell
       title="Website"
       description="Build your page, publish when ready, and request custom website setup."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
@@ -327,7 +327,7 @@ export default async function EcdWebsitePage() {
                   id="about"
                   name="about"
                   defaultValue={aboutText}
-                  placeholder="Use plain language about your centre and daily routine."
+                  placeholder="Use plain language about your crèche and daily routine."
                   className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-xl leading-relaxed"
                 />
               </div>
@@ -385,8 +385,8 @@ export default async function EcdWebsitePage() {
                 </p>
                 <p className="mt-2 text-xs font-medium text-slate-500">
                   {centre?.is_active
-                    ? 'Your centre page is live and visible to parents.'
-                    : 'Your centre page is hidden until you publish.'}
+                    ? 'Your crèche page is live and visible to parents.'
+                    : 'Your crèche page is hidden until you publish.'}
                 </p>
               </div>
 
@@ -422,7 +422,7 @@ export default async function EcdWebsitePage() {
                 <textarea
                   name="goals"
                   className="cc-native-field h-auto min-h-24 py-3 rounded-xl text-sm leading-relaxed"
-                  placeholder="What should this website achieve for your centre?"
+                  placeholder="What should this website achieve for your crèche?"
                 />
                 <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-xl shadow-sm transition-all active:scale-95">Send Request</Button>
               </form>
@@ -433,3 +433,7 @@ export default async function EcdWebsitePage() {
     </EcdOsShell>
   )
 }
+
+
+
+

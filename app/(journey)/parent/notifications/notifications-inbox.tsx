@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -23,10 +23,10 @@ type NotificationItem = {
 type InboxTab = 'All' | 'Messages' | 'Announcements' | 'Updates'
 
 function normalizeCentre(value: NotificationItem['ecd_centres']) {
-  if (!value) return { name: 'Centre update', contactWhatsapp: null as string | null, contactPhone: null as string | null }
+  if (!value) return { name: 'Crèche update', contactWhatsapp: null as string | null, contactPhone: null as string | null }
   const centre = Array.isArray(value) ? value[0] : value
   return {
-    name: centre?.name ?? 'Centre update',
+    name: centre?.name ?? 'Crèche update',
     contactWhatsapp: centre?.contact_whatsapp ?? null,
     contactPhone: centre?.contact_phone ?? null,
   }
@@ -135,10 +135,10 @@ export function NotificationsInbox({ initialItems }: { initialItems: Notificatio
       {filteredItems.length === 0 ? (
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
           <p className="text-sm font-semibold text-slate-900">No {activeTab === 'All' ? 'updates' : activeTab.toLowerCase()} yet</p>
-          <p className="mt-1 text-sm text-slate-600">Apply to centres and switch on preferences to get proactive updates here.</p>
+          <p className="mt-1 text-sm text-slate-600">Apply to crèches and switch on preferences to get proactive updates here.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" asChild>
-              <Link href="/directory">Browse Centres</Link>
+              <Link href="/directory">Browse Crèches</Link>
             </Button>
             <Button size="sm" variant="outline" asChild>
               <Link href="/parent/preferences">Set Preferences</Link>
@@ -196,3 +196,4 @@ export function NotificationsInbox({ initialItems }: { initialItems: Notificatio
     </div>
   )
 }
+

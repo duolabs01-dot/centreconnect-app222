@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 export const metadata: Metadata = {
-  title: 'Centre Comparison | Parent Portal | CentreConnect',
-  description: 'Compare shortlisted ECD centres side by side to make confident decisions.',
+  title: 'Crèche Comparison | Parent Portal | CentreConnect',
+  description: 'Compare shortlisted ECD crèches side by side to make confident decisions.',
 }
 
 type ComparePageProps = {
@@ -84,13 +84,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
   return (
     <main className="cc-page py-2">
       <section className="mb-6">
-        <h1 className="text-3xl font-semibold text-slate-900">Centre Comparison Studio</h1>
-        <p className="mt-2 text-sm text-slate-600">Review your selected centres side by side to make a confident final choice.</p>
+        <h1 className="text-3xl font-semibold text-slate-900">Crèche Comparison Studio</h1>
+        <p className="mt-2 text-sm text-slate-600">Review your selected crèches side by side to make a confident final choice.</p>
       </section>
 
       {orderedCentres.length === 0 ? (
         <div className="rounded-lg border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          Select centres first by adding ids in the URL, for example: <code>/parent/compare?centres=id1,id2,id3</code>
+          Select crèches first by adding ids in the URL, for example: <code>/parent/compare?centres=id1,id2,id3</code>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
@@ -145,7 +145,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                     {centre.fees_display_mode === 'exact' && centre.monthly_fee_min
                       ? `R${centre.monthly_fee_min}`
                       : centre.fees_display_mode === 'range' && centre.monthly_fee_min && centre.monthly_fee_max
-                      ? `R${centre.monthly_fee_min} – R${centre.monthly_fee_max}`
+                      ? `R${centre.monthly_fee_min} â€“ R${centre.monthly_fee_max}`
                       : centre.fees_display_mode === 'contact'
                       ? 'Contact for fees'
                       : 'Not specified'}
@@ -159,3 +159,6 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
     </main>
   )
 }
+
+
+

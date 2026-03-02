@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState, useTransition, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -172,7 +172,7 @@ export function FinancialEntryClient({
           <CardTitle className="text-base">Monthly Financial Entry</CardTitle>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Centre</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Crèche</p>
               <p className="text-sm text-foreground">{ecdId.slice(0, 8)}...</p>
             </div>
             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -425,3 +425,4 @@ export function FinancialEntryClient({
     </section>
   )
 }
+

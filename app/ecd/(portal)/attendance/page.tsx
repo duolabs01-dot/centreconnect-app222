@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -86,7 +86,7 @@ export default async function EcdAttendancePage() {
     <EcdOsShell
       title="Attendance"
       description="Mark daily attendance and pickup status."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <AttendanceClient
@@ -99,5 +99,6 @@ export default async function EcdAttendancePage() {
     </EcdOsShell>
   )
 }
+
 
 

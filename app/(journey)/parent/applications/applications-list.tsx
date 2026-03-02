@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -203,7 +203,7 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
           No applications yet
         </p>
         <p className="mb-6 max-w-xs text-sm text-slate-400">
-          Browse centres and submit your first application.
+          Browse crèches and submit your first application.
           It only takes a few minutes.
         </p>
         <Link
@@ -211,7 +211,7 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
         >
           <Compass className="h-4 w-4" />
-          Find a Centre
+          Find a Crèche
         </Link>
       </div>
     )
@@ -268,4 +268,6 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
     </>
   )
 }
+
+
 

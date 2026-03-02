@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -75,7 +75,7 @@ export default async function EcdBillingPage() {
     <EcdOsShell
       title="Billing"
       description="Plan details, invoices, and subscription actions in one place."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -308,7 +308,7 @@ export default async function EcdBillingPage() {
                   <div key={ticket.id} className="rounded-2xl border border-slate-100 p-4 bg-slate-50/30 transition-all hover:bg-slate-50">
                     <p className="text-sm font-bold text-slate-900">{ticket.ticket_number}</p>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {ticket.status} • {formatDate(ticket.created_at)}
+                      {ticket.status} â€¢ {formatDate(ticket.created_at)}
                     </p>
                   </div>
                 ))}
@@ -320,3 +320,4 @@ export default async function EcdBillingPage() {
     </EcdOsShell>
   )
 }
+

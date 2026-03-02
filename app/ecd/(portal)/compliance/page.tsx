@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { addStaffCheckAction, markDocumentUploadedAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Compliance Toolkit - CentreConnect',
-  description: 'Track required compliance documents and staff clearances for your centre.',
+  description: 'Track required compliance documents and staff clearances for your crèche.',
 }
 
 const REQUIRED_DOCUMENTS: Array<{ document_type: string; label: string }> = [
@@ -127,7 +127,7 @@ export default async function EcdCompliancePage() {
     <EcdOsShell
       title="Compliance Toolkit"
       description="Track required documents and staff clearances in one place."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="space-y-6">
@@ -136,7 +136,7 @@ export default async function EcdCompliancePage() {
             <CardTitle>Compliance Score</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-600">{centre?.name ?? 'Your centre'}</p>
+            <p className="text-sm text-slate-600">{centre?.name ?? 'Your crèche'}</p>
             <p className={`mt-1 text-3xl font-black ${scoreClass(score)}`}>{score}%</p>
             <p className="text-xs text-slate-500">
               {doneDocs} of {totalDocs} required documents uploaded or verified
@@ -296,4 +296,7 @@ export default async function EcdCompliancePage() {
     </EcdOsShell>
   )
 }
+
+
+
 

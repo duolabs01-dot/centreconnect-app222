@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,7 +103,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     <EcdOsShell
       title="Messages"
       description="Choose Broadcast or Direct first, then send quickly using templates."
-      roleLabel={role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
@@ -142,7 +142,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
             <CardContent className="pt-6">
               <CommunicationsComposer
                 ecdId={ecdId}
-                centreName={centre?.name ?? 'Your centre'}
+                centreName={centre?.name ?? 'Your crèche'}
                 templates={templates}
                 recipients={recipients}
                 initialRecipientParentId={initialRecipientParentId}
@@ -168,7 +168,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                     <div key={item.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
                       <p className="text-sm font-bold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {formatDate(item.created_at)} • {item.is_read ? 'Read' : 'Unread'}
+                        {formatDate(item.created_at)} â€¢ {item.is_read ? 'Read' : 'Unread'}
                       </p>
                     </div>
                   ))
@@ -187,7 +187,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                     <div key={thread.id} className="rounded-xl border border-slate-50 bg-slate-50/30 p-4 transition-all hover:bg-slate-50">
                       <p className="text-sm font-bold text-slate-900">Thread {thread.id.slice(0, 8)}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {thread.context_type ?? 'general'} • {formatDate(thread.created_at)}
+                        {thread.context_type ?? 'general'} â€¢ {formatDate(thread.created_at)}
                       </p>
                     </div>
                   ))
@@ -200,6 +200,8 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
     </EcdOsShell>
   )
 }
+
+
 
 
 

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -45,7 +45,7 @@ export async function RecentApplicationsSection() {
         status: application.status as string,
         submittedAt: application.submitted_at as string,
         childName: relationName || childNameById.get(application.child_id as string) || 'Child profile',
-        centreName: (centre?.name as string | undefined) ?? 'Unknown centre',
+        centreName: (centre?.name as string | undefined) ?? 'Unknown crèche',
         centreSlug: (centre?.slug as string | undefined) ?? null,
       }
     }) ?? []
@@ -56,7 +56,7 @@ export async function RecentApplicationsSection() {
       <p className="mt-1 text-sm text-slate-600">Latest submissions and their current status.</p>
       <div className="mt-4 space-y-3">
         {recentApplications.length === 0 ? (
-          <EmptyState title="No applications yet" description="Start by browsing active centres." actionLabel="Browse Centres" actionHref="/directory" />
+          <EmptyState title="No applications yet" description="Start by browsing active crèches." actionLabel="Browse Crèches" actionHref="/directory" />
         ) : (
           recentApplications.map((application) => (
             <div
@@ -74,7 +74,7 @@ export async function RecentApplicationsSection() {
                 <StatusBadge status={application.status} />
                 {application.centreSlug ? (
                   <Button size="sm" variant="ghost" asChild>
-                    <Link href={`/centre/${application.centreSlug}`}>View centre</Link>
+                    <Link href={`/centre/${application.centreSlug}`}>View crèche</Link>
                   </Button>
                 ) : null}
               </div>
@@ -85,4 +85,7 @@ export async function RecentApplicationsSection() {
     </section>
   )
 }
+
+
+
 
