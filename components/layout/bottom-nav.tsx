@@ -23,16 +23,16 @@ function isTabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-const IOS_SPRING = { type: 'spring', stiffness: 1200, damping: 60, mass: 0.1 }
+const IOS_SPRING = { type: 'spring' as const, stiffness: 1200, damping: 60, mass: 0.1 }
 
-const NavButton = memo(({ 
-  item, 
-  active, 
-  onClick, 
-  reducedMotion 
-}: { 
-  item: NavItem, 
-  active: boolean, 
+const NavButton = memo(({
+  item,
+  active,
+  onClick,
+  reducedMotion
+}: {
+  item: NavItem,
+  active: boolean,
   onClick: () => void,
   reducedMotion: boolean
 }) => {
@@ -56,7 +56,7 @@ const NavButton = memo(({
           className="relative z-10"
         >
           <Icon size={20} strokeWidth={active ? 2.5 : 2} />
-          
+
           <AnimatePresence>
             {hasBadge && (
               <motion.span
@@ -99,7 +99,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const [isPending, startTransition] = useTransition()
   const [optimisticPath, setOptimisticPath] = useState(pathname)
   const reducedMotion = useReducedMotion()
-  
+
   useEffect(() => {
     setOptimisticPath(pathname)
   }, [pathname])
@@ -136,10 +136,10 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
           ))}
         </nav>
       </div>
-      
+
       <AnimatePresence>
         {isPending && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
