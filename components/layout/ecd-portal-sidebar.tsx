@@ -190,7 +190,7 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header - Unified with Parent view */}
-      <div className="lg:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-[90] px-4 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-[90] px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MobileNavMenu 
             items={visibleNav} 
@@ -208,7 +208,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-slate-100 bg-white px-5 py-8 shadow-[1px_0_10px_rgba(0,0,0,0.02)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-200 lg:flex lg:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-slate-100 bg-white px-5 py-8 shadow-[1px_0_10px_rgba(0,0,0,0.02)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
       >
         <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />

@@ -105,7 +105,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         attentionBadges={attentionBadges}
       />
       <main className="flex-1 overflow-y-auto [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
-        <div className="mx-auto max-w-[1600px] px-6 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-20 lg:pt-6 lg:pb-10 lg:p-10">
+        <div className="mx-auto max-w-[1600px] px-6 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-20 md:pt-6 md:pb-10 md:p-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
           <div>
             {children}
