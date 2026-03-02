@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister'
 import { LiteModeProvider } from '@/lib/context/LiteModeProvider'
 import { SessionTimeoutProvider } from '@/lib/context/SessionTimeoutProvider'
+import { BottomNavProvider } from '@/lib/context/BottomNavProvider'
 
 export const metadata: Metadata = {
   title: 'CentreConnect',
@@ -64,15 +65,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-sans">
         <LiteModeProvider>
           <SessionTimeoutProvider>
-            <ThemeProvider>
-              <ThemeRouteSync />
-                <FooterConditionalRenderer>
-                  {children}
-                </FooterConditionalRenderer>
-              <SonnerToaster position="top-right" richColors />
-              <Analytics />
-              <ServiceWorkerRegister />
-            </ThemeProvider>
+            <BottomNavProvider>
+              <ThemeProvider>
+                <ThemeRouteSync />
+                  <FooterConditionalRenderer>
+                    {children}
+                  </FooterConditionalRenderer>
+                <SonnerToaster position="top-right" richColors />
+                <Analytics />
+                <ServiceWorkerRegister />
+              </ThemeProvider>
+            </BottomNavProvider>
           </SessionTimeoutProvider>
         </LiteModeProvider>
       </body>

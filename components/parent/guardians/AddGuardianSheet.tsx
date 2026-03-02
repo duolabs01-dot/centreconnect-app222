@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Smartphone, MessageSquare, PenLine, ChevronLeft } from 'lucide-react'
 import { toast } from 'sonner'
 import { addGuardianAction } from '@/lib/actions/guardians/add-guardian'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { useEffect } from 'react'
 
 type ImportSource = 'device_contacts' | 'whatsapp' | 'manual'
 
@@ -39,6 +41,17 @@ export function AddGuardianSheet({
   const [step, setStep] = useState<'pick' | 'form'>('pick')
   const [source, setSource] = useState<ImportSource>('manual')
   const [loading, setLoading] = useState(false)
+  const { setVisible } = useBottomNav()
+
+  useEffect(() => {
+    if (open) {
+      setVisible(false)
+    } else {
+      setVisible(true)
+    }
+    // Cleanup on unmount just in case
+    return () => setVisible(true)
+  }, [open, setVisible])
 
   const importSources = [
     {
@@ -156,7 +169,6 @@ export function AddGuardianSheet({
           <FormShell
             title="Add Co-Guardian"
             description="Co-guardians can view applications, receive updates, and help with pickups."
-            onClose={onClose}
           >
             <div className="space-y-3">
               {importSources.map((sourceOption) => {
@@ -190,7 +202,6 @@ export function AddGuardianSheet({
                   ? 'Paste the details copied from WhatsApp below.'
                   : 'Enter the co-guardian’s information.'
             }
-            onClose={onClose}
             footer={
               <div className="space-y-3">
                 <FormFooter onCancel={onClose} submitLabel="Add Co-Guardian" loading={loading} formId="guardian-form" />

@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { type LucideIcon } from 'lucide-react'
 import { useCallback, useTransition, useState, useEffect, memo } from 'react'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
 export type NavItem = {
   label: string
@@ -99,6 +100,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const [isPending, startTransition] = useTransition()
   const [optimisticPath, setOptimisticPath] = useState(pathname)
   const reducedMotion = useReducedMotion()
+  const { isVisible } = useBottomNav()
 
   useEffect(() => {
     setOptimisticPath(pathname)
@@ -117,7 +119,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [optimisticPath, router])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
-  if (pathname === '/' || isAuthPage) return null
+  if (pathname === '/' || isAuthPage || !isVisible) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
