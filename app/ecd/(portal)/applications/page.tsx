@@ -532,7 +532,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     <EcdOsShell
       title="Admissions Inbox"
       description="Prioritize pending reviews and approved offers awaiting parent acceptance."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <section className="mb-8 flex items-center justify-between">
@@ -653,7 +653,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                             <p className="truncate text-sm font-bold text-slate-900">{childName}</p>
                             <p className="mt-0.5 text-xs text-slate-500">{parentName}</p>
                             <p className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                              {application.application_number} • {formatDate(application.submitted_at)}
+                              {application.application_number} - {formatDate(application.submitted_at)}
                             </p>
                           </div>
                           <StatusBadge status={application.status} />

@@ -218,7 +218,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
       : Promise.resolve({ data: [] as ParentDocument[], error: null }),
   ])
 
-  const centreName = centreResult.data?.name ?? 'Your crèche'
+  const centreName = centreResult.data?.name ?? 'Your creche'
   const templates = (templatesResult.data ?? []) as Template[]
   const history = (historyResult.data ?? []) as HistoryItem[]
   const parentDocs = (documentsResult.data ?? []) as ParentDocument[]
