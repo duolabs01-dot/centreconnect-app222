@@ -104,6 +104,10 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function applicationDetailsHref(applicationId: string) {
+  return `/ecd/applications/${applicationId}`
+}
+
 function normalizeMissingDocuments(value: unknown) {
   if (!Array.isArray(value)) return [] as string[]
   return value.map((entry) => String(entry).trim()).filter(Boolean)
@@ -238,7 +242,7 @@ function renderApplicationList(
                   </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-slate-400 hover:text-teal-600 hover:bg-teal-50" asChild>
-                  <Link href={`/ecd/applications/${application.id}`} title="View Application">
+                  <Link href={applicationDetailsHref(application.id)} title="View Application">
                     <ChevronRight className="w-5 h-5" />
                   </Link>
                 </Button>
@@ -303,7 +307,7 @@ function renderApplicationList(
                         templates={context.templates}
                       />
                       <Button size="sm" variant="ghost" className="h-9 px-4 text-slate-500 hover:text-teal-700 hover:bg-teal-50 font-bold rounded-2xl" asChild>
-                        <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                        <Link href={applicationDetailsHref(application.id)}>Open</Link>
                       </Button>
                     </div>
                   </TableCell>
@@ -690,7 +694,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <SendReminderButton applicationId={application.id} />
                           <Button size="sm" variant="outline" className="h-10 rounded-2xl" asChild>
-                            <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                            <Link href={applicationDetailsHref(application.id)}>Open</Link>
                           </Button>
                         </div>
                       </div>
@@ -786,7 +790,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                     </p>
                   </div>
                   <Button variant="outline" className="w-full mt-4 h-12 rounded-2xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
-                    <Link href={`/ecd/applications/${focusedApplication.id}`}>Full Case File â†’</Link>
+                    <Link href={applicationDetailsHref(focusedApplication.id)}>Full Case File -&gt;</Link>
                   </Button>
                 </div>
               </div>

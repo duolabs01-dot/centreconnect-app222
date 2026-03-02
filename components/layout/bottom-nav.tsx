@@ -41,14 +41,14 @@ const NavButton = memo(({
   return (
     <button
       onClick={handleClick}
-      className="relative flex h-12 flex-1 items-center justify-center rounded-2xl outline-none transition-transform active:scale-95"
+      className="relative flex h-12 flex-1 items-center justify-center rounded-2xl outline-none"
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
       <div className="relative flex flex-col items-center justify-center gap-1">
         <div
           className={cn(
-            'relative z-10 transition-all duration-150',
-            active ? '-translate-y-0.5 scale-110 text-teal-600' : 'text-slate-500'
+            'relative z-10',
+            active ? 'text-teal-600' : 'text-slate-500'
           )}
         >
           <Icon size={20} strokeWidth={active ? 2.5 : 2} />
@@ -59,7 +59,7 @@ const NavButton = memo(({
 
         <span
           className={cn(
-            'text-[10px] font-bold uppercase tracking-widest transition-colors duration-150',
+            'text-[10px] font-bold uppercase tracking-widest',
             active ? 'text-teal-600' : 'text-slate-500'
           )}
         >
@@ -68,7 +68,7 @@ const NavButton = memo(({
 
         <span
           className={cn(
-            'absolute -inset-x-3 -inset-y-2 -z-0 rounded-2xl transition-colors duration-150',
+            'absolute -inset-x-3 -inset-y-2 -z-0 rounded-2xl',
             active ? 'bg-teal-50/70' : 'bg-transparent'
           )}
         />
@@ -101,7 +101,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
       <div className="pointer-events-auto mb-[calc(1rem+env(safe-area-inset-bottom))] w-full max-w-[400px] px-4">
         <nav
-          className="flex items-center gap-1 rounded-3xl border border-slate-200 bg-white/90 p-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)] backdrop-blur-xl"
+          className="flex items-center gap-1 rounded-3xl border border-slate-200 bg-white p-2 shadow-[0_8px_32px_rgba(0,0,0,0.15)]"
         >
           {items.map((item) => (
             <NavButton
