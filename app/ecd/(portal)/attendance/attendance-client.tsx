@@ -194,7 +194,7 @@ export function AttendanceClient({
                     type="button"
                     onClick={() => toggleAttendance(child.id, 'checked_in')}
                     disabled={Boolean(saving[child.id])}
-                    className={`h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
+                    className={`h-10 rounded-2xl px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
                       childState.checked_in
                         ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
                         : 'bg-slate-100 text-slate-500 border border-slate-200'
@@ -206,7 +206,7 @@ export function AttendanceClient({
                     type="button"
                     onClick={() => toggleAttendance(child.id, 'picked_up')}
                     disabled={Boolean(saving[child.id])}
-                    className={`h-10 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
+                    className={`h-10 rounded-2xl px-3 py-2 text-xs font-bold transition-colors ${ // Updated h-10
                       childState.picked_up
                         ? 'bg-cyan-100 text-cyan-700 border border-cyan-300'
                         : 'bg-slate-100 text-slate-500 border border-slate-200'

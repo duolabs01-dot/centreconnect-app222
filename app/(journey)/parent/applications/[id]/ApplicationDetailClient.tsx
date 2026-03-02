@@ -148,7 +148,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
           type="button"
           onClick={generateCode}
           disabled={generating}
-          className="mt-3 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+          className="mt-3 rounded-2xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
         >
           {generating ? 'Generating...' : 'Generate Pickup Code'}
         </button>
@@ -266,8 +266,18 @@ export default function ApplicationDetailClient({
   return (
     <div style={{ fontFamily: 'var(--font-parent)', padding: '0 0 32px' }}>
       <div className="mb-3 flex items-center gap-2">
-        <button onClick={() => router.back()}> {'\u2190'} Back </button>
-        <button onClick={() => router.push('/parent/dashboard')}>Home</button>
+        <button
+          onClick={() => router.back()}
+          className="rounded-2xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+        >
+          {'\u2190'} Back
+        </button>
+        <button
+          onClick={() => router.push('/parent/dashboard')}
+          className="rounded-2xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+        >
+          Home
+        </button>
       </div>
       <h1>{childFirstName}&apos;s Application</h1>
       <p>
@@ -279,7 +289,7 @@ export default function ApplicationDetailClient({
             type="button"
             onClick={onWithdraw}
             disabled={isWithdrawing}
-            className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
+            className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
           >
             {isWithdrawing ? 'Processing...' : withdrawLabel}
           </button>
@@ -317,7 +327,10 @@ export default function ApplicationDetailClient({
             {status === 'submitted' && (
               <div className="mt-2">
                 {!isEditing ? (
-                  <button onClick={() => setIsEditing(true)} className="text-xs font-semibold text-cyan-700 hover:text-cyan-800">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="rounded-2xl px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-50 hover:text-cyan-800"
+                  >
                     Edit message {'\u2192'}
                   </button>
                 ) : (
@@ -347,7 +360,7 @@ export default function ApplicationDetailClient({
                           })
                         }}
                         disabled={isSaving}
-                        className="rounded-lg bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                        className="rounded-2xl bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
                       >
                         {isSaving ? 'Saving...' : 'Save'}
                       </button>
@@ -356,7 +369,7 @@ export default function ApplicationDetailClient({
                           setIsEditing(false)
                           setEditMessage(parentMessage ?? '')
                         }}
-                        className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                        className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
                       >
                         Cancel
                       </button>

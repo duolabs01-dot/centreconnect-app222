@@ -201,7 +201,7 @@ export function DailyReportsClient({
                             key={opt.value}
                             onClick={() => updateReport(selectedChild.id, { [meal.key]: opt.value })}
                             className={cn(
-                              "h-12 rounded-xl text-xs font-bold transition-all",
+                              "h-12 rounded-2xl text-xs font-bold transition-all",
                               (currentReport as any)[meal.key] === opt.value
                                 ? "bg-cyan-100 text-cyan-800 border-2 border-cyan-300"
                                 : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"
@@ -231,7 +231,7 @@ export function DailyReportsClient({
                         key={m.value}
                         onClick={() => updateReport(selectedChild.id, { mood: m.value })}
                         className={cn(
-                          "flex flex-col items-center justify-center h-20 rounded-xl transition-all",
+                          "flex flex-col items-center justify-center h-20 rounded-2xl transition-all",
                           currentReport.mood === m.value
                             ? "bg-amber-100 text-amber-900 border-2 border-amber-300 shadow-sm"
                             : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"

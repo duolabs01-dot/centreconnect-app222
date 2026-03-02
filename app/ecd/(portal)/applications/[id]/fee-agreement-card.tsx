@@ -75,7 +75,7 @@ export function FeeAgreementCard({
           <Button 
             type="submit" 
             disabled={isSaving}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold h-11 rounded-xl shadow-sm transition-all active:scale-95"
+            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-all active:scale-95"
           >
             {isSaving ? 'Saving...' : 'Save Fee Agreement'}
           </Button>

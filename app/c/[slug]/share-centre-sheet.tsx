@@ -171,7 +171,7 @@ export function ShareCentreSheet({ centreName, centreSlug, suburb, city }: Share
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900">Share {centreName}</h3>
-          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+          <button onClick={() => setOpen(false)} className="rounded-2xl p-1 text-slate-400 transition-colors hover:text-slate-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -238,7 +238,7 @@ export function ShareCentreSheet({ centreName, centreSlug, suburb, city }: Share
                       <div className="flex items-center gap-2">
                         <a
                           href={toSmsHref(contact.phone, shareText)}
-                          className="inline-flex items-center rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white"
+                          className="inline-flex items-center rounded-2xl border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-white"
                         >
                           SMS
                         </a>
@@ -246,7 +246,7 @@ export function ShareCentreSheet({ centreName, centreSlug, suburb, city }: Share
                           href={whatsappHref}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+                          className="inline-flex items-center rounded-2xl border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
                         >
                           WhatsApp
                         </a>

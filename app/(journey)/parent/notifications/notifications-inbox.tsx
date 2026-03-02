@@ -115,7 +115,7 @@ export function NotificationsInbox({ initialItems }: { initialItems: Notificatio
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
-            className="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-700 data-[active=true]:bg-white data-[active=true]:text-slate-900 data-[active=true]:shadow-sm"
+            className="flex-1 rounded-2xl px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-700 data-[active=true]:bg-white data-[active=true]:text-slate-900 data-[active=true]:shadow-sm"
             data-active={activeTab === tab ? 'true' : 'false'}
           >
             {tab}

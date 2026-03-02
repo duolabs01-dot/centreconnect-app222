@@ -296,7 +296,7 @@ export default function RegisterPage() {
                   />
                   <button
                     type="button"
-                    className="absolute right-0 top-0 flex h-12 w-10 items-center justify-center text-slate-400"
+                    className="absolute right-0 top-0 flex h-12 w-10 items-center justify-center rounded-2xl text-slate-400"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -318,7 +318,7 @@ export default function RegisterPage() {
                   />
                   <button
                     type="button"
-                    className="absolute right-0 top-0 flex h-12 w-10 items-center justify-center text-slate-400"
+                    className="absolute right-0 top-0 flex h-12 w-10 items-center justify-center rounded-2xl text-slate-400"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
                   >
                     {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}

@@ -33,7 +33,7 @@ export function AnnouncementComposer({
           <button
             type="button"
             onClick={() => setTab('quick')}
-            className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+            className={`flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
               tab === 'quick' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
             }`}
           >
@@ -42,7 +42,7 @@ export function AnnouncementComposer({
           <button
             type="button"
             onClick={() => setTab('custom')}
-            className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+            className={`flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
               tab === 'custom' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
             }`}
           >

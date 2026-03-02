@@ -208,7 +208,7 @@ export function ApplicationsList({ applications }: { applications: ApplicationIt
         </p>
         <Link
           href="/directory"
-          className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
+          className="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-cyan-700"
         >
           <Compass className="h-4 w-4" />
           Find a Crèche

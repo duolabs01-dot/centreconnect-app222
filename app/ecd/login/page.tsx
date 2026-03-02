@@ -133,7 +133,7 @@ export default function EcdLoginPage() {
                   />
                   <button
                     type="button"
-                    className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-slate-500 hover:text-slate-700"
+                    className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-2xl text-slate-500 hover:text-slate-700"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                     onClick={() => setShowPassword((prev) => !prev)}
                   >

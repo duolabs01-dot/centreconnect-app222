@@ -60,7 +60,7 @@ export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetP
       >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900">Message {centreName}</h3>
-          <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+          <button onClick={() => setOpen(false)} className="rounded-2xl p-1 text-slate-400 transition-colors hover:text-slate-600">
             <X className="h-5 w-5" />
           </button>
         </div>

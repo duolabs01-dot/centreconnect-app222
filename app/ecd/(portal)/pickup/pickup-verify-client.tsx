@@ -169,7 +169,7 @@ export function PickupVerifyClient({ ecdId }: PickupVerifyClientProps) {
                     setSelectedChildId(child.id)
                     setSelectedChildName(fullName)
                   }}
-                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                  className={`w-full rounded-2xl border px-3 py-2 text-left text-sm transition-colors ${
                     active
                       ? 'border-cyan-300 bg-cyan-50 text-cyan-800'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
