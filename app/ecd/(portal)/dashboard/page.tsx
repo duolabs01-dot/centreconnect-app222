@@ -194,24 +194,24 @@ export default async function EcdDashboardPage() {
       userRole={role}
     >
       <div className="space-y-8 pb-12">
-        <section className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 px-8 py-10 text-white shadow-2xl">
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card px-8 py-10 text-foreground shadow-[var(--shadow-elevation-1)]">
           <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-3xl -mr-32 -mt-32" />
           <div className="relative z-10">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-400">
               {getJohannesburgGreeting()}
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               {centreName}
             </h1>
-            <div className="mt-6 flex flex-wrap gap-6 items-center border-t border-white/10 pt-6">
+            <div className="mt-6 flex flex-wrap items-center gap-6 border-t border-border pt-6">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-sm font-bold text-slate-300">{attendanceToday} Children In Today</p>
+                <p className="text-sm font-bold text-slate-600">{attendanceToday} Children In Today</p>
               </div>
-              <div className="h-4 w-px bg-white/10 hidden sm:block" />
+              <div className="hidden h-4 w-px bg-border sm:block" />
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-teal-400" />
-                <p className="text-sm font-bold text-slate-300">{pendingApplications} Applications Pending</p>
+                <p className="text-sm font-bold text-slate-600">{pendingApplications} Applications Pending</p>
               </div>
             </div>
           </div>
@@ -343,9 +343,9 @@ export default async function EcdDashboardPage() {
                   </div>
                 </div>
                 {stale72h > 0 && (
-                  <div className="flex items-center gap-4 p-5 rounded-2xl bg-rose-600 text-white font-black text-sm shadow-xl shadow-rose-900/20">
-                    <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
-                      <ShieldAlert className="w-5 h-5" />
+                  <div className="flex items-center gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-black text-rose-800 shadow-[var(--shadow-elevation-1)]">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-100">
+                      <ShieldAlert className="w-5 h-5 text-rose-600" />
                     </div>
                     <span>{stale72h} applications require immediate attention (72h SLA breach)</span>
                   </div>

@@ -125,7 +125,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             {showMobileBack ? (
               <button
                 onClick={() => router.back()}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 transition-all md:hidden"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-all hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -192,12 +192,12 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                       </div>
                     </div>
                     
-                    <Link href="/parent/profile/documents" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <Link href="/parent/profile/documents" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">
                       <FileText className="h-4 w-4" />
                       Documents Vault
                     </Link>
                     
-                    <Link href="/parent/profile/security" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <Link href="/parent/profile/security" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">
                       <LockIcon className="h-4 w-4" />
                       Account Security
                     </Link>
@@ -207,7 +207,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                     <button 
                       onClick={() => { handleSignOut(); setShowUserDropdown(false); }}
                       disabled={isSigningOut}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors"
+                      className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-bold text-rose-600 transition-colors hover:bg-rose-50"
                     >
                       <LogOut className="h-4 w-4" />
                       {isSigningOut ? 'Ending Session...' : 'Sign Out'}
@@ -245,10 +245,10 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                     You are {profileNudge?.completionPct ?? 0}% ready. Centres are <span className="font-bold text-slate-900">3x more likely</span> to respond to complete profiles.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <Button size="sm" className="h-10 rounded-xl bg-slate-900 text-white font-bold" asChild>
+                    <Button size="sm" className="h-10 rounded-2xl bg-teal-600 text-white font-bold hover:bg-teal-500" asChild>
                       <Link href="/parent/profile">Finish Profile</Link>
                     </Button>
-                    <Button size="sm" variant="outline" className="h-10 rounded-xl border-amber-200 bg-white text-amber-700 font-bold" asChild>
+                    <Button size="sm" variant="outline" className="h-10 rounded-2xl border-amber-200 bg-white text-amber-700 font-bold" asChild>
                       <Link href="/parent/profile/documents">Upload IDs</Link>
                     </Button>
                   </div>
