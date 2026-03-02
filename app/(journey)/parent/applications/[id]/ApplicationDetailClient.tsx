@@ -361,7 +361,7 @@ export default function ApplicationDetailClient({
 
   return (
     <div style={{ fontFamily: 'var(--font-parent)', padding: '0 0 32px' }}>
-      <div className="mb-3 flex items-center gap-2">
+      <div className="mb-3 hidden items-center gap-2 md:flex">
         <button
           onClick={() => router.back()}
           className="rounded-2xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"

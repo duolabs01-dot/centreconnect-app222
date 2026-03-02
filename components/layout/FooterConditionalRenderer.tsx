@@ -6,6 +6,7 @@ import { GlobalDesktopFooter } from './global-desktop-footer'
 import { GlobalMobileLegalStrip } from './global-mobile-legal-strip'
 import { BottomNav } from './bottom-nav'
 import { PARENT_NAV_ITEMS, ADMIN_MOBILE_NAV_ITEMS } from '@/lib/navigation-config'
+import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
 
 interface FooterConditionalRendererProps {
   children: ReactNode
@@ -29,6 +30,7 @@ function useIsSignedIn(pathname: string): boolean {
 export function FooterConditionalRenderer({ children }: FooterConditionalRendererProps) {
   const pathname = usePathname()
   const isSignedIn = useIsSignedIn(pathname)
+  const hideParentBottomNav = shouldHideParentBottomNav(pathname ?? '')
 
   const isParentPortal = pathname?.startsWith('/parent') || pathname?.startsWith('/directory') || pathname?.startsWith('/c/') || pathname?.startsWith('/apply/')
   const isEcdPortal = pathname?.startsWith('/ecd') && !pathname?.startsWith('/ecd/login') && !pathname?.startsWith('/ecd/register')
@@ -41,7 +43,7 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
 
       {isSignedIn && (
         <>
-          {isParentPortal && <BottomNav items={PARENT_NAV_ITEMS} pathname={pathname} />}
+          {isParentPortal && !hideParentBottomNav && <BottomNav items={PARENT_NAV_ITEMS} pathname={pathname} />}
           {isAdminPortal && <BottomNav items={ADMIN_MOBILE_NAV_ITEMS} pathname={pathname} />}
         </>
       )}

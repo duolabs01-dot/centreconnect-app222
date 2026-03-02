@@ -65,6 +65,10 @@ export async function submitApplicationAction(input: unknown) {
       })
     : supabase
 
+  // Keep parent records present even when profile setup is still partial.
+  // This ensures ECD teams can still resolve parent context for pipeline items.
+  await db.from('parents').upsert({ id: user.id }, { onConflict: 'id' })
+
   const { data: child } = await db
     .from('children')
     .select('id,parent_id,first_name,last_name,date_of_birth,gender')

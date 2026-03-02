@@ -13,6 +13,7 @@ import { LiteImage } from '@/components/ui/LiteImage'
 import { createClient } from '@/lib/supabase/client'
 import { useParentLayout } from './parent-layout-provider'
 import { robustSignOut } from '@/lib/auth/client-sign-out'
+import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -31,19 +32,21 @@ function getTitle(pathname: string) {
 }
 
 function shouldShowMobileBack(pathname: string) {
-  const topLevelTabs = new Set(['/directory', '/parent/dashboard', '/parent/applications', '/parent/profile'])
+  if (shouldHideParentBottomNav(pathname)) return true
+  const topLevelTabs = new Set(['/directory', '/parent/dashboard'])
   if (topLevelTabs.has(pathname)) return false
   return true
 }
 
 export function ParentAppShell({ children }: ParentAppShellProps) {
-  const { userName, avatarUrl, isVerified, profileNudge } = useParentLayout()
+  const { userName, avatarUrl, isVerified, profileNudge, userId } = useParentLayout()
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   useAppNavLock()
   
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
 
@@ -57,6 +60,23 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     return () => document.documentElement.removeAttribute('data-app-shell')
   }, [])
 
+  useEffect(() => {
+    if (!profileNudge) return
+    if (pathname.startsWith('/parent/profile')) return
+    if (typeof window === 'undefined') return
+
+    const dayKey = new Date().toISOString().slice(0, 10)
+    const storageKey = `cc:profile-nudge-popup:${userId}:${dayKey}`
+    if (window.sessionStorage.getItem(storageKey)) return
+
+    const timer = window.setTimeout(() => {
+      setShowProfilePrompt(true)
+    }, 700)
+    window.sessionStorage.setItem(storageKey, 'shown')
+
+    return () => window.clearTimeout(timer)
+  }, [pathname, profileNudge, userId])
+
   async function handleSignOut() {
     if (isSigningOut) return
     setIsSigningOut(true)
@@ -69,7 +89,16 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     }
   }
 
+  function handleMobileBack() {
+    if (typeof window !== 'undefined' && window.history.length <= 1) {
+      router.push('/parent/dashboard')
+      return
+    }
+    router.back()
+  }
+
   const showMobileBack = shouldShowMobileBack(pathname)
+  const hideParentBottomNav = shouldHideParentBottomNav(pathname)
   const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !pathname.startsWith('/parent/profile'))
 
   return (
@@ -89,8 +118,8 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           <div className="flex items-center gap-4">
             {showMobileBack ? (
               <button
-                onClick={() => router.back()}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-all hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
+                onClick={handleMobileBack}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-colors hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
@@ -161,7 +190,12 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 pb-[calc(8rem+env(safe-area-inset-bottom))] md:pb-12">
+      <main
+        className={cn(
+          'relative z-10 flex-1 md:pb-12',
+          hideParentBottomNav ? 'pb-12' : 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
+        )}
+      >
         <Container className="max-w-4xl px-4 pt-6 sm:px-6">
           {/* Mobile Title View */}
           <div className="md:hidden mb-6">
@@ -208,6 +242,36 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           <div className="parent-page-content">{children}</div>
         </Container>
       </main>
+
+      {showProfilePrompt ? (
+        <section className="fixed inset-x-4 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[70] rounded-3xl border border-teal-200 bg-white/95 p-4 shadow-[var(--shadow-elevation-3)] md:inset-x-auto md:bottom-6 md:right-6 md:w-[360px]">
+          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-600">Quick boost</p>
+          <p className="mt-1 text-sm font-bold text-slate-900">Complete your profile for faster responses.</p>
+          <p className="mt-1 text-xs text-slate-600">
+            You are {profileNudge?.completionPct ?? 0}% ready. Add missing info to help crèches review quicker.
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <Button size="sm" className="h-9 rounded-2xl bg-teal-600 text-white hover:bg-teal-500" asChild>
+              <Link
+                href="/parent/profile"
+                onClick={() => {
+                  setShowProfilePrompt(false)
+                }}
+              >
+                Complete profile
+              </Link>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700"
+              onClick={() => setShowProfilePrompt(false)}
+            >
+              Remind me later
+            </Button>
+          </div>
+        </section>
+      ) : null}
     </div>
   )
 }

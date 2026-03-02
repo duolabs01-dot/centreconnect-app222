@@ -3,8 +3,6 @@ import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { ParentLayoutProvider } from '@/components/layout/parent-layout-provider'
 import { PublicShell } from '@/components/layout/public-shell'
-import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
 
 export default async function JourneyLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -44,15 +42,6 @@ export default async function JourneyLayout({ children }: { children: React.Reac
     supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id),
   ])
 
-  // ONBOARDING CHECK: If no child or no relationship, redirect to onboarding
-  const headerList = headers()
-  const pathname = headerList.get('x-invoke-path') || ''
-  const isCurrentlyOnboarding = pathname.includes('/parent/onboarding')
-  
-  if (isCurrentlyOnboarding === false && ((childrenCount.count ?? 0) === 0 || !parentDetails.data?.guardian_relationship)) {
-    redirect('/parent/onboarding')
-  }
-  
   const verificationStatus = parentDetails.data?.id_verification_status?.trim().toLowerCase() ?? ''
   const isVerified = verificationStatus === 'verified'
   

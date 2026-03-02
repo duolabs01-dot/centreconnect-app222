@@ -67,7 +67,7 @@ export default async function ParentDocumentsPage() {
             <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents Vault</h1>
             <p className="mt-1 text-sm text-slate-500 font-medium">Securely manage your family documents.</p>
           </div>
-          <Button variant="outline" className="rounded-2xl font-bold h-11 self-start sm:self-auto" asChild>
+          <Button variant="outline" className="hidden h-11 rounded-2xl font-bold md:inline-flex" asChild>
             <Link href="/parent/profile">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
