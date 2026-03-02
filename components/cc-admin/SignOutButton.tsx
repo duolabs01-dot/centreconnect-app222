@@ -31,8 +31,18 @@ export function SignOutButton({
         toast.error('Could not sign out. Please try again.')
         return
       }
+      if (clientError || serverError) {
+        toast.warning('Signed out with warnings. Redirecting...')
+      }
+
       router.replace(redirectTo)
       router.refresh()
+
+      if (typeof window !== 'undefined') {
+        window.location.replace(redirectTo)
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not sign out. Please try again.')
     } finally {
       setIsLoading(false)
     }
