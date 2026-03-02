@@ -3,6 +3,8 @@
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+export type FormMode = 'parent' | 'ecd' | 'admin'
+
 export function FormShell({
   title,
   description,
@@ -10,6 +12,7 @@ export function FormShell({
   children,
   footer,
   className,
+  mode = 'parent'
 }: {
   title: string
   description?: string
@@ -17,14 +20,24 @@ export function FormShell({
   children: React.ReactNode
   footer?: React.ReactNode
   className?: string
+  mode?: FormMode
 }) {
+  const isParent = mode === 'parent'
+  const isEcd = mode === 'ecd'
+
   return (
-    <div className={cn('flex flex-col h-full max-h-full bg-transparent', className)}>
-      <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-border shrink-0">
+    <div className={cn('flex flex-col h-full max-h-full bg-white', className)}>
+      <div className={cn(
+        "flex items-start justify-between gap-4 px-6 py-6 border-b shrink-0",
+        isParent ? "border-slate-100 bg-white" : "border-teal-50 bg-teal-50/10"
+      )}>
         <div className="min-w-0">
-          <h2 className="text-base font-semibold text-foreground leading-snug">{title}</h2>
+          <h2 className={cn(
+            "text-xl font-black tracking-tight leading-snug",
+            isParent ? "text-slate-900" : "text-teal-900"
+          )}>{title}</h2>
           {description && (
-            <p className="text-sm text-muted-foreground mt-0.5 leading-snug">{description}</p>
+            <p className="text-sm text-slate-500 mt-1 font-medium leading-relaxed">{description}</p>
           )}
         </div>
         {onClose && (
@@ -32,19 +45,30 @@ export function FormShell({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className={cn(
+              "shrink-0 p-2 rounded-xl transition-all active:scale-95",
+              isParent 
+                ? "text-slate-400 hover:text-slate-900 hover:bg-slate-50" 
+                : "text-teal-400 hover:text-teal-900 hover:bg-teal-50"
+            )}
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
+      <div className={cn(
+        "flex-1 overflow-y-auto px-6 py-8 space-y-6 min-h-0 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full",
+        isParent ? "hover:[&::-webkit-scrollbar-thumb]:bg-slate-200" : "hover:[&::-webkit-scrollbar-thumb]:bg-teal-100"
+      )}>
         {children}
       </div>
 
       {footer && (
-        <div className="shrink-0 px-6 py-4 border-t border-border bg-muted/20">
+        <div className={cn(
+          "shrink-0 px-6 py-6 border-t",
+          isParent ? "border-slate-100 bg-slate-50/30" : "border-teal-50 bg-teal-50/20"
+        )}>
           {footer}
         </div>
       )}
@@ -59,6 +83,7 @@ export function FormFooter({
   destructive = false,
   disabled = false,
   formId,
+  mode = 'parent'
 }: {
   onCancel: () => void
   submitLabel?: string
@@ -66,14 +91,23 @@ export function FormFooter({
   destructive?: boolean
   disabled?: boolean
   formId?: string
+  mode?: FormMode
 }) {
+  const isParent = mode === 'parent'
+  const isEcd = mode === 'ecd'
+
   return (
-    <div className="flex gap-2.5 justify-end">
+    <div className="flex gap-3 justify-end items-center">
       <button
         type="button"
         onClick={onCancel}
         disabled={loading}
-        className="px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+        className={cn(
+          "px-6 py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50",
+          isParent 
+            ? "text-slate-500 hover:text-slate-900 hover:bg-slate-50" 
+            : "text-teal-600 hover:text-teal-900 hover:bg-teal-50"
+        )}
       >
         Cancel
       </button>
@@ -82,12 +116,21 @@ export function FormFooter({
         form={formId}
         disabled={loading || disabled}
         className={cn(
-          'px-5 py-2 rounded-xl text-sm font-semibold text-white transition-all',
+          'px-8 py-3.5 rounded-2xl text-sm font-black text-white transition-all shadow-lg active:scale-[0.98]',
           'disabled:opacity-50 disabled:cursor-not-allowed',
-          destructive ? 'bg-destructive hover:bg-destructive/90' : 'bg-cyan-600 hover:bg-cyan-500'
+          destructive 
+            ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-900/20' 
+            : isParent 
+              ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
+              : 'bg-teal-600 hover:bg-teal-700 shadow-teal-900/20'
         )}
       >
-        {loading ? 'Saving…' : submitLabel}
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            {isParent ? 'Safeguarding...' : 'Processing...'}
+          </span>
+        ) : submitLabel}
       </button>
     </div>
   )

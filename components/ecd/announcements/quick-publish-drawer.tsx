@@ -130,7 +130,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
           title={template?.label ?? 'Quick Announcement'}
           description="Review and edit before sending."
           onClose={onClose}
-          className="space-y-6 bg-transparent"
+          mode="ecd"
           footer={
             <FormFooter
               onCancel={onClose}
@@ -138,6 +138,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
               loading={isPending}
               disabled={!canSend || !template}
               formId="quick-publish-form"
+              mode="ecd"
             />
           }
         >

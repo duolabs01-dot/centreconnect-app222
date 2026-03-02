@@ -169,6 +169,7 @@ export function AddGuardianSheet({
           <FormShell
             title="Add Co-Guardian"
             description="Co-guardians can view applications, receive updates, and help with pickups."
+            mode="parent"
           >
             <div className="space-y-3">
               {importSources.map((sourceOption) => {
@@ -202,13 +203,14 @@ export function AddGuardianSheet({
                   ? 'Paste the details copied from WhatsApp below.'
                   : 'Enter the co-guardian’s information.'
             }
+            mode="parent"
             footer={
               <div className="space-y-3">
-                <FormFooter onCancel={onClose} submitLabel="Add Co-Guardian" loading={loading} formId="guardian-form" />
+                <FormFooter onCancel={onClose} submitLabel="Add Co-Guardian" loading={loading} formId="guardian-form" mode="parent" />
                 <button
                   type="button"
                   onClick={() => setStep('pick')}
-                  className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-teal-700 transition-colors"
+                  className="flex items-center gap-1 text-xs font-black uppercase tracking-widest text-slate-400 hover:text-cyan-600 transition-colors px-1"
                 >
                   <ChevronLeft className="h-3 w-3" /> Change import method
                 </button>
