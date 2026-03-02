@@ -19,11 +19,11 @@ export function AdminKpiCard({ label, value, trend, sparklineData, className, ac
   
   return (
     <div className={cn(
-      "relative bg-[#0D121D] border border-white/5 rounded-3xl p-6 sm:p-8 hover:bg-[#121824] transition-all duration-500 group overflow-hidden shadow-2xl shadow-black/40",
+      "tile transform-gpu [will-change:transform] relative bg-[#0D121D] border border-white/5 rounded-3xl p-6 sm:p-8 hover:bg-[#121824] transition-transform duration-200 group overflow-hidden shadow-2xl shadow-black/40",
       className
     )}>
       {/* Background glow overlay */}
-      <div className="absolute -right-4 -top-4 w-24 h-24 bg-cyan-500/5 blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+      <div className="absolute -right-4 -top-4 h-24 w-24 bg-cyan-500/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
       
       {/* Header Info */}
       <div className="flex justify-between items-start mb-10">
@@ -38,7 +38,7 @@ export function AdminKpiCard({ label, value, trend, sparklineData, className, ac
             {value}
           </h3>
         </div>
-        <button className="p-1.5 rounded-lg bg-white/5 text-slate-600 hover:text-white hover:bg-white/10 transition-all">
+        <button className="rounded-lg bg-white/5 p-1.5 text-slate-600 transition-colors duration-200 hover:bg-white/10 hover:text-white">
           <MoreHorizontal className="w-4 h-4" />
         </button>
       </div>

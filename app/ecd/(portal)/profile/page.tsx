@@ -484,7 +484,10 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 <p className="text-sm text-slate-500 py-4 italic">No staff members listed yet.</p>
               ) : (
                 (staffMembers ?? []).map((member: any) => (
-                  <div key={member.user_id} className="rounded-2xl border border-slate-100 p-5 shadow-sm transition-all hover:border-teal-100">
+                  <div
+                    key={member.user_id}
+                    className="tile transform-gpu [will-change:transform] rounded-2xl border border-slate-100 p-5 shadow-sm transition-transform duration-200 hover:border-teal-100"
+                  >
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-bold text-slate-900">

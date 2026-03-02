@@ -305,7 +305,10 @@ export default async function EcdBillingPage() {
             ) : (
               <div className="grid gap-3 sm:grid-cols-2">
                 {(billingTickets ?? []).map((ticket) => (
-                  <div key={ticket.id} className="rounded-2xl border border-slate-100 p-4 bg-slate-50/30 transition-all hover:bg-slate-50">
+                  <div
+                    key={ticket.id}
+                    className="tile transform-gpu [will-change:transform] rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition-transform duration-200 hover:bg-slate-50"
+                  >
                     <p className="text-sm font-bold text-slate-900">{ticket.ticket_number}</p>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
                       {ticket.status} â€¢ {formatDate(ticket.created_at)}

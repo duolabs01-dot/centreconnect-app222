@@ -151,7 +151,10 @@ export default async function EcdTransportPage() {
                   <p className="text-sm font-medium text-slate-400 py-2">No enquiries yet. Encourage parents to request a quote.</p>
                 ) : (
                   recentEnquiries.map((enquiry) => (
-                    <div key={enquiry.id} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition-all hover:border-teal-200">
+                    <div
+                      key={enquiry.id}
+                      className="tile transform-gpu [will-change:transform] flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition-transform duration-200 hover:border-teal-200"
+                    >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-slate-900">{enquiry.pickup_address ?? 'Pickup address pending'}</p>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">{formatDate(enquiry.created_at)}</p>

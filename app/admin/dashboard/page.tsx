@@ -64,7 +64,7 @@ export default async function AdminDashboardPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          <button className="h-16 px-10 rounded-3xl bg-white text-black font-black uppercase text-xs tracking-[0.2em] hover:bg-cyan-400 transition-all shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex items-center gap-3 active:scale-95 group">
+          <button className="flex h-16 items-center gap-3 rounded-3xl bg-white px-10 text-xs font-black uppercase tracking-[0.2em] text-black shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-transform duration-200 hover:scale-[1.02] hover:bg-cyan-400 group transform-gpu [will-change:transform]">
             <Zap className="w-4 h-4 group-hover:fill-current" />
             System Audit
           </button>
@@ -104,7 +104,7 @@ export default async function AdminDashboardPage() {
         
         {/* Main Revenue Stream - Massive Component */}
         <div className="lg:col-span-2 relative">
-          <div className="absolute -inset-4 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5 rounded-[3rem] blur-3xl" />
+          <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5" />
           <div className="relative bg-[#080B13] border border-white/5 rounded-[3rem] p-8 sm:p-12 shadow-2xl overflow-hidden group">
             <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between mb-16">
               <div className="space-y-2">
@@ -139,7 +139,7 @@ export default async function AdminDashboardPage() {
         <div className="space-y-10">
           {/* Health Monitor */}
           <div className="bg-[#080B13] border border-white/5 rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl" />
+            <div className="absolute right-0 top-0 h-32 w-32 bg-cyan-500/5" />
             <div className="flex items-center justify-between mb-10 relative">
               <div className="flex items-center gap-3">
                 <Activity className="w-5 h-5 text-cyan-500" />
@@ -151,8 +151,8 @@ export default async function AdminDashboardPage() {
           </div>
 
           {/* Action Callouts */}
-          <div className="relative group cursor-pointer active:scale-95 transition-all duration-300">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-600 to-blue-800 rounded-[3rem] blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
+          <div className="tile transform-gpu [will-change:transform] relative group cursor-pointer transition-transform duration-200">
+            <div className="absolute inset-0 rounded-[3rem] bg-gradient-to-br from-cyan-600 to-blue-800 opacity-20 transition-opacity duration-200 group-hover:opacity-40" />
             <div className="relative bg-gradient-to-br from-cyan-600 to-blue-900 rounded-[3rem] p-10 text-black shadow-2xl shadow-cyan-900/40 overflow-hidden">
               <div className="absolute -right-10 -top-10 opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-1000">
                 <Globe size={300} />
@@ -164,7 +164,7 @@ export default async function AdminDashboardPage() {
                   <h3 className="text-4xl font-black tracking-tighter leading-[0.9]">14 Centres Awaiting Audit</h3>
                 </div>
                 <p className="text-sm font-bold opacity-70 leading-relaxed">Verification queue is approaching threshold. Human intervention required.</p>
-                <button className="bg-black text-white h-14 px-8 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 shadow-2xl hover:bg-slate-900 transition-all">
+                <button className="flex h-14 items-center gap-3 rounded-2xl bg-black px-8 text-[10px] font-black uppercase tracking-[0.3em] text-white shadow-2xl transition-colors duration-200 hover:bg-slate-900">
                   Launch Audit
                   <ArrowUpRight className="w-4 h-4" />
                 </button>
@@ -176,7 +176,7 @@ export default async function AdminDashboardPage() {
 
       {/* Network Map / Regional Load */}
       <div className="relative group">
-        <div className="absolute inset-0 bg-emerald-500/[0.02] rounded-[3rem] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 rounded-[3rem] bg-emerald-500/[0.02] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         <div className="relative bg-[#080B13] border border-white/5 rounded-[3rem] p-8 sm:p-12 shadow-2xl overflow-hidden">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between mb-12">
             <div className="space-y-1">

@@ -334,7 +334,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                   type="button"
                   onClick={() => setStepIndex(idx)}
                   className={cn(
-                    'flex min-h-[60px] items-center gap-3 rounded-3xl border px-4 py-3 text-left transition-all',
+                    'flex min-h-[60px] items-center gap-3 rounded-3xl border px-4 py-3 text-left transform-gpu [will-change:transform] transition-transform duration-200 hover:scale-[1.02]',
                     complete && 'border-emerald-200 bg-emerald-50 text-emerald-700',
                     active && 'border-teal-400 bg-teal-600 text-white shadow-[0_10px_26px_rgba(13,148,136,0.34)]',
                     !active && !complete && 'border-slate-200 bg-white text-slate-600 hover:border-teal-200'

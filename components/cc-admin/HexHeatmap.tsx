@@ -91,7 +91,6 @@ export function HexHeatmap({ data = DEFAULT_PROVINCES }: HexHeatmapProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05, type: 'spring', stiffness: 200, damping: 18 }}
                 style={{ transformOrigin: `${cx}px ${cy}px` }}
-                whileHover={{ scale: 1.08 }}
               />
               <text x={cx} y={cy - 4} textAnchor="middle" fontSize="7" fontWeight="700" fill={stroke} className="font-orbitron" style={{ filter: `drop-shadow(0 0 3px ${stroke})` }}>{p.shortLabel}</text>
               <text x={cx} y={cy + 5} textAnchor="middle" fontSize="8" fontWeight="800" fill="white" className="font-inter">{p.score}</text>

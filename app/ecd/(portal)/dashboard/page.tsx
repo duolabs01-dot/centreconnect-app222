@@ -195,7 +195,7 @@ export default async function EcdDashboardPage() {
     >
       <div className="space-y-8 pb-12">
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card px-8 py-10 text-foreground shadow-[var(--shadow-elevation-1)]">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 blur-3xl -mr-32 -mt-32" />
+          <div className="absolute right-0 top-0 h-64 w-64 -mr-32 -mt-32 bg-teal-500/10" />
           <div className="relative z-10">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-400">
               {getJohannesburgGreeting()}
@@ -225,8 +225,12 @@ export default async function EcdDashboardPage() {
             { label: 'Pipeline', icon: TrendingUp, href: '/ecd/applications', color: 'bg-blue-50 text-blue-700 border-blue-100', desc: 'New admissions' },
             { label: 'Reports', icon: Zap, href: '/ecd/daily-reports', color: 'bg-amber-50 text-amber-700 border-amber-100', desc: 'Parent updates' },
           ].map(act => (
-            <Link key={act.label} href={act.href} className="group transition-all active:scale-95">
-              <Card className={cn("h-full border-none shadow-sm group-hover:shadow-md transition-all rounded-[2rem]", act.color)}>
+            <Link
+              key={act.label}
+              href={act.href}
+              className="tile transform-gpu [will-change:transform] group transition-transform duration-200"
+            >
+              <Card className={cn("h-full rounded-[2rem] border-none shadow-sm transition-transform duration-200 group-hover:shadow-md", act.color)}>
                 <CardContent className="p-6">
                   <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm transition-transform group-hover:-rotate-6">
                     <act.icon className="h-5 w-5" />
@@ -272,7 +276,7 @@ export default async function EcdDashboardPage() {
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="flex items-center gap-5 rounded-2xl border border-slate-50 bg-white p-5 text-slate-900 transition-all hover:bg-teal-50/30 hover:border-teal-100 group"
+                  className="tile transform-gpu [will-change:transform] group flex items-center gap-5 rounded-2xl border border-slate-50 bg-white p-5 text-slate-900 transition-transform duration-200 hover:border-teal-100 hover:bg-teal-50/30"
                 >
                   <span
                     className={cn(
