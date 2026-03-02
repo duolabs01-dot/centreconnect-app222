@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/sheet'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton } from '@/components/ecd/SignOutButton'
+import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { useEffect } from 'react'
 
 type NavItem = {
   href: string
@@ -50,6 +52,12 @@ export function MobileNavMenu({
 }: MobileNavMenuProps) {
   const pathname = usePathname()
   const [open, setOpen] = React.useState(false)
+  const { setVisible } = useBottomNav()
+
+  useEffect(() => {
+    setVisible(!open)
+    return () => setVisible(true)
+  }, [open, setVisible])
 
   const visibleNav = items.filter((item) => {
     if (type === 'public') return true

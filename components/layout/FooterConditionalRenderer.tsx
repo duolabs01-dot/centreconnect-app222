@@ -38,7 +38,6 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
       {isSignedIn && (
         <>
           {isParentPortal && <BottomNav items={PARENT_NAV_ITEMS} pathname={pathname} />}
-          {isEcdPortal && <BottomNav items={ECD_MOBILE_NAV_ITEMS} pathname={pathname} />}
           {isAdminPortal && <BottomNav items={ADMIN_MOBILE_NAV_ITEMS} pathname={pathname} />}
         </>
       )}
