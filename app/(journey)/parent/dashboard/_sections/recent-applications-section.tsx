@@ -5,9 +5,19 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatDate } from '@/lib/utils'
 
+type BadgeStatus = 'paid' | 'pending' | 'overdue' | 'draft'
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function mapApplicationStatusToBadge(status: string): BadgeStatus {
+  const normalized = status.toLowerCase()
+  if (['submitted', 'in_review', 'waitlisted', 'under_review', 'pending'].includes(normalized)) return 'pending'
+  if (['approved', 'accepted', 'enrolled', 'confirmed', 'active'].includes(normalized)) return 'paid'
+  if (['rejected', 'declined', 'withdrawn', 'cancelled', 'expired'].includes(normalized)) return 'overdue'
+  return 'draft'
 }
 
 export async function RecentApplicationsSection() {
@@ -71,7 +81,7 @@ export async function RecentApplicationsSection() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <StatusBadge status={application.status} />
+                <StatusBadge status={mapApplicationStatusToBadge(application.status)} />
                 {application.centreSlug ? (
                   <Button size="sm" variant="ghost" asChild>
                     <Link href={`/centre/${application.centreSlug}`}>View crèche</Link>
