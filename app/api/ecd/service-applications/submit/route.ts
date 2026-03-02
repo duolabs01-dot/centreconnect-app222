@@ -255,7 +255,7 @@ export async function POST(request: Request) {
       centreSuburb: data.centreSuburb?.trim() || null,
       centreCity: data.centreCity?.trim() || 'Johannesburg',
       centreProvince: data.centreProvince?.trim() || 'Gauteng',
-      selectedTier: data.selectedTier,
+      selectedTier: normalizedSelectedTier,
       recommendedTier: data.recommendedTier,
       requestedPlan: data.selectedTier,
       monthlyBudget: data.monthlyBudget ?? null,
