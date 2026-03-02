@@ -5,8 +5,6 @@ const nextConfig = {
   // Note: ESLint is now handled via root config or separate lint command in Next 15+
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    workerThreads: true,
-    webpackBuildWorker: false,
   },
   images: {
     remotePatterns: [
