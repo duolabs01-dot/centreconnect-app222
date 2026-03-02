@@ -190,7 +190,7 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header - Unified with Parent view */}
-      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-white/80 backdrop-blur-md border-b border-slate-100 z-[90] px-4 flex items-center justify-between">
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card/90 px-4 backdrop-blur-md md:hidden">
         <div className="flex items-center gap-3">
           <MobileNavMenu 
             items={visibleNav} 
@@ -208,7 +208,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-slate-100 bg-white px-5 py-8 shadow-[1px_0_10px_rgba(0,0,0,0.02)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-5 py-8 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
       >
         <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />
@@ -219,7 +219,7 @@ export function EcdPortalSidebar({
         <nav className="mt-2 space-y-2" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
             <Fragment key={bucket.group}>
-              <p className="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+              <p className="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 {GROUP_LABELS[bucket.group]}
               </p>
               {bucket.items.map((item) => renderNavItem(item))}
@@ -231,7 +231,7 @@ export function EcdPortalSidebar({
               <div className="my-4 px-4">
                 <div className="h-px w-full bg-slate-100" />
               </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 Coming Soon
               </p>
               {comingSoonItems.map((item) => renderNavItem(item))}
@@ -243,19 +243,22 @@ export function EcdPortalSidebar({
               <div className="my-4 px-4">
                 <div className="h-px w-full bg-slate-100" />
               </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 {GROUP_LABELS.settings}
               </p>
               {renderNavItem(settingsItem)}
             </Fragment>
           ) : null}
         </nav>
-        <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-slate-100 bg-slate-50/50 p-6">
+        <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
           <div className="flex flex-col gap-1">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Operator</p>
-            <p className="truncate text-sm text-slate-900 font-bold">{userEmail ?? 'Unknown'}</p>  
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
+            <p className="truncate text-sm font-bold text-foreground">{userEmail ?? 'Unknown'}</p>  
           </div>
-          <SignOutButton redirectTo="/" className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all font-bold rounded-2xl py-3 shadow-sm text-sm" />
+          <SignOutButton
+            redirectTo="/"
+            className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+          />
         </div>
       </aside>
     </>

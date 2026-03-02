@@ -97,7 +97,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   return (
     <div
       data-parent-theme="true"
-      className="min-h-screen bg-white font-sans text-slate-950"
+      className="min-h-screen bg-card font-sans text-foreground"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -118,7 +118,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
       </div>
 
       {/* Premium Sticky Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-xl">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center gap-4">
             {showMobileBack ? (
@@ -158,7 +158,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
               {showUserDropdown && (
                 <>
                   <div className="fixed inset-0 z-0" onClick={() => setShowUserDropdown(false)} />
-                  <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] animate-in zoom-in-95 duration-100 z-[60]">
+                  <div className="absolute right-0 z-[60] mt-2 w-56 origin-top-right animate-in zoom-in-95 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-elevation-1)] duration-100">
                     <div className="px-3 py-2 border-b border-slate-50 mb-1">
                       <p className="text-xs font-semibold text-slate-400">Signed in</p>
                       <div className="flex items-center gap-2 mt-1">

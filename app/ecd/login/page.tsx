@@ -12,7 +12,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Section } from '@/components/layout/Section'
 import { triggerConfetti } from '@/lib/ui/confetti'
-import { registerSession } from '@/lib/session-guard'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
+import {
+  ensureProfileWithRetry,
+  isEcdRole,
+  signInWithPasswordRetry,
+  type AuthRole,
+} from '@/lib/auth/client-auth'
 
 export default function EcdLoginPage() {
   const router = useRouter()
@@ -32,44 +38,38 @@ export default function EcdLoginPage() {
     }
     setLoading(true)
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const user = await signInWithPasswordRetry(supabase, {
         email: normalizedEmail,
         password: normalizedPassword,
       })
-      if (error) throw error
 
-      const ensureProfileResponse = await fetch('/api/auth/ensure-profile', { method: 'POST' })
-      if (!ensureProfileResponse.ok) {
-        const payload = (await ensureProfileResponse.json().catch(() => ({}))) as { error?: string }
-        throw new Error(payload.error || 'Failed to finalize account profile')
-      }
+      const { role: ensuredRole } = await ensureProfileWithRetry()
 
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('role')
-        .eq('id', data.user.id)
+        .eq('id', user.id)
         .single()
 
       if (profileError) throw profileError
+      const role = (ensuredRole ?? (profile?.role as AuthRole | undefined) ?? null) as AuthRole | null
 
-      if (profile.role !== 'ecd_admin' && profile.role !== 'ecd_staff' && profile.role !== 'ecd_supervisor') {
-        await supabase.auth.signOut()
+      if (!isEcdRole(role)) {
+        await robustSignOut(supabase)
         toast.error('This login is for ECD centres only')
-        setLoading(false)
         return
       }
 
-      if (profile.role === 'ecd_admin') {
+      if (role === 'ecd_admin') {
         const bootstrapResponse = await fetch('/api/ecd/bootstrap-centre', { method: 'POST' })
         if (bootstrapResponse.status === 403) {
           const payload = (await bootstrapResponse.json().catch(() => ({}))) as { error?: string; code?: string }
-          await supabase.auth.signOut()
+          await robustSignOut(supabase)
           toast.error(
             payload.code === 'APPLICATION_PENDING'
               ? 'Application pending approval. We will notify you once approved.'
               : payload.error || 'Account is not ready yet.'
           )
-          setLoading(false)
           return
         }
         if (!bootstrapResponse.ok) {
@@ -83,6 +83,7 @@ export default function EcdLoginPage() {
       router.replace('/ecd/dashboard')
       router.refresh()
     } catch (error: any) {
+      await robustSignOut(supabase)
       toast.error(error.message || 'Failed to login')
     } finally {
       setLoading(false)

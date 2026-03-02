@@ -9,9 +9,14 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 import { triggerConfetti } from '@/lib/ui/confetti'
-import { registerSession } from '@/lib/session-guard'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
-import { cn } from '@/lib/utils'
+import { robustSignOut } from '@/lib/auth/client-sign-out'
+import {
+  destinationForRole,
+  ensureProfileWithRetry,
+  signInWithPasswordRetry,
+  type AuthRole,
+} from '@/lib/auth/client-auth'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -46,12 +51,6 @@ export default function LoginPage() {
     return sanitizeNextPath(requestedNext) ?? '/'
   }
 
-  function destinationForRole(role: string | null | undefined) {
-    if (role === 'platform_admin') return '/admin/command'
-    if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
-    return '/parent/dashboard'
-  }
-
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     const normalizedEmail = email.trim().toLowerCase()
@@ -63,22 +62,21 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const user = await signInWithPasswordRetry(supabase, {
         email: normalizedEmail,
         password: normalizedPassword,
       })
-      if (error) throw error
+      const { role: ensuredRole } = await ensureProfileWithRetry()
+      let role: AuthRole | null = ensuredRole
 
-      // Sync profile & register session
-      await fetch('/api/auth/ensure-profile', { method: 'POST' })
-      
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .maybeSingle()
-
-      const role = profile?.role ?? data.user.user_metadata?.role ?? 'parent_user'
+      if (!role) {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        role = (profile?.role as AuthRole | undefined) ?? null
+      }
 
       triggerConfetti('application')
       toast.success('Logged in successfully!')
@@ -86,6 +84,7 @@ export default function LoginPage() {
       router.replace(destination)
       router.refresh()
     } catch (error: any) {
+      await robustSignOut(supabase)
       toast.error(error.message || 'Failed to login')
     } finally {
       setLoading(false)
