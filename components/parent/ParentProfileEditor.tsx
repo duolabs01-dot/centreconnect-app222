@@ -156,6 +156,12 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           onClick: () => openEdit('emergency_contact_name', profile.emergency_contact_name) 
         },
         { 
+          label: 'Co-Guardian Access', 
+          value: 'Invite co-parents', 
+          icon: Users, 
+          href: '/parent/profile/guardians' 
+        },
+        { 
           label: 'Child Profiles', 
           value: `${profile.child_count} active profiles`, 
           icon: Users, 
