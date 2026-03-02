@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { QuickSendTemplate } from './quick-send-template'
 import { SendReminderButton } from './send-reminder-button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
@@ -104,19 +103,26 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
-function applicationDetailsHref(applicationId: string) {
-  return `/ecd/applications/${applicationId}`
+function routeToken(value: string | null | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) return null
+  if (normalized === 'undefined' || normalized === 'null') return null
+  return encodeURIComponent(normalized)
+}
+
+function applicationDetailsHref(application: Pick<ApplicationRow, 'id' | 'application_number'>) {
+  const idToken = routeToken(application.id)
+  if (idToken) return `/ecd/applications/${idToken}`
+
+  const numberToken = routeToken(application.application_number)
+  if (numberToken) return `/ecd/applications/${numberToken}?lookup=number`
+
+  return '/ecd/applications'
 }
 
 function normalizeMissingDocuments(value: unknown) {
   if (!Array.isArray(value)) return [] as string[]
   return value.map((entry) => String(entry).trim()).filter(Boolean)
-}
-
-type Template = {
-  template_key: string
-  title: string
-  body: string
 }
 
 type IntakeBlockedApplication = {
@@ -199,14 +205,7 @@ async function partitionPendingForReview(applications: ApplicationRow[]) {
   return { ready, blocked }
 }
 
-function renderApplicationList(
-  applications: ApplicationRow[],
-  context: {
-    ecdId: string
-    centreName: string
-    templates: Template[]
-  }
-) {
+function renderApplicationList(applications: ApplicationRow[]) {
   if (applications.length === 0) {
     return (
       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-12 text-center">
@@ -235,30 +234,22 @@ function renderApplicationList(
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-900 truncate">{childName}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {parentName} â€¢ {formatDate(application.submitted_at)}
+                    {parentName} - {formatDate(application.submitted_at)}
                   </p>
                   <div className="mt-2">
                     <StatusBadge status={application.status} />
                   </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-slate-400 hover:text-teal-600 hover:bg-teal-50" asChild>
-                  <Link href={applicationDetailsHref(application.id)} title="View Application">
+                  <Link href={applicationDetailsHref(application)} prefetch={false} title="View Application">
                     <ChevronRight className="w-5 h-5" />
                   </Link>
                 </Button>
               </div>
-              <div className="mt-4 pt-4 border-t border-slate-50 flex justify-end">
-                <QuickSendTemplate
-                  ecdId={context.ecdId}
-                  parentId={parent?.id ?? ''}
-                  applicationId={application.id}
-                  applicationNumber={application.application_number}
-                  centreName={context.centreName}
-                  childName={childName}
-                  parentName={parentName}
-                  status={application.status}
-                  templates={context.templates}
-                />
+              <div className="mt-4 flex justify-end border-t border-slate-50 pt-4">
+                <Button size="sm" className="h-10 rounded-2xl bg-teal-600 px-4 font-bold text-white hover:bg-teal-700" asChild>
+                  <Link href={applicationDetailsHref(application)} prefetch={false}>Open Application</Link>
+                </Button>
               </div>
             </Card>
           )
@@ -294,20 +285,9 @@ function renderApplicationList(
                   </TableCell>
                   <TableCell className="text-slate-500 text-xs">{formatDate(application.submitted_at)}</TableCell>
                   <TableCell className="text-right pr-6">
-                    <div className="flex items-center justify-end gap-2">
-                      <QuickSendTemplate
-                        ecdId={context.ecdId}
-                        parentId={parent?.id ?? ''}
-                        applicationId={application.id}
-                        applicationNumber={application.application_number}
-                        centreName={context.centreName}
-                        childName={childName}
-                        parentName={parentName}
-                        status={application.status}
-                        templates={context.templates}
-                      />
-                      <Button size="sm" variant="ghost" className="h-9 px-4 text-slate-500 hover:text-teal-700 hover:bg-teal-50 font-bold rounded-2xl" asChild>
-                        <Link href={applicationDetailsHref(application.id)}>Open</Link>
+                    <div className="flex items-center justify-end">
+                      <Button size="sm" variant="ghost" className="h-9 rounded-2xl px-4 font-bold text-slate-500 hover:bg-teal-50 hover:text-teal-700" asChild>
+                        <Link href={applicationDetailsHref(application)} prefetch={false}>Open</Link>
                       </Button>
                     </div>
                   </TableCell>
@@ -324,14 +304,6 @@ function renderApplicationList(
 export default async function EcdApplicationsPage({ searchParams }: ApplicationsPageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
-  const { data: templatesData } = await supabase
-    .from('communication_templates')
-    .select('template_key,title,body')
-    .eq('is_active', true)
-    .in('template_key', ['missing_documents', 'open_day_invite', 'application_update', 'spot_available'])
-    .order('created_at', { ascending: true })
-
-  const templates = (templatesData ?? []) as Template[]
   const selectedTab: TabKey =
     searchParams?.tab === 'awaiting_offer_response' ||
     searchParams?.tab === 'approved' ||
@@ -602,11 +574,12 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               {selectedTab !== 'pending' ? <input type="hidden" name="tab" value={selectedTab} /> : null}
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input 
-                  name="q" 
-                  defaultValue={searchParams?.q ?? ''} 
-                  placeholder="Search applications..." 
-                  className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-4 text-sm text-slate-900 focus:border-teal-400 focus:ring-4 focus:ring-teal-500/5 outline-none transition-all"
+                <Input
+                  name="q"
+                  defaultValue={searchParams?.q ?? ''}
+                  placeholder="Search applications..."
+                  inputMode="search"
+                  className="h-12 w-full rounded-2xl border-slate-100 bg-slate-50 pl-12 pr-4 text-sm text-slate-900 transition-all focus:border-teal-400 focus:ring-4 focus:ring-teal-500/5"
                 />
               </div>
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold transition-all active:scale-95 shadow-sm">Search</Button>
@@ -694,7 +667,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <SendReminderButton applicationId={application.id} />
                           <Button size="sm" variant="outline" className="h-10 rounded-2xl" asChild>
-                            <Link href={applicationDetailsHref(application.id)}>Open</Link>
+                            <Link href={applicationDetailsHref(application)} prefetch={false}>Open</Link>
                           </Button>
                         </div>
                       </div>
@@ -704,11 +677,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               </div>
             )}
 
-            {renderApplicationList(selectedApplications, {
-              ecdId,
-              centreName: centre?.name ?? 'Your crèche',
-              templates,
-            })}
+            {renderApplicationList(selectedApplications)}
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-50">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -789,8 +758,8 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                       {focusedApplication.admin_notes || 'No private notes added yet.'}
                     </p>
                   </div>
-                  <Button variant="outline" className="w-full mt-4 h-12 rounded-2xl font-bold text-slate-600 border-slate-200 hover:bg-white hover:text-teal-700 hover:border-teal-200" asChild>
-                    <Link href={applicationDetailsHref(focusedApplication.id)}>Full Case File -&gt;</Link>
+                  <Button variant="outline" className="mt-4 h-12 w-full rounded-2xl border-slate-200 font-bold text-slate-600 hover:border-teal-200 hover:bg-white hover:text-teal-700" asChild>
+                    <Link href={applicationDetailsHref(focusedApplication)} prefetch={false}>Full Case File -&gt;</Link>
                   </Button>
                 </div>
               </div>

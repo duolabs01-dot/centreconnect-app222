@@ -17,6 +17,8 @@ import { FeeAgreementCard } from './fee-agreement-card'
 import { QuickDecisionActions } from './quick-decision-actions'
 import { SendReminderButton } from '../send-reminder-button'
 
+export const revalidate = 30
+
 export const metadata: Metadata = {
   title: 'Application Details - CentreConnect',
   description: 'Review child application details and manage admission status.',
@@ -28,6 +30,9 @@ export const metadata: Metadata = {
 type ApplicationDetailsPageProps = {
   params: {
     id: string
+  }
+  searchParams?: {
+    lookup?: string
   }
 }
 
@@ -48,9 +53,79 @@ type ParentDocument = {
   created_at: string
 }
 
+type Template = {
+  template_key: string
+  title: string
+  body: string
+}
+
+type ApplicationRow = {
+  id: string
+  application_number: string
+  status: string
+  submitted_at: string
+  parent_message: string | null
+  admin_notes: string | null
+  ecd_id: string
+  reviewed_at: string | null
+  decided_at: string | null
+  offer_made_at: string | null
+  offer_sent_at: string | null
+  offer_accepted_at: string | null
+  enrolled_at: string | null
+  withdrawn_at: string | null
+  monthly_fee_cents: number | null
+  fee_notes: string | null
+  missing_documents: unknown
+  children: unknown
+  parents: unknown
+}
+
+type ChildProfile = {
+  first_name: string
+  last_name: string
+  date_of_birth: string | null
+  gender: string | null
+  allergies: string | string[] | null
+  medical_conditions: string | string[] | null
+  special_needs: string | null
+}
+
+type ParentProfile = {
+  id: string
+  alt_phone: string | null
+  billing_email: string | null
+  address: string | null
+  suburb: string | null
+  city: string | null
+  province: string | null
+  guardian_relationship: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  id_verification_status: string | null
+  user_profiles:
+    | {
+        full_name: string
+        phone: string | null
+      }
+    | Array<{
+        full_name: string
+        phone: string | null
+      }>
+    | null
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function decodeRouteToken(value: string) {
+  try {
+    return decodeURIComponent(value).trim()
+  } catch {
+    return value.trim()
+  }
 }
 
 function parseMissingDocuments(value: unknown): string[] {
@@ -58,73 +133,97 @@ function parseMissingDocuments(value: unknown): string[] {
   return value.map((entry) => String(entry).trim()).filter(Boolean)
 }
 
-export default async function ApplicationDetailsPage({ params }: ApplicationDetailsPageProps) {
-  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+function formatValueList(value: unknown, fallback = 'None listed') {
+  if (Array.isArray(value)) {
+    const values = value.map((entry) => String(entry).trim()).filter(Boolean)
+    return values.length > 0 ? values.join(', ') : fallback
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : fallback
+  }
+  return fallback
+}
 
-  const [{ data: centre }, { data: application }, { data: templatesData }] = await Promise.all([
-    supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
+async function fetchApplicationForRoute(
+  supabase: Awaited<ReturnType<typeof requireEcdPortalSession>>['supabase'],
+  ecdId: string,
+  routeToken: string,
+  preferNumberLookup: boolean
+) {
+  const selectClause =
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,reviewed_at,decided_at,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,withdrawn_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+
+  const queryById = () =>
     supabase
       .from('applications')
-      .select(
-        'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,reviewed_at,decided_at,offer_made_at,offer_sent_at,offer_accepted_at,enrolled_at,withdrawn_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
-      )
-      .eq('id', params.id)
+      .select(selectClause)
       .eq('ecd_id', ecdId)
-      .maybeSingle(),
+      .eq('id', routeToken)
+      .maybeSingle()
+
+  const queryByNumber = () =>
+    supabase
+      .from('applications')
+      .select(selectClause)
+      .eq('ecd_id', ecdId)
+      .eq('application_number', routeToken)
+      .maybeSingle()
+
+  const primary = preferNumberLookup ? await queryByNumber() : await queryById()
+  if (primary.data) return primary.data as ApplicationRow
+
+  const fallback = preferNumberLookup ? await queryById() : await queryByNumber()
+  return (fallback.data ?? null) as ApplicationRow | null
+}
+
+export default async function ApplicationDetailsPage({ params, searchParams }: ApplicationDetailsPageProps) {
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  const routeToken = decodeRouteToken(params.id)
+  const preferNumberLookup = searchParams?.lookup === 'number'
+
+  const application = await fetchApplicationForRoute(supabase, ecdId, routeToken, preferNumberLookup)
+  if (!application) {
+    notFound()
+  }
+
+  const child = normalizeOne(application.children as ChildProfile | ChildProfile[] | null)
+  const parent = normalizeOne(application.parents as ParentProfile | ParentProfile[] | null)
+  const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+  const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? ''
+  const parentName = parentProfile?.full_name ?? 'Parent'
+  const childName = child ? `${child.first_name} ${child.last_name}` : 'Child'
+
+  const [centreResult, templatesResult, historyResult, documentsResult] = await Promise.all([
+    supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
     supabase
       .from('communication_templates')
       .select('template_key,title,body')
       .eq('is_active', true)
       .in('template_key', ['missing_documents', 'open_day_invite', 'application_update', 'spot_available'])
       .order('created_at', { ascending: true }),
+    supabase
+      .from('application_status_history')
+      .select('id,old_status,new_status,notes,changed_by,created_at')
+      .eq('application_id', application.id)
+      .order('created_at', { ascending: false })
+      .limit(40),
+    parent?.id
+      ? createAdminClient()
+          .from('parent_documents')
+          .select('id,doc_type,file_name,verification_status,created_at')
+          .eq('parent_id', parent.id)
+          .order('created_at', { ascending: false })
+          .limit(100)
+      : Promise.resolve({ data: [] as ParentDocument[], error: null }),
   ])
 
-  if (!application) {
-    notFound()
-  }
+  const centreName = centreResult.data?.name ?? 'Your crèche'
+  const templates = (templatesResult.data ?? []) as Template[]
+  const history = (historyResult.data ?? []) as HistoryItem[]
+  const parentDocs = (documentsResult.data ?? []) as ParentDocument[]
+  const docsError = documentsResult.error?.message ?? null
 
-  const child = normalizeOne(application.children)
-  const parent = normalizeOne(application.parents)
-  const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-  const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? ''
-  const parentName = parentProfile?.full_name ?? 'Parent'
-  const childName = child ? `${child.first_name} ${child.last_name}` : 'Child'
-  const templates = (templatesData ?? []) as Array<{
-    template_key: string
-    title: string
-    body: string
-  }>
-
-  let parentDocs: ParentDocument[] = []
-  let docsError: string | null = null
-  if (parent?.id) {
-    try {
-      const admin = createAdminClient()
-      const { data, error } = await admin
-        .from('parent_documents')
-        .select('id,doc_type,file_name,verification_status,created_at')
-        .eq('parent_id', parent.id)
-        .order('created_at', { ascending: false })
-        .limit(100)
-
-      if (error) {
-        docsError = error.message
-      } else {
-        parentDocs = (data ?? []) as ParentDocument[]
-      }
-    } catch (error) {
-      docsError = error instanceof Error ? error.message : 'Unable to load parent documents.'
-    }
-  }
-
-  const { data: historyRows } = await supabase
-    .from('application_status_history')
-    .select('id,old_status,new_status,notes,changed_by,created_at')
-    .eq('application_id', application.id)
-    .order('created_at', { ascending: false })
-    .limit(40)
-
-  const history = (historyRows ?? []) as HistoryItem[]
   const missingCodes = parseMissingDocuments(application.missing_documents)
   const missingLabels = toApplicationDocumentLabels(missingCodes)
 
@@ -150,12 +249,12 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
     <EcdOsShell
       title="Application Details"
       description="Review full child enrollment details and take quick action."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
       <div className="space-y-5 pb-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Link href="/ecd/applications" className="text-sm font-semibold text-teal-700 hover:text-teal-800">
+          <Link href="/ecd/applications" prefetch={false} className="text-sm font-semibold text-teal-700 hover:text-teal-800">
             Back to applications
           </Link>
           <StatusBadge status={application.status} />
@@ -203,6 +302,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
               {parent?.id ? (
                 <Button asChild variant="outline" className="h-11 rounded-2xl">
                   <Link
+                    prefetch={false}
                     href={`/ecd/communications?recipient=${encodeURIComponent(parent.id)}&contextType=application&contextId=${encodeURIComponent(application.id)}`}
                   >
                     Send Message
@@ -245,13 +345,13 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                   <span className="font-semibold text-slate-900">Gender:</span> {child?.gender ?? 'Not provided'}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Allergies:</span> {child?.allergies ?? 'None listed'}
+                  <span className="font-semibold text-slate-900">Allergies:</span> {formatValueList(child?.allergies)}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Conditions:</span> {child?.medical_conditions ?? 'None listed'}
+                  <span className="font-semibold text-slate-900">Conditions:</span> {formatValueList(child?.medical_conditions)}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Special needs:</span> {child?.special_needs ?? 'None listed'}
+                  <span className="font-semibold text-slate-900">Special needs:</span> {formatValueList(child?.special_needs, 'None listed')}
                 </p>
               </CardContent>
             </Card>
@@ -271,12 +371,10 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                   <span className="font-semibold text-slate-900">Phone:</span> {parentPhone || 'Not provided'}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Billing email:</span>{' '}
-                  {parent?.billing_email || 'Not provided'}
+                  <span className="font-semibold text-slate-900">Billing email:</span> {parent?.billing_email || 'Not provided'}
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-900">Relationship:</span>{' '}
-                  {parent?.guardian_relationship || 'Not provided'}
+                  <span className="font-semibold text-slate-900">Relationship:</span> {parent?.guardian_relationship || 'Not provided'}
                 </p>
                 <p className="sm:col-span-2">
                   <span className="font-semibold text-slate-900">Address:</span>{' '}
@@ -343,7 +441,8 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                           {entry.old_status ? `${entry.old_status} -> ${entry.new_status}` : entry.new_status}
                         </p>
                         <p className="mt-1 text-xs text-slate-600">
-                          {formatDate(entry.created_at)}{entry.changed_by ? ` | by ${entry.changed_by}` : ''}
+                          {formatDate(entry.created_at)}
+                          {entry.changed_by ? ` | by ${entry.changed_by}` : ''}
                         </p>
                         {entry.notes ? <p className="mt-1 text-xs text-slate-700">{entry.notes}</p> : null}
                       </li>
@@ -402,7 +501,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                   ecdId={application.ecd_id}
                   parentId={parent?.id ?? ''}
                   applicationId={application.id}
-                  centreName={centre?.name ?? 'Your crèche'}
+                  centreName={centreName}
                   childName={childName}
                   parentName={parentName}
                   applicationNumber={application.application_number}
@@ -421,9 +520,7 @@ export default async function ApplicationDetailsPage({ params }: ApplicationDeta
                     Outstanding Documents
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="text-sm text-amber-900">
-                  {missingLabels.join(', ')}
-                </CardContent>
+                <CardContent className="text-sm text-amber-900">{missingLabels.join(', ')}</CardContent>
               </Card>
             ) : null}
           </aside>
