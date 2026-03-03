@@ -590,6 +590,26 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
               />
             </div>
             <div className="space-y-1">
+              <Label htmlFor="tenant-address" className={adminTheme.body}>Address</Label>
+              <Input
+                id="tenant-address"
+                className={premiumInputClass}
+                placeholder="123 Main Road"
+                value={createForm.address}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, address: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="tenant-suburb" className={adminTheme.body}>Suburb</Label>
+              <Input
+                id="tenant-suburb"
+                className={premiumInputClass}
+                placeholder="Alexandra"
+                value={createForm.suburb}
+                onChange={(e) => setCreateForm((prev) => ({ ...prev, suburb: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="tenant-province" className={adminTheme.body}>Province</Label>
               <Input
                 id="tenant-province"
