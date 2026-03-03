@@ -1,24 +1,85 @@
-import type { Metadata } from "next"
-import { FileText } from "lucide-react"
+import type { Metadata } from 'next'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { ReportCardsClient } from './report-cards-client'
 
 export const metadata: Metadata = {
-  title: "Report Cards — CentreConnect",
+  title: 'Report Cards — CentreConnect',
+  description: 'Create and share child progress reports with parents.',
 }
 
-export default function ReportCardsPage() {
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+export default async function ReportCardsPage() {
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+
+  // 1. Get enrolled children for this centre
+  const { data: enrolledRows } = await supabase
+    .from('applications')
+    .select('child_id,children(id,first_name,last_name)')
+    .eq('ecd_id', ecdId)
+    .eq('status', 'enrolled')
+    .limit(200)
+
+  const seenChildIds = new Set<string>()
+  const enrolledChildren = (enrolledRows ?? []).flatMap((row: any) => {
+    const child = normalizeOne(row.children)
+    const childId = child?.id ?? row.child_id
+    if (!childId || seenChildIds.has(childId)) return []
+    seenChildIds.add(childId)
+    return [
+      {
+        id: childId,
+        first_name: child?.first_name?.trim() || 'Child',
+        last_name: child?.last_name?.trim() || '',
+      },
+    ]
+  })
+
+  // 2. Get all report cards for this centre with their areas
+  const { data: reportCardsRaw } = await supabase
+    .from('report_cards')
+    .select('*,report_card_areas(*)')
+    .eq('ecd_id', ecdId)
+    .order('created_at', { ascending: false })
+    .limit(200)
+
+  const reportCards = (reportCardsRaw ?? []).map((rc: any) => ({
+    id: rc.id,
+    child_id: rc.child_id,
+    term: rc.term,
+    period_start: rc.period_start,
+    period_end: rc.period_end,
+    status: rc.status,
+    teacher_name: rc.teacher_name,
+    overall_comment: rc.overall_comment,
+    published_at: rc.published_at,
+    created_at: rc.created_at,
+    updated_at: rc.updated_at,
+    report_card_areas: (rc.report_card_areas ?? []).map((a: any) => ({
+      area_name: a.area_name,
+      rating: a.rating,
+      comment: a.comment,
+      sort_order: a.sort_order,
+    })),
+  }))
+
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 max-w-md">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
-          <FileText className="h-7 w-7" />
-        </div>
-        <p className="text-xs font-bold uppercase tracking-wider text-teal-600 mb-2">
-          Coming Soon
-        </p>
-        <h1 className="text-xl font-bold text-slate-900">Report Cards</h1>
-        <p className="mt-2 text-sm text-slate-500">Share child progress reports with parents.</p>
-        <p className="mt-4 text-xs text-slate-400">Expected: Q2 2026</p>
-      </div>
-    </div>
+    <ReportCardsClient
+      enrolledChildren={enrolledChildren}
+      initialReportCards={reportCards}
+      ecdId={ecdId}
+      userRoleLabel={
+        role === 'ecd_admin'
+          ? 'Creche Admin'
+          : role === 'ecd_supervisor'
+            ? 'Supervisor'
+            : 'Staff Member'
+      }
+      userEmail={user.email ?? ''}
+      userRole={role}
+    />
   )
 }
