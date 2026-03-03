@@ -13,7 +13,7 @@ export default function EcdErrorPage({ error, reset }: ErrorPageProps) {
 
   return (
     <div className="ecd-light-shell min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card/80 p-8 text-center shadow-[var(--shadow-elevation-4)] backdrop-blur-sm">
+      <div className="mx-auto max-w-xl rounded-2xl border border-border bg-card p-8 text-center shadow-[var(--shadow-elevation-4)]">
         <h1 className="text-2xl font-bold text-foreground">ECD page failed to load</h1>
         <p className="mt-3 text-sm text-muted-foreground">Try again or return to the ECD dashboard.</p>
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">

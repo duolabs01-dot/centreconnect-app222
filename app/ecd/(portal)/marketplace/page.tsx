@@ -209,7 +209,7 @@ export default async function EcdMarketplacePage() {
                     ) : (
                       <form action={requestService} className="mt-6">
                         <input type="hidden" name="service_id" value={service.id} />
-                        <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-sm transition-all active:scale-95" type="submit" disabled={requestPending}>
+                        <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-sm transition-colors" type="submit" disabled={requestPending}>
                           {requestPending ? 'Request Sent' : 'Request Add-on'}
                         </Button>
                       </form>

@@ -296,7 +296,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardHeader>
           <CardContent className="pt-6">
             <div className="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full bg-teal-600 transition-all duration-700" style={{ width: `${score}%` }} />
+              <div className="h-full bg-teal-600 transition-[width] duration-700" style={{ width: `${score}%` }} />
             </div>
             <p className="text-sm font-bold text-slate-900">{score}% complete</p>
             <p className="mt-1 text-xs text-slate-500 font-medium">
@@ -365,7 +365,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="phone" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.phone ?? ''} placeholder="Main phone" />
               <input name="contact_phone" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.contact_phone ?? ''} placeholder="Contact phone" />
               <input name="contact_whatsapp" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.contact_whatsapp ?? ''} placeholder="WhatsApp number" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Basics
               </Button>
             </form>
@@ -383,7 +383,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="city" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.city ?? ''} placeholder="City" />
               <input name="province" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
               <input name="postal_code" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Location
               </Button>
             </form>
@@ -398,7 +398,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <form action={saveAccountDetails} className="grid gap-4 md:grid-cols-2">
               <input name="full_name" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
               <input name="profile_phone" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Account
               </Button>
             </form>
@@ -453,7 +453,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                   <option value="off">Off</option>
                 </select>
               </div>
-              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm">Save Notification Preferences</Button>
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">Save Notification Preferences</Button>
             </form>
           </CardContent>
         </Card>
@@ -476,7 +476,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 <option value="ecd_supervisor">ECD Supervisor</option>
                 <option value="ecd_admin">ECD Admin</option>
               </select>
-              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-all active:scale-95">Invite Staff (Support-assisted)</Button>
+              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Invite Staff (Support-assisted)</Button>
             </form>
 
             <div className="space-y-3">
@@ -486,7 +486,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 (staffMembers ?? []).map((member: any) => (
                   <div
                     key={member.user_id}
-                    className="tile transform-gpu [will-change:transform] rounded-2xl border border-slate-100 p-5 shadow-sm transition-transform duration-200 hover:border-teal-100"
+                    className="tile rounded-2xl border border-slate-100 p-5 shadow-sm transition-colors duration-200 hover:border-teal-100"
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -531,7 +531,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                             type="submit"
                             size="sm"
                             variant="outline"
-                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
                               member.can_approve_applications
                                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                                 : 'border-slate-200 bg-slate-50 text-slate-400'
@@ -556,7 +556,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                             type="submit"
                             size="sm"
                             variant="outline"
-                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
                               member.can_publish_announcements
                                 ? 'border-teal-200 bg-teal-50 text-teal-700'
                                 : 'border-slate-200 bg-slate-50 text-slate-400'

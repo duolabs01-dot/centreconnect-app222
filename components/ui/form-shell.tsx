@@ -46,7 +46,7 @@ export function FormShell({
             onClick={onClose}
             aria-label="Close"
             className={cn(
-              "shrink-0 p-2 rounded-2xl transition-all active:scale-95",
+              "shrink-0 p-2 rounded-2xl transition-colors",
               isParent 
                 ? "text-slate-400 hover:text-slate-900 hover:bg-slate-50" 
                 : "text-teal-400 hover:text-teal-900 hover:bg-teal-50"
@@ -103,7 +103,7 @@ export function FormFooter({
         onClick={onCancel}
         disabled={loading}
         className={cn(
-          "px-6 py-3 rounded-2xl text-sm font-bold transition-all disabled:opacity-50",
+          "px-6 py-3 rounded-2xl text-sm font-bold transition-colors disabled:opacity-50",
           isParent 
             ? "text-slate-500 hover:text-slate-900 hover:bg-slate-50" 
             : "text-teal-600 hover:text-teal-900 hover:bg-teal-50"
@@ -116,7 +116,7 @@ export function FormFooter({
         form={formId}
         disabled={loading || disabled}
         className={cn(
-          'px-8 py-3.5 rounded-2xl text-sm font-black text-white transition-all shadow-lg active:scale-[0.98]',
+          'px-8 py-3.5 rounded-2xl text-sm font-black text-white transition-colors shadow-lg',
           'disabled:opacity-50 disabled:cursor-not-allowed',
           destructive 
             ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-900/20' 

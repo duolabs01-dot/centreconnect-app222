@@ -9,7 +9,7 @@ const Card = React.memo(React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "tile transform-gpu [will-change:transform] rounded-2xl border border-border/75 bg-card/95 text-card-foreground shadow-[var(--shadow-elevation-4)] transition-transform duration-200",
+      "tile rounded-2xl border border-border/75 bg-card/95 text-card-foreground shadow-[var(--shadow-elevation-4)] transition-colors duration-200",
       className
     )}
     {...props}

@@ -228,11 +228,11 @@ export default async function EcdDashboardPage() {
             <Link
               key={act.label}
               href={act.href}
-              className="tile transform-gpu [will-change:transform] group transition-transform duration-200"
+              className="tile group transition-colors duration-200"
             >
-              <Card className={cn("h-full rounded-[2rem] border-none shadow-sm transition-transform duration-200 group-hover:shadow-md", act.color)}>
+              <Card className={cn("h-full rounded-[2rem] border-none shadow-sm transition-shadow duration-200 group-hover:shadow-md", act.color)}>
                 <CardContent className="p-6">
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm transition-transform group-hover:-rotate-6">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm transition-colors">
                     <act.icon className="h-5 w-5" />
                   </div>
                   <p className="text-sm font-black uppercase tracking-widest">{act.label}</p>
@@ -276,7 +276,7 @@ export default async function EcdDashboardPage() {
                 <Link
                   key={item.id}
                   href={item.href}
-                  className="tile transform-gpu [will-change:transform] group flex items-center gap-5 rounded-2xl border border-slate-50 bg-white p-5 text-slate-900 transition-transform duration-200 hover:border-teal-100 hover:bg-teal-50/30"
+                  className="tile group flex items-center gap-5 rounded-2xl border border-slate-50 bg-white p-5 text-slate-900 transition-colors duration-200 hover:border-teal-100 hover:bg-teal-50/30"
                 >
                   <span
                     className={cn(
@@ -292,7 +292,7 @@ export default async function EcdDashboardPage() {
                     <p className="text-sm font-black group-hover:text-teal-900 transition-colors tracking-tight">{item.label}</p>
                     <p className="mt-0.5 text-xs text-slate-500 font-medium leading-relaxed">{item.detail}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-teal-600 transition-transform group-hover:translate-x-1" />
+                  <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-teal-600 transition-colors" />
                 </Link>
               ))
             )}
@@ -327,7 +327,7 @@ export default async function EcdDashboardPage() {
             <Card className="shadow-sm border-none rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 px-8 py-6">
                 <CardTitle className="text-slate-900 font-black uppercase tracking-widest text-sm">Admissions Pipeline</CardTitle>
-                <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100 transition-all">
+                <Link href="/ecd/applications" className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600 hover:text-teal-700 bg-teal-50 px-3 py-1 rounded-full border border-teal-100 transition-colors">
                   Full Pipeline &rarr;
                 </Link>
               </CardHeader>

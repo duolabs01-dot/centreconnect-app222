@@ -117,7 +117,7 @@
 }
 
 .glass-card {
-  @apply bg-white/80 border-slate-200 backdrop-blur-md;
+  @apply bg-white border-slate-200;
 }
 
 /* Parent Portal theme */
@@ -141,13 +141,19 @@
 }
 
 .tile {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: transform;
-  transform: translateZ(0);
+  transition:
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tile:hover {
-  transform: scale(1.02);
+  box-shadow: var(--shadow-elevation-2);
+}
+
+.ecd-page-shell .tile,
+.ecd-page-shell .tile:hover {
+  transform: none;
 }
 
 /* Fast mobile navigation: no animation/transition overhead */

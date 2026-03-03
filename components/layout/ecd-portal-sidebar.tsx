@@ -151,7 +151,7 @@ export function EcdPortalSidebar({
         href={item.href}
         scroll={false}
         className={cn(
-          'group relative flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-bold tracking-tight transition-all duration-200 transform-gpu [will-change:transform]',
+          'group relative flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-bold tracking-tight transition-colors duration-200',
           active
             ? 'border border-teal-200 bg-teal-50/90 text-teal-900 shadow-sm'
             : 'border border-transparent text-slate-700 hover:border-teal-100 hover:bg-teal-50/60 hover:text-teal-800'
@@ -190,7 +190,7 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header - Unified with Parent view */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card/90 px-4 backdrop-blur-md md:hidden">
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
         <div className="flex items-center gap-3">
           <MobileNavMenu 
             items={visibleNav} 

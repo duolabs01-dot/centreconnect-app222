@@ -239,7 +239,7 @@ export default async function EcdBillingPage() {
                   placeholder="Add context for this month..."
                 />
               </label>
-              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-all active:scale-95 shadow-sm" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm" disabled={role === 'ecd_staff'}>
                 Save Financial Snapshot
               </Button>
             </form>
@@ -307,7 +307,7 @@ export default async function EcdBillingPage() {
                 {(billingTickets ?? []).map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="tile transform-gpu [will-change:transform] rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition-transform duration-200 hover:bg-slate-50"
+                    className="tile rounded-2xl border border-slate-100 bg-slate-50/30 p-4 transition-colors duration-200 hover:bg-slate-50"
                   >
                     <p className="text-sm font-bold text-slate-900">{ticket.ticket_number}</p>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">

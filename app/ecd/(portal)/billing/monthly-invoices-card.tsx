@@ -90,7 +90,7 @@ export function MonthlyInvoicesCard({
           <Button
             onClick={handleGenerate}
             disabled={isGenerating || enrolledWithFeesCount === 0}
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-2xl shadow-md transition-all active:scale-95"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-12 rounded-2xl shadow-md transition-colors"
           >
             {isGenerating ? 'Generating...' : `Generate Invoices for ${currentMonthName}`}
           </Button>

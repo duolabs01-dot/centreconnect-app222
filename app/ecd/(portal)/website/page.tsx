@@ -240,7 +240,7 @@ export default async function EcdWebsitePage() {
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <div className="rounded-full bg-slate-100 p-1">
-              <div className="h-2.5 rounded-full bg-teal-600 transition-all duration-700" style={{ width: `${completionPct}%` }} />
+              <div className="h-2.5 rounded-full bg-teal-600 transition-[width] duration-700" style={{ width: `${completionPct}%` }} />
             </div>
             <p className="text-sm font-bold text-teal-700">{completionPct}% complete</p>
             <div className="grid gap-3 sm:grid-cols-3">
@@ -359,7 +359,7 @@ export default async function EcdWebsitePage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-all active:scale-95">Save Draft</Button>
+                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Save Draft</Button>
                 {centre?.slug ? (
                   <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
                     <a href={`/centre/${centre.slug}`} target="_blank" rel="noreferrer">
@@ -395,7 +395,7 @@ export default async function EcdWebsitePage() {
                 <Button
                   type="submit"
                   variant={centre?.is_active ? 'outline' : 'default'}
-                  className={cn("w-full h-12 rounded-2xl font-bold transition-all active:scale-95 shadow-sm", 
+                  className={cn("w-full h-12 rounded-2xl font-bold transition-colors shadow-sm", 
                     !centre?.is_active && "bg-teal-600 hover:bg-teal-700 text-white")}
                 >
                   {centre?.is_active ? 'Unpublish Website' : 'Publish Website'}
@@ -424,7 +424,7 @@ export default async function EcdWebsitePage() {
                   className="cc-native-field h-auto min-h-24 py-3 rounded-2xl text-sm leading-relaxed"
                   placeholder="What should this website achieve for your crèche?"
                 />
-                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-all active:scale-95">Send Request</Button>
+                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-colors">Send Request</Button>
               </form>
             </CardContent>
           </Card>

@@ -519,7 +519,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
           </div>
           <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-teal-100">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-[width] duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -535,7 +535,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                   variant="outline"
                   onClick={() => setStepIndex(idx)}
                   className={cn(
-                    'flex h-auto min-h-[60px] items-center gap-3 rounded-3xl px-4 py-3 text-left transform-gpu [will-change:transform] transition-transform duration-200 hover:scale-[1.02]',
+                    'flex h-auto min-h-[60px] items-center gap-3 rounded-3xl px-4 py-3 text-left transition-colors duration-200',
                     complete && 'border-emerald-200 bg-emerald-50 text-emerald-700',
                     active && 'border-teal-400 bg-teal-600 text-white shadow-[0_10px_26px_rgba(13,148,136,0.34)]',
                     !active && !complete && 'border-slate-200 bg-white text-slate-600 hover:border-teal-200'
