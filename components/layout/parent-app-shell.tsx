@@ -127,7 +127,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
       {/* Premium Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex items-center gap-4">
             {showMobileBack ? (
               <Button
@@ -216,7 +216,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           hideParentBottomNav ? 'pb-12' : 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
         )}
       >
-        <Container className="max-w-4xl px-4 pt-6 sm:px-6">
+        <Container className="max-w-6xl px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
           {/* Mobile Title View */}
           <div className="md:hidden mb-6">
             <div className="flex items-center gap-2">

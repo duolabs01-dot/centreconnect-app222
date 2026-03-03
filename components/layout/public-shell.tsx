@@ -3,6 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Container } from '@/components/layout/container'
 
 type PublicShellProps = {
   children: React.ReactNode
@@ -10,10 +11,9 @@ type PublicShellProps = {
 
 export function PublicShell({ children }: PublicShellProps) {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Premium Sticky Glass Nav */}
-      <header className="sticky top-0 z-40 border-b border-slate-200/60 bg-white/95 backdrop-blur-xl shadow-sm">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
+    <div className="min-h-screen bg-slate-50 text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elevation-1)]">
+        <Container className="flex items-center justify-between py-3.5 sm:py-4">
           <Link href="/" className="flex items-center gap-1.5">
             <span className="font-display text-xl font-bold tracking-tight text-slate-900">CentreConnect</span>
             <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mt-1" />
@@ -25,13 +25,13 @@ export function PublicShell({ children }: PublicShellProps) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button size="sm" variant="default" className="font-bold bg-cyan-600 hover:bg-cyan-700 text-white rounded-full px-6" asChild>
+            <Button size="sm" variant="default" className="h-10 rounded-2xl bg-teal-600 px-5 text-sm font-bold text-white hover:bg-teal-700" asChild>
               <Link href="/login">
                 Sign In
               </Link>
             </Button>
           </div>
-        </div>
+        </Container>
       </header>
 
       <div className="animate-in fade-in duration-500">

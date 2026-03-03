@@ -216,28 +216,28 @@ export default function EcdRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background/90 via-background/70 to-white">
+    <div className="min-h-screen bg-slate-50">
       <Section className="py-8 sm:py-10 lg:py-12" containerClassName="cc-section">
         <div className="mb-6">
-          <Link href="/for-centres" className="text-xs font-semibold text-sky-700 hover:underline">
-            Back to For ECD
+          <Link href="/for-centres" className="text-xs font-semibold text-teal-700 hover:underline">
+            Back to For ECD Centres
           </Link>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">CentreConnect</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Register Your ECD</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-            This is a product application wizard, not an auth page. Share your centre profile, pick a package, and submit for review.
+            Complete this quick setup to join the platform. Start with Pilot if you want a trial with no card details.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_1.35fr]">
-          <Card className="h-fit border-border bg-card/95">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)]">
+          <Card className="h-fit rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)] xl:sticky xl:top-24">
             <CardHeader>
               <CardTitle className="text-xl text-foreground">Packages and Pricing</CardTitle>
               <CardDescription>All monthly prices are disclosed upfront.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {PLAN_OPTIONS.map((tier) => (
-                <div key={tier} className="rounded-2xl border border-border bg-card/90 p-4">
+                <div key={tier} className="rounded-2xl border border-border bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
                     <p className="text-xl font-bold text-foreground">R{TIER_PRICES[tier]}</p>
@@ -250,14 +250,14 @@ export default function EcdRegisterPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/90">
+          <Card className="rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)]">
             <CardHeader className="space-y-4">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-cyan-700">Step {step} of 4</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-teal-700">Step {step} of 4</p>
                 <p className="text-sm font-semibold text-muted-foreground">{STEP_TITLES[step]}</p>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-card/80">
-                <div className="h-full rounded-full bg-cyan-500 transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} />
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-teal-500 transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} />
               </div>
             </CardHeader>
 
@@ -267,53 +267,53 @@ export default function EcdRegisterPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="fullName">Primary Contact Name *</Label>
-                      <Input id="fullName" placeholder="e.g. Nandi Mokoena" value={form.fullName} onChange={(e) => setField('fullName', e.target.value)} required />
+                      <Input id="fullName" placeholder="e.g. Nandi Mokoena" value={form.fullName} onChange={(e) => setField('fullName', e.target.value)} required className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Business Email *</Label>
-                      <Input id="email" type="email" placeholder="owner@yourcentre.co.za" value={form.email} onChange={(e) => setField('email', e.target.value)} required />
+                      <Input id="email" type="email" placeholder="owner@yourcentre.co.za" value={form.email} onChange={(e) => setField('email', e.target.value)} required className="h-11 rounded-2xl" />
                     </div>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Contact Number</Label>
-                      <Input id="phone" placeholder="+27 72 123 4567" value={form.phone} onChange={(e) => setField('phone', e.target.value)} />
+                      <Input id="phone" placeholder="+27 72 123 4567" value={form.phone} onChange={(e) => setField('phone', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="operatorRole">Your Role at Centre</Label>
-                      <Input id="operatorRole" value={form.operatorRole} onChange={(e) => setField('operatorRole', e.target.value)} placeholder="Owner, Principal, Manager" />
+                      <Input id="operatorRole" value={form.operatorRole} onChange={(e) => setField('operatorRole', e.target.value)} placeholder="Owner, Principal, Manager" className="h-11 rounded-2xl" />
                     </div>
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="centreName">Centre Name *</Label>
-                      <Input id="centreName" placeholder="Bright Start Early Learning" value={form.centreName} onChange={(e) => setField('centreName', e.target.value)} required />
+                      <Input id="centreName" placeholder="Bright Start Early Learning" value={form.centreName} onChange={(e) => setField('centreName', e.target.value)} required className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="centrePhone">Centre Phone</Label>
-                      <Input id="centrePhone" placeholder="+27 11 234 5678" value={form.centrePhone} onChange={(e) => setField('centrePhone', e.target.value)} />
+                      <Input id="centrePhone" placeholder="+27 11 234 5678" value={form.centrePhone} onChange={(e) => setField('centrePhone', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="centreAddress">Address</Label>
-                    <Input id="centreAddress" placeholder="123 Rivonia Road" value={form.centreAddress} onChange={(e) => setField('centreAddress', e.target.value)} />
+                    <Input id="centreAddress" placeholder="123 Rivonia Road" value={form.centreAddress} onChange={(e) => setField('centreAddress', e.target.value)} className="h-11 rounded-2xl" />
                   </div>
 
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="centreSuburb">Suburb</Label>
-                      <Input id="centreSuburb" placeholder="Alexandra" value={form.centreSuburb} onChange={(e) => setField('centreSuburb', e.target.value)} />
+                      <Input id="centreSuburb" placeholder="Alexandra" value={form.centreSuburb} onChange={(e) => setField('centreSuburb', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="centreCity">City</Label>
-                      <Input id="centreCity" placeholder="Johannesburg" value={form.centreCity} onChange={(e) => setField('centreCity', e.target.value)} />
+                      <Input id="centreCity" placeholder="Johannesburg" value={form.centreCity} onChange={(e) => setField('centreCity', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="centreProvince">Province</Label>
-                      <Input id="centreProvince" placeholder="Gauteng" value={form.centreProvince} onChange={(e) => setField('centreProvince', e.target.value)} />
+                      <Input id="centreProvince" placeholder="Gauteng" value={form.centreProvince} onChange={(e) => setField('centreProvince', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                   </div>
                 </div>
@@ -324,15 +324,15 @@ export default function EcdRegisterPage() {
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="yearsOperating">Years Operating</Label>
-                      <Input id="yearsOperating" type="number" min="0" value={form.yearsOperating} onChange={(e) => setField('yearsOperating', e.target.value)} />
+                      <Input id="yearsOperating" type="number" min="0" value={form.yearsOperating} onChange={(e) => setField('yearsOperating', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="currentChildren">Current Children</Label>
-                      <Input id="currentChildren" type="number" min="0" value={form.currentChildren} onChange={(e) => setField('currentChildren', e.target.value)} />
+                      <Input id="currentChildren" type="number" min="0" value={form.currentChildren} onChange={(e) => setField('currentChildren', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="staffCount">Staff Count</Label>
-                      <Input id="staffCount" type="number" min="0" value={form.staffCount} onChange={(e) => setField('staffCount', e.target.value)} />
+                      <Input id="staffCount" type="number" min="0" value={form.staffCount} onChange={(e) => setField('staffCount', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                   </div>
 
@@ -342,7 +342,7 @@ export default function EcdRegisterPage() {
                       id="registrationStatus"
                       value={form.registrationStatus}
                       onChange={(e) => setField('registrationStatus', e.target.value)}
-                      className="cc-native-field"
+                      className="cc-native-field h-11 rounded-2xl"
                     >
                       <option>Unregistered / Community-based</option>
                       <option>Partially Registered</option>
@@ -352,14 +352,14 @@ export default function EcdRegisterPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="operatingHours">Operating Hours</Label>
-                    <Input id="operatingHours" value={form.operatingHours} onChange={(e) => setField('operatingHours', e.target.value)} placeholder="Mon-Fri 06:30-17:30" />
+                    <Input id="operatingHours" value={form.operatingHours} onChange={(e) => setField('operatingHours', e.target.value)} placeholder="Mon-Fri 06:30-17:30" className="h-11 rounded-2xl" />
                   </div>
 
                     <div className="space-y-2">
                       <Label>Age Groups Served</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {AGE_GROUP_OPTIONS.map((option) => (
-                          <label key={option} className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
+                          <label key={option} className="flex min-h-[44px] items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
                             <input
                               type="checkbox"
                               checked={form.ageGroups.includes(option)}
@@ -378,11 +378,11 @@ export default function EcdRegisterPage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="monthlyBudget">Monthly Budget (R)</Label>
-                      <Input id="monthlyBudget" type="number" min="0" placeholder="299" value={form.monthlyBudget} onChange={(e) => setField('monthlyBudget', e.target.value)} />
+                      <Input id="monthlyBudget" type="number" min="0" placeholder="299" value={form.monthlyBudget} onChange={(e) => setField('monthlyBudget', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="expectedChildren">Expected Children (next 12 months)</Label>
-                      <Input id="expectedChildren" type="number" min="0" placeholder="60" value={form.expectedChildren} onChange={(e) => setField('expectedChildren', e.target.value)} />
+                      <Input id="expectedChildren" type="number" min="0" placeholder="60" value={form.expectedChildren} onChange={(e) => setField('expectedChildren', e.target.value)} className="h-11 rounded-2xl" />
                     </div>
                   </div>
 
@@ -393,7 +393,7 @@ export default function EcdRegisterPage() {
                     <p className="mt-1 text-xs text-emerald-800">{TIER_DESCRIPTIONS[recommendedTier]}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3 text-xs text-cyan-900">
+                  <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3 text-xs text-teal-900">
                     Pilot plan is available for trial onboarding. No card details are required during Pilot.
                   </div>
 
@@ -407,8 +407,8 @@ export default function EcdRegisterPage() {
                           onClick={() => setField('selectedTier', tier)}
                           className={`rounded-2xl border p-3 text-left transition ${
                             active
-                              ? 'border-cyan-400 bg-cyan-50 shadow-[var(--shadow-elevation-1)]'
-                              : 'border-border bg-card/90 text-foreground hover:border-cyan-200 hover:bg-background'
+                              ? 'border-teal-400 bg-teal-50 shadow-[var(--shadow-elevation-1)]'
+                              : 'border-border bg-card text-foreground hover:border-teal-200 hover:bg-background'
                           }`}
                         >
                           <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
@@ -426,7 +426,7 @@ export default function EcdRegisterPage() {
                       <Label>What do you need most right now?</Label>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {NEED_OPTIONS.map((need) => (
-                          <label key={need} className="flex items-center gap-2 rounded-2xl border border-border bg-card/80 px-3 py-2 text-sm text-muted-foreground">
+                          <label key={need} className="flex min-h-[44px] items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 text-sm text-muted-foreground">
                             <input
                               type="checkbox"
                               checked={form.keyNeeds.includes(need)}
@@ -441,7 +441,7 @@ export default function EcdRegisterPage() {
               ) : null}
 
               {step === 4 ? (
-                <div className="space-y-3 rounded-2xl border border-border bg-card/90 p-4 text-sm text-muted-foreground">
+                <div className="space-y-3 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
                   <p className="font-semibold text-foreground">Review your application</p>
                   <p className="text-muted-foreground">Contact: {form.fullName} ({form.email})</p>
                   <p className="text-muted-foreground">Centre: {form.centreName}</p>
@@ -465,6 +465,7 @@ export default function EcdRegisterPage() {
                       onChange={(e) => setField('additionalContext', e.target.value)}
                       placeholder="Share challenges, timelines, compliance goals, or implementation priorities."
                       rows={4}
+                      className="min-h-24 rounded-2xl"
                     />
                   </div>
                   {turnstileSiteKey ? (
@@ -481,7 +482,7 @@ export default function EcdRegisterPage() {
               ) : null}
 
               <div className="flex items-center justify-between gap-2 pt-2">
-                <Button variant="outline" onClick={previousStep} disabled={step === 1 || loading}>
+                <Button variant="outline" onClick={previousStep} disabled={step === 1 || loading} className="h-11 rounded-2xl px-5 font-semibold">
                   Back
                 </Button>
 
@@ -492,11 +493,12 @@ export default function EcdRegisterPage() {
                       nextStep()
                     }}
                     disabled={loading}
+                    className="h-11 rounded-2xl px-5 bg-teal-600 hover:bg-teal-700 text-white font-semibold"
                   >
                     Next
                   </Button>
                 ) : (
-                  <Button onClick={submitApplication} disabled={loading}>
+                  <Button onClick={submitApplication} disabled={loading} className="h-11 rounded-2xl px-5 bg-teal-600 hover:bg-teal-700 text-white font-semibold">
                     {loading ? 'Submitting...' : 'Submit Service Application'}
                   </Button>
                 )}

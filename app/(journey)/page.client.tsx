@@ -55,8 +55,8 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
   }, [])
 
   return (
-    <div className="bg-white">
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+    <div className="bg-slate-50">
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="space-y-12 sm:space-y-20">
           
           {/* SECTION 2 — New Hero */}
@@ -72,10 +72,10 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
               </p>
               
               <div className="mt-10 flex flex-wrap gap-4">
-                <Button size="lg" className="h-14 px-8 text-base font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl" asChild>
+                <Button size="lg" className="h-14 rounded-2xl bg-cyan-500 px-8 text-base font-bold text-slate-950 hover:bg-cyan-400" asChild>
                   <Link href="/directory">Find a Crèche Near You</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold border-white/20 text-white bg-transparent hover:bg-white/10 rounded-xl" asChild>
+                <Button size="lg" variant="outline" className="h-14 rounded-2xl border-white/20 bg-transparent px-8 text-base font-bold text-white hover:bg-white/10" asChild>
                   <Link href="/for-centres">I Run a Centre &rarr;</Link>
                 </Button>
               </div>
@@ -250,7 +250,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                   </div>
                 ))}
               </div>
-              <Button size="lg" className="mt-12 h-14 px-8 text-base font-bold bg-white text-slate-950 hover:bg-cyan-50 rounded-xl" asChild>
+              <Button size="lg" className="mt-12 h-14 rounded-2xl bg-white px-8 text-base font-bold text-slate-950 hover:bg-cyan-50" asChild>
                 <Link href="/for-centres">Register Your Centre &rarr;</Link>
               </Button>
             </div>

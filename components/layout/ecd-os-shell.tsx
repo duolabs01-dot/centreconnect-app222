@@ -14,6 +14,6 @@ export function EcdOsShell({
   children,
 }: EcdOsShellProps) {
   return (
-    <div className="ecd-page-shell min-h-screen bg-[#F8FAFC] text-slate-900">{children}</div>
+    <div className="ecd-page-shell w-full min-h-screen bg-card text-foreground">{children}</div>
   )
 }
