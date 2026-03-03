@@ -5,9 +5,10 @@ import { Calendar, CalendarDays, Clock3, MessageSquare, Sparkles } from 'lucide-
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { CalendarInteractiveView, type CalendarEvent, type CalendarScope, type CalendarViewMode, type CalendarVisibility } from '@/components/ecd/CalendarInteractiveView'
+import { EcdIosCalendarView, type EcdCalendarFeedItem } from '@/components/ecd/ecd-ios-calendar-view'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS, normalizeCommunicationAutomationSettings } from '@/lib/communications/automation-settings'
+import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { formatDate, getJohannesburgNowParts } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
 type CalendarPageProps = {
   searchParams?: {
     month?: string
-    visibility?: string
     edit?: string
-    scope?: string
-    view?: string
-    focus?: string
     day?: string
   }
 }
@@ -43,6 +40,43 @@ type ChildBirthdayRow = {
   first_name: string | null
   last_name: string | null
   date_of_birth: string | null
+}
+
+type CalendarEventRow = {
+  id: string
+  title: string
+  description: string | null
+  event_date: string
+  start_time: string | null
+  end_time: string | null
+  is_public: boolean
+}
+
+type AttendanceRow = {
+  id: string
+  date: string
+  checked_in: boolean
+  picked_up: boolean
+}
+
+type AnnouncementRow = {
+  id: string
+  title: string
+  content: string | null
+  is_published: boolean
+  published_at: string | null
+  created_at: string
+}
+
+type ReminderRow = {
+  id: string
+  submitted_at: string | null
+  status: string
+  missing_documents: unknown
+  children:
+    | { first_name: string | null; last_name: string | null }
+    | Array<{ first_name: string | null; last_name: string | null }>
+    | null
 }
 
 function toMonthKey(date: Date) {
@@ -77,6 +111,47 @@ function parseDayKey(value?: string) {
   const day = Number(dayRaw)
   if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null
   return new Date(year, month - 1, day)
+}
+
+function formatTimeHHMM(value: string | null | undefined) {
+  if (!value) return null
+  return value.slice(0, 5)
+}
+
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function normalizeMissingDocuments(value: unknown) {
+  if (!Array.isArray(value)) return [] as string[]
+  return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
+function toJhbDayAndTime(isoValue: string) {
+  const parsed = new Date(isoValue)
+  if (Number.isNaN(parsed.getTime())) return null
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Africa/Johannesburg',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  const parts = formatter.formatToParts(parsed)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value
+  const year = part('year')
+  const month = part('month')
+  const day = part('day')
+  const hour = part('hour')
+  const minute = part('minute')
+  if (!year || !month || !day || !hour || !minute) return null
+  return {
+    dayKey: `${year}-${month}-${day}`,
+    time: `${hour}:${minute}`,
+  }
 }
 
 function maxDayInMonth(year: number, month1to12: number) {
@@ -171,33 +246,22 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
   const selectedDate = new Date(selectedYear, selectedMonth - 1, 1)
   const currentMonthKey = toMonthKey(selectedDate)
 
-  const viewParam = searchParams?.view
-  const view: CalendarViewMode =
-    viewParam === 'week'
-      ? 'week'
-      : viewParam === 'day'
-        ? 'day'
-        : viewParam === 'timetable'
-          ? 'timetable'
-          : 'month'
-
-  const focusParam = searchParams?.focus ?? searchParams?.day
-  const focusDate = parseDayKey(focusParam) ?? today
+  const focusDate = parseDayKey(searchParams?.day) ?? today
   const focusDayKey = formatDayKey(focusDate)
 
-  const visibility: CalendarVisibility =
-    searchParams?.visibility === 'public' || searchParams?.visibility === 'internal'
-      ? searchParams.visibility
-      : 'all'
-  const scope: CalendarScope =
-    searchParams?.scope === 'past' || searchParams?.scope === 'upcoming'
-      ? searchParams.scope
-      : 'all'
+  const rangeStartKey = `${selectedYear}-01-01`
+  const rangeEndKey = `${selectedYear}-12-31`
+  const rangeStartTs = `${rangeStartKey}T00:00:00.000Z`
+  const rangeEndTs = `${rangeEndKey}T23:59:59.999Z`
 
-  const rangeStartKey = `${selectedYear - 1}-01-01`
-  const rangeEndKey = `${selectedYear + 1}-12-31`
-
-  const [{ data: eventRows }, centreRow, { data: birthdaysRows }] = await Promise.all([
+  const [
+    { data: eventRows },
+    centreRow,
+    { data: birthdaysRows },
+    { data: attendanceRows },
+    { data: announcementRows },
+    { data: reminderRows },
+  ] = await Promise.all([
     supabase
       .from('calendar_events')
       .select('id,title,description,event_date,start_time,end_time,is_public')
@@ -215,15 +279,132 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
       .not('date_of_birth', 'is', null)
       .order('first_name', { ascending: true })
       .limit(200),
+    supabase
+      .from('attendance')
+      .select('id,date,checked_in,picked_up')
+      .eq('ecd_id', ecdId)
+      .gte('date', rangeStartKey)
+      .lte('date', rangeEndKey)
+      .limit(60000),
+    supabase
+      .from('announcements')
+      .select('id,title,content,is_published,published_at,created_at')
+      .eq('ecd_id', ecdId)
+      .gte('created_at', rangeStartTs)
+      .lte('created_at', rangeEndTs)
+      .order('created_at', { ascending: false })
+      .limit(2000),
+    supabase
+      .from('applications')
+      .select('id,submitted_at,status,missing_documents,children(first_name,last_name)')
+      .eq('ecd_id', ecdId)
+      .in('status', ['partial', 'draft'])
+      .not('submitted_at', 'is', null)
+      .gte('submitted_at', rangeStartTs)
+      .lte('submitted_at', rangeEndTs)
+      .order('submitted_at', { ascending: false })
+      .limit(3000),
   ])
 
   const automationSettings = normalizeCommunicationAutomationSettings(
     centreRow?.communication_automation_settings ?? null
   )
-  const events = ((eventRows ?? []) as CalendarEvent[]) ?? []
+  const rawCalendarEvents = ((eventRows ?? []) as CalendarEventRow[]) ?? []
+  const attendanceSignalRows = ((attendanceRows ?? []) as AttendanceRow[]) ?? []
+  const announcementSignalRows = ((announcementRows ?? []) as AnnouncementRow[]) ?? []
+  const reminderSignalRows = ((reminderRows ?? []) as ReminderRow[]) ?? []
+
+  const attendanceByDate = new Map<string, { total: number; checkedIn: number; pickedUp: number }>()
+  for (const row of attendanceSignalRows) {
+    const key = row.date
+    if (!key) continue
+    const current = attendanceByDate.get(key) ?? { total: 0, checkedIn: 0, pickedUp: 0 }
+    current.total += 1
+    if (row.checked_in) current.checkedIn += 1
+    if (row.picked_up) current.pickedUp += 1
+    attendanceByDate.set(key, current)
+  }
+
+  const calendarFeed: EcdCalendarFeedItem[] = []
+  for (const event of rawCalendarEvents) {
+    calendarFeed.push({
+      id: `event:${event.id}`,
+      title: event.title,
+      description: event.description,
+      event_date: event.event_date,
+      start_time: formatTimeHHMM(event.start_time),
+      end_time: formatTimeHHMM(event.end_time),
+      all_day: !event.start_time && !event.end_time,
+      is_public: Boolean(event.is_public),
+      source: 'event',
+      href: `/ecd/calendar?month=${event.event_date.slice(0, 7)}&day=${event.event_date}&edit=${event.id}#editor`,
+    })
+  }
+
+  for (const [eventDate, summary] of attendanceByDate.entries()) {
+    calendarFeed.push({
+      id: `attendance:${eventDate}`,
+      title: `${summary.checkedIn} checked in`,
+      description: `${summary.pickedUp} picked up · ${summary.total} attendance records`,
+      event_date: eventDate,
+      start_time: null,
+      end_time: null,
+      all_day: true,
+      is_public: false,
+      source: 'attendance',
+      href: `/ecd/attendance`,
+    })
+  }
+
+  for (const item of announcementSignalRows) {
+    const sourceTimestamp = item.published_at ?? item.created_at
+    const when = toJhbDayAndTime(sourceTimestamp)
+    if (!when || when.dayKey < rangeStartKey || when.dayKey > rangeEndKey) continue
+    calendarFeed.push({
+      id: `announcement:${item.id}`,
+      title: item.is_published ? item.title : `Draft: ${item.title}`,
+      description: item.content,
+      event_date: when.dayKey,
+      start_time: null,
+      end_time: null,
+      all_day: true,
+      is_public: item.is_published,
+      source: 'announcement',
+      href: `/ecd/announcements`,
+    })
+  }
+
+  for (const reminder of reminderSignalRows) {
+    if (!reminder.submitted_at) continue
+    const dueAt = new Date(reminder.submitted_at)
+    if (Number.isNaN(dueAt.getTime())) continue
+    dueAt.setHours(dueAt.getHours() + automationSettings.reminder_delay_hours)
+    const due = toJhbDayAndTime(dueAt.toISOString())
+    if (!due || due.dayKey < rangeStartKey || due.dayKey > rangeEndKey) continue
+
+    const child = normalizeOne(reminder.children)
+    const childName = `${child?.first_name ?? 'Child'} ${child?.last_name ?? ''}`.trim()
+    const missingLabels = toApplicationDocumentLabels(normalizeMissingDocuments(reminder.missing_documents))
+
+    calendarFeed.push({
+      id: `reminder:${reminder.id}`,
+      title: `Reminder for ${childName}`,
+      description:
+        missingLabels.length > 0
+          ? `Missing: ${missingLabels.slice(0, 3).join(', ')}`
+          : 'Incomplete application details pending',
+      event_date: due.dayKey,
+      start_time: due.time,
+      end_time: null,
+      all_day: false,
+      is_public: false,
+      source: 'reminder',
+      href: `/ecd/applications/${encodeURIComponent(reminder.id)}`,
+    })
+  }
 
   const editId = (searchParams?.edit ?? '').trim()
-  const editingEvent = editId ? events.find((event) => event.id === editId) ?? null : null
+  const editingEvent = editId ? rawCalendarEvents.find((event) => event.id === editId) ?? null : null
 
   const monthStartKey = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`
   const nowBadge = `Today ${String(nowJhb.day).padStart(2, '0')}/${String(nowJhb.month).padStart(2, '0')} ${String(nowJhb.hour).padStart(2, '0')}:00 SAST`
@@ -382,15 +563,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     revalidatePath('/ecd/calendar')
   }
 
-  const clearParams = new URLSearchParams()
-  clearParams.set('month', currentMonthKey)
-  if (view !== 'month') {
-    clearParams.set('view', view)
-    clearParams.set('focus', focusDayKey)
-  }
-  if (visibility !== 'all') clearParams.set('visibility', visibility)
-  if (scope !== 'all') clearParams.set('scope', scope)
-  const clearSelectionHref = `/ecd/calendar?${clearParams.toString()}#calendar`
+  const clearSelectionHref = `/ecd/calendar?month=${currentMonthKey}&day=${focusDayKey}#editor`
 
   return (
     <EcdOsShell
@@ -409,18 +582,15 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
           </p>
         </section>
 
-        <CalendarInteractiveView
-          events={events}
-          initialView={view}
-          initialVisibility={visibility}
-          initialScope={scope}
-          initialFocusDayKey={focusDayKey}
+        <EcdIosCalendarView
+          items={calendarFeed}
           initialMonthKey={currentMonthKey}
+          initialDayKey={focusDayKey}
           todayKey={todayKey}
           nowBadge={nowBadge}
         />
 
-        <section className="grid gap-5 xl:grid-cols-2">
+        <section id="editor" className="grid gap-5 xl:grid-cols-2">
           <Card className="rounded-3xl border-slate-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
