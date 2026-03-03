@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import ApplicationTimeline from '@/components/parent/ApplicationTimeline'
 import PlacementDecisionModal from '@/components/parent/PlacementDecisionModal'
+import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
 
 type TimelineEvent = {
@@ -145,14 +146,14 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup Code</p>
         <p className="mt-1 text-sm text-slate-600">{`No active code. Generate one for today's pickup.`}</p>
-        <button
+        <Button
           type="button"
           onClick={generateCode}
           disabled={generating}
-          className="mt-3 rounded-2xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+          className="mt-3 h-10 rounded-2xl bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700"
         >
           {generating ? 'Generating...' : 'Generate Pickup Code'}
-        </button>
+        </Button>
         {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
       </div>
     </section>
@@ -362,18 +363,22 @@ export default function ApplicationDetailClient({
   return (
     <div style={{ fontFamily: 'var(--font-parent)', padding: '0 0 32px' }}>
       <div className="mb-3 hidden items-center gap-2 md:flex">
-        <button
+        <Button
+          type="button"
+          variant="ghost"
           onClick={() => router.back()}
-          className="rounded-2xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+          className="h-8 rounded-2xl px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-800"
         >
           {'\u2190'} Back
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
           onClick={() => router.push('/parent/dashboard')}
-          className="rounded-2xl px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-800"
+          className="h-8 rounded-2xl px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-800"
         >
           Home
-        </button>
+        </Button>
       </div>
       <h1>{childFirstName}&apos;s Application</h1>
       <p>
@@ -381,14 +386,15 @@ export default function ApplicationDetailClient({
       </p>
       {canWithdraw ? (
         <div className="mt-2">
-          <button
+          <Button
             type="button"
             onClick={onWithdraw}
             disabled={isWithdrawing}
-            className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
+            variant="outline"
+            className="h-8 rounded-2xl border-rose-200 bg-rose-50 px-3 text-xs font-semibold text-rose-700 hover:bg-rose-100"
           >
             {isWithdrawing ? 'Processing...' : withdrawLabel}
-          </button>
+          </Button>
         </div>
       ) : null}
       {showMultipleApplicationsNotice ? (
@@ -407,13 +413,13 @@ export default function ApplicationDetailClient({
               <li key={document}>- {document.replaceAll('_', ' ')}</li>
             ))}
           </ul>
-          <button
+          <Button
             type="button"
             onClick={() => router.push('/parent/profile/documents')}
-            className="mt-3 rounded-2xl bg-teal-600 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-700"
+            className="mt-3 h-9 rounded-2xl bg-teal-600 px-3 text-xs font-semibold text-white hover:bg-teal-700"
           >
             Upload documents now
-          </button>
+          </Button>
         </div>
       ) : null}
       <div className="glass-card rounded-2xl p-4 sm:p-5">
@@ -443,12 +449,14 @@ export default function ApplicationDetailClient({
             {liveStatus === 'submitted' && (
               <div className="mt-2">
                 {!isEditing ? (
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
                     onClick={() => setIsEditing(true)}
-                    className="rounded-2xl px-2 py-1 text-xs font-semibold text-cyan-700 transition-colors hover:bg-cyan-50 hover:text-cyan-800"
+                    className="h-7 rounded-2xl px-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800"
                   >
                     Edit message {'\u2192'}
-                  </button>
+                  </Button>
                 ) : (
                   <div className="space-y-2">
                     <textarea
@@ -458,7 +466,8 @@ export default function ApplicationDetailClient({
                       placeholder="Your message to the crèche..."
                     />
                     <div className="flex gap-2">
-                      <button
+                      <Button
+                        type="button"
                         onClick={() => {
                           startSave(async () => {
                             const supabase = createClient()
@@ -476,19 +485,21 @@ export default function ApplicationDetailClient({
                           })
                         }}
                         disabled={isSaving}
-                        className="rounded-2xl bg-cyan-600 px-4 py-2 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50"
+                        className="h-8 rounded-2xl bg-cyan-600 px-4 text-xs font-semibold text-white hover:bg-cyan-700"
                       >
                         {isSaving ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() => {
                           setIsEditing(false)
                           setEditMessage(parentMessage ?? '')
                         }}
-                        className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600"
+                        className="h-8 rounded-2xl border-slate-200 px-4 text-xs font-semibold text-slate-600"
                       >
                         Cancel
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}

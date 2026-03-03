@@ -114,17 +114,19 @@ export function SetupWizard() {
               </header>
               <div className="grid grid-cols-2 gap-3">
                 {RELATIONSHIPS.map(r => (
-                  <button
+                  <Button
                     key={r}
+                    type="button"
+                    variant="outline"
                     onClick={() => setRole(r)}
-                    className={`h-14 rounded-2xl border-2 font-bold text-sm transition-all ${
+                    className={`h-14 rounded-2xl border-2 font-bold text-sm transition-colors ${
                       role === r 
                         ? 'border-cyan-600 bg-cyan-50 text-cyan-700' 
                         : 'border-slate-100 hover:border-slate-200 text-slate-600'
                     }`}
                   >
                     {r}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -210,12 +212,14 @@ export function SetupWizard() {
           {/* Actions */}
           <div className="mt-10 flex gap-3 pt-6 border-t border-slate-50">
             {currentStep > 0 && (
-              <button 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={back}
-                className="h-14 px-6 rounded-2xl border border-slate-200 text-slate-400 hover:text-slate-600 transition-colors"
+                className="h-14 rounded-2xl border-slate-200 px-6 text-slate-400 hover:text-slate-600"
               >
                 <ArrowLeft className="h-5 w-5" />
-              </button>
+              </Button>
             )}
             <Button 
               disabled={loading || (currentStep === 0 && !role) || (currentStep === 1 && !child.firstName)}

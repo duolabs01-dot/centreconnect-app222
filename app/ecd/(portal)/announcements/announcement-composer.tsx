@@ -29,25 +29,25 @@ export function AnnouncementComposer({
     <Card className="border-slate-200">
       <CardHeader>
         <CardTitle>Announcement Composer</CardTitle>
-        <div className="inline-flex w-full max-w-xs rounded-xl border border-slate-200 bg-slate-50 p-1">
-          <button
+        <div className="inline-flex w-full max-w-xs gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+          <Button
             type="button"
+            size="sm"
+            variant={tab === 'quick' ? 'secondary' : 'ghost'}
             onClick={() => setTab('quick')}
-            className={`flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
-              tab === 'quick' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
-            }`}
+            className="h-9 flex-1 rounded-2xl px-3 text-xs font-semibold"
           >
             Quick Send
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            size="sm"
+            variant={tab === 'custom' ? 'secondary' : 'ghost'}
             onClick={() => setTab('custom')}
-            className={`flex-1 rounded-2xl px-3 py-2 text-xs font-semibold transition-colors ${
-              tab === 'custom' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-800'
-            }`}
+            className="h-9 flex-1 rounded-2xl px-3 text-xs font-semibold"
           >
             Write Custom
-          </button>
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">

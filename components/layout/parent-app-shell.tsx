@@ -117,12 +117,15 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex items-center gap-4">
             {showMobileBack ? (
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={handleMobileBack}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-600 transition-colors hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
+                className="h-10 w-10 rounded-2xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
               >
                 <ArrowLeft className="h-5 w-5" />
-              </button>
+              </Button>
             ) : null}
             
             <BrandMark href="/parent/dashboard" compact className="shrink-0" />
@@ -132,9 +135,11 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           <div className="flex items-center gap-3">
             {/* Social-media style sign out / User menu */}
             <div className="relative">
-              <button 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center gap-2 p-1 pl-3 rounded-full border border-slate-200 bg-white hover:border-cyan-300 hover:shadow-md transition-all group"
+                className="h-10 rounded-full border-slate-200 bg-white p-1 pl-3 group hover:border-cyan-300 hover:bg-white"
               >
                 <div className="hidden sm:block text-right">
                   <p className="text-[11px] font-black text-slate-900 leading-none">{userName}</p>
@@ -148,7 +153,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                   )}
                 </div>
                 <ChevronDown className={cn("h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-transform", showUserDropdown && "rotate-180")} />
-              </button>
+              </Button>
 
               {showUserDropdown && (
                 <>
@@ -174,14 +179,16 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
                     <div className="h-px bg-slate-50 my-1" />
 
-                    <button 
+                    <Button
+                      type="button"
+                      variant="ghost"
                       onClick={() => { handleSignOut(); setShowUserDropdown(false); }}
                       disabled={isSigningOut}
-                      className="w-full flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-bold text-rose-600 transition-colors hover:bg-rose-50"
+                      className="h-9 w-full justify-start rounded-2xl px-3 text-sm font-bold text-rose-600 hover:bg-rose-50"
                     >
                       <LogOut className="h-4 w-4" />
                       {isSigningOut ? 'Ending Session...' : 'Sign Out'}
-                    </button>
+                    </Button>
                   </div>
                 </>
               )}
@@ -228,13 +235,15 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                     </Button>
                   </div>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setHideProfileNudge(true)}
-                  className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-amber-100 transition-colors text-amber-700"
+                  className="h-8 w-8 rounded-full text-amber-700 hover:bg-amber-100"
                 >
                   <ChevronDown className="h-5 w-5" />
-                </button>
+                </Button>
               </div>
             </section>
           ) : null}
