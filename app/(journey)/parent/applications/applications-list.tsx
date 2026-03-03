@@ -75,6 +75,10 @@ function cardStatusConfig(status: string) {
   }
 }
 
+function canWithdrawApplication(status: string) {
+  return ['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(status)
+}
+
 function ApplicationCard({
   application,
   onOpen,
@@ -179,6 +183,7 @@ export function ApplicationsList({
   const [activeApplicationId, setActiveApplicationId] = useState<string | null>(null)
   const [isDesktop, setIsDesktop] = useState(false)
   const [applicationItems, setApplicationItems] = useState(applications)
+  const [withdrawingIds, setWithdrawingIds] = useState<Record<string, boolean>>({})
   const { setVisible } = useBottomNav()
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const knownApplicationIdsRef = useRef<Set<string>>(new Set(applications.map((application) => application.id)))
@@ -305,6 +310,49 @@ export function ApplicationsList({
     [activeApplicationId, applicationItems]
   )
 
+  async function withdrawApplication(application: ApplicationItem) {
+    if (!canWithdrawApplication(application.status) || withdrawingIds[application.id]) return
+
+    const confirmed = window.confirm('Withdraw this application? You can re-apply later if needed.')
+    if (!confirmed) return
+
+    setWithdrawingIds((current) => ({ ...current, [application.id]: true }))
+    try {
+      const response = await fetch(`/api/parent/applications/${application.id}/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'withdraw' }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      if (!response.ok || !payload.ok) {
+        toast.error(payload.error || 'Failed to withdraw application')
+        return
+      }
+
+      const nowIso = new Date().toISOString()
+      setApplicationItems((current) =>
+        current.map((item) =>
+          item.id === application.id
+            ? {
+                ...item,
+                status: 'withdrawn',
+                updated_at: nowIso,
+                history: [...item.history, { status: 'withdrawn', created_at: nowIso, notes: 'Withdrawn by parent' }],
+              }
+            : item
+        )
+      )
+      toast.success('Application withdrawn')
+      router.refresh()
+    } finally {
+      setWithdrawingIds((current) => {
+        const next = { ...current }
+        delete next[application.id]
+        return next
+      })
+    }
+  }
+
   if (applicationItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -364,6 +412,20 @@ export function ApplicationsList({
             {application.status === 'waitlisted' ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                 Waitlist position: #{application.priority ?? '-'}
+              </div>
+            ) : null}
+
+            {canWithdrawApplication(application.status) ? (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2">
+                <p className="text-xs text-rose-800">Need to stop this application?</p>
+                <button
+                  type="button"
+                  onClick={() => void withdrawApplication(application)}
+                  disabled={Boolean(withdrawingIds[application.id])}
+                  className="inline-flex min-h-[36px] items-center rounded-2xl border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {withdrawingIds[application.id] ? 'Withdrawing...' : 'Withdraw'}
+                </button>
               </div>
             ) : null}
 
