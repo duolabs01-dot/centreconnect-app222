@@ -61,6 +61,9 @@ export function CommunicationsComposer({
 
   const resolvedBody = selectedTemplate ? renderTemplate(selectedTemplate.body, { centreName }) : customMessage.trim()
   const finalMessage = customMessage.trim() || resolvedBody
+  const professionalMessage = finalMessage.includes(centreName)
+    ? finalMessage
+    : `${finalMessage}\n\nKind regards,\n${centreName} Team`
   useEffect(() => {
     const tips = [
       'Tip: Use Broadcast for crèche-wide updates.',
@@ -117,8 +120,8 @@ export function CommunicationsComposer({
         parent_id: parentId,
         ecd_id: ecdId,
         template_key: selectedTemplate?.template_key ?? null,
-        title: selectedTemplate?.title ?? 'Crèche update',
-        message: finalMessage,
+        title: `${centreName}: ${selectedTemplate?.title ?? 'Crèche update'}`,
+        message: professionalMessage,
       }))
 
       const { error: insertError } = await supabase.from('parent_notifications').insert(payload)
@@ -157,7 +160,7 @@ export function CommunicationsComposer({
         application_id: initialContextType === 'application' ? initialContextId : null,
         template_key: 'parent_message',
         title: notificationTitle,
-        message: finalMessage,
+        message: professionalMessage,
       })
       if (notificationError) throw notificationError
 
@@ -193,7 +196,7 @@ export function CommunicationsComposer({
       const { error: messageError } = await supabase.from('messages').insert({
         thread_id: threadId,
         sender_id: user.id,
-        body: finalMessage,
+        body: professionalMessage,
       })
       if (messageError) throw messageError
 

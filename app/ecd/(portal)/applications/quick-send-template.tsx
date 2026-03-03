@@ -58,6 +58,9 @@ export function QuickSendTemplate({
     : customMessage.trim()
 
   const finalMessage = customMessage.trim() || resolvedBody
+  const professionalMessage = finalMessage.includes(centreName)
+    ? finalMessage
+    : `${finalMessage}\n\nKind regards,\n${centreName} Admissions Team`
   const threadHref = parentId
     ? `/ecd/communications?recipient=${encodeURIComponent(parentId)}&contextType=application&contextId=${encodeURIComponent(applicationId)}`
     : null
@@ -85,7 +88,7 @@ export function QuickSendTemplate({
         application_id: applicationId,
         template_key: 'parent_message',
         title: `Message from ${centreName}`,
-        message: finalMessage,
+        message: professionalMessage,
       })
       if (error) throw error
 
@@ -119,7 +122,7 @@ export function QuickSendTemplate({
       const { error: messageError } = await supabase.from('messages').insert({
         thread_id: threadId,
         sender_id: user.id,
-        body: finalMessage,
+        body: professionalMessage,
       })
       if (messageError) throw messageError
 

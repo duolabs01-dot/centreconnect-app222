@@ -45,15 +45,47 @@ type ApplicationRecord = {
   status: string
   ecd_id: string
   parent_id: string
+  child_id: string
   application_number: string
   offer_accepted_at: string | null
   children: ApplicationChild | ApplicationChild[] | null
   parents: ApplicationParent | ApplicationParent[] | null
 }
 
+type BirthdaySyncClient = {
+  rpc: (
+    fn: string,
+    params?: Record<string, unknown>
+  ) => PromiseLike<{ error: { message?: string } | null }>
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+async function syncBirthdayEventsForEnrolledChild(args: {
+  supabase: BirthdaySyncClient
+  ecdId: string
+  childId: string
+  firstName: string
+  lastName: string
+  dateOfBirth?: string | null
+}) {
+  if (!args.dateOfBirth) return
+  const { error } = await args.supabase.rpc('ensure_child_birthday_events', {
+    p_ecd_id: args.ecdId,
+    p_child_id: args.childId,
+    p_first_name: args.firstName,
+    p_last_name: args.lastName,
+    p_date_of_birth: args.dateOfBirth,
+  })
+  if (
+    error &&
+    !String(error.message ?? '').toLowerCase().includes('ensure_child_birthday_events')
+  ) {
+    throw new Error(error.message || 'Failed to sync birthday events')
+  }
 }
 
 function getAppOrigin() {
@@ -86,7 +118,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
   const { data: applicationRaw } = await session.supabase
     .from('applications')
     .select(
-      'id,status,ecd_id,parent_id,application_number,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name,date_of_birth,gender),parents(id,billing_email,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+      'id,status,ecd_id,parent_id,child_id,application_number,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name,date_of_birth,gender),parents(id,billing_email,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
     )
     .eq('id', applicationId)
     .eq('ecd_id', session.ecdId)
@@ -283,6 +315,22 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
       if (emailQueueError) {
         warnings.push('email queue')
       }
+    }
+  }
+
+  if (status === 'enrolled') {
+    const child = normalizeOne(application.children)
+    try {
+      await syncBirthdayEventsForEnrolledChild({
+        supabase: session.supabase,
+        ecdId: session.ecdId,
+        childId: application.child_id,
+        firstName: child?.first_name ?? 'Child',
+        lastName: child?.last_name ?? '',
+        dateOfBirth: child?.date_of_birth ?? null,
+      })
+    } catch {
+      // Enrollment status should not fail if birthday sync is temporarily unavailable.
     }
   }
 

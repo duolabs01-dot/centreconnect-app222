@@ -672,7 +672,7 @@ function CardSurface({ children }: { children: ReactNode }) {
   return (
     <div
       id="calendar"
-      className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-[var(--shadow-elevation-4)] backdrop-blur-xl"
+      className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[var(--shadow-elevation-4)]"
     >
       {children}
     </div>

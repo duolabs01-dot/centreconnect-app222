@@ -33,6 +33,7 @@ function getTitle(pathname: string) {
 }
 
 function shouldShowMobileBack(pathname: string) {
+  if (pathname === '/parent/profile') return false
   if (shouldHideParentBottomNav(pathname)) return true
   const topLevelTabs = new Set(['/directory', '/parent/dashboard'])
   if (topLevelTabs.has(pathname)) return false

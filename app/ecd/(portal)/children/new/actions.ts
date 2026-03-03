@@ -34,6 +34,12 @@ const aiPrefillSchema = z.object({
 
 type ChildPrefill = z.infer<typeof aiPrefillSchema>
 type ChildConfidenceMap = Partial<Record<keyof ChildPrefill, number>>
+type BirthdaySyncClient = {
+  rpc: (
+    fn: string,
+    params?: Record<string, unknown>
+  ) => PromiseLike<{ error: { message?: string } | null }>
+}
 
 const guardianContactInputSchema = z.object({
   full_name: z.string().optional().nullable(),
@@ -177,6 +183,31 @@ function normalizePhoneForWhatsapp(rawPhone: string) {
   if (withoutPlus.startsWith('0')) return `27${withoutPlus.slice(1)}`
   if (withoutPlus.startsWith('27')) return withoutPlus
   return withoutPlus
+}
+
+async function syncBirthdayEventsForChild(args: {
+  supabase: BirthdaySyncClient
+  ecdId: string
+  childId: string
+  firstName: string
+  lastName: string
+  dateOfBirth?: string | null
+}) {
+  if (!args.dateOfBirth) return
+  const { error } = await args.supabase.rpc('ensure_child_birthday_events', {
+    p_ecd_id: args.ecdId,
+    p_child_id: args.childId,
+    p_first_name: args.firstName,
+    p_last_name: args.lastName,
+    p_date_of_birth: args.dateOfBirth,
+  })
+
+  if (
+    error &&
+    !String(error.message ?? '').toLowerCase().includes('ensure_child_birthday_events')
+  ) {
+    throw new Error(error.message || 'Failed to sync birthday events')
+  }
 }
 
 function getFieldString(extraction: AiExtractionPayload, key: AiFieldKey) {
@@ -710,6 +741,21 @@ export async function saveTempChildProfileAndInviteParentAction(
     }
 
     tempProfileId = fallbackId
+  }
+
+  if (!insertChildError && insertedChild?.id) {
+    try {
+      await syncBirthdayEventsForChild({
+        supabase: session.supabase,
+        ecdId: session.ecdId,
+        childId: insertedChild.id,
+        firstName: payload.first_name.trim(),
+        lastName: payload.last_name.trim(),
+        dateOfBirth: payload.date_of_birth || null,
+      })
+    } catch {
+      // Birthday sync should never block enrollment completion.
+    }
   }
 
   const parentPhone = normalizePhoneForWhatsapp(normalizedParentPhone)

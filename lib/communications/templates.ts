@@ -33,33 +33,32 @@ export function buildWarmApplicationUpdateMessage({
   const appNo = applicationNumber ?? 'your application'
 
   if (status === 'approved') {
-    return `Hi ${name}. Good news from ${centre}: ${child}'s application (${appNo}) is approved. Open your Application Journey to accept the offer when ready.`
+    return `Hello ${name}, great news from ${centre}. ${child}'s application (${appNo}) has been approved. Please open your Application Journey to confirm enrollment when ready.`
   }
 
   if (status === 'enrolled') {
-    return `Hi ${name}. ${child} is now enrolled at ${centre}. We are excited to welcome your family.`
+    return `Hello ${name}, ${child} is now enrolled at ${centre}. We are excited to welcome your family.`
   }
 
   if (status === 'in_review') {
-    return `Hi ${name}. ${centre} has started reviewing ${child}'s application (${appNo}). We will keep you updated.`
+    return `Hello ${name}, ${centre} has started reviewing ${child}'s application (${appNo}). We will keep you informed at each step.`
   }
 
   if (status === 'partial') {
-    return `Hi ${name}. ${child}'s application (${appNo}) at ${centre} is saved as partial. Please upload the missing documents so we can continue.`
+    return `Hello ${name}, ${child}'s application (${appNo}) at ${centre} is saved as partial. Please upload the remaining documents so our admissions team can continue.`
   }
 
   if (status === 'waitlisted') {
-    return `Hi ${name}. ${child}'s application (${appNo}) is on the waitlist at ${centre}. We will notify you as soon as a place opens.`
+    return `Hello ${name}, ${child}'s application (${appNo}) is currently on the waitlist at ${centre}. We will contact you as soon as a place opens.`
   }
 
   if (status === 'rejected') {
-    return `Hi ${name}. Thank you for applying to ${centre}. ${child}'s application (${appNo}) was not successful this time.`
+    return `Hello ${name}, thank you for applying to ${centre}. ${child}'s application (${appNo}) was not successful this time.`
   }
 
   if (status === 'withdrawn') {
-    return `Hi ${name}. ${child}'s application (${appNo}) was marked as withdrawn. If this was not expected, please contact ${centre}.`
+    return `Hello ${name}, ${child}'s application (${appNo}) was marked as withdrawn. If this was not expected, please contact ${centre}.`
   }
 
-  return `Hi ${name}. ${child}'s application (${appNo}) at ${centre} has been updated to ${toStatusLabel(status)}.`
+  return `Hello ${name}, ${child}'s application (${appNo}) at ${centre} has been updated to ${toStatusLabel(status)}.`
 }
-

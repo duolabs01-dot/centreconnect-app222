@@ -6,6 +6,14 @@ import {
   evaluateApplicationDocumentChecklist,
   toApplicationDocumentLabels,
 } from '@/lib/admissions/application-documents'
+import {
+  appendProfessionalSignature,
+  channelIncludesInApp,
+  channelIncludesSms,
+  channelIncludesWhatsapp,
+  normalizeCommunicationAutomationSettings,
+  renderAutomationTemplate,
+} from '@/lib/communications/automation-settings'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 const sendReminderSchema = z.object({
@@ -46,14 +54,10 @@ function getAppOrigin() {
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
     process.env.NEXT_PUBLIC_APP_URL?.trim() ||
     process.env.NEXT_PUBLIC_BASE_URL?.trim()
-  if (direct) {
-    return direct.replace(/\/+$/, '')
-  }
+  if (direct) return direct.replace(/\/+$/, '')
 
   const vercelUrl = process.env.VERCEL_URL?.trim()
-  if (vercelUrl) {
-    return `https://${vercelUrl.replace(/\/+$/, '')}`
-  }
+  if (vercelUrl) return `https://${vercelUrl.replace(/\/+$/, '')}`
 
   return 'http://localhost:3010'
 }
@@ -82,14 +86,48 @@ function toSmsHref(rawPhone: string | null | undefined, message: string) {
 
 function parseMissingCodes(value: unknown) {
   if (!Array.isArray(value)) return []
-  return value.map((entry) => String(entry)).map((entry) => entry.trim()).filter(Boolean)
+  return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
+async function loadCentreWithAutomationSettings(session: Awaited<ReturnType<typeof requireEcdPortalSession>>) {
+  const primary = await session.supabase
+    .from('ecd_centres')
+    .select('name,phone,contact_phone,contact_whatsapp,email,communication_automation_settings')
+    .eq('id', session.ecdId)
+    .maybeSingle()
+
+  if (
+    primary.error &&
+    primary.error.message.toLowerCase().includes('communication_automation_settings')
+  ) {
+    const fallback = await session.supabase
+      .from('ecd_centres')
+      .select('name,phone,contact_phone,contact_whatsapp,email')
+      .eq('id', session.ecdId)
+      .maybeSingle()
+    return (fallback.data ?? null) as {
+      name: string | null
+      phone: string | null
+      contact_phone: string | null
+      contact_whatsapp: string | null
+      email: string | null
+      communication_automation_settings?: unknown
+    } | null
+  }
+
+  return (primary.data ?? null) as {
+    name: string | null
+    phone: string | null
+    contact_phone: string | null
+    contact_whatsapp: string | null
+    email: string | null
+    communication_automation_settings?: unknown
+  } | null
 }
 
 export async function sendIncompleteApplicationReminderAction(input: unknown): Promise<ReminderResult> {
   const parsed = sendReminderSchema.safeParse(input)
-  if (!parsed.success) {
-    return { ok: false, error: 'Invalid reminder payload.' }
-  }
+  if (!parsed.success) return { ok: false, error: 'Invalid reminder payload.' }
 
   const session = await requireEcdPortalSession({ cached: false })
   const { data: applicationRaw } = await session.supabase
@@ -102,27 +140,26 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
     .maybeSingle()
 
   const application = (applicationRaw as ApplicationRecord | null) ?? null
-  if (!application) {
-    return { ok: false, error: 'Application not found.' }
-  }
+  if (!application) return { ok: false, error: 'Application not found.' }
 
   const parent = normalizeOne(application.parents)
-  if (!parent?.id) {
-    return { ok: false, error: 'Parent contact is missing on this application.' }
-  }
+  if (!parent?.id) return { ok: false, error: 'Parent contact is missing on this application.' }
 
   const child = normalizeOne(application.children)
   const parentProfile = normalizeOne(parent.user_profiles)
   const parentName = parentProfile?.full_name?.trim() || 'Parent'
   const parentPhone = parentProfile?.phone ?? parent.alt_phone
   const childName =
-    [child?.first_name, child?.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim() || 'your child'
+    [child?.first_name, child?.last_name].filter(Boolean).join(' ').trim() || 'your child'
 
-  const { data: centre } = await session.supabase.from('ecd_centres').select('name').eq('id', session.ecdId).maybeSingle()
+  const centre = await loadCentreWithAutomationSettings(session)
   const centreName = centre?.name?.trim() || 'your crèche'
+  const automationSettings = normalizeCommunicationAutomationSettings(
+    centre?.communication_automation_settings ?? null
+  )
+  if (!automationSettings.enabled) {
+    return { ok: false, error: 'Automatic reminders are disabled in Calendar automation settings.' }
+  }
 
   let missingCodes = parseMissingCodes(application.missing_documents)
   if (missingCodes.length === 0) {
@@ -134,33 +171,53 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
     const checklist = evaluateApplicationDocumentChecklist((parentDocs ?? []).map((doc) => doc.doc_type))
     missingCodes = checklist.missingCodes
   }
-
   if (missingCodes.length === 0) {
     return { ok: false, error: 'No missing documents found for this application.' }
   }
 
   const missingLabels = toApplicationDocumentLabels(missingCodes)
   const directLink = `${getAppOrigin()}/parent/profile/documents?applicationId=${application.id}`
-  const message = `Hi ${parentName} 👋 Your application for ${childName} at ${centreName} is almost complete 🎉. Please upload the missing documents: ${missingLabels.join(', ')}. Tap here: ${directLink} We’re cheering you on 😊`
-
-  const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
-    parent_id: parent.id,
-    ecd_id: session.ecdId,
-    application_id: application.id,
-    template_key: 'missing_documents',
-    title: 'Friendly reminder 📄',
-    message,
-    is_read: false,
+  const baseMessage = renderAutomationTemplate(automationSettings.application_reminder_template, {
+    parent_name: parentName,
+    child_name: childName,
+    centre_name: centreName,
+    missing_documents: missingLabels.join(', '),
+    direct_link: directLink,
   })
-  if (notificationError) {
-    return { ok: false, error: notificationError.message || 'Failed to send reminder.' }
+  const message = appendProfessionalSignature(baseMessage, {
+    centreName,
+    signoff: automationSettings.signoff,
+    includeCentrePhone: automationSettings.include_centre_phone,
+    centrePhone: centre?.contact_phone ?? centre?.phone ?? null,
+    includeCentreEmail: automationSettings.include_centre_email,
+    centreEmail: centre?.email ?? null,
+    includeCentreWhatsapp: automationSettings.include_centre_whatsapp,
+    centreWhatsapp: centre?.contact_whatsapp ?? null,
+  })
+  const shouldSendInApp = channelIncludesInApp(automationSettings.send_channel)
+  const shouldExposeWhatsapp = channelIncludesWhatsapp(automationSettings.send_channel)
+  const shouldExposeSms = channelIncludesSms(automationSettings.send_channel)
+
+  if (shouldSendInApp) {
+    const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
+      parent_id: parent.id,
+      ecd_id: session.ecdId,
+      application_id: application.id,
+      template_key: 'missing_documents',
+      title: `Document reminder from ${centreName}`,
+      message,
+      is_read: false,
+    })
+    if (notificationError) {
+      return { ok: false, error: notificationError.message || 'Failed to send reminder.' }
+    }
   }
 
   const {
     data: { user: actor },
   } = await session.supabase.auth.getUser()
 
-  if (actor?.id) {
+  if (actor?.id && shouldSendInApp) {
     const { data: existingThread } = await session.supabase
       .from('message_threads')
       .select('id')
@@ -185,9 +242,7 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
         .select('id')
         .single()
 
-      if (!threadError && createdThread?.id) {
-        threadId = createdThread.id
-      }
+      if (!threadError && createdThread?.id) threadId = createdThread.id
     }
 
     if (threadId) {
@@ -210,8 +265,10 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
 
   return {
     ok: true,
-    message: 'Reminder sent to parent inbox.',
-    whatsappHref: toWhatsappHref(parentPhone, message) ?? undefined,
-    smsHref: toSmsHref(parentPhone, message) ?? undefined,
+    message: shouldSendInApp
+      ? 'Reminder sent with professional centre details.'
+      : 'Reminder prepared. Open your selected channel to deliver it.',
+    whatsappHref: shouldExposeWhatsapp ? toWhatsappHref(parentPhone, message) ?? undefined : undefined,
+    smsHref: shouldExposeSms ? toSmsHref(parentPhone, message) ?? undefined : undefined,
   }
 }
