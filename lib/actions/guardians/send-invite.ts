@@ -1,11 +1,9 @@
 'use server'
 
 import { randomBytes } from 'crypto'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { sendEmail } from '@/lib/email/send'
-import { requireSupabasePublicEnv } from '@/lib/supabase/env'
+import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
   guardian_id: z.string().uuid(),
@@ -111,11 +109,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
     return { error: parsed.error.errors[0]?.message ?? 'Invalid data' }
   }
 
-  const cookieStore = await cookies()
-  const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('send-coparent-invite-action')
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: { getAll: () => cookieStore.getAll() },
-  })
+  const supabase = await createClient()
 
   const {
     data: { user },
@@ -223,4 +217,3 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
         : undefined,
   }
 }
-

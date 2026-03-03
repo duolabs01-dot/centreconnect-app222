@@ -1,9 +1,7 @@
 'use server'
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { z } from 'zod'
-import { requireSupabasePublicEnv } from '@/lib/supabase/env'
+import { createClient } from '@/lib/supabase/server'
 
 const schema = z.object({
   child_ids: z.array(z.string().uuid()).min(1),
@@ -40,12 +38,7 @@ export async function addGuardianAction(input: unknown) {
   )
   if (!parsed.success) return { error: 'Invalid data' }
 
-  const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('add-guardian-action')
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    { cookies: { getAll: () => cookies().getAll() } }
-  )
+  const supabase = await createClient()
 
   const {
     data: { user },
