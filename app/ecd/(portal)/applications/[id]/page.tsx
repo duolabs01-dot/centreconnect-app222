@@ -47,6 +47,14 @@ type ParentDocument = {
   created_at: string
 }
 
+type ParentDocumentSelectRow = {
+  id: string
+  doc_type: string | null
+  file_name: string | null
+  verification_status?: string | null
+  created_at: string
+}
+
 type Template = { template_key: string; title: string; body: string }
 
 type ChildProfile = {
@@ -149,6 +157,55 @@ function safeDecodeRouteToken(value: string) {
   }
 }
 
+function normalizeParentDocuments(rows: ParentDocumentSelectRow[], includeVerificationStatus: boolean): ParentDocument[] {
+  return rows.map((row) => ({
+    id: row.id,
+    doc_type: row.doc_type,
+    file_name: row.file_name,
+    verification_status: includeVerificationStatus ? row.verification_status ?? null : null,
+    created_at: row.created_at,
+  }))
+}
+
+async function queryParentDocumentsWithSchemaFallback(
+  db: { from: (table: string) => any },
+  parentId: string
+) {
+  const fullSelect = await db
+    .from('parent_documents')
+    .select('id,doc_type,file_name,verification_status,created_at')
+    .eq('parent_id', parentId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (!fullSelect.error) {
+    return {
+      rows: normalizeParentDocuments((fullSelect.data ?? []) as ParentDocumentSelectRow[], true),
+      error: null as string | null,
+    }
+  }
+
+  if (!includesMissingColumnError(fullSelect.error.message)) {
+    return { rows: [] as ParentDocument[], error: fullSelect.error.message }
+  }
+
+  const leanSelect = await db
+    .from('parent_documents')
+    .select('id,doc_type,file_name,created_at')
+    .eq('parent_id', parentId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+
+  if (leanSelect.error) {
+    return { rows: [] as ParentDocument[], error: leanSelect.error.message }
+  }
+
+  return {
+    rows: normalizeParentDocuments((leanSelect.data ?? []) as ParentDocumentSelectRow[], false),
+    error: null as string | null,
+  }
+}
+
 async function fetchApplicationForRoute(
   supabase: Awaited<ReturnType<typeof requireEcdPortalSession>>['supabase'],
   ecdId: string,
@@ -194,23 +251,11 @@ async function fetchParentDocuments(
   if (!parentId) return { rows: [] as ParentDocument[], error: null as string | null }
   try {
     const admin = createAdminClient()
-    const { data, error } = await admin
-      .from('parent_documents')
-      .select('id,doc_type,file_name,verification_status,created_at')
-      .eq('parent_id', parentId)
-      .order('created_at', { ascending: false })
-      .limit(100)
-    if (error) return { rows: [] as ParentDocument[], error: error.message }
-    return { rows: (data ?? []) as ParentDocument[], error: null as string | null }
+    return await queryParentDocumentsWithSchemaFallback(admin, parentId)
   } catch {
-    const fallback = await supabase
-      .from('parent_documents')
-      .select('id,doc_type,file_name,verification_status,created_at')
-      .eq('parent_id', parentId)
-      .order('created_at', { ascending: false })
-      .limit(100)
+    const fallback = await queryParentDocumentsWithSchemaFallback(supabase, parentId)
     if (fallback.error) return { rows: [] as ParentDocument[], error: 'Document access is unavailable right now.' }
-    return { rows: (fallback.data ?? []) as ParentDocument[], error: null as string | null }
+    return fallback
   }
 }
 
