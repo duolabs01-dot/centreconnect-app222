@@ -90,14 +90,34 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
     return { success: false, message: 'Period end date must be on or after period start date.' }
   }
 
-  const { data: childRecord, error: childError } = await session.supabase
-    .from('children')
-    .select('id')
-    .eq('id', payload.child_id)
-    .eq('ecd_id', session.ecdId)
-    .maybeSingle()
+  const [directChildLink, legacyApplicationLink] = await Promise.all([
+    session.supabase
+      .from('children')
+      .select('id')
+      .eq('id', payload.child_id)
+      .eq('ecd_id', session.ecdId)
+      .maybeSingle(),
+    session.supabase
+      .from('applications')
+      .select('id')
+      .eq('child_id', payload.child_id)
+      .eq('ecd_id', session.ecdId)
+      .limit(1)
+      .maybeSingle(),
+  ])
 
-  if (childError || !childRecord?.id) {
+  if (directChildLink.error && legacyApplicationLink.error) {
+    return {
+      success: false,
+      message: formatReportCardError(
+        directChildLink.error ?? legacyApplicationLink.error,
+        'Unable to verify child membership for this centre.'
+      ),
+    }
+  }
+
+  const hasChildLink = Boolean(directChildLink.data?.id || legacyApplicationLink.data?.id)
+  if (!hasChildLink) {
     return { success: false, message: 'This child is not linked to your centre.' }
   }
 
@@ -108,6 +128,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
     .maybeSingle()
 
   const teacherName = normalizeTextInput(teacherProfile?.full_name) ?? session.user.email ?? 'ECD Staff'
+  const teacherIdForWrite = teacherProfile ? session.user.id : null
   const normalizedTerm = payload.term.trim()
 
   const existingForTerm = await session.supabase
@@ -134,7 +155,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
         period_start: periodStart,
         period_end: periodEnd,
         overall_comment: normalizeTextInput(payload.overall_comment),
-        teacher_id: session.user.id,
+        teacher_id: teacherIdForWrite,
         teacher_name: teacherName,
         updated_at: new Date().toISOString(),
       })
@@ -184,7 +205,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
       period_start: periodStart,
       period_end: periodEnd,
       status: 'draft',
-      teacher_id: session.user.id,
+      teacher_id: teacherIdForWrite,
       teacher_name: teacherName,
       overall_comment: normalizeTextInput(payload.overall_comment),
     })
