@@ -33,15 +33,6 @@ export type ReportCardActionResult = {
   reportCardId?: string
 }
 
-export const DEFAULT_DEVELOPMENT_AREAS = [
-  'Language & Literacy',
-  'Numeracy & Mathematics',
-  'Life Skills',
-  'Physical Development',
-  'Creative Arts',
-  'Social & Emotional',
-] as const
-
 function normalizeDateInput(value: string | null | undefined) {
   if (!value) return null
   const normalized = value.trim()

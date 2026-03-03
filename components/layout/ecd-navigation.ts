@@ -19,6 +19,7 @@ import {
   Briefcase,
   ShieldAlert,
   Users,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -44,6 +45,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'daily_operations', supervisorAllowed: true },
   { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck, group: 'daily_operations', supervisorAllowed: true },
   { href: '/ecd/pickup', label: 'Pickup Verification', icon: ShieldCheck, group: 'daily_operations', supervisorAllowed: true },
+  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: Zap, group: 'daily_operations', supervisorAllowed: true },
   { href: '/ecd/children/new', label: 'Children', icon: Users, group: 'daily_operations', supervisorAllowed: true },
   { href: '/ecd/applications', label: 'Applications', icon: ClipboardList, group: 'admissions', supervisorAllowed: true },
   { href: '/ecd/billing', label: 'Billing & Payments', icon: CreditCard, group: 'finance', adminOnly: true },

@@ -1,30 +1,29 @@
-﻿// app/parent/daily-reports/page.tsx
 import type { Metadata } from 'next'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { ParentAppShell } from '@/components/layout/parent-app-shell'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { cn, getJohannesburgNowParts } from '@/lib/utils'
 import {
-  Smile,
-  Laugh,
-  Moon,
+  CheckCircle2,
   CloudRain,
-  Frown,
-  Utensils,
   Coffee,
   Cookie,
-  CheckCircle2,
-  Info
+  Frown,
+  Info,
+  Laugh,
+  Moon,
+  Smile,
+  Utensils,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { ParentAppShell } from '@/components/layout/parent-app-shell'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn, getJohannesburgNowParts } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Daily Reports - CentreConnect',
-  description: 'View today\'s progress, meals, and activities for your children.',
+  description: "View your children's latest daily updates from crèche.",
 }
 
-const MOOD_MAP: Record<string, { label: string, icon: any, color: string }> = {
+const MOOD_MAP: Record<string, { label: string; icon: typeof Smile; color: string }> = {
   happy: { label: 'Happy', icon: Laugh, color: 'text-amber-500' },
   good: { label: 'Good', icon: Smile, color: 'text-emerald-500' },
   tired: { label: 'Tired', icon: Moon, color: 'text-slate-500' },
@@ -32,155 +31,279 @@ const MOOD_MAP: Record<string, { label: string, icon: any, color: string }> = {
   upset: { label: 'Upset', icon: Frown, color: 'text-rose-500' },
 }
 
+type ChildRow = {
+  id: string
+  first_name: string | null
+  last_name: string | null
+}
+
+type ApplicationRow = {
+  child_id: string | null
+  children: ChildRow | ChildRow[] | null
+}
+
+type DailyReportRow = {
+  id: string
+  child_id: string
+  report_date: string
+  breakfast_eaten: string | null
+  lunch_eaten: string | null
+  snack_eaten: string | null
+  nap_start: string | null
+  nap_end: string | null
+  mood: string | null
+  activities: string[] | null
+  teacher_notes: string | null
+  photo_url: string | null
+  published_at: string | null
+}
+
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function formatReportDate(dateValue: string) {
+  return new Date(`${dateValue}T00:00:00Z`).toLocaleDateString('en-ZA', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
+}
+
+function renderMealValue(value: string | null | undefined) {
+  if (!value) return 'N/A'
+  return value.replaceAll('_', ' ')
+}
+
 export default async function ParentDailyReportsPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const todayUtc = new Date(Date.UTC(year, month - 1, day))
+  const sevenDaysAgo = new Date(todayUtc)
+  sevenDaysAgo.setUTCDate(todayUtc.getUTCDate() - 6)
+  const fromDate = sevenDaysAgo.toISOString().slice(0, 10)
 
-  // 1. Get enrolled children
   const { data: applications } = await supabase
     .from('applications')
-    .select('child_id, children(id, first_name, last_name)')
+    .select('child_id,children(id,first_name,last_name)')
     .eq('parent_id', user.id)
     .eq('status', 'enrolled')
 
-  if (!applications || applications.length === 0) {
+  const childRows = (applications ?? []) as ApplicationRow[]
+  const seenChildIds = new Set<string>()
+  const children = childRows.flatMap((row) => {
+    const child = normalizeOne(row.children)
+    const childId = child?.id ?? row.child_id
+    if (!childId || seenChildIds.has(childId)) return []
+    seenChildIds.add(childId)
+    return [
+      {
+        id: childId,
+        first_name: child?.first_name?.trim() || 'Child',
+        last_name: child?.last_name?.trim() || '',
+      },
+    ]
+  })
+
+  if (children.length === 0) {
     return (
       <ParentAppShell>
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Info className="h-12 w-12 text-slate-300 mb-4" />
-          <h2 className="text-lg font-bold text-slate-900">No Enrolled Children</h2>
-          <p className="mt-1 text-sm text-slate-500">Daily reports are only available for enrolled children.</p>
+          <Info className="mb-4 h-12 w-12 text-slate-300" />
+          <h2 className="text-lg font-bold text-slate-900">No enrolled children</h2>
+          <p className="mt-1 text-sm text-slate-500">Daily reports are available once enrollment is active.</p>
         </div>
       </ParentAppShell>
     )
   }
 
-  const childIds = applications.map(a => a.child_id)
-
-  // 2. Get published reports for today
-  const { data: reports } = await supabase
+  const childIds = children.map((child) => child.id)
+  const { data: reportsRaw } = await supabase
     .from('child_daily_reports')
-    .select('*')
+    .select(
+      'id,child_id,report_date,breakfast_eaten,lunch_eaten,snack_eaten,nap_start,nap_end,mood,activities,teacher_notes,photo_url,published_at'
+    )
     .in('child_id', childIds)
-    .eq('report_date', todayDate)
+    .gte('report_date', fromDate)
+    .lte('report_date', todayDate)
     .not('published_at', 'is', null)
+    .order('report_date', { ascending: false })
+    .order('published_at', { ascending: false })
 
-  const reportsByChild: Record<string, any> = {}
-  reports?.forEach(r => { reportsByChild[r.child_id] = r })
+  const reports = (reportsRaw ?? []) as DailyReportRow[]
+  const reportsByChild = new Map<string, DailyReportRow[]>()
+  for (const report of reports) {
+    const list = reportsByChild.get(report.child_id) ?? []
+    list.push(report)
+    reportsByChild.set(report.child_id, list)
+  }
 
   return (
     <ParentAppShell>
       <div className="space-y-6">
         <header>
-          <h1 className="text-2xl font-bold text-slate-900">Today&apos;s Reports</h1>
-          <p className="text-sm text-slate-500">{new Date().toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Daily Reports</h1>
+          <p className="text-sm text-slate-500">
+            Latest updates from the last 7 days, including today.
+          </p>
         </header>
 
-        {applications.map((app: any) => {
-          const child = Array.isArray(app.children) ? app.children[0] : app.children
-          const report = reportsByChild[child.id]
-          const mood = report?.mood ? MOOD_MAP[report.mood] : null
+        {children.map((child) => {
+          const allReports = reportsByChild.get(child.id) ?? []
+          const todayReport = allReports.find((report) => report.report_date === todayDate) ?? null
 
           return (
             <Card key={child.id} className="overflow-hidden border-cyan-100">
-              <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+              <CardHeader className="border-b border-slate-100 bg-slate-50/50">
                 <CardTitle className="text-lg flex items-center justify-between">
-                  <span>{child.first_name} {child.last_name}</span>
-                  {report && (
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                      Received {new Date(report.published_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span>
+                    {child.first_name} {child.last_name}
+                  </span>
+                  {todayReport ? (
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                      Today received
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                      No report yet today
                     </span>
                   )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
-                {!report ? (
-                  <div className="py-8 text-center">
-                    <Moon className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-                    <p className="text-sm font-medium text-slate-500">Today&apos;s report hasn&apos;t been posted yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    {/* Mood & Notes */}
+              <CardContent className="pt-6 space-y-6">
+                {todayReport ? (
+                  <div className="space-y-5">
                     <div className="flex items-start gap-4">
-                      {mood && (
-                        <div className="flex flex-col items-center shrink-0">
-                          <div className={cn("h-16 w-16 rounded-2xl bg-white border-2 border-slate-50 shadow-sm flex items-center justify-center", mood.color)}>
-                            <mood.icon className="h-10 w-10" />
+                      {todayReport.mood && MOOD_MAP[todayReport.mood] ? (
+                        <div className="shrink-0 text-center">
+                          <div
+                            className={cn(
+                              'flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-100 bg-white shadow-sm',
+                              MOOD_MAP[todayReport.mood].color
+                            )}
+                          >
+                            {(() => {
+                              const MoodIcon = MOOD_MAP[todayReport.mood!].icon
+                              return <MoodIcon className="h-8 w-8" />
+                            })()}
                           </div>
-                          <span className="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">{mood.label}</span>
+                          <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                            {MOOD_MAP[todayReport.mood].label}
+                          </p>
                         </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm italic text-slate-700 leading-relaxed">
-                          &quot;{report.teacher_notes || "Your child had a productive day at the crèche today!"}&quot;
-                        </p>
-                      </div>
+                      ) : null}
+                      <p className="text-sm italic text-slate-700 leading-relaxed">
+                        &quot;
+                        {todayReport.teacher_notes || 'Your child had a positive and engaging day at crèche today.'}
+                        &quot;
+                      </p>
                     </div>
 
-                    {/* Photo if any */}
-                    {report.photo_url && (
+                    {todayReport.photo_url ? (
                       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
                         <Image
-                          src={report.photo_url}
-                          alt="Today at the crèche"
+                          src={todayReport.photo_url}
+                          alt="Daily update photo"
                           fill
                           className="h-full w-full object-cover"
                         />
                       </div>
-                    )}
+                    ) : null}
 
-                    {/* Meals Grid */}
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { label: 'Breakfast', key: 'breakfast_eaten', icon: Coffee },
                         { label: 'Lunch', key: 'lunch_eaten', icon: Utensils },
                         { label: 'Snack', key: 'snack_eaten', icon: Cookie },
-                      ].map(meal => (
+                      ].map((meal) => (
                         <div key={meal.key} className="rounded-2xl bg-slate-50 p-3 text-center">
-                          <meal.icon className="h-4 w-4 text-slate-400 mx-auto mb-2" />
-                          <p className="text-[10px] font-bold uppercase text-slate-500 mb-1">{meal.label}</p>
-                          <p className="text-xs font-black text-cyan-700 uppercase tracking-tight">
-                            {report[meal.key]?.replace('_', ' ') || 'N/A'}
+                          <meal.icon className="mx-auto mb-2 h-4 w-4 text-slate-400" />
+                          <p className="mb-1 text-[10px] font-bold uppercase text-slate-500">{meal.label}</p>
+                          <p className="text-xs font-black uppercase tracking-tight text-cyan-700">
+                            {renderMealValue((todayReport as any)[meal.key])}
                           </p>
                         </div>
                       ))}
                     </div>
 
-                    {/* Activities & Rest */}
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-3">
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
                           <CheckCircle2 className="h-4 w-4 text-cyan-600" />
-                          Activities Today
+                          Activities
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {(report.activities || ['Classroom learning']).map((act: string) => (
-                            <span key={act} className="px-3 py-1 bg-cyan-50 text-cyan-700 text-[11px] font-bold rounded-full border border-cyan-100">
-                              {act}
+                          {(todayReport.activities ?? ['Classroom learning']).map((activity) => (
+                            <span
+                              key={`${todayReport.id}-${activity}`}
+                              className="rounded-full border border-cyan-100 bg-cyan-50 px-3 py-1 text-[11px] font-bold text-cyan-700"
+                            >
+                              {activity}
                             </span>
                           ))}
                         </div>
                       </div>
-
-                      {report.nap_start && (
-                        <div className="space-y-3">
+                      {todayReport.nap_start ? (
+                        <div className="space-y-2">
                           <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
                             <Moon className="h-4 w-4 text-amber-500" />
-                            Rest & Nap
+                            Rest
                           </div>
-                          <p className="text-xs text-slate-600 font-medium bg-amber-50/50 p-2 rounded-2xl border border-amber-100/50">
-                            Slept from <span className="font-bold">{report.nap_start}</span> to <span className="font-bold">{report.nap_end || '...'}</span>
+                          <p className="rounded-2xl border border-amber-100 bg-amber-50/50 p-2 text-xs font-medium text-slate-700">
+                            Slept from <span className="font-bold">{todayReport.nap_start}</span> to{' '}
+                            <span className="font-bold">{todayReport.nap_end || '...'}</span>
                           </p>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
+                ) : (
+                  <div className="py-2">
+                    <p className="text-sm text-slate-600">
+                      No report has been published for today yet. You can still see recent updates below.
+                    </p>
+                  </div>
                 )}
+
+                <div className="space-y-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Last 7 days</p>
+                  {allReports.length === 0 ? (
+                    <p className="text-xs text-slate-500">No published reports in the last 7 days.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {allReports.slice(0, 7).map((report) => (
+                        <div
+                          key={report.id}
+                          className="flex items-start justify-between rounded-2xl border border-slate-100 bg-slate-50/40 px-3 py-2"
+                        >
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">{formatReportDate(report.report_date)}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-600">
+                              {report.teacher_notes?.trim()
+                                ? report.teacher_notes.slice(0, 80)
+                                : 'Daily update shared by your crèche team.'}
+                            </p>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase text-slate-500">
+                            {report.published_at
+                              ? new Date(report.published_at).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })
+                              : '--:--'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )
@@ -189,5 +312,3 @@ export default async function ParentDailyReportsPage() {
     </ParentAppShell>
   )
 }
-
-

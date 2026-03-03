@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -52,6 +52,7 @@ export function CommunicationsComposer({
       : recipients[0]?.parentId ?? ''
   )
   const [sending, setSending] = useState(false)
+  const [quickTip, setQuickTip] = useState('Tip: Use templates first, then edit only final details.')
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.template_key === selectedKey) ?? null,
@@ -60,17 +61,21 @@ export function CommunicationsComposer({
 
   const resolvedBody = selectedTemplate ? renderTemplate(selectedTemplate.body, { centreName }) : customMessage.trim()
   const finalMessage = customMessage.trim() || resolvedBody
-  const quickTip = useMemo(() => {
+  useEffect(() => {
     const tips = [
       'Tip: Use Broadcast for crèche-wide updates.',
       'Tip: Use Direct for one parent conversation.',
       'Tip: Keep the first sentence clear and action-focused.',
       'Tip: Templates save time; edit only final details.',
     ]
-    const idx = Number.parseInt(localStorage.getItem('ecd_comms_tip_idx') ?? '-1', 10)
-    const next = Number.isFinite(idx) ? (idx + 1) % tips.length : 0
-    localStorage.setItem('ecd_comms_tip_idx', String(next))
-    return tips[next]
+    try {
+      const idx = Number.parseInt(window.localStorage.getItem('ecd_comms_tip_idx') ?? '-1', 10)
+      const next = Number.isFinite(idx) ? (idx + 1) % tips.length : 0
+      window.localStorage.setItem('ecd_comms_tip_idx', String(next))
+      setQuickTip(tips[next])
+    } catch {
+      setQuickTip(tips[0])
+    }
   }, [])
 
   async function copyMessage() {
@@ -119,7 +124,7 @@ export function CommunicationsComposer({
       const { error: insertError } = await supabase.from('parent_notifications').insert(payload)
       if (insertError) throw insertError
 
-      toast.success(`Broadcast sent to ${parentIds.length} parents ðŸŽ‰`)
+      toast.success(`Broadcast sent to ${parentIds.length} parents`)
       if (!selectedTemplate) setCustomMessage('')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send notification')
@@ -144,6 +149,17 @@ export function CommunicationsComposer({
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) throw new Error('Unauthorized')
+
+      const notificationTitle = selectedTemplate?.title?.trim() || `Message from ${centreName}`
+      const { error: notificationError } = await supabase.from('parent_notifications').insert({
+        parent_id: recipientParentId,
+        ecd_id: ecdId,
+        application_id: initialContextType === 'application' ? initialContextId : null,
+        template_key: selectedTemplate?.template_key ?? null,
+        title: notificationTitle,
+        message: finalMessage,
+      })
+      if (notificationError) throw notificationError
 
       const { data: existingThread } = await supabase
         .from('message_threads')
@@ -181,7 +197,7 @@ export function CommunicationsComposer({
       })
       if (messageError) throw messageError
 
-      toast.success(existingThread ? 'Direct message sent âœ‰ï¸' : 'Conversation created and message sent âœ‰ï¸')
+      toast.success(existingThread ? 'Direct message sent and mirrored to inbox' : 'Conversation started and mirrored to inbox')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send message')
     } finally {
@@ -276,11 +292,11 @@ export function CommunicationsComposer({
       <div className="flex flex-wrap gap-2">
         {mode === 'broadcast' ? (
           <Button type="button" onClick={sendInApp} disabled={sending}>
-            {sending ? 'Sending...' : 'Broadcast to Parents ðŸ“£'}
+            {sending ? 'Sending...' : 'Broadcast to Parents'}
           </Button>
         ) : (
           <Button type="button" onClick={sendThreadMessage} disabled={sending || recipients.length === 0}>
-            {sending ? 'Sending...' : 'Send Direct Message âœ‰ï¸'}
+            {sending ? 'Sending...' : 'Send Direct Message'}
           </Button>
         )}
         <Button type="button" variant="outline" onClick={copyMessage}>
@@ -295,11 +311,11 @@ export function CommunicationsComposer({
 }
 
 function labelWithEmoji(template: Template) {
-  if (template.template_key === 'missing_documents') return `ðŸ“„ ${template.title}`
-  if (template.template_key === 'open_day_invite') return `ðŸ“… ${template.title}`
-  if (template.template_key === 'application_update') return `ðŸ”” ${template.title}`
-  if (template.template_key === 'spot_available') return `ðŸŽ‰ ${template.title}`
-  return `ðŸ’¬ ${template.title}`
+  if (template.template_key === 'missing_documents') return `[Docs] ${template.title}`
+  if (template.template_key === 'open_day_invite') return `[Invite] ${template.title}`
+  if (template.template_key === 'application_update') return `[Update] ${template.title}`
+  if (template.template_key === 'spot_available') return `[Spot] ${template.title}`
+  return `[Message] ${template.title}`
 }
 
 

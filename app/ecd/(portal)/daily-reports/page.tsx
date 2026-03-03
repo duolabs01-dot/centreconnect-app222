@@ -19,7 +19,13 @@ export default async function EcdDailyReportsPage() {
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-  const [enrolledResult, reportsResult] = await Promise.all([
+  const [childrenResult, enrolledResult, reportsResult] = await Promise.all([
+    supabase
+      .from('children')
+      .select('id,first_name,last_name')
+      .eq('ecd_id', ecdId)
+      .order('created_at', { ascending: false })
+      .limit(800),
     supabase
       .from('applications')
       .select('child_id,children(id,first_name,last_name)')
@@ -33,22 +39,37 @@ export default async function EcdDailyReportsPage() {
       .eq('report_date', todayDate),
   ])
 
+  const childrenRows = childrenResult.data ?? []
   const enrolledRows = enrolledResult.data ?? []
   const seenChildIds = new Set<string>()
-  const enrolledChildren = enrolledRows.flatMap((row: any) => {
-    const child = normalizeOne(row.children)
-    const childId = child?.id ?? row.child_id
-    if (!childId || seenChildIds.has(childId)) return []
-    seenChildIds.add(childId)
+  const enrolledChildren = [
+    ...childrenRows.flatMap((child: any) => {
+      const childId = child?.id
+      if (!childId || seenChildIds.has(childId)) return []
+      seenChildIds.add(childId)
+      return [
+        {
+          id: childId,
+          first_name: child?.first_name?.trim() || 'Child',
+          last_name: child?.last_name?.trim() || '',
+        },
+      ]
+    }),
+    ...enrolledRows.flatMap((row: any) => {
+      const child = normalizeOne(row.children)
+      const childId = child?.id ?? row.child_id
+      if (!childId || seenChildIds.has(childId)) return []
+      seenChildIds.add(childId)
 
-    return [
-      {
-        id: childId,
-        first_name: child?.first_name?.trim() || 'Child',
-        last_name: child?.last_name?.trim() || '',
-      },
-    ]
-  })
+      return [
+        {
+          id: childId,
+          first_name: child?.first_name?.trim() || 'Child',
+          last_name: child?.last_name?.trim() || '',
+        },
+      ]
+    }),
+  ]
 
   const reportsByChild: Record<string, any> = {}
   for (const report of reportsResult.data ?? []) {

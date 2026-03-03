@@ -171,7 +171,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                     >
                       <p className="text-sm font-bold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {formatDate(item.created_at)} â€¢ {item.is_read ? 'Read' : 'Unread'}
+                        {formatDate(item.created_at)} · {item.is_read ? 'Read' : 'Unread'}
                       </p>
                     </div>
                   ))
@@ -193,7 +193,7 @@ export default async function EcdCommunicationsPage({ searchParams }: Communicat
                     >
                       <p className="text-sm font-bold text-slate-900">Thread {thread.id.slice(0, 8)}</p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        {thread.context_type ?? 'general'} â€¢ {formatDate(thread.created_at)}
+                        {thread.context_type ?? 'general'} · {formatDate(thread.created_at)}
                       </p>
                     </div>
                   ))

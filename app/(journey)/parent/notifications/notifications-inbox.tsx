@@ -39,6 +39,16 @@ function toWhatsappHref(phone: string | null, message: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
 }
 
+function isDirectMessage(item: NotificationItem) {
+  const templateKey = (item.template_key ?? '').trim().toLowerCase()
+  const title = item.title.trim().toLowerCase()
+  return (
+    templateKey === 'parent_message' ||
+    title.startsWith('message from ') ||
+    title.startsWith('direct message')
+  )
+}
+
 export function NotificationsInbox({
   initialItems,
   parentId,
@@ -215,11 +225,19 @@ export function NotificationsInbox({
             {(() => {
               const centre = normalizeCentre(item.ecd_centres)
               const whatsappHref = toWhatsappHref(centre.contactWhatsapp ?? centre.contactPhone, item.message)
+              const direct = isDirectMessage(item)
               return (
                 <>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {item.title}
+                        {direct ? (
+                          <span className="ml-2 inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-700">
+                            Direct
+                          </span>
+                        ) : null}
+                      </p>
                       <p className="mt-1 text-xs text-slate-600">
                         {centre.name} | {formatDate(item.created_at)}
                       </p>
@@ -247,7 +265,7 @@ export function NotificationsInbox({
                           }
                         }}
                       >
-                        Open WhatsApp Link
+                        {direct ? 'Reply on WhatsApp' : 'Open WhatsApp Link'}
                       </a>
                     </Button>
                   </div>

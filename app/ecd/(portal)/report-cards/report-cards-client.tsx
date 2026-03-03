@@ -10,12 +10,12 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
-  DEFAULT_DEVELOPMENT_AREAS,
   deleteReportCardAction,
   publishReportCardAction,
   saveReportCardAction,
   type SaveReportCardInput,
 } from '@/lib/actions/ecd/report-cards'
+import { DEFAULT_DEVELOPMENT_AREAS } from '@/lib/ecd/report-card-areas'
 
 type ChildOption = {
   id: string
@@ -55,6 +55,8 @@ type ReportCardsClientProps = {
 }
 
 type ViewMode = 'list' | 'editor'
+const EMPTY_CHILDREN: ChildOption[] = []
+const EMPTY_REPORT_CARDS: ReportCardRow[] = []
 
 const CURRENT_YEAR = new Date().getFullYear()
 const TERM_OPTIONS = [
@@ -125,11 +127,13 @@ export function ReportCardsClient({
   userEmail,
   userRole,
 }: ReportCardsClientProps) {
+  const safeChildren = Array.isArray(enrolledChildren) ? enrolledChildren : EMPTY_CHILDREN
+  const safeInitialCards = Array.isArray(initialReportCards) ? initialReportCards : EMPTY_REPORT_CARDS
   const [view, setView] = useState<ViewMode>('list')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [reportCards, setReportCards] = useState<ReportCardRow[]>(initialReportCards)
+  const [reportCards, setReportCards] = useState<ReportCardRow[]>(safeInitialCards)
 
-  const [selectedChildId, setSelectedChildId] = useState<string>(enrolledChildren[0]?.id ?? '')
+  const [selectedChildId, setSelectedChildId] = useState<string>(safeChildren[0]?.id ?? '')
   const [selectedTerm, setSelectedTerm] = useState<string>(TERM_OPTIONS[0])
   const [periodStart, setPeriodStart] = useState('')
   const [periodEnd, setPeriodEnd] = useState('')
@@ -141,8 +145,8 @@ export function ReportCardsClient({
   const [isDeleting, startDeleteTransition] = useTransition()
 
   const childMap = useMemo(() => {
-    return new Map(enrolledChildren.map((child) => [child.id, child]))
-  }, [enrolledChildren])
+    return new Map(safeChildren.map((child) => [child.id, child]))
+  }, [safeChildren])
 
   const groupedByTerm = useMemo(() => {
     const groups = new Map<string, ReportCardRow[]>()
@@ -161,7 +165,7 @@ export function ReportCardsClient({
 
   function resetForm() {
     setEditingId(null)
-    setSelectedChildId(enrolledChildren[0]?.id ?? '')
+    setSelectedChildId(safeChildren[0]?.id ?? '')
     setSelectedTerm(TERM_OPTIONS[0])
     setPeriodStart('')
     setPeriodEnd('')
@@ -348,7 +352,7 @@ export function ReportCardsClient({
                 type="button"
                 className="h-12 rounded-3xl bg-teal-600 px-6 text-white hover:bg-teal-700"
                 onClick={openCreateForm}
-                disabled={enrolledChildren.length === 0 || Boolean(reportCardsWarning)}
+                disabled={safeChildren.length === 0 || Boolean(reportCardsWarning)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 New Report Card
@@ -363,7 +367,7 @@ export function ReportCardsClient({
               </Card>
             ) : null}
 
-            {enrolledChildren.length === 0 ? (
+            {safeChildren.length === 0 ? (
               <Card className="rounded-3xl border-slate-200 bg-white">
                 <CardContent className="py-10 text-center">
                   <p className="text-sm font-semibold text-slate-700">No enrolled children found.</p>
@@ -372,7 +376,7 @@ export function ReportCardsClient({
               </Card>
             ) : null}
 
-            {enrolledChildren.length > 0 && reportCards.length === 0 ? (
+            {safeChildren.length > 0 && reportCards.length === 0 ? (
               <Card className="rounded-3xl border-dashed border-slate-300 bg-white">
                 <CardContent className="py-10 text-center">
                   <FileText className="mx-auto h-8 w-8 text-slate-300" />
@@ -495,7 +499,7 @@ export function ReportCardsClient({
                         disabled={Boolean(editingId)}
                         className="cc-native-field h-12 rounded-2xl"
                       >
-                        {enrolledChildren.map((child) => (
+                        {safeChildren.map((child) => (
                           <option key={child.id} value={child.id}>
                             {childFullName(child)}
                           </option>

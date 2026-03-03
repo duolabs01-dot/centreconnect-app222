@@ -145,7 +145,7 @@ export default async function ReportCardsPage() {
     published_at: card.published_at,
     created_at: card.created_at,
     updated_at: card.updated_at,
-    report_card_areas: (card.report_card_areas ?? []).map((area) => ({
+    report_card_areas: (Array.isArray(card.report_card_areas) ? card.report_card_areas : []).map((area) => ({
       area_name: area.area_name,
       rating: area.rating,
       comment: area.comment,
