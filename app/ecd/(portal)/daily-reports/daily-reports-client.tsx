@@ -313,6 +313,12 @@ export function DailyReportsClient({
     }
   }, [activeTab, filteredChildren, getPrimaryReportForTab])
 
+  const reportTabs: Array<{ key: ReportTab; label: string }> = [
+    { key: 'today', label: 'Today' },
+    { key: 'this_week', label: 'This Week' },
+    { key: 'all', label: 'All' },
+  ]
+
   function selectChild(childId: string) {
     setExpandedChildId(childId)
     const existingDate = selectedDateByChild[childId]
@@ -392,6 +398,41 @@ export function DailyReportsClient({
       userRole={userRole}
     >
       <div className="space-y-6">
+        <section className="hidden lg:flex lg:items-end lg:justify-between">
+          <div className="space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-600">Daily Reporting</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">Daily Reports</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1">
+              {reportTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    'rounded-xl px-4 py-2 text-xs font-semibold transition',
+                    activeTab === tab.key
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <div className="relative w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="h-11 rounded-xl border-slate-200 pl-9"
+                placeholder="Search child name"
+              />
+            </div>
+          </div>
+        </section>
+
         <Card className="border-cyan-100 bg-gradient-to-br from-cyan-50 via-white to-emerald-50">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base text-slate-900">
@@ -420,17 +461,13 @@ export function DailyReportsClient({
 
         <Card>
           <CardContent className="space-y-4 pt-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3 lg:hidden">
               <div className="inline-flex w-full gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 lg:w-auto">
-                {[
-                  { key: 'today', label: 'Today' },
-                  { key: 'this_week', label: 'This Week' },
-                  { key: 'all', label: 'All' },
-                ].map((tab) => (
+                {reportTabs.map((tab) => (
                   <button
                     key={tab.key}
                     type="button"
-                    onClick={() => setActiveTab(tab.key as ReportTab)}
+                    onClick={() => setActiveTab(tab.key)}
                     className={cn(
                       'rounded-xl px-4 py-2 text-xs font-semibold transition',
                       activeTab === tab.key
@@ -442,7 +479,7 @@ export function DailyReportsClient({
                   </button>
                 ))}
               </div>
-              <div className="relative w-full lg:max-w-sm">
+              <div className="relative w-full">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   value={searchQuery}
