@@ -6,6 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { cn } from '@/lib/utils'
+import {
+  AGE_GROUP_PRICE_BANDS,
+  buildAgeGroupPricingFromRandInput,
+  getAgeGroupPricingSummary,
+  normalizeAgeGroupPricing,
+  type AgeGroupPricingKey,
+} from '@/lib/pricing/age-group-pricing'
 
 export const metadata: Metadata = {
   title: 'Website - CentreConnect',
@@ -21,6 +28,13 @@ const sectionOptions = [
   { key: 'jobs', label: 'Jobs' },
   { key: 'contact', label: 'Contact' },
 ]
+
+const agePriceFieldByKey: Record<AgeGroupPricingKey, string> = {
+  '0-2': 'age_price_0_2',
+  '2-4': 'age_price_2_4',
+  '4-6': 'age_price_4_6',
+  '6+': 'age_price_6_plus',
+}
 
 const tierGuide: Record<
   'basic' | 'standard' | 'premium',
@@ -97,12 +111,16 @@ function fromProgramBlocks(contentBlocks: unknown): string {
   return parts.join('\n')
 }
 
+function centsToRandInput(cents: number) {
+  return (Math.max(0, cents) / 100).toFixed(2)
+}
+
 export default async function EcdWebsitePage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const [{ data: centre }, { data: contentRows }, { data: subscription }] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('id,slug,name,tagline,description,is_active,updated_at')
+      .select('id,slug,name,tagline,description,is_active,updated_at,age_group_pricing,monthly_fee_min,monthly_fee_max,fees_display_mode')
       .eq('id', ecdId)
       .maybeSingle(),
     supabase.from('ecd_content').select('section,content_blocks').eq('ecd_id', ecdId).in('section', ['about', 'programs', 'website_sections']),
@@ -129,6 +147,8 @@ export default async function EcdWebsitePage() {
   const completionPct = Math.round((completedSteps / 3) * 100)
   const tier = (subscription?.tier ?? 'basic') as 'basic' | 'standard' | 'premium'
   const guide = tierGuide[tier]
+  const ageGroupPricing = normalizeAgeGroupPricing(centre?.age_group_pricing, centre?.monthly_fee_min ?? null)
+  const pricingSummary = getAgeGroupPricingSummary(ageGroupPricing)
 
   async function saveWebsiteContent(formData: FormData) {
     'use server'
@@ -137,12 +157,33 @@ export default async function EcdWebsitePage() {
     const about = String(formData.get('about') ?? '').trim()
     const programs = String(formData.get('programs') ?? '').trim()
     const sectionKeys = formData.getAll('sections').map((value) => String(value))
+    const agePricing = buildAgeGroupPricingFromRandInput(
+      {
+        '0-2': String(formData.get(agePriceFieldByKey['0-2']) ?? ''),
+        '2-4': String(formData.get(agePriceFieldByKey['2-4']) ?? ''),
+        '4-6': String(formData.get(agePriceFieldByKey['4-6']) ?? ''),
+        '6+': String(formData.get(agePriceFieldByKey['6+']) ?? ''),
+      },
+      centre?.monthly_fee_min ?? null
+    )
+    const nextPricingSummary = getAgeGroupPricingSummary(agePricing)
+    const nextFeesDisplayMode =
+      nextPricingSummary.minFeeRand === null
+        ? 'contact'
+        : nextPricingSummary.minFeeRand === nextPricingSummary.maxFeeRand
+          ? 'exact'
+          : 'range'
 
     await session.supabase
       .from('ecd_centres')
       .update({
         tagline: tagline || null,
         description: about || null,
+        age_group_pricing: agePricing,
+        monthly_fee_min: nextPricingSummary.minFeeRand,
+        monthly_fee_max: nextPricingSummary.maxFeeRand ?? nextPricingSummary.minFeeRand,
+        fees_display_mode: nextFeesDisplayMode,
+        fees_last_updated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', session.ecdId)
@@ -341,6 +382,42 @@ export default async function EcdWebsitePage() {
                   placeholder="Toddler Group | Play-based learning for ages 2-3"
                   className="cc-native-field mt-1.5 h-auto min-h-32 py-3 rounded-2xl leading-relaxed"
                 />
+              </div>
+
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Age-based monthly pricing</p>
+                <p className="mt-1 ml-1 text-xs text-slate-500">
+                  These prices auto-fill applications, offer fees, and monthly invoices.
+                </p>
+                <div className="mt-2 overflow-hidden rounded-2xl border border-slate-100">
+                  <div className="grid grid-cols-[1fr_160px] border-b border-slate-100 bg-slate-50 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    <p>Age Group</p>
+                    <p className="text-right">Monthly Fee (R)</p>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {AGE_GROUP_PRICE_BANDS.map((band) => (
+                      <div key={band.key} className="grid grid-cols-[1fr_160px] items-center px-4 py-3">
+                        <p className="text-sm font-semibold text-slate-800">{band.label}</p>
+                        <input
+                          name={agePriceFieldByKey[band.key]}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          defaultValue={centsToRandInput(ageGroupPricing[band.key].monthly_fee_cents)}
+                          className="cc-native-field h-10 rounded-xl text-right font-semibold"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="mt-2 ml-1 text-xs text-teal-700">
+                  Current fee range:{' '}
+                  {pricingSummary.minFeeRand === null
+                    ? 'Contact for fees'
+                    : pricingSummary.minFeeRand === pricingSummary.maxFeeRand
+                      ? `R${pricingSummary.minFeeRand.toFixed(2)}`
+                      : `R${pricingSummary.minFeeRand.toFixed(2)} - R${pricingSummary.maxFeeRand?.toFixed(2)}`}
+                </p>
               </div>
 
               <div>

@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { readSupabasePublicEnv } from '@/lib/supabase/env'
 import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
+import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -80,6 +81,18 @@ export async function submitApplicationAction(input: unknown) {
     return { error: 'Child not found' }
   }
 
+  const { data: centrePricing } = await db
+    .from('ecd_centres')
+    .select('age_group_pricing,monthly_fee_min')
+    .eq('id', parsed.data.ecd_id)
+    .maybeSingle()
+
+  const resolvedFee = resolveAgeGroupFeeForDateOfBirth({
+    dateOfBirth: child.date_of_birth,
+    ageGroupPricing: centrePricing?.age_group_pricing,
+    fallbackMonthlyFeeRand: centrePricing?.monthly_fee_min ?? null,
+  })
+
   const { data: documents } = await db.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(80)
   const documentChecklist = evaluateApplicationDocumentChecklist((documents ?? []).map((doc) => doc.doc_type))
   const hasMissingDocuments = documentChecklist.missingCodes.length > 0
@@ -114,6 +127,7 @@ export async function submitApplicationAction(input: unknown) {
         parent_id: user.id,
         child_id: parsed.data.child_id,
         status: nextStatus,
+        monthly_fee_cents: resolvedFee?.monthlyFeeCents ?? 0,
         missing_documents: documentChecklist.missingCodes,
         share_multiple_flag: parsed.data.share_multiple_flag,
         parent_message: parsed.data.parent_message ?? null,

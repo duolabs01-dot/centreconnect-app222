@@ -7,6 +7,7 @@ import { buildWarmApplicationUpdateMessage } from '@/lib/communications/template
 import { applicationStatusEmail } from '@/lib/email/templates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
 
 const statusUpdateSchema = z.object({
   applicationId: z.string().uuid(),
@@ -47,6 +48,7 @@ type ApplicationRecord = {
   parent_id: string
   child_id: string
   application_number: string
+  monthly_fee_cents: number | null
   offer_accepted_at: string | null
   children: ApplicationChild | ApplicationChild[] | null
   parents: ApplicationParent | ApplicationParent[] | null
@@ -118,7 +120,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
   const { data: applicationRaw } = await session.supabase
     .from('applications')
     .select(
-      'id,status,ecd_id,parent_id,child_id,application_number,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name,date_of_birth,gender),parents(id,billing_email,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+      'id,status,ecd_id,parent_id,child_id,application_number,monthly_fee_cents,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name,date_of_birth,gender),parents(id,billing_email,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
     )
     .eq('id', applicationId)
     .eq('ecd_id', session.ecdId)
@@ -214,7 +216,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
   }
 
   const now = new Date().toISOString()
-  const payload: Record<string, string | null> = {
+  const payload: Record<string, string | number | null> = {
     status,
     admin_notes: notes || null,
   }
@@ -229,6 +231,26 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
       payload.offer_sent_at = now
       payload.withdrawn_at = null
       payload.withdraw_reason = null
+
+      if (!application.monthly_fee_cents || application.monthly_fee_cents <= 0) {
+        const child = normalizeOne(application.children)
+        const { data: centrePricing } = await session.supabase
+          .from('ecd_centres')
+          .select('age_group_pricing,monthly_fee_min')
+          .eq('id', session.ecdId)
+          .maybeSingle()
+        const resolvedFee = resolveAgeGroupFeeForDateOfBirth({
+          dateOfBirth: child?.date_of_birth ?? null,
+          ageGroupPricing: centrePricing?.age_group_pricing,
+          fallbackMonthlyFeeRand: centrePricing?.monthly_fee_min ?? null,
+        })
+        if (resolvedFee?.monthlyFeeCents && resolvedFee.monthlyFeeCents > 0) {
+          payload.monthly_fee_cents = resolvedFee.monthlyFeeCents
+          if (!notes) {
+            payload.fee_notes = `Auto-set from age pricing (${resolvedFee.ageGroupLabel})`
+          }
+        }
+      }
     }
     if (status === 'withdrawn') {
       payload.withdrawn_at = now

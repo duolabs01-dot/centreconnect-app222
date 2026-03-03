@@ -10,6 +10,7 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
 import { StatusUpdateForm } from './status-update-form'
 import { TemplateSendPanel } from './template-send-panel'
 import { FeeAgreementCard } from './fee-agreement-card'
@@ -300,7 +301,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
   const childName = child ? `${child.first_name} ${child.last_name}` : 'Child'
 
   const [centreResult, templatesResult, historyResult, documentsResult, guardiansRaw, requestHistoryRaw] = await Promise.all([
-    supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
+    supabase.from('ecd_centres').select('name,age_group_pricing,monthly_fee_min').eq('id', ecdId).maybeSingle(),
     supabase.from('communication_templates').select('template_key,title,body').eq('is_active', true).order('title'),
     supabase
       .from('application_status_history')
@@ -378,6 +379,15 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
     child: { firstName: child?.first_name ?? null, lastName: child?.last_name ?? null, dateOfBirth: child?.date_of_birth ?? null, gender: child?.gender ?? null },
     docTypes: docsError ? [] : parentDocs.map((doc) => doc.doc_type),
   })
+  const resolvedAgeFee = resolveAgeGroupFeeForDateOfBirth({
+    dateOfBirth: child?.date_of_birth ?? null,
+    ageGroupPricing: centreResult.data?.age_group_pricing,
+    fallbackMonthlyFeeRand: centreResult.data?.monthly_fee_min ?? null,
+  })
+  const effectiveMonthlyFeeCents =
+    typeof application.monthly_fee_cents === 'number' && application.monthly_fee_cents > 0
+      ? application.monthly_fee_cents
+      : resolvedAgeFee?.monthlyFeeCents ?? 0
 
   return (
     <EcdOsShell
@@ -425,7 +435,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
           </div>
           <aside className="space-y-5">
             <Card className="rounded-3xl border-slate-200 shadow-sm"><CardHeader><CardTitle className="text-base text-slate-900">Update Status</CardTitle></CardHeader><CardContent><StatusUpdateForm applicationId={application.id} currentStatus={application.status} currentNotes={application.admin_notes} currentOfferAcceptedAt={application.offer_accepted_at} /></CardContent></Card>
-            {['approved', 'enrolled'].includes(application.status) ? <FeeAgreementCard applicationId={application.id} initialMonthlyFeeCents={application.monthly_fee_cents ?? 0} initialFeeNotes={application.fee_notes} /> : null}
+            {['approved', 'enrolled'].includes(application.status) ? <FeeAgreementCard applicationId={application.id} initialMonthlyFeeCents={effectiveMonthlyFeeCents} initialFeeNotes={application.fee_notes} /> : null}
             <Card className="rounded-3xl border-slate-200 shadow-sm"><CardHeader><CardTitle className="text-base text-slate-900">Template Message</CardTitle></CardHeader><CardContent><TemplateSendPanel ecdId={application.ecd_id} parentId={parent?.id ?? ''} applicationId={application.id} centreName={centreName} childName={childName} parentName={parentName} applicationNumber={application.application_number} status={application.status} parentPhone={parentPhone || null} templates={templates} /></CardContent></Card>
             <Card className="rounded-3xl border-slate-200 shadow-sm"><CardHeader><CardTitle className="text-base text-slate-900">Request Document Upload (Linked Parents)</CardTitle></CardHeader><CardContent className="space-y-3">{documentRequestError ? <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Unable to load request history right now: {documentRequestError}</div> : null}<CoParentDocumentRequestPanel applicationId={application.id} childId={application.child_id} participants={participants} initialHistory={requestHistory} /></CardContent></Card>
             {missingLabels.length > 0 ? <Card className="rounded-3xl border-amber-200 bg-amber-50 shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2 text-base text-amber-900"><AlertCircle className="h-4 w-4" />Outstanding Documents</CardTitle></CardHeader><CardContent className="text-sm text-amber-900">{missingLabels.join(', ')}</CardContent></Card> : null}
