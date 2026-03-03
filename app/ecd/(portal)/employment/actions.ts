@@ -35,6 +35,14 @@ const updateJobApplicationSchema = z.object({
   nextStatus: z.enum(['new', 'shortlisted', 'interview', 'offer', 'hired', 'rejected']),
   notes: z.string().trim().max(2000).optional(),
   interviewAt: dateTimeInputSchema,
+}).superRefine((value, ctx) => {
+  if (value.nextStatus === 'interview' && !value.interviewAt) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Interview date-time is required when status is set to interview.',
+      path: ['interviewAt'],
+    })
+  }
 })
 
 const toggleJobPublishSchema = z.object({
@@ -158,9 +166,9 @@ export async function updateJobApplicationStatusAction(formData: FormData) {
     .eq('ecd_id', ecdId)
 
   if (error) {
-    redirect('/ecd/employment?error=publish-failed')
+    redirect('/ecd/employment?error=update-failed')
   }
 
   revalidatePath('/ecd/employment')
-  redirect('/ecd/employment?success=job-updated')
+  redirect('/ecd/employment?success=application-updated')
 }

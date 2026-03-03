@@ -97,7 +97,8 @@ function toDateTimeLocal(value: string | null): string {
   if (!value) return ''
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toISOString().slice(0, 16)
+  const timezoneAdjusted = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return timezoneAdjusted.toISOString().slice(0, 16)
 }
 
 export default async function EcdEmploymentPage({ searchParams }: EmploymentPageProps) {
@@ -146,6 +147,8 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       ? 'Job created successfully.'
       : successParam === 'job-updated'
         ? 'Job visibility updated.'
+        : successParam === 'application-updated'
+          ? 'Applicant status updated.'
         : null
 
   const errorMessage =
@@ -153,10 +156,12 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       ? 'Only ECD admins can create or publish jobs.'
       : errorParam === 'invalid-job'
         ? 'Please check job fields and try again.'
-        : errorParam === 'create-failed'
-          ? 'Could not create job. Try again.'
-          : errorParam === 'publish-failed'
-            ? 'Could not update this action. Try again.'
+      : errorParam === 'create-failed'
+        ? 'Could not create job. Try again.'
+        : errorParam === 'publish-failed'
+          ? 'Could not update this action. Try again.'
+          : errorParam === 'update-failed'
+            ? 'Could not update this applicant status. Try again.'
             : null
 
   return (

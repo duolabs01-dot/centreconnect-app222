@@ -223,7 +223,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:sticky md:top-0 md:flex md:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
         <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />

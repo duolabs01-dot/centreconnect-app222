@@ -5,6 +5,7 @@
 import { redirect } from 'next/navigation'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdPortalSidebar } from '@/components/layout/ecd-portal-sidebar'
+import { EcdMainScrollMemory } from '@/components/layout/ecd-main-scroll-memory'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 import '../ecd-theme.css'
@@ -104,7 +105,11 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         userRole={role}
         attentionBadges={attentionBadges}
       />
-      <main className="flex-1 overflow-y-auto bg-card [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80">
+      <main
+        id="ecd-portal-main-scroll"
+        className="flex-1 overflow-y-auto bg-card md:ml-72 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80"
+      >
+        <EcdMainScrollMemory />
         <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-20 sm:px-6 md:pb-10 md:pt-6 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
           <div className="text-foreground">

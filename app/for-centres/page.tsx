@@ -98,7 +98,7 @@ export default async function ForCentresPage() {
           { href: '#active-centres', label: 'Active Centres' },
           { href: '/ecd/login', label: 'ECD Login' },
         ]}
-        cta={{ href: '/for-centres/register?plan=growth', label: 'Register Your ECD' }}
+        cta={{ href: '/for-centres/register?plan=growth&flow=confirm', label: 'Register Your ECD' }}
       />
 
       <Section className="py-12 md:py-16 lg:py-20" containerClassName="cc-section">
@@ -112,7 +112,7 @@ export default async function ForCentresPage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild className="h-11 rounded-2xl bg-teal-600 px-6 text-sm font-bold text-white hover:bg-teal-700">
-              <Link href="/for-centres/register?plan=growth">Start Your ECD Setup</Link>
+              <Link href="/for-centres/register?plan=growth&flow=confirm">Start Your ECD Setup</Link>
             </Button>
             <Button asChild variant="outline" className="h-11 rounded-2xl border-border bg-card px-6 text-sm font-semibold">
               <Link href="#pricing">See Plans</Link>
@@ -186,7 +186,7 @@ export default async function ForCentresPage() {
                     plan.highlighted ? 'bg-teal-600 text-white hover:bg-teal-700' : 'bg-slate-900 text-white hover:bg-slate-800'
                   }`}
                 >
-                  <Link href={`/for-centres/register?plan=${plan.key}`}>{plan.cta}</Link>
+                  <Link href={`/for-centres/register?plan=${plan.key}&flow=confirm`}>{plan.cta}</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -240,7 +240,7 @@ export default async function ForCentresPage() {
             Register in about 10 minutes. We will help you go live quickly and onboard your team.
           </p>
           <Button asChild className="mt-5 h-11 rounded-2xl bg-white px-6 text-sm font-bold text-teal-700 hover:bg-teal-50">
-            <Link href="/for-centres/register?plan=growth">Register Your ECD</Link>
+            <Link href="/for-centres/register?plan=growth&flow=confirm">Register Your ECD</Link>
           </Button>
         </div>
       </Section>

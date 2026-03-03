@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
@@ -15,6 +15,30 @@ import { TurnstileWidget } from '@/components/security/turnstile-widget'
 type InternalTier = 'basic' | 'standard' | 'premium'
 type PublicTier = 'starter' | 'growth' | 'pro'
 type WizardStep = 1 | 2 | 3 | 4
+type RegisterFormState = {
+  fullName: string
+  email: string
+  phone: string
+  centreName: string
+  centrePhone: string
+  centreAddress: string
+  centreSuburb: string
+  centreCity: string
+  centreProvince: string
+  operatorRole: string
+  registrationStatus: string
+  yearsOperating: string
+  currentChildren: string
+  staffCount: string
+  ageGroups: string[]
+  operatingHours: string
+  monthlyBudget: string
+  expectedChildren: string
+  selectedTier: PublicTier
+  keyNeeds: string[]
+  additionalContext: string
+  claimSlug: string
+}
 
 const TIER_PRICES: Record<PublicTier, number> = {
   starter: 199,
@@ -51,6 +75,8 @@ const PLAN_ALIAS_TO_PUBLIC_TIER: Record<string, PublicTier> = {
 }
 
 const PLAN_OPTIONS: PublicTier[] = ['starter', 'growth', 'pro']
+const REGISTER_DRAFT_STORAGE_KEY = 'cc-ecd-register-draft-v1'
+const REGISTER_FAST_TRACK_KEY = 'cc-ecd-register-fast-track'
 
 const STEP_TITLES: Record<WizardStep, string> = {
   1: 'Contact and Centre',
@@ -89,42 +115,139 @@ function formatClaimSlug(slug: string) {
     .join(' ')
 }
 
+function hasFastTrackCoreDetails(values: { fullName: string; email: string; centreName: string }) {
+  return Boolean(values.fullName.trim() && values.email.trim() && values.centreName.trim())
+}
+
 export default function EcdRegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || ''
   const requestedPlanParam = (searchParams.get('plan') || '').toLowerCase()
+  const flowParam = (searchParams.get('flow') || '').toLowerCase()
+  const fastTrackRequested = (searchParams.get('fast') || '').trim() === '1'
   const claimSlugParam = (searchParams.get('claim') || '').trim()
   const hasPresetPlan = Boolean(PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam])
+  const isConfirmFlow = hasPresetPlan && flowParam === 'confirm'
   const initialSelectedTier: PublicTier = PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam] ?? 'growth'
   const presetPlanLabel = initialSelectedTier === 'starter' ? 'Starter' : initialSelectedTier === 'growth' ? 'Growth' : 'Pro'
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-    centreName: claimSlugParam ? formatClaimSlug(claimSlugParam) : '',
-    centrePhone: '',
-    centreAddress: '',
-    centreSuburb: '',
-    centreCity: 'Johannesburg',
-    centreProvince: 'Gauteng',
-    operatorRole: '',
-    registrationStatus: 'Unregistered / Community-based',
-    yearsOperating: '0',
-    currentChildren: '0',
-    staffCount: '0',
-    ageGroups: ['2-4 years', '4-6 years'] as string[],
-    operatingHours: '',
-    monthlyBudget: '299',
-    expectedChildren: '60',
-    selectedTier: initialSelectedTier,
-    keyNeeds: ['Admissions pipeline', 'Parent communications'] as string[],
-    additionalContext: '',
-    claimSlug: claimSlugParam,
-  })
+  const [draftHydrated, setDraftHydrated] = useState(false)
+  const initialFormState = useMemo<RegisterFormState>(
+    () => ({
+      fullName: '',
+      email: '',
+      phone: '',
+      centreName: claimSlugParam ? formatClaimSlug(claimSlugParam) : '',
+      centrePhone: '',
+      centreAddress: '',
+      centreSuburb: '',
+      centreCity: 'Johannesburg',
+      centreProvince: 'Gauteng',
+      operatorRole: '',
+      registrationStatus: 'Unregistered / Community-based',
+      yearsOperating: '0',
+      currentChildren: '0',
+      staffCount: '0',
+      ageGroups: ['2-4 years', '4-6 years'],
+      operatingHours: '',
+      monthlyBudget: '299',
+      expectedChildren: '60',
+      selectedTier: initialSelectedTier,
+      keyNeeds: ['Admissions pipeline', 'Parent communications'],
+      additionalContext: '',
+      claimSlug: claimSlugParam,
+    }),
+    [claimSlugParam, initialSelectedTier]
+  )
+  const [form, setForm] = useState<RegisterFormState>(initialFormState)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    let merged = initialFormState
+    try {
+      const saved = window.localStorage.getItem(REGISTER_DRAFT_STORAGE_KEY)
+      if (saved) {
+        const parsed = JSON.parse(saved) as Partial<RegisterFormState>
+        const parsedSelectedTier =
+          typeof parsed.selectedTier === 'string' && PLAN_OPTIONS.includes(parsed.selectedTier as PublicTier)
+            ? (parsed.selectedTier as PublicTier)
+            : initialFormState.selectedTier
+
+        merged = {
+          ...initialFormState,
+          ...parsed,
+          ageGroups: Array.isArray(parsed.ageGroups)
+            ? parsed.ageGroups.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+            : initialFormState.ageGroups,
+          keyNeeds: Array.isArray(parsed.keyNeeds)
+            ? parsed.keyNeeds.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+            : initialFormState.keyNeeds,
+          selectedTier: hasPresetPlan ? initialSelectedTier : parsedSelectedTier,
+          claimSlug: claimSlugParam || (typeof parsed.claimSlug === 'string' ? parsed.claimSlug : initialFormState.claimSlug),
+          centreName:
+            claimSlugParam && !(typeof parsed.centreName === 'string' && parsed.centreName.trim())
+              ? formatClaimSlug(claimSlugParam)
+              : typeof parsed.centreName === 'string'
+                ? parsed.centreName
+                : initialFormState.centreName,
+        }
+      }
+    } catch {
+      merged = initialFormState
+    }
+
+    if (hasPresetPlan) {
+      merged = { ...merged, selectedTier: initialSelectedTier }
+    }
+
+    setForm(merged)
+
+    if (isConfirmFlow) {
+      const fastTrackEnabled =
+        fastTrackRequested ||
+        window.localStorage.getItem(REGISTER_FAST_TRACK_KEY) === '1' ||
+        hasFastTrackCoreDetails(merged)
+      if (fastTrackEnabled && hasFastTrackCoreDetails(merged)) {
+        setStep(4)
+      }
+    }
+
+    setDraftHydrated(true)
+  }, [claimSlugParam, fastTrackRequested, hasPresetPlan, initialFormState, initialSelectedTier, isConfirmFlow])
+
+  useEffect(() => {
+    if (!draftHydrated || typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(REGISTER_DRAFT_STORAGE_KEY, JSON.stringify(form))
+    } catch {
+      // Ignore localStorage write issues.
+    }
+  }, [draftHydrated, form])
+
+  useEffect(() => {
+    if (!isConfirmFlow || step !== 4 || typeof window === 'undefined') return
+    try {
+      window.localStorage.setItem(REGISTER_FAST_TRACK_KEY, '1')
+    } catch {
+      // Ignore localStorage write issues.
+    }
+  }, [isConfirmFlow, step])
+
+  function setField<K extends keyof RegisterFormState>(key: K, value: RegisterFormState[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function nextStep() {
+    setStep((prev) => (prev < 4 ? ((prev + 1) as WizardStep) : prev))
+  }
+
+  function previousStep() {
+    setStep((prev) => (prev > 1 ? ((prev - 1) as WizardStep) : prev))
+  }
 
   const numericBudget = Number(form.monthlyBudget || 0)
   const numericExpectedChildren = Number(form.expectedChildren || 0)
@@ -136,18 +259,6 @@ export default function EcdRegisterPage() {
       ),
     [numericBudget, numericExpectedChildren]
   )
-
-  function setField<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  function nextStep() {
-    setStep((prev) => (prev < 4 ? ((prev + 1) as WizardStep) : prev))
-  }
-
-  function previousStep() {
-    setStep((prev) => (prev > 1 ? ((prev - 1) as WizardStep) : prev))
-  }
 
   function validateStep(currentStep: WizardStep) {
     if (currentStep === 1) {
@@ -195,7 +306,7 @@ export default function EcdRegisterPage() {
   }
 
   async function submitApplication() {
-    if (!validateStep(3)) return
+    if (!validateStep(1) || !validateStep(2) || !validateStep(3)) return
     if (turnstileSiteKey && !captchaToken) {
       toast.error('Please complete the security verification challenge')
       return
@@ -237,6 +348,10 @@ export default function EcdRegisterPage() {
       const payload = (await response.json().catch(() => ({}))) as { error?: string; message?: string }
       if (!response.ok) throw new Error(payload.error || 'Failed to submit application')
 
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(REGISTER_DRAFT_STORAGE_KEY)
+      }
+
       toast.success(payload.message || 'Application submitted')
       router.replace('/for-centres?status=application-submitted')
       router.refresh()
@@ -257,7 +372,9 @@ export default function EcdRegisterPage() {
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">CentreConnect</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Register Your ECD</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Fill your creche faster and get paid on time. Complete this setup in minutes and choose the plan that matches your centre.
+            Fill your creche faster and get paid on time. {isConfirmFlow
+              ? 'Your selected plan is ready for confirmation and payment.'
+              : 'Complete this setup in minutes and choose the plan that matches your centre.'}
           </p>
           {hasPresetPlan ? (
             <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
@@ -302,9 +419,11 @@ export default function EcdRegisterPage() {
                   Plan was pre-selected from your Choose Plan action. You can confirm and continue below.
                 </p>
               )}
-              <Button asChild variant="outline" className="h-10 w-full rounded-2xl border-border bg-card px-4 text-xs font-semibold">
-                <Link href="/for-centres#pricing">Compare plans</Link>
-              </Button>
+              {!isConfirmFlow ? (
+                <Button asChild variant="outline" className="h-10 w-full rounded-2xl border-border bg-card px-4 text-xs font-semibold">
+                  <Link href="/for-centres#pricing">Compare plans</Link>
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
 
@@ -312,7 +431,9 @@ export default function EcdRegisterPage() {
             <CardHeader className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.1em] text-teal-700">Step {step} of 4</p>
-                <p className="text-sm font-semibold text-muted-foreground">{STEP_TITLES[step]}</p>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  {step === 4 && isConfirmFlow ? 'Review and Confirm' : STEP_TITLES[step]}
+                </p>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full rounded-full bg-teal-500 transition-all duration-300" style={{ width: `${(step / 4) * 100}%` }} />
@@ -464,11 +585,13 @@ export default function EcdRegisterPage() {
                       <p className="mt-1 text-xs text-muted-foreground">
                         This plan was pre-selected from your Choose Plan action.
                       </p>
-                      <div className="mt-2">
-                        <Button asChild variant="outline" className="h-9 rounded-2xl border-border bg-card px-3 text-xs font-semibold">
-                          <Link href="/for-centres#pricing">Need a different plan?</Link>
-                        </Button>
-                      </div>
+                      {!isConfirmFlow ? (
+                        <div className="mt-2">
+                          <Button asChild variant="outline" className="h-9 rounded-2xl border-border bg-card px-3 text-xs font-semibold">
+                            <Link href="/for-centres#pricing">Need a different plan?</Link>
+                          </Button>
+                        </div>
+                      ) : null}
                     </div>
                   ) : (
                     <div className="grid gap-3 sm:grid-cols-3">
