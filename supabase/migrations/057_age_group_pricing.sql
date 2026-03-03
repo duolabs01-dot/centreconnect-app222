@@ -53,7 +53,6 @@ SELECT
   province,
   postal_code,
   age_groups,
-  age_group_pricing,
   logo_url,
   cover_image_url,
   primary_color,
@@ -66,7 +65,8 @@ SELECT
   fees_notes,
   fees_last_updated_at,
   contact_whatsapp,
-  contact_phone
+  contact_phone,
+  age_group_pricing
 FROM public.ecd_centres
 WHERE is_active = TRUE
   AND website_published = TRUE;
