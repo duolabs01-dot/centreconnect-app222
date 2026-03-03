@@ -81,6 +81,8 @@ type WebsiteContentState = {
 }
 
 const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
+const ALLOWED_IMAGE_HOST_SUFFIXES = ['.supabase.co']
+const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com'])
 
 function fromParagraphBlocks(contentBlocks: unknown): string {
   if (!Array.isArray(contentBlocks)) return ''
@@ -125,6 +127,25 @@ function fromGalleryBlocks(contentBlocks: unknown): string[] {
     })
     .filter((value) => value.length > 0)
   return Array.from(new Set(urls))
+}
+
+function isSafeImageUrl(url: string | null | undefined) {
+  if (!url) return false
+  if (url.startsWith('/')) return true
+
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:') return false
+    if (ALLOWED_IMAGE_HOSTS.has(parsed.hostname)) return true
+    return ALLOWED_IMAGE_HOST_SUFFIXES.some((suffix) => parsed.hostname.endsWith(suffix))
+  } catch {
+    return false
+  }
+}
+
+function getSafeImageUrl(candidate: string | null | undefined, fallback: string) {
+  if (candidate && isSafeImageUrl(candidate)) return candidate
+  return fallback
 }
 
 export function CentreClient({ slug }: { slug: string }) {
@@ -275,16 +296,19 @@ export function CentreClient({ slug }: { slug: string }) {
     )
   }
 
-  const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
+  const fallbackHeroImage = getCentreHeroImage(centre.slug, null)
+  const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
   const operationalStatus = getCentreOperationalStatus()
   const isClaimed = typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered)
-  const isFoundingPartner = centre.suburb?.trim().toLowerCase() === 'alexandra'
+  const normalizedSuburb = centre.suburb?.trim().toLowerCase() ?? ''
+  const isFoundingPartner = normalizedSuburb === 'alexandra'
   const pilotBadges = [
     centre.is_registered ? 'Verified' : null,
     isFoundingPartner ? 'Founding Partner' : null,
     centre.is_registered || isFoundingPartner ? 'Priority Listing' : null,
   ].filter(Boolean) as string[]
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
+  const fallbackAddressLabel = locationLabel || 'Address shared on request'
   const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(centre.slug)}`
   const heroFacts = [
     centre.is_registered ? 'DSD Registered' : null,
@@ -301,7 +325,8 @@ export function CentreClient({ slug }: { slug: string }) {
   const visibleSectionSet = new Set(websiteContent.visibleSections)
   const showAbout = visibleSectionSet.has('about')
   const showPrograms = visibleSectionSet.has('programs')
-  const showGallery = visibleSectionSet.has('gallery') && websiteContent.galleryUrls.length > 0
+  const safeGalleryUrls = websiteContent.galleryUrls.filter((url) => isSafeImageUrl(url))
+  const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0
   const showContact = visibleSectionSet.has('contact')
   const aboutCopy =
     websiteContent.aboutText.trim() ||
@@ -422,7 +447,7 @@ export function CentreClient({ slug }: { slug: string }) {
             {showGallery ? (
               <Section id="gallery" title="Gallery">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  {websiteContent.galleryUrls.slice(0, 12).map((url, index) => (
+                  {safeGalleryUrls.slice(0, 12).map((url, index) => (
                     <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white">
                       <Image
                         src={url}
@@ -447,7 +472,7 @@ export function CentreClient({ slug }: { slug: string }) {
                       </div>
                       <div>
                         <p className="text-[10px] font-black uppercase text-slate-400">Address</p>
-                        <p className="text-sm font-bold text-slate-900">{centre.address || `${centre.suburb}, ${centre.city}`}</p>
+                        <p className="text-sm font-bold text-slate-900">{centre.address || fallbackAddressLabel}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
