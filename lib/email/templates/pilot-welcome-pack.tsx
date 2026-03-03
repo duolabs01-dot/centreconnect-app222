@@ -158,6 +158,17 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
         </td>
       </tr>
     </table>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#EFF6FF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#1D4ED8;">Pilot Activation</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
+            If you are claiming a pilot listing, reply with <strong>"Claim"</strong> to confirm ownership.
+            We share pilot perks and any price-lock details only after your Claim reply is confirmed.
+          </p>
+        </td>
+      </tr>
+    </table>
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">
       After setting your password, sign in from the ECD login:
       <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${input.loginLink}</a>
@@ -186,6 +197,16 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       Welcome to the <strong>CentreConnect Pilot</strong> for <strong>${input.centreName}</strong> 🎉.
       Your account is live and ready to run daily operations beautifully.
     </p>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#0F766E;">Pilot Price Lock Confirmed</p>
+          <p style="margin:0;font-size:13px;line-height:1.65;color:${BRAND.body};">
+            As a pilot cr&egrave;che, we're locking your onboarding at R500 and giving you Growth Plan benefits for the first 3 months at Starter price.
+          </p>
+        </td>
+      </tr>
+    </table>
 
     <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0;margin:0 0 16px;">
       <tr>
@@ -286,6 +307,17 @@ export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigr
     <p style="margin:0 0 14px;font-size:13px;line-height:1.65;color:${BRAND.body};">
       Parents can discover your listing and apply quickly. Keep your profile and website content up to date to start receiving more applications.
     </p>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#EFF6FF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 5px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#1D4ED8;">Pilot Claim Flow</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
+            Reply with <strong>"Claim"</strong> to confirm your centre listing.
+            After that confirmation, we send pilot perks and any price-lock terms in your onboarding pack.
+          </p>
+        </td>
+      </tr>
+    </table>
     <div style="margin:0 0 12px;">${button('Start Now: Go Live & Receive Applications', input.websiteBuilderLink)}</div>
     <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
       Next shortcuts:
