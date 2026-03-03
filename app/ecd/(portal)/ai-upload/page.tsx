@@ -5,7 +5,7 @@ import { RegisterImportClient } from './register-import-client'
 
 export const metadata: Metadata = {
   title: 'AI Register Import - CentreConnect',
-  description: 'Digitize paper attendance registers with Gemini extraction and quick attendance import.',
+  description: 'Digitize paper attendance registers with AI extraction and quick attendance import.',
 }
 
 type RegisterImportRow = {
@@ -91,7 +91,7 @@ export default async function AiUploadPage() {
             </p>
           </div>
           <div className="rounded-2xl border border-teal-100 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700">
-            Works with Gemini extraction
+            Works with AI extraction
           </div>
         </div>
 

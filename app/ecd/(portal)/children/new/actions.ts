@@ -38,6 +38,7 @@ type ChildConfidenceMap = Partial<Record<keyof ChildPrefill, number>>
 const tempChildProfileSchema = z.object({
   first_name: z.string().min(1),
   last_name: z.string().min(1),
+  enrollment_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   date_of_birth: z.string().optional().nullable(),
   gender: z.string().optional().nullable(),
   blood_type: z.string().optional().nullable(),
@@ -86,6 +87,41 @@ export type SaveTempChildProfileResult = {
   tempProfileId?: string
   whatsappHref?: string
   parentOnboardingUrl?: string
+}
+
+const bulkExistingChildrenCreateSchema = z.object({
+  children: z
+    .array(
+      z.object({
+        full_name: z.string().min(2).max(140),
+        enrollment_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')).nullable(),
+      })
+    )
+    .min(1)
+    .max(200),
+})
+
+export type ExistingChildBulkDraft = {
+  full_name: string
+  enrollment_start_date: string
+  date_of_birth?: string
+  confidence?: number
+}
+
+export type ExtractExistingChildrenFromPhotoResult = {
+  success: boolean
+  message: string
+  drafts?: ExistingChildBulkDraft[]
+  storagePublicUrl?: string
+  summary?: string
+}
+
+export type BulkCreateExistingChildrenResult = {
+  success: boolean
+  message: string
+  createdCount?: number
+  createdIds?: string[]
 }
 
 function getAppUrl() {
@@ -139,6 +175,52 @@ function getFieldList(extraction: AiExtractionPayload, key: AiFieldKey) {
 
 function getFieldConfidence(extraction: AiExtractionPayload, key: AiFieldKey) {
   return extraction.fields[key]?.confidence
+}
+
+function splitPossibleNames(input: string) {
+  return input
+    .split(/\r?\n|,|;|\|/g)
+    .map((entry) => entry.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+}
+
+function parseRegisterNames(extraction: AiExtractionPayload) {
+  const fullNameValue = extraction.fields.full_name?.value
+  const fromArray = Array.isArray(fullNameValue) ? fullNameValue : []
+  const fromString = typeof fullNameValue === 'string' ? splitPossibleNames(fullNameValue) : []
+  const firstName = getFieldString(extraction, 'first_name')
+  const lastName = getFieldString(extraction, 'last_name')
+  const mergedSingle = [firstName, lastName].filter(Boolean).join(' ').trim()
+
+  const all = [...fromArray, ...fromString, mergedSingle]
+    .map((name) => name.replace(/\s+/g, ' ').trim())
+    .filter((name) => name.length >= 2)
+
+  const unique: string[] = []
+  const seen = new Set<string>()
+  for (const name of all) {
+    const key = name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(name)
+  }
+
+  return unique.slice(0, 200)
+}
+
+function splitNameForChild(fullName: string) {
+  const cleaned = fullName.replace(/\s+/g, ' ').trim()
+  if (!cleaned) return { firstName: 'Unknown', lastName: 'Child' }
+
+  const parts = cleaned.split(' ')
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: 'Child' }
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(' '),
+  }
 }
 
 function mapToChildPrefill(extraction: AiExtractionPayload) {
@@ -267,6 +349,146 @@ export async function extractChildDocumentWithGeminiAction(formData: FormData): 
   }
 }
 
+export async function extractExistingChildrenFromPhotoAction(
+  formData: FormData
+): Promise<ExtractExistingChildrenFromPhotoResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+  if (!session.ecdId) {
+    return { success: false, message: 'ECD session not found.' }
+  }
+
+  const file = formData.get('file')
+  if (!(file instanceof File)) {
+    return { success: false, message: 'Upload a register photo first.' }
+  }
+
+  const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
+
+  const uploadResult = await uploadPhotoForAiExtraction({
+    supabase: session.supabase,
+    ecdId: session.ecdId,
+    documentType: 'register',
+    file,
+    folder: 'children-registers',
+  })
+
+  if (!uploadResult.success) {
+    return {
+      success: false,
+      message: uploadResult.message,
+    }
+  }
+
+  const extractionResult = await extractStructuredDocumentWithGemini({
+    file,
+    documentType: 'register',
+  })
+
+  if (!extractionResult.success || !extractionResult.extraction) {
+    return {
+      success: false,
+      message: extractionResult.message,
+      storagePublicUrl: uploadResult.publicUrl,
+    }
+  }
+
+  const names = parseRegisterNames(extractionResult.extraction)
+  if (names.length === 0) {
+    return {
+      success: false,
+      message: 'AI could not detect child names from this photo. Try a clearer image.',
+      storagePublicUrl: uploadResult.publicUrl,
+    }
+  }
+
+  const suggestedStartDate =
+    normalizeDateString(getFieldString(extractionResult.extraction, 'record_date')) ??
+    fallbackStartDate ??
+    new Date().toISOString().slice(0, 10)
+  const confidence =
+    getFieldConfidence(extractionResult.extraction, 'full_name') ??
+    getFieldConfidence(extractionResult.extraction, 'first_name') ??
+    65
+
+  const drafts: ExistingChildBulkDraft[] = names.map((name) => ({
+    full_name: name,
+    enrollment_start_date: suggestedStartDate,
+    confidence,
+  }))
+
+  return {
+    success: true,
+    message: `AI extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
+    drafts,
+    storagePublicUrl: uploadResult.publicUrl,
+    summary: extractionResult.extraction.summary,
+  }
+}
+
+export async function bulkCreateExistingChildrenAction(
+  input: unknown
+): Promise<BulkCreateExistingChildrenResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+  if (!session.ecdId) {
+    return { success: false, message: 'ECD session not found.' }
+  }
+
+  const parsed = bulkExistingChildrenCreateSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, message: 'Please review names and start dates before saving.' }
+  }
+
+  const normalizedChildren: Array<{
+    full_name: string
+    enrollment_start_date: string
+    date_of_birth: string | null
+  }> = []
+
+  for (const child of parsed.data.children) {
+    const cleanedName = child.full_name.replace(/\s+/g, ' ').trim()
+    if (!cleanedName) continue
+
+    normalizedChildren.push({
+      full_name: cleanedName,
+      enrollment_start_date: child.enrollment_start_date,
+      date_of_birth: normalizeDateString((child.date_of_birth ?? '').trim()) ?? null,
+    })
+  }
+
+  if (normalizedChildren.length === 0) {
+    return { success: false, message: 'No valid child entries to create.' }
+  }
+
+  const payload = normalizedChildren.map((child) => {
+    const split = splitNameForChild(child.full_name)
+    return {
+      ecd_id: session.ecdId,
+      parent_id: null,
+      first_name: split.firstName,
+      last_name: split.lastName,
+      date_of_birth: child.date_of_birth || null,
+      enrollment_start_date: child.enrollment_start_date,
+      enrollment_source: 'ecd_manual',
+      enrollment_status: 'pending_parent',
+      guardian_contacts: [],
+      emergency_contacts: [],
+    }
+  })
+
+  const { data: inserted, error } = await session.supabase.from('children').insert(payload).select('id')
+  if (error) {
+    return { success: false, message: error.message || 'Failed to create child profiles.' }
+  }
+
+  const createdIds = (inserted ?? []).map((row) => String(row.id))
+  return {
+    success: true,
+    message: `Created ${createdIds.length} child profile${createdIds.length === 1 ? '' : 's'} from the bulk list.`,
+    createdCount: createdIds.length,
+    createdIds,
+  }
+}
+
 export async function saveTempChildProfileAndInviteParentAction(
   input: unknown
 ): Promise<SaveTempChildProfileResult> {
@@ -355,6 +577,7 @@ export async function saveTempChildProfileAndInviteParentAction(
       parent_id: null,
       first_name: payload.first_name.trim(),
       last_name: payload.last_name.trim(),
+      enrollment_start_date: payload.enrollment_start_date,
       date_of_birth: payload.date_of_birth || null,
       gender: payload.gender || null,
       allergies: payload.allergies.length > 0 ? payload.allergies : null,

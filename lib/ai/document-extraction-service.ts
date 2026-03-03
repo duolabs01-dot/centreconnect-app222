@@ -255,7 +255,7 @@ export async function extractStructuredDocumentWithGemini(input: {
     const details = await response.text()
     return {
       success: false,
-      message: `Gemini request failed (${response.status}): ${details.slice(0, 220)}`,
+      message: `AI extraction request failed (${response.status}): ${details.slice(0, 220)}`,
     }
   }
 
@@ -264,7 +264,7 @@ export async function extractStructuredDocumentWithGemini(input: {
   if (!rawText) {
     return {
       success: false,
-      message: 'Gemini returned an empty extraction payload.',
+      message: 'AI extraction returned an empty payload.',
     }
   }
 
@@ -272,7 +272,7 @@ export async function extractStructuredDocumentWithGemini(input: {
   if (!jsonText) {
     return {
       success: false,
-      message: 'Gemini did not return valid JSON.',
+      message: 'AI extraction did not return valid JSON.',
     }
   }
 
@@ -282,7 +282,7 @@ export async function extractStructuredDocumentWithGemini(input: {
   } catch {
     return {
       success: false,
-      message: 'Failed to parse Gemini JSON.',
+      message: 'Failed to parse AI extraction JSON.',
     }
   }
 
@@ -290,7 +290,7 @@ export async function extractStructuredDocumentWithGemini(input: {
   if (!parsed.success) {
     return {
       success: false,
-      message: 'Gemini response schema did not match expected format.',
+      message: 'AI extraction response schema did not match expected format.',
     }
   }
 
@@ -312,7 +312,7 @@ export async function extractStructuredDocumentWithGemini(input: {
   if (Object.keys(fields).length === 0) {
     return {
       success: false,
-      message: 'Gemini could not confidently extract structured fields from this image.',
+      message: 'AI could not confidently extract structured fields from this image.',
     }
   }
 
@@ -326,4 +326,3 @@ export async function extractStructuredDocumentWithGemini(input: {
     },
   }
 }
-

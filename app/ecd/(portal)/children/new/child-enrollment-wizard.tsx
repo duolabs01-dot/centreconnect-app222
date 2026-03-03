@@ -11,8 +11,11 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import {
+  bulkCreateExistingChildrenAction,
   extractChildDocumentWithGeminiAction,
+  extractExistingChildrenFromPhotoAction,
   saveTempChildProfileAndInviteParentAction,
+  type ExistingChildBulkDraft,
   type GeminiExtractionResult,
 } from './actions'
 
@@ -28,12 +31,13 @@ const STEPS: Array<{ id: WizardStep; label: string; hint: string; icon: Componen
   { id: 'basic', label: 'Basic Info', hint: 'Child profile core details', icon: UserRoundPlus },
   { id: 'medical', label: 'Medical', hint: 'Health and support fields', icon: HeartPulse },
   { id: 'guardians', label: 'Guardians', hint: 'Parent and caregiver contacts', icon: Users },
-  { id: 'documents', label: 'Documents', hint: 'Gemini extraction + review', icon: FileImage },
+  { id: 'documents', label: 'Documents', hint: 'AI extraction + review', icon: FileImage },
 ]
 
 type WizardState = {
   first_name: string
   last_name: string
+  enrollment_start_date: string
   date_of_birth: string
   gender: string
   blood_type: string
@@ -60,6 +64,7 @@ type WizardState = {
 const DEFAULT_STATE: WizardState = {
   first_name: '',
   last_name: '',
+  enrollment_start_date: '',
   date_of_birth: '',
   gender: '',
   blood_type: '',
@@ -124,11 +129,16 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
   const [birthCertificateFile, setBirthCertificateFile] = useState<File | null>(null)
   const [medicalCardFile, setMedicalCardFile] = useState<File | null>(null)
   const [immunizationRecordFile, setImmunizationRecordFile] = useState<File | null>(null)
+  const [bulkFile, setBulkFile] = useState<File | null>(null)
+  const [bulkDrafts, setBulkDrafts] = useState<ExistingChildBulkDraft[]>([])
+  const [bulkSummary, setBulkSummary] = useState<string>('')
   const [aiSuggestion, setAiSuggestion] = useState<GeminiExtractionResult['prefill']>()
   const [aiConfidence, setAiConfidence] = useState<GeminiExtractionResult['confidence']>()
   const [documentUrls, setDocumentUrls] = useState<Partial<Record<ChildDocumentType, string>>>({})
   const [savedResult, setSavedResult] = useState<{ tempProfileId?: string; whatsappHref?: string } | null>(null)
   const [isExtracting, startExtractTransition] = useTransition()
+  const [isBulkExtracting, startBulkExtractTransition] = useTransition()
+  const [isBulkSaving, startBulkSaveTransition] = useTransition()
   const [isSaving, startSaveTransition] = useTransition()
 
   const activeStep = STEPS[stepIndex]
@@ -145,8 +155,8 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
 
   function goToNextStep() {
     if (activeStep.id === 'basic') {
-      if (!form.first_name.trim() || !form.last_name.trim()) {
-        toast.error('Add first name and last name before moving on.')
+      if (!form.first_name.trim() || !form.last_name.trim() || !form.enrollment_start_date) {
+        toast.error('Add first name, last name, and start date before moving on.')
         return
       }
     }
@@ -241,8 +251,8 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
   }
 
   function handleSaveAndShare() {
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.parent_phone.trim()) {
-      toast.error('Child names and parent WhatsApp number are required.')
+    if (!form.first_name.trim() || !form.last_name.trim() || !form.enrollment_start_date || !form.parent_phone.trim()) {
+      toast.error('Child names, start date, and parent WhatsApp number are required.')
       return
     }
 
@@ -250,6 +260,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
       const payload = {
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
+        enrollment_start_date: form.enrollment_start_date,
         date_of_birth: form.date_of_birth || null,
         gender: form.gender || null,
         blood_type: form.blood_type.trim() || null,
@@ -300,6 +311,72 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
           toast.info('WhatsApp link copied. Paste it into WhatsApp to continue.')
         }
       }
+    })
+  }
+
+  function updateBulkDraft(index: number, patch: Partial<ExistingChildBulkDraft>) {
+    setBulkDrafts((current) => current.map((draft, idx) => (idx === index ? { ...draft, ...patch } : draft)))
+  }
+
+  function removeBulkDraft(index: number) {
+    setBulkDrafts((current) => current.filter((_, idx) => idx !== index))
+  }
+
+  function runBulkExtract() {
+    if (!bulkFile) {
+      toast.error('Upload a register photo first.')
+      return
+    }
+
+    startBulkExtractTransition(async () => {
+      const formData = new FormData()
+      formData.set('file', bulkFile)
+      if (form.enrollment_start_date) {
+        formData.set('default_start_date', form.enrollment_start_date)
+      }
+
+      const result = await extractExistingChildrenFromPhotoAction(formData)
+      if (!result.success || !result.drafts) {
+        toast.error(result.message)
+        return
+      }
+
+      setBulkDrafts(result.drafts)
+      setBulkSummary(result.summary ?? '')
+      toast.success(result.message)
+    })
+  }
+
+  function saveBulkDrafts() {
+    if (bulkDrafts.length === 0) {
+      toast.error('No extracted children to save yet.')
+      return
+    }
+
+    const hasInvalid = bulkDrafts.some((draft) => !draft.full_name.trim() || !draft.enrollment_start_date)
+    if (hasInvalid) {
+      toast.error('Each child needs a name and start date.')
+      return
+    }
+
+    startBulkSaveTransition(async () => {
+      const result = await bulkCreateExistingChildrenAction({
+        children: bulkDrafts.map((draft) => ({
+          full_name: draft.full_name.trim(),
+          enrollment_start_date: draft.enrollment_start_date,
+          date_of_birth: draft.date_of_birth ?? null,
+        })),
+      })
+
+      if (!result.success) {
+        toast.error(result.message)
+        return
+      }
+
+      toast.success(result.message)
+      setBulkDrafts([])
+      setBulkSummary('')
+      setBulkFile(null)
     })
   }
 
@@ -354,12 +431,108 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         </CardHeader>
       </Card>
 
+      <Card className="rounded-3xl border-slate-200 bg-white">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-900">
+            <Bot className="h-5 w-5 text-teal-600" />
+            Bulk Add Existing Children (AI)
+          </CardTitle>
+          <CardDescription className="text-slate-600">
+            Upload a class register photo, review detected names, set start dates, then create child profiles in one go.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-[1fr_220px]">
+            <div className="space-y-1">
+              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Register Photo</label>
+              <Input
+                type="file"
+                accept="image/*,.pdf"
+                className="h-12 rounded-3xl"
+                onChange={(event) => setBulkFile(event.target.files?.[0] ?? null)}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Default Start Date</label>
+              <Input
+                type="date"
+                className="h-12 rounded-3xl"
+                value={form.enrollment_start_date}
+                onChange={(event) => updateField('enrollment_start_date', event.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              className="h-11 rounded-3xl bg-teal-600 px-5 text-white hover:bg-teal-700"
+              onClick={runBulkExtract}
+              disabled={isBulkExtracting || !bulkFile}
+            >
+              {isBulkExtracting ? 'Extracting...' : 'Extract from Photo'}
+            </Button>
+            <Button variant="outline" asChild className="h-11 rounded-3xl border-slate-200 bg-white text-slate-700">
+              <Link href="/ecd/ai-upload">Open AI Register Import</Link>
+            </Button>
+          </div>
+
+          {bulkSummary ? (
+            <p className="rounded-2xl border border-teal-100 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700">{bulkSummary}</p>
+          ) : null}
+
+          {bulkDrafts.length > 0 ? (
+            <div className="space-y-3 rounded-3xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Review extracted children</p>
+              {bulkDrafts.map((draft, index) => (
+                <div
+                  key={`${draft.full_name}-${index}`}
+                  className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[1fr_180px_auto]"
+                >
+                  <Input
+                    className="h-11 rounded-2xl"
+                    value={draft.full_name}
+                    onChange={(event) => updateBulkDraft(index, { full_name: event.target.value })}
+                    placeholder="Child full name"
+                  />
+                  <Input
+                    type="date"
+                    className="h-11 rounded-2xl"
+                    value={draft.enrollment_start_date}
+                    onChange={(event) => updateBulkDraft(index, { enrollment_start_date: event.target.value })}
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <AiSuggestedBadge confidence={draft.confidence} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-11 rounded-2xl border-red-200 bg-white px-3 text-red-600 hover:bg-red-50"
+                      onClick={() => removeBulkDraft(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                className="h-11 rounded-3xl bg-emerald-600 px-5 text-white hover:bg-emerald-700"
+                onClick={saveBulkDrafts}
+                disabled={isBulkSaving}
+              >
+                {isBulkSaving ? 'Saving...' : `Create ${bulkDrafts.length} Child Profiles`}
+              </Button>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       {activeStep.id === 'basic' ? (
         <Card className="rounded-3xl border-slate-200 bg-white">
           <CardHeader>
             <CardTitle className="text-xl font-black text-slate-900">Basic Information</CardTitle>
             <CardDescription className="text-slate-600">
-              Start with identity details. Gemini can pre-fill some of these from uploaded documents later.
+              Start with identity details. AI can pre-fill some of these from uploaded documents later.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -383,6 +556,15 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                 className={cn('h-12 rounded-3xl', getInputAiClass(fieldConfidence('last_name')))}
                 value={form.last_name}
                 onChange={(e) => updateField('last_name', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Start Date *</label>
+              <Input
+                type="date"
+                className="h-12 rounded-3xl"
+                value={form.enrollment_start_date}
+                onChange={(e) => updateField('enrollment_start_date', e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -572,7 +754,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-900">
                 <Bot className="h-5 w-5 text-teal-600" />
-                Document Upload + Gemini Vision
+                Document Upload + AI
               </CardTitle>
               <CardDescription className="text-slate-600">
                 Upload birth certificate, medical card, and immunization photos. AI extracts details, pre-fills fields, and keeps confidence scores visible.
