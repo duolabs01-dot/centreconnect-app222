@@ -121,6 +121,23 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function routeToken(value: string | null | undefined) {
+  const normalized = value?.trim()
+  if (!normalized) return null
+  if (normalized === 'undefined' || normalized === 'null') return null
+  return encodeURIComponent(normalized)
+}
+
+function applicationDetailsHref(application: Pick<ApplicationRow, 'id' | 'application_number'>) {
+  const idToken = routeToken(application.id)
+  if (idToken) return `/ecd/applications/${idToken}`
+
+  const numberToken = routeToken(application.application_number)
+  if (numberToken) return `/ecd/applications/${numberToken}?lookup=number`
+
+  return '/ecd/applications'
+}
+
 function buildWhatsAppLink(rawPhone: string | null | undefined, message: string) {
   if (!rawPhone) return null
   const digits = rawPhone.replace(/[^\d]/g, '')
@@ -449,7 +466,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
                           )}
                           <div className="mt-3 flex flex-wrap gap-2">
                             <Button size="sm" variant="outline" asChild>
-                              <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                              <Link href={applicationDetailsHref(application)} prefetch={false}>Open</Link>
                             </Button>
                             {requestDocHref ? (
                               <Button size="sm" variant="outline" asChild>
@@ -506,7 +523,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <Link href={`/ecd/applications/${application.id}`}>Open</Link>
+                    <Link href={applicationDetailsHref(application)} prefetch={false}>Open</Link>
                   </Button>
                   {requestDocHref ? (
                     <Button size="sm" variant="outline" asChild>

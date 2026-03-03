@@ -141,17 +141,29 @@ function includesMissingColumnError(errorMessage: string | null | undefined) {
   return normalized.includes('column') && (normalized.includes('does not exist') || normalized.includes('could not find'))
 }
 
+function safeDecodeRouteToken(value: string) {
+  try {
+    return decodeURIComponent(value).trim()
+  } catch {
+    return value.trim()
+  }
+}
+
 async function fetchApplicationForRoute(
   supabase: Awaited<ReturnType<typeof requireEcdPortalSession>>['supabase'],
   ecdId: string,
   routeToken: string,
   preferNumberLookup: boolean
 ) {
-  const selectVariants = [
+  const selectVariants: string[] = [
     'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
     'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
     'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
-  ] as const
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
+  ]
 
   for (const selectClause of selectVariants) {
     const byId = () =>
@@ -160,10 +172,10 @@ async function fetchApplicationForRoute(
       supabase.from('applications').select(selectClause).eq('ecd_id', ecdId).eq('application_number', routeToken).maybeSingle()
 
     const primary = preferNumberLookup ? await byNumber() : await byId()
-    if (primary.data) return primary.data as ApplicationRow
+    if (primary.data) return primary.data as unknown as ApplicationRow
 
     const fallback = preferNumberLookup ? await byId() : await byNumber()
-    if (fallback.data) return fallback.data as ApplicationRow
+    if (fallback.data) return fallback.data as unknown as ApplicationRow
 
     const canRetryWithLeanSelect =
       includesMissingColumnError(primary.error?.message) || includesMissingColumnError(fallback.error?.message)
@@ -204,7 +216,7 @@ async function fetchParentDocuments(
 
 export default async function ApplicationDetailsPage({ params, searchParams }: ApplicationDetailsPageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
-  const routeToken = decodeURIComponent(params.id).trim()
+  const routeToken = safeDecodeRouteToken(params.id)
   const application = await fetchApplicationForRoute(supabase, ecdId, routeToken, searchParams?.lookup === 'number')
   if (!application) {
     return (
