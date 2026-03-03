@@ -408,12 +408,13 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
               const active = idx === stepIndex
               const complete = idx < stepIndex
               return (
-                <button
+                <Button
                   key={step.id}
                   type="button"
+                  variant="outline"
                   onClick={() => setStepIndex(idx)}
                   className={cn(
-                    'flex min-h-[60px] items-center gap-3 rounded-3xl border px-4 py-3 text-left transform-gpu [will-change:transform] transition-transform duration-200 hover:scale-[1.02]',
+                    'flex h-auto min-h-[60px] items-center gap-3 rounded-3xl px-4 py-3 text-left transform-gpu [will-change:transform] transition-transform duration-200 hover:scale-[1.02]',
                     complete && 'border-emerald-200 bg-emerald-50 text-emerald-700',
                     active && 'border-teal-400 bg-teal-600 text-white shadow-[0_10px_26px_rgba(13,148,136,0.34)]',
                     !active && !complete && 'border-slate-200 bg-white text-slate-600 hover:border-teal-200'
@@ -424,7 +425,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                     <p className="text-xs font-black uppercase tracking-wider">{step.label}</p>
                     <p className={cn('text-[11px] font-medium', active ? 'text-teal-100' : 'text-slate-500')}>{step.hint}</p>
                   </div>
-                </button>
+                </Button>
               )
             })}
           </div>

@@ -45,41 +45,76 @@ type ReportCardRow = {
     | null
 }
 
+type PostgrestLikeError = {
+  code?: string | null
+  message?: string | null
+} | null | undefined
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function isMissingReportCardsSchemaError(error: PostgrestLikeError) {
+  if (!error) return false
+  const message = (error.message ?? '').toLowerCase()
+  return (
+    error.code === '42P01' ||
+    message.includes('relation "report_cards" does not exist') ||
+    message.includes('relation "report_card_areas" does not exist')
+  )
+}
+
 export default async function ReportCardsPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
 
-  const { data: enrolledRows } = await supabase
-    .from('applications')
-    .select('child_id,children(id,first_name,last_name)')
-    .eq('ecd_id', ecdId)
-    .eq('status', 'enrolled')
-    .order('submitted_at', { ascending: false })
-    .limit(400)
+  const [{ data: childrenRows }, { data: enrolledRows }] = await Promise.all([
+    supabase
+      .from('children')
+      .select('id,first_name,last_name')
+      .eq('ecd_id', ecdId)
+      .order('created_at', { ascending: false })
+      .limit(800),
+    supabase
+      .from('applications')
+      .select('child_id,children(id,first_name,last_name)')
+      .eq('ecd_id', ecdId)
+      .eq('status', 'enrolled')
+      .order('submitted_at', { ascending: false })
+      .limit(400),
+  ])
 
   const seenChildIds = new Set<string>()
-  const enrolledChildren = ((enrolledRows ?? []) as EnrolledRow[]).flatMap((row) => {
-    const child = normalizeOne(row.children)
-    const childId = child?.id ?? row.child_id
-    if (!childId || seenChildIds.has(childId)) return []
-    seenChildIds.add(childId)
-
-    return [
-      {
-        id: childId,
-        first_name: child?.first_name?.trim() || 'Child',
-        last_name: child?.last_name?.trim() || '',
-      },
-    ]
-  })
+  const enrolledChildren = [
+    ...((childrenRows ?? []) as Array<{ id: string; first_name: string | null; last_name: string | null }>).flatMap((child) => {
+      if (!child.id || seenChildIds.has(child.id)) return []
+      seenChildIds.add(child.id)
+      return [
+        {
+          id: child.id,
+          first_name: child.first_name?.trim() || 'Child',
+          last_name: child.last_name?.trim() || '',
+        },
+      ]
+    }),
+    ...((enrolledRows ?? []) as EnrolledRow[]).flatMap((row) => {
+      const child = normalizeOne(row.children)
+      const childId = child?.id ?? row.child_id
+      if (!childId || seenChildIds.has(childId)) return []
+      seenChildIds.add(childId)
+      return [
+        {
+          id: childId,
+          first_name: child?.first_name?.trim() || 'Child',
+          last_name: child?.last_name?.trim() || '',
+        },
+      ]
+    }),
+  ]
 
   const childIds = enrolledChildren.map((child) => child.id)
 
-  const { data: reportCardsRows } =
+  const { data: reportCardsRows, error: reportCardsError } =
     childIds.length > 0
       ? await supabase
           .from('report_cards')
@@ -91,6 +126,12 @@ export default async function ReportCardsPage() {
           .order('updated_at', { ascending: false })
           .limit(300)
       : { data: [] as ReportCardRow[] }
+
+  const reportCardsWarning = isMissingReportCardsSchemaError(reportCardsError)
+    ? 'Report Cards is not fully enabled yet for this environment. Run Supabase migrations 048 and 049, then refresh this page.'
+    : reportCardsError
+      ? 'Report Cards could not load right now. Please refresh or try again shortly.'
+      : null
 
   const reportCards = ((reportCardsRows ?? []) as ReportCardRow[]).map((card) => ({
     id: card.id,
@@ -116,6 +157,7 @@ export default async function ReportCardsPage() {
     <ReportCardsClient
       enrolledChildren={enrolledChildren}
       initialReportCards={reportCards}
+      reportCardsWarning={reportCardsWarning}
       userRoleLabel={
         role === 'ecd_admin'
           ? 'Creche Admin'

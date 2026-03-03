@@ -54,6 +54,26 @@ function normalizeTextInput(value: string | null | undefined) {
   return normalized || null
 }
 
+function isMissingReportCardsSchemaError(error: { code?: string | null; message?: string | null } | null | undefined) {
+  if (!error) return false
+  const message = (error.message ?? '').toLowerCase()
+  return (
+    error.code === '42P01' ||
+    message.includes('relation "report_cards" does not exist') ||
+    message.includes('relation "report_card_areas" does not exist')
+  )
+}
+
+function formatReportCardError(
+  error: { code?: string | null; message?: string | null } | null | undefined,
+  fallback: string
+) {
+  if (isMissingReportCardsSchemaError(error)) {
+    return 'Report Cards is not enabled yet. Run Supabase migrations 048 and 049, then refresh.'
+  }
+  return error?.message || fallback
+}
+
 export async function saveReportCardAction(input: unknown): Promise<ReportCardActionResult> {
   const session = await requireEcdPortalSession({ cached: false })
   const parsed = saveReportCardSchema.safeParse(input)
@@ -99,7 +119,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
     .maybeSingle()
 
   if (existingForTerm.error) {
-    return { success: false, message: existingForTerm.error.message }
+    return { success: false, message: formatReportCardError(existingForTerm.error, 'Unable to check existing report cards.') }
   }
 
   const resolvedId =
@@ -124,7 +144,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
       .maybeSingle()
 
     if (updateError || !updated?.id) {
-      return { success: false, message: updateError?.message || 'Unable to update report card.' }
+      return { success: false, message: formatReportCardError(updateError, 'Unable to update report card.') }
     }
 
     const { error: deleteAreasError } = await session.supabase
@@ -133,7 +153,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
       .eq('report_card_id', resolvedId)
 
     if (deleteAreasError) {
-      return { success: false, message: deleteAreasError.message }
+      return { success: false, message: formatReportCardError(deleteAreasError, 'Unable to refresh report card areas.') }
     }
 
     const { error: insertAreasError } = await session.supabase.from('report_card_areas').insert(
@@ -147,7 +167,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
     )
 
     if (insertAreasError) {
-      return { success: false, message: insertAreasError.message }
+      return { success: false, message: formatReportCardError(insertAreasError, 'Unable to save report card areas.') }
     }
 
     revalidatePath('/ecd/report-cards')
@@ -172,7 +192,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
     .maybeSingle()
 
   if (insertError || !inserted?.id) {
-    return { success: false, message: insertError?.message || 'Unable to create report card.' }
+    return { success: false, message: formatReportCardError(insertError, 'Unable to create report card.') }
   }
 
   const createdId = String(inserted.id)
@@ -187,7 +207,7 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
   )
 
   if (areaInsertError) {
-    return { success: false, message: areaInsertError.message }
+    return { success: false, message: formatReportCardError(areaInsertError, 'Unable to save report card areas.') }
   }
 
   revalidatePath('/ecd/report-cards')
@@ -216,7 +236,7 @@ export async function publishReportCardAction(reportCardIdRaw: string): Promise<
     .maybeSingle()
 
   if (error || !updated?.id) {
-    return { success: false, message: error?.message || 'Unable to publish report card.' }
+    return { success: false, message: formatReportCardError(error, 'Unable to publish report card.') }
   }
 
   revalidatePath('/ecd/report-cards')
@@ -240,7 +260,7 @@ export async function deleteReportCardAction(reportCardIdRaw: string): Promise<R
     .maybeSingle()
 
   if (existingError || !existing?.id) {
-    return { success: false, message: 'Report card not found.' }
+    return { success: false, message: formatReportCardError(existingError, 'Report card not found.') }
   }
 
   if (existing.status === 'published') {
@@ -254,7 +274,7 @@ export async function deleteReportCardAction(reportCardIdRaw: string): Promise<R
     .eq('ecd_id', session.ecdId)
 
   if (deleteError) {
-    return { success: false, message: deleteError.message }
+    return { success: false, message: formatReportCardError(deleteError, 'Unable to delete report card.') }
   }
 
   revalidatePath('/ecd/report-cards')

@@ -162,21 +162,22 @@ export function PickupVerifyClient({ ecdId }: PickupVerifyClientProps) {
               const fullName = `${child.first_name} ${child.last_name}`.trim()
               const active = selectedChildId === child.id
               return (
-                <button
+                <Button
                   key={child.id}
                   type="button"
+                  variant="outline"
                   onClick={() => {
                     setSelectedChildId(child.id)
                     setSelectedChildName(fullName)
                   }}
-                  className={`w-full rounded-2xl border px-3 py-2 text-left text-sm transition-colors ${
+                  className={`h-11 w-full justify-start rounded-2xl border px-3 py-2 text-left text-sm ${
                     active
                       ? 'border-cyan-300 bg-cyan-50 text-cyan-800'
                       : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   {fullName}
-                </button>
+                </Button>
               )
             })
           )}

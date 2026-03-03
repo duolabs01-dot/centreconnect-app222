@@ -527,16 +527,18 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                             name="can_publish_announcements"
                             value={member.can_publish_announcements ? 'true' : 'false'}
                           />
-                          <button
+                          <Button
                             type="submit"
-                            className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                            size="sm"
+                            variant="outline"
+                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
                               member.can_approve_applications
                                 ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                                 : 'border-slate-200 bg-slate-50 text-slate-400'
                             }`}
                           >
                             Approve Applications: {member.can_approve_applications ? 'On' : 'Off'}
-                          </button>
+                          </Button>
                         </form>
                         <form action={updateSupervisorPermissions}>
                           <input type="hidden" name="staff_user_id" value={member.user_id} />
@@ -550,16 +552,18 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                             name="can_publish_announcements"
                             value={member.can_publish_announcements ? 'false' : 'true'}
                           />
-                          <button
+                          <Button
                             type="submit"
-                            className={`inline-flex items-center rounded-full border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
+                            size="sm"
+                            variant="outline"
+                            className={`inline-flex items-center rounded-3xl border px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all ${
                               member.can_publish_announcements
                                 ? 'border-teal-200 bg-teal-50 text-teal-700'
                                 : 'border-slate-200 bg-slate-50 text-slate-400'
                             }`}
                           >
                             Publish Announcements: {member.can_publish_announcements ? 'On' : 'Off'}
-                          </button>
+                          </Button>
                         </form>
                       </div>
                     ) : member.role === 'ecd_supervisor' ? (

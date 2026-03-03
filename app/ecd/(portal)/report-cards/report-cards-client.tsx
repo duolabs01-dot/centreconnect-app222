@@ -48,6 +48,7 @@ type ReportCardRow = {
 type ReportCardsClientProps = {
   enrolledChildren: ChildOption[]
   initialReportCards: ReportCardRow[]
+  reportCardsWarning?: string | null
   userRoleLabel: string
   userEmail: string
   userRole: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
@@ -96,17 +97,21 @@ function StarRating({
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((level) => (
-        <button
+        <Button
           key={level}
           type="button"
           onClick={() => onChange(level)}
+          size="icon"
+          variant="outline"
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-xl border',
-            level <= value ? 'border-amber-200 bg-amber-50 text-amber-500' : 'border-slate-200 bg-white text-slate-300'
+            'h-9 w-9 rounded-2xl',
+            level <= value
+              ? 'border-amber-200 bg-amber-50 text-amber-500 hover:bg-amber-50'
+              : 'border-slate-200 bg-white text-slate-300'
           )}
         >
           <Star className={cn('h-4 w-4', level <= value && 'fill-current')} />
-        </button>
+        </Button>
       ))}
     </div>
   )
@@ -115,6 +120,7 @@ function StarRating({
 export function ReportCardsClient({
   enrolledChildren,
   initialReportCards,
+  reportCardsWarning = null,
   userRoleLabel,
   userEmail,
   userRole,
@@ -342,12 +348,20 @@ export function ReportCardsClient({
                 type="button"
                 className="h-12 rounded-3xl bg-teal-600 px-6 text-white hover:bg-teal-700"
                 onClick={openCreateForm}
-                disabled={enrolledChildren.length === 0}
+                disabled={enrolledChildren.length === 0 || Boolean(reportCardsWarning)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 New Report Card
               </Button>
             </div>
+
+            {reportCardsWarning ? (
+              <Card className="rounded-3xl border-amber-200 bg-amber-50">
+                <CardContent className="py-4">
+                  <p className="text-sm font-semibold text-amber-900">{reportCardsWarning}</p>
+                </CardContent>
+              </Card>
+            ) : null}
 
             {enrolledChildren.length === 0 ? (
               <Card className="rounded-3xl border-slate-200 bg-white">

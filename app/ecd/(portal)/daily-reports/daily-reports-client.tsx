@@ -158,18 +158,20 @@ export function DailyReportsClient({
         {/* Child Selector */}
         <div className="flex gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {enrolledChildren.map((child) => (
-            <button
+            <Button
               key={child.id}
+              type="button"
+              variant="outline"
               onClick={() => setSelectedChildId(child.id)}
               className={cn(
-                "h-12 shrink-0 rounded-full px-5 text-sm font-bold transition-all",
+                "h-12 shrink-0 rounded-3xl px-5 text-sm font-bold",
                 selectedChildId === child.id
                   ? "bg-cyan-600 text-white shadow-md shadow-cyan-900/20"
                   : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
               )}
             >
               {child.first_name} {reports[child.id]?.published_at ? '(Published)' : ''}
-            </button>
+            </Button>
           ))}
         </div>
 
@@ -197,18 +199,20 @@ export function DailyReportsClient({
                       </div>
                       <div className="grid grid-cols-4 gap-2">
                         {EATEN_OPTIONS.map((opt) => (
-                          <button
+                          <Button
                             key={opt.value}
+                            type="button"
+                            variant="outline"
                             onClick={() => updateReport(selectedChild.id, { [meal.key]: opt.value })}
                             className={cn(
-                              "h-12 rounded-2xl text-xs font-bold transition-all",
+                              "h-12 rounded-2xl text-xs font-bold",
                               (currentReport as any)[meal.key] === opt.value
                                 ? "bg-cyan-100 text-cyan-800 border-2 border-cyan-300"
                                 : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"
                             )}
                           >
                             {opt.label}
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -227,11 +231,13 @@ export function DailyReportsClient({
                 <CardContent>
                   <div className="grid grid-cols-5 gap-2">
                     {MOODS.map((m) => (
-                      <button
+                      <Button
                         key={m.value}
+                        type="button"
+                        variant="outline"
                         onClick={() => updateReport(selectedChild.id, { mood: m.value })}
                         className={cn(
-                          "flex flex-col items-center justify-center h-20 rounded-2xl transition-all",
+                          "flex h-20 flex-col items-center justify-center rounded-2xl",
                           currentReport.mood === m.value
                             ? "bg-amber-100 text-amber-900 border-2 border-amber-300 shadow-sm"
                             : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-slate-100"
@@ -239,7 +245,7 @@ export function DailyReportsClient({
                       >
                         <m.icon className={cn("h-7 w-7 mb-1", currentReport.mood === m.value ? "text-amber-600" : "text-slate-400")} />
                         <span className="text-[10px] font-bold uppercase tracking-wider">{m.label}</span>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </CardContent>
@@ -264,7 +270,7 @@ export function DailyReportsClient({
                         type="time"
                         value={currentReport.nap_start || ''}
                         onChange={(e) => updateReport(selectedChild.id, { nap_start: e.target.value })}
-                        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700"
+                        className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700"
                       />
                     </div>
                     <div className="space-y-2">
@@ -273,7 +279,7 @@ export function DailyReportsClient({
                         type="time"
                         value={currentReport.nap_end || ''}
                         onChange={(e) => updateReport(selectedChild.id, { nap_end: e.target.value })}
-                        className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700"
+                        className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700"
                       />
                     </div>
                   </div>
@@ -283,18 +289,20 @@ export function DailyReportsClient({
                     <label className="text-xs font-bold text-slate-500 uppercase">Activities Today</label>
                     <div className="flex flex-wrap gap-2">
                       {ACTIVITIES.map((act) => (
-                        <button
+                        <Button
                           key={act}
+                          type="button"
+                          variant="outline"
                           onClick={() => toggleActivity(act)}
                           className={cn(
-                            "h-12 px-5 rounded-full text-xs font-bold transition-all border",
+                            "h-12 rounded-3xl px-5 text-xs font-bold border",
                             currentReport.activities?.includes(act)
                               ? "bg-cyan-600 text-white border-cyan-600 shadow-sm"
                               : "bg-white text-slate-600 border-slate-200 hover:border-cyan-300"
                           )}
                         >
                           {act}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
