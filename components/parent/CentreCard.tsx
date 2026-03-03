@@ -4,6 +4,7 @@
 
 'use client'
 
+import { useEffect, useState } from 'react'
 import type { KeyboardEvent, MouseEvent } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -36,6 +37,11 @@ interface CentreCardProps {
   distanceLabel?: string
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+}
+
+type OperationalState = {
+  isOnline: boolean | null
+  schedule: string
 }
 
 function formatStatusLabel(status?: string | null) {
@@ -72,7 +78,18 @@ export default function CentreCard({
   const router = useRouter()
   const heroImage = getCentreHeroImage(slug, cover_image_url)
   const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
-  const operationalStatus = getCentreOperationalStatus()
+  const [operationalStatus, setOperationalStatus] = useState<OperationalState>({
+    isOnline: null,
+    schedule: 'Mon-Fri 07:00-17:30, Sat 08:00-13:00',
+  })
+
+  useEffect(() => {
+    const resolved = getCentreOperationalStatus()
+    setOperationalStatus({
+      isOnline: resolved.isOnline,
+      schedule: resolved.schedule,
+    })
+  }, [])
   const isFoundingPartner = suburb?.trim().toLowerCase() === 'alexandra'
   const hasPriorityListing = is_registered || isFoundingPartner
   const pilotBadges = [
@@ -240,11 +257,15 @@ export default function CentreCard({
           <div className="centre-card__meta">
             <span
               className={`centre-card__meta-item ${
-                operationalStatus.isOnline ? 'centre-card__meta-item--online' : 'centre-card__meta-item--offline'
+                operationalStatus.isOnline === null
+                  ? 'centre-card__meta-item--pending'
+                  : operationalStatus.isOnline
+                    ? 'centre-card__meta-item--online'
+                    : 'centre-card__meta-item--offline'
               }`}
             >
               <Circle size={11} fill="currentColor" strokeWidth={0} />
-              {operationalStatus.isOnline ? 'Online' : 'Offline'}
+              {operationalStatus.isOnline === null ? 'Status' : operationalStatus.isOnline ? 'Online' : 'Offline'}
             </span>
             <span className={`centre-card__meta-item ${!locationLabel ? 'text-orange-500' : ''}`}>
               <MapPin size={13} strokeWidth={2} />
@@ -470,6 +491,10 @@ export default function CentreCard({
         }
         .centre-card__meta-item--offline {
           color: #dc2626;
+          font-weight: 700;
+        }
+        .centre-card__meta-item--pending {
+          color: #64748b;
           font-weight: 700;
         }
         .centre-card__meta-item--rating {
