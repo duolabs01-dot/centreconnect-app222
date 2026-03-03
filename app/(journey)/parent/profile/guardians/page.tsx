@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { GuardiansManager, type GuardianChild } from '@/components/parent/GuardiansManager'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
@@ -21,11 +22,41 @@ export default async function ParentGuardiansPage() {
     } = await supabase.auth.getUser()
     if (!user) redirect('/login')
 
-    const { data: children } = await supabase
+    const { data: ownChildren } = await supabase
       .from('children')
       .select('id,first_name,last_name')
       .eq('parent_id', user.id)
       .order('created_at', { ascending: false })
+
+    const { data: linkedGuardianRows } = await supabase
+      .from('guardians')
+      .select('child_id')
+      .eq('linked_user_id', user.id)
+      .limit(100)
+
+    const linkedChildIds = Array.from(
+      new Set((linkedGuardianRows ?? []).map((row) => row.child_id).filter(Boolean))
+    )
+
+    let linkedChildren: GuardianChild[] = []
+    if (linkedChildIds.length > 0) {
+      try {
+        const admin = createAdminClient()
+        const { data: linkedChildrenRows } = await admin
+          .from('children')
+          .select('id,first_name,last_name')
+          .in('id', linkedChildIds)
+        linkedChildren = ((linkedChildrenRows ?? []) as GuardianChild[]).filter(Boolean)
+      } catch {
+        linkedChildren = []
+      }
+    }
+
+    const childList = Array.from(
+      new Map(
+        [...((ownChildren ?? []) as GuardianChild[]), ...linkedChildren].map((child) => [child.id, child])
+      ).values()
+    )
 
     return (
       <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen space-y-6">
@@ -47,7 +78,7 @@ export default async function ParentGuardiansPage() {
         </header>
 
         <div className="max-w-4xl">
-          <GuardiansManager childList={(children ?? []) as GuardianChild[]} />
+          <GuardiansManager childList={childList} />
         </div>
       </div>
     )

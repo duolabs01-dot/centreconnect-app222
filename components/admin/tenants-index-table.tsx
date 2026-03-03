@@ -274,10 +274,22 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           onboardingFeePaid: createForm.onboardingFeePaid,
         }),
       })
-      const payload = (await response.json().catch(() => ({}))) as { error?: string; centre?: { name?: string } }
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        centre?: { name?: string }
+        pilot?: boolean
+        warnings?: string[]
+      }
       if (!response.ok) throw new Error(payload.error || 'Failed to create tenant')
 
-      toast.success(`Tenant created${payload.centre?.name ? `: ${payload.centre.name}` : ''}`)
+      toast.success(
+        `Tenant created${payload.centre?.name ? `: ${payload.centre.name}` : ''}. Password setup email queued${
+          payload.pilot ? ' + pilot welcome pack queued' : ''
+        }.`
+      )
+      if (payload.warnings?.length) {
+        toast.warning(payload.warnings[0])
+      }
       setCreateOpen(false)
       setCreateForm({
         slug: '',

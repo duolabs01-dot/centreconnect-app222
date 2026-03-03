@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { AddGuardianSheet } from '@/components/parent/guardians/AddGuardianSheet'
 import { sendCoParentInviteAction } from '@/lib/actions/guardians/send-invite'
+import { requestCoParentDocumentUploadAction } from '@/lib/actions/guardians/request-document-upload'
 import { Input } from '@/components/ui/input'
 import { Mail, Link2, CheckCircle2, Clock, UserCheck, MessageCircle, Share2 } from 'lucide-react'
 
@@ -17,6 +18,7 @@ export type GuardianChild = {
 
 type Guardian = {
   id: string
+  parent_id: string
   full_name: string | null
   relationship: string | null
   phone: string | null
@@ -35,6 +37,16 @@ type Guardian = {
 type Props = {
   childList: GuardianChild[]
 }
+
+const DOCUMENT_REQUEST_OPTIONS = [
+  { code: 'birth_certificate', label: 'Birth certificate' },
+  { code: 'medical_certificate', label: 'Medical card/certificate' },
+  { code: 'immunization_record', label: 'Immunization record' },
+  { code: 'proof_of_address', label: 'Proof of address' },
+  { code: 'parent_id', label: 'Parent ID document' },
+  { code: 'medical_aid', label: 'Medical aid document' },
+  { code: 'guardian_consent', label: 'Guardian consent form' },
+]
 
 function GuardianStatusBadge({ guardian }: { guardian: Guardian }) {
   if (guardian.linked_user_id) {
@@ -196,11 +208,42 @@ export function GuardiansManager({ childList }: Props) {
   const [loading, setLoading] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [openInvitePanelId, setOpenInvitePanelId] = useState<string | null>(null)
+  const [currentUserId, setCurrentUserId] = useState('')
+  const [requestedForUserId, setRequestedForUserId] = useState('')
+  const [requestCodes, setRequestCodes] = useState<string[]>(['birth_certificate'])
+  const [requestMessage, setRequestMessage] = useState('')
+  const [requestWhatsappHref, setRequestWhatsappHref] = useState<string | null>(null)
+  const [isRequestPending, startRequestTransition] = useTransition()
 
   const selectedChildName = useMemo(() => {
     const child = childList.find((item) => item.id === selectedChildId)
     return child ? `${child.first_name} ${child.last_name}` : 'Select a child'
   }, [childList, selectedChildId])
+
+  const linkedParticipants = useMemo(() => {
+    const participants: Array<{ userId: string; label: string }> = []
+    const seen = new Set<string>()
+    const primaryParentId = guardians[0]?.parent_id ?? null
+
+    for (const guardian of guardians) {
+      if (!guardian.linked_user_id || guardian.linked_user_id === currentUserId) continue
+      if (seen.has(guardian.linked_user_id)) continue
+      seen.add(guardian.linked_user_id)
+      participants.push({
+        userId: guardian.linked_user_id,
+        label: guardian.full_name?.trim() || 'Linked co-parent',
+      })
+    }
+
+    if (primaryParentId && primaryParentId !== currentUserId && !seen.has(primaryParentId)) {
+      participants.unshift({ userId: primaryParentId, label: 'Primary parent' })
+    }
+
+    return participants
+  }, [currentUserId, guardians])
+
+  const canAddCoParent =
+    guardians.length === 0 || !currentUserId || !guardians[0]?.parent_id || guardians[0].parent_id === currentUserId
 
   const loadGuardians = useCallback(async () => {
     if (!selectedChildId) {
@@ -214,7 +257,7 @@ export function GuardiansManager({ childList }: Props) {
       const { data, error } = await supabase
         .from('guardians')
         .select(
-          'id,full_name,relationship,phone,email,import_source,is_verified,can_pickup,can_view_applications,can_receive_announcements,can_generate_pickup_code,linked_user_id,invite_sent_at,invite_accepted_at'
+          'id,parent_id,full_name,relationship,phone,email,import_source,is_verified,can_pickup,can_view_applications,can_receive_announcements,can_generate_pickup_code,linked_user_id,invite_sent_at,invite_accepted_at'
         )
         .eq('child_id', selectedChildId)
         .order('created_at', { ascending: false })
@@ -231,6 +274,53 @@ export function GuardiansManager({ childList }: Props) {
   useEffect(() => {
     void loadGuardians()
   }, [loadGuardians])
+
+  useEffect(() => {
+    let mounted = true
+    const supabase = createClient()
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!mounted) return
+      setCurrentUserId(data.user?.id ?? '')
+    })
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!linkedParticipants.some((item) => item.userId === requestedForUserId)) {
+      setRequestedForUserId(linkedParticipants[0]?.userId ?? '')
+    }
+  }, [linkedParticipants, requestedForUserId])
+
+  function toggleRequestCode(code: string) {
+    setRequestCodes((current) =>
+      current.includes(code) ? current.filter((item) => item !== code) : [...current, code]
+    )
+  }
+
+  function submitDocumentRequest() {
+    if (!selectedChildId || !requestedForUserId || requestCodes.length === 0) {
+      toast.error('Choose a linked parent and at least one document.')
+      return
+    }
+    startRequestTransition(async () => {
+      const result = await requestCoParentDocumentUploadAction({
+        childId: selectedChildId,
+        requestedForUserId,
+        documentCodes: requestCodes,
+        customMessage: requestMessage.trim() || null,
+      })
+      if (!result.ok) {
+        toast.error(result.error || 'Could not send request right now.')
+        return
+      }
+      toast.success(result.message || 'Request sent.')
+      setRequestWhatsappHref(result.whatsappHref ?? null)
+      setRequestCodes(['birth_certificate'])
+      setRequestMessage('')
+    })
+  }
 
   return (
     <div className="space-y-5 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-[var(--shadow-elevation-1)]">
@@ -255,12 +345,17 @@ export function GuardiansManager({ childList }: Props) {
         </div>
         <Button
           onClick={() => setSheetOpen(true)}
-          disabled={!selectedChildId}
+          disabled={!selectedChildId || !canAddCoParent}
           className="h-11 rounded-2xl bg-cyan-600 font-bold text-white hover:bg-cyan-700"
         >
           + Add Co-Parent
         </Button>
       </div>
+      {!canAddCoParent ? (
+        <p className="text-xs text-slate-500">
+          Only the primary parent can add new co-parent profiles for this child.
+        </p>
+      ) : null}
 
       {loading ? (
         <p className="py-4 text-center text-sm text-slate-400">Loading...</p>
@@ -277,7 +372,7 @@ export function GuardiansManager({ childList }: Props) {
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-900">{guardian.full_name}</p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    {guardian.relationship} · {guardian.phone}
+                    {(guardian.relationship || 'Co-parent') + (guardian.phone ? ` | ${guardian.phone}` : '')}
                   </p>
                   {guardian.email ? <p className="mt-0.5 text-xs text-slate-400">{guardian.email}</p> : null}
                 </div>
@@ -299,10 +394,10 @@ export function GuardiansManager({ childList }: Props) {
               </div>
 
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                {guardian.can_view_applications ? <span className="text-[11px] text-slate-500">✓ Applications</span> : null}
-                {guardian.can_pickup ? <span className="text-[11px] text-slate-500">✓ Pickup</span> : null}
-                {guardian.can_receive_announcements ? <span className="text-[11px] text-slate-500">✓ Announcements</span> : null}
-                {guardian.can_generate_pickup_code ? <span className="text-[11px] text-slate-500">✓ Pickup code</span> : null}
+                {guardian.can_view_applications ? <span className="text-[11px] text-slate-500">Applications enabled</span> : null}
+                {guardian.can_pickup ? <span className="text-[11px] text-slate-500">Pickup enabled</span> : null}
+                {guardian.can_receive_announcements ? <span className="text-[11px] text-slate-500">Announcements enabled</span> : null}
+                {guardian.can_generate_pickup_code ? <span className="text-[11px] text-slate-500">Pickup code enabled</span> : null}
               </div>
 
               {openInvitePanelId === guardian.id ? (
@@ -319,6 +414,89 @@ export function GuardiansManager({ childList }: Props) {
         </ul>
       )}
 
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-600">
+          Request document upload from linked parent
+        </p>
+        {linkedParticipants.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-500">
+            Link at least one co-parent account before sending cross-parent document requests.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            <label className="block space-y-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Requested from</span>
+              <select
+                value={requestedForUserId}
+                onChange={(event) => setRequestedForUserId(event.target.value)}
+                className="cc-native-field h-11 w-full rounded-2xl border border-slate-200 bg-white px-3 text-sm text-slate-900"
+              >
+                {linkedParticipants.map((item) => (
+                  <option key={item.userId} value={item.userId}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <div className="space-y-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Requested documents</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {DOCUMENT_REQUEST_OPTIONS.map((option) => (
+                  <label
+                    key={option.code}
+                    className="flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={requestCodes.includes(option.code)}
+                      onChange={() => toggleRequestCode(option.code)}
+                      className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <label className="block space-y-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                Custom message (optional)
+              </span>
+              <textarea
+                value={requestMessage}
+                onChange={(event) => setRequestMessage(event.target.value)}
+                placeholder="Add context for the co-parent. Leave blank to use the default professional message."
+                className="cc-native-field min-h-[88px] w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+              />
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={submitDocumentRequest}
+                disabled={isRequestPending}
+                className="h-10 rounded-2xl bg-teal-600 px-4 text-sm font-bold text-white hover:bg-teal-700"
+              >
+                {isRequestPending ? 'Sending...' : 'Request Upload'}
+              </Button>
+              {requestWhatsappHref ? (
+                <Button
+                  type="button"
+                  asChild
+                  variant="outline"
+                  className="h-10 rounded-2xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                >
+                  <a href={requestWhatsappHref} target="_blank" rel="noreferrer">
+                    Open WhatsApp Link
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+        )}
+      </div>
+
       <AddGuardianSheet
         open={sheetOpen}
         childId={selectedChildId}
@@ -331,4 +509,3 @@ export function GuardiansManager({ childList }: Props) {
     </div>
   )
 }
-

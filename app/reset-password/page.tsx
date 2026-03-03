@@ -22,6 +22,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [hasSession, setHasSession] = useState(false)
   const [checking, setChecking] = useState(true)
+  const [lockedEmail, setLockedEmail] = useState('')
 
   useEffect(() => {
     let mounted = true
@@ -31,6 +32,10 @@ export default function ResetPasswordPage() {
         const code = url.searchParams.get('code')
         const tokenHash = url.searchParams.get('token_hash')
         const type = url.searchParams.get('type')
+        const emailFromLink = (url.searchParams.get('locked_email') || url.searchParams.get('email') || '').trim()
+        if (emailFromLink) {
+          setLockedEmail(emailFromLink)
+        }
 
         if (code) {
           await supabase.auth.exchangeCodeForSession(code)
@@ -117,6 +122,12 @@ export default function ResetPasswordPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {lockedEmail ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="lockedEmail">Email (locked)</Label>
+                      <Input id="lockedEmail" value={lockedEmail} readOnly disabled className="bg-slate-100 text-slate-500" />
+                    </div>
+                  ) : null}
                   <div className="space-y-2">
                     <Label htmlFor="password">New password</Label>
                     <div className="relative">

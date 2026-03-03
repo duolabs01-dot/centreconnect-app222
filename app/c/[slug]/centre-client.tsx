@@ -69,11 +69,76 @@ type ExistingApplication = {
   status: string | null
 }
 
+type ProgramCard = {
+  title: string
+  description: string
+}
+
+type WebsiteContentState = {
+  aboutText: string
+  programCards: ProgramCard[]
+  galleryUrls: string[]
+  visibleSections: string[]
+}
+
+const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
+
+function fromParagraphBlocks(contentBlocks: unknown): string {
+  if (!Array.isArray(contentBlocks)) return ''
+  const values = contentBlocks
+    .map((block) => {
+      if (typeof block === 'string') return block.trim()
+      if (block && typeof block === 'object' && 'content' in block && typeof block.content === 'string') {
+        return block.content.trim()
+      }
+      return ''
+    })
+    .filter((value) => value.length > 0)
+  return values.join('\n')
+}
+
+function fromProgramBlocks(contentBlocks: unknown): ProgramCard[] {
+  if (!Array.isArray(contentBlocks)) return []
+  return contentBlocks
+    .map((block, index) => {
+      if (!block || typeof block !== 'object') return null
+      const title = 'title' in block && typeof block.title === 'string' ? block.title.trim() : ''
+      const description =
+        'description' in block && typeof block.description === 'string' ? block.description.trim() : ''
+      if (!title && !description) return null
+      return {
+        title: title || `Programme ${index + 1}`,
+        description: description || title,
+      }
+    })
+    .filter((value): value is ProgramCard => Boolean(value))
+}
+
+function fromGalleryBlocks(contentBlocks: unknown): string[] {
+  if (!Array.isArray(contentBlocks)) return []
+  const urls = contentBlocks
+    .map((block) => {
+      if (typeof block === 'string') return block.trim()
+      if (block && typeof block === 'object' && 'url' in block && typeof block.url === 'string') {
+        return block.url.trim()
+      }
+      return ''
+    })
+    .filter((value) => value.length > 0)
+  return Array.from(new Set(urls))
+}
+
 export function CentreClient({ slug }: { slug: string }) {
   const [centre, setCentre] = useState<Centre | null>(null)
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [existingApplication, setExistingApplication] = useState<ExistingApplication | null>(null)
+  const [websiteContent, setWebsiteContent] = useState<WebsiteContentState>({
+    aboutText: '',
+    programCards: [],
+    galleryUrls: [],
+    visibleSections: DEFAULT_VISIBLE_SECTIONS,
+  })
 
   useEffect(() => {
     async function fetchCentre() {
@@ -104,6 +169,33 @@ export function CentreClient({ slug }: { slug: string }) {
         resolvedCentre = data as Centre
       }
       setCentre(resolvedCentre)
+
+      if (resolvedCentre?.id) {
+        const { data: contentRows } = await supabase
+          .from('ecd_content')
+          .select('section,content_blocks')
+          .eq('ecd_id', resolvedCentre.id)
+          .in('section', ['about', 'programs', 'gallery', 'website_sections'])
+
+        const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
+        const sections = Array.isArray(sectionMap.get('website_sections'))
+          ? (sectionMap.get('website_sections') as string[])
+          : DEFAULT_VISIBLE_SECTIONS
+
+        setWebsiteContent({
+          aboutText: fromParagraphBlocks(sectionMap.get('about')),
+          programCards: fromProgramBlocks(sectionMap.get('programs')),
+          galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
+          visibleSections: sections,
+        })
+      } else {
+        setWebsiteContent({
+          aboutText: '',
+          programCards: [],
+          galleryUrls: [],
+          visibleSections: DEFAULT_VISIBLE_SECTIONS,
+        })
+      }
 
       // Get user role if logged in
       const { data: { user } } = await supabase.auth.getUser()
@@ -179,6 +271,28 @@ export function CentreClient({ slug }: { slug: string }) {
     : centre.fees_display_mode === 'range' 
       ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max}` 
       : 'Contact Us'
+  const visibleSectionSet = new Set(websiteContent.visibleSections)
+  const showAbout = visibleSectionSet.has('about')
+  const showPrograms = visibleSectionSet.has('programs')
+  const showGallery = visibleSectionSet.has('gallery') && websiteContent.galleryUrls.length > 0
+  const showContact = visibleSectionSet.has('contact')
+  const aboutCopy =
+    websiteContent.aboutText.trim() ||
+    centre.description ||
+    'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'
+  const fallbackPrograms: ProgramCard[] = [
+    {
+      title: 'Holistic Curriculum',
+      description:
+        'Our play-based learning approach focuses on social, emotional, and cognitive development for all ages.',
+    },
+    {
+      title: 'Age-Appropriate Groups',
+      description:
+        'Children are grouped by developmental stage to ensure they receive the right level of care and stimulation.',
+    },
+  ]
+  const programCards = websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms
 
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-32">
@@ -235,80 +349,99 @@ export function CentreClient({ slug }: { slug: string }) {
         <div className="grid gap-12 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-16">
             
-            {/* About Section */}
-            <Section id="about" title="About Our Centre">
-              <div className="space-y-6">
-                <p className="text-xl leading-relaxed font-medium text-slate-700">
-                  {centre.description || 'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'}
-                </p>
-                
-                {centre.capacity && (
-                  <div className="pt-4">
-                    <ProgressBar 
-                      value={82} 
-                      label="Available Capacity" 
-                      subLabel="Applying early is recommended to secure your preferred intake date." 
-                    />
-                  </div>
-                )}
-              </div>
-            </Section>
+            {showAbout ? (
+              <Section id="about" title="About Our Centre">
+                <div className="space-y-6">
+                  <p className="whitespace-pre-line text-xl leading-relaxed font-medium text-slate-700">{aboutCopy}</p>
 
-            {/* Programs Section */}
-            <Section id="programs" title="Programmes & Learning">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <ModernCard className="flex flex-col gap-4 border-l-4 border-l-[#065A82]">
-                  <div className="h-12 w-12 rounded-2xl bg-[#065A82]/10 flex items-center justify-center text-[#065A82]">
-                    <Sparkles className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900">Holistic Curriculum</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
-                    Our play-based learning approach focuses on social, emotional, and cognitive development for all ages.
-                  </p>
-                </ModernCard>
-                <ModernCard className="flex flex-col gap-4 border-l-4 border-l-cyan-500">
-                  <div className="h-12 w-12 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600">
-                    <CheckCircle2 className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900">Age-Appropriate Groups</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">
-                    Children are grouped by developmental stage to ensure they receive the right level of care and stimulation.
-                  </p>
-                </ModernCard>
-              </div>
-            </Section>
+                  {centre.capacity ? (
+                    <div className="pt-4">
+                      <ProgressBar
+                        value={82}
+                        label="Available Capacity"
+                        subLabel="Applying early is recommended to secure your preferred intake date."
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </Section>
+            ) : null}
 
-            {/* Location & Trust */}
-            <Section id="location" title="Location & Contact">
-              <div className="grid gap-6 sm:grid-cols-2">
-                <ModernCard className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                      <MapPin className="h-5 w-5" />
+            {showPrograms ? (
+              <Section id="programs" title="Programmes & Learning">
+                <div className={`grid gap-6 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                  {programCards.map((program, index) => (
+                    <ModernCard
+                      key={`${program.title}-${index}`}
+                      className={`flex flex-col gap-4 border-l-4 ${
+                        index % 2 === 0 ? 'border-l-[#065A82]' : 'border-l-cyan-500'
+                      }`}
+                    >
+                      <div
+                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${
+                          index % 2 === 0 ? 'bg-[#065A82]/10 text-[#065A82]' : 'bg-cyan-50 text-cyan-600'
+                        }`}
+                      >
+                        {index % 2 === 0 ? <Sparkles className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900">{program.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed">{program.description}</p>
+                    </ModernCard>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            {showGallery ? (
+              <Section id="gallery" title="Gallery">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                  {websiteContent.galleryUrls.slice(0, 12).map((url, index) => (
+                    <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white">
+                      <Image
+                        src={url}
+                        alt={`${centre.name} gallery image ${index + 1}`}
+                        width={420}
+                        height={320}
+                        className="h-40 w-full object-cover"
+                      />
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400">Address</p>
-                      <p className="text-sm font-bold text-slate-900">{centre.address || `${centre.suburb}, ${centre.city}`}</p>
+                  ))}
+                </div>
+              </Section>
+            ) : null}
+
+            {showContact ? (
+              <Section id="location" title="Location & Contact">
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <ModernCard className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-slate-400">Address</p>
+                        <p className="text-sm font-bold text-slate-900">{centre.address || `${centre.suburb}, ${centre.city}`}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                      <Phone className="h-5 w-5" />
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
+                        <Phone className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black uppercase text-slate-400">Phone</p>
+                        <p className="text-sm font-bold text-slate-900">{centre.contact_phone || 'Available on request'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase text-slate-400">Phone</p>
-                      <p className="text-sm font-bold text-slate-900">{centre.contact_phone || 'Available on request'}</p>
+                  </ModernCard>
+                  <div className="h-[240px] rounded-[2rem] bg-slate-100 overflow-hidden relative group">
+                    <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Map View Coming Soon</p>
                     </div>
-                  </div>
-                </ModernCard>
-                <div className="h-[240px] rounded-[2rem] bg-slate-100 overflow-hidden relative group">
-                  <div className="absolute inset-0 bg-slate-200 animate-pulse" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Map View Coming Soon</p>
                   </div>
                 </div>
-              </div>
-            </Section>
+              </Section>
+            ) : null}
 
           </div>
 

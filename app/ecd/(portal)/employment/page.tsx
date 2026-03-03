@@ -347,7 +347,11 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                   className={`${FIELD_CLASS} sm:col-span-2`}
                 />
 
-                <select name="role_type" className={FIELD_CLASS} defaultValue={selectedTemplate?.roleType ?? 'assistant'}>
+                <select
+                  name="role_type"
+                  className="cc-native-field h-11 rounded-2xl"
+                  defaultValue={selectedTemplate?.roleType ?? 'assistant'}
+                >
                   <option value="assistant">Assistant</option>
                   <option value="practitioner">Practitioner</option>
                   <option value="cook">Cook</option>

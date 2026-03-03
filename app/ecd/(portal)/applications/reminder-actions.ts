@@ -15,6 +15,7 @@ import {
   renderAutomationTemplate,
 } from '@/lib/communications/automation-settings'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { sendParentInAppNotification, toWhatsappHref } from '@/lib/notifications/multi-channel'
 
 const sendReminderSchema = z.object({
   applicationId: z.string().uuid(),
@@ -60,21 +61,6 @@ function getAppOrigin() {
   if (vercelUrl) return `https://${vercelUrl.replace(/\/+$/, '')}`
 
   return 'http://localhost:3010'
-}
-
-function normalizeWhatsappNumber(rawPhone: string | null | undefined) {
-  const digits = String(rawPhone ?? '').replace(/[^\d]/g, '')
-  if (!digits) return null
-  if (digits.startsWith('0')) return `27${digits.slice(1)}`
-  if (digits.startsWith('27')) return digits
-  return digits
-}
-
-function toWhatsappHref(rawPhone: string | null | undefined, message: string) {
-  if (!message.trim()) return null
-  const number = normalizeWhatsappNumber(rawPhone)
-  if (!number) return `https://wa.me/?text=${encodeURIComponent(message)}`
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`
 }
 
 function toSmsHref(rawPhone: string | null | undefined, message: string) {
@@ -199,7 +185,7 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
   const shouldExposeSms = channelIncludesSms(automationSettings.send_channel)
 
   if (shouldSendInApp) {
-    const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
+    const notificationResult = await sendParentInAppNotification(session.supabase as any, {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,
@@ -208,8 +194,8 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
       message,
       is_read: false,
     })
-    if (notificationError) {
-      return { ok: false, error: notificationError.message || 'Failed to send reminder.' }
+    if (!notificationResult.ok) {
+      return { ok: false, error: notificationResult.error || 'Failed to send reminder.' }
     }
   }
 

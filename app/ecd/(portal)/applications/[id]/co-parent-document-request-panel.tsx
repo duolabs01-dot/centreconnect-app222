@@ -63,6 +63,7 @@ export function CoParentDocumentRequestPanel({
   const [requestedForUserId, setRequestedForUserId] = useState(participants[1]?.userId ?? participants[0]?.userId ?? '')
   const [selectedCodes, setSelectedCodes] = useState<string[]>(['birth_certificate'])
   const [customMessage, setCustomMessage] = useState('')
+  const [lastWhatsappHref, setLastWhatsappHref] = useState<string | null>(null)
 
   const participantById = useMemo(
     () => new Map(participants.map((participant) => [participant.userId, participant])),
@@ -113,6 +114,7 @@ export function CoParentDocumentRequestPanel({
       }
 
       toast.success(result.message || 'Document request sent.')
+      setLastWhatsappHref(result.whatsappHref ?? null)
       const now = new Date().toISOString()
       const optimistic: RequestHistoryItem = {
         id: `optimistic-${now}`,
@@ -204,7 +206,7 @@ export function CoParentDocumentRequestPanel({
           value={customMessage}
           onChange={(event) => setCustomMessage(event.target.value)}
           placeholder="Add context if needed. Otherwise a professional default message is used."
-          className="min-h-[96px] w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
+          className="cc-native-field min-h-[96px] w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900"
         />
       </label>
 
@@ -216,6 +218,18 @@ export function CoParentDocumentRequestPanel({
       >
         {isPending ? 'Sending request...' : 'Request Document Upload'}
       </Button>
+      {lastWhatsappHref ? (
+        <Button
+          type="button"
+          variant="outline"
+          asChild
+          className="h-11 rounded-2xl border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+        >
+          <a href={lastWhatsappHref} target="_blank" rel="noreferrer">
+            Open WhatsApp Link
+          </a>
+        </Button>
+      ) : null}
 
       <div className="space-y-2">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Recent requests</p>

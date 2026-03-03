@@ -5,6 +5,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
+import {
+  renderEcdPasswordSetupEmail,
+  renderPilotWelcomePackEmail,
+} from '@/lib/email/templates/pilot-welcome-pack'
 import { randomBytes } from 'crypto'
 
 const createCentreSchema = z.object({
@@ -24,6 +28,34 @@ const createCentreSchema = z.object({
   onboardingFeePaid: z.boolean(),
 })
 
+function toLockedResetUrl(email: string) {
+  try {
+    const url = new URL('/reset-password', APP_URL)
+    url.searchParams.set('locked_email', email)
+    return url.toString()
+  } catch {
+    return `${APP_URL.replace(/\/$/, '')}/reset-password?locked_email=${encodeURIComponent(email)}`
+  }
+}
+
+async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  const result = await adminClient.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: {
+      redirectTo: toLockedResetUrl(email),
+    },
+  })
+
+  const actionLink = result.data?.properties?.action_link?.trim() ?? ''
+  if (!result.error && actionLink.length > 0) {
+    return { link: actionLink, error: null as string | null }
+  }
+
+  const fallback = `${APP_URL.replace(/\/$/, '')}/forgot-password`
+  return { link: fallback, error: result.error?.message ?? 'Password setup link generation failed.' }
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -41,6 +73,7 @@ export async function POST(request: Request) {
 
   const adminClient = createAdminClient()
   const data = parsed.data
+  const normalizedEmail = data.email.trim().toLowerCase()
   const isPilotPlan = data.tier === 'pilot'
   const normalizedTier = isPilotPlan ? 'basic' : data.tier
   const normalizedMonthlyPrice = isPilotPlan ? 0 : data.monthlyPrice
@@ -51,7 +84,7 @@ export async function POST(request: Request) {
       slug: data.slug,
       name: data.name,
       primary_contact_name: data.primaryContactName,
-      email: data.email,
+      email: normalizedEmail,
       phone: data.phone,
       address: data.address,
       suburb: data.suburb,
@@ -72,7 +105,7 @@ export async function POST(request: Request) {
   const tempPassword = `Cc!${randomBytes(16).toString('base64url')}a1`
 
   const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-    email: data.email,
+    email: normalizedEmail,
     password: tempPassword,
     email_confirm: true,
   })
@@ -88,7 +121,7 @@ export async function POST(request: Request) {
   const { error: profileError } = await adminClient.from('user_profiles').insert({
     id: authUser.user.id,
     full_name: data.primaryContactName,
-    email: data.email,
+    email: normalizedEmail,
     phone: data.phone,
     role: 'ecd_admin',
   })
@@ -151,37 +184,49 @@ export async function POST(request: Request) {
       requestedPlan: data.tier,
       tier: normalizedTier,
       monthlyPrice: normalizedMonthlyPrice,
-      primaryContactEmail: data.email,
+      primaryContactEmail: normalizedEmail,
       isPilotPlan,
     },
   })
+  const emailWarnings: string[] = []
+  const setupLinkResult = await createPasswordSetupLink(adminClient, normalizedEmail)
+  if (setupLinkResult.error) {
+    emailWarnings.push(setupLinkResult.error)
+  }
 
-  const paymentLink = `${APP_URL}/onboarding/pay?centre=${centre.slug}`
-  const emailSubject = isPilotPlan
-    ? 'Welcome to CentreConnect Pilot - Your trial is live'
-    : 'Welcome to CentreConnect - Set up your account'
-  const emailBody = isPilotPlan
-    ? `Dear ${data.primaryContactName},
+  const setupEmailHtml = await renderEcdPasswordSetupEmail({
+    centreName: data.name,
+    contactName: data.primaryContactName,
+    lockedEmail: normalizedEmail,
+    setupLink: setupLinkResult.link,
+    loginLink: `${APP_URL.replace(/\/$/, '')}/ecd/login`,
+  })
+  const setupEmailResult = await queueEmail(
+    normalizedEmail,
+    `Set your CentreConnect password for ${data.name}`,
+    setupEmailHtml
+  )
+  if (!setupEmailResult.success) {
+    emailWarnings.push(setupEmailResult.error ?? 'Failed to queue password setup email.')
+  }
 
-Welcome to CentreConnect Pilot! Your ECD Centre, ${data.name}, has been set up in trial mode.
-
-No card details are needed right now. You can sign in and begin enrollment immediately.
-
-Best regards,
-The CentreConnect Team`
-    : `Dear ${data.primaryContactName},
-
-Welcome to CentreConnect! Your ECD Centre, ${data.name}, has been set up.
-
-To activate your account and set up your payment details, please visit:
-${paymentLink}
-
-We look forward to helping you manage and grow your Early Childhood Development centre.
-
-Best regards,
-The CentreConnect Team`
-
-  await queueEmail(data.email, emailSubject, emailBody)
+  if (isPilotPlan) {
+    const welcomePackHtml = await renderPilotWelcomePackEmail({
+      centreName: data.name,
+      contactName: data.primaryContactName,
+      dashboardLink: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
+      websiteBuilderLink: `${APP_URL.replace(/\/$/, '')}/ecd/website`,
+      supportLink: `${APP_URL.replace(/\/$/, '')}/ecd/support`,
+    })
+    const welcomePackResult = await queueEmail(
+      normalizedEmail,
+      `Pilot Welcome Pack | ${data.name}`,
+      welcomePackHtml
+    )
+    if (!welcomePackResult.success) {
+      emailWarnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
+    }
+  }
 
   const { error: taskError } = await adminClient.from('admin_tasks').insert({
     type: 'activate_tenant',
@@ -203,6 +248,7 @@ The CentreConnect Team`
       centre,
       createdBy: platformAdmin.userId,
       pilot: isPilotPlan,
+      warnings: emailWarnings.length > 0 ? emailWarnings : undefined,
     },
     { status: 201 }
   )

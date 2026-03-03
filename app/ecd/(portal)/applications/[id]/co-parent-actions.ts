@@ -4,6 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
+import {
+  sendEcdInAppNotification,
+  sendParentInAppNotification,
+  toWhatsappHref,
+} from '@/lib/notifications/multi-channel'
 
 const requestDocumentSchema = z.object({
   applicationId: z.string().uuid(),
@@ -20,6 +25,7 @@ type RequestDocumentResult = {
   ok: boolean
   error?: string
   message?: string
+  whatsappHref?: string
 }
 
 type GuardianRow = {
@@ -27,11 +33,13 @@ type GuardianRow = {
   linked_user_id: string | null
   full_name: string | null
   relationship: string | null
+  phone: string | null
 }
 
 type ProfileRow = {
   id: string
   full_name: string | null
+  phone: string | null
 }
 
 function normalizeText(value: string | null | undefined) {
@@ -70,7 +78,7 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
 
   const { data: guardianRows, error: guardiansError } = await session.supabase
     .from('guardians')
-    .select('id,linked_user_id,full_name,relationship')
+    .select('id,linked_user_id,full_name,relationship,phone')
     .eq('child_id', application.child_id)
     .eq('parent_id', application.parent_id)
 
@@ -101,11 +109,12 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
   const profileIds = Array.from(allowedUsers)
   const { data: profileRows } = await session.supabase
     .from('user_profiles')
-    .select('id,full_name')
+    .select('id,full_name,phone')
     .in('id', profileIds)
 
   const profiles = (profileRows ?? []) as ProfileRow[]
   const profileNameById = new Map(profiles.map((profile) => [profile.id, normalizeText(profile.full_name)]))
+  const profilePhoneById = new Map(profiles.map((profile) => [profile.id, normalizeText(profile.phone)]))
 
   const requesterLabel =
     normalizeText(profileNameById.get(payload.requestedByUserId)) ||
@@ -156,7 +165,7 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
   }
 
   const notificationMessage = `${composedMessage}\n\nFrom ${centreName}. Open your profile documents to upload now.`
-  const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
+  const parentNotification = await sendParentInAppNotification(session.supabase as any, {
     parent_id: payload.requestedForUserId,
     ecd_id: session.ecdId,
     application_id: application.id,
@@ -165,13 +174,32 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
     message: notificationMessage,
     is_read: false,
   })
-
-  if (notificationError) {
-    return { ok: false, error: notificationError.message || 'Document request saved, but notification failed.' }
+  if (!parentNotification.ok) {
+    return { ok: false, error: parentNotification.error || 'Document request saved, but notification failed.' }
   }
+
+  await sendEcdInAppNotification(session.supabase as any, {
+    ecd_id: session.ecdId,
+    application_id: application.id,
+    title: 'Linked parent request sent',
+    message: `${requesterLabel} requested documents from ${recipientLabel} for ${childName}.`,
+    metadata: {
+      kind: 'linked_parent_document_request',
+      requested_by_user_id: payload.requestedByUserId,
+      requested_for_user_id: payload.requestedForUserId,
+      document_codes: normalizedCodes,
+    },
+    is_read: false,
+  })
+
+  const recipientPhone =
+    profilePhoneById.get(payload.requestedForUserId) ||
+    normalizeText(guardianById.get(payload.requestedForGuardianId ?? '')?.phone) ||
+    null
+  const whatsappHref = toWhatsappHref(recipientPhone, notificationMessage) ?? undefined
 
   revalidatePath('/ecd/applications')
   revalidatePath(`/ecd/applications/${application.id}`)
 
-  return { ok: true, message: `Document request sent to ${recipientLabel}.` }
+  return { ok: true, message: `Document request sent to ${recipientLabel}.`, whatsappHref }
 }

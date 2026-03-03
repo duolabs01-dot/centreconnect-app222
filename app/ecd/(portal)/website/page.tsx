@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -6,6 +7,7 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { cn } from '@/lib/utils'
 import {
   AGE_GROUP_PRICE_BANDS,
@@ -166,6 +168,86 @@ const websiteStatusCopy: Record<
   },
 }
 
+const WEBSITE_MEDIA_BUCKET = 'ecd-media'
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024
+const MAX_GALLERY_IMAGES = 12
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/svg+xml',
+])
+
+function isFormFile(value: FormDataEntryValue | null): value is File {
+  if (!value || typeof value === 'string') return false
+  return typeof value.name === 'string'
+}
+
+function sanitizeFileName(input: string) {
+  return input
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 60)
+}
+
+function toFileExtension(file: File) {
+  const fromName = file.name.split('.').pop()?.trim().toLowerCase()
+  if (fromName) return fromName
+  const fromType = file.type.split('/').pop()?.trim().toLowerCase()
+  return fromType || 'jpg'
+}
+
+function toGalleryUrls(contentBlocks: unknown): string[] {
+  if (!Array.isArray(contentBlocks)) return []
+  const normalized = contentBlocks
+    .map((block) => {
+      if (typeof block === 'string') return block.trim()
+      if (block && typeof block === 'object' && 'url' in block && typeof block.url === 'string') {
+        return block.url.trim()
+      }
+      return ''
+    })
+    .filter((value) => value.length > 0)
+  return Array.from(new Set(normalized))
+}
+
+async function uploadWebsiteImage(
+  admin: ReturnType<typeof createAdminClient>,
+  ecdId: string,
+  file: File,
+  kind: 'logo' | 'hero' | 'gallery'
+) {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error(`Unsupported image format (${file.type || 'unknown'}).`)
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error('Image exceeds 8MB limit.')
+  }
+
+  const extension = toFileExtension(file)
+  const baseName = sanitizeFileName(file.name.replace(/\.[^/.]+$/, '')) || kind
+  const path = `${ecdId}/website/${kind}-${Date.now()}-${baseName}-${crypto.randomUUID().slice(0, 8)}.${extension}`
+  const bytes = Buffer.from(await file.arrayBuffer())
+
+  const { error: uploadError } = await admin.storage.from(WEBSITE_MEDIA_BUCKET).upload(path, bytes, {
+    contentType: file.type || 'image/jpeg',
+    upsert: true,
+  })
+  if (uploadError) {
+    throw new Error(uploadError.message || 'Image upload failed.')
+  }
+
+  const {
+    data: { publicUrl },
+  } = admin.storage.from(WEBSITE_MEDIA_BUCKET).getPublicUrl(path)
+  if (!publicUrl) throw new Error('Image upload succeeded but URL generation failed.')
+  return publicUrl
+}
+
 export default async function EcdWebsitePage({
   searchParams,
 }: {
@@ -183,10 +265,16 @@ export default async function EcdWebsitePage({
   const [{ data: centre }, { data: contentRows }, { data: subscription }] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('id,slug,name,tagline,description,is_active,updated_at,age_group_pricing,monthly_fee_min,monthly_fee_max,fees_display_mode')
+      .select(
+        'id,slug,name,tagline,description,logo_url,cover_image_url,is_active,updated_at,age_group_pricing,monthly_fee_min,monthly_fee_max,fees_display_mode'
+      )
       .eq('id', ecdId)
       .maybeSingle(),
-    supabase.from('ecd_content').select('section,content_blocks').eq('ecd_id', ecdId).in('section', ['about', 'programs', 'website_sections']),
+    supabase
+      .from('ecd_content')
+      .select('section,content_blocks')
+      .eq('ecd_id', ecdId)
+      .in('section', ['about', 'programs', 'gallery', 'website_sections']),
     supabase
       .from('subscriptions')
       .select('tier,status,monthly_price,current_period_end')
@@ -199,15 +287,17 @@ export default async function EcdWebsitePage({
   const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
   const aboutText = fromParagraphBlocks(sectionMap.get('about'))
   const programsText = fromProgramBlocks(sectionMap.get('programs'))
+  const existingGalleryUrls = toGalleryUrls(sectionMap.get('gallery'))
   const enabledSections = Array.isArray(sectionMap.get('website_sections'))
     ? (sectionMap.get('website_sections') as string[])
     : sectionOptions.map((item) => item.key)
   const hasTagline = Boolean((centre?.tagline ?? '').trim())
   const hasAbout = Boolean(aboutText.trim())
   const hasPrograms = Boolean(programsText.trim())
+  const hasBrandMedia = Boolean(centre?.logo_url || centre?.cover_image_url)
   const hasVisibleSections = enabledSections.length > 0
-  const completedSteps = [hasTagline, hasAbout, hasPrograms && hasVisibleSections].filter(Boolean).length
-  const completionPct = Math.round((completedSteps / 3) * 100)
+  const completedSteps = [hasTagline, hasAbout, hasPrograms && hasVisibleSections, hasBrandMedia].filter(Boolean).length
+  const completionPct = Math.round((completedSteps / 4) * 100)
   const tier = (subscription?.tier ?? 'basic') as 'basic' | 'standard' | 'premium'
   const guide = tierGuide[tier]
   const ageGroupPricing = normalizeAgeGroupPricing(centre?.age_group_pricing, centre?.monthly_fee_min ?? null)
@@ -216,10 +306,19 @@ export default async function EcdWebsitePage({
   async function saveWebsiteContent(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
+    const admin = createAdminClient()
     const tagline = String(formData.get('tagline') ?? '').trim()
     const about = String(formData.get('about') ?? '').trim()
     const programs = String(formData.get('programs') ?? '').trim()
     const sectionKeys = formData.getAll('sections').map((value) => String(value))
+    const logoFileValue = formData.get('logo_file')
+    const heroFileValue = formData.get('hero_file')
+    const galleryFileValues = formData.getAll('gallery_files')
+    const logoFile = isFormFile(logoFileValue) && logoFileValue.size > 0 ? logoFileValue : null
+    const heroFile = isFormFile(heroFileValue) && heroFileValue.size > 0 ? heroFileValue : null
+    const galleryFiles = galleryFileValues.filter(
+      (value): value is File => isFormFile(value) && value.size > 0
+    )
     const agePricing = buildAgeGroupPricingFromRandInput(
       {
         '0-2': String(formData.get(agePriceFieldByKey['0-2']) ?? ''),
@@ -237,18 +336,59 @@ export default async function EcdWebsitePage({
           ? 'exact'
           : 'range'
 
+    let uploadedLogoUrl: string | null = null
+    let uploadedHeroUrl: string | null = null
+    const uploadedGalleryUrls: string[] = []
+
+    try {
+      if (logoFile) {
+        uploadedLogoUrl = await uploadWebsiteImage(admin, session.ecdId, logoFile, 'logo')
+      }
+      if (heroFile) {
+        uploadedHeroUrl = await uploadWebsiteImage(admin, session.ecdId, heroFile, 'hero')
+      }
+      for (const galleryFile of galleryFiles.slice(0, MAX_GALLERY_IMAGES)) {
+        const uploaded = await uploadWebsiteImage(admin, session.ecdId, galleryFile, 'gallery')
+        uploadedGalleryUrls.push(uploaded)
+      }
+    } catch {
+      redirect('/ecd/website?status=save-error')
+    }
+
+    const mergedGalleryUrls = Array.from(
+      new Set([...existingGalleryUrls, ...uploadedGalleryUrls].filter((value) => value.length > 0))
+    ).slice(-MAX_GALLERY_IMAGES)
+    const centreUpdatePayload: {
+      tagline: string | null
+      description: string | null
+      age_group_pricing: ReturnType<typeof buildAgeGroupPricingFromRandInput>
+      monthly_fee_min: number | null
+      monthly_fee_max: number | null
+      fees_display_mode: 'exact' | 'range' | 'contact'
+      fees_last_updated_at: string
+      updated_at: string
+      logo_url?: string
+      cover_image_url?: string
+    } = {
+      tagline: tagline || null,
+      description: about || null,
+      age_group_pricing: agePricing,
+      monthly_fee_min: nextPricingSummary.minFeeRand,
+      monthly_fee_max: nextPricingSummary.maxFeeRand ?? nextPricingSummary.minFeeRand,
+      fees_display_mode: nextFeesDisplayMode,
+      fees_last_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+    if (uploadedLogoUrl) {
+      centreUpdatePayload.logo_url = uploadedLogoUrl
+    }
+    if (uploadedHeroUrl) {
+      centreUpdatePayload.cover_image_url = uploadedHeroUrl
+    }
+
     const { error: centreUpdateError } = await session.supabase
       .from('ecd_centres')
-      .update({
-        tagline: tagline || null,
-        description: about || null,
-        age_group_pricing: agePricing,
-        monthly_fee_min: nextPricingSummary.minFeeRand,
-        monthly_fee_max: nextPricingSummary.maxFeeRand ?? nextPricingSummary.minFeeRand,
-        fees_display_mode: nextFeesDisplayMode,
-        fees_last_updated_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .update(centreUpdatePayload)
       .eq('id', session.ecdId)
     if (centreUpdateError) {
       redirect('/ecd/website?status=save-error')
@@ -274,6 +414,12 @@ export default async function EcdWebsitePage({
           content_blocks: sectionKeys,
           updated_by: session.user.id,
         },
+        {
+          ecd_id: session.ecdId,
+          section: 'gallery',
+          content_blocks: mergedGalleryUrls,
+          updated_by: session.user.id,
+        },
       ],
       { onConflict: 'ecd_id,section' }
     )
@@ -283,7 +429,11 @@ export default async function EcdWebsitePage({
 
     const { data: updatedCentre } = await session.supabase.from('ecd_centres').select('slug').eq('id', session.ecdId).maybeSingle()
     revalidatePath('/ecd/website')
+    revalidatePath('/ecd/profile')
+    revalidatePath('/ecd/dashboard')
+    revalidatePath('/directory')
     if (updatedCentre?.slug) revalidatePath(`/c/${updatedCentre.slug}`)
+    if (updatedCentre?.slug) revalidatePath(`/centre/${updatedCentre.slug}`)
     redirect('/ecd/website?status=draft-saved')
   }
 
@@ -378,7 +528,7 @@ export default async function EcdWebsitePage({
               <div className="h-2.5 rounded-full bg-teal-600 transition-[width] duration-700" style={{ width: `${completionPct}%` }} />
             </div>
             <p className="text-sm font-bold text-teal-700">{completionPct}% complete</p>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div
                 className={cn(
                   'rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-colors',
@@ -408,6 +558,16 @@ export default async function EcdWebsitePage({
                 )}
               >
                 Step 3: Enable sections
+              </div>
+              <div
+                className={cn(
+                  'rounded-2xl border px-4 py-3 text-[10px] font-black uppercase tracking-widest transition-colors',
+                  hasBrandMedia
+                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-100 bg-slate-50 text-slate-400'
+                )}
+              >
+                Step 4: Add brand media
               </div>
             </div>
           </CardContent>
@@ -454,6 +614,94 @@ export default async function EcdWebsitePage({
                   placeholder="Example: Safe, caring learning for ages 2 to 6"
                   className="cc-native-field mt-1.5 h-12 rounded-2xl"
                 />
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brand media</p>
+                <div className="mt-3 grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <label htmlFor="logo_file" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Logo image
+                    </label>
+                    {centre?.logo_url ? (
+                      <Image
+                        src={centre.logo_url}
+                        alt="Current centre logo"
+                        width={96}
+                        height={96}
+                        className="h-20 w-20 rounded-2xl border border-slate-200 object-cover bg-white"
+                      />
+                    ) : (
+                      <p className="text-xs text-slate-500">No logo uploaded yet.</p>
+                    )}
+                    <input
+                      id="logo_file"
+                      name="logo_file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+                    />
+                    <p className="text-xs text-slate-500">Shows on directory cards, admissions pages, and jobs pages.</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="hero_file" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Hero image
+                    </label>
+                    {centre?.cover_image_url ? (
+                      <Image
+                        src={centre.cover_image_url}
+                        alt="Current hero image"
+                        width={384}
+                        height={144}
+                        className="h-24 w-full rounded-2xl border border-slate-200 object-cover bg-white"
+                      />
+                    ) : (
+                      <p className="text-xs text-slate-500">No hero image uploaded yet.</p>
+                    )}
+                    <input
+                      id="hero_file"
+                      name="hero_file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+                    />
+                    <p className="text-xs text-slate-500">Used as the public page hero and listing cover image.</p>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label htmlFor="gallery_files" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      Gallery pictures
+                    </label>
+                    {existingGalleryUrls.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                        {existingGalleryUrls.slice(0, 8).map((url) => (
+                          <Image
+                            key={url}
+                            src={url}
+                            alt="Gallery preview"
+                            width={180}
+                            height={120}
+                            className="h-20 w-full rounded-xl border border-slate-200 object-cover bg-white"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-500">No gallery pictures uploaded yet.</p>
+                    )}
+                    <input
+                      id="gallery_files"
+                      name="gallery_files"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                      multiple
+                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Add new gallery pictures anytime. We keep up to {MAX_GALLERY_IMAGES} most recent unique images.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>
