@@ -73,7 +73,7 @@ function fallbackAreas(): ReportCardArea[] {
 }
 
 function formatDisplayDate(value: string | null | undefined) {
-  if (!value) return '—'
+  if (!value) return '--'
   return new Date(value).toLocaleDateString('en-ZA', {
     day: 'numeric',
     month: 'short',

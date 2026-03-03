@@ -66,6 +66,10 @@ export async function saveReportCardAction(input: unknown): Promise<ReportCardAc
   const periodStart = normalizeDateInput(payload.period_start)
   const periodEnd = normalizeDateInput(payload.period_end)
 
+  if (periodStart && periodEnd && periodStart > periodEnd) {
+    return { success: false, message: 'Period end date must be on or after period start date.' }
+  }
+
   const { data: childRecord, error: childError } = await session.supabase
     .from('children')
     .select('id')
