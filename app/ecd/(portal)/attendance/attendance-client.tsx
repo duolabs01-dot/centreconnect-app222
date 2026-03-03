@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button' // Assuming there is a Button co
 type AttendanceClientProps = {
   enrolledChildren: Array<{ id: string; first_name: string; last_name: string }>
   attendanceByChild: Record<string, { id: string; checked_in: boolean; picked_up: boolean } | null>
+  parentIdByChild: Record<string, string | null>
   ecdId: string
   todayDate: string
   staffId: string
@@ -15,9 +16,79 @@ type AttendanceClientProps = {
 
 type LocalAttendanceState = Record<string, { id: string | null; checked_in: boolean; picked_up: boolean }>
 
+function randomSixDigitCode() {
+  const bytes = new Uint32Array(1)
+  crypto.getRandomValues(bytes)
+  return String(bytes[0] % 1_000_000).padStart(6, '0')
+}
+
+function nextDateIso(dateIso: string) {
+  const start = new Date(`${dateIso}T00:00:00+02:00`)
+  start.setUTCDate(start.getUTCDate() + 1)
+  return start.toISOString().slice(0, 10)
+}
+
+async function generatePickupCodeForFirstCheckIn({
+  supabase,
+  ecdId,
+  childId,
+  parentId,
+  todayDate,
+}: {
+  supabase: ReturnType<typeof createClient>
+  ecdId: string
+  childId: string
+  parentId: string
+  todayDate: string
+}) {
+  const dayStart = `${todayDate}T00:00:00+02:00`
+  const dayEnd = `${nextDateIso(todayDate)}T00:00:00+02:00`
+
+  const { data: existingCode, error: existingCodeError } = await supabase
+    .from('pickup_codes')
+    .select('id')
+    .eq('ecd_id', ecdId)
+    .eq('child_id', childId)
+    .eq('parent_id', parentId)
+    .gte('created_at', dayStart)
+    .lt('created_at', dayEnd)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existingCodeError) {
+    throw new Error(existingCodeError.message || 'Failed to inspect today pickup code')
+  }
+
+  if (existingCode?.id) {
+    return { generated: false }
+  }
+
+  const { data, error } = await supabase.rpc('generate_pickup_code_atomic', {
+    p_ecd_id: ecdId,
+    p_child_id: childId,
+    p_parent_id: parentId,
+    p_generated_by_role: 'centre',
+    p_code: randomSixDigitCode(),
+    p_expires_at: `${todayDate}T23:59:59+02:00`,
+  })
+
+  if (error) {
+    throw new Error(error.message || 'Failed to generate pickup code')
+  }
+
+  const payload = data as { success?: boolean; error?: string } | null
+  if (!payload?.success) {
+    throw new Error(payload?.error || 'Failed to generate pickup code')
+  }
+
+  return { generated: true }
+}
+
 export function AttendanceClient({
   enrolledChildren,
   attendanceByChild,
+  parentIdByChild,
   ecdId,
   todayDate,
   staffId,
@@ -86,6 +157,30 @@ export function AttendanceClient({
             picked_up: Boolean(data.picked_up),
           },
         }))
+
+        if (field === 'checked_in' && value && !previousState.checked_in) {
+          const parentId = parentIdByChild[childId]
+          if (parentId) {
+            try {
+              const outcome = await generatePickupCodeForFirstCheckIn({
+                supabase,
+                ecdId,
+                childId,
+                parentId,
+                todayDate,
+              })
+              if (outcome.generated) {
+                toast.success('Pickup code generated after first check-in.')
+              }
+            } catch (pickupError) {
+              const message =
+                pickupError instanceof Error
+                  ? pickupError.message
+                  : 'Attendance saved, but pickup code was not generated.'
+              toast.error(message)
+            }
+          }
+        }
         return
       }
 
@@ -125,6 +220,30 @@ export function AttendanceClient({
           picked_up: Boolean(data.picked_up),
         },
       }))
+
+      if (field === 'checked_in' && value && !previousState.checked_in) {
+        const parentId = parentIdByChild[childId]
+        if (parentId) {
+          try {
+            const outcome = await generatePickupCodeForFirstCheckIn({
+              supabase,
+              ecdId,
+              childId,
+              parentId,
+              todayDate,
+            })
+            if (outcome.generated) {
+              toast.success('Pickup code generated after first check-in.')
+            }
+          } catch (pickupError) {
+            const message =
+              pickupError instanceof Error
+                ? pickupError.message
+                : 'Attendance saved, but pickup code was not generated.'
+            toast.error(message)
+          }
+        }
+      }
     } catch {
       setLocalAttendance((current) => ({
         ...current,

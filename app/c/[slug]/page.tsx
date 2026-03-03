@@ -11,10 +11,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     .eq('slug', slug)
     .maybeSingle()
 
-  if (!centre) return { title: 'Crèche Not Found' }
+  if (!centre) return { title: 'Creche Not Found' }
 
   return {
-    title: `${centre.name} — CentreConnect`,
+    title: `${centre.name} - CentreConnect`,
     description: centre.tagline || `View ${centre.name} details and apply online.`,
     openGraph: {
       images: [

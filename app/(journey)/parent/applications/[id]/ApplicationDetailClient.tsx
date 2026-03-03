@@ -57,143 +57,27 @@ type PickupCodeSectionProps = {
   parentId: string
 }
 
-function randomSixDigitCode() {
-  const bytes = new Uint32Array(1)
-  crypto.getRandomValues(bytes)
-  return String(bytes[0] % 1_000_000).padStart(6, '0')
-}
-
 function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCodeSectionProps) {
   const [code, setCode] = useState<string | null>(null)
+  const [createdAt, setCreatedAt] = useState<string | null>(null)
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
-  const [enabled, setEnabled] = useState(false)
-  const [generating, setGenerating] = useState(false)
-  const [toggling, setToggling] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const rotationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const notifyCentreActivation = useCallback(async () => {
-    const response = await fetch(`/api/parent/applications/${applicationId}/pickup-activation`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active: true }),
-    })
-
-    const payload = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string }
-    if (!response.ok || !payload.ok) {
-      const message = payload.error || 'Could not notify your crèche team'
-      setError(message)
-      toast.error(message)
-      return false
-    }
-
-    return true
-  }, [applicationId])
-
-  const generateCode = useCallback(
+  const loadLatestCode = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!childId || !ecdId || !parentId) return
-      setGenerating(true)
+      if (!silent) setLoading(true)
+      if (silent) setRefreshing(true)
       setError(null)
-      const secureCode = randomSixDigitCode()
-      const nextExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
-      const supabase = createClient()
 
-      try {
-        const { data, error: rpcError } = await supabase.rpc('generate_pickup_code_atomic', {
-          p_ecd_id: ecdId,
-          p_child_id: childId,
-          p_parent_id: parentId,
-          p_generated_by_role: 'parent',
-          p_code: secureCode,
-          p_expires_at: nextExpiresAt,
-        })
-
-        if (rpcError) {
-          setError(rpcError.message)
-          if (!silent) toast.error('Could not generate code')
-          return
-        }
-
-        const result = data as { success?: boolean; error?: string } | null
-        if (!result?.success) {
-          setError(result?.error ?? 'unknown')
-          if (!silent) toast.error('Could not generate code')
-          return
-        }
-
-        setCode(secureCode)
-        setExpiresAt(nextExpiresAt)
-        if (!silent) toast.success('Pickup code generated')
-      } finally {
-        setGenerating(false)
-      }
-    },
-    [childId, ecdId, parentId]
-  )
-
-  const deactivatePickupCodes = useCallback(async () => {
-    if (!childId || !ecdId || !parentId) return
-    const supabase = createClient()
-    const { error: updateError } = await supabase
-      .from('pickup_codes')
-      .update({ locked: true })
-      .eq('child_id', childId)
-      .eq('ecd_id', ecdId)
-      .eq('parent_id', parentId)
-      .eq('used', false)
-      .eq('locked', false)
-      .gt('expires_at', new Date().toISOString())
-
-    if (updateError) {
-      throw new Error(updateError.message)
-    }
-  }, [childId, ecdId, parentId])
-
-  async function activatePickup() {
-    if (enabled || toggling) return
-    setToggling(true)
-    setError(null)
-    try {
-      const notified = await notifyCentreActivation()
-      if (!notified) return
-      setEnabled(true)
-      await generateCode()
-    } finally {
-      setToggling(false)
-    }
-  }
-
-  async function deactivatePickup() {
-    if (!enabled || toggling) return
-    setToggling(true)
-    setError(null)
-    try {
-      await deactivatePickupCodes()
-      setEnabled(false)
-      setCode(null)
-      setExpiresAt(null)
-      toast.success('Pickup code deactivated')
-    } catch (deactivateError) {
-      const message = deactivateError instanceof Error ? deactivateError.message : 'Failed to deactivate pickup code'
-      setError(message)
-      toast.error(message)
-    } finally {
-      setToggling(false)
-    }
-  }
-
-  useEffect(() => {
-    let active = true
-
-    async function loadActiveCode() {
-      if (!childId || !ecdId) return
       const supabase = createClient()
       const { data, error: fetchError } = await supabase
         .from('pickup_codes')
-        .select('id,code,expires_at,used,locked')
+        .select('code,created_at,expires_at,used,locked')
         .eq('child_id', childId)
         .eq('ecd_id', ecdId)
+        .eq('parent_id', parentId)
         .eq('used', false)
         .eq('locked', false)
         .gt('expires_at', new Date().toISOString())
@@ -201,53 +85,30 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
         .limit(1)
         .maybeSingle()
 
-      if (!active) return
-
       if (fetchError) {
-        setError(fetchError.message)
-        return
+        setError(fetchError.message || 'Unable to load pickup code right now.')
+      } else {
+        setCode(data?.code ?? null)
+        setCreatedAt(data?.created_at ?? null)
+        setExpiresAt(data?.expires_at ?? null)
       }
 
-      if (data?.code) {
-        setCode(data.code)
-        setExpiresAt(data.expires_at ?? null)
-        setEnabled(true)
-        return
-      }
-
-      setEnabled(false)
-      setCode(null)
-      setExpiresAt(null)
-    }
-
-    void loadActiveCode()
-
-    return () => {
-      active = false
-    }
-  }, [childId, ecdId])
+      if (!silent) setLoading(false)
+      if (silent) setRefreshing(false)
+    },
+    [childId, ecdId, parentId]
+  )
 
   useEffect(() => {
-    if (rotationTimeoutRef.current) {
-      clearTimeout(rotationTimeoutRef.current)
-      rotationTimeoutRef.current = null
-    }
-    if (!enabled || !code || !expiresAt) return
+    void loadLatestCode()
+  }, [loadLatestCode])
 
-    const expiresInMs = new Date(expiresAt).getTime() - Date.now()
-    const rotationInMs = Math.max(1_000, expiresInMs + 1_000)
-
-    rotationTimeoutRef.current = setTimeout(() => {
-      void generateCode({ silent: true })
-    }, rotationInMs)
-
-    return () => {
-      if (rotationTimeoutRef.current) {
-        clearTimeout(rotationTimeoutRef.current)
-        rotationTimeoutRef.current = null
-      }
-    }
-  }, [enabled, code, expiresAt, generateCode])
+  useEffect(() => {
+    const interval = setInterval(() => {
+      void loadLatestCode({ silent: true })
+    }, 30_000)
+    return () => clearInterval(interval)
+  }, [loadLatestCode])
 
   return (
     <section id="pickup-code-section" data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
@@ -255,52 +116,42 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup & Collection</p>
-            <p className="mt-1 text-sm text-slate-600">
-              Activate when you are ready. While active, a new secure code is generated every hour.
-            </p>
+            <p className="mt-1 text-sm text-slate-600">A secure code appears here automatically after the crèche marks your child present at check-in.</p>
           </div>
           <Button
             type="button"
-            onClick={() => void (enabled ? deactivatePickup() : activatePickup())}
-            disabled={toggling || generating}
-            variant={enabled ? 'outline' : 'default'}
-            className={
-              enabled
-                ? 'h-10 rounded-2xl border-slate-300 px-4 text-sm font-semibold'
-                : 'h-10 rounded-2xl bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700'
-            }
+            onClick={() => void loadLatestCode({ silent: true })}
+            disabled={loading || refreshing}
+            variant="outline"
+            className="h-10 rounded-2xl border-slate-300 px-4 text-sm font-semibold"
           >
-            {toggling ? 'Please wait...' : enabled ? 'Deactivate Pickup Code' : 'Activate Pickup Code'}
+            {refreshing ? 'Refreshing...' : 'Refresh code'}
           </Button>
         </div>
 
-        {enabled ? (
+        {loading ? (
+          <div className="mt-3 animate-pulse rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="h-4 w-32 rounded-xl bg-slate-200" />
+            <div className="mt-3 h-10 w-44 rounded-xl bg-slate-200" />
+            <div className="mt-2 h-3 w-64 rounded-xl bg-slate-100" />
+          </div>
+        ) : code ? (
           <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
-            {code ? (
-              <>
-                <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Active Code</p>
-                <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Show this to the crèche staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
-                </p>
-                <p className="mt-1 text-[11px] font-medium text-cyan-700">Auto-refresh stays on only while activated.</p>
-              </>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-sm text-slate-700">No active code yet.</p>
-                <Button
-                  type="button"
-                  onClick={() => void generateCode()}
-                  disabled={generating}
-                  className="h-10 rounded-2xl bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700"
-                >
-                  {generating ? 'Generating...' : 'Generate Pickup Code'}
-                </Button>
-              </div>
-            )}
+            <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Active code</p>
+            <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Show this code to the crèche staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
+            </p>
+            {createdAt ? (
+              <p className="mt-1 text-[11px] font-medium text-cyan-700">Generated at {formatDate(createdAt)}</p>
+            ) : null}
           </div>
         ) : (
-          <p className="mt-3 text-xs text-slate-500">Pickup code is currently off.</p>
+          <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Waiting for check-in</p>
+            <p className="mt-1 text-sm text-amber-900">No code yet. Your crèche will trigger this automatically on first attendance check-in.</p>
+            <p className="mt-2 text-xs text-amber-800">No manual activation needed from your side.</p>
+          </div>
         )}
 
         {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}

@@ -6,7 +6,7 @@ type GeneratePickupCodeInput = {
   ecdId: string
   childId: string
   parentId: string
-  generatedByRole: 'parent' | 'centre'
+  generatedByRole: 'centre'
 }
 
 type GeneratePickupCodeResult =
@@ -27,9 +27,8 @@ export async function generatePickupCode(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Not authenticated' }
 
-  // When a parent generates, ensure they can only generate for themselves
-  if (input.generatedByRole === 'parent' && input.parentId !== user.id) {
-    return { success: false, error: 'Unauthorized: parent ID mismatch' }
+  if (input.generatedByRole !== 'centre') {
+    return { success: false, error: 'Pickup code generation is centre-managed only' }
   }
 
   const code = randomSixDigitCode()

@@ -127,10 +127,20 @@ export function MobileCentreDetailsSheet({
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
                 <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-emerald-900">
-                  <CheckCircle2 size={14} />
-                  {isRegistered ? 'DSD registered' : 'DSD registration in progress'}
-                </p>
+                <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
+                  <li className="flex items-center gap-2 font-semibold">
+                    <CheckCircle2 size={14} className="text-emerald-700" />
+                    {isRegistered ? 'DSD registered' : 'DSD registration in progress'}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <ShieldCheck size={14} className="text-emerald-700" />
+                    Safety and compliance oversight expected.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <BadgeCheck size={14} className="text-emerald-700" />
+                    Subsidy readiness supports quality operations.
+                  </li>
+                </ul>
                 <p className="mt-2 text-xs text-emerald-900/90">
                   Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
                 </p>
@@ -158,7 +168,7 @@ export function MobileCentreDetailsSheet({
                   href={claimHref}
                   className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  This is my crèche - Claim &amp; Update
+                  This is my creche - Claim &amp; Update
                 </Link>
               ) : null}
 

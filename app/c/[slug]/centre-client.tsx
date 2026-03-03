@@ -236,7 +236,7 @@ export function CentreClient({ slug }: { slug: string }) {
           <div className="lg:col-span-2 space-y-16">
             
             {/* About Section */}
-            <Section id="about" emoji="👋" title="About Our Centre">
+            <Section id="about" title="About Our Centre">
               <div className="space-y-6">
                 <p className="text-xl leading-relaxed font-medium text-slate-700">
                   {centre.description || 'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'}
@@ -255,7 +255,7 @@ export function CentreClient({ slug }: { slug: string }) {
             </Section>
 
             {/* Programs Section */}
-            <Section id="programs" emoji="🎓" title="Programmes & Learning">
+            <Section id="programs" title="Programmes & Learning">
               <div className="grid gap-6 sm:grid-cols-2">
                 <ModernCard className="flex flex-col gap-4 border-l-4 border-l-[#065A82]">
                   <div className="h-12 w-12 rounded-2xl bg-[#065A82]/10 flex items-center justify-center text-[#065A82]">
@@ -279,7 +279,7 @@ export function CentreClient({ slug }: { slug: string }) {
             </Section>
 
             {/* Location & Trust */}
-            <Section id="location" emoji="📍" title="Location & Contact">
+            <Section id="location" title="Location & Contact">
               <div className="grid gap-6 sm:grid-cols-2">
                 <ModernCard className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -352,10 +352,20 @@ export function CentreClient({ slug }: { slug: string }) {
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                <p className="mt-2 flex items-center gap-2 text-sm font-bold text-emerald-900">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
-                </p>
+                <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
+                  <li className="flex items-center gap-2 font-semibold">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                    {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-emerald-700" />
+                    Safety and compliance oversight expected.
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <BadgeCheck className="h-4 w-4 text-emerald-700" />
+                    Subsidy readiness supports quality operations.
+                  </li>
+                </ul>
                 <p className="mt-2 text-xs text-emerald-900/90">
                   Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
                 </p>
@@ -383,7 +393,7 @@ export function CentreClient({ slug }: { slug: string }) {
                   href={claimHref}
                   className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  This is my crèche - Claim &amp; Update
+                  This is my creche - Claim &amp; Update
                 </Link>
               ) : null}
 

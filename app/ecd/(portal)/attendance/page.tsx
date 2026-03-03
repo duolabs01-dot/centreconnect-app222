@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 
 type EnrolledApplicationRow = {
   child_id: string | null
+  parent_id: string | null
   children:
     | { id: string; first_name: string | null; last_name: string | null }
     | Array<{ id: string; first_name: string | null; last_name: string | null }>
@@ -39,7 +40,7 @@ export default async function EcdAttendancePage() {
   const [enrolledResult, attendanceResult] = await Promise.all([
     supabase
       .from('applications')
-      .select('child_id,children(id,first_name,last_name)')
+      .select('child_id,parent_id,children(id,first_name,last_name)')
       .eq('ecd_id', ecdId)
       .eq('status', 'enrolled')
       .limit(100),
@@ -70,8 +71,18 @@ export default async function EcdAttendancePage() {
   })
 
   const attendanceByChild: Record<string, { id: string; checked_in: boolean; picked_up: boolean } | null> = {}
+  const parentIdByChild: Record<string, string | null> = {}
   for (const child of enrolledChildren) {
     attendanceByChild[child.id] = null
+    parentIdByChild[child.id] = null
+  }
+  for (const row of enrolledRows) {
+    const child = normalizeOne(row.children)
+    const childId = child?.id ?? row.child_id
+    if (!childId) continue
+    if (!parentIdByChild[childId] && row.parent_id) {
+      parentIdByChild[childId] = row.parent_id
+    }
   }
   for (const row of attendanceRows) {
     if (attendanceByChild[row.child_id] === undefined) continue
@@ -92,6 +103,7 @@ export default async function EcdAttendancePage() {
       <AttendanceClient
         enrolledChildren={enrolledChildren}
         attendanceByChild={attendanceByChild}
+        parentIdByChild={parentIdByChild}
         ecdId={ecdId}
         todayDate={todayDate}
         staffId={user.id}

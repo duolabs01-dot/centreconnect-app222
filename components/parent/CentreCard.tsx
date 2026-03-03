@@ -150,7 +150,7 @@ export default function CentreCard({
             loading="lazy"
           />
 
-          {/* Registration badge — top right */}
+          {/* Registration badge - top right */}
           {is_registered && (
             <div className="centre-card__reg-badge">
               <CheckCircle2 size={12} strokeWidth={2.5} />
@@ -248,6 +248,14 @@ export default function CentreCard({
               <CheckCircle2 size={12} />
               {is_registered ? 'DSD registered' : 'DSD registration in progress'}
             </p>
+            <p className="centre-card__checklist-item">
+              <ShieldCheck size={12} />
+              Safety and compliance oversight expected.
+            </p>
+            <p className="centre-card__checklist-item">
+              <BadgeCheck size={12} />
+              Subsidy readiness supports quality operations.
+            </p>
             <p className="centre-card__checklist-note">
               Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
             </p>
@@ -273,7 +281,7 @@ export default function CentreCard({
 
           {!is_claimed ? (
             <button type="button" className="centre-card__claim-btn" onClick={handleClaimClick}>
-              This is my crèche - Claim &amp; Update
+              This is my creche - Claim &amp; Update
             </button>
           ) : null}
         </div>
@@ -442,6 +450,9 @@ export default function CentreCard({
           color: #14532d;
           font-size: 12px;
           font-weight: 700;
+        }
+        .centre-card__checklist-item + .centre-card__checklist-item {
+          margin-top: 4px;
         }
         .centre-card__checklist-note {
           margin: 6px 0 0 0;
