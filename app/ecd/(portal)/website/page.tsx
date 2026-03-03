@@ -1,6 +1,7 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -115,7 +116,69 @@ function centsToRandInput(cents: number) {
   return (Math.max(0, cents) / 100).toFixed(2)
 }
 
-export default async function EcdWebsitePage() {
+type WebsiteActionStatus =
+  | 'draft-saved'
+  | 'published'
+  | 'unpublished'
+  | 'request-sent'
+  | 'save-error'
+  | 'publish-error'
+  | 'request-error'
+
+const websiteStatusCopy: Record<
+  WebsiteActionStatus,
+  { tone: 'success' | 'error'; title: string; description: string }
+> = {
+  'draft-saved': {
+    tone: 'success',
+    title: 'Draft saved',
+    description: 'Your website draft changes were saved successfully.',
+  },
+  published: {
+    tone: 'success',
+    title: 'Website published',
+    description: 'Your public crèche page is now live for parents.',
+  },
+  unpublished: {
+    tone: 'success',
+    title: 'Website unpublished',
+    description: 'Your public crèche page is now hidden from parents.',
+  },
+  'request-sent': {
+    tone: 'success',
+    title: 'Request sent',
+    description: 'Your custom website request was sent to support.',
+  },
+  'save-error': {
+    tone: 'error',
+    title: 'Could not save draft',
+    description: 'Please try again. If the issue continues, contact support.',
+  },
+  'publish-error': {
+    tone: 'error',
+    title: 'Could not update publish status',
+    description: 'Please try again. If the issue continues, contact support.',
+  },
+  'request-error': {
+    tone: 'error',
+    title: 'Could not send request',
+    description: 'Please try again. If the issue continues, contact support.',
+  },
+}
+
+export default async function EcdWebsitePage({
+  searchParams,
+}: {
+  searchParams?: { status?: string | string[] }
+}) {
+  const rawStatus = searchParams?.status
+  const status =
+    typeof rawStatus === 'string'
+      ? rawStatus
+      : Array.isArray(rawStatus)
+        ? rawStatus[0]
+        : null
+  const statusMeta = status && status in websiteStatusCopy ? websiteStatusCopy[status as WebsiteActionStatus] : null
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const [{ data: centre }, { data: contentRows }, { data: subscription }] = await Promise.all([
     supabase
@@ -174,7 +237,7 @@ export default async function EcdWebsitePage() {
           ? 'exact'
           : 'range'
 
-    await session.supabase
+    const { error: centreUpdateError } = await session.supabase
       .from('ecd_centres')
       .update({
         tagline: tagline || null,
@@ -187,8 +250,11 @@ export default async function EcdWebsitePage() {
         updated_at: new Date().toISOString(),
       })
       .eq('id', session.ecdId)
+    if (centreUpdateError) {
+      redirect('/ecd/website?status=save-error')
+    }
 
-    await session.supabase.from('ecd_content').upsert(
+    const { error: contentUpsertError } = await session.supabase.from('ecd_content').upsert(
       [
         {
           ecd_id: session.ecdId,
@@ -211,10 +277,14 @@ export default async function EcdWebsitePage() {
       ],
       { onConflict: 'ecd_id,section' }
     )
+    if (contentUpsertError) {
+      redirect('/ecd/website?status=save-error')
+    }
 
     const { data: updatedCentre } = await session.supabase.from('ecd_centres').select('slug').eq('id', session.ecdId).maybeSingle()
     revalidatePath('/ecd/website')
-    if (updatedCentre?.slug) revalidatePath(`/centre/${updatedCentre.slug}`)
+    if (updatedCentre?.slug) revalidatePath(`/c/${updatedCentre.slug}`)
+    redirect('/ecd/website?status=draft-saved')
   }
 
   async function setWebsitePublished(formData: FormData) {
@@ -223,11 +293,18 @@ export default async function EcdWebsitePage() {
     const nextPublished = String(formData.get('next_published') ?? '') === 'true'
     const nowIso = new Date().toISOString()
 
-    await session.supabase.from('ecd_centres').update({ is_active: nextPublished, updated_at: nowIso }).eq('id', session.ecdId)
+    const { error: publishToggleError } = await session.supabase
+      .from('ecd_centres')
+      .update({ is_active: nextPublished, updated_at: nowIso })
+      .eq('id', session.ecdId)
+    if (publishToggleError) {
+      redirect('/ecd/website?status=publish-error')
+    }
 
     const { data: updatedCentre } = await session.supabase.from('ecd_centres').select('slug').eq('id', session.ecdId).maybeSingle()
     revalidatePath('/ecd/website')
-    if (updatedCentre?.slug) revalidatePath(`/centre/${updatedCentre.slug}`)
+    if (updatedCentre?.slug) revalidatePath(`/c/${updatedCentre.slug}`)
+    redirect(`/ecd/website?status=${nextPublished ? 'published' : 'unpublished'}`)
   }
 
   async function submitWebsiteBrief(formData: FormData) {
@@ -251,7 +328,7 @@ export default async function EcdWebsitePage() {
       .filter(Boolean)
       .join('\n')
 
-    await session.supabase.from('support_tickets').insert({
+    const { error: supportInsertError } = await session.supabase.from('support_tickets').insert({
       ticket_number: ticketNumber,
       ecd_id: session.ecdId,
       created_by: session.user.id,
@@ -261,9 +338,13 @@ export default async function EcdWebsitePage() {
       priority: 2,
       status: 'open',
     })
+    if (supportInsertError) {
+      redirect('/ecd/website?status=request-error')
+    }
 
     revalidatePath('/ecd/website')
     revalidatePath('/ecd/support')
+    redirect('/ecd/website?status=request-sent')
   }
 
   return (
@@ -274,6 +355,19 @@ export default async function EcdWebsitePage() {
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
+      {statusMeta ? (
+        <div
+          className={cn(
+            'mb-6 rounded-2xl border px-4 py-3',
+            statusMeta.tone === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+              : 'border-rose-200 bg-rose-50 text-rose-900'
+          )}
+        >
+          <p className="text-sm font-bold">{statusMeta.title}</p>
+          <p className="mt-1 text-xs font-medium">{statusMeta.description}</p>
+        </div>
+      ) : null}
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <Card className="border-slate-100 bg-white lg:col-span-2 shadow-sm text-slate-900 rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
@@ -439,7 +533,7 @@ export default async function EcdWebsitePage() {
                 <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Save Draft</Button>
                 {centre?.slug ? (
                   <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-                    <a href={`/centre/${centre.slug}`} target="_blank" rel="noreferrer">
+                    <a href={`/c/${centre.slug}?preview=1`} target="_blank" rel="noreferrer">
                       Preview Public Page
                     </a>
                   </Button>
