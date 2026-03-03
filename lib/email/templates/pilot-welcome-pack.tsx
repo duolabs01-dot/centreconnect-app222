@@ -14,6 +14,14 @@ type PilotWelcomePackEmailInput = {
   supportLink: string
 }
 
+type ParentToEcdAdminMigrationEmailInput = {
+  centreName: string
+  contactName: string
+  dashboardLink: string
+  websiteBuilderLink: string
+  applicationsLink: string
+}
+
 const BRAND = {
   bg: '#F4F7FB',
   card: '#FFFFFF',
@@ -176,6 +184,49 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   return renderShell(
     'Pilot Welcome Pack',
     'Launch-ready checklist, links, and onboarding guidance for your pilot workspace.',
+    body
+  )
+}
+
+export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigrationEmailInput) {
+  const body = `
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName},</p>
+    <p style="margin:0 0 12px;font-size:14px;line-height:1.65;">
+      Your CentreConnect account was upgraded from <strong>Parent</strong> to <strong>ECD Admin</strong> for
+      <strong> ${input.centreName}</strong>.
+    </p>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFF7ED;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#9A3412;">Access Update</p>
+          <p style="margin:0;font-size:13px;line-height:1.6;color:#7C2D12;">
+            Parent-side access is now revoked for this email. Use your ECD Admin portal moving forward.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:14px;line-height:1.65;"><strong>ECD Admin privileges now active:</strong></p>
+    <ul style="margin:0 0 14px 18px;padding:0;color:${BRAND.body};font-size:13px;line-height:1.7;">
+      <li>Manage your centre profile, branding, logo, hero image, and gallery.</li>
+      <li>Review incoming applications, make offers, and manage admissions flow.</li>
+      <li>Publish announcements and send parent communications.</li>
+      <li>Access attendance, daily reports, pickup tools, and operations dashboard.</li>
+    </ul>
+    <p style="margin:0 0 14px;font-size:13px;line-height:1.65;color:${BRAND.body};">
+      Parents can discover your listing and apply quickly. Keep your profile and website content up to date to start receiving more applications.
+    </p>
+    <div style="margin:0 0 12px;">${button('Start Now: Go Live & Receive Applications', input.websiteBuilderLink)}</div>
+    <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
+      Next shortcuts:
+      <a href="${input.dashboardLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">Open Dashboard</a>
+      &nbsp;|&nbsp;
+      <a href="${input.applicationsLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">Open Applications</a>
+    </p>
+  `
+
+  return renderShell(
+    'You Are Now an ECD Admin',
+    'Your account role has changed. Move to the ECD portal to launch and manage your centre.',
     body
   )
 }

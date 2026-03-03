@@ -7,6 +7,7 @@ import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
 import {
   renderEcdPasswordSetupEmail,
+  renderParentToEcdAdminMigrationEmail,
   renderPilotWelcomePackEmail,
 } from '@/lib/email/templates/pilot-welcome-pack'
 import { randomBytes } from 'crypto'
@@ -326,6 +327,24 @@ export async function POST(request: Request) {
   )
   if (!setupEmailResult.success) {
     emailWarnings.push(setupEmailResult.error ?? 'Failed to queue password setup email.')
+  }
+
+  if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
+    const migrationEmailHtml = await renderParentToEcdAdminMigrationEmail({
+      centreName: data.name,
+      contactName: data.primaryContactName,
+      dashboardLink: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
+      websiteBuilderLink: `${APP_URL.replace(/\/$/, '')}/ecd/website`,
+      applicationsLink: `${APP_URL.replace(/\/$/, '')}/ecd/applications`,
+    })
+    const migrationEmailResult = await queueEmail(
+      normalizedEmail,
+      `Access updated: You are now ECD Admin for ${data.name}`,
+      migrationEmailHtml
+    )
+    if (!migrationEmailResult.success) {
+      emailWarnings.push(migrationEmailResult.error ?? 'Failed to queue ECD admin migration email.')
+    }
   }
 
   if (isPilotPlan) {
