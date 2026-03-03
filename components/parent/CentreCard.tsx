@@ -4,8 +4,9 @@
 
 'use client'
 
-import type { MouseEvent } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore, BadgeCheck, Circle } from 'lucide-react'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
@@ -68,6 +69,7 @@ export default function CentreCard({
   existingApplicationId,
   existingApplicationStatus,
 }: CentreCardProps) {
+  const router = useRouter()
   const heroImage = getCentreHeroImage(slug, cover_image_url)
   const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
   const operationalStatus = getCentreOperationalStatus()
@@ -103,6 +105,16 @@ export default function CentreCard({
     event.preventDefault()
     event.stopPropagation()
     window.location.href = `/parent/applications/${existingApplicationId}`
+  }
+
+  function openCentreProfile() {
+    router.push(centreHref)
+  }
+
+  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    openCentreProfile()
   }
 
   if (variant === 'compact') {
@@ -169,7 +181,14 @@ export default function CentreCard({
 
   return (
     <>
-      <Link href={centreHref} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
+      <article
+        className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}
+        role="link"
+        tabIndex={0}
+        aria-label={`View ${name}`}
+        onClick={openCentreProfile}
+        onKeyDown={handleCardKeyDown}
+      >
         {/* Cover image */}
         <div className="centre-card__cover">
           <LiteImage
@@ -310,7 +329,7 @@ export default function CentreCard({
             ) : null}
           </div>
 
-          <div className="centre-card__apply-row">
+          <div className="centre-card__apply-row" onClick={(event) => event.stopPropagation()}>
             {hasExistingApplication ? (
               <>
                 <button type="button" className="centre-card__apply-btn centre-card__apply-btn--disabled" disabled>
@@ -333,7 +352,7 @@ export default function CentreCard({
             </button>
           ) : null}
         </div>
-      </Link>
+      </article>
 
       <style jsx>{`
         .centre-card {
@@ -347,6 +366,7 @@ export default function CentreCard({
           transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
                       box-shadow 0.2s ease;
           -webkit-tap-highlight-color: transparent;
+          cursor: pointer;
         }
         .centre-card:active {
           transform: scale(0.98);

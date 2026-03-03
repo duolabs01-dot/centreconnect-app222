@@ -19,6 +19,16 @@ type ParentAppShellProps = {
   children: React.ReactNode
 }
 
+const DESKTOP_PARENT_TABS: Array<{ href: string; label: string }> = [
+  { href: '/parent/dashboard', label: 'Dashboard' },
+  { href: '/directory', label: 'Discover' },
+  { href: '/parent/applications', label: 'Applications' },
+  { href: '/parent/daily-reports', label: 'Daily Reports' },
+  { href: '/parent/report-cards', label: 'Report Cards' },
+  { href: '/parent/notifications', label: 'Notifications' },
+  { href: '/parent/profile', label: 'Profile' },
+]
+
 function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/applications')) return 'My Applications'
   if (pathname.startsWith('/parent/report-cards')) return 'Report Cards'
@@ -48,6 +58,13 @@ function getMobileBackTarget(pathname: string) {
   if (pathname.startsWith('/parent/notifications/')) return '/parent/notifications'
   if (pathname.startsWith('/parent/')) return '/parent/dashboard'
   return '/parent/dashboard'
+}
+
+function isDesktopTabActive(pathname: string, href: string) {
+  if (href === '/directory') {
+    return pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
+  }
+  return pathname === href || pathname.startsWith(`${href}/`)
 }
 
 export function ParentAppShell({ children }: ParentAppShellProps) {
@@ -127,86 +144,118 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
       {/* Premium Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
-          <div className="flex items-center gap-4">
-            {showMobileBack ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={handleMobileBack}
-                className="h-10 w-10 rounded-2xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            ) : null}
-            
-            <BrandMark href="/parent/dashboard" compact className="shrink-0" />
-            
-          </div>
+        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {showMobileBack ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleMobileBack}
+                  className="h-10 w-10 rounded-2xl bg-slate-50 text-slate-600 hover:bg-cyan-50 hover:text-cyan-600 md:hidden"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              ) : null}
 
-          <div className="flex items-center gap-3">
-            {/* Social-media style sign out / User menu */}
-            <div className="relative">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="h-10 rounded-full border-slate-200 bg-white p-1 pl-3 group hover:border-cyan-300 hover:bg-white"
-              >
-                <div className="hidden sm:block text-right">
-                  <p className="text-[11px] font-black text-slate-900 leading-none">{userName}</p>
-                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">Parent Account</p>
-                </div>
-                <div className="h-8 w-8 overflow-hidden rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-xs font-bold text-white shadow-inner">
-                  {avatarUrl ? (
-                    <LiteImage src={avatarUrl} alt={userName} width={32} height={32} className="h-full w-full object-cover" />
-                  ) : (
-                    userName[0].toUpperCase()
-                  )}
-                </div>
-                <ChevronDown className={cn("h-4 w-4 text-slate-400 group-hover:text-slate-600 transition-transform", showUserDropdown && "rotate-180")} />
-              </Button>
+              <BrandMark href="/parent/dashboard" compact className="shrink-0" />
+            </div>
 
-              {showUserDropdown && (
-                <>
-                  <div className="fixed inset-0 z-0" onClick={() => setShowUserDropdown(false)} />
-                  <div className="absolute right-0 z-[60] mt-2 w-56 origin-top-right animate-in zoom-in-95 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-elevation-1)] duration-100">
-                    <div className="px-3 py-2 border-b border-slate-50 mb-1">
-                      <p className="text-xs font-semibold text-slate-400">Signed in</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-sm font-bold text-slate-900">{userName}</p>
-                        {isVerified && <BadgeCheck className="h-4 w-4 text-cyan-500 fill-cyan-50" />}
-                      </div>
-                    </div>
-                    
-                    <Link href="/parent/profile/documents" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">
-                      <FileText className="h-4 w-4" />
-                      Documents Vault
-                    </Link>
-                    
-                    <Link href="/parent/profile/security" onClick={() => setShowUserDropdown(false)} className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50">
-                      <LockIcon className="h-4 w-4" />
-                      Account Security
-                    </Link>
-
-                    <div className="h-px bg-slate-50 my-1" />
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => { handleSignOut(); setShowUserDropdown(false); }}
-                      disabled={isSigningOut}
-                      className="h-9 w-full justify-start rounded-2xl px-3 text-sm font-bold text-rose-600 hover:bg-rose-50"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      {isSigningOut ? 'Ending Session...' : 'Sign Out'}
-                    </Button>
+            <div className="flex items-center gap-3">
+              {/* Social-media style sign out / User menu */}
+              <div className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowUserDropdown(!showUserDropdown)}
+                  className="h-10 rounded-full border-slate-200 bg-white p-1 pl-3 group hover:border-cyan-300 hover:bg-white"
+                >
+                  <div className="hidden sm:block text-right">
+                    <p className="text-[11px] font-black text-slate-900 leading-none">{userName}</p>
+                    <p className="mt-0.5 text-[9px] font-bold uppercase tracking-tighter text-slate-400">Parent Account</p>
                   </div>
-                </>
-              )}
+                  <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 text-xs font-bold text-white shadow-inner">
+                    {avatarUrl ? (
+                      <LiteImage src={avatarUrl} alt={userName} width={32} height={32} className="h-full w-full object-cover" />
+                    ) : (
+                      userName[0].toUpperCase()
+                    )}
+                  </div>
+                  <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform group-hover:text-slate-600', showUserDropdown && 'rotate-180')} />
+                </Button>
+
+                {showUserDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-0" onClick={() => setShowUserDropdown(false)} />
+                    <div className="absolute right-0 z-[60] mt-2 w-56 origin-top-right animate-in zoom-in-95 rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-elevation-1)] duration-100">
+                      <div className="mb-1 border-b border-slate-50 px-3 py-2">
+                        <p className="text-xs font-semibold text-slate-400">Signed in</p>
+                        <div className="mt-1 flex items-center gap-2">
+                          <p className="text-sm font-bold text-slate-900">{userName}</p>
+                          {isVerified && <BadgeCheck className="h-4 w-4 fill-cyan-50 text-cyan-500" />}
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/parent/profile/documents"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Documents Vault
+                      </Link>
+
+                      <Link
+                        href="/parent/profile/security"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                      >
+                        <LockIcon className="h-4 w-4" />
+                        Account Security
+                      </Link>
+
+                      <div className="my-1 h-px bg-slate-50" />
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => {
+                          handleSignOut()
+                          setShowUserDropdown(false)
+                        }}
+                        disabled={isSigningOut}
+                        className="h-9 w-full justify-start rounded-2xl px-3 text-sm font-bold text-rose-600 hover:bg-rose-50"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {isSigningOut ? 'Ending Session...' : 'Sign Out'}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
+
+          <nav className="mt-3 hidden items-center gap-2 overflow-x-auto pb-1 md:flex">
+            {DESKTOP_PARENT_TABS.map((tab) => {
+              const active = isDesktopTabActive(pathname, tab.href)
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  className={cn(
+                    'rounded-2xl border px-3.5 py-2 text-xs font-black uppercase tracking-[0.08em] transition-colors',
+                    active
+                      ? 'border-teal-300 bg-teal-50 text-teal-700'
+                      : 'border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:text-teal-700'
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </nav>
         </div>
       </header>
 

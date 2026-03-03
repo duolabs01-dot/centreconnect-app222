@@ -53,9 +53,72 @@ const TIER_DESCRIPTIONS: Record<PublicTier, string> = {
 }
 
 const TIER_BENEFITS: Record<PublicTier, string[]> = {
-  starter: ['Parent applications in one dashboard', 'Announcements and direct parent messages', 'Professional centre listing'],
-  growth: ['Everything in Starter', 'Attendance and calendar workflows', 'Faster admissions follow-up and reminders'],
-  pro: ['Everything in Growth', 'Website and growth tools', 'Priority onboarding and support'],
+  starter: [
+    'Parent applications in one dashboard',
+    'Announcements and direct parent messages',
+    'Professional centre listing',
+    'Structured child profile intake',
+  ],
+  growth: [
+    'Everything in Starter',
+    'Attendance and calendar workflows',
+    'Faster admissions follow-up and reminders',
+    'Daily operational tracking',
+  ],
+  pro: [
+    'Everything in Growth',
+    'Website and growth tools',
+    'Priority onboarding and support',
+    'Advanced configuration support',
+  ],
+}
+
+const TIER_PACKAGE_DETAILS: Record<
+  PublicTier,
+  { bestFor: string; packageIncludes: string[]; outcomes: string[] }
+> = {
+  starter: {
+    bestFor: 'Community and small centres starting digital admissions.',
+    packageIncludes: [
+      'Public centre profile with branding and contact setup',
+      'Admissions pipeline with status tracking',
+      'Parent messaging and announcements',
+      'Core onboarding guidance',
+    ],
+    outcomes: [
+      'Capture parent interest faster from your listing',
+      'Reduce manual admission follow-up',
+      'Standardize parent communication from day one',
+    ],
+  },
+  growth: {
+    bestFor: 'Growing centres handling more children and daily operations.',
+    packageIncludes: [
+      'Everything in Starter',
+      'Attendance and routine operations workflows',
+      'Daily reporting foundations and reminders',
+      'Enhanced admissions follow-up tooling',
+    ],
+    outcomes: [
+      'Improve daily operations consistency',
+      'Increase conversion from application to enrollment',
+      'Keep teams aligned on child updates and attendance',
+    ],
+  },
+  pro: {
+    bestFor: 'Established centres scaling admissions, operations, and visibility.',
+    packageIncludes: [
+      'Everything in Growth',
+      'Website builder and growth presentation tools',
+      'Priority onboarding and support guidance',
+      'Advanced implementation support',
+    ],
+    outcomes: [
+      'Operate admissions and centre visibility in one place',
+      'Present a stronger public profile to parents',
+      'Move faster with high-touch rollout support',
+    ],
+  },
 }
 
 const PUBLIC_TO_INTERNAL_TIER: Record<PublicTier, InternalTier> = {
@@ -409,6 +472,18 @@ export default function EcdRegisterPage() {
                     <li key={benefit}>- {benefit}</li>
                   ))}
                 </ul>
+                <div className="mt-3 rounded-xl border border-slate-200 bg-white p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Best for</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-700">
+                    {TIER_PACKAGE_DETAILS[form.selectedTier].bestFor}
+                  </p>
+                  <p className="mt-2 text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Package includes</p>
+                  <ul className="mt-1 space-y-1 text-[11px] text-slate-600">
+                    {TIER_PACKAGE_DETAILS[form.selectedTier].packageIncludes.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
               {!hasPresetPlan ? (
                 <p className="text-xs text-muted-foreground">
@@ -614,9 +689,17 @@ export default function EcdRegisterPage() {
                             <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
                             <p className="text-[11px] font-medium text-muted-foreground">per month</p>
                             <p className="mt-1 text-xs text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
+                            <p className="mt-1 text-[11px] font-semibold text-slate-700">
+                              {TIER_PACKAGE_DETAILS[tier].bestFor}
+                            </p>
                             <ul className="mt-2 space-y-1 text-[11px] text-slate-600">
                               {TIER_BENEFITS[tier].map((benefit) => (
                                 <li key={benefit}>- {benefit}</li>
+                              ))}
+                            </ul>
+                            <ul className="mt-2 space-y-1 text-[10px] text-slate-500">
+                              {TIER_PACKAGE_DETAILS[tier].outcomes.map((item) => (
+                                <li key={item}>- {item}</li>
                               ))}
                             </ul>
                           </button>
@@ -659,6 +742,14 @@ export default function EcdRegisterPage() {
                   <p className="text-muted-foreground">
                     Recommended package: {recommendedTier === 'starter' ? 'Starter' : recommendedTier === 'growth' ? 'Growth' : 'Pro'}
                   </p>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-500">Selected package includes</p>
+                    <ul className="mt-1 space-y-1 text-xs text-slate-600">
+                      {TIER_PACKAGE_DETAILS[form.selectedTier].packageIncludes.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  </div>
                   <p className="text-muted-foreground">Key needs: {form.keyNeeds.join(', ')}</p>
 
                   <div className="space-y-2 pt-2">

@@ -27,7 +27,10 @@ type Plan = {
   price: string
   cadence: string
   description: string
+  bestFor: string
   features: string[]
+  outcomes: string[]
+  packageIncludes: string[]
   cta: string
   highlighted?: boolean
 }
@@ -39,10 +42,22 @@ const plans: Plan[] = [
     price: 'R199',
     cadence: '/month',
     description: 'Best for centres that want to fill open spaces quickly.',
+    bestFor: 'Community and small centres starting digital admissions.',
     features: [
       'Get listed where parents are searching',
       'Accept online applications in one inbox',
       'Send announcements and direct parent messages',
+    ],
+    outcomes: [
+      'Reduce missed parent leads with one admissions inbox',
+      'Respond to applications faster with structured child profiles',
+      'Keep parent communication professional and consistent',
+    ],
+    packageIncludes: [
+      'Public centre profile with logo, photos, and contact details',
+      'Application pipeline with status tracking',
+      'In-app parent notifications and announcement delivery',
+      'Basic admissions reporting and support setup',
     ],
     cta: 'Choose Starter',
   },
@@ -52,10 +67,22 @@ const plans: Plan[] = [
     price: 'R299',
     cadence: '/month',
     description: 'For busy centres that need strong daily operations.',
+    bestFor: 'Growing centres managing multiple classrooms and higher volume.',
     features: [
       'Everything in Starter',
       'Attendance and calendar in one workflow',
       'Faster follow-up on pending applications',
+    ],
+    outcomes: [
+      'Track attendance daily with less admin overhead',
+      'Improve conversion from application to enrollment',
+      'Keep parent updates predictable with operational workflows',
+    ],
+    packageIncludes: [
+      'Everything in Starter',
+      'Attendance register and classroom routines',
+      'Daily reports and pickup workflow foundations',
+      'Expanded workflow automations for applications and reminders',
     ],
     cta: 'Choose Growth',
     highlighted: true,
@@ -66,10 +93,22 @@ const plans: Plan[] = [
     price: 'R499',
     cadence: '/month',
     description: 'For centres that want full control and premium support.',
+    bestFor: 'Established centres scaling operations and visibility.',
     features: [
       'Everything in Growth',
       'Website and growth tools',
       'Priority support and onboarding help',
+    ],
+    outcomes: [
+      'Run admissions, operations, and website from one system',
+      'Present a stronger digital brand to parents discovering your centre',
+      'Launch faster with priority onboarding guidance',
+    ],
+    packageIncludes: [
+      'Everything in Growth',
+      'Website builder with managed sections and media',
+      'Advanced operational configuration and support priority',
+      'Growth-focused setup guidance for admissions performance',
     ],
     cta: 'Choose Pro',
   },
@@ -180,6 +219,26 @@ export default async function ForCentresPage() {
                     <li key={feature}>- {feature}</li>
                   ))}
                 </ul>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Best For</p>
+                  <p className="mt-1 text-xs font-semibold text-slate-700">{plan.bestFor}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Package Includes</p>
+                  <ul className="space-y-1 text-xs text-slate-600">
+                    {plan.packageIncludes.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Expected Outcomes</p>
+                  <ul className="space-y-1 text-xs text-slate-600">
+                    {plan.outcomes.map((item) => (
+                      <li key={item}>- {item}</li>
+                    ))}
+                  </ul>
+                </div>
                 <Button
                   asChild
                   className={`h-11 w-full rounded-2xl text-sm font-bold ${
@@ -192,6 +251,9 @@ export default async function ForCentresPage() {
             </Card>
           ))}
         </div>
+        <p className="mt-4 text-xs text-slate-500">
+          Pricing shown is monthly platform subscription pricing per centre. Final onboarding details are confirmed during registration.
+        </p>
       </Section>
 
       <Section id="active-centres" className="py-10 md:py-12" containerClassName="cc-section">
