@@ -223,7 +223,7 @@ export default async function ForCentresPage() {
                       {statusLabel(centre.is_registered)}
                     </span>
                     <Button variant="outline" size="sm" asChild className="h-9 rounded-2xl border-border bg-card px-3 text-xs font-semibold">
-                      <Link href={`/centre/${centre.slug}`}>View profile</Link>
+                      <Link href={`/c/${centre.slug}`}>View profile</Link>
                     </Button>
                   </div>
                 </CardContent>

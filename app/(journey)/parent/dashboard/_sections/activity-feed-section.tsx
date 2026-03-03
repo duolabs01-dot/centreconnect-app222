@@ -67,7 +67,7 @@ export async function ActivityFeedSection() {
                   {activity.childLastName ? ` ${activity.childLastName}` : ''}&apos;s application to{' '}
                   {activity.centreSlug ? (
                     <Link
-                      href={`/centre/${activity.centreSlug}`}
+                      href={`/c/${activity.centreSlug}`}
                       className="underline decoration-slate-300 underline-offset-2"
                     >
                       {activity.centreName}

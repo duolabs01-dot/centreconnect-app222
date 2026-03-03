@@ -36,7 +36,7 @@ export async function SuggestedCentresSection() {
                 <p className="mt-1 text-xs text-slate-600">{centre.suburb ?? 'Suburb not listed'}</p>
               </div>
               <Button size="sm" variant="outline" asChild>
-                <Link href={`/centre/${centre.slug}`}>View crèche</Link>
+                <Link href={`/c/${centre.slug}`}>View crèche</Link>
               </Button>
             </div>
           ))

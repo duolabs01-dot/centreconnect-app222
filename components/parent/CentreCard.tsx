@@ -104,7 +104,7 @@ export default function CentreCard({
 
   if (variant === 'compact') {
     return (
-      <Link href={`/centre/${slug}`} className="centre-card centre-card--compact">
+      <Link href={`/c/${slug}`} className="centre-card centre-card--compact">
         <div className="centre-card__logo-sm">
           {logo_url ? (
             <LiteImage src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" sizes="40px" />
@@ -166,7 +166,7 @@ export default function CentreCard({
 
   return (
     <>
-      <Link href={`/centre/${slug}`} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
+      <Link href={`/c/${slug}`} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
         {/* Cover image */}
         <div className="centre-card__cover">
           <LiteImage

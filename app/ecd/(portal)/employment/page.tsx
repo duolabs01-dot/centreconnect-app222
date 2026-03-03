@@ -447,7 +447,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
         {centre?.slug ? (
           <div className="flex justify-start">
             <Button asChild variant="outline" className={OUTLINE_BUTTON_CLASS}>
-              <Link href={`/centre/${centre.slug}`}>View your public jobs section</Link>
+              <Link href={`/c/${centre.slug}`}>View your public jobs section</Link>
             </Button>
           </div>
         ) : null}

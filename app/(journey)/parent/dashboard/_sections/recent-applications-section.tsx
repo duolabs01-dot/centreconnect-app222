@@ -84,7 +84,7 @@ export async function RecentApplicationsSection() {
                 <StatusBadge status={mapApplicationStatusToBadge(application.status)} />
                 {application.centreSlug ? (
                   <Button size="sm" variant="ghost" asChild>
-                    <Link href={`/centre/${application.centreSlug}`}>View crèche</Link>
+                    <Link href={`/c/${application.centreSlug}`}>View crèche</Link>
                   </Button>
                 ) : null}
               </div>

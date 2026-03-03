@@ -170,7 +170,7 @@ export function ApplyForm({
         <Button type="submit" disabled={submitting}>
           {submitting ? 'Submitting...' : 'Submit Application'}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.push(`/centre/${centreSlug}`)}>
+        <Button type="button" variant="outline" onClick={() => router.push(`/c/${centreSlug}`)}>
           Back
         </Button>
       </div>
