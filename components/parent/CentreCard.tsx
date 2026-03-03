@@ -79,6 +79,9 @@ export default function CentreCard({
     hasPriorityListing ? 'Priority Listing' : null,
   ].filter(Boolean) as string[]
 
+  const encodedSlug = encodeURIComponent(slug)
+  const centreHref = `/c/${encodedSlug}`
+  const applyHref = `/apply/${encodedSlug}`
   const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(slug)}`
   const hasExistingApplication = Boolean(existingApplicationId)
   const applicationStatusLabel = formatStatusLabel(existingApplicationStatus)
@@ -92,7 +95,7 @@ export default function CentreCard({
   function handleApplyClick(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     event.stopPropagation()
-    window.location.href = `/apply/${slug}`
+    window.location.href = applyHref
   }
 
   function handleViewStatusClick(event: MouseEvent<HTMLButtonElement>) {
@@ -104,7 +107,7 @@ export default function CentreCard({
 
   if (variant === 'compact') {
     return (
-      <Link href={`/c/${slug}`} className="centre-card centre-card--compact">
+      <Link href={centreHref} className="centre-card centre-card--compact">
         <div className="centre-card__logo-sm">
           {logo_url ? (
             <LiteImage src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" sizes="40px" />
@@ -166,7 +169,7 @@ export default function CentreCard({
 
   return (
     <>
-      <Link href={`/c/${slug}`} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
+      <Link href={centreHref} className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}>
         {/* Cover image */}
         <div className="centre-card__cover">
           <LiteImage

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { 
   CheckCircle2, 
@@ -44,9 +43,9 @@ type Centre = {
   email: string | null
   phone: string | null
   address: string | null
-  suburb: string
-  city: string
-  province: string
+  suburb: string | null
+  city: string | null
+  province: string | null
   age_groups: string[] | null
   logo_url: string | null
   cover_image_url: string | null
@@ -144,95 +143,102 @@ export function CentreClient({ slug }: { slug: string }) {
     async function fetchCentre() {
       const supabase = createClient()
       let resolvedCentre: Centre | null = null
-      
-      // Get centre data
-      const { data, error } = await supabase
-        .from('ecd_centres')
-        .select('*')
-        .eq('slug', slug)
-        .single()
 
-      if (error || !data) {
-        // Try fallback table if needed
-        const { data: fallbackData } = await supabase
-          .from('public_ecd_centres')
+      try {
+        // Primary fetch from centres table, fallback to public view.
+        const { data: centreData } = await supabase
+          .from('ecd_centres')
           .select('*')
           .eq('slug', slug)
           .maybeSingle()
-        
-        if (fallbackData) {
-          resolvedCentre = fallbackData as any
+
+        if (centreData) {
+          resolvedCentre = centreData as Centre
         } else {
-          resolvedCentre = null
+          const { data: fallbackRows } = await supabase
+            .from('public_ecd_centres')
+            .select('*')
+            .eq('slug', slug)
+            .limit(1)
+
+          resolvedCentre = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
         }
-      } else {
-        resolvedCentre = data as Centre
-      }
-      setCentre(resolvedCentre)
 
-      if (resolvedCentre?.id) {
-        const { data: contentRows } = await supabase
-          .from('ecd_content')
-          .select('section,content_blocks')
-          .eq('ecd_id', resolvedCentre.id)
-          .in('section', ['about', 'programs', 'gallery', 'website_sections'])
+        setCentre(resolvedCentre)
 
-        const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
-        const sections = Array.isArray(sectionMap.get('website_sections'))
-          ? (sectionMap.get('website_sections') as string[])
-          : DEFAULT_VISIBLE_SECTIONS
+        if (resolvedCentre?.id) {
+          const { data: contentRows } = await supabase
+            .from('ecd_content')
+            .select('section,content_blocks')
+            .eq('ecd_id', resolvedCentre.id)
+            .in('section', ['about', 'programs', 'gallery', 'website_sections'])
 
-        setWebsiteContent({
-          aboutText: fromParagraphBlocks(sectionMap.get('about')),
-          programCards: fromProgramBlocks(sectionMap.get('programs')),
-          galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
-          visibleSections: sections,
-        })
-      } else {
+          const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
+          const sections = Array.isArray(sectionMap.get('website_sections'))
+            ? (sectionMap.get('website_sections') as string[])
+            : DEFAULT_VISIBLE_SECTIONS
+
+          setWebsiteContent({
+            aboutText: fromParagraphBlocks(sectionMap.get('about')),
+            programCards: fromProgramBlocks(sectionMap.get('programs')),
+            galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
+            visibleSections: sections,
+          })
+        } else {
+          setWebsiteContent({
+            aboutText: '',
+            programCards: [],
+            galleryUrls: [],
+            visibleSections: DEFAULT_VISIBLE_SECTIONS,
+          })
+        }
+
+        // Get user role if logged in
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (user) {
+          const [{ data: profile }, existingApplicationResult] = await Promise.all([
+            supabase.from('user_profiles').select('role').eq('id', user.id).single(),
+            resolvedCentre?.id
+              ? supabase
+                  .from('applications')
+                  .select('id,status')
+                  .eq('parent_id', user.id)
+                  .eq('ecd_id', resolvedCentre.id)
+                  .order('created_at', { ascending: false })
+                  .limit(1)
+                  .maybeSingle()
+              : Promise.resolve({ data: null }),
+          ])
+
+          setUserRole(profile?.role ?? null)
+          setExistingApplication(
+            existingApplicationResult?.data?.id
+              ? {
+                  id: existingApplicationResult.data.id,
+                  status: existingApplicationResult.data.status ?? null,
+                }
+              : null
+          )
+        } else {
+          setUserRole(null)
+          setExistingApplication(null)
+        }
+      } catch (error) {
+        console.error('[centre-client] Failed to load centre details:', error)
+        setCentre(null)
         setWebsiteContent({
           aboutText: '',
           programCards: [],
           galleryUrls: [],
           visibleSections: DEFAULT_VISIBLE_SECTIONS,
         })
-      }
-
-      // Get user role if logged in
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const [{ data: profile }, existingApplicationResult] = await Promise.all([
-          supabase
-            .from('user_profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single(),
-          resolvedCentre?.id
-            ? supabase
-                .from('applications')
-                .select('id,status')
-                .eq('parent_id', user.id)
-                .eq('ecd_id', resolvedCentre.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle()
-            : Promise.resolve({ data: null }),
-        ])
-
-        setUserRole(profile?.role ?? null)
-        setExistingApplication(
-          existingApplicationResult?.data?.id
-            ? {
-                id: existingApplicationResult.data.id,
-                status: existingApplicationResult.data.status ?? null,
-              }
-            : null
-        )
-      } else {
         setUserRole(null)
         setExistingApplication(null)
+      } finally {
+        setLoading(false)
       }
-      
-      setLoading(false)
     }
 
     fetchCentre()
@@ -246,7 +252,28 @@ export function CentreClient({ slug }: { slug: string }) {
     )
   }
 
-  if (!centre) return notFound()
+  if (!centre) {
+    return (
+      <main className="min-h-screen bg-[#F8F9FA] py-16">
+        <Container className="max-w-2xl">
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">Centre profile unavailable</h1>
+            <p className="mt-3 text-sm font-medium text-slate-600">
+              We could not load this centre right now. Please return to Discover and try again.
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/directory"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-black text-white"
+              >
+                Back to Discover
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </main>
+    )
+  }
 
   const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
   const operationalStatus = getCentreOperationalStatus()

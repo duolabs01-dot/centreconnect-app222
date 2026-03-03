@@ -36,6 +36,10 @@ function isTruthyPreviewFlag(value: string | string[] | undefined) {
   return normalized === '1' || normalized === 'true'
 }
 
+function isInactiveCentre(value: boolean | null | undefined) {
+  return value === false
+}
+
 export default async function CentrePage({
   params,
   searchParams,
@@ -55,11 +59,11 @@ export default async function CentrePage({
   }
 
   const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
-  if (!centre.is_active && !previewRequested) {
+  if (isInactiveCentre(centre.is_active) && !previewRequested) {
     notFound()
   }
 
-  if (!centre.is_active && previewRequested) {
+  if (isInactiveCentre(centre.is_active) && previewRequested) {
     const {
       data: { user },
     } = await supabase.auth.getUser()

@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
 
+const TERMS_VERSION = '2026-02-19'
+
 export default function RegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -24,6 +26,7 @@ export default function RegisterPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
 
@@ -78,6 +81,11 @@ export default function RegisterPage() {
       return
     }
 
+    if (!acceptedTerms) {
+      toast.error('Please accept the Terms of Use to continue')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -91,6 +99,8 @@ export default function RegisterPage() {
             role: 'parent_user',
             full_name: formData.fullName,
             phone: formData.phone,
+            accepted_terms_at: new Date().toISOString(),
+            terms_version: TERMS_VERSION,
           },
         },
       })
@@ -118,6 +128,11 @@ export default function RegisterPage() {
   }
 
   async function handleGoogleSignUp() {
+    if (!acceptedTerms) {
+      toast.error('Please accept the Terms of Use to continue')
+      return
+    }
+
     setGoogleLoading(true)
     try {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -251,8 +266,27 @@ export default function RegisterPage() {
                   </button>
                 </div>
               </div>
-              
-              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98] mt-4" disabled={loading}>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <label htmlFor="acceptTerms" className="flex items-start gap-3">
+                  <input
+                    id="acceptTerms"
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                  />
+                  <span className="text-xs font-medium leading-relaxed text-slate-600">
+                    I agree to the{' '}
+                    <Link href="/terms" target="_blank" className="font-bold text-cyan-700 underline underline-offset-2">
+                      Terms of Use
+                    </Link>
+                    .
+                  </span>
+                </label>
+              </div>
+               
+              <Button type="submit" className="h-12 w-full bg-slate-900 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg hover:bg-slate-800 transition-all active:scale-[0.98] mt-4" disabled={loading || !acceptedTerms}>
                 {loading ? 'Safeguarding...' : 'Sign up'}
               </Button>
             </form>
@@ -271,7 +305,7 @@ export default function RegisterPage() {
               variant="outline"
               className="h-12 w-full bg-white border-slate-200 text-slate-700 font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm"
               onClick={handleGoogleSignUp}
-              disabled={googleLoading || loading}
+              disabled={googleLoading || loading || !acceptedTerms}
             >
               {googleLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                 <>
