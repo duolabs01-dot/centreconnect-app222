@@ -26,6 +26,9 @@ const createCentreSchema = z.object({
   tier: z.enum(['pilot', 'basic', 'standard', 'premium']).default('basic'),
   contractSigned: z.boolean(),
   onboardingFeePaid: z.boolean(),
+  allowExistingEmailMigration: z.boolean().optional().default(false),
+  confirmAdminRoleMigration: z.boolean().optional().default(false),
+  confirmParentAccessRevocation: z.boolean().optional().default(false),
 })
 
 function toLockedResetUrl(email: string) {
@@ -56,6 +59,24 @@ async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdmi
   return { link: fallback, error: result.error?.message ?? 'Password setup link generation failed.' }
 }
 
+function isEmailAlreadyRegisteredError(message?: string | null) {
+  const value = (message ?? '').toLowerCase()
+  return value.includes('already been registered') || value.includes('already registered') || value.includes('already exists')
+}
+
+async function findAuthUserIdByEmail(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  const { data, error } = await adminClient
+    .schema('auth')
+    .from('users')
+    .select('id,email')
+    .ilike('email', email)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return null
+  return data?.id ?? null
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -77,6 +98,39 @@ export async function POST(request: Request) {
   const isPilotPlan = data.tier === 'pilot'
   const normalizedTier = isPilotPlan ? 'basic' : data.tier
   const normalizedMonthlyPrice = isPilotPlan ? 0 : data.monthlyPrice
+  const existingAuthUserId = await findAuthUserIdByEmail(adminClient, normalizedEmail)
+
+  const { data: existingProfile } = existingAuthUserId
+    ? await adminClient
+        .from('user_profiles')
+        .select('id,role')
+        .eq('id', existingAuthUserId)
+        .maybeSingle()
+    : { data: null as { id: string; role: string | null } | null }
+
+  const existingRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
+  let resolvedExistingRole = existingRole
+  let reusedExistingUser = Boolean(existingAuthUserId)
+  const migrationConfirmed =
+    data.allowExistingEmailMigration && data.confirmAdminRoleMigration && data.confirmParentAccessRevocation
+
+  if (existingAuthUserId && !migrationConfirmed) {
+    return NextResponse.json(
+      {
+        error:
+          'This email is already registered. Confirm migration to continue. This will force the user role to ECD Admin and revoke parent access.',
+        code: 'existing_user_confirmation_required',
+        conflict: {
+          email: normalizedEmail,
+          existingRole,
+          existingUserId: existingAuthUserId,
+          willSetRole: 'ecd_admin',
+          parentAccessWillBeRevoked: existingRole === 'parent_user',
+        },
+      },
+      { status: 409 }
+    )
+  }
 
   const { data: centre, error: centreError } = await adminClient
     .from('ecd_centres')
@@ -102,32 +156,87 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: centreError.message }, { status: 400 })
   }
 
-  const tempPassword = `Cc!${randomBytes(16).toString('base64url')}a1`
+  let adminUserId: string | null = existingAuthUserId
+  let createdNewAuthUser = false
 
-  const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
-    email: normalizedEmail,
-    password: tempPassword,
-    email_confirm: true,
-  })
+  if (!adminUserId) {
+    const tempPassword = `Cc!${randomBytes(16).toString('base64url')}a1`
 
-  if (authError) {
+    const { data: authUser, error: authError } = await adminClient.auth.admin.createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      email_confirm: true,
+    })
+
+    if (authError) {
+      if (isEmailAlreadyRegisteredError(authError.message)) {
+        const fallbackExistingUserId = await findAuthUserIdByEmail(adminClient, normalizedEmail)
+        const { data: fallbackExistingProfile } = fallbackExistingUserId
+          ? await adminClient
+              .from('user_profiles')
+              .select('id,role')
+              .eq('id', fallbackExistingUserId)
+              .maybeSingle()
+          : { data: null as { id: string; role: string | null } | null }
+
+        const fallbackRole = typeof fallbackExistingProfile?.role === 'string'
+          ? fallbackExistingProfile.role
+          : resolvedExistingRole
+        resolvedExistingRole = fallbackRole
+        if (fallbackExistingUserId && migrationConfirmed) {
+          adminUserId = fallbackExistingUserId
+          reusedExistingUser = true
+        } else {
+          await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+          return NextResponse.json(
+            {
+              error:
+                'This email is already registered. Confirm migration to continue. This will force the user role to ECD Admin and revoke parent access.',
+              code: 'existing_user_confirmation_required',
+              conflict: {
+                email: normalizedEmail,
+                existingRole: fallbackRole,
+                existingUserId: fallbackExistingUserId ?? null,
+                willSetRole: 'ecd_admin',
+                parentAccessWillBeRevoked: fallbackRole === 'parent_user',
+              },
+            },
+            { status: 409 }
+          )
+        }
+      } else {
+        await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+        return NextResponse.json(
+          { error: `Failed to create primary admin user: ${authError.message}` },
+          { status: 500 }
+        )
+      }
+    } else {
+      adminUserId = authUser.user.id
+      createdNewAuthUser = true
+    }
+  }
+
+  if (!adminUserId) {
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
-      { error: `Failed to create primary admin user: ${authError.message}` },
+      { error: 'Failed to resolve primary admin account for tenant provisioning.' },
       { status: 500 }
     )
   }
 
-  const { error: profileError } = await adminClient.from('user_profiles').insert({
-    id: authUser.user.id,
+  const { error: profileError } = await adminClient.from('user_profiles').upsert({
+    id: adminUserId,
     full_name: data.primaryContactName,
     email: normalizedEmail,
     phone: data.phone,
     role: 'ecd_admin',
-  })
+  }, { onConflict: 'id' })
 
   if (profileError) {
-    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    if (createdNewAuthUser) {
+      await adminClient.auth.admin.deleteUser(adminUserId)
+    }
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
       { error: `Failed to create primary admin profile: ${profileError.message}` },
@@ -135,15 +244,18 @@ export async function POST(request: Request) {
     )
   }
 
-  const { error: ecdAdminError } = await adminClient.from('ecd_admins').insert({
+  const { error: ecdAdminError } = await adminClient.from('ecd_admins').upsert({
     ecd_id: centre.id,
-    user_id: authUser.user.id,
+    user_id: adminUserId,
     role: 'ecd_admin',
-  })
+    accepted_at: new Date().toISOString(),
+  }, { onConflict: 'ecd_id,user_id' })
 
   if (ecdAdminError) {
-    await adminClient.auth.admin.deleteUser(authUser.user.id)
-    await adminClient.from('user_profiles').delete().eq('id', authUser.user.id)
+    if (createdNewAuthUser) {
+      await adminClient.auth.admin.deleteUser(adminUserId)
+      await adminClient.from('user_profiles').delete().eq('id', adminUserId)
+    }
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
       { error: `Failed to link ECD admin to centre: ${ecdAdminError.message}` },
@@ -159,9 +271,11 @@ export async function POST(request: Request) {
   })
 
   if (subscriptionError) {
-    await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', authUser.user.id)
-    await adminClient.from('user_profiles').delete().eq('id', authUser.user.id)
-    await adminClient.auth.admin.deleteUser(authUser.user.id)
+    await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', adminUserId)
+    if (createdNewAuthUser) {
+      await adminClient.from('user_profiles').delete().eq('id', adminUserId)
+      await adminClient.auth.admin.deleteUser(adminUserId)
+    }
     await adminClient.from('ecd_centres').delete().eq('id', centre.id)
     return NextResponse.json(
       {
@@ -186,6 +300,10 @@ export async function POST(request: Request) {
       monthlyPrice: normalizedMonthlyPrice,
       primaryContactEmail: normalizedEmail,
       isPilotPlan,
+      migratedExistingUser: reusedExistingUser,
+      previousRole: resolvedExistingRole,
+      roleForcedTo: 'ecd_admin',
+      parentAccessRevoked: reusedExistingUser && resolvedExistingRole === 'parent_user',
     },
   })
   const emailWarnings: string[] = []
@@ -248,6 +366,8 @@ export async function POST(request: Request) {
       centre,
       createdBy: platformAdmin.userId,
       pilot: isPilotPlan,
+      migratedExistingUser: reusedExistingUser,
+      previousRole: resolvedExistingRole,
       warnings: emailWarnings.length > 0 ? emailWarnings : undefined,
     },
     { status: 201 }

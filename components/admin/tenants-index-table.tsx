@@ -45,6 +45,14 @@ type TenantsIndexTableProps = {
   tenants: TenantRow[]
 }
 
+type ExistingUserConflict = {
+  email?: string
+  existingRole?: string | null
+  existingUserId?: string | null
+  willSetRole?: string
+  parentAccessWillBeRevoked?: boolean
+}
+
 const TIER_MONTHLY_PRICE: Record<'pilot' | 'basic' | 'standard' | 'premium', number> = {
   pilot: 0,
   basic: 199,
@@ -113,6 +121,12 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
     tier: 'pilot',
     contractSigned: false,
     onboardingFeePaid: false,
+  })
+  const [existingUserConflict, setExistingUserConflict] = useState<ExistingUserConflict | null>(null)
+  const [migrationConfirmOpen, setMigrationConfirmOpen] = useState(false)
+  const [migrationChecks, setMigrationChecks] = useState({
+    confirmRoleMigration: false,
+    confirmParentAccessRevocation: false,
   })
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [filterTier, setFilterTier] = useState<string>('all')
@@ -227,7 +241,11 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
     }
   }
 
-  async function createTenant() {
+  async function createTenant(options?: {
+    allowExistingEmailMigration?: boolean
+    confirmAdminRoleMigration?: boolean
+    confirmParentAccessRevocation?: boolean
+  }) {
     if (createBusy) return
     const requiredFields = ['name', 'primaryContactName', 'email', 'phone', 'address', 'suburb', 'slug'] as const
     for (const field of requiredFields) {
@@ -272,25 +290,45 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           tier: createForm.tier,
           contractSigned: createForm.contractSigned,
           onboardingFeePaid: createForm.onboardingFeePaid,
+          allowExistingEmailMigration: options?.allowExistingEmailMigration ?? false,
+          confirmAdminRoleMigration: options?.confirmAdminRoleMigration ?? false,
+          confirmParentAccessRevocation: options?.confirmParentAccessRevocation ?? false,
         }),
       })
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string
+        code?: string
+        conflict?: ExistingUserConflict
         centre?: { name?: string }
         pilot?: boolean
+        migratedExistingUser?: boolean
+        previousRole?: string | null
         warnings?: string[]
       }
-      if (!response.ok) throw new Error(payload.error || 'Failed to create tenant')
+      if (!response.ok) {
+        if (response.status === 409 && payload.code === 'existing_user_confirmation_required') {
+          setExistingUserConflict(payload.conflict ?? null)
+          setMigrationChecks({
+            confirmRoleMigration: false,
+            confirmParentAccessRevocation: false,
+          })
+          setMigrationConfirmOpen(true)
+          return
+        }
+        throw new Error(payload.error || 'Failed to create tenant')
+      }
 
       toast.success(
         `Tenant created${payload.centre?.name ? `: ${payload.centre.name}` : ''}. Password setup email queued${
           payload.pilot ? ' + pilot welcome pack queued' : ''
-        }.`
+        }.${payload.migratedExistingUser ? ' Existing user migrated to ECD Admin.' : ''}`
       )
       if (payload.warnings?.length) {
         toast.warning(payload.warnings[0])
       }
       setCreateOpen(false)
+      setMigrationConfirmOpen(false)
+      setExistingUserConflict(null)
       setCreateForm({
         slug: '',
         name: '',
@@ -523,7 +561,20 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         )}
       </div>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open)
+          if (!open) {
+            setMigrationConfirmOpen(false)
+            setExistingUserConflict(null)
+            setMigrationChecks({
+              confirmRoleMigration: false,
+              confirmParentAccessRevocation: false,
+            })
+          }
+        }}
+      >
         <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
           <DialogHeader>
             <DialogTitle className={adminTheme.cardTitle}>Create Tenant</DialogTitle>
@@ -695,6 +746,94 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
             </Button>
             <Button className={adminTheme.buttonPrimary} onClick={() => void createTenant()} disabled={createBusy}>
               {createBusy ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={migrationConfirmOpen}
+        onOpenChange={(open) => {
+          setMigrationConfirmOpen(open)
+          if (!open) {
+            setMigrationChecks({
+              confirmRoleMigration: false,
+              confirmParentAccessRevocation: false,
+            })
+          }
+        }}
+      >
+        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
+          <DialogHeader>
+            <DialogTitle className={adminTheme.cardTitle}>Confirm Existing Account Migration</DialogTitle>
+            <DialogDescription className="text-slate-300">
+              {existingUserConflict?.email
+                ? `${existingUserConflict.email} is already registered. Continue only if you want to force this account into ECD Admin for this new tenant.`
+                : 'This email is already registered. Continue only if you want to force this account into ECD Admin for this new tenant.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 text-sm text-slate-200">
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-amber-100">
+              Current role: <span className="font-semibold">{existingUserConflict?.existingRole ?? 'Unknown'}</span><br />
+              New role: <span className="font-semibold">{existingUserConflict?.willSetRole ?? 'ecd_admin'}</span><br />
+              Parent access: <span className="font-semibold">Will be blocked after migration</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <input
+                id="confirm-role-migration"
+                type="checkbox"
+                className={cn(premiumInputClass, "mt-0.5 h-4 w-4")}
+                checked={migrationChecks.confirmRoleMigration}
+                onChange={(event) =>
+                  setMigrationChecks((prev) => ({ ...prev, confirmRoleMigration: event.target.checked }))
+                }
+              />
+              <Label htmlFor="confirm-role-migration" className={adminTheme.body}>
+                I confirm this user account must be migrated to ECD Admin.
+              </Label>
+            </div>
+            <div className="flex items-start gap-2">
+              <input
+                id="confirm-parent-access-revocation"
+                type="checkbox"
+                className={cn(premiumInputClass, "mt-0.5 h-4 w-4")}
+                checked={migrationChecks.confirmParentAccessRevocation}
+                onChange={(event) =>
+                  setMigrationChecks((prev) => ({ ...prev, confirmParentAccessRevocation: event.target.checked }))
+                }
+              />
+              <Label htmlFor="confirm-parent-access-revocation" className={adminTheme.body}>
+                I confirm parent access will be revoked for this account.
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              className={adminTheme.buttonSecondary}
+              onClick={() => setMigrationConfirmOpen(false)}
+              disabled={createBusy}
+            >
+              Cancel
+            </Button>
+            <Button
+              className={adminTheme.buttonPrimary}
+              disabled={
+                createBusy ||
+                !migrationChecks.confirmRoleMigration ||
+                !migrationChecks.confirmParentAccessRevocation
+              }
+              onClick={() =>
+                void createTenant({
+                  allowExistingEmailMigration: true,
+                  confirmAdminRoleMigration: migrationChecks.confirmRoleMigration,
+                  confirmParentAccessRevocation: migrationChecks.confirmParentAccessRevocation,
+                })
+              }
+            >
+              {createBusy ? 'Migrating...' : 'Confirm & Create Tenant'}
             </Button>
           </DialogFooter>
         </DialogContent>
