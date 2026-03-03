@@ -98,18 +98,34 @@ export async function POST(request: Request) {
     )
 
     const rowIds = validRows.map((row) => row.id)
-    const { error: linkError } = await admin
+    const inviteActionAt = new Date().toISOString()
+    const lifecycleAwareLink = await admin
       .from('guardians')
       .update({
         linked_user_id: user.id,
-        invite_accepted_at: new Date().toISOString(),
+        invite_accepted_at: inviteActionAt,
+        invite_link_clicked_at: inviteActionAt,
+        invite_registered_at: inviteActionAt,
+        invite_claimed_at: inviteActionAt,
         invite_token: null,
         invite_token_expires_at: null,
       })
       .in('id', rowIds)
 
-    if (linkError) {
-      return NextResponse.json({ error: 'Failed to link account. Please try again.' }, { status: 500 })
+    if (lifecycleAwareLink.error) {
+      const fallbackLink = await admin
+        .from('guardians')
+        .update({
+          linked_user_id: user.id,
+          invite_accepted_at: inviteActionAt,
+          invite_token: null,
+          invite_token_expires_at: null,
+        })
+        .in('id', rowIds)
+
+      if (fallbackLink.error) {
+        return NextResponse.json({ error: 'Failed to link account. Please try again.' }, { status: 500 })
+      }
     }
 
     const linkedChildren = Array.from(
@@ -134,4 +150,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Something went wrong.' }, { status: 500 })
   }
 }
-

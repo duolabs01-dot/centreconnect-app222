@@ -31,6 +31,18 @@ export default async function JoinPage({ searchParams }: PageProps) {
     .limit(50)
 
   const rows = guardians ?? []
+  if (rows.length > 0) {
+    const viewedAt = new Date().toISOString()
+    try {
+      await admin
+        .from('guardians')
+        .update({ invite_link_viewed_at: viewedAt })
+        .eq('invite_token', token)
+        .is('invite_link_viewed_at', null)
+    } catch {
+      // Invite lifecycle tracking is optional during rollout.
+    }
+  }
   const expired =
     rows.length === 0 ||
     rows.every((row) => !row.invite_token_expires_at || new Date(row.invite_token_expires_at) < new Date())

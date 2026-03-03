@@ -167,17 +167,39 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
   const expiresAt = new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString()
   const expiresHours = 72
 
-  const { error: updateError } = await supabase
+  const inviteSentAt = new Date().toISOString()
+  const targetIds = uniqueTargets.map((row) => row.id)
+  const lifecycleAwareUpdate = await supabase
     .from('guardians')
     .update({
       email: normalizedEmail,
       invite_token: token,
       invite_token_expires_at: expiresAt,
-      invite_sent_at: new Date().toISOString(),
+      invite_sent_at: inviteSentAt,
+      invite_accepted_at: null,
+      invite_link_viewed_at: null,
+      invite_link_clicked_at: null,
+      invite_registered_at: null,
+      invite_claimed_at: null,
     })
-    .in('id', uniqueTargets.map((row) => row.id))
+    .in('id', targetIds)
 
-  if (updateError) return { error: 'Failed to generate invite. Please try again.' }
+  if (lifecycleAwareUpdate.error) {
+    const fallbackUpdate = await supabase
+      .from('guardians')
+      .update({
+        email: normalizedEmail,
+        invite_token: token,
+        invite_token_expires_at: expiresAt,
+        invite_sent_at: inviteSentAt,
+        invite_accepted_at: null,
+      })
+      .in('id', targetIds)
+
+    if (fallbackUpdate.error) {
+      return { error: 'Failed to generate invite. Please try again.' }
+    }
+  }
 
   const acceptUrl = `${getAppUrl()}/join?token=${token}`
   const childNames = Array.from(
