@@ -55,7 +55,7 @@ export default function LoginPage() {
     const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
     const fallbackOrigin = window.location.origin.replace(/\/$/, '')
     const baseOrigin = configuredOrigin || fallbackOrigin
-    return `${baseOrigin}/auth/confirm`
+    return `${baseOrigin}/auth/callback`
   }
 
   async function handleLogin(e: React.FormEvent) {

@@ -1,5 +1,5 @@
 ﻿'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { Eye, EyeOff, ArrowLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
-import { cn } from '@/lib/utils'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -19,58 +18,14 @@ export default function RegisterPage() {
     password: '',
     fullName: '',
     phone: '',
-    username: '',
   })
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
-  // Username validation state
-  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle')
-  const [usernameError, setUsernameError] = useState('')
-
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
-
-  // Debounced username check
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (formData.username.length >= 3) {
-        checkUsername(formData.username)
-      } else if (formData.username.length > 0) {
-        setUsernameStatus('invalid')
-        setUsernameError('Username too short')
-      } else {
-        setUsernameStatus('idle')
-      }
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [formData.username])
-
-  async function checkUsername(username: string) {
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      setUsernameStatus('invalid')
-      setUsernameError('Use 3-20 letters, numbers or _')
-      return
-    }
-
-    setUsernameStatus('checking')
-    try {
-      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`)
-      const data = await res.json()
-      if (data.available) {
-        setUsernameStatus('available')
-      } else {
-        setUsernameStatus('taken')
-        setUsernameError('Username is already taken')
-      }
-    } catch (err) {
-      setUsernameStatus('idle')
-    }
-  }
 
   function getErrorMessage(error: unknown, fallback: string) {
     if (typeof error === 'string' && error.trim()) return error
@@ -104,16 +59,11 @@ export default function RegisterPage() {
     const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
     const fallbackOrigin = window.location.origin.replace(/\/$/, '')
     const baseOrigin = configuredOrigin || fallbackOrigin
-    return `${baseOrigin}/auth/confirm?next=${destination}`
+    return `${baseOrigin}/auth/callback?next=${destination}`
   }
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault()
-    
-    if (usernameStatus !== 'available') {
-      toast.error(usernameError || 'Please choose a valid username')
-      return
-    }
 
     const normalizedEmail = formData.email.trim().toLowerCase()
     const normalizedPassword = formData.password.trim()
@@ -141,7 +91,6 @@ export default function RegisterPage() {
             role: 'parent_user',
             full_name: formData.fullName,
             phone: formData.phone,
-            username: formData.username.toLowerCase(),
           },
         },
       })
@@ -162,12 +111,7 @@ export default function RegisterPage() {
       router.push(authDestinationPath())
     } catch (error: any) {
       const message = getErrorMessage(error, 'Failed to create account')
-      if (message.includes('unique constraint') && message.includes('username')) {
-        toast.error('Username is taken. Please choose another.')
-        setUsernameStatus('taken')
-      } else {
-        toast.error(message)
-      }
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -227,27 +171,6 @@ export default function RegisterPage() {
             </header>
 
             <form onSubmit={handleRegister} className="space-y-4">
-              {/* Username Field */}
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center ml-1">
-                  <Label htmlFor="username" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Username</Label>
-                  {usernameStatus === 'checking' && <Loader2 className="h-3 w-3 animate-spin text-slate-400" />}
-                  {usernameStatus === 'available' && <span className="text-[9px] font-bold text-emerald-600 uppercase flex items-center gap-1"><CheckCircle2 className="h-2.5 w-2.5" /> Available</span>}
-                  {(usernameStatus === 'taken' || usernameStatus === 'invalid') && <span className="text-[9px] font-bold text-rose-500 uppercase flex items-center gap-1"><AlertCircle className="h-2.5 w-2.5" /> {usernameError}</span>}
-                </div>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value.toLowerCase().replace(/\s/g, '') })}
-                  placeholder="unique_handle"
-                  className={cn(
-                    "h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none",
-                    usernameStatus === 'available' && "border-emerald-200 bg-emerald-50/30",
-                    (usernameStatus === 'taken' || usernameStatus === 'invalid') && "border-rose-200 bg-rose-50/30"
-                  )}
-                  required
-                />
-              </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</Label>

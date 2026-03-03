@@ -51,7 +51,12 @@ async function verifyWithTokenHash(input: {
 }) {
   const candidateTypes: EmailOtpType[] = []
   if (input.type) candidateTypes.push(input.type)
-  if (!candidateTypes.includes('signup')) candidateTypes.push('signup')
+  const fallbackTypes: EmailOtpType[] = ['signup', 'magiclink', 'invite', 'recovery', 'email_change'] as EmailOtpType[]
+  for (const fallbackType of fallbackTypes) {
+    if (!candidateTypes.includes(fallbackType)) {
+      candidateTypes.push(fallbackType)
+    }
+  }
 
   let lastError: { message: string } | null = null
   for (const otpType of candidateTypes) {
@@ -138,12 +143,18 @@ export async function GET(request: NextRequest) {
     const tokenHash = url.searchParams.get('token_hash')
     const type = url.searchParams.get('type') as EmailOtpType | null
     const next = sanitizeNextPath(url.searchParams.get('next'))
+    const supabase = await createClient()
 
-    if (!code && (!tokenHash || !type)) {
-      return NextResponse.redirect(buildRedirectUrl('/login?error=invalid-confirmation-link', request))
+    if (!code && !tokenHash) {
+      const {
+        data: { user: existingUser },
+      } = await supabase.auth.getUser()
+
+      if (!existingUser) {
+        return NextResponse.redirect(buildRedirectUrl('/login?error=invalid-confirmation-link', request))
+      }
     }
 
-    const supabase = await createClient()
     let error: { message: string } | null = null
     if (code) {
       const { error: codeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -155,7 +166,12 @@ export async function GET(request: NextRequest) {
         })
         error = otpError
       } else if (codeError) {
-        error = codeError
+        const {
+          data: { user: recoveredUser },
+        } = await supabase.auth.getUser()
+        if (!recoveredUser) {
+          error = codeError
+        }
       }
     } else if (tokenHash) {
       const { error: otpError } = await verifyWithTokenHash({
