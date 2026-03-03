@@ -39,6 +39,16 @@ function shouldShowMobileBack(pathname: string) {
   return true
 }
 
+function getMobileBackTarget(pathname: string) {
+  if (pathname.startsWith('/parent/profile/')) return '/parent/profile'
+  if (pathname.startsWith('/parent/applications/')) return '/parent/applications'
+  if (pathname.startsWith('/parent/children/')) return '/parent/children'
+  if (pathname.startsWith('/parent/report-cards/')) return '/parent/report-cards'
+  if (pathname.startsWith('/parent/notifications/')) return '/parent/notifications'
+  if (pathname.startsWith('/parent/')) return '/parent/dashboard'
+  return '/parent/dashboard'
+}
+
 export function ParentAppShell({ children }: ParentAppShellProps) {
   const { userName, avatarUrl, isVerified, profileNudge, userId } = useParentLayout()
   const pathname = usePathname()
@@ -91,11 +101,12 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   }
 
   function handleMobileBack() {
-    if (typeof window !== 'undefined' && window.history.length <= 1) {
+    const target = getMobileBackTarget(pathname)
+    if (target === pathname) {
       router.push('/parent/dashboard')
       return
     }
-    router.back()
+    router.push(target)
   }
 
   const showMobileBack = shouldShowMobileBack(pathname)

@@ -11,33 +11,27 @@
   "categories": ["education", "parenting"],
   "icons": [
     {
-      "src": "/centreconnect-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192.png?v=20260303-v1",
+      "sizes": "192x192",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/centreconnect-logo.svg",
+      "src": "/icon-192-maskable.png?v=20260303-v1",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/centreconnect-logo.svg",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/centreconnect-logo.svg",
+      "src": "/icon-512.png?v=20260303-v1",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/centreconnect-logo.svg",
+      "src": "/icon-512-maskable.png?v=20260303-v1",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "maskable"
     }
   ],
@@ -45,12 +39,12 @@
     {
       "name": "Dashboard",
       "url": "/parent/dashboard",
-      "icons": [{ "src": "/centreconnect-logo.svg", "sizes": "any" }]
+      "icons": [{ "src": "/icon-192.png?v=20260303-v1", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Search Centres",
       "url": "/directory",
-      "icons": [{ "src": "/centreconnect-logo.svg", "sizes": "any" }]
+      "icons": [{ "src": "/icon-192.png?v=20260303-v1", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "screenshots": [

@@ -15,6 +15,7 @@ const metadataBaseUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   process.env.NEXT_PUBLIC_APP_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+const iconVersion = '20260303-v1'
 
 export const metadata: Metadata = {
   metadataBase: new URL(metadataBaseUrl),
@@ -24,12 +25,12 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/centreconnect-logo.svg?v=20260224-cc', type: 'image/svg+xml' },
-      { url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '192x192', type: 'image/svg+xml' },
-      { url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '512x512', type: 'image/svg+xml' },
+      { url: `/favicon.ico?v=${iconVersion}`, type: 'image/x-icon' },
+      { url: `/icon-192.png?v=${iconVersion}`, sizes: '192x192', type: 'image/png' },
+      { url: `/icon-512.png?v=${iconVersion}`, sizes: '512x512', type: 'image/png' },
     ],
-    apple: [{ url: '/centreconnect-logo.svg?v=20260224-cc', sizes: '180x180', type: 'image/svg+xml' }],
-    shortcut: ['/centreconnect-logo.svg?v=20260224-cc'],
+    apple: [{ url: `/apple-touch-icon.png?v=${iconVersion}`, sizes: '180x180', type: 'image/png' }],
+    shortcut: [`/favicon.ico?v=${iconVersion}`],
   },
   appleWebApp: {
     capable: true,
@@ -65,6 +66,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
+        <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${iconVersion}`} />
         <meta name="theme-color" content="#065A82" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>

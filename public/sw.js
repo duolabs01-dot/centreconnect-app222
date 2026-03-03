@@ -1,10 +1,13 @@
-const CACHE_NAME = 'cc-v7-ultra';
+const CACHE_NAME = 'cc-v8-icons';
 const OFFLINE_URL = '/offline';
 
 const ASSETS = [
   '/',
   '/manifest.json',
-  '/centreconnect-logo.svg',
+  '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png',
   '/offline'
 ];
 
@@ -84,8 +87,8 @@ self.addEventListener('push', (event) => {
   const title = data.title ?? 'CentreConnect';
   const options = {
     body: data.body ?? 'Update from your ECD centre',
-    icon: '/centreconnect-logo.svg',
-    badge: '/centreconnect-logo.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     data: { url: data.url ?? '/' }
   };
   event.waitUntil(self.registration.showNotification(title, options));

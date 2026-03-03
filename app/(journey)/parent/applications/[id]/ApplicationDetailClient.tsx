@@ -360,13 +360,17 @@ export default function ApplicationDetailClient({
     })
   }
 
+  function goBackToApplications() {
+    router.push('/parent/applications')
+  }
+
   return (
     <div style={{ fontFamily: 'var(--font-parent)', padding: '0 0 32px' }}>
       <div className="mb-3 hidden items-center gap-2 md:flex">
         <Button
           type="button"
           variant="ghost"
-          onClick={() => router.back()}
+          onClick={goBackToApplications}
           className="h-8 rounded-2xl px-3 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-800"
         >
           {'\u2190'} Back
