@@ -39,6 +39,7 @@ type ImportRow = {
 export type RegisterExtractionActionResult = {
   success: boolean
   message: string
+  items?: ImportRow[]
   item?: ImportRow
 }
 
@@ -217,37 +218,65 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
     normalizeDate(parsed.data.attendance_date) ??
     null
 
-  const { data: createdRow, error } = await session.supabase
+  const rowsPayload =
+    names.length > 0
+      ? names.map((name) => ({
+          ecd_id: session.ecdId,
+          uploaded_by: session.user.id,
+          source_file_path: upload.path,
+          source_file_url: upload.publicUrl,
+          source_file_name: file.name,
+          extraction: {
+            summary: extraction.extraction?.summary ?? null,
+            fields: extraction.extraction?.fields ?? {},
+          },
+          extracted_names: [name],
+          extracted_date: extractedDate,
+          selected_name: name,
+          status: 'extracted' as const,
+          notes: parsed.data.notes?.trim() || extraction.extraction?.summary || null,
+        }))
+      : [
+          {
+            ecd_id: session.ecdId,
+            uploaded_by: session.user.id,
+            source_file_path: upload.path,
+            source_file_url: upload.publicUrl,
+            source_file_name: file.name,
+            extraction: {
+              summary: extraction.extraction?.summary ?? null,
+              fields: extraction.extraction?.fields ?? {},
+            },
+            extracted_names: [],
+            extracted_date: extractedDate,
+            status: 'extracted' as const,
+            notes: parsed.data.notes?.trim() || extraction.extraction?.summary || null,
+          },
+        ]
+
+  const { data: createdRows, error } = await session.supabase
     .from('attendance_register_imports')
-    .insert({
-      ecd_id: session.ecdId,
-      uploaded_by: session.user.id,
-      source_file_path: upload.path,
-      source_file_url: upload.publicUrl,
-      source_file_name: file.name,
-      extraction: {
-        summary: extraction.extraction.summary ?? null,
-        fields: extraction.extraction.fields,
-      },
-      extracted_names: names,
-      extracted_date: extractedDate,
-      status: 'extracted',
-      notes: parsed.data.notes?.trim() || extraction.extraction.summary || null,
-    })
+    .insert(rowsPayload)
     .select(
       'id,source_file_url,source_file_name,extracted_names,extracted_date,status,selected_name,imported_child_id,imported_attendance_id,notes,created_at'
     )
-    .single()
+    .order('created_at', { ascending: false })
 
-  if (error || !createdRow) {
+  if (error || !createdRows || createdRows.length === 0) {
     return { success: false, message: error?.message || 'Failed to save extracted register data.' }
   }
+
+  const serializedItems = (createdRows as Record<string, unknown>[]).map((row) => serializeImportRow(row))
 
   revalidatePath('/ecd/ai-upload')
   return {
     success: true,
-    message: names.length > 0 ? 'Register extracted. Review names and import attendance.' : 'Register extracted. No names detected; please review manually.',
-    item: serializeImportRow(createdRow as Record<string, unknown>),
+    message:
+      names.length > 0
+        ? `Register extracted. ${serializedItems.length} name${serializedItems.length === 1 ? '' : 's'} ready for import.`
+        : 'Register extracted. No names detected; please review manually.',
+    items: serializedItems,
+    item: serializedItems[0],
   }
 }
 
@@ -313,6 +342,17 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
 
   if (!childId) {
     return { success: false, message: 'Select an existing child or enable "create child profile".' }
+  }
+
+  const { data: childMatch, error: childMatchError } = await session.supabase
+    .from('children')
+    .select('id')
+    .eq('id', childId)
+    .eq('ecd_id', session.ecdId)
+    .maybeSingle()
+
+  if (childMatchError || !childMatch?.id) {
+    return { success: false, message: 'Selected child is not linked to this centre.' }
   }
 
   const attendanceDate =

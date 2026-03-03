@@ -111,17 +111,27 @@ export function RegisterImportClient({
         formData.set('notes', bulkNotes)
 
         const result = await extractRegisterPhotoAction(formData)
+        const resultItems = result.items ?? (result.item ? [result.item] : [])
+
         if (!result.success) {
           toast.error(`${file.name}: ${result.message}`)
-          if (result.item) {
-            setImports((current) => [result.item as RegisterImportItem, ...current])
+          if (resultItems.length > 0) {
+            setImports((current) => {
+              const existingIds = new Set(current.map((entry) => entry.id))
+              const fresh = resultItems.filter((entry) => !existingIds.has(entry.id)) as RegisterImportItem[]
+              return [...fresh, ...current]
+            })
           }
           continue
         }
 
-        if (result.item) {
-          successCount += 1
-          setImports((current) => [result.item as RegisterImportItem, ...current])
+        if (resultItems.length > 0) {
+          successCount += resultItems.length
+          setImports((current) => {
+            const existingIds = new Set(current.map((entry) => entry.id))
+            const fresh = resultItems.filter((entry) => !existingIds.has(entry.id)) as RegisterImportItem[]
+            return [...fresh, ...current]
+          })
         }
       }
 
