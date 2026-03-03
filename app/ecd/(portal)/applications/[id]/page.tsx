@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { AlertCircle, FileText, History, Phone, UserRound, Users } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { StatusBadge } from '@/components/ui/status-badge'
@@ -136,21 +135,44 @@ const parseMissingDocuments = (value: unknown) => parseTextArray(value)
 const normalizeName = (value: string | null | undefined, fallback = 'Unknown user') => (value?.trim() ? value.trim() : fallback)
 const formatEventDate = (value: string | null | undefined) => (value ? formatDate(value) : 'Not yet')
 
+function includesMissingColumnError(errorMessage: string | null | undefined) {
+  if (!errorMessage) return false
+  const normalized = errorMessage.toLowerCase()
+  return normalized.includes('column') && (normalized.includes('does not exist') || normalized.includes('could not find'))
+}
+
 async function fetchApplicationForRoute(
   supabase: Awaited<ReturnType<typeof requireEcdPortalSession>>['supabase'],
   ecdId: string,
   routeToken: string,
   preferNumberLookup: boolean
 ) {
-  const selectClause =
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
-  const byId = () => supabase.from('applications').select(selectClause).eq('ecd_id', ecdId).eq('id', routeToken).maybeSingle()
-  const byNumber = () =>
-    supabase.from('applications').select(selectClause).eq('ecd_id', ecdId).eq('application_number', routeToken).maybeSingle()
-  const primary = preferNumberLookup ? await byNumber() : await byId()
-  if (primary.data) return primary.data as ApplicationRow
-  const fallback = preferNumberLookup ? await byId() : await byNumber()
-  return (fallback.data ?? null) as ApplicationRow | null
+  const selectVariants = [
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
+  ] as const
+
+  for (const selectClause of selectVariants) {
+    const byId = () =>
+      supabase.from('applications').select(selectClause).eq('ecd_id', ecdId).eq('id', routeToken).maybeSingle()
+    const byNumber = () =>
+      supabase.from('applications').select(selectClause).eq('ecd_id', ecdId).eq('application_number', routeToken).maybeSingle()
+
+    const primary = preferNumberLookup ? await byNumber() : await byId()
+    if (primary.data) return primary.data as ApplicationRow
+
+    const fallback = preferNumberLookup ? await byId() : await byNumber()
+    if (fallback.data) return fallback.data as ApplicationRow
+
+    const canRetryWithLeanSelect =
+      includesMissingColumnError(primary.error?.message) || includesMissingColumnError(fallback.error?.message)
+    if (!canRetryWithLeanSelect) {
+      break
+    }
+  }
+
+  return null
 }
 
 async function fetchParentDocuments(
@@ -184,7 +206,34 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const routeToken = decodeURIComponent(params.id).trim()
   const application = await fetchApplicationForRoute(supabase, ecdId, routeToken, searchParams?.lookup === 'number')
-  if (!application) notFound()
+  if (!application) {
+    return (
+      <EcdOsShell
+        title="Application Details"
+        description="Review full child enrollment details and take quick action."
+        roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+        userEmail={user.email ?? 'Unknown email'}
+      >
+        <div className="mx-auto max-w-2xl py-8">
+          <Card className="rounded-3xl border-amber-200 bg-amber-50 shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg text-amber-900">We couldn&apos;t load this application</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-amber-900">
+              <p>
+                This record may have been moved, archived, or is missing some older profile fields.
+              </p>
+              <Button asChild className="h-11 rounded-2xl bg-teal-600 px-5 font-bold text-white hover:bg-teal-700">
+                <Link href="/ecd/applications" prefetch={false}>
+                  Back to Applications
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </EcdOsShell>
+    )
+  }
 
   const child = normalizeOne(application.children as ChildProfile | ChildProfile[] | null)
   const parent = normalizeOne(application.parents as ParentProfile | ParentProfile[] | null)
