@@ -366,6 +366,17 @@ export function ApplicationsList({
                 Waitlist position: #{application.priority ?? '-'}
               </div>
             ) : null}
+
+            {normalizeStatus(application.status) === 'enrolled' ? (
+              <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2">
+                <Link
+                  href={`/parent/applications/${application.id}#pickup-code-section`}
+                  className="inline-flex min-h-[36px] items-center rounded-2xl border border-cyan-300 bg-white px-3 py-1.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-100"
+                >
+                  Open Pickup Code
+                </Link>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>

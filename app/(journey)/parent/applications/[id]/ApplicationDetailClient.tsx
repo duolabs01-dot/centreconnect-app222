@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -44,11 +44,60 @@ type PickupCodeSectionProps = {
   parentId: string
 }
 
+function randomSixDigitCode() {
+  const bytes = new Uint32Array(1)
+  crypto.getRandomValues(bytes)
+  return String(bytes[0] % 1_000_000).padStart(6, '0')
+}
+
 function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCodeSectionProps) {
   const [code, setCode] = useState<string | null>(null)
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const rotationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const generateCode = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      if (!childId || !ecdId || !parentId) return
+      setGenerating(true)
+      setError(null)
+      const secureCode = randomSixDigitCode()
+      const nextExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+      const supabase = createClient()
+
+      try {
+        const { data, error: rpcError } = await supabase.rpc('generate_pickup_code_atomic', {
+          p_ecd_id: ecdId,
+          p_child_id: childId,
+          p_parent_id: parentId,
+          p_generated_by_role: 'parent',
+          p_code: secureCode,
+          p_expires_at: nextExpiresAt,
+        })
+
+        if (rpcError) {
+          setError(rpcError.message)
+          if (!silent) toast.error('Could not generate code')
+          return
+        }
+
+        const result = data as { success?: boolean; error?: string } | null
+        if (!result?.success) {
+          setError(result?.error ?? 'unknown')
+          if (!silent) toast.error('Could not generate code')
+          return
+        }
+
+        setCode(secureCode)
+        setExpiresAt(nextExpiresAt)
+        if (!silent) toast.success('Pickup code generated')
+      } finally {
+        setGenerating(false)
+      }
+    },
+    [childId, ecdId, parentId]
+  )
 
   useEffect(() => {
     let active = true
@@ -78,7 +127,12 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
       if (data?.code) {
         setCode(data.code)
         setExpiresAt(data.expires_at ?? null)
+        return
       }
+
+      setCode(null)
+      setExpiresAt(null)
+      void generateCode({ silent: true })
     }
 
     void loadActiveCode()
@@ -86,69 +140,53 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
     return () => {
       active = false
     }
-  }, [childId, ecdId])
+  }, [childId, ecdId, generateCode])
 
-  async function generateCode() {
-    if (!childId || !ecdId || !parentId) return
-    setGenerating(true)
-    setError(null)
-    const randomCode = Math.floor(100000 + Math.random() * 900000).toString()
-    const nextExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
-    const supabase = createClient()
-
-    try {
-      const { data, error: rpcError } = await supabase.rpc('generate_pickup_code_atomic', {
-        p_ecd_id: ecdId,
-        p_child_id: childId,
-        p_parent_id: parentId,
-        p_generated_by_role: 'parent',
-        p_code: randomCode,
-        p_expires_at: nextExpiresAt,
-      })
-
-      if (rpcError) {
-        setError(rpcError.message)
-        toast.error('Could not generate code')
-        return
-      }
-
-      const result = data as { success?: boolean; error?: string } | null
-      if (!result?.success) {
-        setError(result?.error ?? 'unknown')
-        toast.error('Could not generate code')
-        return
-      }
-
-      setCode(randomCode)
-      setExpiresAt(nextExpiresAt)
-      toast.success('Pickup code generated')
-    } finally {
-      setGenerating(false)
+  useEffect(() => {
+    if (rotationTimeoutRef.current) {
+      clearTimeout(rotationTimeoutRef.current)
+      rotationTimeoutRef.current = null
     }
-  }
+    if (!code || !expiresAt) return
+
+    const expiresInMs = new Date(expiresAt).getTime() - Date.now()
+    const rotationInMs = Math.max(1_000, expiresInMs + 1_000)
+
+    rotationTimeoutRef.current = setTimeout(() => {
+      void generateCode({ silent: true })
+    }, rotationInMs)
+
+    return () => {
+      if (rotationTimeoutRef.current) {
+        clearTimeout(rotationTimeoutRef.current)
+        rotationTimeoutRef.current = null
+      }
+    }
+  }, [code, expiresAt, generateCode])
 
   if (code) {
     return (
-      <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
+      <section id="pickup-code-section" data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
         <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">{`Today's Pickup Code`}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Pickup & Collection</p>
           <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
           <p className="mt-1 text-xs text-slate-500">
             Show this to the crèche staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
           </p>
+          <p className="mt-1 text-[11px] font-medium text-cyan-700">Auto-refreshes every hour for safety.</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
+    <section id="pickup-code-section" data-application-id={applicationId} className="glass-card rounded-2xl p-4 sm:p-5">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup Code</p>
-        <p className="mt-1 text-sm text-slate-600">{`No active code. Generate one for today's pickup.`}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Pickup & Collection</p>
+        <p className="mt-1 text-sm text-slate-600">No active code yet. Generate now and it will auto-refresh every hour.</p>
         <Button
           type="button"
-          onClick={generateCode}
+          onClick={() => void generateCode()}
           disabled={generating}
           className="mt-3 h-10 rounded-2xl bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700"
         >

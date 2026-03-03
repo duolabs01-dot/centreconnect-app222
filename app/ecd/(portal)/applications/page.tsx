@@ -194,12 +194,10 @@ async function partitionPendingForReview(applications: ApplicationRow[]) {
       docTypes: docTypesByParent.get(application.parent_id) ?? [],
     })
 
-    if (readiness.ready) {
-      ready.push(application)
-      continue
+    ready.push(application)
+    if (!readiness.ready) {
+      blocked.push({ application, missing: readiness.missing.slice(0, 4) })
     }
-
-    blocked.push({ application, missing: readiness.missing.slice(0, 4) })
   }
 
   return { ready, blocked }
@@ -616,10 +614,10 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                 </div>
                 <div>
                   <p className="text-sm font-bold text-amber-900">
-                    {blockedPendingApplications.length} Blocked Applications
+                    {blockedPendingApplications.length} Applications Need More Info
                   </p>
                   <p className="mt-1 text-xs text-amber-800/80 leading-relaxed font-medium">
-                    Some parents haven&apos;t finished their profile or document uploads. Ask them to update their details to resume the process.
+                    Parents can still apply with partial details. Use reminders to help them finish profiles and documents.
                   </p>
                 </div>
               </div>

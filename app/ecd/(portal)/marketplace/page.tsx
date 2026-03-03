@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
+import { randomUUID } from 'crypto'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,7 +23,7 @@ type ServiceRow = {
 
 type OrderRow = {
   id: string
-  status: string
+  status: 'cart' | 'requested' | 'paid' | 'fulfilled' | 'cancelled'
   created_at: string
   service_id: string
   marketplace_services:
@@ -47,70 +48,121 @@ function isIncludedInTier(tier: SubscriptionTier, serviceName: string) {
 export default async function EcdMarketplacePage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
 
-  async function requestService(formData: FormData) {
+  function nextTicketNumber() {
+    return `MKT-${Date.now().toString().slice(-8)}-${randomUUID().slice(0, 4).toUpperCase()}`
+  }
+
+  async function addToCart(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
     const serviceId = String(formData.get('service_id') ?? '')
     if (!serviceId) return
-
-    // 1. Fetch service details to check if it's bookkeeping
-    const { data: service } = await session.supabase
-      .from('marketplace_services')
-      .select('service_name')
-      .eq('id', serviceId)
-      .single()
 
     const { data: existing } = await session.supabase
       .from('ecd_marketplace_orders')
       .select('id,status')
       .eq('ecd_id', session.ecdId)
       .eq('service_id', serviceId)
-      .in('status', ['requested', 'paid'])
+      .in('status', ['cart', 'requested', 'paid'])
       .limit(1)
       .maybeSingle()
 
     if (!existing) {
-      const { data: order, error: orderError } = await session.supabase.from('ecd_marketplace_orders').insert({
+      await session.supabase.from('ecd_marketplace_orders').insert({
         ecd_id: session.ecdId,
         service_id: serviceId,
         requested_by: session.user.id,
-        status: 'requested',
-      }).select('id').single()
-
-      // 2. Human Workflow: If Bookkeeping, create an assignment for platform team
-      if (!orderError && order && service?.service_name.toLowerCase().includes('bookkeeping')) {
-        const { createAdminClient } = await import('@/lib/supabase/admin')
-        const admin = createAdminClient()
-        
-        await admin.from('bookkeeping_assignments').insert({
-          ecd_id: session.ecdId,
-          service_application_id: null, // This is a marketplace order, not a bootstrap app
-          status: 'pending',
-          priority: 'medium',
-          notes: `Marketplace Order: ${order.id}`
-        })
-
-        // 3. Notify Platform Admin
-        try {
-          const { sendServiceApplicationNotification } = await import('@/lib/email/service-application-notification')
-          const { data: centre } = await admin.from('ecd_centres').select('name').eq('id', session.ecdId).single()
-          
-          await sendServiceApplicationNotification({
-            applicationId: order.id,
-            submittedAt: new Date().toISOString(),
-            applicantFullName: session.user.email ?? 'Unknown',
-            applicantEmail: session.user.email ?? '',
-            centreName: centre?.name ?? 'Unknown Crèche',
-            selectedTier: 'premium', // Hack: using existing notification type for speed
-            recommendedTier: 'premium',
-          })
-        } catch (err) {
-          console.error('Failed to send bookkeeping notification:', err)
-        }
-      }
+        status: 'cart',
+      })
     }
 
     revalidatePath('/ecd/marketplace')
+  }
+
+  async function removeFromCart(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    const orderId = String(formData.get('order_id') ?? '')
+    if (!orderId) return
+
+    await session.supabase
+      .from('ecd_marketplace_orders')
+      .update({ status: 'cancelled' })
+      .eq('id', orderId)
+      .eq('ecd_id', session.ecdId)
+      .eq('status', 'cart')
+
+    revalidatePath('/ecd/marketplace')
+  }
+
+  async function submitCart() {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+
+    const { data: cartRows } = await session.supabase
+      .from('ecd_marketplace_orders')
+      .select('id,service_id,marketplace_services(service_name,price)')
+      .eq('ecd_id', session.ecdId)
+      .eq('status', 'cart')
+      .order('created_at', { ascending: true })
+      .limit(50)
+
+    const cartOrders = (cartRows ?? []) as Array<{
+      id: string
+      service_id: string
+      marketplace_services:
+        | { service_name: string; price: number | null }
+        | Array<{ service_name: string; price: number | null }>
+        | null
+    }>
+    if (cartOrders.length === 0) {
+      revalidatePath('/ecd/marketplace')
+      return
+    }
+
+    const { data: centre } = await session.supabase
+      .from('ecd_centres')
+      .select('name')
+      .eq('id', session.ecdId)
+      .maybeSingle()
+
+    const orderIds = cartOrders.map((row) => row.id)
+    await session.supabase
+      .from('ecd_marketplace_orders')
+      .update({ status: 'requested' })
+      .in('id', orderIds)
+      .eq('ecd_id', session.ecdId)
+
+    const supportTickets = cartOrders.map((row) => {
+      const service = Array.isArray(row.marketplace_services)
+        ? row.marketplace_services[0]
+        : row.marketplace_services
+      const serviceName = service?.service_name ?? 'Marketplace add-on'
+      const servicePrice = service?.price != null ? `R${Number(service.price).toFixed(2)}` : 'Price on request'
+
+      return {
+        ticket_number: nextTicketNumber(),
+        ecd_id: session.ecdId,
+        created_by: session.user.id,
+        subject: `Marketplace add-on request: ${serviceName}`,
+        description: [
+          `Centre: ${centre?.name ?? 'Unknown centre'}`,
+          `Service: ${serviceName}`,
+          `Price: ${servicePrice}`,
+          `Order ID: ${row.id}`,
+          'Requested from ECD Marketplace cart.',
+        ].join('\n'),
+        category: 'billing',
+        status: 'open',
+        priority: 2,
+      }
+    })
+
+    await session.supabase.from('support_tickets').insert(supportTickets)
+
+    revalidatePath('/ecd/marketplace')
+    revalidatePath('/admin/support')
+    revalidatePath('/admin/command')
   }
 
   const [{ data: servicesData }, { data: subscription }, { data: ordersData }] = await Promise.all([
@@ -131,13 +183,20 @@ export default async function EcdMarketplacePage() {
       .select('id,status,created_at,service_id,marketplace_services(service_name,price)')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(100),
   ])
 
   const services = ((servicesData ?? []) as ServiceRow[]) ?? []
   const tier = (subscription?.tier ?? 'basic') as SubscriptionTier
   const orders = ((ordersData ?? []) as OrderRow[]) ?? []
-  const openRequestServiceIds = new Set(orders.filter((row) => row.status === 'requested').map((row) => row.service_id))
+  const cartOrders = orders.filter((row) => row.status === 'cart')
+  const requestHistory = orders.filter((row) => row.status !== 'cart')
+  const cartServiceIds = new Set(cartOrders.map((row) => row.service_id))
+  const openRequestServiceIds = new Set(
+    requestHistory
+      .filter((row) => row.status === 'requested' || row.status === 'paid')
+      .map((row) => row.service_id)
+  )
 
   return (
     <EcdOsShell
@@ -167,6 +226,57 @@ export default async function EcdMarketplacePage() {
           </CardContent>
         </Card>
 
+        <Card className="border-cyan-100 bg-cyan-50/40 shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold text-cyan-900">Request Cart</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
+            {cartOrders.length === 0 ? (
+              <p className="text-sm text-slate-600">
+                No add-ons in your cart yet. Add items below, then send in one click.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {cartOrders.map((order) => {
+                    const service = Array.isArray(order.marketplace_services)
+                      ? order.marketplace_services[0]
+                      : order.marketplace_services
+                    return (
+                      <div key={order.id} className="flex items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-white px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-slate-900">{service?.service_name ?? 'Service'}</p>
+                          <p className="text-xs text-slate-500">
+                            {service?.price != null
+                              ? new Intl.NumberFormat('en-ZA', {
+                                  style: 'currency',
+                                  currency: 'ZAR',
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                }).format(service.price)
+                              : 'Price on request'}
+                          </p>
+                        </div>
+                        <form action={removeFromCart}>
+                          <input type="hidden" name="order_id" value={order.id} />
+                          <Button type="submit" size="sm" variant="outline" className="h-9 rounded-2xl border-slate-200 font-bold">
+                            Remove
+                          </Button>
+                        </form>
+                      </div>
+                    )
+                  })}
+                </div>
+                <form action={submitCart}>
+                  <Button type="submit" className="h-11 rounded-2xl bg-teal-600 px-6 font-bold text-white hover:bg-teal-700">
+                    Send {cartOrders.length} request{cartOrders.length === 1 ? '' : 's'} to CC Admin
+                  </Button>
+                </form>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {services.length === 0 ? (
             <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-sm">
@@ -179,6 +289,7 @@ export default async function EcdMarketplacePage() {
           ) : (
             services.map((service) => {
               const included = isIncludedInTier(tier, service.service_name)
+              const inCart = cartServiceIds.has(service.id)
               const requestPending = openRequestServiceIds.has(service.id)
 
               return (
@@ -206,11 +317,15 @@ export default async function EcdMarketplacePage() {
                       <Button className="mt-6 w-full h-11 rounded-2xl font-bold" variant="outline" disabled>
                         Already Included
                       </Button>
+                    ) : inCart ? (
+                      <Button className="mt-6 w-full h-11 rounded-2xl font-bold" variant="outline" disabled>
+                        Added to cart
+                      </Button>
                     ) : (
-                      <form action={requestService} className="mt-6">
+                      <form action={addToCart} className="mt-6">
                         <input type="hidden" name="service_id" value={service.id} />
                         <Button className="w-full h-11 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-2xl shadow-sm transition-colors" type="submit" disabled={requestPending}>
-                          {requestPending ? 'Request Sent' : 'Request Add-on'}
+                          {requestPending ? 'Request Sent' : 'Add to Cart'}
                         </Button>
                       </form>
                     )}
@@ -226,7 +341,7 @@ export default async function EcdMarketplacePage() {
             <CardTitle className="text-base font-bold">My Marketplace Requests</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            {orders.length === 0 ? (
+            {requestHistory.length === 0 ? (
               <p className="text-sm text-slate-500 py-4">No marketplace requests yet.</p>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-slate-100">
@@ -240,7 +355,7 @@ export default async function EcdMarketplacePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orders.map((order) => {
+                    {requestHistory.map((order) => {
                       const service = Array.isArray(order.marketplace_services)
                         ? order.marketplace_services[0]
                         : order.marketplace_services
