@@ -69,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
         <link rel="apple-touch-icon" href={`/apple-touch-icon.png?v=${iconVersion}`} />
         <meta name="theme-color" content="#065A82" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="font-sans">

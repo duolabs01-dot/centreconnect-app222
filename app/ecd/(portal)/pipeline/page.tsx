@@ -70,7 +70,12 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 export default async function EcdPipelinePage({ searchParams }: PipelinePageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
-  const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
+  const { data: centre } = await supabase
+    .from('ecd_centres')
+    .select('name,allow_incomplete_applications')
+    .eq('id', ecdId)
+    .maybeSingle()
+  const allowIncompleteApplications = centre?.allow_incomplete_applications ?? true
   const pageSize = 120
   const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
   const currentPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
@@ -133,7 +138,7 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
       }).length
 
   const visibleApplications =
-    docsError
+    docsError || allowIncompleteApplications
       ? applications
       : applications.filter((application) => {
           if (application.status !== 'submitted' && application.status !== 'in_review') return true
@@ -182,8 +187,9 @@ export default async function EcdPipelinePage({ searchParams }: PipelinePageProp
         </p>
         {blockedPendingCount > 0 ? (
           <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-            {blockedPendingCount} pending application{blockedPendingCount === 1 ? '' : 's'} are hidden until parents
-            complete required intake details.
+            {allowIncompleteApplications
+              ? `${blockedPendingCount} pending application${blockedPendingCount === 1 ? '' : 's'} still need documents, but remain visible for review.`
+              : `${blockedPendingCount} pending application${blockedPendingCount === 1 ? '' : 's'} are hidden until parents complete required intake details. Switch policy in Admissions Inbox to allow incomplete reviews.`}
           </p>
         ) : null}
         <div className="mt-2 flex items-center gap-2">

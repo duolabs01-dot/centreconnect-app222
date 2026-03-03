@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { buildWarmApplicationUpdateMessage } from '@/lib/communications/templates'
 import { applicationStatusEmail } from '@/lib/email/templates'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 
 const statusUpdateSchema = z.object({
   applicationId: z.string().uuid(),
@@ -21,11 +23,21 @@ type UpdateStatusResult = {
   warning?: string
 }
 
-type ApplicationChild = { first_name: string | null; last_name: string | null }
-type ApplicationProfile = { full_name: string | null }
+type ApplicationChild = {
+  first_name: string | null
+  last_name: string | null
+  date_of_birth: string | null
+  gender: string | null
+}
+type ApplicationProfile = { full_name: string | null; phone: string | null }
 type ApplicationParent = {
   id: string
   billing_email: string | null
+  alt_phone: string | null
+  guardian_relationship: string | null
+  emergency_contact_name: string | null
+  emergency_contact_phone: string | null
+  id_verification_status: string | null
   user_profiles: ApplicationProfile | ApplicationProfile[] | null
 }
 type ApplicationRecord = {
@@ -37,6 +49,11 @@ type ApplicationRecord = {
   offer_accepted_at: string | null
   children: ApplicationChild | ApplicationChild[] | null
   parents: ApplicationParent | ApplicationParent[] | null
+}
+
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
 }
 
 function getAppOrigin() {
@@ -69,7 +86,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
   const { data: applicationRaw } = await session.supabase
     .from('applications')
     .select(
-      'id,status,ecd_id,parent_id,application_number,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name),parents(id,billing_email,user_profiles(full_name))'
+      'id,status,ecd_id,parent_id,application_number,admin_notes,offer_accepted_at,offer_made_at,offer_sent_at,enrolled_at,children(first_name,last_name,date_of_birth,gender),parents(id,billing_email,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
     )
     .eq('id', applicationId)
     .eq('ecd_id', session.ecdId)
@@ -100,6 +117,66 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
       return {
         ok: false,
         error: 'Contact the crèche admin to grant approval rights before making final decisions.',
+      }
+    }
+  }
+
+  if (status === 'approved') {
+    const { data: centrePolicy } = await session.supabase
+      .from('ecd_centres')
+      .select('allow_incomplete_applications')
+      .eq('id', session.ecdId)
+      .maybeSingle()
+    const allowIncompleteApplications = centrePolicy?.allow_incomplete_applications ?? true
+
+    if (!allowIncompleteApplications) {
+      const parent = normalizeOne(application.parents)
+      const parentProfile = normalizeOne(parent?.user_profiles ?? null)
+      const child = normalizeOne(application.children)
+
+      let docTypes: string[] = []
+      try {
+        const admin = createAdminClient()
+        if (parent?.id) {
+          const { data: docsRows } = await admin
+            .from('parent_documents')
+            .select('doc_type')
+            .eq('parent_id', parent.id)
+            .limit(100)
+          docTypes = (docsRows ?? [])
+            .map((row) => row.doc_type)
+            .filter((docType): docType is string => typeof docType === 'string' && docType.trim().length > 0)
+        }
+      } catch {
+        docTypes = []
+      }
+
+      const readiness = evaluateApplicationIntakeReadiness({
+        parent: {
+          fullName: parentProfile?.full_name ?? null,
+          phone: parentProfile?.phone ?? parent?.alt_phone ?? null,
+          guardianRelationship: parent?.guardian_relationship ?? null,
+          emergencyContactName: parent?.emergency_contact_name ?? null,
+          emergencyContactPhone: parent?.emergency_contact_phone ?? null,
+          idVerificationStatus: parent?.id_verification_status ?? null,
+        },
+        child: {
+          firstName: child?.first_name ?? null,
+          lastName: child?.last_name ?? null,
+          dateOfBirth: child?.date_of_birth ?? null,
+          gender: child?.gender ?? null,
+        },
+        docTypes,
+      })
+
+      if (!readiness.ready) {
+        const missing = readiness.missing.slice(0, 4).join(', ')
+        return {
+          ok: false,
+          error: missing
+            ? `This centre currently requires complete applications before approval. Missing: ${missing}.`
+            : 'This centre currently requires complete applications before approval.',
+        }
       }
     }
   }

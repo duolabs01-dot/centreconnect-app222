@@ -45,7 +45,7 @@ export default async function ParentProfilePage() {
     const userEmail = user.email ?? 'No email'
     const avatarUrl = userProfile?.avatar_url?.trim() ?? ''
 
-    const [parentProfileResult, childrenCountResult] = await Promise.all([
+    const [parentProfileResult, childrenCountResult, enrolledChildrenCountResult] = await Promise.all([
       supabase
         .from('parents')
         .select(
@@ -54,6 +54,7 @@ export default async function ParentProfilePage() {
         .eq('id', user.id)
         .maybeSingle(),
       supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id),
+      supabase.from('applications').select('id', { count: 'exact', head: true }).eq('parent_id', user.id).eq('status', 'enrolled'),
     ])
 
     const parentProfile = (parentProfileResult.error ? null : parentProfileResult.data) as
@@ -67,6 +68,7 @@ export default async function ParentProfilePage() {
       | null
 
     const childCount = childrenCountResult.count ?? 0
+    const enrolledChildCount = enrolledChildrenCountResult.count ?? 0
 
     return (
       <div className="bg-surface-secondary px-4 pt-4 min-h-screen">
@@ -82,6 +84,7 @@ export default async function ParentProfilePage() {
             notifications_application_updates: parentProfile?.notifications_application_updates ?? true,
             notifications_reminders: parentProfile?.notifications_reminders ?? true,
             child_count: childCount,
+            enrolled_child_count: enrolledChildCount,
           }}
         />
       </div>

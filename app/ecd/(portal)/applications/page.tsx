@@ -1,5 +1,6 @@
 ﻿import type { Metadata } from 'next'
 import Link from 'next/link'
+import { revalidatePath } from 'next/cache'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -135,7 +136,7 @@ type IncompleteApplication = {
   missing: string[]
 }
 
-async function partitionPendingForReview(applications: ApplicationRow[]) {
+async function partitionPendingForReview(applications: ApplicationRow[], allowIncompleteApplications: boolean) {
   if (applications.length === 0) {
     return {
       ready: [] as ApplicationRow[],
@@ -194,7 +195,9 @@ async function partitionPendingForReview(applications: ApplicationRow[]) {
       docTypes: docTypesByParent.get(application.parent_id) ?? [],
     })
 
-    ready.push(application)
+    if (allowIncompleteApplications || readiness.ready) {
+      ready.push(application)
+    }
     if (!readiness.ready) {
       blocked.push({ application, missing: readiness.missing.slice(0, 4) })
     }
@@ -301,7 +304,28 @@ function renderApplicationList(applications: ApplicationRow[]) {
 
 export default async function EcdApplicationsPage({ searchParams }: ApplicationsPageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
-  const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
+
+  async function updateIncompleteAdmissionsPolicyAction(formData: FormData) {
+    'use server'
+
+    const session = await requireEcdPortalSession({ cached: false })
+    const allowIncompleteApplications = String(formData.get('allow_incomplete_applications') ?? 'true') === 'true'
+
+    await session.supabase
+      .from('ecd_centres')
+      .update({ allow_incomplete_applications: allowIncompleteApplications })
+      .eq('id', session.ecdId)
+
+    revalidatePath('/ecd/applications')
+    revalidatePath('/ecd/pipeline')
+  }
+
+  const { data: centre } = await supabase
+    .from('ecd_centres')
+    .select('name,allow_incomplete_applications')
+    .eq('id', ecdId)
+    .maybeSingle()
+  const allowIncompleteApplications = centre?.allow_incomplete_applications ?? true
   const selectedTab: TabKey =
     searchParams?.tab === 'awaiting_offer_response' ||
     searchParams?.tab === 'approved' ||
@@ -390,7 +414,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       })
 
     if (grouped.pending.length > 0) {
-      const pendingPartition = await partitionPendingForReview(grouped.pending)
+      const pendingPartition = await partitionPendingForReview(grouped.pending, allowIncompleteApplications)
       grouped.pending = pendingPartition.ready
       blockedPendingApplications = pendingPartition.blocked
     }
@@ -449,7 +473,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
         .limit(500)
 
       const pendingApplications = ((pendingRows ?? []) as ApplicationRow[]) ?? []
-      const pendingPartition = await partitionPendingForReview(pendingApplications)
+      const pendingPartition = await partitionPendingForReview(pendingApplications, allowIncompleteApplications)
       blockedPendingApplications = pendingPartition.blocked
       filteredCounts = {
         ...filteredCounts,
@@ -545,6 +569,29 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       </section>
 
       <div className="space-y-8">
+        <Card className="rounded-3xl border-teal-100 bg-teal-50/50 shadow-sm">
+          <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-teal-700">Admissions Policy</p>
+              <p className="mt-1 text-sm text-teal-900">
+                {allowIncompleteApplications
+                  ? 'Incomplete applications are accepted. You can request missing documents anytime or with the offer.'
+                  : 'Only complete applications can be approved. Incomplete profiles stay hidden from pending review.'}
+              </p>
+            </div>
+            <form action={updateIncompleteAdmissionsPolicyAction}>
+              <input
+                type="hidden"
+                name="allow_incomplete_applications"
+                value={allowIncompleteApplications ? 'false' : 'true'}
+              />
+              <Button type="submit" className="h-11 rounded-2xl bg-teal-600 px-5 font-bold text-white hover:bg-teal-700">
+                {allowIncompleteApplications ? 'Switch to Complete-Only' : 'Allow Incomplete Applications'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-t-4 border-t-teal-600">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pending</p>
@@ -614,10 +661,13 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                 </div>
                 <div>
                   <p className="text-sm font-bold text-amber-900">
-                    {blockedPendingApplications.length} Applications Need More Info
+                    {blockedPendingApplications.length}{' '}
+                    {allowIncompleteApplications ? 'Applications Need More Info' : 'Applications Hidden Until Complete'}
                   </p>
                   <p className="mt-1 text-xs text-amber-800/80 leading-relaxed font-medium">
-                    Parents can still apply with partial details. Use reminders to help them finish profiles and documents.
+                    {allowIncompleteApplications
+                      ? 'Parents can still apply with partial details. Use reminders to help them finish profiles and documents.'
+                      : 'Enable incomplete applications above if you want to review profiles first and request documents later.'}
                   </p>
                 </div>
               </div>

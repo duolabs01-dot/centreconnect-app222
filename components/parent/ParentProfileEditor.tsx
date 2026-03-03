@@ -50,6 +50,7 @@ type ParentProfileHubInitial = {
   notifications_application_updates: boolean
   notifications_reminders: boolean
   child_count: number
+  enrolled_child_count: number
 }
 
 function initialsFromName(name: string) {
@@ -181,6 +182,16 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           icon: Users, 
           href: '/parent/children' 
         },
+        ...(profile.enrolled_child_count > 0
+          ? [
+              {
+                label: 'Pickup & Collection',
+                value: `${profile.enrolled_child_count} enrolled profile${profile.enrolled_child_count === 1 ? '' : 's'}`,
+                icon: Shield,
+                href: '/parent/applications',
+              },
+            ]
+          : []),
       ]
     },
     {
