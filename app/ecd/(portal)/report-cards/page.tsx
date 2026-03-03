@@ -1,24 +1,130 @@
-import type { Metadata } from "next"
-import { FileText } from "lucide-react"
+import type { Metadata } from 'next'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { ReportCardsClient } from './report-cards-client'
 
 export const metadata: Metadata = {
-  title: "Report Cards — CentreConnect",
+  title: 'Report Cards - CentreConnect',
+  description: 'Create and publish term-based progress report cards for enrolled children.',
 }
 
-export default function ReportCardsPage() {
+type EnrolledRow = {
+  child_id: string | null
+  children:
+    | {
+        id: string
+        first_name: string | null
+        last_name: string | null
+      }
+    | Array<{
+        id: string
+        first_name: string | null
+        last_name: string | null
+      }>
+    | null
+}
+
+type ReportCardRow = {
+  id: string
+  child_id: string
+  term: string
+  period_start: string | null
+  period_end: string | null
+  status: 'draft' | 'published'
+  teacher_name: string | null
+  overall_comment: string | null
+  published_at: string | null
+  created_at: string
+  updated_at: string
+  report_card_areas:
+    | Array<{
+        area_name: string
+        rating: number
+        comment: string | null
+        sort_order: number
+      }>
+    | null
+}
+
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+export default async function ReportCardsPage() {
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+
+  const { data: enrolledRows } = await supabase
+    .from('applications')
+    .select('child_id,children(id,first_name,last_name)')
+    .eq('ecd_id', ecdId)
+    .eq('status', 'enrolled')
+    .order('submitted_at', { ascending: false })
+    .limit(400)
+
+  const seenChildIds = new Set<string>()
+  const enrolledChildren = ((enrolledRows ?? []) as EnrolledRow[]).flatMap((row) => {
+    const child = normalizeOne(row.children)
+    const childId = child?.id ?? row.child_id
+    if (!childId || seenChildIds.has(childId)) return []
+    seenChildIds.add(childId)
+
+    return [
+      {
+        id: childId,
+        first_name: child?.first_name?.trim() || 'Child',
+        last_name: child?.last_name?.trim() || '',
+      },
+    ]
+  })
+
+  const childIds = enrolledChildren.map((child) => child.id)
+
+  const { data: reportCardsRows } =
+    childIds.length > 0
+      ? await supabase
+          .from('report_cards')
+          .select(
+            'id,child_id,term,period_start,period_end,status,teacher_name,overall_comment,published_at,created_at,updated_at,report_card_areas(area_name,rating,comment,sort_order)'
+          )
+          .eq('ecd_id', ecdId)
+          .in('child_id', childIds)
+          .order('updated_at', { ascending: false })
+          .limit(300)
+      : { data: [] as ReportCardRow[] }
+
+  const reportCards = ((reportCardsRows ?? []) as ReportCardRow[]).map((card) => ({
+    id: card.id,
+    child_id: card.child_id,
+    term: card.term,
+    period_start: card.period_start,
+    period_end: card.period_end,
+    status: card.status,
+    teacher_name: card.teacher_name,
+    overall_comment: card.overall_comment,
+    published_at: card.published_at,
+    created_at: card.created_at,
+    updated_at: card.updated_at,
+    report_card_areas: (card.report_card_areas ?? []).map((area) => ({
+      area_name: area.area_name,
+      rating: area.rating,
+      comment: area.comment,
+      sort_order: area.sort_order ?? 0,
+    })),
+  }))
+
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-      <div className="rounded-2xl border border-slate-200 bg-white p-10 max-w-md">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
-          <FileText className="h-7 w-7" />
-        </div>
-        <p className="text-xs font-bold uppercase tracking-wider text-teal-600 mb-2">
-          Coming Soon
-        </p>
-        <h1 className="text-xl font-bold text-slate-900">Report Cards</h1>
-        <p className="mt-2 text-sm text-slate-500">Share child progress reports with parents.</p>
-        <p className="mt-4 text-xs text-slate-400">Expected: Q2 2026</p>
-      </div>
-    </div>
+    <ReportCardsClient
+      enrolledChildren={enrolledChildren}
+      initialReportCards={reportCards}
+      userRoleLabel={
+        role === 'ecd_admin'
+          ? 'Creche Admin'
+          : role === 'ecd_supervisor'
+            ? 'Supervisor'
+            : 'Staff Member'
+      }
+      userEmail={user.email ?? 'Unknown email'}
+      userRole={role}
+    />
   )
 }

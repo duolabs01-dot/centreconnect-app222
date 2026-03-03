@@ -21,6 +21,7 @@ type ParentAppShellProps = {
 
 function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/applications')) return 'My Applications'
+  if (pathname.startsWith('/parent/report-cards')) return 'Report Cards'
   if (pathname.startsWith('/parent/support')) return 'Support'
   if (pathname.startsWith('/parent/preferences')) return 'Preferences'
   if (pathname.startsWith('/parent/profile/security')) return 'Security'

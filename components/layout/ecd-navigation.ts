@@ -54,7 +54,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/employment', label: 'Staff & Employment', icon: Briefcase, group: 'compliance_team', supervisorAllowed: true },
   { href: '/ecd/website', label: 'Website', icon: Globe, group: 'growth_tools' },
   { href: '/ecd/marketplace', label: 'Marketplace', icon: Store, group: 'growth_tools', adminOnly: true },
-  { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
+  { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'communication', supervisorAllowed: true },
   { href: '/ecd/parent-invoicing', label: 'Parent Invoicing', icon: Receipt, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },
   { href: '/ecd/ai-upload', label: 'AI Register Import', icon: Bot, group: 'compliance_team', supervisorAllowed: true },
   { href: '/ecd/whatsapp-alerts', label: 'WhatsApp Alerts', icon: MessageCircleMore, group: 'coming_soon', comingSoon: true, supervisorAllowed: true },

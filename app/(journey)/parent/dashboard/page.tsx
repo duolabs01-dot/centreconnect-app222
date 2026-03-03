@@ -7,6 +7,7 @@ import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import {
   Building2,
   ChevronRight,
+  FileText,
   Heart,
   MessageSquare,
   Search,
@@ -121,6 +122,12 @@ export default async function ParentDashboardPage() {
         description: "See meals, mood, and activities for today.",
         href: '/parent/daily-reports',
         icon: Sparkles,
+      },
+      {
+        label: 'Report Cards',
+        description: 'View term progress reports and teacher feedback.',
+        href: '/parent/report-cards',
+        icon: FileText,
       },
       {
         label: 'Messages',
