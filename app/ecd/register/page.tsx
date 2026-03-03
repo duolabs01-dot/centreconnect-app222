@@ -12,25 +12,45 @@ import { Textarea } from '@/components/ui/textarea'
 import { Section } from '@/components/layout/Section'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
 
-type Tier = 'basic' | 'standard' | 'premium'
-type RequestedTier = 'pilot' | Tier
+type InternalTier = 'basic' | 'standard' | 'premium'
+type PublicTier = 'starter' | 'growth' | 'pro'
 type WizardStep = 1 | 2 | 3 | 4
 
-const TIER_PRICES: Record<RequestedTier, number> = {
-  pilot: 0,
-  basic: 199,
-  standard: 299,
-  premium: 499,
+const TIER_PRICES: Record<PublicTier, number> = {
+  starter: 199,
+  growth: 299,
+  pro: 499,
 }
 
-const TIER_DESCRIPTIONS: Record<RequestedTier, string> = {
-  pilot: 'Pilot trial workspace for onboarding and enrollment. No card details required to start.',
-  basic: 'Listings, enquiries, and essential workflow setup for smaller centres.',
-  standard: 'Everything in Basic plus stronger admissions handling and operations support.',
-  premium: 'Full platform depth for high-volume centres managing larger teams and pipelines.',
+const TIER_DESCRIPTIONS: Record<PublicTier, string> = {
+  starter: 'Best for centres that want to fill open spaces and start quickly.',
+  growth: 'For busy centres that need stronger daily operations and follow-up.',
+  pro: 'For high-volume centres that want full control and priority support.',
 }
 
-const PLAN_OPTIONS: RequestedTier[] = ['pilot', 'basic', 'standard', 'premium']
+const TIER_BENEFITS: Record<PublicTier, string[]> = {
+  starter: ['Parent applications in one dashboard', 'Announcements and direct parent messages', 'Professional centre listing'],
+  growth: ['Everything in Starter', 'Attendance and calendar workflows', 'Faster admissions follow-up and reminders'],
+  pro: ['Everything in Growth', 'Website and growth tools', 'Priority onboarding and support'],
+}
+
+const PUBLIC_TO_INTERNAL_TIER: Record<PublicTier, InternalTier> = {
+  starter: 'basic',
+  growth: 'standard',
+  pro: 'premium',
+}
+
+const PLAN_ALIAS_TO_PUBLIC_TIER: Record<string, PublicTier> = {
+  starter: 'starter',
+  basic: 'starter',
+  pilot: 'starter',
+  growth: 'growth',
+  standard: 'growth',
+  pro: 'pro',
+  premium: 'pro',
+}
+
+const PLAN_OPTIONS: PublicTier[] = ['starter', 'growth', 'pro']
 
 const STEP_TITLES: Record<WizardStep, string> = {
   1: 'Contact and Centre',
@@ -50,10 +70,10 @@ const NEED_OPTIONS = [
   'Analytics and reporting',
 ]
 
-function recommendTier(monthlyBudget: number, expectedChildren: number): Tier {
-  if (monthlyBudget <= 250 || expectedChildren <= 40) return 'basic'
-  if (monthlyBudget <= 450 || expectedChildren <= 100) return 'standard'
-  return 'premium'
+function recommendTier(monthlyBudget: number, expectedChildren: number): PublicTier {
+  if (monthlyBudget <= 250 || expectedChildren <= 40) return 'starter'
+  if (monthlyBudget <= 450 || expectedChildren <= 100) return 'growth'
+  return 'pro'
 }
 
 function toggleArrayValue(values: string[], value: string): string[] {
@@ -65,9 +85,7 @@ export default function EcdRegisterPage() {
   const searchParams = useSearchParams()
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || ''
   const requestedPlanParam = (searchParams.get('plan') || '').toLowerCase()
-  const initialSelectedTier: RequestedTier = PLAN_OPTIONS.includes(requestedPlanParam as RequestedTier)
-    ? (requestedPlanParam as RequestedTier)
-    : 'standard'
+  const initialSelectedTier: PublicTier = PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam] ?? 'growth'
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
@@ -194,8 +212,8 @@ export default function EcdRegisterPage() {
           operatingHours: form.operatingHours.trim() || undefined,
           monthlyBudget: Number(form.monthlyBudget || 0),
           expectedChildren: Number(form.expectedChildren || 0),
-          selectedTier: form.selectedTier,
-          recommendedTier,
+          selectedTier: PUBLIC_TO_INTERNAL_TIER[form.selectedTier],
+          recommendedTier: PUBLIC_TO_INTERNAL_TIER[recommendedTier],
           keyNeeds: form.keyNeeds,
           additionalContext: form.additionalContext.trim() || undefined,
           captchaToken: turnstileSiteKey ? captchaToken : undefined,
@@ -225,7 +243,7 @@ export default function EcdRegisterPage() {
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">CentreConnect</p>
           <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Register Your ECD</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Complete this quick setup to join the platform. Start with Pilot if you want a trial with no card details.
+            Fill your creche faster and get paid on time. Complete this setup in minutes and choose the plan that matches your centre.
           </p>
         </div>
 
@@ -233,20 +251,27 @@ export default function EcdRegisterPage() {
           <Card className="h-fit rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)] xl:sticky xl:top-24">
             <CardHeader>
               <CardTitle className="text-xl text-foreground">Packages and Pricing</CardTitle>
-              <CardDescription>All monthly prices are disclosed upfront.</CardDescription>
+              <CardDescription>Simple plans built for ECD owners.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {PLAN_OPTIONS.map((tier) => (
                 <div key={tier} className="rounded-2xl border border-border bg-slate-50 p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      {tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : 'Pro'}
+                    </p>
                     <p className="text-xl font-bold text-foreground">R{TIER_PRICES[tier]}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{tier === 'pilot' ? 'trial' : 'per month'}</p>
+                  <p className="text-xs text-muted-foreground">per month</p>
                   <p className="mt-2 text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
+                  <ul className="mt-2 space-y-1 text-xs text-slate-600">
+                    {TIER_BENEFITS[tier].map((benefit) => (
+                      <li key={benefit}>- {benefit}</li>
+                    ))}
+                  </ul>
                 </div>
               ))}
-              <p className="text-xs text-muted-foreground">After review and approval, your ECD admin dashboard is activated.</p>
+              <p className="text-xs text-muted-foreground">After review and approval, your ECD dashboard is activated.</p>
             </CardContent>
           </Card>
 
@@ -388,16 +413,16 @@ export default function EcdRegisterPage() {
 
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
                     <p className="text-sm font-semibold text-emerald-900">
-                      Recommended package: {recommendedTier.toUpperCase()} (R{TIER_PRICES[recommendedTier]}/month)
+                      Recommended package: {recommendedTier === 'starter' ? 'Starter' : recommendedTier === 'growth' ? 'Growth' : 'Pro'} (R{TIER_PRICES[recommendedTier]}/month)
                     </p>
                     <p className="mt-1 text-xs text-emerald-800">{TIER_DESCRIPTIONS[recommendedTier]}</p>
                   </div>
 
                   <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3 text-xs text-teal-900">
-                    Pilot plan is available for trial onboarding. No card details are required during Pilot.
+                    All plans include onboarding guidance so your team can launch smoothly.
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-3 sm:grid-cols-3">
                     {PLAN_OPTIONS.map((tier) => {
                       const active = form.selectedTier === tier
                       return (
@@ -411,12 +436,17 @@ export default function EcdRegisterPage() {
                               : 'border-border bg-card text-foreground hover:border-teal-200 hover:bg-background'
                           }`}
                         >
-                          <p className="text-sm font-semibold text-foreground">{tier.toUpperCase()}</p>
-                          <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
-                          <p className="text-[11px] font-medium text-muted-foreground">
-                            {tier === 'pilot' ? 'trial' : 'per month'}
+                          <p className="text-sm font-semibold text-foreground">
+                            {tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : 'Pro'}
                           </p>
+                          <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
+                          <p className="text-[11px] font-medium text-muted-foreground">per month</p>
                           <p className="mt-1 text-xs text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
+                          <ul className="mt-2 space-y-1 text-[11px] text-slate-600">
+                            {TIER_BENEFITS[tier].map((benefit) => (
+                              <li key={benefit}>- {benefit}</li>
+                            ))}
+                          </ul>
                         </button>
                       )
                     })}
@@ -451,10 +481,11 @@ export default function EcdRegisterPage() {
                   <p className="text-muted-foreground">Registration status: {form.registrationStatus}</p>
                   <p className="text-muted-foreground">Current children / staff: {form.currentChildren} / {form.staffCount}</p>
                   <p className="text-muted-foreground">
-                    Selected package: {form.selectedTier.toUpperCase()} (
-                    {form.selectedTier === 'pilot' ? 'trial / no card details required' : `R${TIER_PRICES[form.selectedTier]}/month`})
+                    Selected package: {form.selectedTier === 'starter' ? 'Starter' : form.selectedTier === 'growth' ? 'Growth' : 'Pro'} (R{TIER_PRICES[form.selectedTier]}/month)
                   </p>
-                  <p className="text-muted-foreground">Recommended package: {recommendedTier.toUpperCase()}</p>
+                  <p className="text-muted-foreground">
+                    Recommended package: {recommendedTier === 'starter' ? 'Starter' : recommendedTier === 'growth' ? 'Growth' : 'Pro'}
+                  </p>
                   <p className="text-muted-foreground">Key needs: {form.keyNeeds.join(', ')}</p>
 
                   <div className="space-y-2 pt-2">

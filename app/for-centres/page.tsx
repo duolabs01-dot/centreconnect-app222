@@ -22,7 +22,7 @@ type Centre = {
 }
 
 type Plan = {
-  key: 'pilot' | 'basic' | 'standard' | 'premium'
+  key: 'starter' | 'growth' | 'pro'
   title: string
   price: string
   cadence: string
@@ -34,41 +34,44 @@ type Plan = {
 
 const plans: Plan[] = [
   {
-    key: 'pilot',
-    title: 'Pilot',
-    price: 'R0',
-    cadence: 'trial',
-    description: 'Founding-partner onboarding with no card details required.',
-    features: ['Start immediately', 'No card details required', 'Manual onboarding support'],
-    cta: 'Start Pilot',
-  },
-  {
-    key: 'basic',
-    title: 'Basic',
+    key: 'starter',
+    title: 'Starter',
     price: 'R199',
     cadence: '/month',
-    description: 'Best for smaller centres that need strong basics.',
-    features: ['Centre profile page', 'Parent messages', 'Basic reporting'],
-    cta: 'Choose Basic',
+    description: 'Best for centres that want to fill open spaces quickly.',
+    features: [
+      'Get listed where parents are searching',
+      'Accept online applications in one inbox',
+      'Send announcements and direct parent messages',
+    ],
+    cta: 'Choose Starter',
   },
   {
-    key: 'standard',
-    title: 'Standard',
+    key: 'growth',
+    title: 'Growth',
     price: 'R299',
     cadence: '/month',
-    description: 'Great for active centres managing steady admissions.',
-    features: ['Everything in Basic', 'Advanced admissions', 'Attendance and calendar', 'Daily reports'],
-    cta: 'Choose Standard',
+    description: 'For busy centres that need strong daily operations.',
+    features: [
+      'Everything in Starter',
+      'Attendance and calendar in one workflow',
+      'Faster follow-up on pending applications',
+    ],
+    cta: 'Choose Growth',
     highlighted: true,
   },
   {
-    key: 'premium',
-    title: 'Premium',
+    key: 'pro',
+    title: 'Pro',
     price: 'R499',
     cadence: '/month',
-    description: 'For high-volume centres with bigger operations.',
-    features: ['Everything in Standard', 'Website tools', 'Transport workflows', 'Priority support'],
-    cta: 'Choose Premium',
+    description: 'For centres that want full control and premium support.',
+    features: [
+      'Everything in Growth',
+      'Website and growth tools',
+      'Priority support and onboarding help',
+    ],
+    cta: 'Choose Pro',
   },
 ]
 
@@ -102,17 +105,17 @@ export default async function ForCentresPage() {
         <div className="rounded-3xl border border-border bg-card px-6 py-8 shadow-[var(--shadow-elevation-1)] sm:px-8 sm:py-10 lg:px-12 lg:py-14">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-teal-600">For ECD Owners</p>
           <h1 className="mt-3 max-w-4xl text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-            Fill your creche faster and run daily operations from one clean dashboard.
+            Fill your creche faster and get paid on time.
           </h1>
           <p className="mt-4 max-w-3xl text-sm text-slate-600 sm:text-base">
-            CentreConnect helps you manage applications, parent communication, compliance and reporting without admin stress.
+            One simple system for applications, parent communication, attendance, and billing so your team spends less time on admin.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild className="h-11 rounded-2xl bg-teal-600 px-6 text-sm font-bold text-white hover:bg-teal-700">
-              <Link href="/for-centres/register">Register Your ECD</Link>
+              <Link href="/for-centres/register">Start Your ECD Setup</Link>
             </Button>
             <Button asChild variant="outline" className="h-11 rounded-2xl border-border bg-card px-6 text-sm font-semibold">
-              <Link href="#pricing">View Plans</Link>
+              <Link href="#pricing">See Plans</Link>
             </Button>
           </div>
         </div>
@@ -152,10 +155,10 @@ export default async function ForCentresPage() {
 
       <Section id="pricing" className="py-10 md:py-12" containerClassName="cc-section">
         <div className="mb-6">
-          <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">Simple monthly plans</h2>
-          <p className="mt-2 text-sm text-slate-600">Start with Pilot and upgrade when you are ready.</p>
+          <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">Simple plans that grow with your creche</h2>
+          <p className="mt-2 text-sm text-slate-600">Choose Starter, Growth, or Pro based on your current stage.</p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {plans.map((plan) => (
             <Card
               key={plan.key}
@@ -232,9 +235,9 @@ export default async function ForCentresPage() {
 
       <Section className="py-12 md:py-16" containerClassName="cc-section">
         <div className="rounded-3xl border border-teal-200 bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-8 text-white shadow-[var(--shadow-elevation-2)] sm:px-8 sm:py-10 lg:px-12">
-          <h2 className="text-2xl font-black tracking-tight sm:text-3xl">Ready to register your centre?</h2>
+          <h2 className="text-2xl font-black tracking-tight sm:text-3xl">Ready to fill your creche faster?</h2>
           <p className="mt-2 max-w-2xl text-sm text-teal-50 sm:text-base">
-            Complete the registration wizard in about 10 minutes and we will help you get live quickly.
+            Register in about 10 minutes. We will help you go live quickly and onboard your team.
           </p>
           <Button asChild className="mt-5 h-11 rounded-2xl bg-white px-6 text-sm font-bold text-teal-700 hover:bg-teal-50">
             <Link href="/for-centres/register">Register Your ECD</Link>
