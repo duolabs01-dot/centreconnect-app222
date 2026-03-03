@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { verifyPickupCode } from '@/lib/actions/pickup/verify-code'
 
 type PickupVerifyClientProps = {
   ecdId: string
@@ -90,45 +91,48 @@ export function PickupVerifyClient({ ecdId }: PickupVerifyClientProps) {
     setVerifying(true)
     setResult(null)
 
-    const supabase = createClient()
     const errorMap: Record<string, string> = {
       not_found: 'No code found for this child',
       expired: 'This code has expired. Ask the parent to generate a new one.',
       used: 'This code has already been used.',
       locked: 'This code is locked after too many failed attempts.',
       invalid: 'Incorrect code. Please check and try again.',
+      unauthorized: 'You are not allowed to verify this child.',
     }
 
     try {
-      const { data, error } = await supabase.rpc('verify_pickup_code_atomic', {
-        p_ecd_id: ecdId,
-        p_child_id: selectedChildId,
-        p_code: codeInput,
+      const payload = await verifyPickupCode({
+        ecdId,
+        childId: selectedChildId,
+        code: codeInput,
       })
 
-      if (error) {
-        setResult({ success: false, message: error.message || 'Verification failed.' })
-        return
-      }
-
-      const payload = data as { success?: boolean; error?: string } | null
-      const success = Boolean(payload?.success)
-      const message = payload?.error
+      const success = Boolean(payload.success)
+      const message = !payload.success
         ? (errorMap[payload.error] ?? 'Verification failed.')
-        : `${selectedChildName ?? 'Child'} may be released.`
+        : `${payload.childName ?? selectedChildName ?? 'Child'} may be released.`
 
       setResult({ success, message })
       if (success) {
+        const successPayload = payload as Extract<typeof payload, { success: true }>
+        const followUpMessage = successPayload.guardianName
+          ? `${message} Guardian: ${successPayload.guardianName}.`
+          : message
+        toast.success(followUpMessage)
+
+        if (successPayload.whatsappHref) {
+          toast('Parent WhatsApp link is ready in notifications.')
+        }
+
         setCodeInput('')
-        toast.success(message)
         window.setTimeout(() => {
           setSelectedChildId(null)
           setSelectedChildName(null)
           setChildSearch('')
-          setResult(null); // Clear result after successful verification and timeout
+          setResult(null)
         }, 3000)
       } else {
-        toast.error(message);
+        toast.error(message)
       }
     } finally {
       setVerifying(false)

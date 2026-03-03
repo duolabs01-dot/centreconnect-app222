@@ -8,6 +8,10 @@ import { applicationStatusEmail } from '@/lib/email/templates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
+import {
+  sendEcdInAppAndEmailNotification,
+  sendParentInAppAndWhatsappNotification,
+} from '@/lib/notifications/multi-channel'
 
 const statusUpdateSchema = z.object({
   applicationId: z.string().uuid(),
@@ -306,8 +310,13 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
       : rawParentProfile
 
     if (parent?.id) {
-      const centreNameResult = await session.supabase.from('ecd_centres').select('name').eq('id', session.ecdId).maybeSingle()
-      const centreName = centreNameResult.data?.name ?? 'Your crèche'
+      const centreResult = await session.supabase
+        .from('ecd_centres')
+        .select('name,email')
+        .eq('id', session.ecdId)
+        .maybeSingle()
+      const centreName = centreResult.data?.name ?? 'Your crèche'
+      const centreEmail = centreResult.data?.email ?? null
       const parentName = parentProfile?.full_name ?? 'Parent'
       const childName = [child?.first_name, child?.last_name].filter(Boolean).join(' ').trim() || 'your child'
 
@@ -319,16 +328,18 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         status,
       })
 
-      const { error: notificationError } = await session.supabase.from('parent_notifications').insert({
+      const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
         parent_id: parent.id,
         ecd_id: session.ecdId,
         application_id: applicationId,
         template_key: null,
-        title: status === 'approved' ? 'Application approved ðŸŽ‰' : 'A quick update on your application',
+        title: status === 'approved' ? 'Application approved' : 'A quick update on your application',
         message,
+        parent_phone: parentProfile?.phone ?? parent?.alt_phone ?? null,
+        is_read: false,
       })
 
-      if (notificationError) {
+      if (!parentNotification.ok) {
         warnings.push('parent notification')
       }
 
@@ -350,6 +361,27 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
 
       if (emailQueueError) {
         warnings.push('email queue')
+      }
+
+      const ecdNotification = await sendEcdInAppAndEmailNotification(session.supabase as any, {
+        ecd_id: session.ecdId,
+        application_id: applicationId,
+        title: 'Application status changed',
+        message: `${childName} moved from ${application.status} to ${status}.`,
+        metadata: {
+          kind: 'application_status_changed',
+          old_status: application.status,
+          new_status: status,
+          child_name: childName,
+          changed_by: session.user.id,
+        },
+        email_recipient: centreEmail,
+        email_subject: `[CentreConnect] ${childName} status updated`,
+        email_body: `<p>${childName} moved from <strong>${application.status}</strong> to <strong>${status}</strong>.</p><p>Open the applications board to review details.</p>`,
+      })
+
+      if (!ecdNotification.ok) {
+        warnings.push('ecd notification')
       }
     }
   }

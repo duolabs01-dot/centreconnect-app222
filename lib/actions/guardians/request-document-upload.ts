@@ -6,9 +6,8 @@ import { toApplicationDocumentLabels } from '@/lib/admissions/application-docume
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import {
-  sendEcdInAppNotification,
-  sendParentInAppNotification,
-  toWhatsappHref,
+  sendEcdInAppAndEmailNotification,
+  sendParentInAppAndWhatsappNotification,
 } from '@/lib/notifications/multi-channel'
 
 const requestDocumentUploadSchema = z.object({
@@ -165,37 +164,39 @@ export async function requestCoParentDocumentUploadAction(
 
   const { data: centre } = await admin
     .from('ecd_centres')
-    .select('name')
+    .select('name,email')
     .eq('id', ecdId)
     .maybeSingle()
   const centreName = centre?.name?.trim() || 'your creche'
   const notificationMessage = `${message}\n\nFrom ${centreName}. Open your profile documents to upload now.`
 
   const recipientPhone = normalizeText(profileById.get(payload.requestedForUserId)?.phone) || normalizeText(forGuardian?.phone)
-  const parentNotification = await sendParentInAppNotification(admin as any, {
+  const parentNotification = await sendParentInAppAndWhatsappNotification(admin as any, {
     parent_id: payload.requestedForUserId,
     ecd_id: ecdId,
     application_id: applicationId,
     template_key: 'document_request',
     title: `Document request for ${childName}`,
     message: notificationMessage,
+    parent_phone: recipientPhone,
     is_read: false,
   })
   if (!parentNotification.ok) {
     return { ok: false, error: parentNotification.error || 'Request saved, but notification failed.' }
   }
 
-  await sendParentInAppNotification(admin as any, {
+  await sendParentInAppAndWhatsappNotification(admin as any, {
     parent_id: user.id,
     ecd_id: ecdId,
     application_id: applicationId,
     template_key: 'document_request',
     title: `Document request sent to ${recipientLabel}`,
     message: `You asked ${recipientLabel} to upload: ${requestedLabels.join(', ')} for ${childName}.`,
+    parent_phone: normalizeText(profileById.get(user.id)?.phone),
     is_read: false,
   })
 
-  await sendEcdInAppNotification(admin as any, {
+  await sendEcdInAppAndEmailNotification(admin as any, {
     ecd_id: ecdId,
     application_id: applicationId,
     title: 'Co-parent document request',
@@ -207,6 +208,9 @@ export async function requestCoParentDocumentUploadAction(
       requested_for_user_id: payload.requestedForUserId,
       document_codes: normalizedCodes,
     },
+    email_recipient: centre?.email ?? null,
+    email_subject: `[CentreConnect] Document request for ${childName}`,
+    email_body: `<p>${requesterLabel} requested documents from ${recipientLabel} for <strong>${childName}</strong>.</p><p>Open applications to monitor upload progress.</p>`,
     is_read: false,
   })
 
@@ -216,6 +220,6 @@ export async function requestCoParentDocumentUploadAction(
   return {
     ok: true,
     message: `Request sent to ${recipientLabel}.`,
-    whatsappHref: toWhatsappHref(recipientPhone, notificationMessage) ?? undefined,
+    whatsappHref: parentNotification.whatsappHref ?? undefined,
   }
 }

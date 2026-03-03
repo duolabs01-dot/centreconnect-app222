@@ -5,9 +5,8 @@ import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import {
-  sendEcdInAppNotification,
-  sendParentInAppNotification,
-  toWhatsappHref,
+  sendEcdInAppAndEmailNotification,
+  sendParentInAppAndWhatsappNotification,
 } from '@/lib/notifications/multi-channel'
 
 const requestDocumentSchema = z.object({
@@ -134,8 +133,12 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
   }
 
   const labels = toApplicationDocumentLabels(normalizedCodes)
-  const centreResult = await session.supabase.from('ecd_centres').select('name').eq('id', session.ecdId).maybeSingle()
-  const centreName = centreResult.data?.name ?? 'your crèche'
+  const centreResult = await session.supabase
+    .from('ecd_centres')
+    .select('name,email')
+    .eq('id', session.ecdId)
+    .maybeSingle()
+  const centreName = centreResult.data?.name ?? 'your creche'
 
   const defaultMessage = `Hi ${recipientLabel}, ${requesterLabel} asked you to upload ${labels.join(', ')} for ${childName}.`
   const composedMessage = normalizeText(payload.customMessage) || defaultMessage
@@ -165,20 +168,25 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
   }
 
   const notificationMessage = `${composedMessage}\n\nFrom ${centreName}. Open your profile documents to upload now.`
-  const parentNotification = await sendParentInAppNotification(session.supabase as any, {
+  const recipientPhone =
+    profilePhoneById.get(payload.requestedForUserId) ||
+    normalizeText(guardianById.get(payload.requestedForGuardianId ?? '')?.phone) ||
+    null
+  const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
     parent_id: payload.requestedForUserId,
     ecd_id: session.ecdId,
     application_id: application.id,
     template_key: 'document_request',
     title: `Document request for ${childName}`,
     message: notificationMessage,
+    parent_phone: recipientPhone,
     is_read: false,
   })
   if (!parentNotification.ok) {
     return { ok: false, error: parentNotification.error || 'Document request saved, but notification failed.' }
   }
 
-  await sendEcdInAppNotification(session.supabase as any, {
+  await sendEcdInAppAndEmailNotification(session.supabase as any, {
     ecd_id: session.ecdId,
     application_id: application.id,
     title: 'Linked parent request sent',
@@ -189,17 +197,18 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
       requested_for_user_id: payload.requestedForUserId,
       document_codes: normalizedCodes,
     },
+    email_recipient: centreResult.data?.email ?? null,
+    email_subject: `[CentreConnect] Linked parent document request for ${childName}`,
+    email_body: `<p>${requesterLabel} requested documents from ${recipientLabel} for <strong>${childName}</strong>.</p><p>Open applications to follow up.</p>`,
     is_read: false,
   })
-
-  const recipientPhone =
-    profilePhoneById.get(payload.requestedForUserId) ||
-    normalizeText(guardianById.get(payload.requestedForGuardianId ?? '')?.phone) ||
-    null
-  const whatsappHref = toWhatsappHref(recipientPhone, notificationMessage) ?? undefined
 
   revalidatePath('/ecd/applications')
   revalidatePath(`/ecd/applications/${application.id}`)
 
-  return { ok: true, message: `Document request sent to ${recipientLabel}.`, whatsappHref }
+  return {
+    ok: true,
+    message: `Document request sent to ${recipientLabel}.`,
+    whatsappHref: parentNotification.whatsappHref ?? undefined,
+  }
 }

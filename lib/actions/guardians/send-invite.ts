@@ -4,6 +4,10 @@ import { randomBytes } from 'crypto'
 import { z } from 'zod'
 import { sendEmail } from '@/lib/email/send'
 import { createClient } from '@/lib/supabase/server'
+import {
+  sendEcdInAppAndEmailNotification,
+  sendParentInAppAndWhatsappNotification,
+} from '@/lib/notifications/multi-channel'
 
 const schema = z.object({
   guardian_id: z.string().uuid(),
@@ -132,7 +136,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
 
   const { data: inviterProfile } = await supabase
     .from('user_profiles')
-    .select('full_name')
+    .select('full_name,phone')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -226,6 +230,50 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
   const emailResult = normalizedEmail
     ? await sendEmail({ to: normalizedEmail, subject, html })
     : { success: false as const }
+
+  const childIds = Array.from(new Set(uniqueTargets.map((row) => row.child_id)))
+  const { data: relatedApplications } = await supabase
+    .from('applications')
+    .select('id,child_id,ecd_id')
+    .in('child_id', childIds)
+    .order('submitted_at', { ascending: false })
+    .limit(10)
+
+  const primaryApplication = (relatedApplications ?? [])[0]
+  if (primaryApplication?.ecd_id) {
+    await sendParentInAppAndWhatsappNotification(supabase as any, {
+      parent_id: user.id,
+      ecd_id: primaryApplication.ecd_id,
+      application_id: primaryApplication.id,
+      template_key: 'co_parent_invite',
+      title: 'Co-parent invite sent',
+      message: `Invite sent for ${childLabel}. Share via WhatsApp if needed.`,
+      parent_phone: inviterProfile?.phone ?? null,
+      is_read: false,
+    }).catch(() => null)
+
+    const { data: centre } = await supabase
+      .from('ecd_centres')
+      .select('name,email')
+      .eq('id', primaryApplication.ecd_id)
+      .maybeSingle()
+    const centreName = centre?.name ?? 'your centre'
+    await sendEcdInAppAndEmailNotification(supabase as any, {
+      ecd_id: primaryApplication.ecd_id,
+      application_id: primaryApplication.id,
+      title: 'Co-parent invite sent',
+      message: `${inviterName} sent a co-parent invite for ${childLabel}.`,
+      metadata: {
+        kind: 'co_parent_invite',
+        inviter_id: user.id,
+        child_ids: childIds,
+      },
+      email_recipient: centre?.email ?? null,
+      email_subject: `[CentreConnect] Co-parent invite sent`,
+      email_body: `<p>${inviterName} sent a co-parent invite for <strong>${childLabel}</strong> at ${centreName}.</p>`,
+      is_read: false,
+    }).catch(() => null)
+  }
 
   return {
     success: true,

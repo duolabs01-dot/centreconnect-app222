@@ -17,6 +17,31 @@ type EcdNotificationInsert = {
   is_read?: boolean
 }
 
+type EmailQueueInsert = {
+  recipient: string
+  subject: string
+  body: string
+  status?: 'pending' | 'sent' | 'failed'
+}
+
+type ParentMultiChannelInsert = ParentNotificationInsert & {
+  parent_phone?: string | null
+}
+
+type EcdMultiChannelInsert = EcdNotificationInsert & {
+  email_recipient?: string | null
+  email_subject?: string | null
+  email_body?: string | null
+}
+
+type MultiChannelResult = {
+  ok: boolean
+  inAppSent: boolean
+  emailQueued: boolean
+  whatsappHref: string | null
+  error: string | null
+}
+
 function normalizePhone(rawPhone: string | null | undefined) {
   const digits = String(rawPhone ?? '').replace(/[^\d]/g, '')
   if (!digits) return null
@@ -31,6 +56,26 @@ export function toWhatsappHref(rawPhone: string | null | undefined, message: str
   const number = normalizePhone(rawPhone)
   if (!number) return `https://wa.me/?text=${encodeURIComponent(text)}`
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`
+}
+
+export async function queueEmailNotification(
+  db: { from: (table: 'email_queue') => any },
+  payload: EmailQueueInsert
+) {
+  const recipient = payload.recipient.trim()
+  const subject = payload.subject.trim()
+  const body = payload.body.trim()
+  if (!recipient || !subject || !body) {
+    return { ok: false, error: 'Missing recipient, subject, or body.' }
+  }
+
+  const { error } = await db.from('email_queue').insert({
+    recipient,
+    subject,
+    body,
+    status: payload.status ?? 'pending',
+  })
+  return { ok: !error, error: error?.message ?? null }
 }
 
 export async function sendParentInAppNotification(
@@ -54,4 +99,71 @@ export async function sendEcdInAppNotification(
     is_read: payload.is_read ?? false,
   })
   return { ok: !error, error: error?.message ?? null }
+}
+
+export async function sendParentInAppAndWhatsappNotification(
+  db: { from: (table: 'parent_notifications') => any },
+  payload: ParentMultiChannelInsert
+): Promise<MultiChannelResult> {
+  const inAppResult = await sendParentInAppNotification(db, {
+    parent_id: payload.parent_id,
+    ecd_id: payload.ecd_id,
+    application_id: payload.application_id,
+    template_key: payload.template_key,
+    title: payload.title,
+    message: payload.message,
+    is_read: payload.is_read ?? false,
+  })
+
+  return {
+    ok: inAppResult.ok,
+    inAppSent: inAppResult.ok,
+    emailQueued: false,
+    whatsappHref: toWhatsappHref(payload.parent_phone, payload.message),
+    error: inAppResult.error,
+  }
+}
+
+export async function sendEcdInAppAndEmailNotification(
+  db: {
+    from: (table: 'ecd_notifications' | 'email_queue') => any
+  },
+  payload: EcdMultiChannelInsert
+): Promise<MultiChannelResult> {
+  const inAppResult = await sendEcdInAppNotification(db as any, {
+    ecd_id: payload.ecd_id,
+    application_id: payload.application_id,
+    title: payload.title,
+    message: payload.message,
+    metadata: payload.metadata,
+    is_read: payload.is_read ?? false,
+  })
+
+  let emailQueued = false
+  if (payload.email_recipient && payload.email_subject && payload.email_body) {
+    const emailResult = await queueEmailNotification(db as any, {
+      recipient: payload.email_recipient,
+      subject: payload.email_subject,
+      body: payload.email_body,
+      status: 'pending',
+    })
+    emailQueued = emailResult.ok
+    if (!emailResult.ok) {
+      return {
+        ok: false,
+        inAppSent: inAppResult.ok,
+        emailQueued: false,
+        whatsappHref: null,
+        error: emailResult.error,
+      }
+    }
+  }
+
+  return {
+    ok: inAppResult.ok,
+    inAppSent: inAppResult.ok,
+    emailQueued,
+    whatsappHref: null,
+    error: inAppResult.error,
+  }
 }

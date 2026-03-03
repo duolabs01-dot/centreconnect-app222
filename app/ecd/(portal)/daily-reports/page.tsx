@@ -9,26 +9,45 @@ export const metadata: Metadata = {
   description: 'Provide daily updates for parents on their children\'s meals, mood, and activities.',
 }
 
+type ChildRecord = {
+  id: string
+  first_name: string
+  last_name: string
+  photo_url: string | null
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function toDateString(value: Date) {
+  return value.toISOString().slice(0, 10)
 }
 
 export default async function EcdDailyReportsPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const todayUtc = new Date(Date.UTC(year, month - 1, day))
+  const weekStartUtc = new Date(todayUtc)
+  const weekDay = (todayUtc.getUTCDay() + 6) % 7
+  weekStartUtc.setUTCDate(todayUtc.getUTCDate() - weekDay)
+  const lookbackUtc = new Date(todayUtc)
+  lookbackUtc.setUTCDate(todayUtc.getUTCDate() - 45)
+  const weekStartDate = toDateString(weekStartUtc)
+  const lookbackDate = toDateString(lookbackUtc)
 
   const [childrenResult, enrolledResult, reportsResult] = await Promise.all([
     supabase
       .from('children')
-      .select('id,first_name,last_name')
+      .select('id,first_name,last_name,photo_url')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
       .limit(800),
     supabase
       .from('applications')
-      .select('child_id,children(id,first_name,last_name)')
+      .select('child_id,children(id,first_name,last_name,photo_url)')
       .eq('ecd_id', ecdId)
       .eq('status', 'enrolled')
       .limit(100),
@@ -36,13 +55,16 @@ export default async function EcdDailyReportsPage() {
       .from('child_daily_reports')
       .select('*')
       .eq('ecd_id', ecdId)
-      .eq('report_date', todayDate),
+      .gte('report_date', lookbackDate)
+      .lte('report_date', todayDate)
+      .order('report_date', { ascending: false })
+      .order('created_at', { ascending: false }),
   ])
 
   const childrenRows = childrenResult.data ?? []
   const enrolledRows = enrolledResult.data ?? []
   const seenChildIds = new Set<string>()
-  const enrolledChildren = [
+  const enrolledChildren: ChildRecord[] = [
     ...childrenRows.flatMap((child: any) => {
       const childId = child?.id
       if (!childId || seenChildIds.has(childId)) return []
@@ -52,6 +74,7 @@ export default async function EcdDailyReportsPage() {
           id: childId,
           first_name: child?.first_name?.trim() || 'Child',
           last_name: child?.last_name?.trim() || '',
+          photo_url: child?.photo_url ?? null,
         },
       ]
     }),
@@ -66,22 +89,20 @@ export default async function EcdDailyReportsPage() {
           id: childId,
           first_name: child?.first_name?.trim() || 'Child',
           last_name: child?.last_name?.trim() || '',
+          photo_url: child?.photo_url ?? null,
         },
       ]
     }),
   ]
-
-  const reportsByChild: Record<string, any> = {}
-  for (const report of reportsResult.data ?? []) {
-    reportsByChild[report.child_id] = report
-  }
+  const reports = reportsResult.data ?? []
 
   return (
     <DailyReportsClient
       enrolledChildren={enrolledChildren}
-      initialReportsByChild={reportsByChild}
+      initialReports={reports as any[]}
       ecdId={ecdId}
       todayDate={todayDate}
+      weekStartDate={weekStartDate}
       staffId={user.id}
       userRoleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? ''}
