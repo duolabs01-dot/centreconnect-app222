@@ -26,6 +26,13 @@ type ApplicationRow = {
   start_date: string | null
   parent_message: string | null
   admin_notes: string | null
+  offer_breakdown: unknown
+  offer_conditions: string | null
+  offer_penalties: string | null
+  offer_legal_agreement: string | null
+  offer_expires_at: string | null
+  rejection_reason_code: string | null
+  rejection_reason_note: string | null
   offer_accepted_at: string | null
   share_multiple_flag: boolean | null
   ecd_centres:
@@ -49,6 +56,34 @@ function normalizeMissingDocuments(value: unknown): string[] {
   return value.map((entry) => String(entry).trim()).filter(Boolean)
 }
 
+type OfferBreakdownItem = {
+  key: string
+  label: string
+  amount_cents: number
+  frequency: 'monthly' | 'once'
+}
+
+function parseOfferBreakdown(value: unknown): OfferBreakdownItem[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null
+      const record = item as Record<string, unknown>
+      const key = typeof record.key === 'string' ? record.key.trim() : ''
+      const label = typeof record.label === 'string' ? record.label.trim() : ''
+      const amount = Number(record.amount_cents)
+      const frequency = record.frequency === 'once' ? 'once' : record.frequency === 'monthly' ? 'monthly' : null
+      if (!key || !label || !Number.isFinite(amount) || !frequency) return null
+      return {
+        key,
+        label,
+        amount_cents: Math.max(0, Math.round(amount)),
+        frequency,
+      }
+    })
+    .filter((item): item is OfferBreakdownItem => Boolean(item))
+}
+
 export default async function ParentApplicationDetailPage({ params }: ApplicationDetailPageProps) {
   const supabase = await createClient()
   const {
@@ -60,7 +95,9 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
     .from('applications')
     .select(`
       id, application_number, status, missing_documents, submitted_at, child_id, ecd_id,
-      start_date, parent_message, admin_notes, offer_accepted_at, share_multiple_flag,
+      start_date, parent_message, admin_notes, offer_breakdown, offer_conditions, offer_penalties,
+      offer_legal_agreement, offer_expires_at, rejection_reason_code, rejection_reason_note,
+      offer_accepted_at, share_multiple_flag,
       ecd_centres (name, suburb, slug),
       children (first_name, last_name),
       application_status_history (new_status, created_at, notes)
@@ -100,6 +137,13 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       startDate={appRow.start_date}
       parentMessage={appRow.parent_message ?? null}
       adminNotes={appRow.admin_notes}
+      offerBreakdown={parseOfferBreakdown(appRow.offer_breakdown)}
+      offerConditions={appRow.offer_conditions}
+      offerPenalties={appRow.offer_penalties}
+      offerAgreement={appRow.offer_legal_agreement}
+      offerExpiresAt={appRow.offer_expires_at}
+      rejectionReasonCode={appRow.rejection_reason_code}
+      rejectionReasonNote={appRow.rejection_reason_note}
       acceptedAt={appRow.offer_accepted_at}
       centreName={centre?.name ?? 'Unknown crèche'}
       centreSuburb={centre?.suburb ?? 'Unknown suburb'}

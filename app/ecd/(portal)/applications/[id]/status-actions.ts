@@ -131,6 +131,20 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
     return { ok: false, error: 'Application not found.' }
   }
 
+  if (status === 'approved' && application.status !== 'approved') {
+    return {
+      ok: false,
+      error: 'Use Create Offer to approve with pricing breakdown and agreement terms.',
+    }
+  }
+
+  if (status === 'rejected' && application.status !== 'rejected') {
+    return {
+      ok: false,
+      error: 'Use Reject With Reason so parents receive a structured rejection reason.',
+    }
+  }
+
   if (application.status === 'enrolled' && status !== 'enrolled') {
     return { ok: false, error: 'Enrolled applications cannot be moved back to another status.' }
   }

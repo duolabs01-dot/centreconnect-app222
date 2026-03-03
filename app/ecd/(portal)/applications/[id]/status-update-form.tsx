@@ -15,7 +15,6 @@ type StatusUpdateFormProps = {
 }
 
 const statusLabels: Record<string, string> = {
-  approved: 'Approval sent. Parent must confirm to finalize.',
   enrolled: 'Enrollment confirmed.',
 }
 
@@ -29,6 +28,8 @@ export function StatusUpdateForm({
   const [status, setStatus] = useState(currentStatus)
   const [notes, setNotes] = useState(currentNotes ?? '')
   const [isPending, startTransition] = useTransition()
+  const includeApprovedOption = currentStatus === 'approved'
+  const includeRejectedOption = currentStatus === 'rejected'
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -71,14 +72,20 @@ export function StatusUpdateForm({
           <option value="partial">Partial</option>
           <option value="submitted">Submitted</option>
           <option value="in_review">In Review</option>
-          <option value="approved">Approved</option>
+          {includeApprovedOption ? <option value="approved">Approved (offer already created)</option> : null}
           <option value="enrolled">Enrolled</option>
           <option value="waitlisted">Waitlisted</option>
-          <option value="rejected">Rejected</option>
+          {includeRejectedOption ? <option value="rejected">Rejected</option> : null}
           <option value="withdrawn">Withdrawn</option>
         </select>
         {currentOfferAcceptedAt ? (
           <p className="text-xs text-slate-600">Parent has accepted this offer. Status changes are locked.</p>
+        ) : null}
+        {!currentOfferAcceptedAt ? (
+          <p className="text-xs text-slate-600">
+            Use the dedicated <span className="font-semibold">Create Offer</span> and{' '}
+            <span className="font-semibold">Reject With Reason</span> panels for final decisions.
+          </p>
         ) : null}
       </div>
 

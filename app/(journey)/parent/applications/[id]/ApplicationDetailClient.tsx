@@ -8,6 +8,7 @@ import ApplicationTimeline from '@/components/parent/ApplicationTimeline'
 import PlacementDecisionModal from '@/components/parent/PlacementDecisionModal'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
+import { getRejectionReasonLabel, getRejectionReasonMessage } from '@/lib/admissions/rejection-reasons'
 
 type TimelineEvent = {
   status: 'submitted' | 'in_review' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
@@ -26,6 +27,18 @@ type ApplicationDetailClientProps = {
   startDate: string | null
   parentMessage?: string | null
   adminNotes: string | null
+  offerBreakdown: Array<{
+    key: string
+    label: string
+    amount_cents: number
+    frequency: 'monthly' | 'once'
+  }>
+  offerConditions: string | null
+  offerPenalties: string | null
+  offerAgreement: string | null
+  offerExpiresAt: string | null
+  rejectionReasonCode: string | null
+  rejectionReasonNote: string | null
   acceptedAt: string | null
   centreName: string
   centreSuburb: string
@@ -306,6 +319,14 @@ export default function ApplicationDetailClient({
   parentId,
   startDate,
   parentMessage: initialParentMessage,
+  adminNotes,
+  offerBreakdown,
+  offerConditions,
+  offerPenalties,
+  offerAgreement,
+  offerExpiresAt,
+  rejectionReasonCode,
+  rejectionReasonNote,
   acceptedAt,
   centreName,
   centreSuburb,
@@ -350,6 +371,12 @@ export default function ApplicationDetailClient({
       : 'submitted'
 
   const currentStatus = normalizeStatus(liveStatus)
+  const offerMonthlyTotal = offerBreakdown
+    .filter((item) => item.frequency === 'monthly')
+    .reduce((sum, item) => sum + item.amount_cents, 0)
+  const offerOnceOffTotal = offerBreakdown
+    .filter((item) => item.frequency === 'once')
+    .reduce((sum, item) => sum + item.amount_cents, 0)
   const timelineHistory =
     liveHistory.length > 0
       ? liveHistory.map((item) => ({
@@ -562,6 +589,54 @@ export default function ApplicationDetailClient({
           </Button>
         </div>
       ) : null}
+      {offerBreakdown.length > 0 ? (
+        <div className="mt-2 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-cyan-700">Offer Details</p>
+          <div className="mt-2 space-y-1 text-sm text-cyan-900">
+            {offerBreakdown.map((item) => (
+              <p key={`${item.key}-${item.label}`}>
+                {item.label}: <span className="font-semibold">R {(item.amount_cents / 100).toFixed(2)}</span>{' '}
+                <span className="text-xs text-cyan-700">({item.frequency === 'monthly' ? 'monthly' : 'once-off'})</span>
+              </p>
+            ))}
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-cyan-300 bg-white px-3 py-2 text-xs text-cyan-900">
+              Monthly total: <span className="font-bold">R {(offerMonthlyTotal / 100).toFixed(2)}</span>
+            </div>
+            <div className="rounded-xl border border-cyan-300 bg-white px-3 py-2 text-xs text-cyan-900">
+              Once-off total: <span className="font-bold">R {(offerOnceOffTotal / 100).toFixed(2)}</span>
+            </div>
+          </div>
+          {offerExpiresAt ? (
+            <p className="mt-2 text-xs text-cyan-800">Offer valid until {formatDate(offerExpiresAt)}.</p>
+          ) : null}
+          {offerConditions ? (
+            <p className="mt-2 text-xs text-cyan-900">
+              <span className="font-semibold">Conditions:</span> {offerConditions}
+            </p>
+          ) : null}
+          {offerPenalties ? (
+            <p className="mt-1 text-xs text-cyan-900">
+              <span className="font-semibold">Penalties:</span> {offerPenalties}
+            </p>
+          ) : null}
+          {offerAgreement ? (
+            <details className="mt-3 rounded-xl border border-cyan-300 bg-white p-2">
+              <summary className="cursor-pointer text-xs font-semibold text-cyan-800">View agreement text</summary>
+              <pre className="mt-2 whitespace-pre-wrap text-[11px] leading-relaxed text-slate-700">{offerAgreement}</pre>
+            </details>
+          ) : null}
+        </div>
+      ) : null}
+      {normalizeStatus(liveStatus) === 'rejected' ? (
+        <div className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-rose-700">Decision Reason</p>
+          <p className="mt-1 text-sm font-semibold text-rose-900">{getRejectionReasonLabel(rejectionReasonCode)}</p>
+          <p className="mt-1 text-xs text-rose-800">{getRejectionReasonMessage(rejectionReasonCode)}</p>
+          {rejectionReasonNote ? <p className="mt-1 text-xs text-rose-900">Note: {rejectionReasonNote}</p> : null}
+        </div>
+      ) : null}
       <div className="glass-card rounded-2xl p-4 sm:p-5">
         <p className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">Application Summary</p>
         <div className="space-y-3">
@@ -651,6 +726,12 @@ export default function ApplicationDetailClient({
               </p>
             )}
           </div>
+          {adminNotes ? (
+            <div>
+              <p className="mb-1 text-sm text-slate-600">Message from crèche</p>
+              <p className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm text-slate-800">{adminNotes}</p>
+            </div>
+          ) : null}
         </div>
       </div>
       {liveStatus === 'enrolled' && (
