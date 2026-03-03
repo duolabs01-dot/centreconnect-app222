@@ -19,6 +19,7 @@ type CentreGeoRow = {
   id: string
   latitude: number | string | null
   longitude: number | string | null
+  onboarding_complete: boolean | null
 }
 
 function toFiniteNumber(value: unknown): number | null {
@@ -96,16 +97,23 @@ export async function GET(req: Request) {
 
   const [{ data: centresData }, { count }] = await Promise.all([centresQuery, countQuery])
   const centreIds = (centresData ?? []).map((centre) => centre.id as string)
-  const geoById = new Map<string, { latitude: number | string | null; longitude: number | string | null }>()
+  const geoById = new Map<
+    string,
+    { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
+  >()
 
   if (centreIds.length > 0) {
     const { data: geoRows } = await supabase
       .from('ecd_centres')
-      .select('id,latitude,longitude')
+      .select('id,latitude,longitude,onboarding_complete')
       .in('id', centreIds)
 
     ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
-      geoById.set(row.id, { latitude: row.latitude, longitude: row.longitude })
+      geoById.set(row.id, {
+        latitude: row.latitude,
+        longitude: row.longitude,
+        onboarding_complete: row.onboarding_complete,
+      })
     })
   }
 
@@ -113,6 +121,7 @@ export async function GET(req: Request) {
     centres: (centresData ?? []).map((centre) => ({
       ...centre,
       subsidy_accepted: Boolean(centre.subsidy_accepted),
+      is_claimed: Boolean(geoById.get(centre.id as string)?.onboarding_complete ?? centre.is_registered),
       latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
       longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
     })),

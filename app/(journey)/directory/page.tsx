@@ -35,6 +35,7 @@ type CentreGeoRow = {
   id: string
   latitude: number | string | null
   longitude: number | string | null
+  onboarding_complete: boolean | null
 }
 
 function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
@@ -67,6 +68,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
     monthly_fee_min: centre.monthly_fee_min,
     monthly_fee_max: centre.monthly_fee_max,
     subsidy_accepted: Boolean(centre.subsidy_accepted),
+    is_claimed: Boolean(centre.is_claimed),
     latitude,
     longitude,
   }
@@ -158,16 +160,23 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
 
     const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
     const centreIds = centreRows.map((centre) => centre.id)
-    const geoById = new Map<string, { latitude: number | string | null; longitude: number | string | null }>()
+    const geoById = new Map<
+      string,
+      { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
+    >()
 
     if (centreIds.length > 0) {
       const { data: geoRows } = await supabase
         .from('ecd_centres')
-        .select('id,latitude,longitude')
+        .select('id,latitude,longitude,onboarding_complete')
         .in('id', centreIds)
 
       ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
-        geoById.set(row.id, { latitude: row.latitude, longitude: row.longitude })
+        geoById.set(row.id, {
+          latitude: row.latitude,
+          longitude: row.longitude,
+          onboarding_complete: row.onboarding_complete,
+        })
       })
     }
 
@@ -175,6 +184,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       const geo = geoById.get(centre.id)
       return toDirectoryCentre({
         ...centre,
+        is_claimed: Boolean(geo?.onboarding_complete ?? centre.is_registered),
         latitude: (geo?.latitude as number | string | null | undefined) ?? null,
         longitude: (geo?.longitude as number | string | null | undefined) ?? null,
       } as RawDirectoryCentre)

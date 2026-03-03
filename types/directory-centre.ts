@@ -14,10 +14,12 @@ export type DirectoryCentre = {
   monthly_fee_min: number | null
   monthly_fee_max: number | null
   subsidy_accepted: boolean
+  is_claimed: boolean
   latitude: number | null
   longitude: number | null
 }
 
-export type RawDirectoryCentre = Omit<DirectoryCentre, 'subsidy_accepted'> & {
+export type RawDirectoryCentre = Omit<DirectoryCentre, 'subsidy_accepted' | 'is_claimed'> & {
   subsidy_accepted: boolean | null
+  is_claimed?: boolean | null
 }

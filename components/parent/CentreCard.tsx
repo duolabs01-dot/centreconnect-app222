@@ -4,11 +4,13 @@
 
 'use client'
 
+import type { MouseEvent } from 'react'
 import Link from 'next/link'
-import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore } from 'lucide-react'
+import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore, BadgeCheck, Circle } from 'lucide-react'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
+import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 
 interface CentreCardProps {
   id: string
@@ -27,6 +29,7 @@ interface CentreCardProps {
   variant?: 'default' | 'compact' | 'featured'
   subsidy_accepted?: boolean
   fees_display_mode?: 'exact' | 'range' | 'contact' | null
+  is_claimed?: boolean
   latitude?: number | null // Added
   longitude?: number | null // Added
   distanceLabel?: string
@@ -49,10 +52,27 @@ export default function CentreCard({
   variant = 'default',
   subsidy_accepted = false,
   fees_display_mode = null,
+  is_claimed = true,
   distanceLabel,
 }: CentreCardProps) {
   const heroImage = getCentreHeroImage(slug, cover_image_url)
   const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
+  const operationalStatus = getCentreOperationalStatus()
+  const isFoundingPartner = suburb?.trim().toLowerCase() === 'alexandra'
+  const hasPriorityListing = is_registered || isFoundingPartner
+  const pilotBadges = [
+    is_registered ? 'Verified' : null,
+    isFoundingPartner ? 'Founding Partner' : null,
+    hasPriorityListing ? 'Priority Listing' : null,
+  ].filter(Boolean) as string[]
+
+  const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(slug)}`
+
+  function handleClaimClick(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    window.location.href = claimHref
+  }
 
   if (variant === 'compact') {
     return (
@@ -168,6 +188,14 @@ export default function CentreCard({
 
           {/* Meta row */}
           <div className="centre-card__meta">
+            <span
+              className={`centre-card__meta-item ${
+                operationalStatus.isOnline ? 'centre-card__meta-item--online' : 'centre-card__meta-item--offline'
+              }`}
+            >
+              <Circle size={11} fill="currentColor" strokeWidth={0} />
+              {operationalStatus.label}
+            </span>
             <span className={`centre-card__meta-item ${!locationLabel ? 'text-orange-500' : ''}`}>
               <MapPin size={13} strokeWidth={2} />
               {locationLabel || 'Location to be confirmed'}
@@ -203,6 +231,28 @@ export default function CentreCard({
             </div>
           )}
 
+          {pilotBadges.length > 0 ? (
+            <div className="centre-card__badges">
+              {pilotBadges.map((badge) => (
+                <span key={badge} className="centre-card__pilot-badge">
+                  <BadgeCheck size={12} />
+                  {badge}
+                </span>
+              ))}
+            </div>
+          ) : null}
+
+          <div className="centre-card__checklist">
+            <p className="centre-card__checklist-title">Trust checklist</p>
+            <p className="centre-card__checklist-item">
+              <CheckCircle2 size={12} />
+              {is_registered ? 'DSD registered' : 'DSD registration in progress'}
+            </p>
+            <p className="centre-card__checklist-note">
+              Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
+            </p>
+          </div>
+
           <div className="centre-card__trust">
             {is_registered ? (
               <span className="centre-card__trust-item">
@@ -220,6 +270,12 @@ export default function CentreCard({
               </span>
             ) : null}
           </div>
+
+          {!is_claimed ? (
+            <button type="button" className="centre-card__claim-btn" onClick={handleClaimClick}>
+              This is my crèche - Claim &amp; Update
+            </button>
+          ) : null}
         </div>
       </Link>
 
@@ -332,8 +388,66 @@ export default function CentreCard({
           display: flex; align-items: center; gap: 4px;
           font-size: 13px; color: #64748B; font-weight: 500;
         }
+        .centre-card__meta-item--online {
+          color: #059669;
+          font-weight: 700;
+        }
+        .centre-card__meta-item--offline {
+          color: #dc2626;
+          font-weight: 700;
+        }
         .centre-card__meta-item--rating {
           color: #F59E0B;
+        }
+
+        .centre-card__badges {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 10px;
+        }
+        .centre-card__pilot-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          border-radius: 999px;
+          border: 1px solid #99f6e4;
+          background: #ecfeff;
+          color: #0f766e;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 4px 8px;
+        }
+
+        .centre-card__checklist {
+          border: 1px solid #d1fae5;
+          background: #f0fdf4;
+          border-radius: 12px;
+          padding: 10px;
+          margin-bottom: 10px;
+        }
+        .centre-card__checklist-title {
+          margin: 0 0 6px 0;
+          font-size: 10px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #047857;
+        }
+        .centre-card__checklist-item {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          color: #14532d;
+          font-size: 12px;
+          font-weight: 700;
+        }
+        .centre-card__checklist-note {
+          margin: 6px 0 0 0;
+          color: #166534;
+          font-size: 11px;
+          line-height: 1.35;
         }
 
         /* Tags */
@@ -374,6 +488,20 @@ export default function CentreCard({
           font-size: 12px;
           font-weight: 600;
           padding: 3px 8px;
+        }
+
+        .centre-card__claim-btn {
+          width: 100%;
+          margin-top: 10px;
+          border: 1px solid #0f766e;
+          background: #ffffff;
+          color: #0f766e;
+          border-radius: 12px;
+          height: 40px;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 0.01em;
+          cursor: pointer;
         }
       `}</style>
     </>

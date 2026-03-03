@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { cn } from '@/lib/utils'
 import { 
   CheckCircle2, 
   Users, 
@@ -13,7 +13,8 @@ import {
   Clock, 
   MapPin, 
   ShieldCheck,
-  ChevronRight,
+  Circle,
+  BadgeCheck,
   GraduationCap,
   Sparkles,
   Phone,
@@ -31,6 +32,8 @@ import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { ContactCentreSheet } from './contact-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
+import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
+import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 
 type Centre = {
   id: string
@@ -58,6 +61,7 @@ type Centre = {
   fees_last_updated_at: string | null
   contact_whatsapp: string | null
   contact_phone: string | null
+  onboarding_complete?: boolean | null
 }
 
 export function CentreClient({ slug }: { slug: string }) {
@@ -121,6 +125,16 @@ export function CentreClient({ slug }: { slug: string }) {
   if (!centre) return notFound()
 
   const heroImage = getCentreHeroImage(centre.slug, centre.cover_image_url)
+  const operationalStatus = getCentreOperationalStatus()
+  const isClaimed = typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered)
+  const isFoundingPartner = centre.suburb?.trim().toLowerCase() === 'alexandra'
+  const pilotBadges = [
+    centre.is_registered ? 'Verified' : null,
+    isFoundingPartner ? 'Founding Partner' : null,
+    centre.is_registered || isFoundingPartner ? 'Priority Listing' : null,
+  ].filter(Boolean) as string[]
+  const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
+  const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(centre.slug)}`
   const heroFacts = [
     centre.is_registered ? 'DSD Registered' : null,
     centre.subsidy_accepted ? 'Subsidy Friendly' : null,
@@ -267,7 +281,7 @@ export function CentreClient({ slug }: { slug: string }) {
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-6 lg:block">
+          <aside className="hidden space-y-6 lg:block">
             <ModernCard className="sticky top-24 space-y-8 border-t-8 border-t-[#065A82] shadow-2xl">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -296,6 +310,51 @@ export function CentreClient({ slug }: { slug: string }) {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className={`flex items-center gap-2 text-sm font-bold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  <Circle className="h-3 w-3" fill="currentColor" strokeWidth={0} />
+                  {operationalStatus.label}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">{operationalStatus.schedule}</p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-bold text-emerald-900">
+                  <CheckCircle2 className="h-4 w-4" />
+                  {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
+                </p>
+                <p className="mt-2 text-xs text-emerald-900/90">
+                  Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
+                </p>
+              </div>
+
+              {pilotBadges.length > 0 ? (
+                <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-700">Pilot advantages</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {pilotBadges.map((badge) => (
+                      <span
+                        key={badge}
+                        className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-xs font-bold text-teal-700"
+                      >
+                        <BadgeCheck className="h-3 w-3" />
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {!isClaimed ? (
+                <Link
+                  href={claimHref}
+                  className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
+                >
+                  This is my crèche - Claim &amp; Update
+                </Link>
+              ) : null}
+
               <div className="space-y-3 pt-4">
                 <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
                 <div className="grid grid-cols-2 gap-2">
@@ -310,18 +369,19 @@ export function CentreClient({ slug }: { slug: string }) {
         </div>
       </Container>
 
-      {/* Floating Bottom Bar for Mobile */}
-      <div className="fixed bottom-8 inset-x-6 z-50 lg:hidden">
-        <div className="bg-[#1A1A2E] rounded-full p-2.5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10 backdrop-blur-2xl flex items-center justify-between gap-4">
-          <div className="pl-6">
-            <p className="text-[9px] font-black text-white/40 uppercase tracking-widest leading-none mb-1">Fee Starts From</p>
-            <p className="text-lg font-black text-white leading-none">{feesLabel}</p>
-          </div>
-          <div className="shrink-0 w-1/2">
-            <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
-          </div>
-        </div>
-      </div>
+      <MobileCentreDetailsSheet
+        centreId={centre.id}
+        centreSlug={centre.slug}
+        centreName={centre.name}
+        locationLabel={locationLabel}
+        feesLabel={feesLabel}
+        isRegistered={Boolean(centre.is_registered)}
+        isClaimed={isClaimed}
+        isOnline={operationalStatus.isOnline}
+        schedule={operationalStatus.schedule}
+        userRole={userRole}
+        pilotBadges={pilotBadges}
+      />
     </main>
   )
 }
