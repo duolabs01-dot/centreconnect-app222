@@ -101,7 +101,10 @@ export default function RegisterPage() {
 
   function getAuthRedirectUrl() {
     const destination = encodeURIComponent(authDestinationPath())
-    return `${window.location.origin.replace(/\/$/, '')}/auth/confirm?next=${destination}`
+    const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
+    const fallbackOrigin = window.location.origin.replace(/\/$/, '')
+    const baseOrigin = configuredOrigin || fallbackOrigin
+    return `${baseOrigin}/auth/confirm?next=${destination}`
   }
 
   async function handleRegister(e: React.FormEvent) {

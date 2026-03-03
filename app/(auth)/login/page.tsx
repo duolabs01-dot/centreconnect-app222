@@ -51,6 +51,13 @@ export default function LoginPage() {
     return sanitizeNextPath(requestedNext) ?? '/'
   }
 
+  function resolveAuthCallbackUrl() {
+    const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
+    const fallbackOrigin = window.location.origin.replace(/\/$/, '')
+    const baseOrigin = configuredOrigin || fallbackOrigin
+    return `${baseOrigin}/auth/confirm`
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     const normalizedEmail = email.trim().toLowerCase()
@@ -97,7 +104,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(authDestinationPath())}`,
+          redirectTo: `${resolveAuthCallbackUrl()}?next=${encodeURIComponent(authDestinationPath())}`,
           queryParams: {
             prompt: 'select_account',
           },
