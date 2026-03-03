@@ -40,6 +40,25 @@ const GROUP_LABELS: Record<NonNullable<EcdNavItem['group']>, string> = {
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
 
+function readSavedSidebarScroll() {
+  try {
+    const saved = window.sessionStorage.getItem(SIDEBAR_SCROLL_KEY)
+    if (!saved) return null
+    const parsed = Number.parseInt(saved, 10)
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeSavedSidebarScroll(value: number) {
+  try {
+    window.sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(Math.max(0, Math.floor(value))))
+  } catch {
+    // Ignore storage write issues (private browsing / quota).
+  }
+}
+
 export function EcdPortalSidebar({
   userEmail,
   roleLabel = 'ECD Portal',
@@ -59,16 +78,13 @@ export function EcdPortalSidebar({
     const element = desktopScrollRef.current
     if (!element) return
 
-    const savedScroll = window.sessionStorage.getItem(SIDEBAR_SCROLL_KEY)
-    if (savedScroll) {
-      const parsed = Number.parseInt(savedScroll, 10)
-      if (Number.isFinite(parsed) && parsed >= 0) {
-        element.scrollTop = parsed
-      }
+    const saved = readSavedSidebarScroll()
+    if (saved !== null) {
+      element.scrollTop = saved
     }
 
     const onScroll = () => {
-      window.sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(element.scrollTop))
+      writeSavedSidebarScroll(element.scrollTop)
     }
 
     element.addEventListener('scroll', onScroll, { passive: true })
@@ -79,12 +95,9 @@ export function EcdPortalSidebar({
     const element = desktopScrollRef.current
     if (!element) return
 
-    const savedScroll = window.sessionStorage.getItem(SIDEBAR_SCROLL_KEY)
-    if (!savedScroll) return
-
-    const parsed = Number.parseInt(savedScroll, 10)
-    if (Number.isFinite(parsed) && parsed >= 0) {
-      element.scrollTop = parsed
+    const saved = readSavedSidebarScroll()
+    if (saved !== null) {
+      element.scrollTop = saved
     }
   }, [pathname])
 
@@ -146,6 +159,12 @@ export function EcdPortalSidebar({
         key={item.href}
         href={item.href}
         scroll={false}
+        onClick={() => {
+          const element = desktopScrollRef.current
+          if (element) {
+            writeSavedSidebarScroll(element.scrollTop)
+          }
+        }}
         className={cn(
           'group relative flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-bold tracking-tight transition-colors duration-200',
           active
@@ -204,7 +223,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:sticky md:top-0 md:flex md:flex-col"
       >
         <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />

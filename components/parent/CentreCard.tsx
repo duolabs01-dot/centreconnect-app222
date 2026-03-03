@@ -281,7 +281,7 @@ export default function CentreCard({
 
           {!is_claimed ? (
             <button type="button" className="centre-card__claim-btn" onClick={handleClaimClick}>
-              This is my creche - Claim &amp; Update
+              {`This is my cr\u00e8che - Claim & Update`}
             </button>
           ) : null}
         </div>

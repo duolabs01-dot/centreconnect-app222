@@ -26,6 +26,7 @@ const submitSchema = z.object({
   operatingHours: z.string().max(120).optional(),
   keyNeeds: z.array(z.string().max(80)).max(20).optional(),
   additionalContext: z.string().max(1200).optional(),
+  claimSlug: z.string().max(160).optional(),
   monthlyBudget: z.number().min(0).max(100000).optional(),
   expectedChildren: z.number().int().min(0).max(5000).optional(),
   selectedTier: z.enum(['pilot', 'basic', 'standard', 'premium']),
@@ -207,6 +208,7 @@ export async function POST(request: Request) {
       operatingHours: data.operatingHours?.trim() || null,
       keyNeeds: data.keyNeeds ?? [],
       additionalContext: data.additionalContext?.trim() || null,
+      claimSlug: data.claimSlug?.trim() || null,
       requestedPlan: data.selectedTier,
       pilotRequested: data.selectedTier === 'pilot',
     }

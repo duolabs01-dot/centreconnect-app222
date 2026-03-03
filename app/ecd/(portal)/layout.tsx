@@ -98,7 +98,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
   }
 
   return (
-    <div className="ecd-premium-shell ecd-light-shell flex min-h-screen bg-card text-foreground">
+    <div className="ecd-premium-shell ecd-light-shell flex h-screen overflow-hidden bg-card text-foreground">
       <EcdPortalSidebar
         userEmail={user.email ?? null}
         userRole={role}

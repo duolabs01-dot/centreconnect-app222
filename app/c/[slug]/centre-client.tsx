@@ -393,7 +393,7 @@ export function CentreClient({ slug }: { slug: string }) {
                   href={claimHref}
                   className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  This is my creche - Claim &amp; Update
+                  {`This is my cr\u00e8che - Claim & Update`}
                 </Link>
               ) : null}
 

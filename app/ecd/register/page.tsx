@@ -80,12 +80,24 @@ function toggleArrayValue(values: string[], value: string): string[] {
   return values.includes(value) ? values.filter((item) => item !== value) : [...values, value]
 }
 
+function formatClaimSlug(slug: string) {
+  return slug
+    .split(/[-_]/g)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
 export default function EcdRegisterPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || ''
   const requestedPlanParam = (searchParams.get('plan') || '').toLowerCase()
+  const claimSlugParam = (searchParams.get('claim') || '').trim()
+  const hasPresetPlan = Boolean(PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam])
   const initialSelectedTier: PublicTier = PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam] ?? 'growth'
+  const presetPlanLabel = initialSelectedTier === 'starter' ? 'Starter' : initialSelectedTier === 'growth' ? 'Growth' : 'Pro'
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
@@ -93,7 +105,7 @@ export default function EcdRegisterPage() {
     fullName: '',
     email: '',
     phone: '',
-    centreName: '',
+    centreName: claimSlugParam ? formatClaimSlug(claimSlugParam) : '',
     centrePhone: '',
     centreAddress: '',
     centreSuburb: '',
@@ -111,6 +123,7 @@ export default function EcdRegisterPage() {
     selectedTier: initialSelectedTier,
     keyNeeds: ['Admissions pipeline', 'Parent communications'] as string[],
     additionalContext: '',
+    claimSlug: claimSlugParam,
   })
 
   const numericBudget = Number(form.monthlyBudget || 0)
@@ -216,6 +229,7 @@ export default function EcdRegisterPage() {
           recommendedTier: PUBLIC_TO_INTERNAL_TIER[recommendedTier],
           keyNeeds: form.keyNeeds,
           additionalContext: form.additionalContext.trim() || undefined,
+          claimSlug: form.claimSlug || undefined,
           captchaToken: turnstileSiteKey ? captchaToken : undefined,
         }),
       })
@@ -245,33 +259,52 @@ export default function EcdRegisterPage() {
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
             Fill your creche faster and get paid on time. Complete this setup in minutes and choose the plan that matches your centre.
           </p>
+          {hasPresetPlan ? (
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
+              Plan selected: {presetPlanLabel} (R{TIER_PRICES[initialSelectedTier]}/month)
+            </div>
+          ) : null}
+          {form.claimSlug ? (
+            <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
+              Claiming existing centre profile: {formatClaimSlug(form.claimSlug)}
+            </div>
+          ) : null}
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)]">
           <Card className="h-fit rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)] xl:sticky xl:top-24">
             <CardHeader>
-              <CardTitle className="text-xl text-foreground">Packages and Pricing</CardTitle>
-              <CardDescription>Simple plans built for ECD owners.</CardDescription>
+              <CardTitle className="text-xl text-foreground">Selected Plan</CardTitle>
+              <CardDescription>Clear pricing before you confirm.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {PLAN_OPTIONS.map((tier) => (
-                <div key={tier} className="rounded-2xl border border-border bg-slate-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm font-semibold text-foreground">
-                      {tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : 'Pro'}
-                    </p>
-                    <p className="text-xl font-bold text-foreground">R{TIER_PRICES[tier]}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">per month</p>
-                  <p className="mt-2 text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
-                  <ul className="mt-2 space-y-1 text-xs text-slate-600">
-                    {TIER_BENEFITS[tier].map((benefit) => (
-                      <li key={benefit}>- {benefit}</li>
-                    ))}
-                  </ul>
+              <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-bold text-foreground">
+                    {form.selectedTier === 'starter' ? 'Starter' : form.selectedTier === 'growth' ? 'Growth' : 'Pro'}
+                  </p>
+                  <p className="text-xl font-black text-foreground">R{TIER_PRICES[form.selectedTier]}</p>
                 </div>
-              ))}
-              <p className="text-xs text-muted-foreground">After review and approval, your ECD dashboard is activated.</p>
+                <p className="text-xs text-muted-foreground">per month</p>
+                <p className="mt-2 text-sm text-muted-foreground">{TIER_DESCRIPTIONS[form.selectedTier]}</p>
+                <ul className="mt-2 space-y-1 text-xs text-slate-600">
+                  {TIER_BENEFITS[form.selectedTier].map((benefit) => (
+                    <li key={benefit}>- {benefit}</li>
+                  ))}
+                </ul>
+              </div>
+              {!hasPresetPlan ? (
+                <p className="text-xs text-muted-foreground">
+                  You can change this plan in step 3.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Plan was pre-selected from your Choose Plan action. You can confirm and continue below.
+                </p>
+              )}
+              <Button asChild variant="outline" className="h-10 w-full rounded-2xl border-border bg-card px-4 text-xs font-semibold">
+                <Link href="/for-centres#pricing">Compare plans</Link>
+              </Button>
             </CardContent>
           </Card>
 
@@ -422,35 +455,52 @@ export default function EcdRegisterPage() {
                     All plans include onboarding guidance so your team can launch smoothly.
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {PLAN_OPTIONS.map((tier) => {
-                      const active = form.selectedTier === tier
-                      return (
-                        <button
-                          key={tier}
-                          type="button"
-                          onClick={() => setField('selectedTier', tier)}
-                          className={`rounded-2xl border p-3 text-left transition ${
-                            active
-                              ? 'border-teal-400 bg-teal-50 shadow-[var(--shadow-elevation-1)]'
-                              : 'border-border bg-card text-foreground hover:border-teal-200 hover:bg-background'
-                          }`}
-                        >
-                          <p className="text-sm font-semibold text-foreground">
-                            {tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : 'Pro'}
-                          </p>
-                          <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
-                          <p className="text-[11px] font-medium text-muted-foreground">per month</p>
-                          <p className="mt-1 text-xs text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
-                          <ul className="mt-2 space-y-1 text-[11px] text-slate-600">
-                            {TIER_BENEFITS[tier].map((benefit) => (
-                              <li key={benefit}>- {benefit}</li>
-                            ))}
-                          </ul>
-                        </button>
-                      )
-                    })}
-                  </div>
+                  {hasPresetPlan ? (
+                    <div className="rounded-2xl border border-teal-200 bg-white p-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.08em] text-teal-700">Chosen plan</p>
+                      <p className="mt-1 text-sm font-semibold text-foreground">
+                        {presetPlanLabel} - R{TIER_PRICES[form.selectedTier]}/month
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        This plan was pre-selected from your Choose Plan action.
+                      </p>
+                      <div className="mt-2">
+                        <Button asChild variant="outline" className="h-9 rounded-2xl border-border bg-card px-3 text-xs font-semibold">
+                          <Link href="/for-centres#pricing">Need a different plan?</Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {PLAN_OPTIONS.map((tier) => {
+                        const active = form.selectedTier === tier
+                        return (
+                          <button
+                            key={tier}
+                            type="button"
+                            onClick={() => setField('selectedTier', tier)}
+                            className={`rounded-2xl border p-3 text-left transition ${
+                              active
+                                ? 'border-teal-400 bg-teal-50 shadow-[var(--shadow-elevation-1)]'
+                                : 'border-border bg-card text-foreground hover:border-teal-200 hover:bg-background'
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-foreground">
+                              {tier === 'starter' ? 'Starter' : tier === 'growth' ? 'Growth' : 'Pro'}
+                            </p>
+                            <p className="text-lg font-bold text-foreground">R{TIER_PRICES[tier]}</p>
+                            <p className="text-[11px] font-medium text-muted-foreground">per month</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
+                            <ul className="mt-2 space-y-1 text-[11px] text-slate-600">
+                              {TIER_BENEFITS[tier].map((benefit) => (
+                                <li key={benefit}>- {benefit}</li>
+                              ))}
+                            </ul>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
 
                     <div className="space-y-2">
                       <Label>What do you need most right now?</Label>
@@ -530,7 +580,7 @@ export default function EcdRegisterPage() {
                   </Button>
                 ) : (
                   <Button onClick={submitApplication} disabled={loading} className="h-11 rounded-2xl px-5 bg-teal-600 hover:bg-teal-700 text-white font-semibold">
-                    {loading ? 'Submitting...' : 'Submit Service Application'}
+                    {loading ? 'Submitting...' : hasPresetPlan ? 'Confirm & Pay' : 'Submit Service Application'}
                   </Button>
                 )}
               </div>
