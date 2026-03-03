@@ -133,6 +133,10 @@ export function NotificationsInbox({
         templateKey === 'announcement' ||
         templateKey === 'open_day_invite' ||
         templateKey === 'spot_available' ||
+        templateKey.endsWith('_notice') ||
+        templateKey.endsWith('_invite') ||
+        templateKey === 'daily_report_nudge' ||
+        templateKey === 'report_card_ready' ||
         title.includes('announcement') ||
         title.includes('open day') ||
         title.includes('invite') ||

@@ -83,8 +83,8 @@ export function QuickSendTemplate({
         parent_id: parentId,
         ecd_id: ecdId,
         application_id: applicationId,
-        template_key: selectedTemplate?.template_key ?? null,
-        title: selectedTemplate?.title ?? 'Application Update',
+        template_key: 'parent_message',
+        title: `Message from ${centreName}`,
         message: finalMessage,
       })
       if (error) throw error

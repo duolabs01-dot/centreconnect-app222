@@ -24,24 +24,24 @@ type AnnouncementsPageProps = {
 
 const announcementTemplates: Record<string, { title: string; message: string; commsTemplate?: string }> = {
   pickup: {
-    title: 'ðŸš— Pickup Reminder',
-    message: 'Friendly reminder: please bring your pickup code and arrive before closing time today.',
-    commsTemplate: 'application_update',
+    title: 'Pickup Reminder',
+    message: 'Friendly reminder: please bring your pickup code and collect your child before closing time today.',
+    commsTemplate: 'pickup_reminder',
   },
   fee: {
-    title: 'ðŸ’³ Fee Reminder',
-    message: 'Monthly fees are due soon. Please check your billing tab for invoice status and support options.',
-    commsTemplate: 'application_update',
+    title: 'Fee Reminder',
+    message: 'Monthly fees are due soon. Please check Billing in the app if you need your invoice details.',
+    commsTemplate: 'payment_reminder',
   },
   event: {
-    title: 'ðŸ“… Event Update',
-    message: 'Please note an upcoming crèche event. Full details are available in the calendar section.',
-    commsTemplate: 'open_day_invite',
+    title: 'Event Update',
+    message: 'We have an upcoming parent event at the crèche. Please check Calendar for the date and time.',
+    commsTemplate: 'parent_meeting_invite',
   },
   health: {
-    title: 'ðŸ©º Health Notice',
-    message: 'Please keep children at home if unwell and notify the crèche if symptoms start.',
-    commsTemplate: 'application_update',
+    title: 'Health Notice',
+    message: 'Please keep children at home if they are unwell, and let the crèche know as soon as possible.',
+    commsTemplate: 'health_notice',
   },
 }
 

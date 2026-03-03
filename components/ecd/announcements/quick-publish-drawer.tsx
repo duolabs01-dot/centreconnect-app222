@@ -13,41 +13,41 @@ import { publishAnnouncementAction } from '@/lib/actions/announcements/publish'
 export const QUICK_PUBLISH_TEMPLATES = {
   fees_reminder: {
     label: 'Fees Reminder',
-    emoji: '💳',
+    emoji: 'R',
     title: 'Monthly Fees Reminder - {month}',
-    body: `Dear Parents,\n\nThis is a reminder that monthly fees for {month} are due by {due_date}.\n\nPlease contact us if you need support.\n\nThank you,\n{centre_name}`,
+    body: `Dear Parents,\n\nThis is a friendly reminder that fees for {month} are due by {due_date}.\n\nIf you need help, please contact us early so we can support you.\n\nThank you,\n{centre_name}`,
     audience: 'all' as const,
     template_type: 'fees_reminder',
   },
   closure: {
     label: 'Centre Closure',
-    emoji: '📌',
-    title: 'Important: Centre Closed - {date}',
-    body: `Dear Parents,\n\nPlease note that {centre_name} will be closed on {date}.\n\nReason: {reason}\nReopen: {reopen_date}\n\nThank you,\n{centre_name}`,
+    emoji: '!',
+    title: 'Important: Centre Closed on {date}',
+    body: `Dear Parents,\n\nPlease note that {centre_name} will be closed on {date}.\n\nReason: {reason}\nReopen date: {reopen_date}\n\nThank you for understanding,\n{centre_name}`,
     audience: 'all' as const,
     template_type: 'closure',
   },
   absent_child: {
-    label: 'Child Absence',
-    emoji: '🧒',
-    title: 'Absence Notice - {child_name}',
-    body: `Dear {parent_name},\n\nWe noticed {child_name} was absent on {date}. Please reply if there is anything we should know.\n\nWarm regards,\n{centre_name}`,
+    label: 'Absence Check-In',
+    emoji: 'A',
+    title: 'Checking in about {child_name}',
+    body: `Hi {parent_name},\n\nWe noticed {child_name} was absent on {date}.\nPlease let us know if everything is okay.\n\nKind regards,\n{centre_name}`,
     audience: 'individual' as const,
     template_type: 'absent_child',
   },
   holiday: {
     label: 'Holiday Notice',
-    emoji: '🎉',
+    emoji: 'H',
     title: '{centre_name} Holiday Schedule',
-    body: `Dear Parents,\n\nHoliday schedule:\nFrom: {start_date}\nTo: {end_date}\nReopen: {reopen_date}\n\nThank you,\n{centre_name}`,
+    body: `Dear Parents,\n\nHoliday dates:\nFrom: {start_date}\nTo: {end_date}\nReopen date: {reopen_date}\n\nPlease plan collections and transport in advance.\n\nThank you,\n{centre_name}`,
     audience: 'all' as const,
     template_type: 'holiday',
   },
   payment_received: {
     label: 'Payment Received',
-    emoji: '✅',
+    emoji: 'OK',
     title: 'Payment Confirmation - {month}',
-    body: `Dear {parent_name},\n\nWe have received your payment of {amount} for {month}.\n\nThank you,\n{centre_name}`,
+    body: `Hi {parent_name},\n\nWe have received your payment of {amount} for {month}.\n\nThank you for your prompt payment.\n\n{centre_name}`,
     audience: 'individual' as const,
     template_type: 'payment_received',
   },
@@ -69,8 +69,8 @@ function resolveVars(text: string, centreName: string) {
     .replace(/\{centre_name\}/g, centreName)
     .replace(/\{month\}/g, now.toLocaleString('en-ZA', { month: 'long', year: 'numeric' }))
     .replace(/\{date\}/g, now.toLocaleDateString('en-ZA'))
-    .replace(/\{due_date\}/g, 'end of this month')
-    .replace(/\{reason\}/g, 'Planned maintenance')
+    .replace(/\{due_date\}/g, 'the last day of this month')
+    .replace(/\{reason\}/g, 'planned maintenance')
     .replace(/\{reopen_date\}/g, '')
     .replace(/\{start_date\}/g, '')
     .replace(/\{end_date\}/g, '')
@@ -146,7 +146,7 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">When you send this</p>
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <Bell className="h-4 w-4 text-cyan-500" />
-              In-app notifications go to approved/enrolled parents
+              In-app notifications go to approved and enrolled parents
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-700">
               <Globe className="h-4 w-4 text-emerald-600" />
@@ -197,5 +197,4 @@ export function QuickPublishDrawer({ open, templateKey, ecdId, centreName, onClo
     </Sheet>
   )
 }
-
 

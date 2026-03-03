@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
-import { renderTemplate, toStatusLabel } from '@/lib/communications/templates'
+import { renderTemplate } from '@/lib/communications/templates'
 
 type Template = {
   template_key: string
@@ -98,8 +98,8 @@ export function TemplateSendPanel({
         parent_id: parentId,
         ecd_id: ecdId,
         application_id: applicationId,
-        template_key: selectedTemplate?.template_key ?? null,
-        title: selectedTemplate?.title ?? `Application ${toStatusLabel(status)}`,
+        template_key: 'parent_message',
+        title: `Message from ${centreName}`,
         message: finalMessage,
       })
 

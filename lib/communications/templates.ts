@@ -11,10 +11,7 @@ export function toStatusLabel(status: string | null | undefined) {
   return status.replaceAll('_', ' ')
 }
 
-export function renderTemplate(
-  templateBody: string,
-  variables: TemplateVariables
-) {
+export function renderTemplate(templateBody: string, variables: TemplateVariables) {
   return templateBody
     .replaceAll('{{centre_name}}', variables.centreName ?? 'our centre')
     .replaceAll('{{child_name}}', variables.childName ?? 'your child')
@@ -31,37 +28,38 @@ export function buildWarmApplicationUpdateMessage({
   status,
 }: TemplateVariables) {
   const name = parentName ?? 'there'
-  const centre = centreName ?? 'your centre'
+  const centre = centreName ?? 'your creche'
   const child = childName ?? 'your child'
   const appNo = applicationNumber ?? 'your application'
 
   if (status === 'approved') {
-    return `Hi ${name} 🎉 Wonderful news from ${centre}: ${child}'s application (${appNo}) has been approved! Open your Application Journey when you're ready to accept and secure the spot 😊.`
+    return `Hi ${name}. Good news from ${centre}: ${child}'s application (${appNo}) is approved. Open your Application Journey to accept the offer when ready.`
   }
 
   if (status === 'enrolled') {
-    return `Hi ${name} 🌟 ${child} is now enrolled at ${centre}. We’re so excited to welcome your family! You can open the app anytime for daily updates 💙.`
+    return `Hi ${name}. ${child} is now enrolled at ${centre}. We are excited to welcome your family.`
   }
 
   if (status === 'in_review') {
-    return `Hi ${name} 👋 ${centre} has started reviewing ${child}'s application (${appNo}). We’ll keep you posted at every step ✨.`
+    return `Hi ${name}. ${centre} has started reviewing ${child}'s application (${appNo}). We will keep you updated.`
   }
 
   if (status === 'partial') {
-    return `Hi ${name} 💛 ${child}'s application (${appNo}) at ${centre} is saved as partial. Upload the missing documents when you can, and we’ll move it forward right away 📄.`
+    return `Hi ${name}. ${child}'s application (${appNo}) at ${centre} is saved as partial. Please upload the missing documents so we can continue.`
   }
 
   if (status === 'waitlisted') {
-    return `Hi ${name} 🙂 ${child}'s application (${appNo}) is currently on the waitlist at ${centre}. We’ll notify you as soon as a place opens up.`
+    return `Hi ${name}. ${child}'s application (${appNo}) is on the waitlist at ${centre}. We will notify you as soon as a place opens.`
   }
 
   if (status === 'rejected') {
-    return `Hi ${name}, thank you for applying to ${centre}. ${child}'s application (${appNo}) was not successful this time. We’re still here to help you find a great fit nearby 💙.`
+    return `Hi ${name}. Thank you for applying to ${centre}. ${child}'s application (${appNo}) was not successful this time.`
   }
 
   if (status === 'withdrawn') {
-    return `Hi ${name}, ${child}'s application (${appNo}) was marked as withdrawn. If this wasn’t expected, please contact ${centre} and we’ll help 🤝.`
+    return `Hi ${name}. ${child}'s application (${appNo}) was marked as withdrawn. If this was not expected, please contact ${centre}.`
   }
 
-  return `Hi ${name} 👋 ${child}'s application (${appNo}) at ${centre} has been updated to ${toStatusLabel(status)}.`
+  return `Hi ${name}. ${child}'s application (${appNo}) at ${centre} has been updated to ${toStatusLabel(status)}.`
 }
+

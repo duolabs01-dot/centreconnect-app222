@@ -150,12 +150,12 @@ export function CommunicationsComposer({
       } = await supabase.auth.getUser()
       if (!user) throw new Error('Unauthorized')
 
-      const notificationTitle = selectedTemplate?.title?.trim() || `Message from ${centreName}`
+      const notificationTitle = `Message from ${centreName}`
       const { error: notificationError } = await supabase.from('parent_notifications').insert({
         parent_id: recipientParentId,
         ecd_id: ecdId,
         application_id: initialContextType === 'application' ? initialContextId : null,
-        template_key: selectedTemplate?.template_key ?? null,
+        template_key: 'parent_message',
         title: notificationTitle,
         message: finalMessage,
       })
@@ -315,6 +315,11 @@ function labelWithEmoji(template: Template) {
   if (template.template_key === 'open_day_invite') return `[Invite] ${template.title}`
   if (template.template_key === 'application_update') return `[Update] ${template.title}`
   if (template.template_key === 'spot_available') return `[Spot] ${template.title}`
+  if (template.template_key.endsWith('_reminder')) return `[Reminder] ${template.title}`
+  if (template.template_key.endsWith('_notice')) return `[Notice] ${template.title}`
+  if (template.template_key.endsWith('_invite')) return `[Invite] ${template.title}`
+  if (template.template_key.includes('welcome')) return `[Welcome] ${template.title}`
+  if (template.template_key.includes('report_card')) return `[Report] ${template.title}`
   return `[Message] ${template.title}`
 }
 

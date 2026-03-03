@@ -200,8 +200,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
       .from('communication_templates')
       .select('template_key,title,body')
       .eq('is_active', true)
-      .in('template_key', ['missing_documents', 'open_day_invite', 'application_update', 'spot_available'])
-      .order('created_at', { ascending: true }),
+      .order('title', { ascending: true }),
     supabase
       .from('application_status_history')
       .select('id,old_status,new_status,notes,changed_by,created_at')

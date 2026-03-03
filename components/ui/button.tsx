@@ -6,19 +6,19 @@ import { Loader2 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-3xl border border-transparent text-sm font-semibold transition-colors transition-transform duration-200 ease-out active:translate-y-px active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex cursor-pointer select-none items-center justify-center gap-2 whitespace-nowrap rounded-3xl border border-transparent text-sm font-semibold transition-colors duration-200 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 disabled:active:translate-y-0 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "hover-lift bg-primary text-primary-foreground shadow-[var(--shadow-elevation-3)] hover:bg-primary/90 hover:shadow-[var(--shadow-elevation-3)]",
+          "bg-primary text-primary-foreground shadow-[var(--shadow-elevation-2)] hover:bg-primary/90",
         destructive:
-          "hover-lift bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-3)] hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground shadow-[var(--shadow-elevation-2)] hover:bg-destructive/90",
         outline:
-          "hover-lift border-slate-200 bg-white text-slate-700 shadow-[var(--shadow-elevation-1)] hover:bg-slate-50 hover:text-slate-900 hover:shadow-[var(--shadow-elevation-3)]",
+          "border-slate-200 bg-white text-slate-700 shadow-[var(--shadow-elevation-1)] hover:bg-slate-50 hover:text-slate-900",
         secondary:
-          "hover-lift bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:bg-secondary/80",
-        ghost: "hover-lift text-slate-500 hover:text-slate-900 hover:bg-slate-50",
+          "bg-secondary text-secondary-foreground shadow-[var(--shadow-elevation-1)] hover:bg-secondary/80",
+        ghost: "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
         link: "text-cyan-600 underline-offset-4 hover:underline",
       },
       size: {
