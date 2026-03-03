@@ -37,7 +37,7 @@ export function DirectoryAuthCta() {
 
   return (
     <Button asChild className="h-9 px-4 text-sm">
-      <Link href="/login">Sign in</Link>
+      <Link href="/login?next=%2Fdirectory">Sign in/ Sign up</Link>
     </Button>
   )
 }

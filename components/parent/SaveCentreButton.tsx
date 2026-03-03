@@ -102,7 +102,7 @@ export function SaveCentreButton({ centreId, initialSaved = false }: SaveCentreB
 
           <div className="flex flex-col gap-3">
             <Button asChild className="h-14 rounded-2xl bg-cyan-600 hover:bg-cyan-700 font-bold text-lg shadow-xl shadow-cyan-900/20">
-              <Link href="/register">Create Free Account</Link>
+              <Link href="/login?next=%2Fdirectory">Sign in/ Sign up</Link>
             </Button>
             <Button asChild variant="ghost" className="h-12 rounded-2xl font-bold text-slate-500">
               <Link href="/login">I already have an account — Sign In</Link>
