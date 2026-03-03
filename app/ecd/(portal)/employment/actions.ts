@@ -5,12 +5,28 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
+const dateInputSchema = z
+  .string()
+  .trim()
+  .optional()
+  .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+    message: 'Invalid date value',
+  })
+
+const dateTimeInputSchema = z
+  .string()
+  .trim()
+  .optional()
+  .refine((value) => !value || !Number.isNaN(new Date(value).getTime()), {
+    message: 'Invalid date-time value',
+  })
+
 const createJobSchema = z.object({
   title: z.string().trim().min(3).max(120),
   roleType: z.enum(['assistant', 'cook', 'cleaner', 'driver', 'practitioner', 'other']),
   description: z.string().trim().max(2000).optional(),
   requirements: z.string().trim().max(2000).optional(),
-  closesAt: z.string().trim().optional(),
+  closesAt: dateInputSchema,
   publishNow: z.boolean(),
 })
 
@@ -18,7 +34,12 @@ const updateJobApplicationSchema = z.object({
   applicationId: z.string().uuid(),
   nextStatus: z.enum(['new', 'shortlisted', 'interview', 'offer', 'hired', 'rejected']),
   notes: z.string().trim().max(2000).optional(),
-  interviewAt: z.string().trim().optional(),
+  interviewAt: dateTimeInputSchema,
+})
+
+const toggleJobPublishSchema = z.object({
+  jobId: z.string().uuid(),
+  nextPublished: z.boolean(),
 })
 
 async function requireEcdAdminContext() {
@@ -78,20 +99,21 @@ export async function toggleJobPublishAction(formData: FormData) {
   if (!ctx.user) redirect('/ecd/login')
   if (!ctx.ecdId) redirect('/ecd/employment?error=owner-only')
 
-  const jobId = String(formData.get('job_id') ?? '').trim()
-  const nextPublished = String(formData.get('next_published') ?? '').trim() === 'true'
-
-  if (!jobId) {
+  const parsed = toggleJobPublishSchema.safeParse({
+    jobId: String(formData.get('job_id') ?? '').trim(),
+    nextPublished: String(formData.get('next_published') ?? '').trim() === 'true',
+  })
+  if (!parsed.success) {
     redirect('/ecd/employment?error=invalid-job')
   }
 
   const { error } = await ctx.supabase
     .from('jobs')
     .update({
-      is_published: nextPublished,
-      published_at: nextPublished ? new Date().toISOString() : null,
+      is_published: parsed.data.nextPublished,
+      published_at: parsed.data.nextPublished ? new Date().toISOString() : null,
     })
-    .eq('id', jobId)
+    .eq('id', parsed.data.jobId)
     .eq('ecd_id', ctx.ecdId)
 
   if (error) {
@@ -118,7 +140,11 @@ export async function updateJobApplicationStatusAction(formData: FormData) {
   }
 
   const nextNotes = parsed.data.notes ? parsed.data.notes : null
-  const nextInterviewAt = parsed.data.interviewAt ? new Date(parsed.data.interviewAt).toISOString() : null
+  const interviewDate = parsed.data.interviewAt ? new Date(parsed.data.interviewAt) : null
+  if (interviewDate && Number.isNaN(interviewDate.getTime())) {
+    redirect('/ecd/employment?error=invalid-job')
+  }
+  const nextInterviewAt = interviewDate ? interviewDate.toISOString() : null
 
   const { error } = await supabase
     .from('job_applications')

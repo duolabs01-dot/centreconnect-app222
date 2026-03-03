@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -52,12 +52,14 @@ type TeamMemberRow = {
 }
 
 type EmploymentPageProps = {
-  searchParams?: {
-    success?: string
-    error?: string
-    template?: string
-  }
+  searchParams?: Record<string, string | string[] | undefined>
 }
+
+const PANEL_CLASS = 'rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)]'
+const FIELD_CLASS = 'cc-native-field h-11 rounded-2xl'
+const OUTLINE_BUTTON_CLASS =
+  'h-10 rounded-2xl border-border bg-card px-4 text-sm font-semibold text-foreground hover:bg-teal-50 hover:text-teal-700'
+const PRIMARY_BUTTON_CLASS = 'h-11 rounded-2xl bg-teal-600 px-6 text-sm font-bold text-white hover:bg-teal-700'
 
 const jobTemplates: Record<string, { title: string; roleType: string; description: string; requirements: string }> = {
   assistant: {
@@ -80,12 +82,34 @@ const jobTemplates: Record<string, { title: string; roleType: string; descriptio
   },
 }
 
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function queryValue(value: string | string[] | undefined): string | null {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) return value[0] ?? null
+  return null
+}
+
+function toDateTimeLocal(value: string | null): string {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toISOString().slice(0, 16)
+}
+
 export default async function EcdEmploymentPage({ searchParams }: EmploymentPageProps) {
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
   const canManageJobs = role === 'ecd_admin'
-  const selectedTemplate = searchParams?.template && jobTemplates[searchParams.template]
-    ? jobTemplates[searchParams.template]
-    : null
+
+  const selectedTemplateKey = queryValue(searchParams?.template)
+  const selectedTemplate = selectedTemplateKey ? jobTemplates[selectedTemplateKey] ?? null : null
+
+  const successParam = queryValue(searchParams?.success)
+  const errorParam = queryValue(searchParams?.error)
+
   const { data: centre } = await supabase.from('ecd_centres').select('slug,name').eq('id', ecdId).maybeSingle()
 
   const [{ data: jobs }, { count: applicationsCount }, { data: jobApplications }, teamMembersResult] = await Promise.all([
@@ -94,49 +118,45 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       .select('id,title,role_type,is_published,closes_at,created_at')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
-      .limit(20),
-    supabase
-      .from('job_applications')
-      .select('*', { head: true, count: 'exact' })
-      .eq('ecd_id', ecdId),
+      .limit(30),
+    supabase.from('job_applications').select('*', { head: true, count: 'exact' }).eq('ecd_id', ecdId),
     supabase
       .from('job_applications')
       .select('id,applicant_name,applicant_email,applicant_phone,status,notes,interview_at,created_at,jobs(id,title)')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
-      .limit(20),
+      .limit(30),
     supabase
       .from('ecd_admins')
-      .select(
-        'user_id,role,can_approve_applications,can_publish_announcements,invited_at,user_profiles(full_name)'
-      )
+      .select('user_id,role,can_approve_applications,can_publish_announcements,invited_at,user_profiles(full_name)')
       .eq('ecd_id', ecdId)
       .order('invited_at', { ascending: true })
-      .limit(50),
+      .limit(100),
   ])
 
-  const jobRows = ((jobs ?? []) as JobRow[]) ?? []
-  const applicationRows = ((jobApplications ?? []) as JobApplicationRow[]) ?? []
-  const teamMembers = ((teamMembersResult.data ?? []) as TeamMemberRow[]) ?? []
+  const jobRows = (jobs ?? []) as JobRow[]
+  const applicationRows = (jobApplications ?? []) as JobApplicationRow[]
+  const teamMembers = (teamMembersResult.data ?? []) as TeamMemberRow[]
+
   const publishedCount = jobRows.filter((job) => job.is_published).length
-  const draftCount = jobRows.length - publishedCount
+  const draftCount = Math.max(jobRows.length - publishedCount, 0)
 
   const successMessage =
-    searchParams?.success === 'job-created'
+    successParam === 'job-created'
       ? 'Job created successfully.'
-      : searchParams?.success === 'job-updated'
+      : successParam === 'job-updated'
         ? 'Job visibility updated.'
         : null
 
   const errorMessage =
-    searchParams?.error === 'owner-only'
+    errorParam === 'owner-only'
       ? 'Only ECD admins can create or publish jobs.'
-      : searchParams?.error === 'invalid-job'
+      : errorParam === 'invalid-job'
         ? 'Please check job fields and try again.'
-        : searchParams?.error === 'create-failed'
+        : errorParam === 'create-failed'
           ? 'Could not create job. Try again.'
-          : searchParams?.error === 'publish-failed'
-            ? 'Could not update publishing state. Try again.'
+          : errorParam === 'publish-failed'
+            ? 'Could not update this action. Try again.'
             : null
 
   return (
@@ -147,78 +167,76 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
-      <section className="space-y-6">
+      <section className="space-y-6 pb-6">
         {successMessage ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
             {successMessage}
           </div>
         ) : null}
+
         {errorMessage ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
-          </div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{errorMessage}</div>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card className="border-slate-200">
+          <Card className={PANEL_CLASS}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-600">Total Jobs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-slate-900">{jobRows.length}</p>
+              <p className="text-2xl font-black text-foreground">{jobRows.length}</p>
             </CardContent>
           </Card>
-          <Card className="border-slate-200">
+
+          <Card className={PANEL_CLASS}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-600">Published</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-slate-900">{publishedCount}</p>
+              <p className="text-2xl font-black text-foreground">{publishedCount}</p>
             </CardContent>
           </Card>
-          <Card className="border-slate-200">
+
+          <Card className={PANEL_CLASS}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-slate-600">Drafts</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-slate-900">{draftCount}</p>
+              <p className="text-2xl font-black text-foreground">{draftCount}</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Your Team ({teamMembers.length})</CardTitle>
+        <Card className={PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Your Team ({teamMembers.length})</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {teamMembers.length === 0 ? (
-              <p className="text-sm text-slate-500">No team members found. Invite staff from Settings.</p>
+              <p className="text-sm text-slate-500">No team members found. Invite staff from settings.</p>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-border rounded-2xl border border-border">
                 {teamMembers.map((member) => {
-                  const profile = Array.isArray(member.user_profiles) ? member.user_profiles[0] : member.user_profiles
+                  const profile = normalizeOne(member.user_profiles)
                   const name = profile?.full_name ?? 'Team Member'
                   const memberRoleLabel =
-                    member.role === 'ecd_admin'
-                      ? 'Crèche Admin'
-                      : member.role === 'ecd_supervisor'
-                        ? 'Supervisor'
-                        : 'Staff Member'
+                    member.role === 'ecd_admin' ? 'Crèche Admin' : member.role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'
+
                   return (
-                    <div key={member.user_id} className="flex items-center justify-between py-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{name}</p>
+                    <div key={member.user_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-[160px]">
+                        <p className="text-sm font-semibold text-foreground">{name}</p>
                         <p className="text-xs text-slate-500">{memberRoleLabel}</p>
                       </div>
-                      <div className="flex flex-wrap gap-1 text-right">
+                      <div className="flex flex-wrap gap-2 text-right">
                         {member.can_approve_applications ? (
-                          <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] text-cyan-700">
-                            Can Approve
+                          <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-1 text-[10px] font-semibold text-teal-700">
+                            Can approve
                           </span>
                         ) : null}
                         {member.can_publish_announcements ? (
-                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700">
-                            Can Publish
+                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">
+                            Can publish
                           </span>
                         ) : null}
                       </div>
@@ -227,31 +245,31 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                 })}
               </div>
             )}
+
             {role === 'ecd_admin' ? (
-              <div className="mt-4 border-t border-slate-100 pt-4">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/ecd/profile#staff">Manage Staff in Settings</Link>
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" asChild className={OUTLINE_BUTTON_CLASS}>
+                <Link href="/ecd/profile#staff">Manage staff in settings</Link>
+              </Button>
             ) : null}
           </CardContent>
         </Card>
 
-        <Card className="pipeline-card pipeline-col-shortlisted border-slate-200">
-          <CardHeader>
-            <CardTitle className="pipeline-column-header -mx-6 -mt-6 mb-3 px-6 py-4">Candidate Pipeline</CardTitle>
+        <Card className={PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Candidate Pipeline</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             <p className="text-sm text-slate-600">Total job applications received: {applicationsCount ?? 0}</p>
+
             {applicationRows.length === 0 ? (
               <p className="text-sm text-slate-600">No applicants yet.</p>
             ) : (
               <div className="space-y-3">
                 {applicationRows.map((application) => {
-                  const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs
+                  const job = normalizeOne(application.jobs)
                   return (
-                    <div key={application.id} className="pipeline-item rounded-2xl border border-slate-200 p-3">
-                      <p className="text-sm font-semibold text-slate-900">{application.applicant_name}</p>
+                    <div key={application.id} className="rounded-2xl border border-border bg-slate-50/60 p-4">
+                      <p className="text-sm font-semibold text-foreground">{application.applicant_name}</p>
                       <p className="mt-1 text-xs text-slate-600">
                         {job?.title ?? 'Job role'} | Applied {formatDate(application.created_at)}
                       </p>
@@ -259,13 +277,11 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                       {application.applicant_phone ? (
                         <p className="mt-1 text-xs text-slate-600">{application.applicant_phone}</p>
                       ) : null}
-                      <form action={updateJobApplicationStatusAction} className="mt-3 flex flex-wrap items-center gap-2">
+
+                      <form action={updateJobApplicationStatusAction} className="mt-3 grid gap-2 md:grid-cols-[180px_220px_1fr_auto]">
                         <input type="hidden" name="application_id" value={application.id} />
-                        <select
-                          name="next_status"
-                          defaultValue={application.status}
-                          className="cc-native-field h-9 min-w-[160px]"
-                        >
+
+                        <select name="next_status" defaultValue={application.status} className="cc-native-field h-10 rounded-2xl">
                           <option value="new">New</option>
                           <option value="shortlisted">Shortlisted</option>
                           <option value="interview">Interview</option>
@@ -273,24 +289,25 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                           <option value="hired">Hired</option>
                           <option value="rejected">Rejected</option>
                         </select>
+
                         <input
                           type="datetime-local"
                           name="interview_at"
-                          defaultValue={
-                            application.interview_at
-                              ? new Date(application.interview_at).toISOString().slice(0, 16)
-                              : ''
-                          }
-                          className="cc-native-field h-9"
+                          defaultValue={toDateTimeLocal(application.interview_at)}
+                          className="cc-native-field h-10 rounded-2xl"
                         />
+
                         <input
                           type="text"
                           name="notes"
                           placeholder="Notes (optional)"
                           defaultValue={application.notes ?? ''}
-                          className="cc-native-field h-9 min-w-[220px] flex-1"
+                          className="cc-native-field h-10 rounded-2xl"
                         />
-                        <Button type="submit" size="sm" variant="outline">Update</Button>
+
+                        <Button type="submit" size="sm" variant="outline" className={OUTLINE_BUTTON_CLASS}>
+                          Update
+                        </Button>
                       </form>
                     </div>
                   )
@@ -300,35 +317,37 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Create Job</CardTitle>
+        <Card className={PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Create Job</CardTitle>
           </CardHeader>
           <CardContent>
             {canManageJobs ? (
               <form action={createJobAction} className="grid gap-3 sm:grid-cols-2">
                 <div className="sm:col-span-2 flex flex-wrap gap-2">
-                  <Button size="sm" type="button" variant="outline" asChild>
+                  <Button size="sm" type="button" variant="outline" asChild className={OUTLINE_BUTTON_CLASS}>
                     <Link href="/ecd/employment?template=assistant">Template: Assistant</Link>
                   </Button>
-                  <Button size="sm" type="button" variant="outline" asChild>
+                  <Button size="sm" type="button" variant="outline" asChild className={OUTLINE_BUTTON_CLASS}>
                     <Link href="/ecd/employment?template=practitioner">Template: Practitioner</Link>
                   </Button>
-                  <Button size="sm" type="button" variant="outline" asChild>
+                  <Button size="sm" type="button" variant="outline" asChild className={OUTLINE_BUTTON_CLASS}>
                     <Link href="/ecd/employment?template=cleaner">Template: Cleaner</Link>
                   </Button>
-                  <Button size="sm" type="button" variant="outline" asChild>
+                  <Button size="sm" type="button" variant="outline" asChild className={OUTLINE_BUTTON_CLASS}>
                     <Link href="/ecd/employment">Custom</Link>
                   </Button>
                 </div>
+
                 <input
                   name="title"
                   required
                   placeholder="Job title (e.g. Assistant Practitioner)"
                   defaultValue={selectedTemplate?.title ?? ''}
-                  className="cc-native-field sm:col-span-2"
+                  className={`${FIELD_CLASS} sm:col-span-2`}
                 />
-                <select name="role_type" className="cc-native-field" defaultValue={selectedTemplate?.roleType ?? 'assistant'}>
+
+                <select name="role_type" className={FIELD_CLASS} defaultValue={selectedTemplate?.roleType ?? 'assistant'}>
                   <option value="assistant">Assistant</option>
                   <option value="practitioner">Practitioner</option>
                   <option value="cook">Cook</option>
@@ -336,73 +355,75 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                   <option value="driver">Driver</option>
                   <option value="other">Other</option>
                 </select>
+
                 <div>
                   <label htmlFor="closes_at" className="mb-1 block text-sm font-medium text-slate-700">
-                    Application Closing Date
-                    <span className="ml-1 text-xs font-normal text-slate-500">(Last day applicants can apply)</span>
+                    Application closing date
                   </label>
-                  <input
-                    id="closes_at"
-                    name="closes_at"
-                    type="date"
-                    className="cc-native-field"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                  <p className="mt-1 text-xs text-slate-500">Leave blank if the position is open until filled.</p>
+                  <input id="closes_at" name="closes_at" type="date" className={FIELD_CLASS} min={new Date().toISOString().split('T')[0]} />
+                  <p className="mt-1 text-xs text-slate-500">Leave blank if the role is open until filled.</p>
                 </div>
+
                 <textarea
                   name="description"
                   placeholder="Short role description"
                   defaultValue={selectedTemplate?.description ?? ''}
-                  className="cc-native-field min-h-24 sm:col-span-2"
+                  className="cc-native-field min-h-24 rounded-2xl sm:col-span-2"
                 />
+
                 <textarea
                   name="requirements"
                   placeholder="Key requirements"
                   defaultValue={selectedTemplate?.requirements ?? ''}
-                  className="cc-native-field min-h-24 sm:col-span-2"
+                  className="cc-native-field min-h-24 rounded-2xl sm:col-span-2"
                 />
+
                 <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2">
-                  <input type="checkbox" name="publish_now" />
+                  <input type="checkbox" name="publish_now" className="h-4 w-4 rounded border-border text-teal-600" />
                   Publish immediately
                 </label>
+
                 <div className="sm:col-span-2">
-                  <Button type="submit" className="w-full sm:w-auto">Create Job</Button>
+                  <Button type="submit" className={`${PRIMARY_BUTTON_CLASS} w-full sm:w-auto`}>
+                    Create Job
+                  </Button>
                 </div>
               </form>
             ) : (
-              <p className="text-sm text-slate-600">
-                You can view hiring activity, but only ECD admins can create and publish jobs.
-              </p>
+              <p className="text-sm text-slate-600">You can view hiring activity, but only ECD admins can create and publish jobs.</p>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Open Positions</CardTitle>
+        <Card className={PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Open Positions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {jobRows.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No jobs yet. Create your first role above to show it under Job opportunities on the landing page.
-              </p>
+              <p className="text-sm text-slate-600">No jobs yet. Create your first role above to publish it on your public profile.</p>
             ) : (
               jobRows.map((job) => (
-                <div key={job.id} className="rounded-2xl border border-slate-200 p-3">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
+                <div key={job.id} className="rounded-2xl border border-border bg-slate-50/60 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{job.title}</p>
+                      <p className="text-sm font-semibold text-foreground">{job.title}</p>
                       <p className="mt-1 text-xs text-slate-600">
                         {job.role_type} | {job.is_published ? 'Published' : 'Draft'} | Created {formatDate(job.created_at)}
                       </p>
                       {job.closes_at ? <p className="mt-1 text-xs text-slate-600">Closes {formatDate(job.closes_at)}</p> : null}
                     </div>
+
                     {canManageJobs ? (
                       <form action={toggleJobPublishAction}>
                         <input type="hidden" name="job_id" value={job.id} />
                         <input type="hidden" name="next_published" value={job.is_published ? 'false' : 'true'} />
-                        <Button type="submit" size="sm" variant={job.is_published ? 'outline' : 'default'}>
+                        <Button
+                          type="submit"
+                          size="sm"
+                          variant={job.is_published ? 'outline' : 'default'}
+                          className={job.is_published ? OUTLINE_BUTTON_CLASS : PRIMARY_BUTTON_CLASS}
+                        >
                           {job.is_published ? 'Unpublish' : 'Publish'}
                         </Button>
                       </form>
@@ -416,7 +437,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
 
         {centre?.slug ? (
           <div className="flex justify-start">
-            <Button asChild variant="outline">
+            <Button asChild variant="outline" className={OUTLINE_BUTTON_CLASS}>
               <Link href={`/centre/${centre.slug}`}>View your public jobs section</Link>
             </Button>
           </div>
@@ -425,5 +446,3 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     </EcdOsShell>
   )
 }
-
-

@@ -127,18 +127,14 @@ export function EcdPortalSidebar({
 
     if (item.comingSoon) {
       return (
-        <div
-          key={item.href}
-          className="group relative flex items-center gap-3 rounded-3xl border border-slate-200/80 bg-slate-50 px-4 py-3"
-          aria-disabled="true"
-        >
+        <div key={item.href} className="group relative flex items-center gap-3 rounded-3xl border border-border bg-slate-50 px-4 py-3" aria-disabled="true">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
             <item.icon className="h-4 w-4 shrink-0" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold tracking-tight text-slate-700">{item.label}</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-slate-300 bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500">
+          <span className="inline-flex items-center rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500">
             Soon
           </span>
         </div>
@@ -208,7 +204,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-5 py-8 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:flex md:flex-col"
       >
         <div className="px-4 mb-8">
           <BrandMark compact className="brightness-100" />
@@ -229,7 +225,7 @@ export function EcdPortalSidebar({
           {comingSoonItems.length > 0 ? (
             <Fragment>
               <div className="my-4 px-4">
-                <div className="h-px w-full bg-slate-100" />
+                <div className="h-px w-full bg-border" />
               </div>
               <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 Coming Soon
@@ -241,7 +237,7 @@ export function EcdPortalSidebar({
           {settingsItem ? (
             <Fragment>
               <div className="my-4 px-4">
-                <div className="h-px w-full bg-slate-100" />
+                <div className="h-px w-full bg-border" />
               </div>
               <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 {GROUP_LABELS.settings}
