@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
+import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
 import {
@@ -327,6 +328,15 @@ export async function POST(request: Request) {
   )
   if (!setupEmailResult.success) {
     emailWarnings.push(setupEmailResult.error ?? 'Failed to queue password setup email.')
+  } else {
+    await writeInviteLog(adminClient, {
+      centreId: centre.id,
+      ownerEmail: normalizedEmail,
+      ownerPhone: data.phone,
+      inviteType: 'email',
+      status: 'sent',
+      notes: 'ECD admin password setup invite.',
+    })
   }
 
   if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
@@ -344,6 +354,15 @@ export async function POST(request: Request) {
     )
     if (!migrationEmailResult.success) {
       emailWarnings.push(migrationEmailResult.error ?? 'Failed to queue ECD admin migration email.')
+    } else {
+      await writeInviteLog(adminClient, {
+        centreId: centre.id,
+        ownerEmail: normalizedEmail,
+        ownerPhone: data.phone,
+        inviteType: 'email',
+        status: 'sent',
+        notes: 'Parent access revoked and migrated to ECD Admin.',
+      })
     }
   }
 
@@ -367,6 +386,15 @@ export async function POST(request: Request) {
     )
     if (!welcomePackResult.success) {
       emailWarnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
+    } else {
+      await writeInviteLog(adminClient, {
+        centreId: centre.id,
+        ownerEmail: normalizedEmail,
+        ownerPhone: data.phone,
+        inviteType: 'welcome_pack',
+        status: 'sent',
+        notes: 'Pilot welcome pack on tenant creation.',
+      })
     }
   }
 

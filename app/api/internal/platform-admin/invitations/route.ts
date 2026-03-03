@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -116,6 +117,14 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
+
+  await writeInviteLog(adminClient, {
+    centreId: data.ecdId,
+    ownerEmail: normalizedEmail,
+    inviteType: 'email',
+    status: 'sent',
+    notes: `ECD access invite (${data.role})`,
+  })
 
   return NextResponse.json({
     invitedEmail: normalizedEmail,

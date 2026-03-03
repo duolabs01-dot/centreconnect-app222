@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
+import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 function slugify(input: string) {
   return input
@@ -226,6 +227,14 @@ export async function POST() {
       )
       if (!welcomePackResult.success) {
         warnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
+      } else {
+        await writeInviteLog(admin, {
+          centreId: centre.id,
+          ownerEmail: user.email,
+          inviteType: 'welcome_pack',
+          status: 'sent',
+          notes: 'Pilot welcome pack (bootstrap-centre).',
+        })
       }
     }
 

@@ -16,7 +16,8 @@ import {
   Zap,
   Activity,
   Cpu,
-  LifeBuoy
+  LifeBuoy,
+  Mail
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
   { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
+  { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites' },
   { label: 'Support Relay', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
 ]
 
