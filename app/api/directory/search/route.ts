@@ -22,6 +22,12 @@ type CentreGeoRow = {
   onboarding_complete: boolean | null
 }
 
+type CentreApplicationRow = {
+  id: string
+  ecd_id: string
+  status: string | null
+}
+
 function toFiniteNumber(value: unknown): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null
@@ -46,6 +52,9 @@ export async function GET(req: Request) {
   }
 
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   let centresQuery = supabase
     .from('public_ecd_centres')
@@ -97,6 +106,7 @@ export async function GET(req: Request) {
 
   const [{ data: centresData }, { count }] = await Promise.all([centresQuery, countQuery])
   const centreIds = (centresData ?? []).map((centre) => centre.id as string)
+  const applicationByCentre = new Map<string, { id: string; status: string | null }>()
   const geoById = new Map<
     string,
     { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
@@ -117,6 +127,24 @@ export async function GET(req: Request) {
     })
   }
 
+  if (user && centreIds.length > 0) {
+    const { data: applicationRows } = await supabase
+      .from('applications')
+      .select('id,ecd_id,status')
+      .eq('parent_id', user.id)
+      .in('ecd_id', centreIds)
+      .order('created_at', { ascending: false })
+
+    ;((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
+      if (!applicationByCentre.has(row.ecd_id)) {
+        applicationByCentre.set(row.ecd_id, {
+          id: row.id,
+          status: row.status ?? null,
+        })
+      }
+    })
+  }
+
   return NextResponse.json({
     centres: (centresData ?? []).map((centre) => ({
       ...centre,
@@ -124,6 +152,8 @@ export async function GET(req: Request) {
       is_claimed: Boolean(geoById.get(centre.id as string)?.onboarding_complete ?? centre.is_registered),
       latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
       longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
+      existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
+      existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
     })),
     totalResults: count ?? 0,
   })

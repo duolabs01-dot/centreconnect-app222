@@ -60,6 +60,7 @@ export function buildSaParentOfferAgreement(params: AgreementParams) {
     '',
     '4. CONDITIONS OF ACCEPTANCE',
     params.customConditions.trim() || '- Parent confirms child profile information is accurate and complete before enrollment is finalized.',
+    "- If the creche accepts/enrols a child with incomplete profile, it is the creche's responsibility to follow up.",
     '',
     '5. PENALTIES, LATE FEES, AND NOTICE',
     params.customPenalties.trim() ||
@@ -68,6 +69,8 @@ export function buildSaParentOfferAgreement(params: AgreementParams) {
     '6. LEGAL AND PRIVACY',
     '- This agreement is issued by the centre through CentreConnect for enrollment administration.',
     '- POPIA applies to personal information processing for admissions and billing operations.',
+    '- Fee, notice, and cancellation terms must comply with the Consumer Protection Act 68 of 2008 and applicable South African law.',
+    '- The centre remains responsible for admission due diligence, document follow-up, and child safety compliance before attendance starts.',
     '- Any disputes should first be handled directly with the centre in writing.',
     '',
     '7. ACCEPTANCE',

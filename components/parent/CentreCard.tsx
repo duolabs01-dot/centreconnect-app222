@@ -33,6 +33,17 @@ interface CentreCardProps {
   latitude?: number | null // Added
   longitude?: number | null // Added
   distanceLabel?: string
+  existingApplicationId?: string | null
+  existingApplicationStatus?: string | null
+}
+
+function formatStatusLabel(status?: string | null) {
+  if (!status) return 'Submitted'
+  return status
+    .split('_')
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ')
 }
 
 export default function CentreCard({
@@ -54,6 +65,8 @@ export default function CentreCard({
   fees_display_mode = null,
   is_claimed = true,
   distanceLabel,
+  existingApplicationId,
+  existingApplicationStatus,
 }: CentreCardProps) {
   const heroImage = getCentreHeroImage(slug, cover_image_url)
   const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
@@ -67,11 +80,26 @@ export default function CentreCard({
   ].filter(Boolean) as string[]
 
   const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(slug)}`
+  const hasExistingApplication = Boolean(existingApplicationId)
+  const applicationStatusLabel = formatStatusLabel(existingApplicationStatus)
 
   function handleClaimClick(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     event.stopPropagation()
     window.location.href = claimHref
+  }
+
+  function handleApplyClick(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    window.location.href = `/apply/${slug}`
+  }
+
+  function handleViewStatusClick(event: MouseEvent<HTMLButtonElement>) {
+    if (!existingApplicationId) return
+    event.preventDefault()
+    event.stopPropagation()
+    window.location.href = `/parent/applications/${existingApplicationId}`
   }
 
   if (variant === 'compact') {
@@ -194,7 +222,7 @@ export default function CentreCard({
               }`}
             >
               <Circle size={11} fill="currentColor" strokeWidth={0} />
-              {operationalStatus.label}
+              {operationalStatus.isOnline ? 'Online' : 'Offline'}
             </span>
             <span className={`centre-card__meta-item ${!locationLabel ? 'text-orange-500' : ''}`}>
               <MapPin size={13} strokeWidth={2} />
@@ -257,7 +285,7 @@ export default function CentreCard({
               Subsidy readiness supports quality operations.
             </p>
             <p className="centre-card__checklist-note">
-              Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
+              Government subsidy = higher quality & safety oversight.
             </p>
           </div>
 
@@ -277,6 +305,23 @@ export default function CentreCard({
                 <MessageCircleMore size={12} /> Clear fees
               </span>
             ) : null}
+          </div>
+
+          <div className="centre-card__apply-row">
+            {hasExistingApplication ? (
+              <>
+                <button type="button" className="centre-card__apply-btn centre-card__apply-btn--disabled" disabled>
+                  Apply (Already submitted)
+                </button>
+                <button type="button" className="centre-card__status-btn" onClick={handleViewStatusClick}>
+                  View status: {applicationStatusLabel}
+                </button>
+              </>
+            ) : (
+              <button type="button" className="centre-card__apply-btn" onClick={handleApplyClick}>
+                Apply
+              </button>
+            )}
           </div>
 
           {!is_claimed ? (
@@ -499,6 +544,46 @@ export default function CentreCard({
           font-size: 12px;
           font-weight: 600;
           padding: 3px 8px;
+        }
+
+        .centre-card__apply-row {
+          margin-top: 10px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .centre-card__apply-btn {
+          border: 1px solid #0e7490;
+          background: #ecfeff;
+          color: #0e7490;
+          border-radius: 999px;
+          height: 32px;
+          padding: 0 12px;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          cursor: pointer;
+        }
+
+        .centre-card__apply-btn--disabled {
+          border-color: #cbd5e1;
+          background: #f1f5f9;
+          color: #64748b;
+          cursor: not-allowed;
+        }
+
+        .centre-card__status-btn {
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          color: #475569;
+          border-radius: 999px;
+          height: 32px;
+          padding: 0 12px;
+          font-size: 11px;
+          font-weight: 700;
+          cursor: pointer;
         }
 
         .centre-card__claim-btn {

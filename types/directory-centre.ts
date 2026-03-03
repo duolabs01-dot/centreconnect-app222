@@ -17,9 +17,16 @@ export type DirectoryCentre = {
   is_claimed: boolean
   latitude: number | null
   longitude: number | null
+  existingApplicationId?: string | null
+  existingApplicationStatus?: string | null
 }
 
-export type RawDirectoryCentre = Omit<DirectoryCentre, 'subsidy_accepted' | 'is_claimed'> & {
+export type RawDirectoryCentre = Omit<
+  DirectoryCentre,
+  'subsidy_accepted' | 'is_claimed' | 'existingApplicationId' | 'existingApplicationStatus'
+> & {
   subsidy_accepted: boolean | null
   is_claimed?: boolean | null
+  existingApplicationId?: string | null
+  existingApplicationStatus?: string | null
 }

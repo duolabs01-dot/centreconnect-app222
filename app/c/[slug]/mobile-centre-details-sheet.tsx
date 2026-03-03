@@ -120,7 +120,7 @@ export function MobileCentreDetailsSheet({
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                 <p className={`flex items-center gap-2 text-sm font-bold ${isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
                   <Circle size={10} fill="currentColor" strokeWidth={0} />
-                  {isOnline ? 'Online now' : 'Closed now'}
+                  {isOnline ? 'Online' : 'Offline'}
                 </p>
                 <p className="mt-1 text-xs text-slate-600">{schedule}</p>
               </div>
@@ -142,7 +142,7 @@ export function MobileCentreDetailsSheet({
                   </li>
                 </ul>
                 <p className="mt-2 text-xs text-emerald-900/90">
-                  Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
+                  Government subsidy = higher quality & safety oversight.
                 </p>
               </div>
 

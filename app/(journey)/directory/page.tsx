@@ -38,6 +38,12 @@ type CentreGeoRow = {
   onboarding_complete: boolean | null
 }
 
+type CentreApplicationRow = {
+  id: string
+  ecd_id: string
+  status: string | null
+}
+
 function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
   const latitude =
     typeof centre.latitude === 'number'
@@ -71,6 +77,8 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
     is_claimed: Boolean(centre.is_claimed),
     latitude,
     longitude,
+    existingApplicationId: centre.existingApplicationId ?? null,
+    existingApplicationStatus: centre.existingApplicationStatus ?? null,
   }
 }
 
@@ -160,6 +168,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
 
     const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
     const centreIds = centreRows.map((centre) => centre.id)
+    const applicationByCentre = new Map<string, { id: string; status: string | null }>()
     const geoById = new Map<
       string,
       { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
@@ -180,13 +189,34 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       })
     }
 
+    if (user && centreIds.length > 0) {
+      const { data: applicationRows } = await supabase
+        .from('applications')
+        .select('id,ecd_id,status')
+        .eq('parent_id', user.id)
+        .in('ecd_id', centreIds)
+        .order('created_at', { ascending: false })
+
+      ;((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
+        if (!applicationByCentre.has(row.ecd_id)) {
+          applicationByCentre.set(row.ecd_id, {
+            id: row.id,
+            status: row.status ?? null,
+          })
+        }
+      })
+    }
+
     centres = centreRows.map((centre) => {
       const geo = geoById.get(centre.id)
+      const existingApplication = applicationByCentre.get(centre.id)
       return toDirectoryCentre({
         ...centre,
         is_claimed: Boolean(geo?.onboarding_complete ?? centre.is_registered),
         latitude: (geo?.latitude as number | string | null | undefined) ?? null,
         longitude: (geo?.longitude as number | string | null | undefined) ?? null,
+        existingApplicationId: existingApplication?.id ?? null,
+        existingApplicationStatus: existingApplication?.status ?? null,
       } as RawDirectoryCentre)
     })
   } catch (err) {

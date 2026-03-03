@@ -478,7 +478,7 @@ export function CentreClient({ slug }: { slug: string }) {
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <p className={`flex items-center gap-2 text-sm font-bold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
                   <Circle className="h-3 w-3" fill="currentColor" strokeWidth={0} />
-                  {operationalStatus.label}
+                  {operationalStatus.isOnline ? 'Online' : 'Offline'}
                 </p>
                 <p className="mt-1 text-xs text-slate-600">{operationalStatus.schedule}</p>
               </div>
@@ -500,7 +500,7 @@ export function CentreClient({ slug }: { slug: string }) {
                   </li>
                 </ul>
                 <p className="mt-2 text-xs text-emerald-900/90">
-                  Why parents care: Government subsidy standards usually mean stronger quality and safety oversight.
+                  Government subsidy = higher quality & safety oversight.
                 </p>
               </div>
 
