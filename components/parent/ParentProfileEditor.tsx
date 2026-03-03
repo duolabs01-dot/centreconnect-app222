@@ -188,7 +188,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 label: 'Pickup & Collection',
                 value: `${profile.enrolled_child_count} enrolled profile${profile.enrolled_child_count === 1 ? '' : 's'}`,
                 icon: Shield,
-                href: '/parent/applications',
+                href: '/ecd/pickup',
               },
             ]
           : []),

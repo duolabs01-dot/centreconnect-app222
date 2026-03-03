@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,7 @@ function sanitizeFileName(fileName: string) {
 }
 
 export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Props) {
+  const router = useRouter()
   const supabase = createClient()
   const [documents, setDocuments] = useState(initialDocuments)
   const [auditLog, setAuditLog] = useState(initialAuditLog)
@@ -133,12 +135,10 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      const { data, error } = await supabase.storage.from(DOCUMENT_BUCKET).createSignedUrl(doc.file_path, 120)
-      if (error) throw error
       if (user) {
         await createAuditEntry('view', user.id, doc.id, doc.file_name)
       }
-      window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+      router.push(`/parent/profile/documents/view/${doc.id}`)
     } catch (error: any) {
       toast.error(error?.message || 'Failed to open document')
     }

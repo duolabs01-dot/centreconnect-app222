@@ -168,6 +168,12 @@
   will-change: auto;
 }
 
+.ios-liquid-nav {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.48), rgba(240, 249, 255, 0.28)),
+    radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.18), transparent 55%);
+}
+
 /* Mobile fast mode: remove expensive motion across pages */
 @media (max-width: 768px) {
   html,
@@ -180,6 +186,13 @@
   body *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  .ios-liquid-nav,
+  .ios-liquid-nav * {
+    transition-property: background-color, color, border-color, box-shadow, transform, opacity !important;
+    transition-duration: 180ms !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
 }
 
