@@ -20,6 +20,8 @@ type MobileCentreDetailsSheetProps = {
   schedule: string
   userRole: string | null
   pilotBadges: string[]
+  existingApplicationId?: string | null
+  existingApplicationStatus?: string | null
 }
 
 export function MobileCentreDetailsSheet({
@@ -34,6 +36,8 @@ export function MobileCentreDetailsSheet({
   schedule,
   userRole,
   pilotBadges,
+  existingApplicationId,
+  existingApplicationStatus,
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
   const [dragY, setDragY] = useState(0)
@@ -74,7 +78,13 @@ export function MobileCentreDetailsSheet({
               <span className="text-xs font-bold text-teal-700">Swipe sheet</span>
             </button>
             <div className="mt-2">
-              <ApplyCTA variant="hero" centreSlug={centreSlug} userRole={userRole} />
+              <ApplyCTA
+                variant="hero"
+                centreSlug={centreSlug}
+                userRole={userRole}
+                existingApplicationId={existingApplicationId ?? null}
+                existingApplicationStatus={existingApplicationStatus ?? null}
+              />
             </div>
           </div>
         </div>

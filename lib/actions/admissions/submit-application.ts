@@ -89,14 +89,17 @@ export async function submitApplicationAction(input: unknown) {
     .from('applications')
     .select('id,status')
     .eq('parent_id', user.id)
-    .eq('child_id', parsed.data.child_id)
     .eq('ecd_id', parsed.data.ecd_id)
-    .not('status', 'in', '(withdrawn,rejected)')
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
   if (duplicate?.id) {
-    return { error: 'An active application already exists for this child at this centre' }
+    return {
+      error: 'Application already submitted for this creche. View your existing status instead.',
+      existingApplicationId: duplicate.id,
+      existingApplicationStatus: duplicate.status ?? null,
+    }
   }
 
   let applicationId: string | null = null

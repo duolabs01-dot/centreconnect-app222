@@ -139,6 +139,19 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     redirect(`/login?next=${next}`)
   }
 
+  const { data: existingApplication } = await supabase
+    .from('applications')
+    .select('id')
+    .eq('parent_id', user.id)
+    .eq('ecd_id', centre.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existingApplication?.id) {
+    redirect(`/parent/applications/${existingApplication.id}`)
+  }
+
   const [{ data: children }, { data: parentDocuments }] = await Promise.all([
     supabase
       .from('children')
@@ -192,4 +205,3 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     </main>
   )
 }
-

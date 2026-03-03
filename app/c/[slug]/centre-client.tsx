@@ -64,14 +64,21 @@ type Centre = {
   onboarding_complete?: boolean | null
 }
 
+type ExistingApplication = {
+  id: string
+  status: string | null
+}
+
 export function CentreClient({ slug }: { slug: string }) {
   const [centre, setCentre] = useState<Centre | null>(null)
   const [loading, setLoading] = useState(true)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [existingApplication, setExistingApplication] = useState<ExistingApplication | null>(null)
 
   useEffect(() => {
     async function fetchCentre() {
       const supabase = createClient()
+      let resolvedCentre: Centre | null = null
       
       // Get centre data
       const { data, error } = await supabase
@@ -89,23 +96,48 @@ export function CentreClient({ slug }: { slug: string }) {
           .maybeSingle()
         
         if (fallbackData) {
-          setCentre(fallbackData as any)
+          resolvedCentre = fallbackData as any
         } else {
-          setCentre(null)
+          resolvedCentre = null
         }
       } else {
-        setCentre(data)
+        resolvedCentre = data as Centre
       }
+      setCentre(resolvedCentre)
 
       // Get user role if logged in
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
+        const [{ data: profile }, existingApplicationResult] = await Promise.all([
+          supabase
+            .from('user_profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single(),
+          resolvedCentre?.id
+            ? supabase
+                .from('applications')
+                .select('id,status')
+                .eq('parent_id', user.id)
+                .eq('ecd_id', resolvedCentre.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle()
+            : Promise.resolve({ data: null }),
+        ])
+
         setUserRole(profile?.role ?? null)
+        setExistingApplication(
+          existingApplicationResult?.data?.id
+            ? {
+                id: existingApplicationResult.data.id,
+                status: existingApplicationResult.data.status ?? null,
+              }
+            : null
+        )
+      } else {
+        setUserRole(null)
+        setExistingApplication(null)
       }
       
       setLoading(false)
@@ -356,7 +388,13 @@ export function CentreClient({ slug }: { slug: string }) {
               ) : null}
 
               <div className="space-y-3 pt-4">
-                <ApplyCTA variant="hero" centreSlug={centre.slug} userRole={userRole} />
+                <ApplyCTA
+                  variant="hero"
+                  centreSlug={centre.slug}
+                  userRole={userRole}
+                  existingApplicationId={existingApplication?.id ?? null}
+                  existingApplicationStatus={existingApplication?.status ?? null}
+                />
                 <div className="grid grid-cols-2 gap-2">
                   <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
                   <SaveCentreButton centreId={centre.id} initialSaved={false} />
@@ -381,6 +419,8 @@ export function CentreClient({ slug }: { slug: string }) {
         schedule={operationalStatus.schedule}
         userRole={userRole}
         pilotBadges={pilotBadges}
+        existingApplicationId={existingApplication?.id ?? null}
+        existingApplicationStatus={existingApplication?.status ?? null}
       />
     </main>
   )
