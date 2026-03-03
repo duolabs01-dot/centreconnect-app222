@@ -11,7 +11,12 @@ type PilotWelcomePackEmailInput = {
   contactName: string
   dashboardLink: string
   websiteBuilderLink: string
-  supportLink: string
+  attendanceLink: string
+  pickupLink: string
+  qrPosterLink: string
+  supportWhatsApp?: string
+  supportEmail?: string
+  supportLink?: string
 }
 
 type ParentToEcdAdminMigrationEmailInput = {
@@ -105,6 +110,37 @@ function button(label: string, href: string) {
   return `<a href="${href}" style="display:inline-block;padding:12px 18px;border-radius:12px;background:${BRAND.primary};color:#fff;font-weight:700;text-decoration:none;font-size:14px;">${label}</a>`
 }
 
+function mockScreenshotCard(title: string, subtitle: string, accent: string, detailRows: string[]) {
+  const rows = detailRows
+    .map(
+      (row) =>
+        `<tr><td style="padding:0 0 8px;"><div style="height:10px;border-radius:999px;background:${row};"></div></td></tr>`
+    )
+    .join('')
+
+  return `
+    <td style="width:33.33%;vertical-align:top;padding:0 4px 8px;">
+      <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFFFFF;overflow:hidden;">
+        <tr>
+          <td style="padding:10px 10px 8px;background:linear-gradient(120deg, ${accent} 0%, #0EA5A4 100%);color:#FFFFFF;">
+            <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">${title}</p>
+            <p style="margin:4px 0 0;font-size:11px;opacity:0.95;">${subtitle}</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 10px 2px;background:#F8FAFC;">
+            <table role="presentation" width="100%" style="border-collapse:collapse;">
+              ${rows}
+            </table>
+            <div style="height:24px;border-radius:8px;background:#E2E8F0;margin:0 0 8px;"></div>
+            <div style="height:24px;border-radius:8px;background:#CFFAFE;margin:0 0 8px;"></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  `
+}
+
 export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName},</p>
@@ -140,50 +176,85 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
 }
 
 export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
+  const supportWhatsApp = input.supportWhatsApp ?? '+27685356430'
+  const supportEmail = input.supportEmail ?? 'admin@centerconnect.co.za'
+  const supportLink = input.supportLink ?? `mailto:${supportEmail}`
+
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Welcome ${input.contactName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName} 👋,</p>
     <p style="margin:0 0 16px;font-size:14px;line-height:1.65;">
-      You're now part of the <strong>CentreConnect Pilot</strong> with <strong>${input.centreName}</strong>.
-      Your welcome pack below follows the exact product UI/UX flow your team will use daily.
+      Welcome to the <strong>CentreConnect Pilot</strong> for <strong>${input.centreName}</strong> 🎉.
+      Your account is live and ready to run daily operations beautifully.
     </p>
-    <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 10px;margin:0 0 14px;">
+
+    <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0;margin:0 0 16px;">
       <tr>
-        <td style="border:1px solid ${BRAND.border};border-radius:12px;padding:12px 14px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Step 1</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">Open Dashboard</p>
-          <p style="margin:6px 0 0;font-size:13px;color:${BRAND.body};">Track readiness, applications, and quick actions from one command panel.</p>
-        </td>
+        ${mockScreenshotCard('Dashboard', 'Live centre pulse', '#065A82', ['#CBD5E1', '#A7F3D0', '#BFDBFE'])}
+        ${mockScreenshotCard('Attendance', 'Daily check-ins', '#0F766E', ['#99F6E4', '#CFFAFE', '#E2E8F0'])}
+        ${mockScreenshotCard('Pickup', 'Secure verification', '#0B7285', ['#BAE6FD', '#E0F2FE', '#E2E8F0'])}
       </tr>
+    </table>
+
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 14px;">
       <tr>
-        <td style="border:1px solid ${BRAND.border};border-radius:12px;padding:12px 14px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Step 2</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">Website Builder</p>
-          <p style="margin:6px 0 0;font-size:13px;color:${BRAND.body};">Add logo, hero image, gallery, and publish your profile for parent discovery.</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="border:1px solid ${BRAND.border};border-radius:12px;padding:12px 14px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Step 3</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">Admissions & Parent Comms</p>
-          <p style="margin:6px 0 0;font-size:13px;color:${BRAND.body};">Manage applications, reminders, and parent notifications from the ECD portal.</p>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">QR Poster Setup 📍</p>
+          <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:${BRAND.body};">
+            Print your pickup QR poster and place it at reception so verified pickups are fast and secure.
+          </p>
+          <ol style="margin:0 0 10px 18px;padding:0;font-size:13px;line-height:1.7;color:${BRAND.body};">
+            <li>Open Pickup Centre in the ECD portal.</li>
+            <li>Generate or refresh your QR code poster.</li>
+            <li>Print and display it where guardians check out children.</li>
+          </ol>
+          ${button('Open Pickup & QR Poster', input.qrPosterLink)}
         </td>
       </tr>
     </table>
+
+    <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 12px;">
+      <tr>
+        <td style="border:1px solid ${BRAND.border};border-radius:12px;padding:12px 14px;background:#FFFFFF;">
+          <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Quick Start ⚡</p>
+          <p style="margin:0;font-size:13px;color:${BRAND.body};line-height:1.65;">
+            1. Upload logo + hero image in Website Builder.<br/>
+            2. Review Dashboard and clear setup items.<br/>
+            3. Take first attendance and verify first pickup.<br/>
+            4. Keep your profile updated so parents can discover and apply.
+          </p>
+        </td>
+      </tr>
+    </table>
+
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;">
-      ${button('Open Dashboard', input.dashboardLink)}
-      ${button('Open Website Builder', input.websiteBuilderLink)}
+      ${button('Open Dashboard 📊', input.dashboardLink)}
+      ${button('Open Attendance ✅', input.attendanceLink)}
+      ${button('Go Live in Website Builder 🚀', input.websiteBuilderLink)}
+      ${button('Open Pickup 🔐', input.pickupLink)}
     </div>
-    <p style="margin:0 0 8px;font-size:13px;color:${BRAND.body};line-height:1.65;">
-      Need a quick handover with your team? Reply to this email or create a support request.
-    </p>
-    <p style="margin:0;font-size:13px;">
-      <a href="${input.supportLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">Open support desk</a>
+
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 12px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 5px;font-size:12px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#0F766E;">Support 🤝</p>
+          <p style="margin:0 0 6px;font-size:13px;line-height:1.65;color:${BRAND.body};">
+            WhatsApp: <a href="https://wa.me/${supportWhatsApp.replace(/[^0-9]/g, '')}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${supportWhatsApp}</a><br/>
+            Email: <a href="mailto:${supportEmail}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${supportEmail}</a><br/>
+            We respond within an hour.
+          </p>
+          <a href="${supportLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">Open support</a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="margin:0;font-size:13px;color:${BRAND.body};line-height:1.65;">
+      You are launch-ready. Let’s get your centre in front of families now 🌟
     </p>
   `
 
   return renderShell(
-    'Pilot Welcome Pack',
-    'Launch-ready checklist, links, and onboarding guidance for your pilot workspace.',
+    'Pilot Welcome Pack 🚀',
+    'Your CentreConnect workspace is live. Start onboarding, attendance, and secure pickup today.',
     body
   )
 }

@@ -353,6 +353,11 @@ export async function POST(request: Request) {
       contactName: data.primaryContactName,
       dashboardLink: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
       websiteBuilderLink: `${APP_URL.replace(/\/$/, '')}/ecd/website`,
+      attendanceLink: `${APP_URL.replace(/\/$/, '')}/ecd/attendance`,
+      pickupLink: `${APP_URL.replace(/\/$/, '')}/ecd/pickup`,
+      qrPosterLink: `${APP_URL.replace(/\/$/, '')}/ecd/pickup`,
+      supportWhatsApp: '+27685356430',
+      supportEmail: 'admin@centerconnect.co.za',
       supportLink: `${APP_URL.replace(/\/$/, '')}/ecd/support`,
     })
     const welcomePackResult = await queueEmail(

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { queueEmail } from '@/lib/communications/emails'
+import { APP_URL } from '@/lib/config'
+import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 
 function slugify(input: string) {
   return input
@@ -15,6 +18,26 @@ async function rollbackProvisionedCentre(admin: ReturnType<typeof createAdminCli
   await admin.from('ecd_admins').delete().eq('ecd_id', centreId).eq('user_id', userId)
   await admin.from('subscriptions').delete().eq('ecd_id', centreId)
   await admin.from('ecd_centres').delete().eq('id', centreId)
+}
+
+function isPilotRequested(selectedTier: string | null | undefined, adminNotes: string | null | undefined) {
+  const tier = (selectedTier ?? '').trim().toLowerCase()
+  if (tier === 'pilot') return true
+  const notes = (adminNotes ?? '').toLowerCase()
+  return notes.includes('"pilotrequested": true') || notes.includes('"requestedplan": "pilot"')
+}
+
+function resolveContactName(user: { email?: string | null; user_metadata?: Record<string, unknown> | null }) {
+  const metadata = user.user_metadata ?? {}
+  const metadataName =
+    typeof metadata.full_name === 'string'
+      ? metadata.full_name.trim()
+      : typeof metadata.name === 'string'
+      ? metadata.name.trim()
+      : ''
+  if (metadataName) return metadataName
+  const local = (user.email ?? '').split('@')[0]?.trim()
+  return local || 'ECD Admin'
 }
 
 export async function POST() {
@@ -46,7 +69,7 @@ export async function POST() {
     const serviceApplicationQuery = admin
       .from('ecd_service_applications')
       .select(
-        'id,status,centre_name,centre_phone,centre_address,centre_suburb,centre_city,centre_province,selected_tier,provisioned_at'
+        'id,status,centre_name,centre_phone,centre_address,centre_suburb,centre_city,centre_province,selected_tier,admin_notes,provisioned_at'
       )
       .order('created_at', { ascending: false })
       .limit(1)
@@ -176,6 +199,36 @@ export async function POST() {
       )
     }
 
+    const warnings: string[] = []
+    const shouldSendPilotWelcomePack = isPilotRequested(
+      serviceApplication.selected_tier as string | null | undefined,
+      (serviceApplication as { admin_notes?: string | null }).admin_notes
+    )
+
+    if (shouldSendPilotWelcomePack && user.email) {
+      const baseUrl = APP_URL.replace(/\/$/, '')
+      const welcomePackHtml = await renderPilotWelcomePackEmail({
+        centreName,
+        contactName: resolveContactName(user),
+        dashboardLink: `${baseUrl}/ecd/dashboard`,
+        websiteBuilderLink: `${baseUrl}/ecd/website`,
+        attendanceLink: `${baseUrl}/ecd/attendance`,
+        pickupLink: `${baseUrl}/ecd/pickup`,
+        qrPosterLink: `${baseUrl}/ecd/pickup`,
+        supportWhatsApp: '+27685356430',
+        supportEmail: 'admin@centerconnect.co.za',
+        supportLink: `${baseUrl}/ecd/support`,
+      })
+      const welcomePackResult = await queueEmail(
+        user.email,
+        `Pilot Welcome Pack 🚀 | ${centreName}`,
+        welcomePackHtml
+      )
+      if (!welcomePackResult.success) {
+        warnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
+      }
+    }
+
     const { error: applicationUpdateError } = await admin
       .from('ecd_service_applications')
       .update({
@@ -190,12 +243,18 @@ export async function POST() {
           ok: true,
           created: true,
           warning: `Centre was provisioned, but application status was not updated: ${applicationUpdateError.message}`,
+          warnings: warnings.length > 0 ? warnings : undefined,
         },
         { status: 200 }
       )
     }
 
-    return NextResponse.json({ ok: true, created: true })
+    return NextResponse.json({
+      ok: true,
+      created: true,
+      warnings: warnings.length > 0 ? warnings : undefined,
+      pilotWelcomePackQueued: shouldSendPilotWelcomePack && warnings.length === 0,
+    })
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
