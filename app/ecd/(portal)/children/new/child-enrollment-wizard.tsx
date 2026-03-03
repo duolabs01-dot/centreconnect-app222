@@ -26,6 +26,20 @@ type ChildEnrollmentWizardProps = {
 type WizardStep = 'basic' | 'medical' | 'guardians' | 'documents'
 type ChildDocumentType = 'birth_certificate' | 'medical_card' | 'immunization_record'
 type ChildConfidenceMap = NonNullable<GeminiExtractionResult['confidence']>
+type GuardianContactDraft = {
+  full_name: string
+  relationship: string
+  phone: string
+  email: string
+  can_pickup: boolean
+}
+
+type EmergencyContactDraft = {
+  full_name: string
+  relationship: string
+  phone: string
+  notes: string
+}
 
 const STEPS: Array<{ id: WizardStep; label: string; hint: string; icon: ComponentType<{ className?: string }> }> = [
   { id: 'basic', label: 'Basic Info', hint: 'Child profile core details', icon: UserRoundPlus },
@@ -43,6 +57,9 @@ type WizardState = {
   blood_type: string
   doctor_name: string
   medical_aid_number: string
+  immunization_status: string
+  immunization_due_date: string
+  immunization_notes: string
   emergency_contact_name: string
   emergency_contact_phone: string
   dietary_restrictions: string
@@ -70,6 +87,9 @@ const DEFAULT_STATE: WizardState = {
   blood_type: '',
   doctor_name: '',
   medical_aid_number: '',
+  immunization_status: '',
+  immunization_due_date: '',
+  immunization_notes: '',
   emergency_contact_name: '',
   emergency_contact_phone: '',
   dietary_restrictions: '',
@@ -86,6 +106,21 @@ const DEFAULT_STATE: WizardState = {
   secondary_guardian_phone: '',
   secondary_guardian_email: '',
   ai_review_notes: '',
+}
+
+const DEFAULT_GUARDIAN_CONTACT: GuardianContactDraft = {
+  full_name: '',
+  relationship: 'parent',
+  phone: '',
+  email: '',
+  can_pickup: true,
+}
+
+const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
+  full_name: '',
+  relationship: 'family',
+  phone: '',
+  notes: '',
 }
 
 function listToArray(value: string) {
@@ -126,6 +161,8 @@ function getInputAiClass(confidence: number | undefined) {
 export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps) {
   const [stepIndex, setStepIndex] = useState(0)
   const [form, setForm] = useState<WizardState>(DEFAULT_STATE)
+  const [guardianContacts, setGuardianContacts] = useState<GuardianContactDraft[]>([DEFAULT_GUARDIAN_CONTACT])
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContactDraft[]>([DEFAULT_EMERGENCY_CONTACT])
   const [birthCertificateFile, setBirthCertificateFile] = useState<File | null>(null)
   const [medicalCardFile, setMedicalCardFile] = useState<File | null>(null)
   const [immunizationRecordFile, setImmunizationRecordFile] = useState<File | null>(null)
@@ -153,6 +190,36 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
+  function updateGuardianContact(index: number, patch: Partial<GuardianContactDraft>) {
+    setGuardianContacts((current) => current.map((entry, idx) => (idx === index ? { ...entry, ...patch } : entry)))
+  }
+
+  function addGuardianContact() {
+    setGuardianContacts((current) => [...current, DEFAULT_GUARDIAN_CONTACT])
+  }
+
+  function removeGuardianContact(index: number) {
+    setGuardianContacts((current) => {
+      const next = current.filter((_, idx) => idx !== index)
+      return next.length > 0 ? next : [DEFAULT_GUARDIAN_CONTACT]
+    })
+  }
+
+  function updateEmergencyContact(index: number, patch: Partial<EmergencyContactDraft>) {
+    setEmergencyContacts((current) => current.map((entry, idx) => (idx === index ? { ...entry, ...patch } : entry)))
+  }
+
+  function addEmergencyContact() {
+    setEmergencyContacts((current) => [...current, DEFAULT_EMERGENCY_CONTACT])
+  }
+
+  function removeEmergencyContact(index: number) {
+    setEmergencyContacts((current) => {
+      const next = current.filter((_, idx) => idx !== index)
+      return next.length > 0 ? next : [DEFAULT_EMERGENCY_CONTACT]
+    })
+  }
+
   function goToNextStep() {
     if (activeStep.id === 'basic') {
       if (!form.first_name.trim() || !form.last_name.trim() || !form.enrollment_start_date) {
@@ -162,8 +229,9 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
     }
 
     if (activeStep.id === 'guardians') {
-      if (!form.parent_phone.trim()) {
-        toast.error('Parent WhatsApp number is required to send the completion link.')
+      const hasGuardianPhone = guardianContacts.some((entry) => entry.phone.trim().length >= 7)
+      if (!hasGuardianPhone) {
+        toast.error('Add at least one guardian phone number before moving on.')
         return
       }
     }
@@ -189,6 +257,9 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
       blood_type: aiSuggestion.blood_type ?? prev.blood_type,
       doctor_name: aiSuggestion.doctor_name ?? prev.doctor_name,
       medical_aid_number: aiSuggestion.medical_aid_number ?? prev.medical_aid_number,
+      immunization_status: prev.immunization_status,
+      immunization_due_date: prev.immunization_due_date,
+      immunization_notes: prev.immunization_notes,
       emergency_contact_name: aiSuggestion.emergency_contact_name ?? prev.emergency_contact_name,
       emergency_contact_phone: aiSuggestion.emergency_contact_phone ?? prev.emergency_contact_phone,
       dietary_restrictions: aiSuggestion.dietary_restrictions ?? prev.dietary_restrictions,
@@ -201,6 +272,19 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         : prev.medical_conditions_text,
       medications_text: aiSuggestion.medications ? arrayToCsv(aiSuggestion.medications) : prev.medications_text,
     }))
+
+    if (aiSuggestion.emergency_contact_name || aiSuggestion.emergency_contact_phone) {
+      setEmergencyContacts((current) => {
+        const next = [...current]
+        const first = next[0] ?? DEFAULT_EMERGENCY_CONTACT
+        next[0] = {
+          ...first,
+          full_name: aiSuggestion.emergency_contact_name ?? first.full_name,
+          phone: aiSuggestion.emergency_contact_phone ?? first.phone,
+        }
+        return next
+      })
+    }
 
     toast.success('AI pre-fill applied. Review all fields before saving.')
   }
@@ -251,8 +335,29 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
   }
 
   function handleSaveAndShare() {
-    if (!form.first_name.trim() || !form.last_name.trim() || !form.enrollment_start_date || !form.parent_phone.trim()) {
-      toast.error('Child names, start date, and parent WhatsApp number are required.')
+    const normalizedGuardianContacts = guardianContacts
+      .map((entry) => ({
+        full_name: entry.full_name.trim(),
+        relationship: entry.relationship.trim(),
+        phone: entry.phone.trim(),
+        email: entry.email.trim(),
+        can_pickup: Boolean(entry.can_pickup),
+      }))
+      .filter((entry) => entry.full_name || entry.phone || entry.email)
+
+    const normalizedEmergencyContacts = emergencyContacts
+      .map((entry) => ({
+        full_name: entry.full_name.trim(),
+        relationship: entry.relationship.trim(),
+        phone: entry.phone.trim(),
+        notes: entry.notes.trim(),
+      }))
+      .filter((entry) => entry.full_name || entry.phone || entry.notes)
+
+    const primaryGuardian = normalizedGuardianContacts.find((entry) => entry.phone.length >= 7)
+
+    if (!form.first_name.trim() || !form.last_name.trim() || !form.enrollment_start_date || !primaryGuardian) {
+      toast.error('Child names, start date, and at least one guardian phone number are required.')
       return
     }
 
@@ -266,6 +371,9 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         blood_type: form.blood_type.trim() || null,
         doctor_name: form.doctor_name.trim() || null,
         medical_aid_number: form.medical_aid_number.trim() || null,
+        immunization_status: form.immunization_status.trim() || null,
+        immunization_due_date: form.immunization_due_date || null,
+        immunization_notes: form.immunization_notes.trim() || null,
         emergency_contact_name: form.emergency_contact_name.trim() || null,
         emergency_contact_phone: form.emergency_contact_phone.trim() || null,
         dietary_restrictions: form.dietary_restrictions.trim() || null,
@@ -275,12 +383,25 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         allergies: listToArray(form.allergies_text),
         medical_conditions: listToArray(form.medical_conditions_text),
         medications: listToArray(form.medications_text),
-        parent_name: form.parent_name.trim() || null,
-        parent_phone: form.parent_phone.trim(),
-        parent_email: form.parent_email.trim() || null,
-        secondary_guardian_name: form.secondary_guardian_name.trim() || null,
-        secondary_guardian_phone: form.secondary_guardian_phone.trim() || null,
-        secondary_guardian_email: form.secondary_guardian_email.trim() || null,
+        parent_name: primaryGuardian.full_name || form.parent_name.trim() || null,
+        parent_phone: primaryGuardian.phone,
+        parent_email: primaryGuardian.email || form.parent_email.trim() || null,
+        secondary_guardian_name: normalizedGuardianContacts[1]?.full_name || form.secondary_guardian_name.trim() || null,
+        secondary_guardian_phone: normalizedGuardianContacts[1]?.phone || form.secondary_guardian_phone.trim() || null,
+        secondary_guardian_email: normalizedGuardianContacts[1]?.email || form.secondary_guardian_email.trim() || null,
+        guardian_contacts: normalizedGuardianContacts.map((entry, index) => ({
+          full_name: entry.full_name || null,
+          relationship: entry.relationship || (index === 0 ? 'parent' : 'guardian'),
+          phone: entry.phone || null,
+          email: entry.email || null,
+          can_pickup: entry.can_pickup,
+        })),
+        emergency_contacts: normalizedEmergencyContacts.map((entry) => ({
+          full_name: entry.full_name || null,
+          relationship: entry.relationship || 'emergency',
+          phone: entry.phone || null,
+          notes: entry.notes || null,
+        })),
         birth_certificate_file_name: birthCertificateFile?.name ?? null,
         birth_certificate_file_url: documentUrls.birth_certificate ?? null,
         medical_card_file_name: medicalCardFile?.name ?? null,
@@ -643,6 +764,35 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
               />
             </div>
             <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Immunization Status</label>
+              <select
+                className="cc-native-field h-12 rounded-3xl"
+                value={form.immunization_status}
+                onChange={(e) => updateField('immunization_status', e.target.value)}
+              >
+                <option value="">Select status</option>
+                <option value="up_to_date">Up to date</option>
+                <option value="catching_up">Catching up</option>
+                <option value="not_started">Not started</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Next Immunization Due</label>
+              <Input
+                type="date"
+                className="h-12 rounded-3xl"
+                value={form.immunization_due_date}
+                onChange={(e) => updateField('immunization_due_date', e.target.value)}
+              />
+            </div>
+            <Textarea
+              className="min-h-[90px] rounded-3xl md:col-span-2"
+              placeholder="Immunization notes"
+              value={form.immunization_notes}
+              onChange={(e) => updateField('immunization_notes', e.target.value)}
+            />
+            <div className="space-y-2">
               <label className="flex items-center justify-between gap-2 text-xs font-black uppercase tracking-wider text-slate-500">
                 Last Checkup Date
                 <AiSuggestedBadge confidence={fieldConfidence('last_checkup_date')} />
@@ -735,16 +885,118 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
           <CardHeader>
             <CardTitle className="text-xl font-black text-slate-900">Parent & Guardians</CardTitle>
             <CardDescription className="text-slate-600">
-              Parent WhatsApp number is mandatory for completion handoff.
+              Add all guardians and emergency contacts for pickup and safety.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <Input className="h-12 rounded-3xl" placeholder="Parent Full Name" value={form.parent_name} onChange={(e) => updateField('parent_name', e.target.value)} />
-            <Input className="h-12 rounded-3xl" placeholder="Parent WhatsApp Number *" value={form.parent_phone} onChange={(e) => updateField('parent_phone', e.target.value)} />
-            <Input className="h-12 rounded-3xl md:col-span-2" placeholder="Parent Email" value={form.parent_email} onChange={(e) => updateField('parent_email', e.target.value)} />
-            <Input className="h-12 rounded-3xl" placeholder="Secondary Guardian Name" value={form.secondary_guardian_name} onChange={(e) => updateField('secondary_guardian_name', e.target.value)} />
-            <Input className="h-12 rounded-3xl" placeholder="Secondary Guardian Phone" value={form.secondary_guardian_phone} onChange={(e) => updateField('secondary_guardian_phone', e.target.value)} />
-            <Input className="h-12 rounded-3xl md:col-span-2" placeholder="Secondary Guardian Email" value={form.secondary_guardian_email} onChange={(e) => updateField('secondary_guardian_email', e.target.value)} />
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Guardians</p>
+                <Button type="button" variant="outline" className="h-9 rounded-2xl" onClick={addGuardianContact}>
+                  Add Guardian
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {guardianContacts.map((entry, index) => (
+                  <div key={`guardian-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-2">
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder={index === 0 ? 'Primary Guardian Name *' : 'Guardian Name'}
+                      value={entry.full_name}
+                      onChange={(event) => updateGuardianContact(index, { full_name: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder={index === 0 ? 'WhatsApp Phone *' : 'Guardian Phone'}
+                      value={entry.phone}
+                      onChange={(event) => updateGuardianContact(index, { phone: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Relationship (Parent, Aunt, Uncle...)"
+                      value={entry.relationship}
+                      onChange={(event) => updateGuardianContact(index, { relationship: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Guardian Email"
+                      value={entry.email}
+                      onChange={(event) => updateGuardianContact(index, { email: event.target.value })}
+                    />
+                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-3 py-2 md:col-span-2">
+                      <label className="text-xs font-semibold text-slate-700">Pickup allowed</label>
+                      <input
+                        type="checkbox"
+                        checked={entry.can_pickup}
+                        onChange={(event) => updateGuardianContact(index, { can_pickup: event.target.checked })}
+                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 rounded-2xl border-rose-200 text-rose-700 hover:bg-rose-50"
+                        onClick={() => removeGuardianContact(index)}
+                        disabled={guardianContacts.length <= 1}
+                      >
+                        Remove Guardian
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">Emergency Contacts</p>
+                <Button type="button" variant="outline" className="h-9 rounded-2xl" onClick={addEmergencyContact}>
+                  Add Emergency Contact
+                </Button>
+              </div>
+              <div className="space-y-3">
+                {emergencyContacts.map((entry, index) => (
+                  <div key={`emergency-${index}`} className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 md:grid-cols-2">
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Emergency Contact Name"
+                      value={entry.full_name}
+                      onChange={(event) => updateEmergencyContact(index, { full_name: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Emergency Contact Phone"
+                      value={entry.phone}
+                      onChange={(event) => updateEmergencyContact(index, { phone: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Relationship"
+                      value={entry.relationship}
+                      onChange={(event) => updateEmergencyContact(index, { relationship: event.target.value })}
+                    />
+                    <Input
+                      className="h-11 rounded-2xl"
+                      placeholder="Notes"
+                      value={entry.notes}
+                      onChange={(event) => updateEmergencyContact(index, { notes: event.target.value })}
+                    />
+                    <div className="md:col-span-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-9 rounded-2xl border-rose-200 text-rose-700 hover:bg-rose-50"
+                        onClick={() => removeEmergencyContact(index)}
+                        disabled={emergencyContacts.length <= 1}
+                      >
+                        Remove Emergency Contact
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       ) : null}

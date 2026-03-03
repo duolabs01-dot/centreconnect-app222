@@ -35,6 +35,21 @@ const aiPrefillSchema = z.object({
 type ChildPrefill = z.infer<typeof aiPrefillSchema>
 type ChildConfidenceMap = Partial<Record<keyof ChildPrefill, number>>
 
+const guardianContactInputSchema = z.object({
+  full_name: z.string().optional().nullable(),
+  relationship: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  email: z.string().email().optional().or(z.literal('')).nullable(),
+  can_pickup: z.boolean().optional().default(true),
+})
+
+const emergencyContactInputSchema = z.object({
+  full_name: z.string().optional().nullable(),
+  relationship: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+})
+
 const tempChildProfileSchema = z.object({
   first_name: z.string().min(1),
   last_name: z.string().min(1),
@@ -44,6 +59,9 @@ const tempChildProfileSchema = z.object({
   blood_type: z.string().optional().nullable(),
   doctor_name: z.string().optional().nullable(),
   medical_aid_number: z.string().optional().nullable(),
+  immunization_status: z.string().optional().nullable(),
+  immunization_due_date: z.string().optional().nullable(),
+  immunization_notes: z.string().optional().nullable(),
   emergency_contact_name: z.string().optional().nullable(),
   emergency_contact_phone: z.string().optional().nullable(),
   dietary_restrictions: z.string().optional().nullable(),
@@ -54,11 +72,13 @@ const tempChildProfileSchema = z.object({
   medical_conditions: z.array(z.string()).default([]),
   medications: z.array(z.string()).default([]),
   parent_name: z.string().optional().nullable(),
-  parent_phone: z.string().min(7),
+  parent_phone: z.string().optional().nullable(),
   parent_email: z.string().email().optional().or(z.literal('')).nullable(),
   secondary_guardian_name: z.string().optional().nullable(),
   secondary_guardian_phone: z.string().optional().nullable(),
   secondary_guardian_email: z.string().email().optional().or(z.literal('')).nullable(),
+  guardian_contacts: z.array(guardianContactInputSchema).optional().default([]),
+  emergency_contacts: z.array(emergencyContactInputSchema).optional().default([]),
   birth_certificate_file_name: z.string().optional().nullable(),
   birth_certificate_file_url: z.string().url().optional().or(z.literal('')).nullable(),
   medical_card_file_name: z.string().optional().nullable(),
@@ -499,49 +519,90 @@ export async function saveTempChildProfileAndInviteParentAction(
   }
 
   const payload = parsed.data
-  const normalizedParentName = payload.parent_name?.trim() || null
-  const normalizedParentPhone = payload.parent_phone.trim()
-  const normalizedParentEmail = payload.parent_email?.trim() || null
+  const normalizedGuardianContacts = payload.guardian_contacts
+    .map((entry) => ({
+      full_name: entry.full_name?.trim() || null,
+      relationship: entry.relationship?.trim() || null,
+      phone: entry.phone?.trim() || null,
+      email: entry.email?.trim() || null,
+      can_pickup: entry.can_pickup ?? true,
+    }))
+    .filter((entry) => entry.full_name || entry.phone || entry.email)
 
-  const guardianContacts = [
-    normalizedParentName || normalizedParentPhone || normalizedParentEmail
-      ? {
-          role: 'primary_parent',
-          full_name: normalizedParentName,
-          phone: normalizedParentPhone,
-          email: normalizedParentEmail,
-          can_pickup: true,
-        }
-      : null,
-    payload.secondary_guardian_name?.trim() ||
-    payload.secondary_guardian_phone?.trim() ||
-    payload.secondary_guardian_email?.trim()
-      ? {
-          role: 'secondary_guardian',
-          full_name: payload.secondary_guardian_name?.trim() || null,
-          phone: payload.secondary_guardian_phone?.trim() || null,
-          email: payload.secondary_guardian_email?.trim() || null,
-          can_pickup: true,
-        }
-      : null,
-  ].filter(Boolean)
+  if (normalizedGuardianContacts.length === 0) {
+    const legacyParent = {
+      full_name: payload.parent_name?.trim() || null,
+      relationship: 'parent',
+      phone: payload.parent_phone?.trim() || null,
+      email: payload.parent_email?.trim() || null,
+      can_pickup: true,
+    }
+    if (legacyParent.full_name || legacyParent.phone || legacyParent.email) {
+      normalizedGuardianContacts.push(legacyParent)
+    }
 
-  const emergencyContacts = [
-    payload.emergency_contact_name?.trim() || payload.emergency_contact_phone?.trim()
-      ? {
-          full_name: payload.emergency_contact_name?.trim() || null,
-          phone: payload.emergency_contact_phone?.trim() || null,
-          source: 'medical_step',
-        }
-      : null,
-    normalizedParentName || normalizedParentPhone
-      ? {
-          full_name: normalizedParentName,
-          phone: normalizedParentPhone,
-          source: 'parent_contact',
-        }
-      : null,
-  ].filter(Boolean)
+    const legacySecondary = {
+      full_name: payload.secondary_guardian_name?.trim() || null,
+      relationship: 'guardian',
+      phone: payload.secondary_guardian_phone?.trim() || null,
+      email: payload.secondary_guardian_email?.trim() || null,
+      can_pickup: true,
+    }
+    if (legacySecondary.full_name || legacySecondary.phone || legacySecondary.email) {
+      normalizedGuardianContacts.push(legacySecondary)
+    }
+  }
+
+  const normalizedEmergencyContacts = payload.emergency_contacts
+    .map((entry) => ({
+      full_name: entry.full_name?.trim() || null,
+      relationship: entry.relationship?.trim() || null,
+      phone: entry.phone?.trim() || null,
+      notes: entry.notes?.trim() || null,
+    }))
+    .filter((entry) => entry.full_name || entry.phone)
+
+  if (normalizedEmergencyContacts.length === 0) {
+    const medicalEmergency = {
+      full_name: payload.emergency_contact_name?.trim() || null,
+      relationship: 'medical',
+      phone: payload.emergency_contact_phone?.trim() || null,
+      notes: null,
+    }
+    if (medicalEmergency.full_name || medicalEmergency.phone) {
+      normalizedEmergencyContacts.push(medicalEmergency)
+    }
+  }
+
+  const firstGuardianWithPhone = normalizedGuardianContacts.find((entry) => Boolean(entry.phone))
+  const normalizedParentName = payload.parent_name?.trim() || firstGuardianWithPhone?.full_name || null
+  const normalizedParentPhone = payload.parent_phone?.trim() || firstGuardianWithPhone?.phone || ''
+  const normalizedParentEmail = payload.parent_email?.trim() || firstGuardianWithPhone?.email || null
+
+  if (!normalizedParentPhone) {
+    return {
+      success: false,
+      message: 'Add at least one guardian phone number to send the parent WhatsApp link.',
+    }
+  }
+
+  if (
+    !normalizedEmergencyContacts.some((entry) => Boolean(entry.phone)) &&
+    normalizedParentPhone
+  ) {
+    normalizedEmergencyContacts.push({
+      full_name: normalizedParentName,
+      relationship: 'primary_guardian',
+      phone: normalizedParentPhone,
+      notes: 'Auto-added from primary guardian',
+    })
+  }
+
+  const guardianContacts = normalizedGuardianContacts.map((entry, index) => ({
+    ...entry,
+    role: index === 0 ? 'primary_guardian' : 'guardian',
+  }))
+  const emergencyContacts = normalizedEmergencyContacts
 
   const intakeDocuments = {
     birth_certificate: payload.birth_certificate_file_url
@@ -586,11 +647,17 @@ export async function saveTempChildProfileAndInviteParentAction(
       blood_type: payload.blood_type?.trim() || null,
       doctor_name: payload.doctor_name?.trim() || null,
       medical_aid_number: payload.medical_aid_number?.trim() || null,
+      immunization_status: payload.immunization_status?.trim() || null,
+      immunization_due_date: payload.immunization_due_date || null,
+      immunization_notes: payload.immunization_notes?.trim() || null,
       immunization_record: intakeDocuments.immunization_record
         ? {
-            ...intakeDocuments.immunization_record,
-            uploaded_via: 'ecd_manual_enrollment',
-          }
+          ...intakeDocuments.immunization_record,
+          status: payload.immunization_status?.trim() || null,
+          due_date: payload.immunization_due_date || null,
+          notes: payload.immunization_notes?.trim() || null,
+          uploaded_via: 'ecd_manual_enrollment',
+        }
         : null,
       emergency_contact_name: payload.emergency_contact_name?.trim() || null,
       emergency_contact_phone: payload.emergency_contact_phone?.trim() || null,
