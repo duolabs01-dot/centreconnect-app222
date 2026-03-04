@@ -14,6 +14,7 @@ import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
+import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { Button } from '@/components/ui/button'
 
 interface CentreCardProps {
@@ -103,10 +104,14 @@ export default function CentreCard({
       ].filter(Boolean) as string[]
     : []
 
-  const encodedSlug = encodeURIComponent(slug)
-  const centreHref = `/c/${encodedSlug}`
-  const applyHref = `/apply/${encodedSlug}`
-  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug)}`
+  const safeSlug = normalizeCentreSlug(slug) ?? slug.trim()
+  const hasValidSlug = safeSlug.length > 0
+  const encodedSlug = hasValidSlug ? encodeURIComponent(safeSlug) : ''
+  const centreHref = hasValidSlug ? `/c/${encodedSlug}` : '/directory'
+  const applyHref = hasValidSlug ? `/apply/${encodedSlug}` : '/directory'
+  const claimHref = hasValidSlug
+    ? `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeSlug)}`
+    : '/for-centres/register'
   const hasExistingApplication = Boolean(existingApplicationId)
   const applicationStatusLabel = formatStatusLabel(existingApplicationStatus)
 

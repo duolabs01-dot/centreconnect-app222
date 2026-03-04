@@ -2,25 +2,45 @@ import { createClient } from '@/lib/supabase/server'
 import { CentreClient } from './centre-client'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const slug = params.slug
+type MetadataCentre = {
+  name: string
+  tagline: string | null
+}
+
+async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCentre | null> {
+  if (slugCandidates.length === 0) return null
+
   const supabase = await createClient()
-  const { data: publicCentre } = await supabase
+
+  const { data: publicRows } = await supabase
     .from('public_ecd_centres')
     .select('name,tagline')
-    .eq('slug', slug)
-    .maybeSingle()
+    .in('slug', slugCandidates)
+    .limit(1)
 
-  const centre = publicCentre
-    ? publicCentre
-    : (
-        await supabase
-          .from('ecd_centres')
-          .select('name,tagline')
-          .eq('slug', slug)
-          .maybeSingle()
-      ).data
+  if (Array.isArray(publicRows) && publicRows.length > 0) {
+    return publicRows[0] as MetadataCentre
+  }
+
+  const { data: privateRows } = await supabase
+    .from('ecd_centres')
+    .select('name,tagline')
+    .in('slug', slugCandidates)
+    .limit(1)
+
+  if (Array.isArray(privateRows) && privateRows.length > 0) {
+    return privateRows[0] as MetadataCentre
+  }
+
+  return null
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const normalizedSlug = normalizeCentreSlug(params.slug)
+  const slugCandidates = resolveCentreSlugCandidates(params.slug)
+  const centre = await loadCentreMetadata(slugCandidates)
 
   if (!centre) return { title: 'Creche Not Found' }
 
@@ -30,7 +50,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       images: [
         {
-          url: `/api/og/centre/${slug}`,
+          url: `/api/og/centre/${normalizedSlug ?? params.slug}`,
           width: 1200,
           height: 630,
           alt: centre.name,
@@ -57,27 +77,25 @@ export default async function CentrePage({
   params: { slug: string }
   searchParams?: { preview?: string | string[] }
 }) {
-  const supabase = await createClient()
-  const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
-  if (!previewRequested) {
-    const { data: publicCentre } = await supabase
-      .from('public_ecd_centres')
-      .select('id,slug')
-      .eq('slug', params.slug)
-      .maybeSingle()
-
-    if (!publicCentre) {
-      notFound()
-    }
-
-    return <CentreClient slug={params.slug} />
+  const normalizedSlug = normalizeCentreSlug(params.slug)
+  if (!normalizedSlug) {
+    notFound()
   }
 
-  const { data: centre } = await supabase
+  const supabase = await createClient()
+  const slugCandidates = resolveCentreSlugCandidates(params.slug)
+  const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
+  if (!previewRequested) {
+    return <CentreClient slug={normalizedSlug} />
+  }
+
+  const { data: centreRows } = await supabase
     .from('ecd_centres')
     .select('id,slug,is_active')
-    .eq('slug', params.slug)
-    .maybeSingle()
+    .in('slug', slugCandidates)
+    .limit(1)
+
+  const centre = Array.isArray(centreRows) && centreRows.length > 0 ? centreRows[0] : null
 
   if (!centre) {
     notFound()
@@ -103,5 +121,5 @@ export default async function CentrePage({
     }
   }
 
-  return <CentreClient slug={params.slug} />
+  return <CentreClient slug={normalizeCentreSlug(centre.slug) ?? normalizedSlug} />
 }

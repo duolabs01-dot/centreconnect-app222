@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
@@ -171,7 +171,7 @@ export default async function ParentDashboardPage() {
                     </div>
                     {/* WhatsApp Help Shortcut */}
                     <a 
-                      href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20crÃ¨che%20in%20Alexandra."
+                      href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20creche%20in%20Alexandra."
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
@@ -182,7 +182,7 @@ export default async function ParentDashboardPage() {
                   </div>
                   <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
                   <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                    {`Find a crÃ¨che near you`}<br />in Alexandra.
+                    {`Find a creche near you`}<br />in Alexandra.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
                     Browse trusted crèches in Alexandra, compare options, and apply for {firstChildName} â€” all in one place. 
@@ -308,6 +308,7 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
 
 
 

@@ -34,6 +34,7 @@ import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
+import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 
 type Centre = {
   id: string
@@ -166,22 +167,39 @@ export function CentreClient({ slug }: { slug: string }) {
     async function fetchCentre() {
       const supabase = createClient()
       let resolvedCentre: Centre | null = null
+      const slugCandidates = resolveCentreSlugCandidates(slug)
+
+      if (slugCandidates.length === 0) {
+        setCentre(null)
+        setWebsiteContent({
+          aboutText: '',
+          programCards: [],
+          galleryUrls: [],
+          visibleSections: DEFAULT_VISIBLE_SECTIONS,
+        })
+        setUserRole(null)
+        setExistingApplication(null)
+        setLoading(false)
+        return
+      }
 
       try {
         // Primary fetch from centres table, fallback to public view.
-        const { data: centreData } = await supabase
+        const { data: centreRows } = await supabase
           .from('ecd_centres')
           .select('*')
-          .eq('slug', slug)
-          .maybeSingle()
+          .in('slug', slugCandidates)
+          .limit(1)
+
+        const centreData = Array.isArray(centreRows) && centreRows.length > 0 ? (centreRows[0] as Centre) : null
 
         if (centreData) {
-          resolvedCentre = centreData as Centre
+          resolvedCentre = centreData
         } else {
           const { data: fallbackRows } = await supabase
             .from('public_ecd_centres')
             .select('*')
-            .eq('slug', slug)
+            .in('slug', slugCandidates)
             .limit(1)
 
           resolvedCentre = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
@@ -314,7 +332,8 @@ export function CentreClient({ slug }: { slug: string }) {
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = locationLabel || 'Address shared on request'
-  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centre.slug)}`
+  const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
+  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
   const heroFacts = showPilotTrustInfo
     ? [
         centre.is_registered ? 'DSD Registered' : null,

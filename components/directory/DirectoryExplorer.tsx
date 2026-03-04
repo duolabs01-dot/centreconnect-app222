@@ -103,10 +103,10 @@ export default function DirectoryExplorer({
 
   // Quick Filters
   const quickFilters = [
-    { label: '📍 Near Me', active: geoStatus === 'granted', onClick: () => activateMapView() },
-    { label: '🏢 Alexandra', active: selectedSuburb === 'Alexandra', onClick: () => { setSelectedSuburb('Alexandra'); setCurrentPage(1); } },
-    { label: '💸 Subsidy', active: selectedSubsidy === 'true', onClick: () => { setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true'); setCurrentPage(1); } },
-    { label: '👶 Infants', active: selectedAge === 'Infants (0-1 year)', onClick: () => { setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)'); setCurrentPage(1); } },
+    { label: 'Near Me', active: geoStatus === 'granted', onClick: () => activateMapView() },
+    { label: 'Alexandra', active: selectedSuburb === 'Alexandra', onClick: () => { setSelectedSuburb('Alexandra'); setCurrentPage(1); } },
+    { label: 'Subsidy', active: selectedSubsidy === 'true', onClick: () => { setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true'); setCurrentPage(1); } },
+    { label: 'Infants', active: selectedAge === 'Infants (0-1 year)', onClick: () => { setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)'); setCurrentPage(1); } },
   ]
 
   // Debounce search
@@ -183,7 +183,7 @@ export default function DirectoryExplorer({
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search crèches or suburbs..."
+              placeholder="Search creches or suburbs..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-bold shadow-sm focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 transition-all outline-none"
@@ -374,7 +374,7 @@ export default function DirectoryExplorer({
                 <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
                   <Search className="h-8 w-8 text-slate-300" />
                 </div>
-                <h3 className="text-lg font-black text-slate-900 tracking-tight">No crèches found here.</h3>
+                <h3 className="text-lg font-black text-slate-900 tracking-tight">No creches found here.</h3>
                 <p className="mt-2 text-sm text-slate-500 max-w-xs">Try adjusting your filters or expanding your search to other suburbs.</p>
                 <Button variant="outline" onClick={resetFilters} className="mt-6 rounded-2xl h-12 font-bold border-slate-200">Clear All Filters</Button>
               </motion.div>
@@ -432,7 +432,7 @@ export default function DirectoryExplorer({
         )}
       </div>
 
-      {/* Auth Nudge for Guest Users — Shown at the bottom when they have results to encourage conversion */}
+      {/* Auth nudge for guest users, shown when they have directory results */}
       {!initialFilters.search && !hasActiveFilters && centres.length > 0 && (
          <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -451,7 +451,7 @@ export default function DirectoryExplorer({
                   Premium Features
                 </div>
                 <h3 className="text-3xl font-black tracking-tight leading-[1.1] mb-4">
-                  Find the perfect crèche, then let us handle the rest.
+                  Find the perfect creche, then let us handle the rest.
                 </h3>
                 <p className="text-slate-300 text-lg mb-8 font-medium leading-relaxed">
                   Join 500+ parents who use CentreConnect to manage documents, get daily reports, and track applications in real-time.
@@ -487,3 +487,4 @@ export default function DirectoryExplorer({
     </div>
   )
 }
+

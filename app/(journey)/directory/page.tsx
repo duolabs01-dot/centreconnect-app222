@@ -4,9 +4,10 @@ import { Container } from '@/components/layout/container'
 import { Sparkles, MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
 import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-centre'
+import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 
 export const metadata: Metadata = {
-  title: 'Find a Crèche - CentreConnect',
+  title: 'Find a Creche - CentreConnect',
   description: 'Search and compare trusted ECD centres in Alexandra and surrounding areas.',
   openGraph: {
     images: ['/og-image.png'],
@@ -45,7 +46,10 @@ type CentreApplicationRow = {
   status: string | null
 }
 
-function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
+function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
+  const safeSlug = normalizeCentreSlug(centre.slug)
+  if (!safeSlug) return null
+
   const latitude =
     typeof centre.latitude === 'number'
       ? centre.latitude
@@ -61,7 +65,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre {
 
   return {
     id: centre.id,
-    slug: centre.slug,
+    slug: safeSlug,
     name: centre.name,
     tagline: centre.tagline,
     suburb: centre.suburb,
@@ -214,19 +218,21 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       })
     }
 
-    centres = centreRows.map((centre) => {
-      const geo = geoById.get(centre.id)
-      const existingApplication = applicationByCentre.get(centre.id)
-      const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
-      return toDirectoryCentre({
-        ...centre,
-        is_claimed: hasOwner,
-        latitude: (geo?.latitude as number | string | null | undefined) ?? null,
-        longitude: (geo?.longitude as number | string | null | undefined) ?? null,
-        existingApplicationId: existingApplication?.id ?? null,
-        existingApplicationStatus: existingApplication?.status ?? null,
-      } as RawDirectoryCentre)
-    })
+    centres = centreRows
+      .map((centre) => {
+        const geo = geoById.get(centre.id)
+        const existingApplication = applicationByCentre.get(centre.id)
+        const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
+        return toDirectoryCentre({
+          ...centre,
+          is_claimed: hasOwner,
+          latitude: (geo?.latitude as number | string | null | undefined) ?? null,
+          longitude: (geo?.longitude as number | string | null | undefined) ?? null,
+          existingApplicationId: existingApplication?.id ?? null,
+          existingApplicationStatus: existingApplication?.status ?? null,
+        } as RawDirectoryCentre)
+      })
+      .filter((centre): centre is DirectoryCentre => Boolean(centre))
   } catch (err) {
     console.error('DirectoryPage error:', err)
   }
@@ -258,7 +264,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             <span className="text-xs font-bold uppercase tracking-widest">Alexandra Pilot</span>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-            Find the right crèche.
+            Find the right creche.
           </h1>
           <p className="mt-2 text-slate-500 max-w-lg">
             Compare trusted centres in Alexandra by price, age group, and government subsidy.
@@ -284,3 +290,4 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
+

@@ -1,8 +1,7 @@
-'use server'
-
 import { NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
+import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 
 type QueryParams = {
   search?: string
@@ -152,16 +151,26 @@ export async function GET(req: Request) {
     })
   }
 
+  const centres = (centresData ?? []).flatMap((centre) => {
+    const safeSlug = normalizeCentreSlug((centre.slug as string | null | undefined) ?? null)
+    if (!safeSlug) return []
+
+    return [
+      {
+        ...centre,
+        slug: safeSlug,
+        subsidy_accepted: Boolean(centre.subsidy_accepted),
+        is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
+        latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
+        longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
+        existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
+        existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
+      },
+    ]
+  })
+
   return NextResponse.json({
-    centres: (centresData ?? []).map((centre) => ({
-      ...centre,
-      subsidy_accepted: Boolean(centre.subsidy_accepted),
-      is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
-      latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
-      longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
-      existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
-      existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
-    })),
+    centres,
     totalResults: count ?? 0,
   })
 }
