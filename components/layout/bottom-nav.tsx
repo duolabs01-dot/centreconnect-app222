@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { type LucideIcon } from 'lucide-react'
-import { useCallback, useEffect, useRef, memo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 
@@ -82,6 +82,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()
   const { isVisible } = useBottomNav()
   const prefetchedRef = useRef(false)
+  const [savedBadges, setSavedBadges] = useState(2)
 
   useEffect(() => {
     if (prefetchedRef.current) return
@@ -89,10 +90,26 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     items.forEach(item => router.prefetch(item.href))
   }, [items, router])
 
+  useEffect(() => {
+    // Placeholder logic - replace with real saved centres count from context/api
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('cc:saved-count') : null
+    if (stored) {
+      setSavedBadges(Number(stored) || 0)
+    }
+  }, [])
+
   const handleNav = useCallback((href: string) => {
     if (href === pathname) return
     router.push(href)
   }, [pathname, router])
+
+  const decoratedItems = useMemo(
+    () =>
+      items.map((item) =>
+        item.href === '/parent/saved' ? { ...item, badge: savedBadges } : item
+      ),
+    [items, savedBadges]
+  )
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
   if (!isVisible || pathname === '/' || isAuthPage) return null
@@ -107,7 +124,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
             backdropFilter: 'blur(28px) saturate(185%)',
           }}
         >
-          {items.map((item) => (
+          {decoratedItems.map((item) => (
             <NavButton
               key={item.href}
               item={item}
