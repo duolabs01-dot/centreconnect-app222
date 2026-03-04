@@ -72,6 +72,13 @@ export async function acceptOffer(applicationId: string): Promise<AcceptOfferRes
       title: 'Enrollment confirmed',
       message: `You accepted ${childName}'s offer from ${centreName}. Enrollment is now confirmed.`,
       parent_phone: parentPhone,
+      recipient_name: parentProfile?.full_name ?? 'Parent',
+      whatsapp_event_type: 'offer_acceptance',
+      whatsapp_event_key: `offer_acceptance:${applicationId}:${user.id}`,
+      whatsapp_metadata: {
+        child_name: childName,
+        centre_name: centreName,
+      },
       is_read: false,
     })
 

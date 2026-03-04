@@ -171,6 +171,7 @@ export async function requestCoParentDocumentUploadAction(
   const notificationMessage = `${message}\n\nFrom ${centreName}. Open your profile documents to upload now.`
 
   const recipientPhone = normalizeText(profileById.get(payload.requestedForUserId)?.phone) || normalizeText(forGuardian?.phone)
+  const whatsappEventKey = `document_request_from_coparent:${applicationId ?? child.id}:${user.id}:${payload.requestedForUserId}:${Date.now()}`
   const parentNotification = await sendParentInAppAndWhatsappNotification(admin as any, {
     parent_id: payload.requestedForUserId,
     ecd_id: ecdId,
@@ -179,6 +180,15 @@ export async function requestCoParentDocumentUploadAction(
     title: `Document request for ${childName}`,
     message: notificationMessage,
     parent_phone: recipientPhone,
+    recipient_name: recipientLabel,
+    whatsapp_event_type: 'document_request_from_coparent',
+    whatsapp_event_key: whatsappEventKey,
+    whatsapp_metadata: {
+      requested_by_user_id: user.id,
+      requested_for_user_id: payload.requestedForUserId,
+      child_name: childName,
+      document_codes: normalizedCodes,
+    },
     is_read: false,
   })
   if (!parentNotification.ok) {

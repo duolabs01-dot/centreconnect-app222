@@ -14,6 +14,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useParentLayout } from './parent-layout-provider'
 import { robustSignOut } from '@/lib/auth/client-sign-out'
 import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
+import { ParentNotificationBell } from '@/components/notifications/parent-notification-bell'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -163,6 +164,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             </div>
 
             <div className="flex items-center gap-3">
+              <ParentNotificationBell parentId={userId} />
               {/* Social-media style sign out / User menu */}
               <div className="relative">
                 <Button

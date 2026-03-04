@@ -164,6 +164,14 @@ export async function saveDailyReportAction(input: unknown): Promise<SaveDailyRe
       title: `${childName}: daily report ready`,
       message: parentMessage,
       parent_phone: parentPhone,
+      recipient_name: parentProfile?.full_name ?? null,
+      whatsapp_event_type: 'daily_report_ready',
+      whatsapp_event_key: `daily_report_ready:${String(savedReport.id)}`,
+      whatsapp_metadata: {
+        child_name: childName,
+        report_date: payload.reportDate,
+        report_id: String(savedReport.id),
+      },
       is_read: false,
     })
     whatsappHref = parentNotification.whatsappHref ?? undefined
@@ -213,4 +221,3 @@ export async function saveDailyReportAction(input: unknown): Promise<SaveDailyRe
     warning,
   }
 }
-

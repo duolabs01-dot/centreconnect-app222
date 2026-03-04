@@ -1,3 +1,7 @@
+import 'server-only'
+
+import { dispatchWhatsappEvent, type WhatsappNotificationEventType } from '@/lib/notifications/dispatch-whatsapp-event'
+
 type ParentNotificationInsert = {
   parent_id: string
   ecd_id: string
@@ -26,6 +30,10 @@ type EmailQueueInsert = {
 
 type ParentMultiChannelInsert = ParentNotificationInsert & {
   parent_phone?: string | null
+  recipient_name?: string | null
+  whatsapp_event_type?: WhatsappNotificationEventType | null
+  whatsapp_event_key?: string | null
+  whatsapp_metadata?: Record<string, unknown> | null
 }
 
 type EcdMultiChannelInsert = EcdNotificationInsert & {
@@ -115,11 +123,31 @@ export async function sendParentInAppAndWhatsappNotification(
     is_read: payload.is_read ?? false,
   })
 
+  let whatsappHref = toWhatsappHref(payload.parent_phone, payload.message)
+  if (payload.whatsapp_event_type) {
+    const dispatchResult = await dispatchWhatsappEvent({
+      eventType: payload.whatsapp_event_type,
+      eventKey: payload.whatsapp_event_key ?? null,
+      centreId: payload.ecd_id,
+      parentId: payload.parent_id,
+      applicationId: payload.application_id ?? null,
+      recipientPhone: payload.parent_phone ?? null,
+      recipientName: payload.recipient_name ?? null,
+      message: payload.message,
+      metadata: payload.whatsapp_metadata ?? null,
+    })
+
+    whatsappHref = dispatchResult.whatsappHref ?? whatsappHref
+    if (!dispatchResult.ok) {
+      console.error('WhatsApp edge dispatch failed:', dispatchResult.error)
+    }
+  }
+
   return {
     ok: inAppResult.ok,
     inAppSent: inAppResult.ok,
     emailQueued: false,
-    whatsappHref: toWhatsappHref(payload.parent_phone, payload.message),
+    whatsappHref,
     error: inAppResult.error,
   }
 }

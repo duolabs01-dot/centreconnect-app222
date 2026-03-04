@@ -12,6 +12,7 @@ import {
 } from '@/lib/admissions/rejection-reasons'
 import { buildSaParentOfferAgreement, type OfferBreakdownItem } from '@/lib/legal/sa-parent-offer-agreement'
 import { DEFAULT_OFFER_CONDITIONS, DEFAULT_OFFER_PENALTIES } from './offer-defaults'
+import { sendParentInAppAndWhatsappNotification } from '@/lib/notifications/multi-channel'
 
 const createOfferSchema = z.object({
   applicationId: z.string().uuid(),
@@ -264,13 +265,24 @@ export async function createApplicationOfferAction(input: unknown): Promise<Acti
       status: 'approved',
     })
 
-    await session.supabase.from('parent_notifications').insert({
+    await sendParentInAppAndWhatsappNotification(session.supabase as any, {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,
       template_key: null,
       title: 'Offer ready to review',
       message,
+      parent_phone: parentProfile?.phone ?? parent.alt_phone ?? null,
+      recipient_name: parentName,
+      whatsapp_event_type: 'application_status_change',
+      whatsapp_event_key: `application_status_change:${application.id}:approved`,
+      whatsapp_metadata: {
+        old_status: application.status,
+        new_status: 'approved',
+        child_name: childName,
+        application_number: application.application_number,
+      },
+      is_read: false,
     })
 
     const { subject, html } = applicationStatusEmail({
@@ -376,13 +388,25 @@ export async function rejectApplicationWithReasonAction(input: unknown): Promise
   const centreName = centre?.name?.trim() || 'Your creche'
 
   if (parent?.id) {
-    await session.supabase.from('parent_notifications').insert({
+    await sendParentInAppAndWhatsappNotification(session.supabase as any, {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,
       template_key: null,
       title: 'Application update',
       message: `Hi ${parentName}, ${childName}'s application was not successful this time. ${rejectionReason}`,
+      parent_phone: parentProfile?.phone ?? parent.alt_phone ?? null,
+      recipient_name: parentName,
+      whatsapp_event_type: 'application_status_change',
+      whatsapp_event_key: `application_status_change:${application.id}:rejected:${Date.now()}`,
+      whatsapp_metadata: {
+        old_status: application.status,
+        new_status: 'rejected',
+        child_name: childName,
+        application_number: application.application_number,
+        reason: rejectionReason,
+      },
+      is_read: false,
     })
 
     await session.supabase.from('email_queue').insert({

@@ -336,6 +336,15 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         title: status === 'approved' ? 'Application approved' : 'A quick update on your application',
         message,
         parent_phone: parentProfile?.phone ?? parent?.alt_phone ?? null,
+        recipient_name: parentName,
+        whatsapp_event_type: 'application_status_change',
+        whatsapp_event_key: `application_status_change:${applicationId}:${status}`,
+        whatsapp_metadata: {
+          old_status: application.status,
+          new_status: status,
+          child_name: childName,
+          application_number: application.application_number,
+        },
         is_read: false,
       })
 

@@ -100,6 +100,12 @@ export async function verifyPickupCode(
       title: `${childName} pickup verified`,
       message: `${childName} was released to ${guardianName}. Pickup has been verified by your centre team.`,
       parent_phone: parentPhone,
+      whatsapp_event_type: 'pickup_verified',
+      whatsapp_event_key: `pickup_verified:${input.ecdId}:${input.childId}:${Date.now()}`,
+      whatsapp_metadata: {
+        child_name: childName,
+        guardian_name: guardianName,
+      },
       is_read: false,
     })
     whatsappHref = parentNotification.whatsappHref ?? null

@@ -172,6 +172,7 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
     profilePhoneById.get(payload.requestedForUserId) ||
     normalizeText(guardianById.get(payload.requestedForGuardianId ?? '')?.phone) ||
     null
+  const whatsappEventKey = `document_request_from_coparent:${application.id}:${payload.requestedByUserId}:${payload.requestedForUserId}:${Date.now()}`
   const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
     parent_id: payload.requestedForUserId,
     ecd_id: session.ecdId,
@@ -180,6 +181,15 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
     title: `Document request for ${childName}`,
     message: notificationMessage,
     parent_phone: recipientPhone,
+    recipient_name: recipientLabel,
+    whatsapp_event_type: 'document_request_from_coparent',
+    whatsapp_event_key: whatsappEventKey,
+    whatsapp_metadata: {
+      requested_by_user_id: payload.requestedByUserId,
+      requested_for_user_id: payload.requestedForUserId,
+      child_name: childName,
+      document_codes: normalizedCodes,
+    },
     is_read: false,
   })
   if (!parentNotification.ok) {
