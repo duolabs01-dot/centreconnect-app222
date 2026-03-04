@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { APP_URL } from '@/lib/config'
+import { EMAIL_APP_URL } from '@/lib/config'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
@@ -28,11 +28,13 @@ function sanitizeName(value: string | null | undefined, fallback: string) {
   return trimmed || fallback
 }
 
+const emailAppUrlRoot = EMAIL_APP_URL.replace(/\/$/, '')
+
 async function generateOwnerAccessLink(
   admin: ReturnType<typeof createAdminClient>,
   email: string
 ) {
-  const redirectTo = `${APP_URL.replace(/\/$/, '')}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
+  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
   const inviteResult = await admin.auth.admin.generateLink({
     type: 'invite',
     email,
@@ -93,7 +95,7 @@ async function generateOwnerAccessLink(
 }
 
 function buildTrackingUrl(eventKey: string, channel: 'email' | 'whatsapp', target: string) {
-  const url = new URL('/api/invites/open', APP_URL)
+  const url = new URL('/api/invites/open', emailAppUrlRoot)
   url.searchParams.set('event_key', eventKey)
   url.searchParams.set('channel', channel)
   url.searchParams.set('target', target)
@@ -135,7 +137,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
-  const appUrlRoot = APP_URL.replace(/\/$/, '')
   const supportWhatsappMessage = [
     `Hi CentreConnect team, this is ${ownerName} from ${sanitizeName(centre.name, 'my centre')}.`,
     'Please help me complete setup so we can start receiving applications.',
@@ -149,7 +150,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     centreName: sanitizeName(centre.name, 'your centre'),
     ownerName,
     claimUrl: emailTrackingUrl,
-    dashboardUrl: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
+    dashboardUrl: `${emailAppUrlRoot}/ecd/dashboard`,
     whatsappChatLink: trackedSupportWhatsappLink,
     supportWhatsApp: supportWhatsapp,
     supportEmail,
@@ -180,14 +181,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const welcomePackHtml = await renderPilotWelcomePackEmail({
     centreName: sanitizeName(centre.name, 'your centre'),
     contactName: ownerName,
-    dashboardLink: `${appUrlRoot}/ecd/dashboard`,
-    websiteBuilderLink: `${appUrlRoot}/ecd/website`,
-    attendanceLink: `${appUrlRoot}/ecd/attendance`,
-    pickupLink: `${appUrlRoot}/ecd/pickup`,
-    qrPosterLink: `${appUrlRoot}/ecd/pickup`,
+    dashboardLink: `${emailAppUrlRoot}/ecd/dashboard`,
+    websiteBuilderLink: `${emailAppUrlRoot}/ecd/website`,
+    attendanceLink: `${emailAppUrlRoot}/ecd/attendance`,
+    pickupLink: `${emailAppUrlRoot}/ecd/pickup`,
+    qrPosterLink: `${emailAppUrlRoot}/ecd/pickup`,
     supportWhatsApp: supportWhatsapp,
     supportEmail,
-    supportLink: `${appUrlRoot}/ecd/support`,
+    supportLink: `${emailAppUrlRoot}/ecd/support`,
   })
   const welcomePackResult = await queueEmail(
     ownerEmail,
