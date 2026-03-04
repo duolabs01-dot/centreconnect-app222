@@ -13,7 +13,8 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { BrandMark } from '@/components/ecd/BrandMark'
-import { SignOutButton } from '@/components/ecd/SignOutButton'
+import { SignOutButton as EcdSignOutButton } from '@/components/ecd/SignOutButton'
+import { SignOutButton as AdminSignOutButton } from '@/components/cc-admin/SignOutButton'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import { useEffect } from 'react'
 
@@ -177,10 +178,17 @@ export function MobileNavMenu({
                 <p className="truncate text-xs text-slate-700 font-bold mt-1">{userEmail}</p>
               </div>
             )}
-            <SignOutButton 
-              redirectTo="/" 
-              className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold rounded-xl py-2.5 shadow-sm text-sm" 
-            />
+            {type === 'admin' ? (
+              <AdminSignOutButton
+                redirectTo="/"
+                className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold rounded-xl py-2.5 shadow-sm text-sm"
+              />
+            ) : (
+              <EcdSignOutButton
+                redirectTo="/"
+                className="w-full bg-white border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold rounded-xl py-2.5 shadow-sm text-sm"
+              />
+            )}
           </div>
         </div>
       </SheetContent>

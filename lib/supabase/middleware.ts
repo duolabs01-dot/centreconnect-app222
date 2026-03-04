@@ -138,7 +138,39 @@ export async function updateSession(request: NextRequest) {
   const dashboardPath = role ? getDashboardPath(role) : '/'
 
   if (isAuthRoute && role) {
-    return finish(NextResponse.redirect(new URL(dashboardPath, request.url)), cachedRole ? 'auth-route-redirect-cache' : 'auth-route-redirect-db')
+    // Prevent /ecd/login <-> /ecd/dashboard redirect loops when the role exists
+    // but the user has no visible ECD membership + centre.
+    if (pathname === '/ecd/login' && isEcdRole(role)) {
+      const ecdAccessLookup = await withTimeout(
+        (async () => {
+          const result = await supabase
+            .from('ecd_admins')
+            .select('ecd_id, ecd_centres!inner(id)')
+            .eq('user_id', user.id)
+            .limit(1)
+          return { result }
+        })(),
+        3000
+      )
+
+      if (!ecdAccessLookup) {
+        clearRoleCache(response, request)
+        return finish(response, 'auth-route-ecd-membership-timeout-pass')
+      }
+
+      const ecdAccessResult = ecdAccessLookup.result
+      const hasValidEcdAccess = !ecdAccessResult.error && (ecdAccessResult.data?.length ?? 0) > 0
+
+      if (!hasValidEcdAccess) {
+        clearRoleCache(response, request)
+        return finish(response, 'auth-route-ecd-missing-access-pass')
+      }
+    }
+
+    return finish(
+      NextResponse.redirect(new URL(dashboardPath, request.url)),
+      cachedRole ? 'auth-route-redirect-cache' : 'auth-route-redirect-db'
+    )
   }
 
   if (protectedArea && !role) {
@@ -156,6 +188,10 @@ export async function updateSession(request: NextRequest) {
 
 type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 type ProtectedArea = 'admin' | 'ecd' | 'parent'
+
+function isEcdRole(role: UserRole | null | undefined): role is 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' {
+  return role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor'
+}
 
 function getProtectedArea(pathname: string): ProtectedArea | null {
   if (pathname === '/ecd/login') return null

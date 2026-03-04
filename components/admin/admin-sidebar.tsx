@@ -12,7 +12,6 @@ import {
   BarChart3, 
   ShieldCheck, 
   Settings,
-  LogOut,
   Zap,
   Activity,
   Cpu,
@@ -20,6 +19,7 @@ import {
   Mail
 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
@@ -120,9 +120,11 @@ export function AdminSidebar() {
             <button className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-all">
               <Settings className="w-5 h-5" />
             </button>
-            <button className="p-2 text-rose-500/60 hover:text-rose-400 hover:bg-rose-500/5 rounded-lg transition-all">
-              <LogOut className="w-5 h-5" />
-            </button>
+            <SignOutButton
+              redirectTo="/"
+              variant="ghost"
+              className="h-9 rounded-lg px-3 text-xs font-bold text-rose-500/80 hover:bg-rose-500/10 hover:text-rose-400"
+            />
           </div>
         </div>
       </aside>

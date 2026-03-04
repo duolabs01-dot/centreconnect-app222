@@ -25,14 +25,31 @@ export function SignOutButton({
     if (isLoading) return
     setIsLoading(true)
     try {
-      const supabase = createClient()
-      const { clientError, serverError } = await robustSignOut(supabase)
-      if (clientError && serverError) {
-        toast.error('Could not sign out. Please try again.')
-        return
+      const fallbackAuthClient = {
+        auth: {
+          signOut: async () => ({ error: null }),
+        },
+      }
+
+      const authClient = (() => {
+        try {
+          return createClient()
+        } catch (error) {
+          console.error('Unable to create Supabase browser client for ECD sign out:', error)
+          return fallbackAuthClient
+        }
+      })()
+
+      const { clientError, serverError } = await robustSignOut(authClient)
+      if (clientError || serverError) {
+        toast.warning('Signed out with warnings. Redirecting...')
       }
       router.replace(redirectTo)
-      router.refresh()
+      if (typeof window !== 'undefined') {
+        window.location.replace(redirectTo)
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not sign out. Please try again.')
     } finally {
       setIsLoading(false)
     }
