@@ -3,9 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Button } from '@/components/cc-admin/Button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
 type TenantAdminRow = {
   id: string
@@ -45,6 +48,8 @@ export function TenantAccessManager({ tenantId, admins, invitations }: TenantAcc
     fullName: '',
     role: 'ecd_staff' as 'ecd_admin' | 'ecd_staff',
   })
+  const darkInputClass =
+    'border-cyan-500/20 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-400/70'
 
   async function sendInvite() {
     const email = inviteForm.email.trim().toLowerCase()
@@ -79,65 +84,127 @@ export function TenantAccessManager({ tenantId, admins, invitations }: TenantAcc
   }
 
   return (
-    <Card>
+    <Card className="border-cyan-500/20 bg-slate-950/70">
       <CardHeader>
-        <CardTitle>Access (Admins & Staff)</CardTitle>
+        <CardTitle className="text-white">Access (Admins & Staff)</CardTitle>
+        <CardDescription className="text-slate-400">
+          Link team members and track invitation delivery and acceptance.
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto_auto]">
-          <Input
-            type="email"
-            placeholder="educator@centre.co.za"
-            value={inviteForm.email}
-            onChange={(event) => setInviteForm((prev) => ({ ...prev, email: event.target.value }))}
-          />
-          <Input
-            placeholder="Full name (optional)"
-            value={inviteForm.fullName}
-            onChange={(event) => setInviteForm((prev) => ({ ...prev, fullName: event.target.value }))}
-          />
-          <select
-            className="cc-native-field"
-            value={inviteForm.role}
-            onChange={(event) => setInviteForm((prev) => ({ ...prev, role: event.target.value as 'ecd_admin' | 'ecd_staff' }))}
-          >
-            <option value="ecd_staff">Teacher / Educator</option>
-            <option value="ecd_admin">ECD Admin</option>
-          </select>
-          <Button disabled={busy} onClick={() => void sendInvite()}>
-            {busy ? 'Sending...' : 'Send Invite'}
-          </Button>
+      <CardContent className="space-y-6">
+        <div className="rounded-2xl border border-cyan-500/20 bg-slate-900/60 p-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_220px_auto] xl:items-end">
+            <div className="space-y-2">
+              <Label htmlFor="invite-email" className="text-slate-300">
+                Email
+              </Label>
+              <Input
+                id="invite-email"
+                type="email"
+                className={darkInputClass}
+                placeholder="educator@centre.co.za"
+                value={inviteForm.email}
+                onChange={(event) => setInviteForm((prev) => ({ ...prev, email: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="invite-name" className="text-slate-300">
+                Full Name (Optional)
+              </Label>
+              <Input
+                id="invite-name"
+                className={darkInputClass}
+                placeholder="Jane Nkosi"
+                value={inviteForm.fullName}
+                onChange={(event) => setInviteForm((prev) => ({ ...prev, fullName: event.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Role</Label>
+              <Select
+                value={inviteForm.role}
+                onValueChange={(value) => setInviteForm((prev) => ({ ...prev, role: value as 'ecd_admin' | 'ecd_staff' }))}
+              >
+                <SelectTrigger className={`${darkInputClass} [&_span]:text-slate-100`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                  <SelectItem value="ecd_staff">Teacher / Educator</SelectItem>
+                  <SelectItem value="ecd_admin">ECD Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              disabled={busy}
+              onClick={() => void sendInvite()}
+              className="bg-cyan-500 text-black hover:bg-cyan-400"
+            >
+              {busy ? 'Sending...' : 'Send Invite'}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">Linked Team Members</p>
+          <p className="text-sm font-medium text-white">Linked Team Members</p>
           {admins.length === 0 ? (
-            <p className="text-sm text-slate-400">No admins or staff linked yet.</p>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-sm text-slate-400">
+              No admins or staff linked yet.
+            </div>
           ) : (
-            admins.map((adminRow) => (
-              <div key={adminRow.id} className="rounded-md border border-slate-700 bg-slate-900/50 p-2 text-sm">
-                <p className="font-medium">{adminRow.full_name ?? adminRow.user_id}</p>
-                <p className="text-xs text-slate-400">
-                  {adminRow.role} | Invited: {formatDateTime(adminRow.invited_at)} | Accepted: {formatDateTime(adminRow.accepted_at)}
-                </p>
-              </div>
-            ))
+            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/30">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-800 hover:bg-transparent">
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Name</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Role</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Invited</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Accepted</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {admins.map((adminRow) => (
+                    <TableRow key={adminRow.id} className="border-slate-800">
+                      <TableCell className="font-medium text-slate-100">{adminRow.full_name ?? adminRow.user_id}</TableCell>
+                      <TableCell className="text-slate-300">{adminRow.role}</TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(adminRow.invited_at)}</TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(adminRow.accepted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">Invitation Ledger</p>
+          <p className="text-sm font-medium text-white">Invitation Ledger</p>
           {invitations.length === 0 ? (
-            <p className="text-sm text-slate-400">No invitation records yet.</p>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3 text-sm text-slate-400">
+              No invitation records yet.
+            </div>
           ) : (
-            invitations.slice(0, 20).map((invitation) => (
-              <div key={invitation.id} className="rounded-md border border-slate-700 bg-slate-950/40 p-2 text-xs">
-                <p className="font-mono text-slate-200">{invitation.email}</p>
-                <p className="text-slate-400">
-                  {invitation.role} | Invited: {formatDateTime(invitation.invited_at)} | Accepted: {formatDateTime(invitation.accepted_at)}
-                </p>
-              </div>
-            ))
+            <div className="max-h-[360px] overflow-y-auto rounded-xl border border-slate-800 bg-slate-950/30">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-800 hover:bg-transparent">
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Email</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Role</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Invited</TableHead>
+                    <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Accepted</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invitations.slice(0, 40).map((invitation) => (
+                    <TableRow key={invitation.id} className="border-slate-800">
+                      <TableCell className="font-mono text-slate-100">{invitation.email}</TableCell>
+                      <TableCell className="text-slate-300">{invitation.role}</TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(invitation.invited_at)}</TableCell>
+                      <TableCell className="text-slate-300">{formatDateTime(invitation.accepted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
       </CardContent>

@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
 import { SendOwnerInviteButton } from '@/components/admin/send-owner-invite-button'
@@ -134,6 +137,11 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
     resolved: tickets.filter((t) => t.status === 'resolved').length,
     closed: tickets.filter((t) => t.status === 'closed').length,
   }
+  const ownerPhone = centre.contact_phone?.trim() || centre.phone?.trim() || '-'
+  const ownerEmail = centre.email?.trim() || '-'
+  const totalOpenTickets = ticketByStatus.open + ticketByStatus.in_progress + ticketByStatus.waiting_response
+  const websiteHref = `https://${centre.slug}.${ROOT_DOMAIN}`
+  const activationReady = centre.onboarding_fee_paid && !!adminTaskResult.data
 
   return (
     <AdminPageLayout
@@ -142,122 +150,255 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
       roleLabel="Architect Console"
       wide
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Subdomain</CardTitle></CardHeader><CardContent><p className="font-mono text-sm">{centre.slug}.{ROOT_DOMAIN}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Tenant Status</CardTitle></CardHeader><CardContent><p>{centre.is_active ? 'Enabled' : 'Disabled'}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Verification</CardTitle></CardHeader><CardContent><p>{centre.is_registered ? 'Verified badge active' : 'Not verified'}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Package</CardTitle></CardHeader><CardContent><p className="uppercase">{subscription?.tier ?? 'none'} | {subscription?.status ?? 'none'}</p></CardContent></Card>
-      </section>
-
-      <section className="mt-4 grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Tenant Profile</CardTitle>
-            <ActivateCentreButton
-              tenantId={tenantId}
-              onboardingFeePaid={centre.onboarding_fee_paid}
-              hasPendingTask={!!adminTaskResult.data}
-            />
+      <div className="space-y-6 pb-10">
+        <Card className="border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f]">
+          <CardHeader className="gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">Tenant 360</Badge>
+              <Badge className={centre.is_active ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200' : 'border-rose-500/30 bg-rose-500/15 text-rose-200'}>
+                {centre.is_active ? 'Enabled' : 'Disabled'}
+              </Badge>
+              <Badge className="border-slate-700 bg-slate-900 text-slate-300">
+                {centre.is_registered ? 'Verified' : 'Unverified'}
+              </Badge>
+            </div>
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <CardTitle className="text-3xl font-black tracking-tight text-white">{centre.name}</CardTitle>
+                <CardDescription className="mt-2 text-slate-300">
+                  {centre.slug}.{ROOT_DOMAIN}
+                </CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+                  <Link href="/admin/tenants">Back to Tenants</Link>
+                </Button>
+                <Button asChild variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+                  <a href={websiteHref} target="_blank" rel="noreferrer">
+                    Open Centre Site
+                  </a>
+                </Button>
+                <ActivateCentreButton
+                  tenantId={tenantId}
+                  onboardingFeePaid={centre.onboarding_fee_paid}
+                  hasPendingTask={!!adminTaskResult.data}
+                />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p><span className="text-slate-400">Name:</span> {centre.name}</p>
-            <p><span className="text-slate-400">Email:</span> {centre.email}</p>
-            <p><span className="text-slate-400">Phone:</span> {centre.phone}</p>
-            <p><span className="text-slate-400">Address:</span> {centre.address}, {centre.suburb}, {centre.city}, {centre.province}</p>
-            <p><span className="text-slate-400">Created:</span> {formatDateTime(centre.created_at)}</p>
-            <p><span className="text-slate-400">Onboarded:</span> {formatDateTime(centre.onboarded_at)}</p>
-            <p><span className="text-slate-400">Billing cycle end:</span> {formatDateTime(subscription?.current_period_end)}</p>
-            <SendOwnerInviteButton
-              centreId={tenantId}
-              centreName={centre.name}
-              ownerEmail={centre.email}
-              ownerPhone={centre.contact_phone ?? centre.phone}
-            />
-          </CardContent>
         </Card>
-        <Card>
-          <CardHeader><CardTitle>Application Funnel</CardTitle></CardHeader>
-          <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
-            <p>Submitted: <strong>{appByStatus.submitted}</strong></p>
-            <p>In Review: <strong>{appByStatus.in_review}</strong></p>
-            <p>Approved: <strong>{appByStatus.approved}</strong></p>
-            <p>Waitlisted: <strong>{appByStatus.waitlisted}</strong></p>
-            <p>Rejected: <strong>{appByStatus.rejected}</strong></p>
-            <p>Total: <strong>{applications.length}</strong></p>
-          </CardContent>
-        </Card>
-      </section>
 
-      <section className="mt-4 grid gap-4 xl:grid-cols-3">
-        <TenantAccessManager
-          tenantId={tenantId}
-          admins={tenantAdmins.map((adminRow) => {
-            const profileRow = normalizeOne(adminRow.user_profiles as any) as { full_name: string; phone: string | null } | null
-            return {
-              id: adminRow.id,
-              user_id: adminRow.user_id,
-              role: adminRow.role as 'ecd_admin' | 'ecd_staff',
-              invited_at: adminRow.invited_at,
-              accepted_at: adminRow.accepted_at,
-              full_name: profileRow?.full_name ?? null,
-              phone: profileRow?.phone ?? null,
-            }
-          })}
-          invitations={invitationRows}
-        />
-        <Card>
-          <CardHeader><CardTitle>Analytics Snapshot</CardTitle></CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Profile Views: <strong>{analyticsByType.profile_view}</strong></p>
-            <p>WhatsApp Clicks: <strong>{analyticsByType.whatsapp_click}</strong></p>
-            <p>Call Clicks: <strong>{analyticsByType.call_click}</strong></p>
-            <p>Application Events: <strong>{analyticsByType.application_submitted}</strong></p>
-            <p>Total Events: <strong>{analyticsEvents.length}</strong></p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Support Snapshot</CardTitle></CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>Open: <strong>{ticketByStatus.open}</strong></p>
-            <p>In Progress: <strong>{ticketByStatus.in_progress}</strong></p>
-            <p>Waiting Response: <strong>{ticketByStatus.waiting_response}</strong></p>
-            <p>Resolved: <strong>{ticketByStatus.resolved}</strong></p>
-            <p>Closed: <strong>{ticketByStatus.closed}</strong></p>
-          </CardContent>
-        </Card>
-      </section>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-[0.18em] text-slate-500">Package</CardDescription>
+              <CardTitle className="text-white">{(subscription?.tier ?? 'none').toUpperCase()}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-300">{subscription?.status ?? 'none'}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-[0.18em] text-slate-500">Applications</CardDescription>
+              <CardTitle className="text-white">{applications.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-300">{appByStatus.in_review} currently in review</p>
+            </CardContent>
+          </Card>
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-[0.18em] text-slate-500">Analytics Events</CardDescription>
+              <CardTitle className="text-white">{analyticsEvents.length}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-300">{analyticsByType.profile_view} profile views logged</p>
+            </CardContent>
+          </Card>
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase tracking-[0.18em] text-slate-500">Support</CardDescription>
+              <CardTitle className="text-white">{totalOpenTickets}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-300">Open / active tickets</p>
+            </CardContent>
+          </Card>
+        </section>
 
-      <section className="mt-4">
-        <Card>
-          <CardHeader><CardTitle>Platform Activity (Tenant)</CardTitle></CardHeader>
-          <CardContent>
-            <div className="h-72 overflow-y-auto scrollbar-thin scrollbar-thumb-cyber-cyan/30 scrollbar-track-transparent">
-              <div className="overflow-x-auto rounded-md border border-slate-700/80 bg-slate-950/30">
+        <section className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader>
+              <CardTitle className="text-white">Tenant Profile</CardTitle>
+              <CardDescription className="text-slate-400">
+                Core ownership, location and billing metadata.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Owner Email</p>
+                  <p className="mt-1 break-all text-slate-100">{ownerEmail}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Owner Phone</p>
+                  <p className="mt-1 text-slate-100">{ownerPhone}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3 sm:col-span-2">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Address</p>
+                  <p className="mt-1 text-slate-100">
+                    {[centre.address, centre.suburb, centre.city, centre.province].filter(Boolean).join(', ') || '-'}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Created</p>
+                  <p className="mt-1 text-slate-100">{formatDateTime(centre.created_at)}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Onboarded</p>
+                  <p className="mt-1 text-slate-100">{formatDateTime(centre.onboarded_at)}</p>
+                </div>
+                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-3 sm:col-span-2">
+                  <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Billing Cycle End</p>
+                  <p className="mt-1 text-slate-100">{formatDateTime(subscription?.current_period_end)}</p>
+                </div>
+              </div>
+              <SendOwnerInviteButton
+                centreId={tenantId}
+                centreName={centre.name}
+                ownerEmail={centre.email}
+                ownerPhone={centre.contact_phone ?? centre.phone}
+              />
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="text-white">Application Funnel</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
+                <p className="text-slate-300">Submitted: <strong className="text-slate-100">{appByStatus.submitted}</strong></p>
+                <p className="text-slate-300">In Review: <strong className="text-slate-100">{appByStatus.in_review}</strong></p>
+                <p className="text-slate-300">Approved: <strong className="text-slate-100">{appByStatus.approved}</strong></p>
+                <p className="text-slate-300">Waitlisted: <strong className="text-slate-100">{appByStatus.waitlisted}</strong></p>
+                <p className="text-slate-300">Rejected: <strong className="text-slate-100">{appByStatus.rejected}</strong></p>
+                <p className="text-slate-300">Total: <strong className="text-slate-100">{applications.length}</strong></p>
+              </CardContent>
+            </Card>
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="text-white">Analytics Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm text-slate-300">
+                <p>Profile Views: <strong className="text-slate-100">{analyticsByType.profile_view}</strong></p>
+                <p>WhatsApp Clicks: <strong className="text-slate-100">{analyticsByType.whatsapp_click}</strong></p>
+                <p>Call Clicks: <strong className="text-slate-100">{analyticsByType.call_click}</strong></p>
+                <p>Application Events: <strong className="text-slate-100">{analyticsByType.application_submitted}</strong></p>
+              </CardContent>
+            </Card>
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="text-white">Support Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm text-slate-300">
+                <p>Open: <strong className="text-slate-100">{ticketByStatus.open}</strong></p>
+                <p>In Progress: <strong className="text-slate-100">{ticketByStatus.in_progress}</strong></p>
+                <p>Waiting Response: <strong className="text-slate-100">{ticketByStatus.waiting_response}</strong></p>
+                <p>Resolved: <strong className="text-slate-100">{ticketByStatus.resolved}</strong></p>
+                <p>Closed: <strong className="text-slate-100">{ticketByStatus.closed}</strong></p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
+          <TenantAccessManager
+            tenantId={tenantId}
+            admins={tenantAdmins.map((adminRow) => {
+              const profileRow = normalizeOne(adminRow.user_profiles as any) as { full_name: string; phone: string | null } | null
+              return {
+                id: adminRow.id,
+                user_id: adminRow.user_id,
+                role: adminRow.role as 'ecd_admin' | 'ecd_staff',
+                invited_at: adminRow.invited_at,
+                accepted_at: adminRow.accepted_at,
+                full_name: profileRow?.full_name ?? null,
+                phone: profileRow?.phone ?? null,
+              }
+            })}
+            invitations={invitationRows}
+          />
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader>
+              <CardTitle className="text-white">Activation Checklist</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 text-slate-300">
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Contract Signed</p>
+                <p className="mt-1 font-medium text-slate-100">{centre.contract_signed ? 'Yes' : 'No'}</p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 text-slate-300">
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Onboarding Fee Paid</p>
+                <p className="mt-1 font-medium text-slate-100">{centre.onboarding_fee_paid ? 'Yes' : 'No'}</p>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 text-slate-300">
+                <p className="text-xs uppercase tracking-[0.15em] text-slate-500">Pending Activation Task</p>
+                <p className="mt-1 font-medium text-slate-100">{adminTaskResult.data ? 'Present' : 'Not found'}</p>
+              </div>
+              <div className="rounded-xl border border-cyan-500/25 bg-cyan-500/10 p-3 text-cyan-100">
+                {activationReady
+                  ? 'Ready to activate. Use the Activate Centre action above.'
+                  : 'Activation is blocked until onboarding fee and pending activation task requirements are met.'}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section>
+          <Card className="border-cyan-500/20 bg-slate-950/70">
+            <CardHeader>
+              <CardTitle className="text-white">Platform Activity (Tenant)</CardTitle>
+              <CardDescription className="text-slate-400">
+                Full tenant timeline for platform admin actions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/30">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Actor</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Summary</TableHead>
+                    <TableRow className="border-slate-800 hover:bg-transparent">
+                      <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Time</TableHead>
+                      <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Actor</TableHead>
+                      <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Action</TableHead>
+                      <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Summary</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {activity.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>{formatDateTime(entry.created_at)}</TableCell>
-                        <TableCell>{entry.actor_email ?? 'platform-admin'}</TableCell>
-                        <TableCell>{entry.action}</TableCell>
-                        <TableCell>{entry.summary}</TableCell>
+                    {activity.length === 0 ? (
+                      <TableRow className="border-slate-800">
+                        <TableCell colSpan={4} className="py-8 text-center text-slate-500">
+                          No activity recorded yet.
+                        </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      activity.map((entry) => (
+                        <TableRow key={entry.id} className="border-slate-800">
+                          <TableCell className="text-slate-300">{formatDateTime(entry.created_at)}</TableCell>
+                          <TableCell className="text-slate-300">{entry.actor_email ?? 'platform-admin'}</TableCell>
+                          <TableCell className="text-slate-200">{entry.action}</TableCell>
+                          <TableCell className="max-w-[680px] whitespace-normal break-words text-slate-300">{entry.summary}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
     </AdminPageLayout>
   )
 }
