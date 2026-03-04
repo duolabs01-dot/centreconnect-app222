@@ -111,27 +111,31 @@ async function listTenantUsers(admin: ReturnType<typeof createAdminClient>, cent
   }
 
   const userIdList = Array.from(userIds)
-  const [profilesResult, authUsersResult] = await Promise.all([
+  const profilesResult =
     userIdList.length > 0
-      ? admin.from('user_profiles').select('id,full_name,phone').in('id', userIdList)
-      : Promise.resolve({ data: [], error: null } as const),
-    userIdList.length > 0
-      ? admin.schema('auth').from('users').select('id,email').in('id', userIdList)
-      : Promise.resolve({ data: [], error: null } as const),
-  ])
+      ? await admin.from('user_profiles').select('id,full_name,phone').in('id', userIdList)
+      : { data: [], error: null } as const
+
+  const emailById = new Map<string, string | null>()
+  if (userIdList.length > 0) {
+    await Promise.all(
+      userIdList.map(async (userId) => {
+        const { data, error } = await admin.auth.admin.getUserById(userId)
+        if (!error && data?.user) {
+          emailById.set(userId, data.user.email ?? null)
+        } else {
+          emailById.set(userId, null)
+        }
+      })
+    )
+  }
 
   if (profilesResult.error) {
     return { error: profilesResult.error.message as string, status: 400 as const }
   }
-  if (authUsersResult.error) {
-    return { error: authUsersResult.error.message as string, status: 400 as const }
-  }
 
   const profileById = new Map(
     (profilesResult.data ?? []).map((profile) => [profile.id, profile] as const)
-  )
-  const emailById = new Map(
-    (authUsersResult.data ?? []).map((authUser) => [authUser.id, authUser.email ?? null] as const)
   )
 
   const invitationByUserId = new Map<

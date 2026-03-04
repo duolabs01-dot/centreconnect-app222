@@ -35,7 +35,7 @@ export default async function AdminUsersPage() {
   // Fetch ECD Admins & Staff
   const { data: ecdAdminProfiles } = await admin
     .from('user_profiles')
-    .select('*, ecd_admins(ecd_id, ecd_centres(name, subscriptions(tier)))')
+    .select('*, ecd_admins!ecd_admins_user_id_fkey(ecd_id, ecd_centres(name, subscriptions(tier)))')
     .in('role', ['ecd_admin', 'ecd_staff'])
     .order('created_at', { ascending: false })
 

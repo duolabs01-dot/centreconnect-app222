@@ -5,8 +5,10 @@ import { APP_URL } from '@/lib/config'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
+import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
+import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 type SendOwnerInviteResponse = {
   ok: boolean
@@ -118,6 +120,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const ownerName = sanitizeName(centre.primary_contact_name, 'ECD Admin')
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
+  const appUrlRoot = APP_URL.replace(/\/$/, '')
   const supportWhatsappMessage = [
     `Hi CentreConnect team, this is ${ownerName} from ${sanitizeName(centre.name, 'my centre')}.`,
     'Please help me complete setup so we can start receiving applications.',
@@ -134,7 +138,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     dashboardUrl: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
     whatsappChatLink: trackedSupportWhatsappLink,
     supportWhatsApp: supportWhatsapp,
-    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
+    supportEmail,
   })
 
   const emailResult = await queueEmail(ownerEmail, inviteHtml.subject, inviteHtml.html)
@@ -158,6 +162,37 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     },
     createdAt: nowIso,
   })
+
+  const welcomePackHtml = await renderPilotWelcomePackEmail({
+    centreName: sanitizeName(centre.name, 'your centre'),
+    contactName: ownerName,
+    dashboardLink: `${appUrlRoot}/ecd/dashboard`,
+    websiteBuilderLink: `${appUrlRoot}/ecd/website`,
+    attendanceLink: `${appUrlRoot}/ecd/attendance`,
+    pickupLink: `${appUrlRoot}/ecd/pickup`,
+    qrPosterLink: `${appUrlRoot}/ecd/pickup`,
+    supportWhatsApp: supportWhatsapp,
+    supportEmail,
+    supportLink: `${appUrlRoot}/ecd/support`,
+  })
+  const welcomePackResult = await queueEmail(
+    ownerEmail,
+    `Pilot Welcome Pack | ${sanitizeName(centre.name, 'CentreConnect')}`,
+    welcomePackHtml
+  )
+  let combinedWarning: string | undefined = accessLink.warning ?? undefined
+  if (!welcomePackResult.success) {
+    combinedWarning = combinedWarning ?? welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.'
+  } else {
+    await writeInviteLog(admin, {
+      centreId: centre.id,
+      ownerEmail,
+      ownerPhone: ownerPhoneRaw ?? null,
+      inviteType: 'welcome_pack',
+      status: 'sent',
+      notes: 'Pilot welcome pack queued with owner invite.',
+    })
+  }
 
   const whatsappMessage = [
     `Hi ${ownerName},`,
@@ -261,7 +296,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       emailSent: emailResult.success,
       whatsappSent,
       whatsappLink: trackedOwnerWhatsappLink,
-      warning: accessLink.warning,
+      warning: combinedWarning,
     },
   })
 
@@ -270,7 +305,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     eventKey,
     email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
     whatsapp: { sent: whatsappSent, link: trackedOwnerWhatsappLink, error: whatsappError },
-    warning: accessLink.warning ?? undefined,
+    warning: combinedWarning ?? undefined,
   }
 
   return NextResponse.json(response, { status: 200 })

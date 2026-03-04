@@ -11,7 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
 import { SendOwnerInviteButton } from '@/components/admin/send-owner-invite-button'
-import { ROOT_DOMAIN } from '@/lib/config'
+import { DisconnectCentreButton } from '@/components/admin/disconnect-centre-button'
+import { APP_URL, ROOT_DOMAIN } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +48,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
   const [centreResult, adminsResult, invitationsResult, appsResult, analyticsResult, ticketResult, activityResult, adminTaskResult] = await Promise.all([
     admin
       .from('ecd_centres')
-      .select('id,slug,name,email,phone,contact_phone,primary_contact_name,address,suburb,city,province,is_active,is_registered,created_at,onboarded_at,contract_signed,onboarding_fee_paid,subscriptions(*)')
+      .select('id,slug,name,email,phone,contact_phone,primary_contact_name,address,suburb,city,province,is_active,is_registered,created_at,onboarded_at,contract_signed,onboarding_fee_paid,owner_id,subscriptions(*)')
       .eq('id', tenantId)
       .maybeSingle(),
     admin
@@ -91,6 +92,8 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
 
   const centre = centreResult.data as any
   if (!centre) redirect('/admin/tenants')
+
+  const hasOwnerLink = Boolean(centre.owner_id)
 
   const subscription = normalizeOne(centre.subscriptions) as any
   const tenantAdmins = (adminsResult.data ?? []) as Array<{
@@ -140,7 +143,9 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
   const ownerPhone = centre.contact_phone?.trim() || centre.phone?.trim() || '-'
   const ownerEmail = centre.email?.trim() || '-'
   const totalOpenTickets = ticketByStatus.open + ticketByStatus.in_progress + ticketByStatus.waiting_response
-  const websiteHref = `https://${centre.slug}.${ROOT_DOMAIN}`
+  const appUrlRoot = APP_URL.replace(/\/$/, '')
+  const slugSegment = centre.slug?.trim()
+  const websiteHref = slugSegment ? `${appUrlRoot}/c/${slugSegment}` : appUrlRoot
   const activationReady = centre.onboarding_fee_paid && !!adminTaskResult.data
 
   return (
@@ -183,6 +188,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
                   onboardingFeePaid={centre.onboarding_fee_paid}
                   hasPendingTask={!!adminTaskResult.data}
                 />
+                {hasOwnerLink && <DisconnectCentreButton tenantId={tenantId} />}
               </div>
             </div>
           </CardHeader>
