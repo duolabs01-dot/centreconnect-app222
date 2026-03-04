@@ -42,11 +42,6 @@ const SUPPORT_EMAIL = Deno.env.get('SUPPORT_EMAIL') ?? 'admin@centerconnect.co.z
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? ''
 const EMAIL_FROM = Deno.env.get('WELCOME_PACK_FROM') ?? 'CentreConnect <admin@centerconnect.co.za>'
 
-const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID') ?? ''
-const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? ''
-const TWILIO_MESSAGING_SERVICE_SID = Deno.env.get('TWILIO_MESSAGING_SERVICE_SID') ?? ''
-const TWILIO_WHATSAPP_FROM = Deno.env.get('TWILIO_WHATSAPP_FROM') ?? ''
-
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 function jsonResponse(payload: unknown, status = 200) {
@@ -64,10 +59,10 @@ function normalizeEmail(value: string | null | undefined) {
 function normalizePhone(value: string | null | undefined) {
   const digits = String(value ?? '').replace(/[^\d]/g, '')
   if (!digits) return null
-  if (digits.startsWith('0')) return `+27${digits.slice(1)}`
-  if (digits.startsWith('27')) return `+${digits}`
-  if (digits.startsWith('+')) return digits
-  return `+${digits}`
+  if (digits.startsWith('0')) return `27${digits.slice(1)}`
+  if (digits.startsWith('27')) return digits
+  if (digits.startsWith('+')) return digits.replace(/[^\d]/g, '')
+  return digits
 }
 
 function ensureWebhookAuthorized(request: Request) {
@@ -129,55 +124,19 @@ async function sendEmailViaResend(to: string, subject: string, html: string) {
   return { ok: true as const, id: payload.id ?? null }
 }
 
-function toTwilioWhatsappAddress(value: string) {
-  return value.startsWith('whatsapp:') ? value : `whatsapp:${value}`
+function createWhatsappClickToChatLink(rawPhone: string | null | undefined, message: string) {
+  const digits = normalizePhone(rawPhone)
+  const text = message.trim()
+  if (!digits || !text) return null
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
 }
 
-async function sendWhatsappViaTwilio(to: string, body: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
-    return { ok: false as const, error: 'Twilio credentials are not configured.' }
-  }
-
-  const authHeader = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)
-  const params = new URLSearchParams({
-    To: toTwilioWhatsappAddress(to),
-    Body: body,
-  })
-
-  if (TWILIO_MESSAGING_SERVICE_SID) {
-    params.set('MessagingServiceSid', TWILIO_MESSAGING_SERVICE_SID)
-  } else if (TWILIO_WHATSAPP_FROM) {
-    params.set('From', toTwilioWhatsappAddress(TWILIO_WHATSAPP_FROM))
-  } else {
-    return {
-      ok: false as const,
-      error: 'Set TWILIO_MESSAGING_SERVICE_SID or TWILIO_WHATSAPP_FROM.',
-    }
-  }
-
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${authHeader}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: params.toString(),
-  })
-
-  const payload = (await response.json().catch(() => ({}))) as { sid?: string; message?: string }
-  if (!response.ok) {
-    return {
-      ok: false as const,
-      error: payload.message ?? `Twilio responded with ${response.status}`,
-    }
-  }
-
-  return { ok: true as const, id: payload.sid ?? null }
-}
-
-function buildWhatsappMessage(centreName: string) {
-  return `Welcome to CentreConnect, ${centreName}! Your centre workspace is live. Open Dashboard: ${APP_URL}/ecd/dashboard`
+function createTrackedOpenLink(eventKey: string, channel: 'email' | 'whatsapp', target: string) {
+  const url = new URL('/api/invites/open', APP_URL)
+  url.searchParams.set('event_key', eventKey)
+  url.searchParams.set('channel', channel)
+  url.searchParams.set('target', target)
+  return url.toString()
 }
 
 serve(async (request) => {
@@ -201,7 +160,14 @@ serve(async (request) => {
   const centreName = payload.centre.name?.trim() || 'your centre'
   const ownerName = payload.centre.primary_contact_name?.trim() || 'ECD Admin'
   const ownerEmail = normalizeEmail(payload.centre.owner_email)
-  const ownerPhone = normalizePhone(payload.centre.owner_phone)
+  const supportWhatsappMessage = [
+    `Hi CentreConnect team, this is ${ownerName} from ${centreName}.`,
+    'We just received the welcome pack and want help getting fully live today.',
+  ].join('\n')
+  const supportWhatsappLink = createWhatsappClickToChatLink(SUPPORT_WHATSAPP, supportWhatsappMessage)
+  const trackedSupportWhatsappLink = supportWhatsappLink
+    ? createTrackedOpenLink(payload.event_key, 'whatsapp', supportWhatsappLink)
+    : null
 
   const emailTemplate = renderCentreBootstrapWelcomePack({
     centreName,
@@ -212,6 +178,7 @@ serve(async (request) => {
     websiteBuilderLink: `${APP_URL}/ecd/website`,
     supportWhatsApp: SUPPORT_WHATSAPP,
     supportEmail: SUPPORT_EMAIL,
+    whatsappLaunchLink: trackedSupportWhatsappLink,
   })
 
   const summary = {
@@ -267,39 +234,25 @@ serve(async (request) => {
     })
   }
 
-  if (ownerPhone) {
+  if (trackedSupportWhatsappLink) {
     summary.whatsapp.attempted = true
-    const whatsappResult = await sendWhatsappViaTwilio(ownerPhone, buildWhatsappMessage(centreName))
-    if (whatsappResult.ok) {
-      summary.whatsapp.sent = true
-      await upsertNotificationLog({
-        centre_id: payload.centre.id,
-        event_key: payload.event_key,
-        event_type: payload.event,
-        channel: 'whatsapp',
-        recipient: ownerPhone,
-        status: 'sent',
-        provider: 'twilio_whatsapp',
-        provider_message_id: whatsappResult.id,
-        payload: { preview: buildWhatsappMessage(centreName) },
-      })
-    } else {
-      summary.whatsapp.error = whatsappResult.error
-      await upsertNotificationLog({
-        centre_id: payload.centre.id,
-        event_key: payload.event_key,
-        event_type: payload.event,
-        channel: 'whatsapp',
-        recipient: ownerPhone,
-        status: 'failed',
-        provider: 'twilio_whatsapp',
-        error_message: whatsappResult.error,
-        payload: { preview: buildWhatsappMessage(centreName) },
-      })
-    }
+    summary.whatsapp.sent = true
+    await upsertNotificationLog({
+      centre_id: payload.centre.id,
+      event_key: payload.event_key,
+      event_type: payload.event,
+      channel: 'whatsapp',
+      recipient: SUPPORT_WHATSAPP,
+      status: 'sent',
+      provider: 'wa_me_link',
+      payload: {
+        click_to_chat_url: trackedSupportWhatsappLink,
+        preview: supportWhatsappMessage,
+      },
+    })
   }
-  if (!ownerPhone) {
-    summary.whatsapp.error = 'Centre owner phone is missing.'
+  if (!trackedSupportWhatsappLink) {
+    summary.whatsapp.error = 'Support WhatsApp link could not be generated.'
     await upsertNotificationLog({
       centre_id: payload.centre.id,
       event_key: payload.event_key,
@@ -307,9 +260,9 @@ serve(async (request) => {
       channel: 'whatsapp',
       recipient: null,
       status: 'failed',
-      provider: 'twilio_whatsapp',
+      provider: 'wa_me_link',
       error_message: summary.whatsapp.error,
-      payload: { preview: buildWhatsappMessage(centreName) },
+      payload: { preview: supportWhatsappMessage },
     })
   }
 

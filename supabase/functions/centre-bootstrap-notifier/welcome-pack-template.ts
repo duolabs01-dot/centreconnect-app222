@@ -7,6 +7,7 @@ type WelcomePackTemplateInput = {
   websiteBuilderLink: string
   supportWhatsApp: string
   supportEmail: string
+  whatsappLaunchLink: string | null
 }
 
 const BRAND = {
@@ -41,6 +42,30 @@ function cta(label: string, href: string) {
         color:#ffffff;
         font-weight:800;
         font-size:13px;
+        text-decoration:none;
+        letter-spacing:0.02em;
+      "
+    >
+      ${escapeHtml(label)}
+    </a>
+  `
+}
+
+function whatsappCta(label: string, href: string) {
+  return `
+    <a
+      href="${escapeHtml(href)}"
+      style="
+        display:inline-block;
+        width:100%;
+        box-sizing:border-box;
+        text-align:center;
+        padding:15px 20px;
+        border-radius:14px;
+        background:#16A34A;
+        color:#ffffff;
+        font-weight:900;
+        font-size:15px;
         text-decoration:none;
         letter-spacing:0.02em;
       "
@@ -150,6 +175,18 @@ export function renderCentreBootstrapWelcomePack(input: WelcomePackTemplateInput
                     </td>
                   </tr>
                 </table>
+
+                ${
+                  input.whatsappLaunchLink
+                    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 14px;">
+                  <tr>
+                    <td style="padding:0 0 10px;">
+                      ${whatsappCta('Chat on WhatsApp to Launch Faster', input.whatsappLaunchLink)}
+                    </td>
+                  </tr>
+                </table>`
+                    : ''
+                }
 
                 <div style="display:flex;flex-wrap:wrap;gap:8px;">
                   ${cta('Open Attendance', input.attendanceLink)}

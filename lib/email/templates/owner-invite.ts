@@ -3,6 +3,7 @@ type OwnerInviteTemplateInput = {
   ownerName: string
   claimUrl: string
   dashboardUrl: string
+  whatsappChatLink: string | null
   supportWhatsApp: string
   supportEmail: string
 }
@@ -67,6 +68,15 @@ export function renderOwnerInviteEmail(input: OwnerInviteTemplateInput) {
                 <a href="${escapeHtml(input.dashboardUrl)}" style="display:inline-block;margin-left:10px;color:${BRAND.primary};text-decoration:none;font-weight:700;font-size:14px;">
                   View dashboard
                 </a>
+                ${
+                  input.whatsappChatLink
+                    ? `<div style="margin-top:12px;">
+                  <a href="${escapeHtml(input.whatsappChatLink)}" style="display:inline-block;background:#16A34A;color:#ffffff;text-decoration:none;padding:13px 22px;border-radius:14px;font-weight:900;font-size:14px;">
+                    Open WhatsApp Chat
+                  </a>
+                </div>`
+                    : ''
+                }
                 <p style="margin:18px 0 0;font-size:13px;color:${BRAND.muted};line-height:1.6;">
                   Need help? WhatsApp <a href="https://wa.me/${escapeHtml(whatsappDigits)}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${escapeHtml(input.supportWhatsApp)}</a>
                   or email <a href="mailto:${escapeHtml(input.supportEmail)}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${escapeHtml(input.supportEmail)}</a>.

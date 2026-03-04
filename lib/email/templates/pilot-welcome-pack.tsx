@@ -190,6 +190,10 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   const supportWhatsApp = input.supportWhatsApp ?? '+27685356430'
   const supportEmail = input.supportEmail ?? 'admin@centerconnect.co.za'
   const supportLink = input.supportLink ?? `mailto:${supportEmail}`
+  const supportWhatsappDigits = supportWhatsApp.replace(/[^0-9]/g, '')
+  const supportWhatsappLaunchLink = `https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(
+    `Hi CentreConnect team, this is ${input.contactName} from ${input.centreName}. We just got the welcome pack and want help to launch faster.`
+  )}`
 
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName} 👋,</p>
@@ -258,6 +262,9 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       <tr>
         <td style="padding:12px 14px;">
           <p style="margin:0 0 5px;font-size:12px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:#0F766E;">Support 🤝</p>
+          <div style="margin:0 0 10px;">
+            ${button('Chat on WhatsApp', supportWhatsappLaunchLink)}
+          </div>
           <p style="margin:0 0 6px;font-size:13px;line-height:1.65;color:${BRAND.body};">
             WhatsApp: <a href="https://wa.me/${supportWhatsApp.replace(/[^0-9]/g, '')}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${supportWhatsApp}</a><br/>
             Email: <a href="mailto:${supportEmail}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${supportEmail}</a><br/>

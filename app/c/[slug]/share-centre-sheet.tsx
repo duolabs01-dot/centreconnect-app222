@@ -26,25 +26,10 @@ function toWhatsappNumber(raw: string) {
   return raw.replace(/[^\d]/g, '')
 }
 
-function toSmsTarget(raw: string) {
-  const cleaned = raw.replace(/[^+\d]/g, '')
-  if (cleaned.startsWith('+')) return `+${cleaned.slice(1).replace(/[^\d]/g, '')}`
-  return cleaned.replace(/[^\d]/g, '')
-}
-
-function toSmsHref(phone: string, message: string) {
-  const isIos =
-    typeof navigator !== 'undefined' &&
-    (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
-  const separator = isIos ? '&' : '?'
-  return `sms:${toSmsTarget(phone)}${separator}body=${encodeURIComponent(message)}`
-}
-
 function dedupeContacts(rows: ShareContact[]) {
   const seen = new Set<string>()
   return rows.filter((row) => {
-    const key = toSmsTarget(row.phone)
+    const key = toWhatsappNumber(row.phone)
     if (!key || seen.has(key)) return false
     seen.add(key)
     return true
@@ -244,9 +229,6 @@ export function ShareCentreSheet({ centreName, centreSlug, suburb, city }: Share
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Button asChild variant="outline" className="h-8 rounded-2xl px-2.5 text-xs font-semibold">
-                            <a href={toSmsHref(contact.phone, shareText)}>SMS</a>
-                          </Button>
                           <Button
                             asChild
                             variant="outline"

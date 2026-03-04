@@ -16,7 +16,7 @@ type SendOwnerInviteButtonProps = {
 type InviteSendResponse = {
   ok: boolean
   email?: { sent: boolean; error?: string | null }
-  whatsapp?: { sent: boolean; error?: string | null }
+  whatsapp?: { sent: boolean; link?: string | null; error?: string | null }
   warning?: string
 }
 
@@ -47,10 +47,13 @@ export function SendOwnerInviteButton({
 
       const emailState = payload.email?.sent ? 'Email sent' : `Email failed: ${payload.email?.error ?? 'Unknown error'}`
       const whatsappState = payload.whatsapp?.sent
-        ? 'WhatsApp sent'
-        : `WhatsApp not sent: ${payload.whatsapp?.error ?? 'Unknown error'}`
+        ? 'WhatsApp link ready'
+        : `WhatsApp link not ready: ${payload.whatsapp?.error ?? 'Unknown error'}`
 
       toast.success(`${centreName}: ${emailState}. ${whatsappState}.`)
+      if (payload.whatsapp?.link) {
+        window.open(payload.whatsapp.link, '_blank', 'noopener,noreferrer')
+      }
       if (payload.warning) toast.warning(payload.warning)
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send invite.')

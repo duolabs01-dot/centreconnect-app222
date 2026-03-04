@@ -34,8 +34,6 @@ export const DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS: CommunicationAutomationS
 
 function normalizeSendChannel(value: unknown): AutomationSendChannel {
   if (value === 'in_app' || value === 'whatsapp' || value === 'in_app_whatsapp') return value
-  if (value === 'sms') return 'whatsapp'
-  if (value === 'in_app_sms') return 'in_app_whatsapp'
   return DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS.send_channel
 }
 

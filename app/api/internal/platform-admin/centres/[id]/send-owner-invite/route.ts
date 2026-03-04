@@ -3,7 +3,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { APP_URL } from '@/lib/config'
 import { queueEmail } from '@/lib/communications/emails'
-import { normalizeWhatsappPhone, sendWhatsappTemplateMessage } from '@/lib/communications/whatsapp'
+import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
@@ -12,7 +12,7 @@ type SendOwnerInviteResponse = {
   ok: boolean
   eventKey: string
   email: { sent: boolean; error?: string | null }
-  whatsapp: { sent: boolean; error?: string | null }
+  whatsapp: { sent: boolean; link?: string | null; error?: string | null }
   warning?: string
 }
 
@@ -117,14 +117,23 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
   const ownerName = sanitizeName(centre.primary_contact_name, 'ECD Admin')
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
-  const whatsappTrackingUrl = buildTrackingUrl(eventKey, 'whatsapp', accessLink.link)
+  const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
+  const supportWhatsappMessage = [
+    `Hi CentreConnect team, this is ${ownerName} from ${sanitizeName(centre.name, 'my centre')}.`,
+    'Please help me complete setup so we can start receiving applications.',
+  ].join('\n')
+  const supportWhatsappLink = createWhatsappClickToChatLink(supportWhatsapp, supportWhatsappMessage)
+  const trackedSupportWhatsappLink = supportWhatsappLink
+    ? buildTrackingUrl(eventKey, 'whatsapp', supportWhatsappLink)
+    : null
 
   const inviteHtml = renderOwnerInviteEmail({
     centreName: sanitizeName(centre.name, 'your centre'),
     ownerName,
     claimUrl: emailTrackingUrl,
     dashboardUrl: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
-    supportWhatsApp: process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430',
+    whatsappChatLink: trackedSupportWhatsappLink,
+    supportWhatsApp: supportWhatsapp,
     supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
   })
 
@@ -150,48 +159,50 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     createdAt: nowIso,
   })
 
+  const whatsappMessage = [
+    `Hi ${ownerName},`,
+    `${sanitizeName(centre.name, 'Your centre')} is live on CentreConnect.`,
+    `Start now and claim your workspace: ${emailTrackingUrl}`,
+    'Parents can already discover your profile, so keep details updated to receive applications quickly.',
+  ].join('\n')
+  const whatsappLink = createWhatsappClickToChatLink(ownerPhone, whatsappMessage)
+  const trackedOwnerWhatsappLink = whatsappLink
+    ? buildTrackingUrl(eventKey, 'whatsapp', whatsappLink)
+    : null
+
   let whatsappSent = false
   let whatsappError: string | null = null
-  if (ownerPhone) {
-    const whatsappMessage = [
-      `Hi ${ownerName},`,
-      `${sanitizeName(centre.name, 'Your centre')} is live on CentreConnect.`,
-      `Start now and claim your workspace: ${whatsappTrackingUrl}`,
-      'Parents can already discover your profile, so keep details updated to receive applications quickly.',
-    ].join('\n')
-
-    const whatsappResult = await sendWhatsappTemplateMessage(ownerPhone, whatsappMessage)
-    whatsappSent = whatsappResult.ok
-    whatsappError = whatsappResult.ok ? null : whatsappResult.error
+  if (trackedOwnerWhatsappLink || trackedSupportWhatsappLink) {
+    whatsappSent = true
+    await upsertNotificationLog(admin, {
+      centreId: centre.id,
+      eventKey,
+      eventType: 'owner_invite',
+      channel: 'whatsapp',
+      recipient: ownerPhone ?? supportWhatsapp,
+      status: 'sent',
+      provider: 'wa_me_link',
+      payload: {
+        tracked_open_url: trackedSupportWhatsappLink,
+        click_to_chat_url: trackedSupportWhatsappLink,
+        owner_click_to_chat_url: trackedOwnerWhatsappLink,
+        preview: whatsappMessage,
+      },
+      createdAt: nowIso,
+    })
+  } else {
+    whatsappError = 'Owner phone is missing. WhatsApp click-to-chat link was not generated.'
     await upsertNotificationLog(admin, {
       centreId: centre.id,
       eventKey,
       eventType: 'owner_invite',
       channel: 'whatsapp',
       recipient: ownerPhone,
-      status: whatsappResult.ok ? 'sent' : 'failed',
-      provider: 'twilio_whatsapp',
-      providerMessageId: whatsappResult.ok ? whatsappResult.id : null,
-      errorMessage: whatsappResult.ok ? null : whatsappResult.error,
-      payload: {
-        tracked_open_url: whatsappTrackingUrl,
-        preview: whatsappMessage,
-      },
-      createdAt: nowIso,
-    })
-  } else {
-    whatsappError = 'Owner phone is missing. WhatsApp invite not sent.'
-    await upsertNotificationLog(admin, {
-      centreId: centre.id,
-      eventKey,
-      eventType: 'owner_invite',
-      channel: 'whatsapp',
-      recipient: null,
       status: 'failed',
-      provider: 'twilio_whatsapp',
+      provider: 'wa_me_link',
       errorMessage: whatsappError,
       payload: {
-        tracked_open_url: whatsappTrackingUrl,
+        tracked_open_url: null,
       },
       createdAt: nowIso,
     })
@@ -249,6 +260,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       ownerPhone,
       emailSent: emailResult.success,
       whatsappSent,
+      whatsappLink: trackedOwnerWhatsappLink,
       warning: accessLink.warning,
     },
   })
@@ -257,7 +269,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     ok: true,
     eventKey,
     email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
-    whatsapp: { sent: whatsappSent, error: whatsappError },
+    whatsapp: { sent: whatsappSent, link: trackedOwnerWhatsappLink, error: whatsappError },
     warning: accessLink.warning ?? undefined,
   }
 
