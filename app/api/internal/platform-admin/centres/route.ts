@@ -265,6 +265,25 @@ export async function POST(request: Request) {
     )
   }
 
+  const { error: ownerAssignError } = await adminClient
+    .from('ecd_centres')
+    .update({ owner_id: adminUserId })
+    .eq('id', centre.id)
+    .is('owner_id', null)
+
+  if (ownerAssignError) {
+    if (createdNewAuthUser) {
+      await adminClient.auth.admin.deleteUser(adminUserId)
+      await adminClient.from('user_profiles').delete().eq('id', adminUserId)
+    }
+    await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', adminUserId)
+    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    return NextResponse.json(
+      { error: `Failed to assign centre owner: ${ownerAssignError.message}` },
+      { status: 500 }
+    )
+  }
+
   const { error: subscriptionError } = await adminClient.from('subscriptions').insert({
     ecd_id: centre.id,
     tier: normalizedTier,

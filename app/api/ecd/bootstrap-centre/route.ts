@@ -64,6 +64,11 @@ export async function POST() {
       .maybeSingle()
 
     if (existingAssignment?.ecd_id) {
+      await admin
+        .from('ecd_centres')
+        .update({ owner_id: user.id })
+        .eq('id', existingAssignment.ecd_id)
+        .is('owner_id', null)
       return NextResponse.json({ ok: true, created: false })
     }
 
@@ -120,6 +125,11 @@ export async function POST() {
           },
           { onConflict: 'ecd_id,user_id' }
         )
+        await admin
+          .from('ecd_centres')
+          .update({ owner_id: user.id })
+          .eq('id', recoveredEcdId)
+          .is('owner_id', null)
         return NextResponse.json({ ok: true, created: false, recovered: true })
       }
     }
@@ -158,6 +168,7 @@ export async function POST() {
         city: centreCityRaw,
         province: centreProvinceRaw,
         is_active: true,
+        owner_id: user.id,
       })
       .select('id')
       .single()
@@ -170,6 +181,7 @@ export async function POST() {
       ecd_id: centre.id,
       user_id: user.id,
       role: 'ecd_admin',
+      accepted_at: new Date().toISOString(),
     })
 
     if (adminLinkError) {

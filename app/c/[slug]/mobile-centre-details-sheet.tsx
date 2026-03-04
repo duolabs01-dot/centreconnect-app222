@@ -45,7 +45,7 @@ export function MobileCentreDetailsSheet({
   const [dragY, setDragY] = useState(0)
   const startYRef = useRef<number | null>(null)
 
-  const claimHref = useMemo(() => `/for-centres/register?plan=pilot&claim=${encodeURIComponent(centreSlug)}`, [centreSlug])
+  const claimHref = useMemo(() => `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centreSlug)}`, [centreSlug])
 
   function onTouchStart(event: TouchEvent<HTMLDivElement>) {
     startYRef.current = event.touches[0]?.clientY ?? null
@@ -172,7 +172,7 @@ export function MobileCentreDetailsSheet({
                   href={claimHref}
                   className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  {`This is my cr\u00e8che - Claim & Update`}
+                  Claim this creche
                 </Link>
               ) : null}
 

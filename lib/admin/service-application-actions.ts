@@ -203,6 +203,12 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
   if (linkCheckError) return { ok: false, error: linkCheckError.message, statusCode: 400 }
 
   if (existingAdminLink?.ecd_id) {
+    await admin
+      .from('ecd_centres')
+      .update({ owner_id: application.user_id })
+      .eq('id', existingAdminLink.ecd_id)
+      .is('owner_id', null)
+
     const { error: markProvisionedError } = await admin
       .from('ecd_service_applications')
       .update({
@@ -268,6 +274,7 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
       is_active: true,
       is_registered: false,
       onboarded_at: new Date().toISOString(),
+      owner_id: application.user_id,
     })
     .select('id')
     .single()

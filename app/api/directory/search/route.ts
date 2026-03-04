@@ -108,7 +108,6 @@ export async function GET(req: Request) {
   const [{ data: centresData }, { count }] = await Promise.all([centresQuery, countQuery])
   const centreIds = (centresData ?? []).map((centre) => centre.id as string)
   const applicationByCentre = new Map<string, { id: string; status: string | null }>()
-  let supportsOwnerId = true
   const geoById = new Map<
     string,
     {
@@ -120,27 +119,12 @@ export async function GET(req: Request) {
   >()
 
   if (centreIds.length > 0) {
-    let geoRows: CentreGeoRow[] = []
-    const { data: geoRowsWithOwner, error: geoRowsWithOwnerError } = await supabase
+    const { data: geoRows } = await supabase
       .from('ecd_centres')
       .select('id,latitude,longitude,onboarding_complete,owner_id')
       .in('id', centreIds)
 
-    if (geoRowsWithOwnerError) {
-      supportsOwnerId = false
-      const { data: fallbackGeoRows } = await supabase
-        .from('ecd_centres')
-        .select('id,latitude,longitude,onboarding_complete')
-        .in('id', centreIds)
-      geoRows = ((fallbackGeoRows ?? []) as Omit<CentreGeoRow, 'owner_id'>[]).map((row) => ({
-        ...row,
-        owner_id: null,
-      }))
-    } else {
-      geoRows = (geoRowsWithOwner ?? []) as CentreGeoRow[]
-    }
-
-    geoRows.forEach((row) => {
+    ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
       geoById.set(row.id, {
         latitude: row.latitude,
         longitude: row.longitude,
@@ -172,9 +156,7 @@ export async function GET(req: Request) {
     centres: (centresData ?? []).map((centre) => ({
       ...centre,
       subsidy_accepted: Boolean(centre.subsidy_accepted),
-      is_claimed: supportsOwnerId
-        ? Boolean(geoById.get(centre.id as string)?.owner_id)
-        : Boolean(geoById.get(centre.id as string)?.onboarding_complete ?? centre.is_registered),
+      is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
       latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
       longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
       existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,

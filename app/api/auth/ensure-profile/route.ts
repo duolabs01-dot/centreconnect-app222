@@ -109,11 +109,27 @@ export async function POST(request: NextRequest) {
         .eq('user_id', user.id)
 
       const ecdIds = (memberships ?? []).map((row) => row.ecd_id).filter(Boolean) as string[]
+      const acceptedAt = new Date().toISOString()
       
       if (ecdIds.length > 0) {
+        await admin
+          .from('ecd_admins')
+          .update({ accepted_at: acceptedAt })
+          .eq('user_id', user.id)
+          .in('ecd_id', ecdIds)
+          .is('accepted_at', null)
+
+        if (roleToPersist === 'ecd_admin') {
+          await admin
+            .from('ecd_centres')
+            .update({ owner_id: user.id })
+            .in('id', ecdIds)
+            .is('owner_id', null)
+        }
+
         const updatePayload = {
           auth_user_id: user.id,
-          accepted_at: new Date().toISOString(),
+          accepted_at: acceptedAt,
         }
 
         if (normalizedEmail) {

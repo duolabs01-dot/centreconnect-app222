@@ -102,6 +102,14 @@ async function tryRepairEcdMembership(input: {
       { onConflict: 'ecd_id,user_id' }
     )
 
+    if (membershipRole === 'ecd_admin') {
+      await admin
+        .from('ecd_centres')
+        .update({ owner_id: input.userId })
+        .eq('id', ecdIdToLink)
+        .is('owner_id', null)
+    }
+
     if (invitationByEmail?.ecd_id === ecdIdToLink && !invitationByEmail.auth_user_id) {
       await admin
         .from('ecd_admin_invitations')

@@ -170,7 +170,6 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
     const centreIds = centreRows.map((centre) => centre.id)
     const applicationByCentre = new Map<string, { id: string; status: string | null }>()
-    let supportsOwnerId = true
     const geoById = new Map<
       string,
       {
@@ -182,27 +181,12 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     >()
 
     if (centreIds.length > 0) {
-      let geoRows: CentreGeoRow[] = []
-      const { data: geoRowsWithOwner, error: geoRowsWithOwnerError } = await supabase
+      const { data: geoRows } = await supabase
         .from('ecd_centres')
         .select('id,latitude,longitude,onboarding_complete,owner_id')
         .in('id', centreIds)
 
-      if (geoRowsWithOwnerError) {
-        supportsOwnerId = false
-        const { data: fallbackGeoRows } = await supabase
-          .from('ecd_centres')
-          .select('id,latitude,longitude,onboarding_complete')
-          .in('id', centreIds)
-        geoRows = ((fallbackGeoRows ?? []) as Omit<CentreGeoRow, 'owner_id'>[]).map((row) => ({
-          ...row,
-          owner_id: null,
-        }))
-      } else {
-        geoRows = (geoRowsWithOwner ?? []) as CentreGeoRow[]
-      }
-
-      geoRows.forEach((row) => {
+      ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
         geoById.set(row.id, {
           latitude: row.latitude,
           longitude: row.longitude,
@@ -236,7 +220,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
       return toDirectoryCentre({
         ...centre,
-        is_claimed: supportsOwnerId ? hasOwner : Boolean(geo?.onboarding_complete ?? centre.is_registered),
+        is_claimed: hasOwner,
         latitude: (geo?.latitude as number | string | null | undefined) ?? null,
         longitude: (geo?.longitude as number | string | null | undefined) ?? null,
         existingApplicationId: existingApplication?.id ?? null,

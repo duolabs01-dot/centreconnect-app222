@@ -187,30 +187,6 @@ export function CentreClient({ slug }: { slug: string }) {
           resolvedCentre = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
         }
 
-        if (
-          resolvedCentre?.id &&
-          typeof (resolvedCentre as { owner_id?: string | null }).owner_id === 'undefined'
-        ) {
-          const { data: claimState } = await supabase
-            .from('ecd_centres')
-            .select('owner_id,onboarding_complete')
-            .eq('id', resolvedCentre.id)
-            .maybeSingle()
-          if (claimState) {
-            resolvedCentre = {
-              ...resolvedCentre,
-              owner_id:
-                typeof claimState.owner_id === 'string' && claimState.owner_id.trim().length > 0
-                  ? claimState.owner_id
-                  : null,
-              onboarding_complete:
-                typeof claimState.onboarding_complete === 'boolean'
-                  ? claimState.onboarding_complete
-                  : resolvedCentre.onboarding_complete ?? null,
-            }
-          }
-        }
-
         setCentre(resolvedCentre)
 
         if (resolvedCentre?.id) {
@@ -327,10 +303,9 @@ export function CentreClient({ slug }: { slug: string }) {
   const operationalStatus = getCentreOperationalStatus()
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
   const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
-  const isClaimed =
-    hasOwnerId || (typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered))
+  const isClaimed = hasOwnerId
   const showPilotTrustInfo = isPilotCentre
-  const showUnclaimedDisclaimer = !showPilotTrustInfo && !hasOwnerId
+  const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
     ? [
     centre.is_registered ? 'Verified' : null,
@@ -339,7 +314,7 @@ export function CentreClient({ slug }: { slug: string }) {
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = locationLabel || 'Address shared on request'
-  const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(centre.slug)}`
+  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centre.slug)}`
   const heroFacts = showPilotTrustInfo
     ? [
         centre.is_registered ? 'DSD Registered' : null,
@@ -422,8 +397,14 @@ export function CentreClient({ slug }: { slug: string }) {
         </div>
 
         {showUnclaimedDisclaimer ? (
-          <ModernCard className="border-amber-200 bg-amber-50 text-amber-900">
+          <ModernCard className="space-y-3 border-amber-200 bg-amber-50 text-amber-900">
             <p className="text-sm font-bold leading-relaxed">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+            <Link
+              href={claimHref}
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-amber-300 bg-white px-4 text-sm font-black text-amber-700"
+            >
+              Claim this creche
+            </Link>
           </ModernCard>
         ) : null}
 
@@ -618,7 +599,7 @@ export function CentreClient({ slug }: { slug: string }) {
                   href={claimHref}
                   className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  {`This is my cr\u00e8che - Claim & Update`}
+                  Claim this creche
                 </Link>
               ) : null}
 

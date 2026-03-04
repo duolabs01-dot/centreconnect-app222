@@ -93,7 +93,7 @@ export default function CentreCard({
   }, [])
   const isPilotCentre = isPilotCentreIdentity({ name, slug })
   const showPilotTrustInfo = isPilotCentre
-  const showUnclaimedDisclaimer = !showPilotTrustInfo && !is_claimed
+  const showUnclaimedDisclaimer = !is_claimed
   const hasPriorityListing = showPilotTrustInfo && is_registered
   const pilotBadges = showPilotTrustInfo
     ? [
@@ -105,7 +105,7 @@ export default function CentreCard({
   const encodedSlug = encodeURIComponent(slug)
   const centreHref = `/c/${encodedSlug}`
   const applyHref = `/apply/${encodedSlug}`
-  const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(slug)}`
+  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug)}`
   const hasExistingApplication = Boolean(existingApplicationId)
   const applicationStatusLabel = formatStatusLabel(existingApplicationStatus)
 
@@ -381,7 +381,7 @@ export default function CentreCard({
 
           {!is_claimed ? (
             <button type="button" className="centre-card__claim-btn" onClick={handleClaimClick}>
-              {`This is my cr\u00e8che - Claim & Update`}
+              Claim this creche
             </button>
           ) : null}
         </div>
