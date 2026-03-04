@@ -426,6 +426,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         invitedEmail?: string
         role?: string
         linkedExistingUser?: boolean
+        pendingLinkOnNextLogin?: boolean
         parentAccessRevoked?: boolean
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
@@ -435,6 +436,10 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           `Linked existing account ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}${
             payload.parentAccessRevoked ? ' (parent access revoked)' : ''
           }`
+        )
+      } else if (payload.pendingLinkOnNextLogin) {
+        toast.success(
+          `Invite saved for ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}. Access will link on next login.`
         )
       } else {
         toast.success(`Invite sent to ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}`)

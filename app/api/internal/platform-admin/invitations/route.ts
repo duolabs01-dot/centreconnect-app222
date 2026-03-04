@@ -35,6 +35,31 @@ async function findAuthUserIdByEmail(adminClient: ReturnType<typeof createAdminC
   return data?.id ?? null
 }
 
+async function resolveExistingAuthUserId(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  const directMatch = await findAuthUserIdByEmail(adminClient, email)
+  if (directMatch) return directMatch
+
+  const magicLinkResult = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+  })
+  const fromMagicLink = magicLinkResult.data?.user?.id ?? null
+  if (!magicLinkResult.error && fromMagicLink) return fromMagicLink
+
+  const usersResult = await adminClient.auth.admin.listUsers({
+    page: 1,
+    perPage: 1000,
+  })
+  if (!usersResult.error) {
+    const match = usersResult.data.users.find(
+      (user) => String(user.email ?? '').trim().toLowerCase() === email
+    )
+    if (match?.id) return match.id
+  }
+
+  return null
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -83,20 +108,19 @@ export async function POST(request: Request) {
 
   let invitedUserId = inviteResult.data.user?.id ?? null
   let linkedExistingUser = false
+  let pendingLinkOnNextLogin = false
 
   if (inviteResult.error) {
     if (!isEmailAlreadyRegisteredError(inviteResult.error.message)) {
       return NextResponse.json({ error: inviteResult.error.message }, { status: 400 })
     }
 
-    invitedUserId = await findAuthUserIdByEmail(adminClient, normalizedEmail)
+    invitedUserId = await resolveExistingAuthUserId(adminClient, normalizedEmail)
     if (!invitedUserId) {
-      return NextResponse.json(
-        { error: 'Email exists in auth but could not resolve user account for linking.' },
-        { status: 500 }
-      )
+      pendingLinkOnNextLogin = true
+    } else {
+      linkedExistingUser = true
     }
-    linkedExistingUser = true
   }
 
   const { data: existingProfile } = invitedUserId
@@ -181,7 +205,9 @@ export async function POST(request: Request) {
     status: linkedExistingUser ? 'claimed' : 'sent',
     notes: linkedExistingUser
       ? `Linked existing account to ECD access (${data.role})`
-      : `ECD access invite (${data.role})`,
+      : pendingLinkOnNextLogin
+        ? `Existing email invite recorded (${data.role}); link will finalize on next login`
+        : `ECD access invite (${data.role})`,
   })
 
   return NextResponse.json({
@@ -190,6 +216,7 @@ export async function POST(request: Request) {
     ecdId: data.ecdId,
     userId: invitedUserId,
     linkedExistingUser,
+    pendingLinkOnNextLogin,
     previousRole,
     parentAccessRevoked,
   })
