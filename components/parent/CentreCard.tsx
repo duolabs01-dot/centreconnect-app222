@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -69,10 +70,12 @@ export function CentreCard({
       <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
         {/* Premium Image Header */}
         <div className="relative h-56 overflow-hidden">
-          <img
+          <Image
             src={displayImage}
             alt={name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            priority
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
@@ -147,3 +150,5 @@ export function CentreCard({
     </motion.div>
   )
 }
+
+export default CentreCard
