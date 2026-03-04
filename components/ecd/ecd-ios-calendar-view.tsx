@@ -34,32 +34,37 @@ type SourceMeta = {
   label: string
   dotClass: string
   chipClass: string
+  textClass: string
   icon: LucideIcon
 }
 
 const SOURCE_META: Record<EcdCalendarFeedSource, SourceMeta> = {
   event: {
     label: 'Event',
-    dotClass: 'bg-teal-500',
-    chipClass: 'border-teal-200 bg-teal-50 text-teal-700',
+    dotClass: 'bg-cyan-500',
+    chipClass: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+    textClass: 'text-cyan-700',
     icon: CalendarCheck2,
   },
   attendance: {
     label: 'Attendance',
-    dotClass: 'bg-sky-500',
-    chipClass: 'border-sky-200 bg-sky-50 text-sky-700',
+    dotClass: 'bg-indigo-500',
+    chipClass: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+    textClass: 'text-indigo-700',
     icon: UsersRound,
   },
   reminder: {
     label: 'Reminder',
     dotClass: 'bg-amber-500',
     chipClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    textClass: 'text-amber-700',
     icon: BellRing,
   },
   announcement: {
     label: 'Announcement',
     dotClass: 'bg-emerald-500',
     chipClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    textClass: 'text-emerald-700',
     icon: Megaphone,
   },
 }
@@ -126,6 +131,11 @@ function toTimeRange(start: string | null, end: string | null, allDay: boolean) 
   return 'Time TBC'
 }
 
+function toTimeLabel(start: string | null, allDay: boolean) {
+  if (allDay) return 'All-day'
+  return start ?? 'Time TBC'
+}
+
 function sortDayItems(items: EcdCalendarFeedItem[]) {
   return [...items].sort((a, b) => {
     if (a.all_day !== b.all_day) return a.all_day ? -1 : 1
@@ -134,6 +144,11 @@ function sortDayItems(items: EcdCalendarFeedItem[]) {
     if (aStart !== bStart) return aStart.localeCompare(bStart)
     return a.title.localeCompare(b.title)
   })
+}
+
+type AgendaGroup = {
+  dayKey: string
+  items: EcdCalendarFeedItem[]
 }
 
 export function EcdIosCalendarView({
@@ -179,6 +194,11 @@ export function EcdIosCalendarView({
     return sortDayItems(itemsByDate.get(selectedDayKey) ?? [])
   }, [itemsByDate, selectedDayKey])
 
+  const selectedAllDayItems = useMemo(
+    () => selectedDayItems.filter((item) => item.all_day),
+    [selectedDayItems]
+  )
+
   const monthSummary = useMemo(() => {
     const monthStart = `${monthKey}-01`
     const monthEndDate = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0)
@@ -197,6 +217,29 @@ export function EcdIosCalendarView({
     }
   }, [items, monthDate, monthKey])
 
+  const monthAgenda = useMemo(() => {
+    const monthStart = `${monthKey}-01`
+    const monthEnd = toDayKey(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0))
+    const monthlyItems = items
+      .filter((item) => item.event_date >= monthStart && item.event_date <= monthEnd)
+      .sort((a, b) => {
+        if (a.event_date !== b.event_date) return a.event_date.localeCompare(b.event_date)
+        if (a.all_day !== b.all_day) return a.all_day ? -1 : 1
+        return (a.start_time ?? '99:99').localeCompare(b.start_time ?? '99:99')
+      })
+
+    const groups: AgendaGroup[] = []
+    for (const item of monthlyItems) {
+      const current = groups[groups.length - 1]
+      if (!current || current.dayKey !== item.event_date) {
+        groups.push({ dayKey: item.event_date, items: [item] })
+      } else {
+        current.items.push(item)
+      }
+    }
+    return groups.slice(0, 18)
+  }, [items, monthDate, monthKey])
+
   function shiftMonth(offset: number) {
     const nextMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + offset, 1)
     setMonthDate(nextMonth)
@@ -211,12 +254,12 @@ export function EcdIosCalendarView({
   }
 
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[var(--shadow-elevation-2)]">
-      <div className="space-y-4 p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_-28px_rgba(15,23,42,0.32)]">
+      <div className="space-y-5 p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/70 p-3.5 sm:p-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-teal-600">Calendar Overview</p>
-            <h2 className="text-2xl font-black tracking-tight text-slate-900">{formatMonthTitle(monthDate)}</h2>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-600">Calendar</p>
+            <h2 className="mt-0.5 text-2xl font-black tracking-tight text-slate-900">{formatMonthTitle(monthDate)}</h2>
             <p className="text-xs text-slate-500">{nowBadge}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -224,7 +267,7 @@ export function EcdIosCalendarView({
               type="button"
               variant="outline"
               onClick={() => shiftMonth(-1)}
-              className="h-11 w-11 rounded-2xl border-slate-200 p-0 text-slate-700"
+              className="h-10 w-10 rounded-2xl border-slate-200/90 p-0 text-slate-700 transition-all duration-200 hover:bg-slate-100"
               aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -233,7 +276,7 @@ export function EcdIosCalendarView({
               type="button"
               variant="outline"
               onClick={jumpToToday}
-              className="h-11 rounded-2xl border-slate-200 px-4 text-slate-700"
+              className="h-10 rounded-2xl border-slate-200/90 px-4 text-slate-700 transition-all duration-200 hover:bg-slate-100"
             >
               Today
             </Button>
@@ -241,7 +284,7 @@ export function EcdIosCalendarView({
               type="button"
               variant="outline"
               onClick={() => shiftMonth(1)}
-              className="h-11 w-11 rounded-2xl border-slate-200 p-0 text-slate-700"
+              className="h-10 w-10 rounded-2xl border-slate-200/90 p-0 text-slate-700 transition-all duration-200 hover:bg-slate-100"
               aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4" />
@@ -249,7 +292,7 @@ export function EcdIosCalendarView({
           </div>
         </div>
 
-        <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/80 p-3 text-xs text-slate-600 sm:grid-cols-5">
+        <div className="grid gap-2 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-3 text-xs text-slate-600 sm:grid-cols-5">
           <p className="sm:col-span-2">
             <span className="font-bold text-slate-800">{monthSummary.total}</span> items this month
           </p>
@@ -258,134 +301,200 @@ export function EcdIosCalendarView({
           <p>Reminders: {monthSummary.sourceCounts.reminder}</p>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 rounded-2xl border border-slate-200 bg-slate-50/70 p-2">
-          {WEEKDAY_LABELS.map((label) => (
-            <div key={label} className="px-1.5 py-1 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              {label}
-            </div>
-          ))}
-
-          {monthDays.map((day) => {
-            const dayKey = toDayKey(day)
-            const dayItems = sortDayItems(itemsByDate.get(dayKey) ?? [])
-            const allDayItems = dayItems.filter((item) => item.all_day)
-            const timedCount = dayItems.length - allDayItems.length
-            const sourceKeys = Array.from(new Set(dayItems.map((item) => item.source))).slice(0, 4)
-            const inCurrentMonth = day.getMonth() === monthDate.getMonth()
-            const isToday = dayKey === todayKey
-            const isSelected = dayKey === selectedDayKey
-
-            return (
-              <button
-                key={dayKey}
-                type="button"
-                onClick={() => {
-                  setSelectedDay(day)
-                  if (!inCurrentMonth) {
-                    setMonthDate(new Date(day.getFullYear(), day.getMonth(), 1))
-                  }
-                }}
-                className={cn(
-                  'min-h-[74px] rounded-2xl border p-1.5 text-left transition-[background-color,border-color,transform] duration-200 sm:min-h-[92px] sm:p-2',
-                  inCurrentMonth ? 'border-slate-200 bg-white hover:bg-slate-50' : 'border-slate-100 bg-slate-100/70 text-slate-400',
-                  isSelected ? 'border-teal-300 bg-teal-50/70 shadow-[var(--shadow-elevation-1)]' : '',
-                  isToday ? 'ring-1 ring-teal-300' : ''
-                )}
+        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-50/75">
+          <div className="grid grid-cols-7 border-b border-slate-200/80 bg-white/80">
+            {WEEKDAY_LABELS.map((label) => (
+              <div
+                key={label}
+                className="px-1.5 py-2 text-center text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500"
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={cn(
-                      'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-[11px] font-bold',
-                      isSelected
-                        ? 'bg-teal-600 text-white'
-                        : isToday
-                          ? 'bg-teal-100 text-teal-700'
-                          : 'text-slate-700'
-                    )}
-                  >
-                    {day.getDate()}
-                  </span>
-                  {dayItems.length > 0 ? (
-                    <span className="text-[10px] font-bold text-slate-500">{dayItems.length}</span>
-                  ) : null}
-                </div>
+                {label}
+              </div>
+            ))}
+          </div>
 
-                {allDayItems[0] ? (
-                  <p className="mt-1.5 truncate rounded-md border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
-                    {allDayItems[0].title}
-                  </p>
-                ) : null}
+          <div className="grid grid-cols-7 gap-px bg-slate-200/70">
+            {monthDays.map((day) => {
+              const dayKey = toDayKey(day)
+              const dayItems = sortDayItems(itemsByDate.get(dayKey) ?? [])
+              const previewItems = dayItems.slice(0, 2)
+              const overflowCount = Math.max(0, dayItems.length - previewItems.length)
+              const inCurrentMonth = day.getMonth() === monthDate.getMonth()
+              const isToday = dayKey === todayKey
+              const isSelected = dayKey === selectedDayKey
 
-                {timedCount > 0 ? (
-                  <p className="mt-1 text-[10px] font-semibold text-slate-500">{timedCount} timed</p>
-                ) : null}
-
-                {sourceKeys.length > 0 ? (
-                  <div className="mt-1.5 flex items-center gap-1">
-                    {sourceKeys.map((source) => (
-                      <span key={`${dayKey}-${source}`} className={cn('h-1.5 w-1.5 rounded-full', SOURCE_META[source].dotClass)} />
-                    ))}
+              return (
+                <button
+                  key={dayKey}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDay(day)
+                    if (!inCurrentMonth) {
+                      setMonthDate(new Date(day.getFullYear(), day.getMonth(), 1))
+                    }
+                  }}
+                  className={cn(
+                    'min-h-[84px] bg-white px-1.5 py-1.5 text-left transition-all duration-250 ease-out sm:min-h-[102px] sm:px-2 sm:py-2',
+                    inCurrentMonth ? 'hover:bg-slate-50/70' : 'bg-slate-100/80 text-slate-400 hover:bg-slate-100',
+                    isSelected ? 'ring-2 ring-cyan-500/60 ring-inset' : '',
+                    isToday ? 'bg-cyan-50/55' : ''
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={cn(
+                        'inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold',
+                        isSelected
+                          ? 'bg-cyan-600 text-white'
+                          : isToday
+                            ? 'bg-cyan-100 text-cyan-700'
+                            : inCurrentMonth
+                              ? 'text-slate-800'
+                              : 'text-slate-400'
+                      )}
+                    >
+                      {day.getDate()}
+                    </span>
+                    {dayItems.length > 0 ? (
+                      <span className="text-[10px] font-semibold text-slate-500">{dayItems.length}</span>
+                    ) : null}
                   </div>
-                ) : null}
-              </button>
-            )
-          })}
+
+                  <div className="mt-1.5 space-y-1">
+                    {previewItems.map((item) => (
+                      <p
+                        key={`${dayKey}-${item.id}`}
+                        className={cn(
+                          'truncate rounded-md border border-transparent px-1.5 py-0.5 text-[10px] font-semibold',
+                          item.all_day ? 'bg-slate-100 text-slate-700' : 'bg-white text-slate-600',
+                          SOURCE_META[item.source].textClass
+                        )}
+                      >
+                        {item.all_day ? item.title : `${item.start_time ?? '--:--'} ${item.title}`}
+                      </p>
+                    ))}
+                    {overflowCount > 0 ? (
+                      <p className="truncate px-1 text-[10px] font-semibold text-slate-500">+{overflowCount} more</p>
+                    ) : null}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
+          <div className="mb-2.5 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-teal-600">Selected Day</p>
-              <h3 className="text-lg font-black text-slate-900">{formatLongDay(selectedDayKey)}</h3>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-600">All-day</p>
+              <h3 className="text-base font-black text-slate-900">{formatLongDay(selectedDayKey)}</h3>
             </div>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold text-slate-600">
               <CalendarDays className="h-3.5 w-3.5" />
-              {selectedDayItems.length} item{selectedDayItems.length === 1 ? '' : 's'}
+              {selectedAllDayItems.length} all-day
             </div>
           </div>
 
-          {selectedDayItems.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
-              No events, attendance, reminders, or announcements on this day.
-            </div>
+          {selectedAllDayItems.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+              No all-day items on this date.
+            </p>
           ) : (
-            <div className="space-y-2.5 transition-all duration-200">
-              {selectedDayItems.map((item) => {
+            <div className="flex flex-wrap gap-2">
+              {selectedAllDayItems.map((item) => {
                 const meta = SOURCE_META[item.source]
                 const Icon = meta.icon
                 return (
-                  <article
+                  <div
                     key={item.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-3 shadow-[var(--shadow-elevation-1)] transition-colors duration-200 hover:bg-slate-50"
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-all duration-200',
+                      meta.chipClass
+                    )}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide', meta.chipClass)}>
-                            <Icon className="h-3 w-3" />
-                            {meta.label}
-                          </span>
-                          <span className="text-[11px] font-semibold text-slate-500">
-                            {toTimeRange(item.start_time, item.end_time, item.all_day)}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-sm font-bold text-slate-900">{item.title}</p>
-                        {item.description ? (
-                          <p className="mt-1 text-xs leading-relaxed text-slate-600">{item.description}</p>
-                        ) : null}
-                      </div>
-                      {item.href ? (
-                        <Link
-                          href={item.href}
-                          className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition-colors hover:border-teal-200 hover:text-teal-700"
-                        >
-                          Open
-                        </Link>
-                      ) : null}
-                    </div>
-                  </article>
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="max-w-[220px] truncate">{item.title}</span>
+                  </div>
                 )
               })}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-600">Agenda List</p>
+              <h3 className="text-lg font-black text-slate-900">Everything at a glance</h3>
+            </div>
+            <span className="text-xs font-semibold text-slate-500">{monthAgenda.length} day groups</span>
+          </div>
+
+          {monthAgenda.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+              No calendar activity in this month yet.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {monthAgenda.map((group) => (
+                <section
+                  key={group.dayKey}
+                  className="rounded-2xl border border-slate-200 bg-slate-50/55 p-3 transition-all duration-200"
+                >
+                  <h4 className="text-sm font-black text-slate-900">{formatLongDay(group.dayKey)}</h4>
+                  <div className="mt-2 space-y-2">
+                    {group.items.map((item) => {
+                      const meta = SOURCE_META[item.source]
+                      const Icon = meta.icon
+                      return (
+                        <article
+                          key={item.id}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2.5 transition-colors duration-200 hover:bg-slate-50"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={cn('h-2 w-2 rounded-full', meta.dotClass)} />
+                                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                                  {toTimeLabel(item.start_time, item.all_day)}
+                                </p>
+                              </div>
+                              <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{item.title}</p>
+                              {item.description ? (
+                                <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">
+                                  {item.description}
+                                </p>
+                              ) : null}
+                              <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                                {toTimeRange(item.start_time, item.end_time, item.all_day)}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em]',
+                                  meta.chipClass
+                                )}
+                              >
+                                <Icon className="h-3 w-3" />
+                                {meta.label}
+                              </span>
+                              {item.href ? (
+                                <Link
+                                  href={item.href}
+                                  className="inline-flex h-8 items-center rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-bold text-slate-700 transition-colors duration-200 hover:border-cyan-200 hover:text-cyan-700"
+                                >
+                                  Open
+                                </Link>
+                              ) : null}
+                            </div>
+                          </div>
+                        </article>
+                      )
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           )}
         </div>
@@ -402,4 +511,3 @@ export function EcdIosCalendarView({
     </section>
   )
 }
-
