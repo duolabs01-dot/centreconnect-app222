@@ -8,6 +8,7 @@ import { EcdPortalSidebar } from '@/components/layout/ecd-portal-sidebar'
 import { EcdMainScrollMemory } from '@/components/layout/ecd-main-scroll-memory'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
+import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 import '../ecd-theme.css'
 
 type EcdLayoutProps = {
@@ -112,6 +113,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         <EcdMainScrollMemory />
         <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-20 sm:px-6 md:pb-10 md:pt-6 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
+          <AppBreadcrumbs rootHref="/ecd/dashboard" rootLabel="ECD" />
           <div className="text-foreground">
             {children}
           </div>

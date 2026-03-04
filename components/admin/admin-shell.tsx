@@ -3,6 +3,7 @@
 import React from 'react'
 import { AdminSidebar } from './admin-sidebar'
 import { cn } from '@/lib/utils'
+import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 
 interface AdminShellProps {
   children: React.ReactNode
@@ -23,6 +24,7 @@ export function AdminShell({ children, className }: AdminShellProps) {
         
         <div className="flex-1 mt-16 px-4 py-6 sm:px-6 sm:py-8 md:mt-0 lg:px-8 lg:py-10 xl:px-10">
           <div className="mx-auto w-full max-w-[1600px]">
+            <AppBreadcrumbs rootHref="/admin/dashboard" rootLabel="CC Admin" tone="dark" />
             {children}
           </div>
         </div>

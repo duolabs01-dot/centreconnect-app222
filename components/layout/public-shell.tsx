@@ -4,6 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Container } from '@/components/layout/container'
+import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 
 type PublicShellProps = {
   children: React.ReactNode
@@ -35,6 +36,9 @@ export function PublicShell({ children }: PublicShellProps) {
       </header>
 
       <div className="animate-in fade-in duration-500">
+        <Container className="pt-4">
+          <AppBreadcrumbs rootHref="/" rootLabel="Home" />
+        </Container>
         {children}
       </div>
     </div>

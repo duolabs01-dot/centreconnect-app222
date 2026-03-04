@@ -15,6 +15,7 @@ import { useParentLayout } from './parent-layout-provider'
 import { robustSignOut } from '@/lib/auth/client-sign-out'
 import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
 import { ParentNotificationBell } from '@/components/notifications/parent-notification-bell'
+import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -282,6 +283,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         )}
       >
         <Container className="max-w-6xl px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
+          <AppBreadcrumbs rootHref="/parent/dashboard" rootLabel="Home" />
           {/* Mobile Title View */}
           <div className="md:hidden mb-6">
             <div className="flex items-center gap-2">
