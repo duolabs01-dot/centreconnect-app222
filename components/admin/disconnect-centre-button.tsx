@@ -15,7 +15,7 @@ export function DisconnectCentreButton({ tenantId }: DisconnectCentreButtonProps
   const [busy, setBusy] = useState(false)
 
   async function handleDisconnect() {
-    if (!confirm('This will remove all owner/staff memberships and mark the tenant as inactive. Continue?')) {
+    if (!confirm('This will purge admin accounts, reset the centre to a “paused” state, and leave only the directory contact info. Continue?')) {
       return
     }
 
