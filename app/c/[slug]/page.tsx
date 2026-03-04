@@ -6,11 +6,21 @@ import { notFound } from 'next/navigation'
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const slug = params.slug
   const supabase = await createClient()
-  const { data: centre } = await supabase
-    .from('ecd_centres')
-    .select('name, tagline')
+  const { data: publicCentre } = await supabase
+    .from('public_ecd_centres')
+    .select('name,tagline')
     .eq('slug', slug)
     .maybeSingle()
+
+  const centre = publicCentre
+    ? publicCentre
+    : (
+        await supabase
+          .from('ecd_centres')
+          .select('name,tagline')
+          .eq('slug', slug)
+          .maybeSingle()
+      ).data
 
   if (!centre) return { title: 'Creche Not Found' }
 
@@ -48,6 +58,21 @@ export default async function CentrePage({
   searchParams?: { preview?: string | string[] }
 }) {
   const supabase = await createClient()
+  const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
+  if (!previewRequested) {
+    const { data: publicCentre } = await supabase
+      .from('public_ecd_centres')
+      .select('id,slug')
+      .eq('slug', params.slug)
+      .maybeSingle()
+
+    if (!publicCentre) {
+      notFound()
+    }
+
+    return <CentreClient slug={params.slug} />
+  }
+
   const { data: centre } = await supabase
     .from('ecd_centres')
     .select('id,slug,is_active')
@@ -55,11 +80,6 @@ export default async function CentrePage({
     .maybeSingle()
 
   if (!centre) {
-    notFound()
-  }
-
-  const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
-  if (isInactiveCentre(centre.is_active) && !previewRequested) {
     notFound()
   }
 
