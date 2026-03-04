@@ -129,7 +129,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
       .limit(30),
     supabase
       .from('ecd_admins')
-      .select('user_id,role,can_approve_applications,can_publish_announcements,invited_at,user_profiles(full_name)')
+      .select('user_id,role,can_approve_applications,can_publish_announcements,invited_at,user_profiles!ecd_admins_user_id_fkey(full_name)')
       .eq('ecd_id', ecdId)
       .order('invited_at', { ascending: true })
       .limit(100),

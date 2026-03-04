@@ -46,7 +46,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .maybeSingle()
   const { data: staffMembers } = await supabase
     .from('ecd_admins')
-    .select('user_id,role,can_approve_applications,can_publish_announcements,user_profiles(full_name)')
+    .select('user_id,role,can_approve_applications,can_publish_announcements,user_profiles!ecd_admins_user_id_fkey(full_name)')
     .eq('ecd_id', ecdId)
     .order('invited_at', { ascending: false })
     .limit(20)

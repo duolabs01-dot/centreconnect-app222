@@ -57,7 +57,7 @@ async function listTenantUsers(admin: ReturnType<typeof createAdminClient>, cent
     admin.from('ecd_centres').select('id,name,owner_id').eq('id', centreId).maybeSingle(),
     admin
       .from('ecd_admins')
-      .select('id,user_id,role,invited_at,accepted_at,user_profiles(full_name,phone)')
+      .select('id,user_id,role,invited_at,accepted_at,user_profiles!ecd_admins_user_id_fkey(full_name,phone)')
       .eq('ecd_id', centreId)
       .order('invited_at', { ascending: false }),
     admin

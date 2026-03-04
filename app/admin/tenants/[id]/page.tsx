@@ -52,7 +52,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
       .maybeSingle(),
     admin
       .from('ecd_admins')
-      .select('id,user_id,role,invited_at,accepted_at,user_profiles(full_name,phone)')
+      .select('id,user_id,role,invited_at,accepted_at,user_profiles!ecd_admins_user_id_fkey(full_name,phone)')
       .eq('ecd_id', tenantId)
       .order('invited_at', { ascending: false }),
     admin
