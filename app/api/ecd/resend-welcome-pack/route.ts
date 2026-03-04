@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { readFile } from 'fs/promises'
+import path from 'path'
 import nodemailer from 'nodemailer'
 
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -12,11 +14,8 @@ type Payload = {
 
 async function fetchWelcomePackHtml(appUrl: string) {
   const normalized = appUrl.replace(/\/+$/, '')
-  const response = await fetch(`${normalized}/CentreConnect_Pilot_Welcome_FINAL.html`)
-  if (!response.ok) {
-    throw new Error(`Failed to download welcome pack HTML (${response.status})`)
-  }
-  const html = await response.text()
+  const htmlPath = path.join(process.cwd(), 'public', 'CentreConnect_Pilot_Welcome_FINAL.html')
+  const html = await readFile(htmlPath, 'utf-8')
   return html.replace(OLD_DOMAIN_PATTERN, normalized)
 }
 
@@ -82,7 +81,7 @@ export async function POST(request: Request) {
   try {
     html = await fetchWelcomePackHtml(appUrl)
   } catch (error) {
-    console.error('resend-welcome-pack: failed to download welcome pack', error)
+    console.error('resend-welcome-pack: failed to read welcome pack', error)
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
   }
 
