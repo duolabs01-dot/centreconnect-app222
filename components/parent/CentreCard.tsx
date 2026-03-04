@@ -14,6 +14,7 @@ import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
+import { Button } from '@/components/ui/button'
 
 interface CentreCardProps {
   id: string
@@ -365,24 +366,34 @@ export default function CentreCard({
           <div className="centre-card__apply-row" onClick={(event) => event.stopPropagation()}>
             {hasExistingApplication ? (
               <>
-                <button type="button" className="centre-card__apply-btn centre-card__apply-btn--disabled" disabled>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="centre-card__apply-btn centre-card__apply-btn--disabled rounded-2xl"
+                  disabled
+                >
                   Apply (Already submitted)
-                </button>
-                <button type="button" className="centre-card__status-btn" onClick={handleViewStatusClick}>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="centre-card__status-btn rounded-2xl"
+                  onClick={handleViewStatusClick}
+                >
                   View status: {applicationStatusLabel}
-                </button>
+                </Button>
               </>
             ) : (
-              <button type="button" className="centre-card__apply-btn" onClick={handleApplyClick}>
+              <Button type="button" className="centre-card__apply-btn rounded-2xl" onClick={handleApplyClick}>
                 Apply
-              </button>
+              </Button>
             )}
           </div>
 
           {!is_claimed ? (
-            <button type="button" className="centre-card__claim-btn" onClick={handleClaimClick}>
+            <Button type="button" variant="outline" className="centre-card__claim-btn rounded-2xl" onClick={handleClaimClick}>
               Claim this creche
-            </button>
+            </Button>
           ) : null}
         </div>
       </article>

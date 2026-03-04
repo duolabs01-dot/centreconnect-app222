@@ -192,9 +192,14 @@ export default function DirectoryExplorer({
           
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
             <SheetTrigger asChild>
-              <button className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:border-cyan-400 active:scale-90 transition-all">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-12 w-12 rounded-2xl border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-cyan-400 active:scale-90"
+              >
                 <SlidersHorizontal className="h-5 w-5" />
-              </button>
+              </Button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-[2.5rem] px-6 pb-12 pt-8">
               <SheetHeader className="mb-6">
@@ -218,18 +223,20 @@ export default function DirectoryExplorer({
                   <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Age Group</label>
                   <div className="flex flex-wrap gap-2">
                     {['All', ...ageGroups].map(age => (
-                      <button
+                      <Button
+                        type="button"
                         key={age}
                         onClick={() => setSelectedAge(age === 'All' ? '' : age)}
+                        variant={(age === 'All' ? !selectedAge : selectedAge === age) ? 'default' : 'outline'}
                         className={cn(
-                          "px-4 py-2 rounded-xl text-sm font-bold border transition-all",
+                          'h-10 rounded-2xl px-4 text-sm font-bold transition-all',
                           (age === 'All' ? !selectedAge : selectedAge === age)
-                            ? "bg-cyan-600 border-cyan-600 text-white"
-                            : "bg-white border-slate-200 text-slate-600"
+                            ? 'border-cyan-600 bg-cyan-600 text-white hover:bg-cyan-700'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         )}
                       >
                         {age}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -238,18 +245,20 @@ export default function DirectoryExplorer({
                   <label className="text-xs font-bold uppercase tracking-widest text-slate-400">Monthly Budget</label>
                   <div className="grid grid-cols-2 gap-2">
                     {FEE_OPTIONS.map(opt => (
-                      <button
+                      <Button
+                        type="button"
                         key={opt.value}
                         onClick={() => setSelectedFee(opt.value)}
+                        variant={selectedFee === opt.value ? 'default' : 'outline'}
                         className={cn(
-                          "px-4 py-3 rounded-xl text-sm font-bold border transition-all text-left",
+                          'h-auto min-h-11 rounded-2xl px-4 py-3 text-left text-sm font-bold transition-all',
                           selectedFee === opt.value
-                            ? "bg-cyan-50 border-cyan-600 text-cyan-700"
-                            : "bg-white border-slate-200 text-slate-600"
+                            ? 'border-cyan-600 bg-cyan-50 text-cyan-700 hover:bg-cyan-100'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         )}
                       >
                         {opt.label}
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -277,30 +286,38 @@ export default function DirectoryExplorer({
 
         {/* Quick Filter Horizontal Scroll */}
         <div className="no-scrollbar mt-2 flex gap-2 overflow-x-auto pb-1">
-          <button
+          <Button
+            type="button"
             onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+            variant={viewMode === 'map' ? 'default' : 'outline'}
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition-all shadow-sm border",
-              viewMode === 'map' ? "bg-slate-900 border-slate-900 text-white" : "bg-white border-slate-200 text-slate-600"
+              'h-9 shrink-0 rounded-full px-4 text-xs font-black uppercase tracking-wider transition-all shadow-sm',
+              viewMode === 'map'
+                ? 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800'
+                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
             )}
           >
             {viewMode === 'list' ? <MapIcon className="h-3 w-3" /> : <LayoutGrid className="h-3 w-3" />}
             {viewMode === 'list' ? 'Map' : 'List'}
-          </button>
+          </Button>
           
           <div className="h-8 w-px bg-slate-200 shrink-0 mx-1 self-center" />
 
           {quickFilters.map((q, i) => (
-            <button
+            <Button
+              type="button"
               key={i}
               onClick={q.onClick}
+              variant={q.active ? 'default' : 'outline'}
               className={cn(
-                "shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all shadow-sm border whitespace-nowrap",
-                q.active ? "bg-cyan-50 border-cyan-300 text-cyan-700" : "bg-white border-slate-200 text-slate-600"
+                'h-9 shrink-0 whitespace-nowrap rounded-full px-4 text-xs font-bold transition-all shadow-sm',
+                q.active
+                  ? 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               )}
             >
               {q.label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
@@ -314,7 +331,7 @@ export default function DirectoryExplorer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-x-0 top-0 z-10 flex justify-center py-8 bg-white/40 backdrop-blur-[2px] rounded-3xl h-full"
+              className="absolute inset-x-0 top-0 z-10 flex h-full justify-center rounded-2xl bg-white/40 py-8 backdrop-blur-[2px]"
             >
               <div className="flex h-10 items-center gap-2 rounded-full bg-slate-900 px-4 text-xs font-bold text-white shadow-xl">
                 <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -330,12 +347,14 @@ export default function DirectoryExplorer({
               <p className="text-xs font-bold text-slate-400">
                 {geoStatus === 'granted' ? 'Showing centres near you' : 'Mappable centres in this area'}
               </p>
-              <button 
+              <Button
+                type="button"
+                variant="ghost"
                 onClick={activateMapView}
-                className="text-xs font-black text-cyan-600 uppercase tracking-widest hover:text-cyan-800"
+                className="h-8 rounded-2xl px-3 text-xs font-black uppercase tracking-widest text-cyan-600 hover:bg-cyan-50 hover:text-cyan-800"
               >
                 Refresh Location
-              </button>
+              </Button>
             </div>
             <DirectoryMap
               centresWithLocation={centres.filter(c => c.latitude && c.longitude)}
@@ -389,20 +408,23 @@ export default function DirectoryExplorer({
                   Page <span className="text-slate-900">{currentPage}</span> of {totalPages}
                 </p>
                 <div className="flex gap-2">
-                  <button 
+                  <Button
+                    type="button"
+                    variant="outline"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage(p => p - 1)}
-                    className="h-10 px-4 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 disabled:opacity-30 active:scale-95 transition-all"
+                    className="h-10 rounded-2xl border-slate-200 px-4 text-sm font-bold text-slate-600 transition-all active:scale-95 disabled:opacity-30"
                   >
                     Previous
-                  </button>
-                  <button 
+                  </Button>
+                  <Button
+                    type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage(p => p + 1)}
-                    className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold disabled:opacity-30 active:scale-95 transition-all shadow-lg shadow-slate-900/10"
+                    className="h-10 rounded-2xl bg-slate-900 px-4 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition-all active:scale-95 hover:bg-slate-800 disabled:opacity-30"
                   >
                     Next
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}

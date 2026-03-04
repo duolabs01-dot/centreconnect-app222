@@ -6,6 +6,7 @@ import type { LucideIcon } from 'lucide-react'
 import { BellRing, CalendarCheck2, CalendarDays, ChevronLeft, ChevronRight, Megaphone, UsersRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 export type EcdCalendarFeedSource = 'event' | 'attendance' | 'announcement' | 'reminder'
 
@@ -254,9 +255,9 @@ export function EcdIosCalendarView({
   }
 
   return (
-    <section className="overflow-hidden rounded-[2.2rem] border border-slate-200/80 bg-white shadow-[0_20px_45px_-28px_rgba(15,23,42,0.32)]">
-      <div className="space-y-5 p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/70 p-3.5 sm:p-4">
+    <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-white shadow-[0_20px_45px_-28px_rgba(15,23,42,0.32)]">
+      <CardContent className="space-y-5 p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/70 p-3.5 sm:p-4">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-600">Calendar</p>
             <h2 className="mt-0.5 text-2xl font-black tracking-tight text-slate-900">{formatMonthTitle(monthDate)}</h2>
@@ -292,16 +293,16 @@ export function EcdIosCalendarView({
           </div>
         </div>
 
-        <div className="grid gap-2 rounded-3xl border border-slate-200/80 bg-slate-50/80 p-3 text-xs text-slate-600 sm:grid-cols-5">
+        <Card className="grid gap-2 rounded-2xl border-slate-200/80 bg-slate-50/80 p-3 text-xs text-slate-600 shadow-none sm:grid-cols-5">
           <p className="sm:col-span-2">
             <span className="font-bold text-slate-800">{monthSummary.total}</span> items this month
           </p>
           <p>Events: {monthSummary.sourceCounts.event}</p>
           <p>Attendance: {monthSummary.sourceCounts.attendance}</p>
           <p>Reminders: {monthSummary.sourceCounts.reminder}</p>
-        </div>
+        </Card>
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-slate-50/75">
+        <Card className="overflow-hidden rounded-2xl border-slate-200/80 bg-slate-50/75 shadow-none">
           <div className="grid grid-cols-7 border-b border-slate-200/80 bg-white/80">
             {WEEKDAY_LABELS.map((label) => (
               <div
@@ -324,9 +325,10 @@ export function EcdIosCalendarView({
               const isSelected = dayKey === selectedDayKey
 
               return (
-                <button
+                <Button
                   key={dayKey}
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     setSelectedDay(day)
                     if (!inCurrentMonth) {
@@ -334,7 +336,7 @@ export function EcdIosCalendarView({
                     }
                   }}
                   className={cn(
-                    'min-h-[84px] bg-white px-1.5 py-1.5 text-left transition-all duration-250 ease-out sm:min-h-[102px] sm:px-2 sm:py-2',
+                    'min-h-[84px] h-auto justify-start rounded-none bg-white px-1.5 py-1.5 text-left transition-all duration-250 ease-out sm:min-h-[102px] sm:px-2 sm:py-2',
                     inCurrentMonth ? 'hover:bg-slate-50/70' : 'bg-slate-100/80 text-slate-400 hover:bg-slate-100',
                     isSelected ? 'ring-2 ring-cyan-500/60 ring-inset' : '',
                     isToday ? 'bg-cyan-50/55' : ''
@@ -377,13 +379,13 @@ export function EcdIosCalendarView({
                       <p className="truncate px-1 text-[10px] font-semibold text-slate-500">+{overflowCount} more</p>
                     ) : null}
                   </div>
-                </button>
+                </Button>
               )
             })}
           </div>
-        </div>
+        </Card>
 
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
+        <Card className="rounded-2xl border-slate-200/80 bg-white p-3.5 shadow-none sm:p-4">
           <div className="mb-2.5 flex items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-600">All-day</p>
@@ -419,9 +421,9 @@ export function EcdIosCalendarView({
               })}
             </div>
           )}
-        </div>
+        </Card>
 
-        <div className="rounded-3xl border border-slate-200/80 bg-white p-3.5 sm:p-4">
+        <Card className="rounded-2xl border-slate-200/80 bg-white p-3.5 shadow-none sm:p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-600">Agenda List</p>
@@ -437,9 +439,9 @@ export function EcdIosCalendarView({
           ) : (
             <div className="space-y-3">
               {monthAgenda.map((group) => (
-                <section
+                <Card
                   key={group.dayKey}
-                  className="rounded-2xl border border-slate-200 bg-slate-50/55 p-3 transition-all duration-200"
+                  className="rounded-2xl border-slate-200 bg-slate-50/55 p-3 shadow-none transition-all duration-200"
                 >
                   <h4 className="text-sm font-black text-slate-900">{formatLongDay(group.dayKey)}</h4>
                   <div className="mt-2 space-y-2">
@@ -493,11 +495,11 @@ export function EcdIosCalendarView({
                       )
                     })}
                   </div>
-                </section>
+                </Card>
               ))}
             </div>
           )}
-        </div>
+        </Card>
 
         <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
           {Object.entries(SOURCE_META).map(([source, meta]) => (
@@ -507,7 +509,7 @@ export function EcdIosCalendarView({
             </span>
           ))}
         </div>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

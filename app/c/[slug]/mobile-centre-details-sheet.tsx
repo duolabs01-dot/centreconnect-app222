@@ -7,6 +7,7 @@ import { BadgeCheck, CheckCircle2, Circle, ShieldCheck } from 'lucide-react'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { ContactCentreSheet } from './contact-centre-sheet'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
+import { Button } from '@/components/ui/button'
 
 type MobileCentreDetailsSheetProps = {
   centreId: string
@@ -71,14 +72,15 @@ export function MobileCentreDetailsSheet({
       {!open ? (
         <div className="fixed inset-x-4 bottom-6 z-50 lg:hidden">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-2 shadow-[var(--shadow-elevation-3)]">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setOpen(true)}
-              className="flex h-12 w-full items-center justify-between rounded-2xl bg-slate-50 px-4 text-left"
+              className="flex h-12 w-full items-center justify-between rounded-2xl bg-slate-50 px-4 text-left text-inherit hover:bg-slate-100"
             >
               <span className="text-sm font-bold text-slate-900">Centre details and trust info</span>
               <span className="text-xs font-bold text-teal-700">Swipe sheet</span>
-            </button>
+            </Button>
             <div className="mt-2">
               <ApplyCTA
                 variant="hero"
@@ -94,8 +96,9 @@ export function MobileCentreDetailsSheet({
 
       {open ? (
         <div className="fixed inset-0 z-[70] lg:hidden">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]"
             aria-label="Close centre details"
@@ -186,13 +189,14 @@ export function MobileCentreDetailsSheet({
                 <p className="text-lg font-black text-slate-900">{feesLabel}</p>
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setOpen(false)}
-                className="h-11 w-full rounded-2xl border border-slate-200 bg-white text-sm font-bold text-slate-700"
+                className="h-11 w-full rounded-2xl border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50"
               >
                 Swipe down or tap to close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
