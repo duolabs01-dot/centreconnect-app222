@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   CheckCircle2,
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -41,6 +43,14 @@ type SuccessState = {
   teamFailed: number
   eventKey: string | null
   trackingLink: string
+}
+
+type ExistingUserConflict = {
+  email?: string
+  existingRole?: string | null
+  existingUserId?: string | null
+  willSetRole?: string
+  parentAccessWillBeRevoked?: boolean
 }
 
 const TIER_PRICE: Record<Tier, number> = {
@@ -100,9 +110,12 @@ const darkInputClass =
   'border-cyan-500/20 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-400/70'
 
 export function AdminTenantsOnboarding() {
+  const router = useRouter()
   const [mode, setMode] = useState<OnboardingMode>('single')
   const [busy, setBusy] = useState(false)
   const [inviteBusy, setInviteBusy] = useState(false)
+  const [migrationDialogOpen, setMigrationDialogOpen] = useState(false)
+  const [existingUserConflict, setExistingUserConflict] = useState<ExistingUserConflict | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [heroFile, setHeroFile] = useState<File | null>(null)
   const [success, setSuccess] = useState<SuccessState | null>(null)
@@ -197,7 +210,11 @@ export function AdminTenantsOnboarding() {
     return { sent, failed: emails.length - sent }
   }
 
-  async function handleCreate() {
+  async function handleCreate(options?: {
+    allowExistingEmailMigration?: boolean
+    confirmAdminRoleMigration?: boolean
+    confirmParentAccessRevocation?: boolean
+  }) {
     const centreName = form.centreName.trim()
     const ownerEmail = form.ownerEmail.trim().toLowerCase()
     const ownerPhone = form.ownerPhone.trim()
@@ -232,16 +249,27 @@ export function AdminTenantsOnboarding() {
           tier: form.tier,
           contractSigned: true,
           onboardingFeePaid: true,
+          allowExistingEmailMigration: options?.allowExistingEmailMigration ?? false,
+          confirmAdminRoleMigration: options?.confirmAdminRoleMigration ?? false,
+          confirmParentAccessRevocation: options?.confirmParentAccessRevocation ?? false,
         }),
       })
 
       const createPayload = (await createResponse.json().catch(() => ({}))) as {
         error?: string
+        code?: string
+        conflict?: ExistingUserConflict
         centre?: { id: string; name: string; slug: string }
         warnings?: string[]
       }
 
       if (!createResponse.ok || !createPayload.centre?.id) {
+        if (createResponse.status === 409 && createPayload.code === 'existing_user_confirmation_required') {
+          setExistingUserConflict(createPayload.conflict ?? { email: ownerEmail })
+          setMigrationDialogOpen(true)
+          toast.warning('Existing account detected. Confirm migration to continue.')
+          return
+        }
         throw new Error(createPayload.error || 'Failed to create tenant.')
       }
 
@@ -291,12 +319,27 @@ export function AdminTenantsOnboarding() {
         trackingLink,
       })
 
-      toast.success('Centre created and onboarding started.')
+      setMigrationDialogOpen(false)
+      setExistingUserConflict(null)
+      router.refresh()
+      if (options?.allowExistingEmailMigration) {
+        toast.success('Migration complete: account changed to ECD Admin and linked to the new tenant.')
+      } else {
+        toast.success('Centre created and onboarding started.')
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to create centre.')
     } finally {
       setBusy(false)
     }
+  }
+
+  async function handleConfirmMigration() {
+    await handleCreate({
+      allowExistingEmailMigration: true,
+      confirmAdminRoleMigration: true,
+      confirmParentAccessRevocation: true,
+    })
   }
 
   async function handleResendInvite() {
@@ -331,335 +374,389 @@ export function AdminTenantsOnboarding() {
     setSuccess(null)
     setLogoFile(null)
     setHeroFile(null)
+    setMigrationDialogOpen(false)
+    setExistingUserConflict(null)
     setForm((prev) => ({ ...prev, centreName: '', ownerEmail: '', ownerPhone: '', suburb: '', teamEmails: '' }))
   }
 
+  const migrationDialog = (
+    <Dialog
+      open={migrationDialogOpen}
+      onOpenChange={(open) => {
+        setMigrationDialogOpen(open)
+        if (!open && !busy) {
+          setExistingUserConflict(null)
+        }
+      }}
+    >
+      <DialogContent className="border-cyan-500/30 bg-slate-950 text-slate-100">
+        <DialogHeader>
+          <DialogTitle className="text-cyan-200">Confirm Migration</DialogTitle>
+          <DialogDescription className="text-slate-300">
+            {existingUserConflict?.email
+              ? `${existingUserConflict.email} already exists. Confirm to migrate this account to ECD Admin and revoke parent access.`
+              : 'This email already exists. Confirm migration to ECD Admin and revoke parent access.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-100">
+          Existing role: {existingUserConflict?.existingRole ?? 'unknown'} | New role:{' '}
+          {existingUserConflict?.willSetRole ?? 'ecd_admin'}
+        </div>
+        <DialogFooter className="gap-2 sm:justify-end">
+          <Button
+            variant="outline"
+            onClick={() => {
+              setMigrationDialogOpen(false)
+              setExistingUserConflict(null)
+            }}
+            className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+            disabled={busy}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => void handleConfirmMigration()}
+            loading={busy}
+            className="bg-cyan-500 text-black hover:bg-cyan-400"
+          >
+            Confirm Migration - Change to ECD Admin and revoke parent access
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (success) {
     return (
-      <div className="space-y-8">
-        <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#050b1a] via-[#071326] to-[#04111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.16)]">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-200">Onboarding Ready</Badge>
-            <Badge className="border-emerald-400/30 bg-emerald-500/15 text-emerald-200">Success</Badge>
+      <>
+        <div className="space-y-8">
+          <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#050b1a] via-[#071326] to-[#04111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.16)]">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-200">Onboarding Ready</Badge>
+              <Badge className="border-emerald-400/30 bg-emerald-500/15 text-emerald-200">Success</Badge>
+            </div>
+            <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Tenant Created Successfully</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-300">
+              {success.centreName} is ready. Invite dispatch and onboarding tracking are available immediately.
+            </p>
+          </header>
+
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                  Launch Summary
+                </CardTitle>
+                <CardDescription className="text-slate-400">Single centre + team onboarding status</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Centre</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-100">{success.centreName}</p>
+                    <p className="mt-1 text-xs text-cyan-300">/{success.slug}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Owner</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-100">{success.ownerEmail}</p>
+                    <p className="mt-1 text-xs text-slate-400">{success.ownerPhone}</p>
+                  </div>
+                </div>
+
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-800 hover:bg-transparent">
+                      <TableHead className="text-xs uppercase tracking-[0.2em] text-slate-500">Metric</TableHead>
+                      <TableHead className="text-xs uppercase tracking-[0.2em] text-slate-500">Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow className="border-slate-800">
+                      <TableCell className="text-slate-300">Team invites requested</TableCell>
+                      <TableCell className="text-slate-100">{success.teamRequested}</TableCell>
+                    </TableRow>
+                    <TableRow className="border-slate-800">
+                      <TableCell className="text-slate-300">Team invites sent</TableCell>
+                      <TableCell className="text-emerald-300">{success.teamSent}</TableCell>
+                    </TableRow>
+                    <TableRow className="border-slate-800">
+                      <TableCell className="text-slate-300">Team invite failures</TableCell>
+                      <TableCell className="text-amber-300">{success.teamFailed}</TableCell>
+                    </TableRow>
+                    <TableRow className="border-slate-800">
+                      <TableCell className="text-slate-300">Invite event key</TableCell>
+                      <TableCell className="text-xs text-cyan-300">{success.eventKey ?? 'Pending'}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <CardFooter className="flex flex-wrap gap-3">
+                <Button
+                  onClick={() => void handleResendInvite()}
+                  loading={inviteBusy}
+                  className="bg-cyan-500 text-black hover:bg-cyan-400"
+                >
+                  <Send className="h-4 w-4" />
+                  Send Invite
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void copyTrackingLink()}
+                  className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Tracking Link
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                >
+                  <Link href={success.trackingLink}>Open Tracking</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={resetFlow}
+                  className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                >
+                  Create Another Centre
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Sparkles className="h-4 w-4 text-cyan-300" />
+                  Next Steps
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-slate-300">
+                <p>1. Owner receives onboarding invite and welcome pack flow.</p>
+                <p>2. Team members receive role-based invite links.</p>
+                <p>3. Use tracking to monitor sent/opened/claimed states.</p>
+              </CardContent>
+            </Card>
           </div>
-          <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Tenant Created Successfully</h1>
+        </div>
+        {migrationDialog}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className="space-y-8">
+        <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.14)]">
+          <div className="flex flex-wrap items-center gap-3">
+            <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">CC Admin</Badge>
+            <Badge className="border-slate-700 bg-slate-900 text-slate-300">Dark Onboarding</Badge>
+          </div>
+          <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Tenant Onboarding</h1>
           <p className="mt-2 max-w-2xl text-sm text-slate-300">
-            {success.centreName} is ready. Invite dispatch and onboarding tracking are available immediately.
+            Create a new centre and launch owner or team onboarding in a single flow.
           </p>
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <Card className="border-cyan-500/20 bg-slate-950/70">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                Launch Summary
-              </CardTitle>
-              <CardDescription className="text-slate-400">Single centre + team onboarding status</CardDescription>
+              <CardTitle className="text-white">Create Centre Workspace</CardTitle>
+              <CardDescription className="text-slate-400">Single owner or team of 5+ in one setup</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Centre</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-100">{success.centreName}</p>
-                  <p className="mt-1 text-xs text-cyan-300">/{success.slug}</p>
+            <CardContent className="space-y-6">
+              <Tabs value={mode} onValueChange={(value) => setMode(value as OnboardingMode)}>
+                <TabsList className="grid h-11 w-full grid-cols-2 rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-1">
+                  <TabsTrigger
+                    value="single"
+                    className="rounded-xl text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100"
+                  >
+                    <Rocket className="mr-2 h-4 w-4" />
+                    Single Centre
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="team"
+                    className="rounded-xl text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100"
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Bulk Team (5+)
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="single" className="mt-5" />
+                <TabsContent value="team" className="mt-5 space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Team Role</Label>
+                    <Select value={form.teamRole} onValueChange={(value) => setForm((prev) => ({ ...prev, teamRole: value as TeamRole }))}>
+                      <SelectTrigger className={cn(darkInputClass, '[&_span]:text-slate-100')}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                        <SelectItem value="ecd_staff">ECD Staff</SelectItem>
+                        <SelectItem value="ecd_admin">ECD Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Team Email List (5+)</Label>
+                    <Textarea
+                      className={cn(darkInputClass, 'min-h-[140px]')}
+                      placeholder="staff1@centre.co.za&#10;staff2@centre.co.za&#10;staff3@centre.co.za"
+                      value={form.teamEmails}
+                      onChange={(event) => setForm((prev) => ({ ...prev, teamEmails: event.target.value }))}
+                    />
+                    <p className="text-xs text-slate-500">
+                      Valid emails: {teamParsed.valid.length} | Invalid entries: {teamParsed.invalidCount}
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="centre-name" className="text-slate-300">
+                    Centre Name
+                  </Label>
+                  <Input
+                    id="centre-name"
+                    className={darkInputClass}
+                    value={form.centreName}
+                    onChange={(event) => setForm((prev) => ({ ...prev, centreName: event.target.value }))}
+                    placeholder="Sunshine Early Learning Centre"
+                  />
                 </div>
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Owner</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-100">{success.ownerEmail}</p>
-                  <p className="mt-1 text-xs text-slate-400">{success.ownerPhone}</p>
-                </div>
-              </div>
-
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-slate-800 hover:bg-transparent">
-                    <TableHead className="text-xs uppercase tracking-[0.2em] text-slate-500">Metric</TableHead>
-                    <TableHead className="text-xs uppercase tracking-[0.2em] text-slate-500">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow className="border-slate-800">
-                    <TableCell className="text-slate-300">Team invites requested</TableCell>
-                    <TableCell className="text-slate-100">{success.teamRequested}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-slate-800">
-                    <TableCell className="text-slate-300">Team invites sent</TableCell>
-                    <TableCell className="text-emerald-300">{success.teamSent}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-slate-800">
-                    <TableCell className="text-slate-300">Team invite failures</TableCell>
-                    <TableCell className="text-amber-300">{success.teamFailed}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-slate-800">
-                    <TableCell className="text-slate-300">Invite event key</TableCell>
-                    <TableCell className="text-xs text-cyan-300">{success.eventKey ?? 'Pending'}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter className="flex flex-wrap gap-3">
-              <Button
-                onClick={() => void handleResendInvite()}
-                loading={inviteBusy}
-                className="bg-cyan-500 text-black hover:bg-cyan-400"
-              >
-                <Send className="h-4 w-4" />
-                Send Invite
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => void copyTrackingLink()}
-                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-              >
-                <Copy className="h-4 w-4" />
-                Copy Tracking Link
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-              >
-                <Link href={success.trackingLink}>Open Tracking</Link>
-              </Button>
-              <Button
-                variant="outline"
-                onClick={resetFlow}
-                className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
-              >
-                Create Another Centre
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card className="border-cyan-500/20 bg-slate-950/70">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Sparkles className="h-4 w-4 text-cyan-300" />
-                Next Steps
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-slate-300">
-              <p>1. Owner receives onboarding invite and welcome pack flow.</p>
-              <p>2. Team members receive role-based invite links.</p>
-              <p>3. Use tracking to monitor sent/opened/claimed states.</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-8">
-      <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.14)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">CC Admin</Badge>
-          <Badge className="border-slate-700 bg-slate-900 text-slate-300">Dark Onboarding</Badge>
-        </div>
-        <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Tenant Onboarding</h1>
-        <p className="mt-2 max-w-2xl text-sm text-slate-300">
-          Create a new centre and launch owner or team onboarding in a single flow.
-        </p>
-      </header>
-
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <Card className="border-cyan-500/20 bg-slate-950/70">
-          <CardHeader>
-            <CardTitle className="text-white">Create Centre Workspace</CardTitle>
-            <CardDescription className="text-slate-400">Single owner or team of 5+ in one setup</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <Tabs value={mode} onValueChange={(value) => setMode(value as OnboardingMode)}>
-              <TabsList className="grid h-11 w-full grid-cols-2 rounded-2xl border border-cyan-500/20 bg-slate-900/80 p-1">
-                <TabsTrigger
-                  value="single"
-                  className="rounded-xl text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100"
-                >
-                  <Rocket className="mr-2 h-4 w-4" />
-                  Single Centre
-                </TabsTrigger>
-                <TabsTrigger
-                  value="team"
-                  className="rounded-xl text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100"
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Bulk Team (5+)
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="single" className="mt-5" />
-              <TabsContent value="team" className="mt-5 space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Team Role</Label>
-                  <Select value={form.teamRole} onValueChange={(value) => setForm((prev) => ({ ...prev, teamRole: value as TeamRole }))}>
+                  <Label htmlFor="owner-email" className="text-slate-300">
+                    Owner Email
+                  </Label>
+                  <Input
+                    id="owner-email"
+                    type="email"
+                    className={darkInputClass}
+                    value={form.ownerEmail}
+                    onChange={(event) => setForm((prev) => ({ ...prev, ownerEmail: event.target.value }))}
+                    placeholder="owner@centre.co.za"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner-phone" className="text-slate-300">
+                    Owner Phone
+                  </Label>
+                  <Input
+                    id="owner-phone"
+                    className={darkInputClass}
+                    value={form.ownerPhone}
+                    onChange={(event) => setForm((prev) => ({ ...prev, ownerPhone: event.target.value }))}
+                    placeholder="+27 72 123 4567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="suburb" className="text-slate-300">
+                    Suburb
+                  </Label>
+                  <Input
+                    id="suburb"
+                    className={darkInputClass}
+                    value={form.suburb}
+                    onChange={(event) => setForm((prev) => ({ ...prev, suburb: event.target.value }))}
+                    placeholder="Alexandra"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Plan</Label>
+                  <Select value={form.tier} onValueChange={(value) => setForm((prev) => ({ ...prev, tier: value as Tier }))}>
                     <SelectTrigger className={cn(darkInputClass, '[&_span]:text-slate-100')}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
-                      <SelectItem value="ecd_staff">ECD Staff</SelectItem>
-                      <SelectItem value="ecd_admin">ECD Admin</SelectItem>
+                      <SelectItem value="pilot">Pilot (R0)</SelectItem>
+                      <SelectItem value="basic">Basic (R199)</SelectItem>
+                      <SelectItem value="standard">Standard (R299)</SelectItem>
+                      <SelectItem value="premium">Premium (R499)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Team Email List (5+)</Label>
-                  <Textarea
-                    className={cn(darkInputClass, 'min-h-[140px]')}
-                    placeholder="staff1@centre.co.za&#10;staff2@centre.co.za&#10;staff3@centre.co.za"
-                    value={form.teamEmails}
-                    onChange={(event) => setForm((prev) => ({ ...prev, teamEmails: event.target.value }))}
+                  <Label htmlFor="logo-upload" className="text-slate-300">
+                    Logo Upload
+                  </Label>
+                  <Input
+                    id="logo-upload"
+                    type="file"
+                    accept="image/*"
+                    className={darkInputClass}
+                    onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
                   />
-                  <p className="text-xs text-slate-500">
-                    Valid emails: {teamParsed.valid.length} | Invalid entries: {teamParsed.invalidCount}
-                  </p>
+                  <p className="text-xs text-slate-500">{logoFile ? logoFile.name : 'No file selected'}</p>
                 </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="centre-name" className="text-slate-300">
-                  Centre Name
-                </Label>
-                <Input
-                  id="centre-name"
-                  className={darkInputClass}
-                  value={form.centreName}
-                  onChange={(event) => setForm((prev) => ({ ...prev, centreName: event.target.value }))}
-                  placeholder="Sunshine Early Learning Centre"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="hero-upload" className="text-slate-300">
+                    Hero Image Upload
+                  </Label>
+                  <Input
+                    id="hero-upload"
+                    type="file"
+                    accept="image/*"
+                    className={darkInputClass}
+                    onChange={(event) => setHeroFile(event.target.files?.[0] ?? null)}
+                  />
+                  <p className="text-xs text-slate-500">{heroFile ? heroFile.name : 'No file selected'}</p>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="owner-email" className="text-slate-300">
-                  Owner Email
-                </Label>
-                <Input
-                  id="owner-email"
-                  type="email"
-                  className={darkInputClass}
-                  value={form.ownerEmail}
-                  onChange={(event) => setForm((prev) => ({ ...prev, ownerEmail: event.target.value }))}
-                  placeholder="owner@centre.co.za"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="owner-phone" className="text-slate-300">
-                  Owner Phone
-                </Label>
-                <Input
-                  id="owner-phone"
-                  className={darkInputClass}
-                  value={form.ownerPhone}
-                  onChange={(event) => setForm((prev) => ({ ...prev, ownerPhone: event.target.value }))}
-                  placeholder="+27 72 123 4567"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="suburb" className="text-slate-300">
-                  Suburb
-                </Label>
-                <Input
-                  id="suburb"
-                  className={darkInputClass}
-                  value={form.suburb}
-                  onChange={(event) => setForm((prev) => ({ ...prev, suburb: event.target.value }))}
-                  placeholder="Alexandra"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-300">Plan</Label>
-                <Select value={form.tier} onValueChange={(value) => setForm((prev) => ({ ...prev, tier: value as Tier }))}>
-                  <SelectTrigger className={cn(darkInputClass, '[&_span]:text-slate-100')}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
-                    <SelectItem value="pilot">Pilot (R0)</SelectItem>
-                    <SelectItem value="basic">Basic (R199)</SelectItem>
-                    <SelectItem value="standard">Standard (R299)</SelectItem>
-                    <SelectItem value="premium">Premium (R499)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="logo-upload" className="text-slate-300">
-                  Logo Upload
-                </Label>
-                <Input
-                  id="logo-upload"
-                  type="file"
-                  accept="image/*"
-                  className={darkInputClass}
-                  onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
-                />
-                <p className="text-xs text-slate-500">{logoFile ? logoFile.name : 'No file selected'}</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="hero-upload" className="text-slate-300">
-                  Hero Image Upload
-                </Label>
-                <Input
-                  id="hero-upload"
-                  type="file"
-                  accept="image/*"
-                  className={darkInputClass}
-                  onChange={(event) => setHeroFile(event.target.files?.[0] ?? null)}
-                />
-                <p className="text-xs text-slate-500">{heroFile ? heroFile.name : 'No file selected'}</p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-wrap justify-between gap-3">
-            <p className="text-xs text-slate-500">
-              Welcome pack and invite flow trigger automatically after successful creation.
-            </p>
-            <Button
-              onClick={() => void handleCreate()}
-              loading={busy}
-              className="bg-cyan-500 text-black hover:bg-cyan-400"
-            >
-              <UploadCloud className="h-4 w-4" />
-              Create & Start Onboarding
-            </Button>
-          </CardFooter>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="border-cyan-500/20 bg-slate-950/70">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <ImagePlus className="h-4 w-4 text-cyan-300" />
-                Brand Media
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm text-slate-300">
-              <p>Logo and hero image upload are included in onboarding.</p>
-              <p>Files are saved to centre media storage and attached to the centre profile.</p>
             </CardContent>
-          </Card>
-
-          <Card className="border-cyan-500/20 bg-slate-950/70">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-white">
-                <MailPlus className="h-4 w-4 text-cyan-300" />
-                Invite Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm text-slate-300">
-              <p>Owner invite is triggered automatically on successful creation.</p>
-              <p>Team mode sends bulk invites immediately for all valid emails.</p>
+            <CardFooter className="flex flex-wrap justify-between gap-3">
+              <p className="text-xs text-slate-500">
+                Welcome pack and invite flow trigger automatically after successful creation.
+              </p>
               <Button
-                asChild
-                variant="outline"
-                className="w-full border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                onClick={() => void handleCreate()}
+                loading={busy}
+                className="bg-cyan-500 text-black hover:bg-cyan-400"
               >
-                <Link href="/admin/invites">Open Invite Tracking</Link>
+                <UploadCloud className="h-4 w-4" />
+                Create & Start Onboarding
               </Button>
-            </CardContent>
+            </CardFooter>
           </Card>
+
+          <div className="space-y-6">
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <ImagePlus className="h-4 w-4 text-cyan-300" />
+                  Brand Media
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-slate-300">
+                <p>Logo and hero image upload are included in onboarding.</p>
+                <p>Files are saved to centre media storage and attached to the centre profile.</p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-cyan-500/20 bg-slate-950/70">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <MailPlus className="h-4 w-4 text-cyan-300" />
+                  Invite Preview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm text-slate-300">
+                <p>Owner invite is triggered automatically on successful creation.</p>
+                <p>Team mode sends bulk invites immediately for all valid emails.</p>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                >
+                  <Link href="/admin/invites">Open Invite Tracking</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+      {migrationDialog}
+    </>
   )
 }
-
