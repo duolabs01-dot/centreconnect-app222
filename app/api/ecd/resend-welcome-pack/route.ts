@@ -31,11 +31,10 @@ type Payload = {
   ownerEmail?: string
 }
 
-async function fetchWelcomePackHtml(appUrl: string) {
-  const normalized = appUrl.replace(/\/+$/, '')
+async function fetchWelcomePackHtml(appUrlRoot: string) {
   const htmlPath = path.join(process.cwd(), 'public', 'CentreConnect_Pilot_Welcome_FINAL.html')
   const html = await readFile(htmlPath, 'utf-8')
-  return html.replace(OLD_DOMAIN_PATTERN, normalized)
+  return html.replace(OLD_DOMAIN_PATTERN, appUrlRoot)
 }
 
 export async function POST(request: Request) {
@@ -55,11 +54,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'ownerEmail is required' }, { status: 400 })
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL
-  if (!appUrl) {
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!rawAppUrl) {
     console.error('resend-welcome-pack: NEXT_PUBLIC_APP_URL missing')
     return NextResponse.json({ success: false, error: 'Application URL is not configured' }, { status: 500 })
   }
+  const appUrlRoot = rawAppUrl.replace(/\/+$/, '')
 
   const smtpHost = process.env.SMTP_HOST
   const smtpPortRaw = process.env.SMTP_PORT
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
   let html: string
   try {
-    html = await fetchWelcomePackHtml(appUrl)
+    html = await fetchWelcomePackHtml(appUrlRoot)
   } catch (error) {
     console.error('resend-welcome-pack: failed to read welcome pack', error)
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
@@ -114,6 +114,9 @@ export async function POST(request: Request) {
     '{{centreName}}': centreName,
     '{{centreSlug}}': centreSlug,
   })
+
+  const centrePageUrl = `${appUrlRoot}/centre/${centreSlug || 'profile'}`
+  const plainText = `Welcome ${ownerName} to ${centreName}! Visit ${centrePageUrl} for your centre details.`
 
   const subject = `Welcome to CentreConnect Pilot — ${centreName}`
 
@@ -133,6 +136,12 @@ export async function POST(request: Request) {
       to: ownerEmail,
       subject,
       html,
+      text: plainText,
+      headers: {
+        'List-Unsubscribe': `<mailto:hello@centerconnect.co.za?subject=unsubscribe>`,
+        'Reply-To': 'hello@centerconnect.co.za',
+        Precedence: 'bulk',
+      },
     })
   } catch (error) {
     console.error('resend-welcome-pack: SMTP send failed', error)
