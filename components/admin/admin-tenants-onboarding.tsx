@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import {
+  AlertTriangle,
   CheckCircle2,
   Copy,
   ImagePlus,
@@ -718,41 +719,52 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                     <p className="text-xs text-rose-300">{onboardingForm.formState.errors.centreName.message}</p>
                   ) : null}
                   {normalizedCentreName && matchingCentres.length > 0 ? (
-                    <Card className="border-cyan-500/20 bg-slate-950/95">
-                      <CardContent className="space-y-2 p-3">
-                        <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Existing centres</p>
-                        <div className="space-y-2">
-                          {matchingCentres.map((centre) => (
-                            <div
-                              key={centre.id}
-                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2"
-                            >
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-slate-100">{centre.name}</p>
-                                {centre.ownerEmail ? (
-                                  <p className="truncate text-xs text-slate-400">{centre.ownerEmail}</p>
-                                ) : null}
-                              </div>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-                                onClick={() =>
-                                  onboardingForm.setValue('centreName', centre.name, {
-                                    shouldDirty: true,
-                                    shouldTouch: true,
-                                    shouldValidate: true,
-                                  })
-                                }
-                              >
-                                Use
-                              </Button>
-                            </div>
-                          ))}
+                    <>
+                      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-200">
+                          <AlertTriangle className="h-4 w-4 text-amber-200" />
+                          <span>Possible duplicate centre name</span>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <p className="mt-1 text-[11px] text-amber-200">
+                          {matchingCentres.length} existing centre{matchingCentres.length === 1 ? '' : 's'} match “{centreName.trim()}”.
+                        </p>
+                      </div>
+                      <Card className="border-cyan-500/20 bg-slate-950/95">
+                        <CardContent className="space-y-2 p-3">
+                          <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Existing centres</p>
+                          <div className="space-y-2">
+                            {matchingCentres.map((centre) => (
+                              <div
+                                key={centre.id}
+                                className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2"
+                              >
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-medium text-slate-100">{centre.name}</p>
+                                  {centre.ownerEmail ? (
+                                    <p className="truncate text-xs text-slate-400">{centre.ownerEmail}</p>
+                                  ) : null}
+                                </div>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                                  onClick={() =>
+                                    onboardingForm.setValue('centreName', centre.name, {
+                                      shouldDirty: true,
+                                      shouldTouch: true,
+                                      shouldValidate: true,
+                                    })
+                                  }
+                                >
+                                  Use
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </>
                   ) : null}
                   {exactCentreMatch ? (
                     <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">

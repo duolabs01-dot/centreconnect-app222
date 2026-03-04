@@ -1,19 +1,15 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { AdminTenantsOnboarding } from '@/components/admin/admin-tenants-onboarding'
 import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/admin-tenants-table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Tenant Onboarding | CC Admin',
-  description: 'Hybrid onboarding and tenant operations console.',
+  title: 'Tenants & Onboarding | Platform Admin',
+  description: 'Create new centres (single or bulk) and manage the full tenant directory.',
 }
 
 async function requirePlatformAdmin() {
@@ -27,17 +23,7 @@ async function requirePlatformAdmin() {
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  return { user, admin }
-}
-
-type PageSearchParams = Record<string, string | string[] | undefined>
-
-function one(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value
-}
-
-function noticeText(value: string | undefined) {
-  return null
+  return { admin }
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -60,15 +46,8 @@ function extractAgeFee(ageGroupPricing: any, key: string) {
   return String(Math.round(cents / 100))
 }
 
-export default async function AdminTenantsPage({
-  searchParams,
-}: {
-  searchParams?: Promise<PageSearchParams>
-}) {
+export default async function AdminTenantsPage() {
   const { admin } = await requirePlatformAdmin()
-  const resolved = (await searchParams) ?? {}
-  const audience = one(resolved.audience) === 'parent' ? 'parent' : 'ecd'
-  const notice = noticeText(one(resolved.notice))
 
   const [centresResult, invitationsResult] = await Promise.all([
     admin
@@ -208,49 +187,34 @@ export default async function AdminTenantsPage({
   }))
 
   return (
-    <div className="space-y-8 pb-16">
-      <Card className="border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f]">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">CC Admin</Badge>
-            <Badge className="border-slate-700 bg-slate-900 text-slate-300">Hybrid Onboarding</Badge>
-          </div>
-          <div className="space-y-2">
-            <CardTitle className="text-3xl font-black tracking-tight text-white">Tenants</CardTitle>
-            <CardDescription className="text-slate-300">
-              Single centre onboarding, bulk team invites, and full tenant operations in one place.
-            </CardDescription>
-          </div>
-          <div className="inline-flex rounded-2xl border border-cyan-500/20 bg-slate-900/70 p-1">
-            <Button
-              asChild
-              size="sm"
-              className={audience === 'parent' ? 'bg-transparent text-slate-300 hover:bg-slate-800' : 'bg-cyan-500 text-black hover:bg-cyan-400'}
-            >
-              <Link href="/admin/tenants?audience=ecd">ECD</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className={audience === 'parent' ? 'bg-cyan-500 text-black hover:bg-cyan-400' : 'bg-transparent text-slate-300 hover:bg-slate-800'}
-            >
-              <Link href="/admin/tenants?audience=parent">Parent</Link>
-            </Button>
-          </div>
-          {notice ? (
-            <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-100">{notice}</div>
-          ) : null}
-          {audience === 'parent' ? (
-            <div className="rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
-              Parent mode selected. Tenant onboarding below remains ECD-focused.
-            </div>
-          ) : null}
-        </CardHeader>
-      </Card>
+    <main className="space-y-12 px-4 py-10 lg:px-8">
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Create Tenant</p>
+          <h1 className="text-3xl font-black text-white">Single + Bulk Workspace Setup</h1>
+          <p className="max-w-3xl text-sm text-slate-400">
+            Launch a new centre either as a single owner or with a bulk team list, then let the welcome pack and owner
+            invite run automatically.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_25px_100px_rgba(2,6,23,0.65)]">
+          <AdminTenantsOnboarding existingCentres={existingCentres} />
+        </div>
+      </section>
 
-      <AdminTenantsOnboarding existingCentres={existingCentres} />
-
-      <AdminTenantsTable tenants={tenants} />
-    </div>
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Tenant Directory</p>
+          <h2 className="text-3xl font-black text-white">All Centres</h2>
+          <p className="max-w-3xl text-sm text-slate-400">
+            TanStack-powered directory with a fully featured edit modal that touches package, pricing, branding, and the
+            marketplace toggles.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-slate-800 bg-slate-950/70">
+          <AdminTenantsTable tenants={tenants} />
+        </div>
+      </section>
+    </main>
   )
 }
