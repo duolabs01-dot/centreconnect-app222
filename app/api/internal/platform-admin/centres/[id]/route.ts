@@ -50,6 +50,9 @@ const actionSchema = z.discriminatedUnion('action', [
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']).default('trial'),
     monthlyPrice: z.number().min(0).max(100000).default(199),
   }),
+  z.object({
+    action: z.literal('revert_to_non_paying'),
+  }),
 ])
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -216,6 +219,52 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         monthlyPrice: normalizedPlan.monthlyPrice,
         active: true,
       },
+    })
+  }
+
+  if (payload.action === 'revert_to_non_paying') {
+    const { error: detachInvoiceSubscriptionError } = await admin
+      .from('invoices')
+      .update({ subscription_id: null })
+      .eq('ecd_id', centreId)
+      .not('subscription_id', 'is', null)
+    if (detachInvoiceSubscriptionError) {
+      return NextResponse.json({ error: detachInvoiceSubscriptionError.message }, { status: 400 })
+    }
+
+    const { error: deleteSubscriptionError } = await admin.from('subscriptions').delete().eq('ecd_id', centreId)
+    if (deleteSubscriptionError) return NextResponse.json({ error: deleteSubscriptionError.message }, { status: 400 })
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'revert_to_non_paying',
+      summary: 'Reverted tenant subscription to non-paying state',
+      details: {
+        detachedInvoiceSubscriptions: true,
+      },
+    })
+    void sendPlatformAdminActionNotification({
+      subject: 'Tenant Reverted To Non-Paying',
+      heading: 'A tenant subscription was removed and reverted to non-paying.',
+      lines: [
+        `Centre: ${centreName}`,
+        `Slug: ${centreSlug}`,
+        `Centre ID: ${centreId}`,
+        `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
+      ],
+      details: {
+        action: 'revert_to_non_paying',
+        detachedInvoiceSubscriptions: true,
+      },
+    })
+
+    return NextResponse.json({
+      ok: true,
+      reverted: true,
+      centreId,
     })
   }
 

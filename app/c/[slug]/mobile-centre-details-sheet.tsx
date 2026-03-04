@@ -175,7 +175,7 @@ export function MobileCentreDetailsSheet({
                   href={claimHref}
                   className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  Claim this creche
+                  Claim & Update
                 </Link>
               ) : null}
 

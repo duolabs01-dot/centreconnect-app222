@@ -79,6 +79,10 @@ async function findAuthUserIdByEmail(adminClient: ReturnType<typeof createAdminC
   return data?.id ?? null
 }
 
+function normalizeSlug(slug: string) {
+  return slug.trim().toLowerCase()
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -96,6 +100,7 @@ export async function POST(request: Request) {
 
   const adminClient = createAdminClient()
   const data = parsed.data
+  const normalizedSlug = normalizeSlug(data.slug)
   const normalizedEmail = data.email.trim().toLowerCase()
   const isPilotPlan = data.tier === 'pilot'
   const normalizedTier = isPilotPlan ? 'basic' : data.tier
@@ -134,28 +139,111 @@ export async function POST(request: Request) {
     )
   }
 
-  const { data: centre, error: centreError } = await adminClient
-    .from('ecd_centres')
-    .insert({
-      slug: data.slug,
-      name: data.name,
-      primary_contact_name: data.primaryContactName,
-      email: normalizedEmail,
-      phone: data.phone,
-      address: data.address,
-      suburb: data.suburb,
-      city: data.city,
-      province: data.province,
-      postal_code: data.postalCode ?? null,
-      contract_signed: data.contractSigned,
-      onboarding_fee_paid: data.onboardingFeePaid,
-      is_active: false,
-    })
-    .select('id,slug,name,city,province')
-    .single()
+  const [existingBySlugResult, existingByEmailResult] = await Promise.all([
+    adminClient
+      .from('ecd_centres')
+      .select('id,slug,name,owner_id')
+      .eq('slug', normalizedSlug)
+      .maybeSingle(),
+    adminClient
+      .from('ecd_centres')
+      .select('id,slug,name,owner_id')
+      .eq('email', normalizedEmail)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  if (existingBySlugResult.error) {
+    return NextResponse.json({ error: existingBySlugResult.error.message }, { status: 400 })
+  }
+  if (existingByEmailResult.error) {
+    return NextResponse.json({ error: existingByEmailResult.error.message }, { status: 400 })
+  }
+
+  const existingBySlug = existingBySlugResult.data
+  const existingByEmail = existingByEmailResult.data
+  const existingClaimedSlug = Boolean(
+    existingBySlug?.owner_id && String(existingBySlug.owner_id).trim().length > 0
+  )
+  if (existingClaimedSlug) {
+    return NextResponse.json(
+      {
+        error: `Centre slug "${normalizedSlug}" is already claimed and cannot be re-linked. Use a different slug or manage the existing tenant.`,
+      },
+      { status: 409 }
+    )
+  }
+
+  const existingUnclaimedByEmail =
+    existingByEmail && (!existingByEmail.owner_id || String(existingByEmail.owner_id).trim().length === 0)
+      ? existingByEmail
+      : null
+
+  if (
+    existingByEmail &&
+    existingByEmail.id !== existingBySlug?.id &&
+    existingByEmail.owner_id &&
+    String(existingByEmail.owner_id).trim().length > 0
+  ) {
+    return NextResponse.json(
+      {
+        error: `A claimed centre already uses ${normalizedEmail}. Update the existing tenant instead of creating a new one.`,
+      },
+      { status: 409 }
+    )
+  }
+
+  const linkableCentre = existingBySlug ?? existingUnclaimedByEmail
+  const linkingExistingUnclaimedCentre = Boolean(linkableCentre)
+  let createdNewCentre = false
+
+  const centreWritePayload = {
+    slug: normalizedSlug,
+    name: data.name,
+    primary_contact_name: data.primaryContactName,
+    email: normalizedEmail,
+    phone: data.phone,
+    address: data.address,
+    suburb: data.suburb,
+    city: data.city,
+    province: data.province,
+    postal_code: data.postalCode ?? null,
+    contract_signed: data.contractSigned,
+    onboarding_fee_paid: data.onboardingFeePaid,
+    is_active: false,
+  }
+
+  const centreResult = linkableCentre
+    ? await adminClient
+        .from('ecd_centres')
+        .update(centreWritePayload)
+        .eq('id', linkableCentre.id)
+        .is('owner_id', null)
+        .select('id,slug,name,city,province')
+        .maybeSingle()
+    : await adminClient
+        .from('ecd_centres')
+        .insert(centreWritePayload)
+        .select('id,slug,name,city,province')
+        .single()
+
+  const centre = centreResult.data
+  const centreError = centreResult.error
 
   if (centreError) {
     return NextResponse.json({ error: centreError.message }, { status: 400 })
+  }
+
+  if (!centre) {
+    return NextResponse.json(
+      { error: 'Existing centre listing is no longer claimable. Refresh and try again.' },
+      { status: 409 }
+    )
+  }
+
+  if (!linkingExistingUnclaimedCentre) {
+    createdNewCentre = true
   }
 
   let adminUserId: string | null = existingAuthUserId
@@ -189,7 +277,9 @@ export async function POST(request: Request) {
           adminUserId = fallbackExistingUserId
           reusedExistingUser = true
         } else {
-          await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+          if (createdNewCentre) {
+            await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+          }
           return NextResponse.json(
             {
               error:
@@ -207,7 +297,9 @@ export async function POST(request: Request) {
           )
         }
       } else {
-        await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+        if (createdNewCentre) {
+          await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+        }
         return NextResponse.json(
           { error: `Failed to create primary admin user: ${authError.message}` },
           { status: 500 }
@@ -220,7 +312,9 @@ export async function POST(request: Request) {
   }
 
   if (!adminUserId) {
-    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    if (createdNewCentre) {
+      await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    }
     return NextResponse.json(
       { error: 'Failed to resolve primary admin account for tenant provisioning.' },
       { status: 500 }
@@ -239,7 +333,9 @@ export async function POST(request: Request) {
     if (createdNewAuthUser) {
       await adminClient.auth.admin.deleteUser(adminUserId)
     }
-    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    if (createdNewCentre) {
+      await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    }
     return NextResponse.json(
       { error: `Failed to create primary admin profile: ${profileError.message}` },
       { status: 500 }
@@ -258,7 +354,9 @@ export async function POST(request: Request) {
       await adminClient.auth.admin.deleteUser(adminUserId)
       await adminClient.from('user_profiles').delete().eq('id', adminUserId)
     }
-    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    if (createdNewCentre) {
+      await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    }
     return NextResponse.json(
       { error: `Failed to link ECD admin to centre: ${ecdAdminError.message}` },
       { status: 500 }
@@ -277,19 +375,24 @@ export async function POST(request: Request) {
       await adminClient.from('user_profiles').delete().eq('id', adminUserId)
     }
     await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', adminUserId)
-    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    if (createdNewCentre) {
+      await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    }
     return NextResponse.json(
       { error: `Failed to assign centre owner: ${ownerAssignError.message}` },
       { status: 500 }
     )
   }
 
-  const { error: subscriptionError } = await adminClient.from('subscriptions').insert({
-    ecd_id: centre.id,
-    tier: normalizedTier,
-    status: 'trial',
-    monthly_price: normalizedMonthlyPrice,
-  })
+  const { error: subscriptionError } = await adminClient.from('subscriptions').upsert(
+    {
+      ecd_id: centre.id,
+      tier: normalizedTier,
+      status: 'trial',
+      monthly_price: normalizedMonthlyPrice,
+    },
+    { onConflict: 'ecd_id' }
+  )
 
   if (subscriptionError) {
     await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', adminUserId)
@@ -297,7 +400,9 @@ export async function POST(request: Request) {
       await adminClient.from('user_profiles').delete().eq('id', adminUserId)
       await adminClient.auth.admin.deleteUser(adminUserId)
     }
-    await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    if (createdNewCentre) {
+      await adminClient.from('ecd_centres').delete().eq('id', centre.id)
+    }
     return NextResponse.json(
       {
         error: 'Failed to create subscription and rolled back tenant provisioning',
@@ -325,6 +430,7 @@ export async function POST(request: Request) {
       previousRole: resolvedExistingRole,
       roleForcedTo: 'ecd_admin',
       parentAccessRevoked: reusedExistingUser && resolvedExistingRole === 'parent_user',
+      linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,
     },
   })
   const emailWarnings: string[] = []
@@ -436,11 +542,12 @@ export async function POST(request: Request) {
     {
       centre,
       createdBy: platformAdmin.userId,
+      linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,
       pilot: isPilotPlan,
       migratedExistingUser: reusedExistingUser,
       previousRole: resolvedExistingRole,
       warnings: emailWarnings.length > 0 ? emailWarnings : undefined,
     },
-    { status: 201 }
+    { status: createdNewCentre ? 201 : 200 }
   )
 }

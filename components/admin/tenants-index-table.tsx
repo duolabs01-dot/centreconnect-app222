@@ -133,6 +133,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [, startTransition] = useTransition()
   const bulkConvertibleIds = tenants.filter((tenant) => !tenant.subscription).map((tenant) => tenant.id)
+  const bulkRevertibleIds = tenants.filter((tenant) => Boolean(tenant.subscription)).map((tenant) => tenant.id)
 
   // CSV export — runs in browser, no server needed
   const exportCSV = () => {
@@ -236,6 +237,53 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
       startTransition(() => router.refresh())
     } catch (error: any) {
       toast.error(error?.message || 'Bulk convert failed')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function revertToNonPaying(tenantId: string) {
+    setPendingId(tenantId)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/centres/${tenantId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'revert_to_non_paying',
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) throw new Error(payload.error || 'Failed to revert tenant to non-paying')
+      toast.success('Tenant reverted to non-paying (subscription removed)')
+      startTransition(() => router.refresh())
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to revert tenant to non-paying')
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  async function bulkRevertToNonPaying() {
+    if (bulkRevertibleIds.length === 0) {
+      toast.error('No subscription tenants available to revert.')
+      return
+    }
+    setPendingId('bulk-revert')
+    try {
+      const response = await fetch('/api/internal/platform-admin/centres/bulk', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'revert_to_non_paying',
+          ids: bulkRevertibleIds,
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; count?: number }
+      if (!response.ok) throw new Error(payload.error || 'Bulk revert failed')
+      toast.success(`Bulk reverted ${payload.count ?? bulkRevertibleIds.length} tenants to non-paying`)
+      startTransition(() => router.refresh())
+    } catch (error: any) {
+      toast.error(error?.message || 'Bulk revert failed')
     } finally {
       setPendingId(null)
     }
@@ -400,7 +448,15 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           onClick={() => void bulkConvertToTenant()}
           className={adminTheme.buttonSecondary}
         >
-          Convert All Non-Plan ECDs ({bulkConvertibleIds.length})
+          Convert All Non-Paying ECDs ({bulkConvertibleIds.length})
+        </Button>
+        <Button
+          size="sm"
+          disabled={pendingId === 'bulk-revert'}
+          onClick={() => void bulkRevertToNonPaying()}
+          className={adminTheme.buttonSecondary}
+        >
+          Revert All To Non-Paying ({bulkRevertibleIds.length})
         </Button>
         <Button size="sm" onClick={exportCSV} className={adminTheme.buttonSecondary}>
           Export CSV
@@ -533,6 +589,17 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
                           className={adminTheme.buttonPrimary}
                         >
                           Convert
+                        </Button>
+                      ) : null}
+                      {tenant.subscription ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={pendingId === tenant.id}
+                          onClick={() => void revertToNonPaying(tenant.id)}
+                          className={adminTheme.buttonSecondary}
+                        >
+                          Revert
                         </Button>
                       ) : null}
                       <Button

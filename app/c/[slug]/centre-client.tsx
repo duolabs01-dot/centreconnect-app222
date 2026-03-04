@@ -422,7 +422,7 @@ export function CentreClient({ slug }: { slug: string }) {
               href={claimHref}
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-amber-300 bg-white px-4 text-sm font-black text-amber-700"
             >
-              Claim this creche
+              Claim & Update
             </Link>
           </ModernCard>
         ) : null}
@@ -618,7 +618,7 @@ export function CentreClient({ slug }: { slug: string }) {
                   href={claimHref}
                   className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
                 >
-                  Claim this creche
+                  Claim & Update
                 </Link>
               ) : null}
 

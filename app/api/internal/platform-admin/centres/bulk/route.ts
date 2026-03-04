@@ -47,6 +47,10 @@ const bulkSchema = z.discriminatedUnion('action', [
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']).default('trial'),
     monthlyPrice: z.number().min(0).max(100000).default(199),
   }),
+  z.object({
+    action: z.literal('revert_to_non_paying'),
+    ids: z.array(z.string().uuid()).min(1).max(200),
+  }),
 ])
 
 export async function PATCH(request: Request) {
@@ -143,6 +147,44 @@ export async function PATCH(request: Request) {
         monthlyPrice: normalizedPlan.monthlyPrice,
       },
     })
+  }
+
+  if (payload.action === 'revert_to_non_paying') {
+    const { error: detachInvoiceSubscriptionError } = await admin
+      .from('invoices')
+      .update({ subscription_id: null })
+      .in('ecd_id', payload.ids)
+      .not('subscription_id', 'is', null)
+    if (detachInvoiceSubscriptionError) {
+      return NextResponse.json({ error: detachInvoiceSubscriptionError.message }, { status: 400 })
+    }
+
+    const { error: deleteSubscriptionError } = await admin.from('subscriptions').delete().in('ecd_id', payload.ids)
+    if (deleteSubscriptionError) return NextResponse.json({ error: deleteSubscriptionError.message }, { status: 400 })
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'bulk',
+      action: 'bulk_revert_to_non_paying',
+      summary: `Bulk reverted ${payload.ids.length} tenants to non-paying`,
+      details: { ids: payload.ids, detachedInvoiceSubscriptions: true },
+    })
+    void sendPlatformAdminActionNotification({
+      subject: 'Bulk Revert To Non-Paying',
+      heading: 'Bulk tenant revert-to-non-paying executed.',
+      lines: [
+        `Centres reverted: ${payload.ids.length}`,
+        `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
+      ],
+      details: {
+        action: 'bulk_revert_to_non_paying',
+        ids: payload.ids,
+        detachedInvoiceSubscriptions: true,
+      },
+    })
+
+    return NextResponse.json({ ok: true, count: payload.ids.length, reverted: true })
   }
 
   if (payload.action === 'set_subscription_status') {
