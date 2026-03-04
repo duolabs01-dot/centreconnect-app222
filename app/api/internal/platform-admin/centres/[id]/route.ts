@@ -44,6 +44,36 @@ const actionSchema = z.discriminatedUnion('action', [
     coverImageUrl: z.string().url().nullable().optional(),
   }),
   z.object({
+    action: z.literal('set_profile'),
+    name: z.string().min(2).max(160).optional(),
+    slug: z.string().min(3).max(80).regex(slugPattern).optional(),
+    primaryContactName: z.string().min(2).max(160).nullable().optional(),
+    email: z.string().email().optional(),
+    phone: z.string().min(5).max(40).optional(),
+    contactPhone: z.string().min(5).max(40).nullable().optional(),
+    contactWhatsapp: z.string().min(5).max(40).nullable().optional(),
+    address: z.string().max(255).optional(),
+    suburb: z.string().max(120).optional(),
+    city: z.string().max(120).optional(),
+    province: z.string().max(120).optional(),
+    postalCode: z.string().max(20).nullable().optional(),
+    logoUrl: z.string().url().nullable().optional(),
+    coverImageUrl: z.string().url().nullable().optional(),
+    feesDisplayMode: z.enum(['exact', 'range', 'contact']).optional(),
+    monthlyFeeMin: z.number().min(0).nullable().optional(),
+    monthlyFeeMax: z.number().min(0).nullable().optional(),
+    subsidyAccepted: z.boolean().optional(),
+    ageGroupPricing: z.record(z.string(), z.any()).optional(),
+    operatingHours: z.string().max(400).nullable().optional(),
+    dsdStatus: z.string().max(80).nullable().optional(),
+    marketplaceUpgrades: z.array(z.string().max(120)).max(25).optional(),
+    isActive: z.boolean().optional(),
+    isRegistered: z.boolean().optional(),
+    subscriptionTier: z.enum(['pilot', 'basic', 'standard', 'premium']).optional(),
+    subscriptionStatus: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']).optional(),
+    subscriptionMonthlyPrice: z.number().min(0).max(100000).optional(),
+  }),
+  z.object({
     action: z.literal('set_subscription'),
     tier: z.enum(['pilot', 'basic', 'standard', 'premium']),
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']),
@@ -195,6 +225,125 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       ok: true,
       logoUrl: updatePayload.logo_url ?? null,
       coverImageUrl: updatePayload.cover_image_url ?? null,
+    })
+  }
+
+  if (payload.action === 'set_profile') {
+    const updatePayload: Record<string, unknown> = {}
+    if (payload.name !== undefined) updatePayload.name = payload.name
+    if (payload.slug !== undefined) updatePayload.slug = payload.slug
+    if (payload.primaryContactName !== undefined) updatePayload.primary_contact_name = payload.primaryContactName
+    if (payload.email !== undefined) updatePayload.email = payload.email.toLowerCase()
+    if (payload.phone !== undefined) updatePayload.phone = payload.phone
+    if (payload.contactPhone !== undefined) updatePayload.contact_phone = payload.contactPhone
+    if (payload.contactWhatsapp !== undefined) updatePayload.contact_whatsapp = payload.contactWhatsapp
+    if (payload.address !== undefined) updatePayload.address = payload.address
+    if (payload.suburb !== undefined) updatePayload.suburb = payload.suburb
+    if (payload.city !== undefined) updatePayload.city = payload.city
+    if (payload.province !== undefined) updatePayload.province = payload.province
+    if (payload.postalCode !== undefined) updatePayload.postal_code = payload.postalCode
+    if (payload.logoUrl !== undefined) updatePayload.logo_url = payload.logoUrl
+    if (payload.coverImageUrl !== undefined) updatePayload.cover_image_url = payload.coverImageUrl
+    if (payload.feesDisplayMode !== undefined) updatePayload.fees_display_mode = payload.feesDisplayMode
+    if (payload.monthlyFeeMin !== undefined) updatePayload.monthly_fee_min = payload.monthlyFeeMin
+    if (payload.monthlyFeeMax !== undefined) updatePayload.monthly_fee_max = payload.monthlyFeeMax
+    if (payload.subsidyAccepted !== undefined) updatePayload.subsidy_accepted = payload.subsidyAccepted
+    if (payload.ageGroupPricing !== undefined) updatePayload.age_group_pricing = payload.ageGroupPricing
+    if (payload.isActive !== undefined) updatePayload.is_active = payload.isActive
+    if (payload.isRegistered !== undefined) updatePayload.is_registered = payload.isRegistered
+
+    if (
+      payload.operatingHours !== undefined ||
+      payload.dsdStatus !== undefined ||
+      payload.marketplaceUpgrades !== undefined
+    ) {
+      const { data: settingsRow, error: settingsError } = await admin
+        .from('ecd_centres')
+        .select('communication_automation_settings')
+        .eq('id', centreId)
+        .maybeSingle()
+      if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 400 })
+
+      const existingSettings =
+        settingsRow?.communication_automation_settings &&
+        typeof settingsRow.communication_automation_settings === 'object' &&
+        !Array.isArray(settingsRow.communication_automation_settings)
+          ? (settingsRow.communication_automation_settings as Record<string, unknown>)
+          : {}
+      const tenantAdminOverrides =
+        existingSettings.tenant_admin_overrides &&
+        typeof existingSettings.tenant_admin_overrides === 'object' &&
+        !Array.isArray(existingSettings.tenant_admin_overrides)
+          ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
+          : {}
+
+      if (payload.operatingHours !== undefined) tenantAdminOverrides.operating_hours = payload.operatingHours
+      if (payload.dsdStatus !== undefined) tenantAdminOverrides.dsd_status = payload.dsdStatus
+      if (payload.marketplaceUpgrades !== undefined) tenantAdminOverrides.marketplace_upgrades = payload.marketplaceUpgrades
+
+      updatePayload.communication_automation_settings = {
+        ...existingSettings,
+        tenant_admin_overrides: tenantAdminOverrides,
+      }
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      const { error } = await admin.from('ecd_centres').update(updatePayload).eq('id', centreId)
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    const hasSubscriptionUpdate =
+      payload.subscriptionTier !== undefined ||
+      payload.subscriptionStatus !== undefined ||
+      payload.subscriptionMonthlyPrice !== undefined
+
+    if (hasSubscriptionUpdate) {
+      const { data: existingSubscription, error: subscriptionReadError } = await admin
+        .from('subscriptions')
+        .select('tier,status,monthly_price')
+        .eq('ecd_id', centreId)
+        .maybeSingle()
+      if (subscriptionReadError) return NextResponse.json({ error: subscriptionReadError.message }, { status: 400 })
+
+      const requestedTier = (payload.subscriptionTier ?? existingSubscription?.tier ?? 'basic') as RequestedTier
+      const requestedStatus = (payload.subscriptionStatus ?? existingSubscription?.status ?? 'trial') as
+        | 'trial'
+        | 'active'
+        | 'past_due'
+        | 'canceled'
+        | 'suspended'
+      const requestedMonthlyPrice = payload.subscriptionMonthlyPrice ?? Number(existingSubscription?.monthly_price ?? 0)
+      const normalizedPlan = normalizeRequestedTier(requestedTier, requestedStatus, requestedMonthlyPrice)
+
+      const { error: subscriptionError } = await admin.from('subscriptions').upsert(
+        {
+          ecd_id: centreId,
+          tier: normalizedPlan.tier,
+          status: normalizedPlan.status,
+          monthly_price: normalizedPlan.monthlyPrice,
+        },
+        { onConflict: 'ecd_id' }
+      )
+      if (subscriptionError) return NextResponse.json({ error: subscriptionError.message }, { status: 400 })
+    }
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'set_profile',
+      summary: 'Updated tenant profile and commercial settings',
+      details: {
+        updatedFields: Object.keys(updatePayload),
+        subscriptionUpdated: hasSubscriptionUpdate,
+      },
+    })
+
+    return NextResponse.json({
+      ok: true,
+      updated: true,
+      subscriptionUpdated: hasSubscriptionUpdate,
     })
   }
 

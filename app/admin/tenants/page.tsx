@@ -1,12 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { z } from 'zod'
 import { AdminTenantsOnboarding } from '@/components/admin/admin-tenants-onboarding'
+import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/admin-tenants-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -16,8 +15,6 @@ export const metadata: Metadata = {
   title: 'Tenant Onboarding | CC Admin',
   description: 'Hybrid onboarding and tenant operations console.',
 }
-
-const centreIdSchema = z.string().uuid()
 
 async function requirePlatformAdmin() {
   const supabase = await createClient()
@@ -33,45 +30,34 @@ async function requirePlatformAdmin() {
   return { user, admin }
 }
 
-async function deleteTenantAction(formData: FormData) {
-  'use server'
-  const parsedId = centreIdSchema.safeParse(String(formData.get('centreId') ?? ''))
-  if (!parsedId.success) {
-    redirect('/admin/tenants?notice=invalid_centre')
-  }
-
-  const { admin } = await requirePlatformAdmin()
-  const centreId = parsedId.data
-
-  const { error: deleteError } = await admin.from('ecd_centres').delete().eq('id', centreId)
-  if (deleteError) {
-    const { error: archiveError } = await admin.from('ecd_centres').update({ is_active: false }).eq('id', centreId)
-    if (archiveError) {
-      redirect('/admin/tenants?notice=delete_failed')
-    }
-    redirect('/admin/tenants?notice=archived')
-  }
-
-  redirect('/admin/tenants?notice=deleted')
-}
-
 type PageSearchParams = Record<string, string | string[] | undefined>
 
 function one(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return '-'
-  return new Date(value).toLocaleDateString('en-ZA', { dateStyle: 'medium' })
+function noticeText(value: string | undefined) {
+  return null
 }
 
-function noticeText(value: string | undefined) {
-  if (value === 'deleted') return 'Tenant deleted.'
-  if (value === 'archived') return 'Tenant could not be deleted due to linked records and was archived (inactive).'
-  if (value === 'delete_failed') return 'Delete failed.'
-  if (value === 'invalid_centre') return 'Invalid centre ID.'
-  return null
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
+function toRandString(value: number | string | null | undefined) {
+  if (value == null) return ''
+  const parsed = typeof value === 'string' ? Number(value) : value
+  if (!Number.isFinite(parsed)) return ''
+  return String(parsed)
+}
+
+function extractAgeFee(ageGroupPricing: any, key: string) {
+  const bucket = ageGroupPricing?.[key]
+  if (!bucket || typeof bucket !== 'object') return ''
+  const cents = Number(bucket.monthly_fee_cents ?? bucket.monthlyFeeCents ?? 0)
+  if (!Number.isFinite(cents) || cents <= 0) return ''
+  return String(Math.round(cents / 100))
 }
 
 export default async function AdminTenantsPage({
@@ -87,7 +73,9 @@ export default async function AdminTenantsPage({
   const [centresResult, invitationsResult] = await Promise.all([
     admin
       .from('ecd_centres')
-      .select('id,name,email,phone,contact_phone,is_active,owner_id,created_at')
+      .select(
+        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
+      )
       .order('created_at', { ascending: false })
       .limit(1000),
     admin
@@ -100,13 +88,42 @@ export default async function AdminTenantsPage({
 
   const centres = (centresResult.data ?? []) as Array<{
     id: string
+    slug: string | null
     name: string | null
     email: string | null
     phone: string | null
-    contact_phone?: string | null
+    contact_phone: string | null
+    contact_whatsapp: string | null
+    primary_contact_name: string | null
+    address: string | null
+    suburb: string | null
+    city: string | null
+    province: string | null
+    postal_code: string | null
     is_active: boolean | null
+    is_registered: boolean | null
     owner_id: string | null
     created_at: string
+    logo_url: string | null
+    cover_image_url: string | null
+    fees_display_mode: 'exact' | 'range' | 'contact' | null
+    monthly_fee_min: number | null
+    monthly_fee_max: number | null
+    subsidy_accepted: boolean | null
+    age_group_pricing: Record<string, any> | null
+    communication_automation_settings: Record<string, any> | null
+    subscriptions:
+      | {
+          tier: 'basic' | 'standard' | 'premium'
+          status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
+          monthly_price: number
+        }
+      | Array<{
+          tier: 'basic' | 'standard' | 'premium'
+          status: 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
+          monthly_price: number
+        }>
+      | null
   }>
   const invitationRows = (invitationsResult.data ?? []) as Array<{
     ecd_id: string
@@ -123,19 +140,65 @@ export default async function AdminTenantsPage({
     }
   }
 
-  const tenants = centres.map((centre) => {
+  const tenants: AdminTenantTableRow[] = centres.map((centre) => {
+    const subscription = normalizeOne(centre.subscriptions)
     const claimedDate = claimedByCentre.get(centre.id) ?? null
     const ownerPhone = centre.contact_phone?.trim() || centre.phone?.trim() || '-'
     const ownerEmail = centre.email?.trim() || '-'
     const isClaimed = Boolean(centre.owner_id) || Boolean(claimedDate)
-    const status = !centre.is_active ? 'Inactive' : isClaimed ? 'Claimed' : 'Unclaimed'
+    const status: AdminTenantTableRow['status'] = !centre.is_active ? 'Inactive' : isClaimed ? 'Claimed' : 'Unclaimed'
+    const tenantOverrides =
+      centre.communication_automation_settings &&
+      typeof centre.communication_automation_settings === 'object' &&
+      !Array.isArray(centre.communication_automation_settings)
+        ? (centre.communication_automation_settings.tenant_admin_overrides as Record<string, unknown> | undefined)
+        : undefined
+    const marketplaceUpgrades = Array.isArray(tenantOverrides?.marketplace_upgrades)
+      ? (tenantOverrides?.marketplace_upgrades as string[]).join(', ')
+      : ''
+    const dsdStatus = (() => {
+      const raw = typeof tenantOverrides?.dsd_status === 'string' ? tenantOverrides.dsd_status : null
+      if (raw === 'pending' || raw === 'registered' || raw === 'expired' || raw === 'suspended' || raw === 'not_required') {
+        return raw
+      }
+      return centre.is_registered ? 'registered' : 'pending'
+    })()
     return {
       id: centre.id,
       name: centre.name?.trim() || 'Untitled Centre',
+      slug: centre.slug?.trim() || '',
       ownerEmail,
       ownerPhone,
       status,
       claimedDate: claimedDate ?? (isClaimed ? centre.created_at : null),
+      primaryContactName: centre.primary_contact_name?.trim() || '',
+      email: centre.email?.trim() || '',
+      phone: centre.phone?.trim() || '',
+      contactPhone: centre.contact_phone?.trim() || '',
+      contactWhatsapp: centre.contact_whatsapp?.trim() || '',
+      address: centre.address?.trim() || '',
+      suburb: centre.suburb?.trim() || '',
+      city: centre.city?.trim() || 'Johannesburg',
+      province: centre.province?.trim() || 'Gauteng',
+      postalCode: centre.postal_code?.trim() || '',
+      logoUrl: centre.logo_url?.trim() || '',
+      coverImageUrl: centre.cover_image_url?.trim() || '',
+      feesDisplayMode: centre.fees_display_mode ?? 'range',
+      monthlyFeeMin: toRandString(centre.monthly_fee_min),
+      monthlyFeeMax: toRandString(centre.monthly_fee_max),
+      subsidyAccepted: Boolean(centre.subsidy_accepted),
+      age0to2: extractAgeFee(centre.age_group_pricing, '0-2'),
+      age2to4: extractAgeFee(centre.age_group_pricing, '2-4'),
+      age4to6: extractAgeFee(centre.age_group_pricing, '4-6'),
+      age6plus: extractAgeFee(centre.age_group_pricing, '6+'),
+      operatingHours: typeof tenantOverrides?.operating_hours === 'string' ? tenantOverrides.operating_hours : '',
+      dsdStatus,
+      marketplaceUpgrades,
+      isActive: Boolean(centre.is_active),
+      isRegistered: Boolean(centre.is_registered),
+      subscriptionTier: (subscription?.tier as 'basic' | 'standard' | 'premium' | undefined) ?? 'pilot',
+      subscriptionStatus: subscription?.status ?? 'trial',
+      subscriptionMonthlyPrice: toRandString(subscription?.monthly_price ?? 0),
     }
   })
   const existingCentres = tenants.map((tenant) => ({
@@ -187,76 +250,7 @@ export default async function AdminTenantsPage({
 
       <AdminTenantsOnboarding existingCentres={existingCentres} />
 
-      <Card className="border-cyan-500/20 bg-slate-950/70">
-        <CardHeader>
-          <CardTitle className="text-white">All Tenants</CardTitle>
-          <CardDescription className="text-slate-400">Complete tenant registry with quick actions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="border-slate-800 hover:bg-transparent">
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Name</TableHead>
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner Email</TableHead>
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner Phone</TableHead>
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Status</TableHead>
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Claimed Date</TableHead>
-                <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500 text-right">Quick Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tenants.length === 0 ? (
-                <TableRow className="border-slate-800">
-                  <TableCell colSpan={6} className="py-10 text-center text-sm text-slate-500">
-                    No tenants found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                tenants.map((tenant) => (
-                  <TableRow key={tenant.id} className="border-slate-800">
-                    <TableCell className="font-semibold text-slate-100">{tenant.name}</TableCell>
-                    <TableCell className="text-slate-300">{tenant.ownerEmail}</TableCell>
-                    <TableCell className="text-slate-300">{tenant.ownerPhone}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={
-                          tenant.status === 'Claimed'
-                            ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200'
-                            : tenant.status === 'Inactive'
-                              ? 'border-slate-600 bg-slate-800 text-slate-300'
-                              : 'border-amber-500/30 bg-amber-500/15 text-amber-200'
-                        }
-                      >
-                        {tenant.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-300">{formatDate(tenant.claimedDate)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                          <Link href={`/admin/tenants/${tenant.id}`}>Edit</Link>
-                        </Button>
-                        <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                          <Link href={`/admin/tenants/${tenant.id}`}>View</Link>
-                        </Button>
-                        <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                          <Link href={`/admin/tenants/${tenant.id}#invite`}>Invite</Link>
-                        </Button>
-                        <form action={deleteTenantAction}>
-                          <input type="hidden" name="centreId" value={tenant.id} />
-                          <Button type="submit" size="sm" variant="destructive" className="bg-rose-600/90 text-white hover:bg-rose-500">
-                            Delete
-                          </Button>
-                        </form>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <AdminTenantsTable tenants={tenants} />
     </div>
   )
 }
