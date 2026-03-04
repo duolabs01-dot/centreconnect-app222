@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact'
-type SubscriptionTier = 'pilot' | 'basic' | 'standard' | 'premium'
+type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
 type DsdStatus = 'pending' | 'registered' | 'expired' | 'suspended' | 'not_required'
 
@@ -135,6 +135,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
     setSaving(true)
     try {
+      const hasSubscriptionPlan = form.subscriptionTier !== 'none'
       const payload = {
         action: 'set_profile',
         name: form.name.trim(),
@@ -169,9 +170,9 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           .filter(Boolean),
         isActive: form.isActive,
         isRegistered: form.isRegistered,
-        subscriptionTier: form.subscriptionTier,
-        subscriptionStatus: form.subscriptionStatus,
-        subscriptionMonthlyPrice: parseNumberOrNull(form.subscriptionMonthlyPrice) ?? 0,
+        subscriptionTier: hasSubscriptionPlan ? form.subscriptionTier : undefined,
+        subscriptionStatus: hasSubscriptionPlan ? form.subscriptionStatus : undefined,
+        subscriptionMonthlyPrice: hasSubscriptionPlan ? parseNumberOrNull(form.subscriptionMonthlyPrice) ?? 0 : undefined,
       }
 
       const response = await fetch(`/api/internal/platform-admin/centres/${editTenantId}`, {
@@ -243,7 +244,9 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                       </TableCell>
                       <TableCell className="text-slate-300">{formatDate(tenant.claimedDate)}</TableCell>
                       <TableCell className="text-slate-300">
-                        {tenant.subscriptionTier.toUpperCase()} / {tenant.subscriptionStatus}
+                        {tenant.subscriptionTier === 'none'
+                          ? 'NO PLAN'
+                          : `${tenant.subscriptionTier.toUpperCase()} / ${tenant.subscriptionStatus}`}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex flex-wrap justify-end gap-2">
@@ -420,7 +423,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
-                        <SelectItem value="pilot">Pilot</SelectItem>
+                        <SelectItem value="none">No Plan</SelectItem>
                         <SelectItem value="basic">Basic</SelectItem>
                         <SelectItem value="standard">Standard</SelectItem>
                         <SelectItem value="premium">Premium</SelectItem>

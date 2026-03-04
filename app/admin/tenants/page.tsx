@@ -196,9 +196,9 @@ export default async function AdminTenantsPage({
       marketplaceUpgrades,
       isActive: Boolean(centre.is_active),
       isRegistered: Boolean(centre.is_registered),
-      subscriptionTier: (subscription?.tier as 'basic' | 'standard' | 'premium' | undefined) ?? 'pilot',
+      subscriptionTier: (subscription?.tier as 'basic' | 'standard' | 'premium' | undefined) ?? 'none',
       subscriptionStatus: subscription?.status ?? 'trial',
-      subscriptionMonthlyPrice: toRandString(subscription?.monthly_price ?? 0),
+      subscriptionMonthlyPrice: toRandString(subscription?.monthly_price),
     }
   })
   const existingCentres = tenants.map((tenant) => ({

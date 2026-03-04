@@ -30,7 +30,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 type OnboardingMode = 'single' | 'team'
 type TeamRole = 'ecd_admin' | 'ecd_staff'
-type Tier = 'pilot' | 'basic' | 'standard' | 'premium'
+type Tier = 'basic' | 'standard' | 'premium'
 
 type SuccessState = {
   centreId: string
@@ -60,7 +60,6 @@ type ExistingCentreOption = {
 }
 
 const TIER_PRICE: Record<Tier, number> = {
-  pilot: 0,
   basic: 199,
   standard: 299,
   premium: 499,
@@ -140,7 +139,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     suburb: '',
     city: 'Johannesburg',
     province: 'Gauteng',
-    tier: 'pilot' as Tier,
+    tier: 'basic' as Tier,
     teamRole: 'ecd_staff' as TeamRole,
     teamEmails: '',
   })
@@ -753,7 +752,6 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
-                      <SelectItem value="pilot">Pilot (R0)</SelectItem>
                       <SelectItem value="basic">Basic (R199)</SelectItem>
                       <SelectItem value="standard">Standard (R299)</SelectItem>
                       <SelectItem value="premium">Premium (R499)</SelectItem>
