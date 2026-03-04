@@ -56,6 +56,20 @@ async function generateOwnerAccessLink(
     }
   }
 
+  const recoveryResult = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo },
+  })
+  const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
+  if (!recoveryResult.error && recoveryLink) {
+    return {
+      link: recoveryLink,
+      authUserId: recoveryResult.data?.user?.id ?? inviteResult.data?.user?.id ?? null,
+      warning: null,
+    }
+  }
+
   const magicResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
