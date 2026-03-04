@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { AdminTenantsOnboarding } from '@/components/admin/admin-tenants-onboarding'
+import {
+  AdminTenantInviteTracking,
+  type AdminTenantInviteLog,
+} from '@/components/admin/admin-tenant-invite-tracking'
 import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/admin-tenants-table'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -49,7 +53,7 @@ function extractAgeFee(ageGroupPricing: any, key: string) {
 export default async function AdminTenantsPage() {
   const { admin } = await requirePlatformAdmin()
 
-  const [centresResult, invitationsResult] = await Promise.all([
+  const [centresResult, invitationsResult, inviteLogsResult] = await Promise.all([
     admin
       .from('ecd_centres')
       .select(
@@ -63,6 +67,12 @@ export default async function AdminTenantsPage() {
       .eq('role', 'ecd_admin')
       .order('invited_at', { ascending: false })
       .limit(5000),
+    admin
+      .from('notification_logs')
+      .select('id,centre_id,event_key,event_type,channel,status,recipient,created_at,ecd_centres(name)')
+      .in('event_type', ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'])
+      .order('created_at', { ascending: false })
+      .limit(150),
   ])
 
   const centres = (centresResult.data ?? []) as Array<{
@@ -186,6 +196,18 @@ export default async function AdminTenantsPage() {
     ownerEmail: tenant.ownerEmail === '-' ? null : tenant.ownerEmail,
   }))
 
+  const inviteLogs = (inviteLogsResult.data ?? []).map((log) => ({
+    id: log.id,
+    centreId: log.centre_id,
+    centreName: normalizeOne(log.ecd_centres)?.name ?? 'Unknown centre',
+    eventType: log.event_type,
+    channel: log.channel,
+    status: log.status,
+    recipient: log.recipient,
+    createdAt: log.created_at,
+    eventKey: log.event_key ?? null,
+  })) as AdminTenantInviteLog[]
+
   return (
     <main className="space-y-12 px-4 py-10 lg:px-8">
       <section className="space-y-6">
@@ -213,6 +235,20 @@ export default async function AdminTenantsPage() {
         </div>
         <div className="rounded-3xl border border-slate-800 bg-slate-950/70">
           <AdminTenantsTable tenants={tenants} />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Invite Tracking</p>
+          <h2 className="text-3xl font-black text-white">Owner & Team Invites</h2>
+          <p className="max-w-3xl text-sm text-slate-400">
+            Recent notification log records for owner, admin, and welcome-pack channels plus one-click resend for owner
+            invites.
+          </p>
+        </div>
+        <div className="rounded-3xl border border-slate-800 bg-slate-950/70">
+          <AdminTenantInviteTracking logs={inviteLogs} />
         </div>
       </section>
     </main>
