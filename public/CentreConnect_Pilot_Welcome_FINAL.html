@@ -1,582 +1,460 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CentreConnect — Pilot Welcome</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Fredoka+One&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CentreConnect — Pilot Welcome Pack</title>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
 
-:root {
-  --teal:    #065A82;
-  --tealm:   #1C7293;
-  --tealb:   #0EA5E9;
-  --tealxl:  #F0FAFF;
-  --tealll:  #E0F4FF;
-  --green:   #047857;
-  --greenm:  #059669;
-  --greenl:  #D1FAE5;
-  --amber:   #B45309;
-  --amberl:  #FEF3C7;
-  --rose:    #BE123C;
-  --roseL:   #FFE4E6;
-  --gold:    #D97706;
-  --goldl:   #FEF9C3;
-  --navy:    #0F172A;
-  --slate:   #334155;
-  --muted:   #64748B;
-  --border:  #E2E8F0;
-  --light:   #F8FAFC;
-  --white:   #FFFFFF;
-}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#0f172a;color:#1e293b;}
 
-body {
-  font-family: 'Nunito', sans-serif;
-  background: var(--light);
-  color: var(--navy);
-  line-height: 1.65;
-}
+  /* PAGE SYSTEM */
+  .page{width:794px;min-height:1123px;margin:0 auto 40px;background:#fff;position:relative;overflow:hidden;page-break-after:always;}
 
-/* ── HERO ─────────────────────────────────────────────────── */
-.hero {
-  background: linear-gradient(135deg, #053F5C 0%, #065A82 45%, #1C7293 100%);
-  padding: 64px 32px 100px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.hero .blob1, .hero .blob2 {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.05);
-  pointer-events: none;
-}
-.hero .blob1 { width:320px;height:320px;top:-80px;right:-60px; }
-.hero .blob2 { width:200px;height:200px;bottom:-60px;left:-30px; }
-.hero .logo  { font-family:'Fredoka One',cursive; font-size:58px; color:#fff; letter-spacing:1px; margin-bottom:6px; }
-.hero .tagline { font-size:20px; color:rgba(255,255,255,0.85); font-weight:700; margin-bottom:4px; }
-.hero .date   { font-size:14px; color:rgba(255,255,255,0.6); margin-bottom:48px; }
+  /* BRAND COLORS */
+  :root{
+    --navy:#0D1F3C;
+    --amber:#F5A623;
+    --teal:#0EA5A0;
+    --light:#F8FAFC;
+    --muted:#64748b;
+    --pilot:#8B5CF6;
+  }
 
-.centre-row { display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin-bottom:40px; }
-.centre-chip {
-  background:rgba(255,255,255,0.13);
-  border:2px solid rgba(255,255,255,0.35);
-  border-radius:18px;
-  padding:18px 28px;
-  min-width:220px;
-  transition: transform .2s;
-}
-.centre-chip:hover { transform:translateY(-3px); }
-.centre-chip .icon  { font-size:32px; margin-bottom:6px; }
-.centre-chip .cname { font-size:16px; font-weight:900; color:#fff; margin-bottom:2px; }
-.centre-chip .crole { font-size:12px; color:rgba(255,255,255,0.7); }
+  /* ── PAGE 1: COVER ─────────────────────────────────── */
+  .cover{background:var(--navy);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:60px;}
+  .cover-badge{background:var(--pilot);color:#fff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:6px 16px;border-radius:20px;width:fit-content;margin-bottom:40px;}
+  .cover-logo{display:flex;align-items:center;gap:12px;margin-bottom:60px;}
+  .logo-icon{width:44px;height:44px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+  .logo-text{font-size:22px;font-weight:800;color:#fff;}
+  .logo-text span{color:var(--amber);}
+  .cover-headline{font-size:52px;font-weight:900;line-height:1.05;margin-bottom:24px;}
+  .cover-headline em{color:var(--amber);font-style:normal;}
+  .cover-sub{font-size:18px;color:#94a3b8;font-weight:300;line-height:1.6;max-width:480px;}
+  .cover-bottom{display:flex;justify-content:space-between;align-items:flex-end;}
+  .cover-stats{display:flex;gap:40px;}
+  .stat{text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--amber);}
+  .stat-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;}
+  .cover-wave{position:absolute;bottom:0;left:0;right:0;opacity:.06;}
+  .pilot-ribbon{position:absolute;top:40px;right:-30px;background:var(--pilot);color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;padding:8px 50px;transform:rotate(45deg);text-transform:uppercase;}
 
-.founding-badge {
-  display:inline-flex; align-items:center; gap:8px;
-  background:var(--gold); color:var(--navy);
-  font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.8px;
-  padding:10px 24px; border-radius:999px;
-}
+  /* ── SECTION HEADER ────────────────────────────────── */
+  .section-header{background:var(--light);border-left:5px solid var(--amber);padding:20px 30px;margin-bottom:0;}
+  .section-header h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+  .section-header h1{font-size:30px;font-weight:900;color:var(--navy);margin-top:4px;}
 
-/* ── WAVE ─────────────────────────────────────────────────── */
-.wave-wrap { background:var(--light); margin-top:-2px; }
+  /* ── CONTENT PAGE LAYOUT ───────────────────────────── */
+  .content-page{padding:50px;}
+  .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;padding-bottom:16px;border-bottom:2px solid var(--light);}
+  .page-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);}
+  .page-logo .dot{color:var(--amber);}
+  .page-tag{font-size:11px;background:var(--pilot);color:#fff;padding:4px 12px;border-radius:20px;font-weight:600;letter-spacing:1px;}
 
-/* ── LETTER ───────────────────────────────────────────────── */
-.wrap { max-width:880px; margin:0 auto; padding:0 24px 80px; }
+  /* ── STEP CARDS ─────────────────────────────────────── */
+  .steps{display:flex;flex-direction:column;gap:20px;}
+  .step{display:flex;gap:20px;align-items:flex-start;background:var(--light);border-radius:16px;padding:24px;}
+  .step-num{min-width:48px;height:48px;background:var(--navy);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;}
+  .step-body h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+  .step-body p{font-size:14px;color:var(--muted);line-height:1.6;}
+  .step-body .tip{display:inline-block;margin-top:10px;font-size:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;color:var(--navy);font-weight:600;}
 
-.letter {
-  background:white;
-  border-radius:24px;
-  border-left:7px solid var(--tealb);
-  padding:40px 44px;
-  margin:-52px auto 56px;
-  position:relative; z-index:10;
-  box-shadow:0 12px 48px rgba(6,90,130,.13);
-}
-.letter p { font-size:16px; color:var(--slate); margin-bottom:14px; line-height:1.7; }
-.letter p strong { color:var(--teal); }
-.letter .sig { font-size:14px; color:var(--muted); font-style:italic; margin-top:6px; }
+  /* ── FEATURE GRID ───────────────────────────────────── */
+  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .feature-card{background:var(--light);border-radius:16px;padding:24px;}
+  .feature-card.highlight{background:var(--navy);color:#fff;}
+  .feature-card.highlight p{color:#94a3b8;}
+  .feature-icon{font-size:28px;margin-bottom:12px;}
+  .feature-card h3{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+  .feature-card.highlight h3{color:#fff;}
+  .feature-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+  .feature-tag{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;color:var(--pilot);text-transform:uppercase;letter-spacing:1px;}
+  .feature-card.highlight .feature-tag{color:var(--amber);}
 
-/* ── SECTION HEADING ──────────────────────────────────────── */
-.sh {
-  display:flex; align-items:center; gap:14px;
-  margin:56px 0 22px;
-}
-.sh .num {
-  background:var(--teal); color:white;
-  font-family:'Fredoka One',cursive;
-  font-size:22px; min-width:44px; height:44px;
-  border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0;
-}
-.sh h2 { font-family:'Fredoka One',cursive; font-size:28px; color:var(--teal); }
+  /* ── MOCK SCREEN ────────────────────────────────────── */
+  .mock-wrap{background:var(--navy);border-radius:20px;padding:20px;margin-bottom:20px;}
+  .mock-bar{display:flex;gap:6px;margin-bottom:16px;}
+  .mock-bar span{width:10px;height:10px;border-radius:50%;background:#334155;}
+  .mock-bar span:nth-child(1){background:#ef4444;}
+  .mock-bar span:nth-child(2){background:#f59e0b;}
+  .mock-bar span:nth-child(3){background:#22c55e;}
+  .mock-screen{background:#1e293b;border-radius:12px;padding:16px;}
+  .mock-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0f172a;border-radius:10px;margin-bottom:8px;}
+  .mock-row:last-child{margin-bottom:0;}
+  .mock-name{font-size:13px;font-weight:600;color:#e2e8f0;}
+  .mock-detail{font-size:11px;color:#64748b;margin-top:2px;}
+  .mock-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .badge-green{background:#dcfce7;color:#16a34a;}
+  .badge-amber{background:#fef3c7;color:#d97706;}
+  .badge-blue{background:#dbeafe;color:#1d4ed8;}
 
-/* ── FOUNDING CARD ────────────────────────────────────────── */
-.founding-card {
-  background:linear-gradient(135deg,#053F5C,#1C7293);
-  border-radius:24px; padding:40px;
-  color:white; margin-bottom:28px;
-  box-shadow:0 12px 40px rgba(6,90,130,.22);
-  position:relative; overflow:hidden;
-}
-.founding-card::after {
-  content:'⭐ FOUNDING PARTNER';
-  position:absolute; top:20px; right:24px;
-  background:var(--gold); color:var(--navy);
-  font-size:11px; font-weight:900; letter-spacing:.8px;
-  text-transform:uppercase; padding:5px 14px; border-radius:999px;
-}
-.founding-card h3 { font-family:'Fredoka One',cursive; font-size:26px; margin-bottom:6px; }
-.founding-card .sub { font-size:15px; opacity:.8; margin-bottom:30px; }
-.perk-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.perk {
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.22);
-  border-radius:14px; padding:18px 20px;
-}
-.perk .val { font-family:'Fredoka One',cursive; font-size:32px; margin-bottom:3px; }
-.perk .lbl { font-size:13px; opacity:.85; line-height:1.4; }
+  /* ── PICKUP DEMO ────────────────────────────────────── */
+  .pickup-demo{background:var(--navy);border-radius:20px;padding:28px;color:#fff;text-align:center;}
+  .pickup-code{font-size:48px;font-weight:900;letter-spacing:12px;color:var(--amber);margin:20px 0;}
+  .pickup-label{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:2px;}
+  .pickup-steps{display:flex;gap:12px;margin-top:20px;}
+  .pickup-step{flex:1;background:#1e293b;border-radius:12px;padding:14px;text-align:center;}
+  .pickup-step .ps-icon{font-size:24px;margin-bottom:8px;}
+  .pickup-step p{font-size:11px;color:#94a3b8;line-height:1.5;}
 
-/* ── VAT NOTICE ───────────────────────────────────────────── */
-.vat-notice {
-  background:var(--goldl);
-  border:2px solid var(--gold);
-  border-radius:16px; padding:20px 28px;
-  margin-bottom:30px;
-  display:flex; align-items:flex-start; gap:14px;
-}
-.vat-notice .icon { font-size:28px; flex-shrink:0; margin-top:2px; }
-.vat-notice p { font-size:15px; color:var(--navy); line-height:1.6; }
-.vat-notice strong { color:var(--amber); }
+  /* ── CHECKLIST ──────────────────────────────────────── */
+  .checklist{list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .checklist li{display:flex;gap:14px;align-items:center;background:var(--light);border-radius:12px;padding:16px 20px;}
+  .check-icon{font-size:20px;min-width:32px;text-align:center;}
+  .check-text{font-size:14px;color:var(--navy);font-weight:500;}
 
-/* ── FEATURE GRID ─────────────────────────────────────────── */
-.feat-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
-.feat {
-  background:white; border-radius:18px; padding:24px;
-  border:2px solid var(--border);
-  box-shadow:0 2px 10px rgba(0,0,0,.04);
-  transition:border-color .2s, transform .2s;
-}
-.feat:hover { border-color:var(--tealb); transform:translateY(-2px); }
-.feat .ficon { font-size:30px; margin-bottom:10px; display:block; }
-.feat h4 { font-size:15px; font-weight:800; color:var(--teal); margin-bottom:6px; }
-.feat p  { font-size:14px; color:var(--slate); line-height:1.5; }
+  /* ── TIER COMPARE ───────────────────────────────────── */
+  .tier-row{display:flex;gap:12px;margin-top:24px;}
+  .tier-box{flex:1;border-radius:14px;padding:20px;text-align:center;border:2px solid #e2e8f0;}
+  .tier-box.active{border-color:var(--pilot);background:#f5f3ff;}
+  .tier-box h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+  .tier-box.active h4{color:var(--pilot);}
+  .tier-items{font-size:12px;color:var(--muted);line-height:2;}
+  .tier-box.active .tier-items{color:#1e293b;}
 
-/* ── PRICING CARDS ────────────────────────────────────────── */
-.price-row { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:22px 0; }
-.price-card { border-radius:20px; padding:30px 24px; text-align:center; }
-.price-card.s1 { background:linear-gradient(135deg,#065A82,#0EA5E9); color:white; box-shadow:0 8px 28px rgba(6,90,130,.22); }
-.price-card.s2 { background:linear-gradient(135deg,#047857,#059669); color:white; box-shadow:0 8px 28px rgba(4,120,87,.22); }
-.price-card.s3 { background:linear-gradient(135deg,#5B21B6,#7C3AED); color:white; box-shadow:0 8px 28px rgba(91,33,182,.22); }
-.price-card .tier { font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:1px; opacity:.8; margin-bottom:8px; }
-.price-card .pname { font-family:'Fredoka One',cursive; font-size:22px; margin-bottom:12px; }
-.price-card .setup {
-  font-size:13px; background:rgba(255,255,255,.15);
-  border-radius:8px; padding:6px 12px; margin-bottom:14px; display:inline-block;
-}
-.price-card .amount { font-family:'Fredoka One',cursive; font-size:52px; line-height:1; }
-.price-card .per { font-size:14px; opacity:.75; margin-bottom:16px; }
-.price-card .vat-tag { font-size:11px; opacity:.7; font-style:italic; }
-.price-card ul { text-align:left; padding-left:0; list-style:none; margin-top:16px; }
-.price-card ul li { font-size:13px; padding:4px 0; opacity:.9; }
-.price-card ul li::before { content:'✓  '; font-weight:900; }
+  /* ── CTA PAGE ───────────────────────────────────────── */
+  .cta-page{background:var(--navy);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px;}
+  .cta-emoji{font-size:64px;margin-bottom:24px;}
+  .cta-page h1{font-size:42px;font-weight:900;line-height:1.1;margin-bottom:16px;}
+  .cta-page h1 em{color:var(--amber);font-style:normal;}
+  .cta-page p{font-size:17px;color:#94a3b8;max-width:480px;line-height:1.7;margin-bottom:40px;}
+  .cta-btn{background:var(--amber);color:var(--navy);font-size:16px;font-weight:800;padding:16px 40px;border-radius:14px;text-decoration:none;display:inline-block;margin-bottom:20px;}
+  .cta-link{font-size:14px;color:#64748b;}
+  .cta-link strong{color:#94a3b8;}
+  .pilot-note{background:#1e293b;border-radius:14px;padding:20px 30px;margin-top:32px;max-width:420px;text-align:left;}
+  .pilot-note p{font-size:13px;color:#94a3b8;line-height:1.7;}
+  .pilot-note strong{color:var(--amber);}
 
-/* ── CALLOUT ──────────────────────────────────────────────── */
-.callout { border-radius:18px; padding:26px 30px; margin:18px 0; border-left:7px solid; }
-.callout.teal  { background:var(--tealll); border-color:var(--teal); }
-.callout.green { background:var(--greenl); border-color:var(--green); }
-.callout.amber { background:var(--amberl); border-color:var(--amber); }
-.callout h4 { font-size:15px; font-weight:900; margin-bottom:8px; }
-.callout.teal h4  { color:var(--teal); }
-.callout.green h4 { color:var(--green); }
-.callout.amber h4 { color:var(--amber); }
-.callout p, .callout li { font-size:15px; color:var(--navy); line-height:1.7; margin-bottom:4px; }
-.callout ul { padding-left:20px; }
-
-/* ── STEPS ────────────────────────────────────────────────── */
-.steps { display:flex; flex-direction:column; gap:16px; }
-.step  { display:flex; gap:18px; align-items:flex-start; }
-.step .dot {
-  min-width:46px; height:46px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-family:'Fredoka One',cursive; font-size:22px; color:white;
-  box-shadow:0 4px 14px rgba(0,0,0,.15); flex-shrink:0; margin-top:2px;
-}
-.step .body h4 { font-size:16px; font-weight:800; color:var(--teal); margin-bottom:4px; }
-.step .body p  { font-size:15px; color:var(--slate); line-height:1.6; }
-.step .body .badge {
-  display:inline-block; font-size:11px; font-weight:800;
-  background:var(--tealll); color:var(--teal);
-  padding:3px 10px; border-radius:999px; margin-left:8px;
-  vertical-align:middle;
-}
-
-/* ── PARENT FLOW TABLE ────────────────────────────────────── */
-.flow-table { width:100%; border-collapse:collapse; border-radius:16px; overflow:hidden; margin:18px 0; box-shadow:0 2px 14px rgba(0,0,0,.06); }
-.flow-table th { background:var(--teal); color:white; padding:12px 16px; font-size:14px; text-align:left; }
-.flow-table td { padding:12px 16px; font-size:14px; color:var(--navy); border-bottom:1px solid var(--border); vertical-align:top; line-height:1.5; }
-.flow-table tr:nth-child(even) td { background:#F8FAFC; }
-.flow-table tr:last-child td { border-bottom:none; }
-.flow-table .tag { font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; text-transform:uppercase; }
-.tag-auto { background:var(--greenl); color:var(--green); }
-.tag-you  { background:var(--amberl); color:var(--amber); }
-.tag-us   { background:var(--tealll); color:var(--teal); }
-
-/* ── CHANNELS ─────────────────────────────────────────────── */
-.channels { display:flex; flex-direction:column; gap:12px; }
-.channel {
-  background:white; border-radius:14px; padding:18px 22px;
-  display:flex; align-items:flex-start; gap:16px;
-  border:1px solid var(--border); box-shadow:0 2px 8px rgba(0,0,0,.04);
-}
-.channel .ico { font-size:28px; flex-shrink:0; width:40px; text-align:center; margin-top:2px; }
-.channel h4   { font-size:15px; font-weight:800; color:var(--navy); margin-bottom:3px; }
-.channel p    { font-size:14px; color:var(--muted); }
-.channel .right { margin-left:auto; align-self:center; flex-shrink:0; padding-left:12px; }
-
-/* ── REFERRAL ─────────────────────────────────────────────── */
-.referral {
-  background:linear-gradient(135deg,#047857,#059669);
-  border-radius:24px; padding:40px; color:white; text-align:center;
-  box-shadow:0 10px 36px rgba(4,120,87,.22);
-}
-.referral h3 { font-family:'Fredoka One',cursive; font-size:30px; margin-bottom:10px; }
-.referral p  { font-size:16px; opacity:.9; margin-bottom:8px; }
-.referral .big { font-family:'Fredoka One',cursive; font-size:52px; color:#A7F3D0; display:block; margin:16px 0 4px; }
-.referral .sm  { font-size:14px; opacity:.75; }
-
-/* ── FAQ ──────────────────────────────────────────────────── */
-.faqs { display:flex; flex-direction:column; gap:14px; }
-.faq  { background:white; border-radius:16px; border:1px solid var(--border); overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,.04); }
-.fq   { padding:16px 22px; font-size:15px; font-weight:800; color:var(--teal); background:var(--tealxl); border-left:5px solid var(--tealb); }
-.fa   { padding:15px 22px; font-size:15px; color:var(--slate); border-top:1px solid var(--border); line-height:1.65; }
-
-/* ── ROADMAP ──────────────────────────────────────────────── */
-.roadmap { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.ritem { background:white; border-radius:14px; padding:18px 20px; border:1px solid var(--border); box-shadow:0 2px 8px rgba(0,0,0,.04); }
-.ritem .when { font-size:11px; font-weight:900; color:var(--tealb); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
-.ritem h4 { font-size:15px; font-weight:800; color:var(--navy); margin-bottom:4px; }
-.ritem p  { font-size:13px; color:var(--muted); }
-
-/* ── FOOTER ───────────────────────────────────────────────── */
-.footer-cta {
-  background:linear-gradient(135deg,#053F5C,#1C7293);
-  border-radius:28px; padding:52px 40px;
-  text-align:center; color:white;
-  box-shadow:0 12px 40px rgba(6,90,130,.22);
-  margin-top:52px;
-}
-.footer-cta h2 { font-family:'Fredoka One',cursive; font-size:36px; margin-bottom:10px; }
-.footer-cta p  { font-size:17px; opacity:.85; margin-bottom:30px; }
-.contacts { display:flex; justify-content:center; gap:18px; flex-wrap:wrap; }
-.contact  {
-  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28);
-  border-radius:12px; padding:14px 22px;
-}
-.contact .cl { font-size:11px; opacity:.7; display:block; margin-bottom:2px; text-transform:uppercase; letter-spacing:.5px; }
-.contact .cv { font-size:15px; font-weight:800; }
-
-@media(max-width:600px){
-  .perk-grid,.feat-grid,.price-row,.roadmap { grid-template-columns:1fr; }
-  .hero { padding:44px 20px 80px; }
-  .hero .logo { font-size:42px; }
-  .letter { margin:-44px 12px 40px; padding:24px; }
-  .wrap { padding:0 16px 60px; }
-  .founding-card { padding:28px 22px; }
-  .founding-card::after { display:none; }
-}
+  /* PAGE NUMBER */
+  .pg{position:absolute;bottom:24px;right:40px;font-size:11px;color:#cbd5e1;font-weight:600;}
 </style>
 </head>
 <body>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="blob1"></div><div class="blob2"></div>
-  <div class="logo">CentreConnect</div>
-  <p class="tagline">Welcome to the Pilot Programme 🎉</p>
-  <p class="date">02 March 2026 — 29 March 2026 &nbsp;|&nbsp; 4 Weeks &nbsp;|&nbsp; All prices include VAT</p>
-
-  <div class="centre-row">
-    <div class="centre-chip">
-      <div class="icon">🌱</div>
-      <div class="cname">Sakhisizwe Day Care Centre</div>
-      <div class="crole">Founding Partner</div>
+<!-- ═══════════════════════════════════════════════
+     PAGE 1 — COVER
+════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div class="pilot-ribbon">PILOT</div>
+  <div>
+    <div class="cover-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">Centre<span>Connect</span></div>
     </div>
-    <div class="centre-chip">
-      <div class="icon">🌟</div>
-      <div class="cname">Bajhabulile Day Care Centre</div>
-      <div class="crole">Founding Partner</div>
+    <div class="cover-badge">🚀 Pilot Programme</div>
+    <div class="cover-headline">
+      Welcome to<br/><em>CentreConnect.</em><br/>Let's get you set up.
     </div>
-  </div>
-
-  <div class="founding-badge">⭐ You were first. You are family.</div>
-</div>
-
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 60" style="display:block;background:var(--light);margin-top:-2px"><path fill="#1C7293" d="M0,40 C360,70 1080,10 1440,40 L1440,0 L0,0 Z" opacity=".4"/><path fill="#065A82" d="M0,50 C400,80 1040,20 1440,50 L1440,0 L0,0 Z"/></svg>
-
-<div class="wrap">
-
-<!-- LETTER -->
-<div class="letter">
-  <p>To the owners and teams of <strong>Sakhisizwe Day Care Centre</strong> and <strong>Bajhabulile Day Care Centre</strong>,</p>
-  <p>You trusted us before we had a single customer. You believed in what we were building when it was just an idea. That is not something we forget — and it is not something we take lightly.</p>
-  <p>This document covers everything: what you get, how it works, what it costs, and what is coming next. It is written in plain English because we believe you should fully understand what you are signing up for — with no surprises.</p>
-  <p><strong>One important note up front:</strong> every price in this document includes 15% South African VAT. The price you see is the price you pay. Nothing is added at the end.</p>
-  <p class="sig">— The CentreConnect Team &nbsp;|&nbsp; hello@centreconnect.co.za &nbsp;|&nbsp; centreconnect.co.za</p>
-</div>
-
-<!-- VAT NOTICE -->
-<div class="vat-notice">
-  <div class="icon">💡</div>
-  <p><strong>All prices in this document include 15% VAT.</strong> When you see R199/month — that is your total cost. No extra VAT is added. For your accounting records, the VAT-exclusive amount is R173/month (R199 ÷ 1.15). We will show both amounts on your invoice.</p>
-</div>
-
-<!-- 1. WHAT IS CENTRECONNECT -->
-<div class="sh"><div class="num">1</div><h2>What is CentreConnect?</h2></div>
-<p style="font-size:16px;color:var(--slate);margin-bottom:22px;line-height:1.7">CentreConnect is an online system made specifically for South African ECD centres. It works on any phone, tablet, or computer — no app download needed. You just open it in your browser and everything is there.</p>
-
-<div class="feat-grid">
-  <div class="feat"><span class="ficon">✅</span><h4>Digital Attendance</h4><p>Mark children in and out on your phone. No paper register. Records kept automatically. Ready for DSD subsidy checks.</p></div>
-  <div class="feat"><span class="ficon">🔒</span><h4>Pickup Security</h4><p>Only authorised people collect children. Staff verify on their phone. Every pickup is logged with time and date. No more guessing.</p></div>
-  <div class="feat"><span class="ficon">🗂️</span><h4>Admissions Pipeline</h4><p>Parents apply online — day or night. Applications land in your inbox. You accept, waitlist, or decline. No more WhatsApp chaos.</p></div>
-  <div class="feat"><span class="ficon">📋</span><h4>Compliance Tracker</h4><p>Upload your certificates. Set their expiry dates. You get a reminder before anything expires. Never be caught off guard again.</p></div>
-  <div class="feat"><span class="ficon">📢</span><h4>Parent Communications</h4><p>Send announcements to all parents at once. No more messaging from your personal number at night.</p></div>
-  <div class="feat"><span class="ficon">💰</span><h4>Financial Dashboard</h4><p>Enter your income and expenses. See your profit or loss in plain, clear numbers. Know where you stand.</p></div>
-  <div class="feat"><span class="ficon">📝</span><h4>Report Cards</h4><p>Write digital term report cards per child. Parents receive them on their phone. All reports saved permanently.</p></div>
-  <div class="feat"><span class="ficon">🌐</span><h4>Your Centre Online</h4><p>A professional page for your centre. Listed in our parent directory. Parents find you on Google and apply directly.</p></div>
-</div>
-
-<div class="callout teal">
-  <h4>No app needed. No IT skills needed.</h4>
-  <p>If you and your staff can use WhatsApp, you can use CentreConnect. We set it up together at your centre. You will be using it on the same day we visit.</p>
-</div>
-
-<!-- 2. YOUR FOUNDING PARTNER DEAL -->
-<div class="sh"><div class="num">2</div><h2>Your Founding Partner Deal</h2></div>
-
-<div class="founding-card">
-  <h3>Sakhisizwe &amp; Bajhabulile — The Best Deal That Will Ever Exist</h3>
-  <p class="sub">You took a risk on us first. This is how we honour that.</p>
-  <div class="perk-grid">
-    <div class="perk"><div class="val">R0</div><div class="lbl">Setup fee — nothing to pay at onboarding</div></div>
-    <div class="perk"><div class="val">FREE</div><div class="lbl">Full platform access during the 4-week pilot (whole of March)</div></div>
-    <div class="perk"><div class="val">R199<small style="font-size:18px">/mo</small></div><div class="lbl">Monthly from 01 April 2026 — <strong>locked forever</strong></div></div>
-    <div class="perk"><div class="val">∞</div><div class="lbl">Direct WhatsApp support — no queue, no waiting</div></div>
-  </div>
-</div>
-
-<div class="callout amber">
-  <h4>Why R199/month and not free forever?</h4>
-  <p>A platform that costs nothing gets treated like it is worth nothing. R199/month means we both have skin in the game. It also means we can keep the internet running, the servers up, and the support coming. From April 2026, new centres pay R199–R499/month. You will always pay R199. <strong>That price is locked in writing for as long as you stay subscribed.</strong></p>
-</div>
-
-<!-- 3. FOR OTHER CENTRES JOINING IN MARCH -->
-<div class="sh"><div class="num">3</div><h2>For Other Centres Joining in March</h2></div>
-<p style="font-size:15px;color:var(--slate);margin-bottom:22px;line-height:1.7">From mid-March, we will be onboarding more centres who express interest during our outreach drive. These centres are Early Pilot members — not founding partners, but still early enough to get a meaningful discount. Here is what they pay:</p>
-
-<div class="price-row">
-  <div class="price-card s1">
-    <div class="tier">Tier 1</div>
-    <div class="pname">Starter</div>
-    <div class="setup">R500 setup (incl. VAT)</div>
-    <div class="amount">R199</div>
-    <div class="per">/month incl. VAT</div>
-    <div class="vat-tag">= R173/month excl. VAT</div>
-    <ul>
-      <li>Attendance</li>
-      <li>Pickup security</li>
-      <li>Admissions pipeline</li>
-      <li>Parent comms</li>
-      <li>Centre profile + directory</li>
-    </ul>
-  </div>
-  <div class="price-card s2">
-    <div class="tier">Tier 2</div>
-    <div class="pname">Growth</div>
-    <div class="setup">R500 setup (incl. VAT)</div>
-    <div class="amount">R299</div>
-    <div class="per">/month incl. VAT</div>
-    <div class="vat-tag">= R260/month excl. VAT</div>
-    <ul>
-      <li>Everything in Starter, plus:</li>
-      <li>Compliance tracker</li>
-      <li>Financial dashboard</li>
-      <li>Employment hub</li>
-      <li>Report cards</li>
-    </ul>
-  </div>
-  <div class="price-card s3">
-    <div class="tier">Tier 3</div>
-    <div class="pname">Pro</div>
-    <div class="setup">R500 setup (incl. VAT)</div>
-    <div class="amount">R399</div>
-    <div class="per">/month incl. VAT</div>
-    <div class="vat-tag">= R347/month excl. VAT</div>
-    <ul>
-      <li>Everything in Growth, plus:</li>
-      <li>Full parent portal</li>
-      <li>Parent invoicing</li>
-      <li>AI document upload</li>
-      <li>DSD subsidy export</li>
-    </ul>
-  </div>
-</div>
-
-<div class="callout green">
-  <h4>🎁 Bonus for Early Pilot centres that enrol parents</h4>
-  <p>Any Early Pilot centre that has <strong>10 or more parents using the platform within 2 weeks</strong> of going live earns one free month added to their subscription. We track this automatically — no forms or applications needed.</p>
-</div>
-
-<div class="callout amber">
-  <h4>From April 2026, new centres pay R1,500 setup</h4>
-  <p>The R500 Early Pilot setup fee is available only during March 2026. Any centre that joins from April onwards pays the standard R1,500 once-off onboarding fee. If you know another owner who would benefit — refer them now, not later.</p>
-</div>
-
-<!-- 4. YOUR FIRST 4 WEEKS -->
-<div class="sh"><div class="num">4</div><h2>Your First 4 Weeks — Step by Step</h2></div>
-
-<div class="steps">
-  <div class="step">
-    <div class="dot" style="background:var(--teal)">1</div>
-    <div class="body">
-      <h4>We visit your centre <span class="badge">Week 1 of March</span></h4>
-      <p>We come to you. We set everything up together — your account, your children's profiles, your compliance documents. We put up your QR code poster. Takes about 2 hours. You will be using the system on the same day.</p>
+    <div class="cover-sub">
+      This is your quick-start guide. In the next few pages, you'll see exactly what CentreConnect does for your centre — and how to use it from day one.
     </div>
   </div>
-  <div class="step">
-    <div class="dot" style="background:var(--greenm)">2</div>
-    <div class="body">
-      <h4>Your centre goes live that day <span class="badge">Day 1</span></h4>
-      <p>From the moment we finish setup, parents in your area can find your centre on CentreConnect and submit applications. Your profile is on Google. Your QR code works. You are live.</p>
+  <div class="cover-bottom">
+    <div class="cover-stats">
+      <div class="stat"><div class="stat-num">300+</div><div class="stat-label">Centres Listed</div></div>
+      <div class="stat"><div class="stat-num">Free</div><div class="stat-label">For Parents</div></div>
+      <div class="stat"><div class="stat-num">1</div><div class="stat-label">Screen. Everything.</div></div>
+    </div>
+    <div style="font-size:12px;color:#475569;">centerconnect.co.za</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 2 — WHAT IS CENTRECONNECT
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 1</h2>
+    <h1>What is CentreConnect?</h1>
+  </div>
+
+  <p style="font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:28px;">
+    CentreConnect is a platform built <strong style="color:var(--navy);">specifically for South African ECD centres.</strong> It connects you with parents looking for a crèche — and gives you the tools to run your centre professionally, all from your phone.
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card highlight">
+      <div class="feature-icon">📱</div>
+      <h3>Your Centre, Online</h3>
+      <p>Parents in your area can find you, see your details, and apply — without a single phone call.</p>
+      <span class="feature-tag">✦ Always Active</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Manage Applications</h3>
+      <p>See all parent applications in one place. Accept, decline, or waitlist — with one tap.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>Safe Pickup System</h3>
+      <p>Every child gets a secure code. Only verified guardians can collect. Parents are notified instantly.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Daily Reports</h3>
+      <p>Send parents a daily update on their child — meals, activities, mood. Straight to their phone.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
     </div>
   </div>
-  <div class="step">
-    <div class="dot" style="background:var(--tealm)">3</div>
-    <div class="body">
-      <h4>Enrol parents at drop-off and pickup <span class="badge">Week 1–2</span></h4>
-      <p>This is the most important step. At each pickup and drop-off, show parents the platform on your phone. Tap "Invite Parent." They receive a WhatsApp link, tap it, set a PIN, and are in their child's profile in under 60 seconds. Staff can do this for every parent within 2 weeks without any extra admin sessions.</p>
+
+  <div style="background:#f0fdf4;border-radius:14px;padding:20px 24px;margin-top:24px;display:flex;gap:16px;align-items:flex-start;">
+    <div style="font-size:24px;">💡</div>
+    <div>
+      <strong style="color:var(--navy);font-size:14px;">Why it matters:</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6;">Most ECD centres are run on WhatsApp voice notes, paper registers, and word of mouth. CentreConnect gives you what a R50,000 admin system would — for free, during your pilot.</p>
     </div>
   </div>
-  <div class="step">
-    <div class="dot" style="background:var(--amber)">4</div>
-    <div class="body">
-      <h4>We check in every week <span class="badge">Ongoing</span></h4>
-      <p>A quick WhatsApp from us every week: "How is it going? Anything not working?" We fix problems fast. We are a small team — you get a real person, not a chatbot.</p>
+  <div class="pg">2</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 3 — HOW TO GET STARTED (Steps)
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 2</h2>
+    <h1>Getting Started in 4 Steps</h1>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Register Your Centre</h3>
+        <p>Go to <strong>centerconnect.co.za/for-centres</strong> on your phone or computer. Fill in your centre's name, address, contact details, and age groups. Takes about 5 minutes.</p>
+        <span class="tip">📍 Tip: Use your exact street address so parents nearby can find you.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Complete Your Profile</h3>
+        <p>Add your fees, operating hours, and a short description of your centre. The more complete your profile, the higher you appear in parent searches.</p>
+        <span class="tip">📸 Tip: A photo of your classroom makes a huge difference to parents choosing a crèche.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Receive Your First Application</h3>
+        <p>When a parent applies, you get a notification. You can view the child's details, accept the application, and start a child profile — all from your dashboard.</p>
+        <span class="tip">✅ Tip: Respond within 24 hours. Parents choose the centre that responds fastest.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Activate Pickup Codes & Daily Reports</h3>
+        <p>Once a child is enrolled, set up their secure pickup code and start sending daily reports to parents. This is the feature parents love most.</p>
+        <span class="tip">🔐 Tip: Show parents how the pickup code works on Day 1. It builds trust immediately.</span>
+      </div>
     </div>
   </div>
-  <div class="step">
-    <div class="dot" style="background:var(--teal)">5</div>
-    <div class="body">
-      <h4>End of March: you decide <span class="badge">29 March</span></h4>
-      <p>After 4 weeks, we review together: applications received, parents enrolled, features used. If you want to continue, your April subscription starts. If for any reason you are not happy — no pressure, no penalty, we part as friends.</p>
+  <div class="pg">3</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 4 — PICKUP CODE FEATURE DEMO
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 3</h2>
+    <h1>The Pickup Code — How It Works</h1>
+  </div>
+
+  <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+    Every child enrolled at your centre gets a unique, secure pickup code. <strong style="color:var(--navy);">Only people the parent has approved</strong> can use it. This protects children and protects your centre.
+  </p>
+
+  <div class="pickup-demo">
+    <div class="pickup-label">Today's Pickup Code for</div>
+    <div style="font-size:16px;font-weight:700;color:#e2e8f0;margin-top:8px;">Lebo Dlamini · Grade R</div>
+    <div class="pickup-code">8 · 4 · 7</div>
+    <div style="font-size:12px;color:#475569;">Expires at 18:00 today · Resets tomorrow morning</div>
+    <div class="pickup-steps">
+      <div class="pickup-step">
+        <div class="ps-icon">👩</div>
+        <p>Parent sets approved guardians in the app</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">🔢</div>
+        <p>Guardian shows the daily code at pickup</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">✅</div>
+        <p>You confirm in the app — one tap</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">📲</div>
+        <p>Parent gets an instant notification</p>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 5. HOW PARENTS ENROL -->
-<div class="sh"><div class="num">5</div><h2>How Parents Join — The 60-Second Flow</h2></div>
-<p style="font-size:15px;color:var(--slate);margin-bottom:20px;line-height:1.7">You do not need to run workshops or explain apps to parents. The whole thing happens at pickup in under a minute.</p>
-
-<table class="flow-table">
-  <tr><th>What Happens</th><th>Who Does It</th><th>How Long</th><th>When</th></tr>
-  <tr><td>Centre creates child's profile (name, DOB, class, guardian details)</td><td>Centre staff at enrollment or during our onboarding visit</td><td>~3 min per child</td><td>During your onboarding session</td></tr>
-  <tr><td>System sends parent an invite via WhatsApp or SMS</td><td>Staff taps one button — "Invite Parent"</td><td>Automatic</td><td>Same session</td></tr>
-  <tr><td>Parent taps link, enters OTP code, sets a PIN</td><td>Parent on their own phone at pickup</td><td>~60 seconds</td><td>First pickup after invite</td></tr>
-  <tr><td>Parent sees child's profile, attendance, and pickup list</td><td>Parent independently</td><td>Instant</td><td>Ongoing, self-service</td></tr>
-</table>
-
-<div class="callout green">
-  <h4>Why this matters so much</h4>
-  <p>Once parents can see their child's attendance, receive pickup alerts, and read report cards on their phone — they will not want to go back to WhatsApp and paper. <strong>When parents love the platform, your centre cannot leave it.</strong> Parent adoption is what keeps your subscription valuable — to you, and to your parents.</p>
-</div>
-
-<!-- 6. HOW PARENTS FIND YOUR CENTRE -->
-<div class="sh"><div class="num">6</div><h2>How Parents Will Find Your Centre</h2></div>
-
-<div class="channels">
-  <div class="channel">
-    <div class="ico">🔍</div>
-    <div><h4>Google Search</h4><p>A parent types "crèche near me" or "ECD in [your area]". Your CentreConnect profile appears in the results. This gets stronger every week.</p></div>
-    <div class="right"><span class="tag tag-auto">Automatic</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+    <div style="background:#fef2f2;border-radius:14px;padding:20px;">
+      <div style="font-size:20px;margin-bottom:8px;">😰</div>
+      <strong style="font-size:13px;color:#991b1b;">Before CentreConnect</strong>
+      <p style="font-size:12px;color:#7f1d1d;margin-top:6px;line-height:1.6;">An unknown person arrives to collect a child. You have no way to verify if they're authorised. You call the parent. No answer. You're stuck.</p>
+    </div>
+    <div style="background:#f0fdf4;border-radius:14px;padding:20px;">
+      <div style="font-size:20px;margin-bottom:8px;">😌</div>
+      <strong style="font-size:13px;color:#166534;">With CentreConnect</strong>
+      <p style="font-size:12px;color:#14532d;margin-top:6px;line-height:1.6;">They show the code. You check it in the app. Green light — you release the child. Parent already got the notification. Done. Safe. Documented.</p>
+    </div>
   </div>
-  <div class="channel">
-    <div class="ico">📱</div>
-    <div><h4>QR Code at Your Gate</h4><p>Parent scans with their phone camera. Opens your profile page. Taps Apply. Three seconds.</p></div>
-    <div class="right"><span class="tag tag-you">You display it</span></div>
+  <div class="pg">4</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 5 — APPLICATIONS DASHBOARD MOCK
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
   </div>
-  <div class="channel">
-    <div class="ico">💬</div>
-    <div><h4>Your Parent WhatsApp Group</h4><p>You paste your CentreConnect link once. Your parents share it with friends looking for a crèche. Word spreads fast.</p></div>
-    <div class="right"><span class="tag tag-you">You share it once</span></div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 4</h2>
+    <h1>Your Applications Dashboard</h1>
   </div>
-  <div class="channel">
-    <div class="ico">📂</div>
-    <div><h4>Parent Directory</h4><p>Parents browse all listed centres in their area. Your centre appears with details and a direct Apply button.</p></div>
-    <div class="right"><span class="tag tag-auto">Automatic</span></div>
+
+  <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
+    When a parent finds your centre and applies, it appears here instantly. No forms, no paperwork, no WhatsApp messages to scroll through. Everything in one place.
+  </p>
+
+  <div class="mock-wrap">
+    <div class="mock-bar"><span></span><span></span><span></span></div>
+    <div style="font-size:11px;color:#475569;margin-bottom:12px;text-transform:uppercase;letter-spacing:2px;">📋 Incoming Applications</div>
+    <div class="mock-screen">
+      <div class="mock-row">
+        <div><div class="mock-name">👧 Ayanda Mokoena · 3 yrs</div><div class="mock-detail">Applied 2 hours ago · Preschool class</div></div>
+        <span class="mock-badge badge-amber">Pending</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👦 Siphiwe Dlamini · 2 yrs</div><div class="mock-detail">Applied yesterday · Toddler class</div></div>
+        <span class="mock-badge badge-green">Accepted ✓</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👧 Nomsa Khumalo · 5 yrs</div><div class="mock-detail">Applied 3 days ago · Grade R</div></div>
+        <span class="mock-badge badge-green">Accepted ✓</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👦 Lebo Sithole · 4 yrs</div><div class="mock-detail">Applied 4 days ago · Preschool</div></div>
+        <span class="mock-badge badge-blue">Waitlisted</span>
+      </div>
+    </div>
   </div>
-  <div class="channel">
-    <div class="ico">📣</div>
-    <div><h4>Facebook Parenting Groups</h4><p>CentreConnect posts your centre link in local Facebook parenting groups in your area. We do this for you.</p></div>
-    <div class="right"><span class="tag tag-us">We do it</span></div>
+
+  <div style="display:flex;gap:16px;">
+    <div style="flex:1;background:var(--light);border-radius:14px;padding:20px;">
+      <div style="font-size:24px;margin-bottom:8px;">📄</div>
+      <strong style="font-size:14px;color:var(--navy);">Every application includes:</strong>
+      <ul style="margin-top:10px;list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:var(--muted);">✅ Child's name, age, date of birth</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Parent/guardian details</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Which class they're applying for</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Any special needs or notes</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Contact number — click to call</li>
+      </ul>
+    </div>
+    <div style="flex:1;background:var(--navy);border-radius:14px;padding:20px;">
+      <div style="font-size:24px;margin-bottom:8px;">⚡</div>
+      <strong style="font-size:14px;color:#fff;">You can:</strong>
+      <ul style="margin-top:10px;list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:#94a3b8;">✦ Accept with one tap</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Add to waitlist</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Message the parent directly</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Create the child's profile</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Track all history</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg">5</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 6 — WHAT'S INCLUDED IN PILOT + UPGRADE
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 5</h2>
+    <h1>What's Included in Your Pilot</h1>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="check-icon">🏫</span><span class="check-text">Your centre listed in the CentreConnect directory — searchable by parents nearby</span></li>
+    <li><span class="check-icon">📋</span><span class="check-text">Unlimited incoming applications from parents</span></li>
+    <li><span class="check-icon">🔐</span><span class="check-text">Secure pickup code system for all enrolled children</span></li>
+    <li><span class="check-icon">📊</span><span class="check-text">Daily reports to parents (activities, meals, mood)</span></li>
+    <li><span class="check-icon">👶</span><span class="check-text">Child profiles — basic records per enrolled child</span></li>
+    <li><span class="check-icon">📞</span><span class="check-text">Direct support from the CentreConnect team</span></li>
+  </ul>
+
+  <div style="margin-top:28px;">
+    <p style="font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Coming when you upgrade:</p>
+    <div class="tier-row">
+      <div class="tier-box active">
+        <h4>🚀 Pilot (You are here)</h4>
+        <div class="tier-items">Directory listing<br/>Applications<br/>Pickup codes<br/>Daily reports<br/>Basic profiles</div>
+      </div>
+      <div class="tier-box">
+        <h4>⭐ Standard</h4>
+        <div class="tier-items">+ DSD Subsidy Export<br/>+ Transport Manager<br/>+ Compliance tracker<br/>+ Staff profiles<br/>+ Priority listing</div>
+      </div>
+      <div class="tier-box">
+        <h4>🏆 Premium</h4>
+        <div class="tier-items">+ Marketplace access<br/>+ Advanced reports<br/>+ Custom branding<br/>+ Job postings<br/>+ Dedicated support</div>
+      </div>
+    </div>
+  </div>
+  <div class="pg">6</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 7 — CTA / BACK COVER
+════════════════════════════════════════════════ -->
+<div class="page cta-page">
+  <div class="cta-emoji">🇿🇦</div>
+  <h1>You're part of<br/><em>something bigger.</em></h1>
+  <p>You're one of the first ECD centres in South Africa to run on CentreConnect. Your feedback shapes the future of this platform — for every crèche in the country.</p>
+  <a class="cta-btn" href="https://centerconnect.co.za/for-centres">Complete Your Centre Profile →</a>
+  <div class="cta-link">Need help? WhatsApp us at <strong>your number here</strong></div>
+
+  <div class="pilot-note">
+    <p><strong>📌 Pilot Programme Note:</strong><br/>
+    Your pilot access is free. We ask only that you use the platform, give us honest feedback, and tell us what's working — and what's not. Together, we build something that works for every ECD in South Africa.</p>
+  </div>
+
+  <div style="position:absolute;bottom:30px;font-size:12px;color:#334155;">
+    centerconnect.co.za &nbsp;·&nbsp; Built in South Africa, for South Africa &nbsp;·&nbsp; v1.0.2
   </div>
 </div>
 
-<!-- 7. REFERRAL PROGRAMME -->
-<div class="sh"><div class="num">7</div><h2>Tell a Friend — Earn a Free Month</h2></div>
-
-<div class="referral">
-  <h3>The Referral Programme</h3>
-  <p>Know another ECD owner who would benefit from CentreConnect?</p>
-  <span class="big">1 referral = 1 free month</span>
-  <p>Every time a centre you refer signs up and pays, <strong>one free month is added to your subscription automatically.</strong></p>
-  <p>No limit. Refer 12 centres — get a full free year. Just ask them to mention your centre name when signing up.</p>
-  <p class="sm" style="margin-top:18px">This is built into the platform — no forms, no applications, no chasing anyone.</p>
-</div>
-
-<!-- 8. COMMON QUESTIONS -->
-<div class="sh"><div class="num">8</div><h2>Questions You Will Probably Ask</h2></div>
-
-<div class="faqs">
-  <div class="faq"><div class="fq">Do we need WiFi at the centre?</div><div class="fa">You need an internet connection — WiFi or mobile data. CentreConnect is designed to work well on a standard data connection. The daily features (attendance, pickup) load quickly even on 3G. We will check your connection during the onboarding visit.</div></div>
-  <div class="faq"><div class="fq">Our staff are not great with technology — will they cope?</div><div class="fa">Yes. If your staff can use WhatsApp, they can use CentreConnect. The daily features are designed to be as simple as tapping a button. We walk every staff member through it personally during your onboarding visit — no one is left behind.</div></div>
-  <div class="faq"><div class="fq">What does "all prices include VAT" mean?</div><div class="fa">It means the price you see is the price you pay. 15% VAT is already included. So R199/month is your total cost — not R199 plus R29.85 tax. Your invoices will show both the VAT-inclusive and VAT-exclusive amounts so your bookkeeper has what they need.</div></div>
-  <div class="faq"><div class="fq">What if we are already full? Why do we need more applications?</div><div class="fa">A waiting list is your best friend. When a child leaves, you fill the spot immediately — no scrambling. Your CentreConnect listing also shows parents that your centre is established and in demand. That builds your reputation even when you have no open spots.</div></div>
-  <div class="faq"><div class="fq">What happens to our data if we ever cancel?</div><div class="fa">Everything belongs to you. All child records, attendance history, compliance documents, and application data can be exported as a file. We give you everything. We do not hold your data or delete it without warning.</div></div>
-  <div class="faq"><div class="fq">Is my children's information safe?</div><div class="fa">Yes. CentreConnect is built to comply with South Africa's POPIA (Protection of Personal Information Act). Each centre's data is completely isolated — no other centre can ever see your records. Pickup codes are unique per session and expire after use. Child safety is our first design principle, not an afterthought.</div></div>
-  <div class="faq"><div class="fq">Will our R199/month ever go up?</div><div class="fa">No — not for you. As long as you remain a continuous subscriber, your price stays at R199/month permanently. This is a commitment we make in writing. New centres joining from April pay more. You locked in the best rate that will ever exist on CentreConnect.</div></div>
-  <div class="faq"><div class="fq">What if we need help at night or on weekends?</div><div class="fa">As a founding partner, you have our direct WhatsApp number. Send us a message and we respond as soon as possible — usually within a few hours. You are not going through a helpdesk or a ticket system. Real people. Real responses.</div></div>
-</div>
-
-<!-- 9. WHAT IS COMING NEXT -->
-<div class="sh"><div class="num">9</div><h2>What Is Coming — All Free for Subscribers</h2></div>
-<p style="font-size:15px;color:var(--muted);margin-bottom:20px">Everything below is already being built. When it is ready, you get it automatically — no upgrade, no extra charge.</p>
-
-<div class="roadmap">
-  <div class="ritem"><div class="when">Q2 2026</div><h4>💳 Parent Invoicing</h4><p>Send monthly fee invoices to parents. Track who has paid.</p></div>
-  <div class="ritem"><div class="when">Q2 2026</div><h4>📊 DSD Subsidy Export</h4><p>One-tap attendance report in the exact format DSD requires.</p></div>
-  <div class="ritem"><div class="when">Q2 2026</div><h4>⏳ Waiting List</h4><p>When you are full, parents join a waiting list. You manage it easily.</p></div>
-  <div class="ritem"><div class="when">Q3 2026</div><h4>📸 AI Document Upload</h4><p>Photograph a certificate. AI reads it and fills the form for you.</p></div>
-  <div class="ritem"><div class="when">Q3 2026</div><h4>💬 WhatsApp Alerts</h4><p>Auto-WhatsApp to parents: unpicked child, invoice due, announcement. (Small add-on fee.)</p></div>
-  <div class="ritem"><div class="when">Q3–Q4 2026</div><h4>📱 Mobile App</h4><p>Download CentreConnect from Google Play and App Store.</p></div>
-</div>
-
-<!-- FOOTER -->
-<div class="footer-cta">
-  <h2>We Are Here For You 🤲</h2>
-  <p>This is a partnership. If anything is unclear, not working, or needs fixing — tell us immediately. We fix things fast.</p>
-  <div class="contacts">
-    <div class="contact"><span class="cl">WhatsApp</span><span class="cv">[CentreConnect Number]</span></div>
-    <div class="contact"><span class="cl">Email</span><span class="cv">hello@centreconnect.co.za</span></div>
-    <div class="contact"><span class="cl">Website</span><span class="cv">centreconnect.co.za</span></div>
-  </div>
-</div>
-
-</div><!-- /wrap -->
-
-<p style="text-align:center;padding:20px 0 40px;font-size:12px;color:#94A3B8;font-family:'Nunito',sans-serif">
-  CentreConnect — Pilot Programme — March 2026 — All prices include 15% VAT — centreconnect.co.za
-</p>
 </body>
 </html>
