@@ -364,7 +364,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
       setExistingUserConflict(null)
       router.refresh()
       if (options?.allowExistingEmailMigration) {
-        toast.success('Migration complete: account changed to ECD Admin and linked to the new tenant.')
+        toast.success('Access upgraded: account changed to ECD Admin, parent access revoked, and linked to the new tenant.')
       } else {
         toast.success('Centre created and onboarding started.')
       }
