@@ -3,10 +3,7 @@ import Link from 'next/link'
 import { Activity, ArrowUpRight, BellRing, Building2, Signal, Users } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
-import {
-  AdminDashboardAudienceToggle,
-  type DashboardAudience,
-} from '@/components/admin/admin-dashboard-audience-toggle'
+import { DashboardAudience } from '@/components/admin/admin-audience-context'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
 import {
   Table,
@@ -442,7 +439,6 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
           </div>
         </div>
         <div className="flex flex-col items-start gap-4 lg:items-end">
-          <AdminDashboardAudienceToggle audience={audience} />
           <Link
             href="/admin/invites"
             className="inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-5 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition-colors hover:bg-cyan-500/20"

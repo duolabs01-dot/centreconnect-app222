@@ -1,27 +1,11 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Building2, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAdminAudience } from '@/components/admin/admin-audience-context'
 
-export type DashboardAudience = 'parent' | 'ecd'
-
-type AdminDashboardAudienceToggleProps = {
-  audience: DashboardAudience
-}
-
-export function AdminDashboardAudienceToggle({ audience }: AdminDashboardAudienceToggleProps) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const setAudience = (next: DashboardAudience) => {
-    if (next === audience) return
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('audience', next)
-    const query = params.toString()
-    router.replace(query ? `${pathname}?${query}` : pathname)
-  }
+export function AdminAudienceToggle() {
+  const { audience, setAudience } = useAdminAudience()
 
   return (
     <div className="rounded-2xl border border-white/10 bg-black/40 p-1 shadow-[0_12px_24px_rgba(0,0,0,0.28)]">
@@ -58,4 +42,3 @@ export function AdminDashboardAudienceToggle({ audience }: AdminDashboardAudienc
     </div>
   )
 }
-

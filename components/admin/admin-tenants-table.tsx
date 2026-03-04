@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   flexRender,
@@ -156,6 +156,125 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     fullName: '',
     role: 'ecd_staff' as TenantUserPrivilege,
   })
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkInvitesBusy, setBulkInvitesBusy] = useState(false)
+  const [bulkUpgradeBusy, setBulkUpgradeBusy] = useState(false)
+  const [rowUpgrading, setRowUpgrading] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [tenants])
+
+  const toggleSelection = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
+
+  const toggleVisibleSelection = useCallback((ids: string[]) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      const allSelected = ids.every((id) => next.has(id))
+      if (allSelected) {
+        ids.forEach((id) => next.delete(id))
+      } else {
+        ids.forEach((id) => next.add(id))
+      }
+      return next
+    })
+  }, [])
+
+  const sendOwnerInvite = useCallback(async (tenantId: string) => {
+    const response = await fetch(`/api/internal/platform-admin/centres/${tenantId}/send-owner-invite`, {
+      method: 'POST',
+    })
+    const payload = (await response.json().catch(() => ({}))) as { error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Failed to send owner invite.')
+    }
+  }, [])
+
+  const upgradeTenant = useCallback(async (tenantId: string) => {
+    const response = await fetch(`/api/internal/platform-admin/centres/${tenantId}/upgrade`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tier: 'premium' }),
+    })
+    const payload = (await response.json().catch(() => ({}))) as { error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Failed to upgrade tenant.')
+    }
+  }, [])
+
+  const handleBulkInvite = useCallback(async () => {
+    if (selectedIds.size === 0) {
+      toast.error('Select at least one centre to send invites.')
+      return
+    }
+    setBulkInvitesBusy(true)
+    try {
+      const settle = await Promise.allSettled(Array.from(selectedIds).map((id) => sendOwnerInvite(id)))
+      const successCount = settle.filter((entry) => entry.status === 'fulfilled').length
+      const failureCount = settle.length - successCount
+      if (failureCount > 0) {
+        toast.warning(`Invites sent to ${successCount} centres (${failureCount} failed).`)
+      } else {
+        toast.success(`Invites sent to ${successCount} centres.`)
+      }
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error?.message || 'Bulk invite failed.')
+    } finally {
+      setBulkInvitesBusy(false)
+      setSelectedIds(new Set())
+    }
+  }, [router, selectedIds, sendOwnerInvite])
+
+  const handleBulkUpgrade = useCallback(async () => {
+    if (selectedIds.size === 0) {
+      toast.error('Select at least one centre to upgrade.')
+      return
+    }
+    setBulkUpgradeBusy(true)
+    try {
+      const settle = await Promise.allSettled(Array.from(selectedIds).map((id) => upgradeTenant(id)))
+      const successCount = settle.filter((entry) => entry.status === 'fulfilled').length
+      const failureCount = settle.length - successCount
+      if (failureCount > 0) {
+        toast.warning(`Upgraded ${successCount} centres (${failureCount} failed).`)
+      } else {
+        toast.success(`Upgraded ${successCount} centres to premium.`)
+      }
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error?.message || 'Bulk upgrade failed.')
+    } finally {
+      setBulkUpgradeBusy(false)
+      setSelectedIds(new Set())
+    }
+  }, [router, selectedIds, upgradeTenant])
+
+  const handleRowUpgrade = useCallback(
+    async (tenantId: string) => {
+      setRowUpgrading((prev) => ({ ...prev, [tenantId]: true }))
+      try {
+        await upgradeTenant(tenantId)
+        toast.success('Centre upgraded to premium.')
+        router.refresh()
+      } catch (error: any) {
+        toast.error(error?.message || 'Upgrade failed.')
+      } finally {
+        setRowUpgrading((prev) => ({ ...prev, [tenantId]: false }))
+      }
+    },
+    [router, upgradeTenant]
+  )
 
   const loadTenantUsers = useCallback(async (tenantId: string) => {
     setUsersLoading(true)
@@ -199,6 +318,19 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const columns = useMemo<ColumnDef<AdminTenantTableRow>[]>(
     () => [
       {
+        id: 'select',
+        header: 'Select',
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={selectedIds.has(row.original.id)}
+            onChange={() => toggleSelection(row.original.id)}
+            className="h-4 w-4 rounded border border-slate-700 bg-slate-900 accent-cyan-500 focus-visible:ring-2 focus-visible:ring-cyan-400"
+            aria-label={`Select ${row.original.name}`}
+          />
+        ),
+      },
+      {
         accessorKey: 'name',
         header: 'Name',
         cell: ({ row }) => <span className="font-semibold text-slate-100">{row.original.name}</span>,
@@ -241,24 +373,33 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           </span>
         ),
       },
-      {
-        id: 'actions',
-        header: 'Quick Actions',
-        enableSorting: false,
-        enableGlobalFilter: false,
-        cell: ({ row }) => (
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-              onClick={() => openEdit(row.original)}
-            >
-              Edit
-            </Button>
-            <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-              <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
-            </Button>
+        {
+          id: 'actions',
+          header: 'Quick Actions',
+          enableSorting: false,
+          enableGlobalFilter: false,
+          cell: ({ row }) => (
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                onClick={() => openEdit(row.original)}
+              >
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-emerald-500/30 bg-slate-900 text-emerald-200 hover:bg-slate-800"
+                onClick={() => void handleRowUpgrade(row.original.id)}
+                disabled={Boolean(rowUpgrading[row.original.id])}
+              >
+                {rowUpgrading[row.original.id] ? 'Upgrading…' : 'Upgrade'}
+              </Button>
+              <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+                <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
+              </Button>
             <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
               <Link href={`/admin/tenants/${row.original.id}#invite`}>Invite</Link>
             </Button>
@@ -266,7 +407,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         ),
       },
     ],
-    [openEdit]
+    [openEdit, selectedIds, toggleSelection, rowUpgrading, handleRowUpgrade]
   )
 
   const table = useReactTable({
@@ -540,9 +681,47 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     }
   }
 
+  const visibleRowIds = table.getRowModel().rows.map((row) => row.original.id)
+  const selectedCount = selectedIds.size
+  const visibleSelected = visibleRowIds.length > 0 && visibleRowIds.every((id) => selectedIds.has(id))
+
   return (
     <>
-      <Card className="border-cyan-500/20 bg-slate-950/70">
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-slate-950/70 p-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Bulk actions</p>
+            <p className="text-sm font-semibold text-white">{selectedCount} selected</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              onClick={() => toggleVisibleSelection(visibleRowIds)}
+              disabled={visibleRowIds.length === 0}
+            >
+              {visibleSelected ? 'Deselect visible' : `Select all visible (${visibleRowIds.length})`}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-cyan-500 text-black hover:bg-cyan-400"
+              onClick={() => void handleBulkInvite()}
+              disabled={selectedCount === 0 || bulkInvitesBusy}
+            >
+              {bulkInvitesBusy ? 'Sending…' : 'Send owner invites'}
+            </Button>
+            <Button
+              size="sm"
+              className="bg-emerald-500 text-black hover:bg-emerald-400"
+              onClick={() => void handleBulkUpgrade()}
+              disabled={selectedCount === 0 || bulkUpgradeBusy}
+            >
+              {bulkUpgradeBusy ? 'Upgrading…' : 'Upgrade to premium'}
+            </Button>
+          </div>
+        </div>
+        <Card className="border-cyan-500/20 bg-slate-950/70">
         <CardHeader className="space-y-3">
           <CardTitle className="text-white">All Tenants</CardTitle>
           <CardDescription className="text-slate-400">
@@ -642,7 +821,8 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[92vh] overflow-y-auto border-cyan-500/30 bg-slate-950 text-slate-100 sm:max-w-5xl">
