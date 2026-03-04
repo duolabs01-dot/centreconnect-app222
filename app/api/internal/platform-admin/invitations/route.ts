@@ -345,6 +345,20 @@ export async function POST(request: Request) {
     ? { success: true as const, skipped: true as const }
     : await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
 
+  const emailDeliveryStatus: 'sent' | 'queued' | 'failed' = directEmailSent
+    ? 'sent'
+    : emailQueueResult.success
+      ? 'queued'
+      : 'failed'
+  const emailDeliveryMessage =
+    emailDeliveryStatus === 'sent'
+      ? `Invite email sent via ${directEmailProvider ?? 'direct provider'}.`
+      : emailDeliveryStatus === 'queued'
+        ? `Invite was queued but not delivered immediately. Configure RESEND_API_KEY or SMTP_* and run your email worker to deliver queued emails.`
+        : `Invite email failed. ${directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : ''}${
+            emailQueueResult.success ? '' : ` Queue error: ${emailQueueResult.error ?? 'unknown'}`
+          }`
+
   await writeInviteLog(adminClient, {
     centreId: data.ecdId,
     ownerEmail: normalizedEmail,
@@ -373,6 +387,8 @@ export async function POST(request: Request) {
     directEmailSent,
     directEmailProvider,
     directEmailError: directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : null,
+    emailDeliveryStatus,
+    emailDeliveryMessage,
     emailQueued: emailQueueResult.success,
     emailQueueSkipped: 'skipped' in emailQueueResult ? emailQueueResult.skipped : false,
     emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,

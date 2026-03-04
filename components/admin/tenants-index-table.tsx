@@ -432,43 +432,53 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         directEmailSent?: boolean
         directEmailProvider?: 'resend' | 'smtp' | null
         directEmailError?: string | null
+        emailDeliveryStatus?: 'sent' | 'queued' | 'failed'
+        emailDeliveryMessage?: string | null
         emailQueued?: boolean
         emailQueueSkipped?: boolean
         emailQueueError?: string | null
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
 
-      if (payload.linkedExistingUser) {
-        toast.success(
-          `Linked existing account ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}${
-            payload.parentAccessRevoked ? ' (parent access revoked)' : ''
-          }`
-        )
-      } else if (payload.pendingLinkOnNextLogin) {
-        toast.success(
-          `Invite saved for ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}. Access will link on next login.`
-        )
-      } else {
-        toast.success(`Invite sent to ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}`)
+      const targetLabel = payload.invitedEmail ?? email
+      const roleLabel = payload.role ?? inviteForm.role
+
+      if (payload.emailDeliveryStatus === 'sent') {
+        if (payload.linkedExistingUser) {
+          toast.success(
+            `Linked existing account ${targetLabel} as ${roleLabel}${payload.parentAccessRevoked ? ' (parent access revoked)' : ''}`
+          )
+        } else if (payload.pendingLinkOnNextLogin) {
+          toast.success(`Invite sent to ${targetLabel} as ${roleLabel}. Access will link on next login.`)
+        } else {
+          toast.success(`Invite sent to ${targetLabel} as ${roleLabel}`)
+        }
+      } else if (payload.emailDeliveryStatus === 'queued') {
+        toast.warning(payload.emailDeliveryMessage || 'Invite queued, but email not delivered yet.')
+      } else if (payload.emailDeliveryStatus === 'failed') {
+        toast.error(payload.emailDeliveryMessage || 'Invite created, but email delivery failed.')
       }
       if (payload.accessLinkWarning) {
         toast.warning(payload.accessLinkWarning)
       }
-      if (payload.directEmailSent) {
+      if (payload.emailDeliveryStatus === 'sent' && payload.directEmailSent) {
         toast.success(`Invite email delivered via ${payload.directEmailProvider ?? 'mail provider'}.`)
       }
       if (payload.directEmailError) {
         toast.warning(payload.directEmailError)
       }
-      if (payload.emailQueued === false && !payload.directEmailSent) {
+      if (payload.emailDeliveryStatus !== 'sent' && payload.emailQueued === false && !payload.directEmailSent) {
         toast.warning(payload.emailQueueError || 'Invite created, but email queue failed. Please retry.')
       } else if (payload.emailQueueSkipped) {
         // Direct send succeeded; queue intentionally skipped to avoid duplicates.
       }
-      setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
-      setInviteOpen(false)
-      setInviteTenant(null)
-      startTransition(() => router.refresh())
+      const delivered = payload.emailDeliveryStatus === 'sent'
+      if (delivered) {
+        setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
+        setInviteOpen(false)
+        setInviteTenant(null)
+        startTransition(() => router.refresh())
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send invite')
     } finally {
