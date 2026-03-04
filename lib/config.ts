@@ -6,3 +6,6 @@ export const ROOT_DOMAIN =
 
 export const SUPPORT_EMAIL =
   process.env.SUPPORT_EMAIL ?? 'support@centerconnect.co.za'
+
+export const EMAIL_APP_URL =
+  process.env.NEXT_PUBLIC_EMAIL_APP_URL ?? 'https://centerconnect.co.za'
