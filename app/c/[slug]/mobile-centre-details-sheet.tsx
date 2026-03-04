@@ -19,6 +19,7 @@ type MobileCentreDetailsSheetProps = {
   isOnline: boolean
   schedule: string
   userRole: string | null
+  showPilotTrustInfo: boolean
   pilotBadges: string[]
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
@@ -35,6 +36,7 @@ export function MobileCentreDetailsSheet({
   isOnline,
   schedule,
   userRole,
+  showPilotTrustInfo,
   pilotBadges,
   existingApplicationId,
   existingApplicationStatus,
@@ -125,26 +127,28 @@ export function MobileCentreDetailsSheet({
                 <p className="mt-1 text-xs text-slate-600">{schedule}</p>
               </div>
 
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
-                  <li className="flex items-center gap-2 font-semibold">
-                    <CheckCircle2 size={14} className="text-emerald-700" />
-                    {isRegistered ? 'DSD registered' : 'DSD registration in progress'}
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck size={14} className="text-emerald-700" />
-                    Safety and compliance oversight expected.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <BadgeCheck size={14} className="text-emerald-700" />
-                    Subsidy readiness supports quality operations.
-                  </li>
-                </ul>
-                <p className="mt-2 text-xs text-emerald-900/90">
-                  Government subsidy = higher quality & safety oversight.
-                </p>
-              </div>
+              {showPilotTrustInfo ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
+                    <li className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 size={14} className="text-emerald-700" />
+                      {isRegistered ? 'DSD registered' : 'DSD registration in progress'}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck size={14} className="text-emerald-700" />
+                      Safety and compliance oversight expected.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <BadgeCheck size={14} className="text-emerald-700" />
+                      Subsidy readiness supports quality operations.
+                    </li>
+                  </ul>
+                  <p className="mt-2 text-xs text-emerald-900/90">
+                    Government subsidy = higher quality & safety oversight.
+                  </p>
+                </div>
+              ) : null}
 
               {pilotBadges.length > 0 ? (
                 <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3">

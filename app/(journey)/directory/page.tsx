@@ -36,6 +36,7 @@ type CentreGeoRow = {
   latitude: number | string | null
   longitude: number | string | null
   onboarding_complete: boolean | null
+  owner_id: string | null
 }
 
 type CentreApplicationRow = {
@@ -169,22 +170,44 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
     const centreIds = centreRows.map((centre) => centre.id)
     const applicationByCentre = new Map<string, { id: string; status: string | null }>()
+    let supportsOwnerId = true
     const geoById = new Map<
       string,
-      { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
+      {
+        latitude: number | string | null
+        longitude: number | string | null
+        onboarding_complete: boolean | null
+        owner_id: string | null
+      }
     >()
 
     if (centreIds.length > 0) {
-      const { data: geoRows } = await supabase
+      let geoRows: CentreGeoRow[] = []
+      const { data: geoRowsWithOwner, error: geoRowsWithOwnerError } = await supabase
         .from('ecd_centres')
-        .select('id,latitude,longitude,onboarding_complete')
+        .select('id,latitude,longitude,onboarding_complete,owner_id')
         .in('id', centreIds)
 
-      ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+      if (geoRowsWithOwnerError) {
+        supportsOwnerId = false
+        const { data: fallbackGeoRows } = await supabase
+          .from('ecd_centres')
+          .select('id,latitude,longitude,onboarding_complete')
+          .in('id', centreIds)
+        geoRows = ((fallbackGeoRows ?? []) as Omit<CentreGeoRow, 'owner_id'>[]).map((row) => ({
+          ...row,
+          owner_id: null,
+        }))
+      } else {
+        geoRows = (geoRowsWithOwner ?? []) as CentreGeoRow[]
+      }
+
+      geoRows.forEach((row) => {
         geoById.set(row.id, {
           latitude: row.latitude,
           longitude: row.longitude,
           onboarding_complete: row.onboarding_complete,
+          owner_id: row.owner_id,
         })
       })
     }
@@ -210,9 +233,10 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     centres = centreRows.map((centre) => {
       const geo = geoById.get(centre.id)
       const existingApplication = applicationByCentre.get(centre.id)
+      const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
       return toDirectoryCentre({
         ...centre,
-        is_claimed: Boolean(geo?.onboarding_complete ?? centre.is_registered),
+        is_claimed: supportsOwnerId ? hasOwner : Boolean(geo?.onboarding_complete ?? centre.is_registered),
         latitude: (geo?.latitude as number | string | null | undefined) ?? null,
         longitude: (geo?.longitude as number | string | null | undefined) ?? null,
         existingApplicationId: existingApplication?.id ?? null,

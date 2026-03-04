@@ -20,6 +20,7 @@ type CentreGeoRow = {
   latitude: number | string | null
   longitude: number | string | null
   onboarding_complete: boolean | null
+  owner_id: string | null
 }
 
 type CentreApplicationRow = {
@@ -107,22 +108,44 @@ export async function GET(req: Request) {
   const [{ data: centresData }, { count }] = await Promise.all([centresQuery, countQuery])
   const centreIds = (centresData ?? []).map((centre) => centre.id as string)
   const applicationByCentre = new Map<string, { id: string; status: string | null }>()
+  let supportsOwnerId = true
   const geoById = new Map<
     string,
-    { latitude: number | string | null; longitude: number | string | null; onboarding_complete: boolean | null }
+    {
+      latitude: number | string | null
+      longitude: number | string | null
+      onboarding_complete: boolean | null
+      owner_id: string | null
+    }
   >()
 
   if (centreIds.length > 0) {
-    const { data: geoRows } = await supabase
+    let geoRows: CentreGeoRow[] = []
+    const { data: geoRowsWithOwner, error: geoRowsWithOwnerError } = await supabase
       .from('ecd_centres')
-      .select('id,latitude,longitude,onboarding_complete')
+      .select('id,latitude,longitude,onboarding_complete,owner_id')
       .in('id', centreIds)
 
-    ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+    if (geoRowsWithOwnerError) {
+      supportsOwnerId = false
+      const { data: fallbackGeoRows } = await supabase
+        .from('ecd_centres')
+        .select('id,latitude,longitude,onboarding_complete')
+        .in('id', centreIds)
+      geoRows = ((fallbackGeoRows ?? []) as Omit<CentreGeoRow, 'owner_id'>[]).map((row) => ({
+        ...row,
+        owner_id: null,
+      }))
+    } else {
+      geoRows = (geoRowsWithOwner ?? []) as CentreGeoRow[]
+    }
+
+    geoRows.forEach((row) => {
       geoById.set(row.id, {
         latitude: row.latitude,
         longitude: row.longitude,
         onboarding_complete: row.onboarding_complete,
+        owner_id: row.owner_id,
       })
     })
   }
@@ -149,7 +172,9 @@ export async function GET(req: Request) {
     centres: (centresData ?? []).map((centre) => ({
       ...centre,
       subsidy_accepted: Boolean(centre.subsidy_accepted),
-      is_claimed: Boolean(geoById.get(centre.id as string)?.onboarding_complete ?? centre.is_registered),
+      is_claimed: supportsOwnerId
+        ? Boolean(geoById.get(centre.id as string)?.owner_id)
+        : Boolean(geoById.get(centre.id as string)?.onboarding_complete ?? centre.is_registered),
       latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
       longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
       existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,

@@ -13,6 +13,7 @@ import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
+import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 
 interface CentreCardProps {
   id: string
@@ -90,11 +91,16 @@ export default function CentreCard({
       schedule: resolved.schedule,
     })
   }, [])
-  const hasPriorityListing = is_registered
-  const pilotBadges = [
+  const isPilotCentre = isPilotCentreIdentity({ name, slug })
+  const showPilotTrustInfo = isPilotCentre
+  const showUnclaimedDisclaimer = !showPilotTrustInfo && !is_claimed
+  const hasPriorityListing = showPilotTrustInfo && is_registered
+  const pilotBadges = showPilotTrustInfo
+    ? [
     is_registered ? 'Verified' : null,
     hasPriorityListing ? 'Priority Listing' : null,
-  ].filter(Boolean) as string[]
+      ].filter(Boolean) as string[]
+    : []
 
   const encodedSlug = encodeURIComponent(slug)
   const centreHref = `/c/${encodedSlug}`
@@ -149,7 +155,7 @@ export default function CentreCard({
             {suburb}
           </p>
         </div>
-        {is_registered && (
+        {is_registered && showPilotTrustInfo && (
           <CheckCircle2 size={16} className="centre-card__check" />
         )}
         <style jsx>{`
@@ -216,7 +222,7 @@ export default function CentreCard({
           />
 
           {/* Registration badge - top right */}
-          {is_registered && (
+          {is_registered && showPilotTrustInfo && (
             <div className="centre-card__reg-badge">
               <CheckCircle2 size={12} strokeWidth={2.5} />
               Registered
@@ -311,32 +317,34 @@ export default function CentreCard({
             </div>
           ) : null}
 
-          <div className="centre-card__checklist">
-            <p className="centre-card__checklist-title">Trust checklist</p>
-            <p className="centre-card__checklist-item">
-              <CheckCircle2 size={12} />
-              {is_registered ? 'DSD registered' : 'DSD registration in progress'}
-            </p>
-            <p className="centre-card__checklist-item">
-              <ShieldCheck size={12} />
-              Safety and compliance oversight expected.
-            </p>
-            <p className="centre-card__checklist-item">
-              <BadgeCheck size={12} />
-              Subsidy readiness supports quality operations.
-            </p>
-            <p className="centre-card__checklist-note">
-              Government subsidy = higher quality & safety oversight.
-            </p>
-          </div>
+          {showPilotTrustInfo ? (
+            <div className="centre-card__checklist">
+              <p className="centre-card__checklist-title">Trust checklist</p>
+              <p className="centre-card__checklist-item">
+                <CheckCircle2 size={12} />
+                {is_registered ? 'DSD registered' : 'DSD registration in progress'}
+              </p>
+              <p className="centre-card__checklist-item">
+                <ShieldCheck size={12} />
+                Safety and compliance oversight expected.
+              </p>
+              <p className="centre-card__checklist-item">
+                <BadgeCheck size={12} />
+                Subsidy readiness supports quality operations.
+              </p>
+              <p className="centre-card__checklist-note">
+                Government subsidy = higher quality & safety oversight.
+              </p>
+            </div>
+          ) : null}
 
           <div className="centre-card__trust">
-            {is_registered ? (
+            {showPilotTrustInfo && is_registered ? (
               <span className="centre-card__trust-item">
                 <ShieldCheck size={12} /> Registered
               </span>
             ) : null}
-            {subsidy_accepted ? (
+            {showPilotTrustInfo && subsidy_accepted ? (
               <span className="centre-card__trust-item">
                 <Wallet size={12} /> Subsidy-friendly
               </span>
@@ -347,6 +355,12 @@ export default function CentreCard({
               </span>
             ) : null}
           </div>
+
+          {showUnclaimedDisclaimer ? (
+            <p className="centre-card__disclaimer" role="note">
+              {UNCLAIMED_CENTRE_DISCLAIMER}
+            </p>
+          ) : null}
 
           <div className="centre-card__apply-row" onClick={(event) => event.stopPropagation()}>
             {hasExistingApplication ? (
@@ -590,6 +604,17 @@ export default function CentreCard({
           font-size: 12px;
           font-weight: 600;
           padding: 3px 8px;
+        }
+        .centre-card__disclaimer {
+          margin: 10px 0 0 0;
+          border: 1px solid #fcd34d;
+          background: #fffbeb;
+          border-radius: 12px;
+          padding: 10px;
+          color: #92400e;
+          font-size: 12px;
+          line-height: 1.45;
+          font-weight: 700;
         }
 
         .centre-card__apply-row {

@@ -33,6 +33,7 @@ import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
+import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 
 type Centre = {
   id: string
@@ -60,6 +61,7 @@ type Centre = {
   fees_last_updated_at: string | null
   contact_whatsapp: string | null
   contact_phone: string | null
+  owner_id?: string | null
   onboarding_complete?: boolean | null
 }
 
@@ -185,6 +187,30 @@ export function CentreClient({ slug }: { slug: string }) {
           resolvedCentre = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
         }
 
+        if (
+          resolvedCentre?.id &&
+          typeof (resolvedCentre as { owner_id?: string | null }).owner_id === 'undefined'
+        ) {
+          const { data: claimState } = await supabase
+            .from('ecd_centres')
+            .select('owner_id,onboarding_complete')
+            .eq('id', resolvedCentre.id)
+            .maybeSingle()
+          if (claimState) {
+            resolvedCentre = {
+              ...resolvedCentre,
+              owner_id:
+                typeof claimState.owner_id === 'string' && claimState.owner_id.trim().length > 0
+                  ? claimState.owner_id
+                  : null,
+              onboarding_complete:
+                typeof claimState.onboarding_complete === 'boolean'
+                  ? claimState.onboarding_complete
+                  : resolvedCentre.onboarding_complete ?? null,
+            }
+          }
+        }
+
         setCentre(resolvedCentre)
 
         if (resolvedCentre?.id) {
@@ -299,20 +325,29 @@ export function CentreClient({ slug }: { slug: string }) {
   const fallbackHeroImage = getCentreHeroImage(centre.slug, null)
   const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
   const operationalStatus = getCentreOperationalStatus()
-  const isClaimed = typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered)
-  const pilotBadges = [
+  const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
+  const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
+  const isClaimed =
+    hasOwnerId || (typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered))
+  const showPilotTrustInfo = isPilotCentre
+  const showUnclaimedDisclaimer = !showPilotTrustInfo && !hasOwnerId
+  const pilotBadges = showPilotTrustInfo
+    ? [
     centre.is_registered ? 'Verified' : null,
     centre.is_registered ? 'Priority Listing' : null,
-  ].filter(Boolean) as string[]
+      ].filter(Boolean) as string[]
+    : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = locationLabel || 'Address shared on request'
   const claimHref = `/for-centres/register?plan=pilot&claim=${encodeURIComponent(centre.slug)}`
-  const heroFacts = [
-    centre.is_registered ? 'DSD Registered' : null,
-    centre.subsidy_accepted ? 'Subsidy Friendly' : null,
-    'Verified Profile',
-    'Open for 2026'
-  ].filter(Boolean) as string[]
+  const heroFacts = showPilotTrustInfo
+    ? [
+        centre.is_registered ? 'DSD Registered' : null,
+        centre.subsidy_accepted ? 'Subsidy Friendly' : null,
+        'Verified Profile',
+        'Open for 2026',
+      ].filter(Boolean) as string[]
+    : ['Open for 2026']
 
   const feesLabel = centre.fees_display_mode === 'exact' 
     ? `R${centre.monthly_fee_min}` 
@@ -385,6 +420,12 @@ export function CentreClient({ slug }: { slug: string }) {
             </HeroPill>
           ))}
         </div>
+
+        {showUnclaimedDisclaimer ? (
+          <ModernCard className="border-amber-200 bg-amber-50 text-amber-900">
+            <p className="text-sm font-bold leading-relaxed">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+          </ModernCard>
+        ) : null}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -532,26 +573,28 @@ export function CentreClient({ slug }: { slug: string }) {
                 <p className="mt-1 text-xs text-slate-600">{operationalStatus.schedule}</p>
               </div>
 
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
-                  <li className="flex items-center gap-2 font-semibold">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                    {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                    Safety and compliance oversight expected.
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <BadgeCheck className="h-4 w-4 text-emerald-700" />
-                    Subsidy readiness supports quality operations.
-                  </li>
-                </ul>
-                <p className="mt-2 text-xs text-emerald-900/90">
-                  Government subsidy = higher quality & safety oversight.
-                </p>
-              </div>
+              {showPilotTrustInfo ? (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
+                    <li className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-700" />
+                      {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-emerald-700" />
+                      Safety and compliance oversight expected.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <BadgeCheck className="h-4 w-4 text-emerald-700" />
+                      Subsidy readiness supports quality operations.
+                    </li>
+                  </ul>
+                  <p className="mt-2 text-xs text-emerald-900/90">
+                    Government subsidy = higher quality & safety oversight.
+                  </p>
+                </div>
+              ) : null}
 
               {pilotBadges.length > 0 ? (
                 <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
@@ -610,6 +653,7 @@ export function CentreClient({ slug }: { slug: string }) {
         isOnline={operationalStatus.isOnline}
         schedule={operationalStatus.schedule}
         userRole={userRole}
+        showPilotTrustInfo={showPilotTrustInfo}
         pilotBadges={pilotBadges}
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
