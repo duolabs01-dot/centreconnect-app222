@@ -30,6 +30,7 @@ type FeeDisplayMode = 'exact' | 'range' | 'contact'
 type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
 type DsdStatus = 'pending' | 'registered' | 'expired' | 'suspended' | 'not_required'
+type TenantUserPrivilege = 'owner' | 'ecd_admin' | 'ecd_staff'
 
 export type AdminTenantTableRow = {
   id: string
@@ -73,12 +74,38 @@ type AdminTenantsTableProps = {
   tenants: AdminTenantTableRow[]
 }
 
+type TenantUserRow = {
+  userId: string
+  membershipId: string | null
+  role: 'ecd_admin' | 'ecd_staff'
+  effectiveRole: TenantUserPrivilege
+  isOwner: boolean
+  fullName: string | null
+  phone: string | null
+  email: string | null
+  invitedAt: string | null
+  acceptedAt: string | null
+}
+
+type TenantPendingInvitation = {
+  invitationId: string
+  email: string
+  role: 'ecd_admin' | 'ecd_staff'
+  invitedAt: string
+  acceptedAt: string | null
+}
+
 const darkInputClass =
   'border-cyan-500/20 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-400/70'
 
 function formatDate(value: string | null | undefined) {
   if (!value) return '-'
   return new Date(value).toLocaleDateString('en-ZA', { dateStyle: 'medium' })
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return '-'
+  return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
 function parseNumberOrNull(value: string) {
@@ -117,14 +144,57 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'claimedDate', desc: true }])
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersBusy, setUsersBusy] = useState(false)
   const [editTenantId, setEditTenantId] = useState<string | null>(null)
   const [form, setForm] = useState<AdminTenantTableRow | null>(null)
+  const [tenantUsers, setTenantUsers] = useState<TenantUserRow[]>([])
+  const [pendingInvitations, setPendingInvitations] = useState<TenantPendingInvitation[]>([])
+  const [userRoleDrafts, setUserRoleDrafts] = useState<Record<string, TenantUserPrivilege>>({})
+  const [inviteForm, setInviteForm] = useState({
+    email: '',
+    fullName: '',
+    role: 'ecd_staff' as TenantUserPrivilege,
+  })
+
+  const loadTenantUsers = useCallback(async (tenantId: string) => {
+    setUsersLoading(true)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/centres/${tenantId}/users`)
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        users?: TenantUserRow[]
+        pendingInvitations?: TenantPendingInvitation[]
+      }
+      if (!response.ok) throw new Error(payload.error || 'Failed to load tenant users')
+
+      const users = payload.users ?? []
+      const invites = payload.pendingInvitations ?? []
+      setTenantUsers(users)
+      setPendingInvitations(invites)
+      setUserRoleDrafts(
+        Object.fromEntries(users.map((user) => [user.userId, user.effectiveRole] as const))
+      )
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to load tenant users')
+      setTenantUsers([])
+      setPendingInvitations([])
+      setUserRoleDrafts({})
+    } finally {
+      setUsersLoading(false)
+    }
+  }, [])
 
   const openEdit = useCallback((tenant: AdminTenantTableRow) => {
     setEditTenantId(tenant.id)
     setForm({ ...tenant })
+    setTenantUsers([])
+    setPendingInvitations([])
+    setUserRoleDrafts({})
+    setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
     setEditOpen(true)
-  }, [])
+    void loadTenantUsers(tenant.id)
+  }, [loadTenantUsers])
 
   const columns = useMemo<ColumnDef<AdminTenantTableRow>[]>(
     () => [
@@ -302,6 +372,174 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     }
   }
 
+  function applyUsersPayload(payload: {
+    users?: TenantUserRow[]
+    pendingInvitations?: TenantPendingInvitation[]
+  }) {
+    const users = payload.users ?? []
+    const pending = payload.pendingInvitations ?? []
+    setTenantUsers(users)
+    setPendingInvitations(pending)
+    setUserRoleDrafts(
+      Object.fromEntries(users.map((user) => [user.userId, user.effectiveRole] as const))
+    )
+  }
+
+  async function createTenantUser() {
+    if (!editTenantId) return
+
+    const email = inviteForm.email.trim().toLowerCase()
+    if (!email) {
+      toast.error('User email is required.')
+      return
+    }
+
+    setUsersBusy(true)
+    try {
+      const inviteRole = inviteForm.role === 'owner' ? 'ecd_admin' : inviteForm.role
+      const inviteResponse = await fetch('/api/internal/platform-admin/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ecdId: editTenantId,
+          email,
+          role: inviteRole,
+          fullName: inviteForm.fullName.trim() || undefined,
+        }),
+      })
+      const invitePayload = (await inviteResponse.json().catch(() => ({}))) as {
+        error?: string
+        userId?: string | null
+        invitedEmail?: string
+      }
+      if (!inviteResponse.ok) throw new Error(invitePayload.error || 'Failed to invite user')
+
+      if (inviteForm.role === 'owner') {
+        if (!invitePayload.userId) {
+          toast.warning(
+            'Invite sent, but ownership could not be assigned yet. Assign owner after the user account is linked.'
+          )
+        } else {
+          const ownerResponse = await fetch(`/api/internal/platform-admin/centres/${editTenantId}/users`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'set_user_privileges',
+              userId: invitePayload.userId,
+              role: 'owner',
+            }),
+          })
+          const ownerPayload = (await ownerResponse.json().catch(() => ({}))) as {
+            error?: string
+            users?: TenantUserRow[]
+            pendingInvitations?: TenantPendingInvitation[]
+          }
+          if (!ownerResponse.ok) throw new Error(ownerPayload.error || 'Failed to assign owner privileges')
+          applyUsersPayload(ownerPayload)
+        }
+      }
+
+      setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
+      if (inviteForm.role !== 'owner') {
+        await loadTenantUsers(editTenantId)
+      }
+      router.refresh()
+      toast.success(`User invite sent to ${invitePayload.invitedEmail ?? email}`)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to create tenant user')
+    } finally {
+      setUsersBusy(false)
+    }
+  }
+
+  async function saveUserPrivileges(user: TenantUserRow) {
+    if (!editTenantId) return
+    const role = userRoleDrafts[user.userId] ?? user.effectiveRole
+
+    setUsersBusy(true)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/centres/${editTenantId}/users`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'set_user_privileges',
+          userId: user.userId,
+          role,
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        users?: TenantUserRow[]
+        pendingInvitations?: TenantPendingInvitation[]
+      }
+      if (!response.ok) throw new Error(payload.error || 'Failed to update user privileges')
+      applyUsersPayload(payload)
+      router.refresh()
+      toast.success('User privileges updated.')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to update user privileges')
+    } finally {
+      setUsersBusy(false)
+    }
+  }
+
+  async function removeTenantUser(user: TenantUserRow) {
+    if (!editTenantId) return
+
+    setUsersBusy(true)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/centres/${editTenantId}/users`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'remove_user',
+          userId: user.userId,
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        users?: TenantUserRow[]
+        pendingInvitations?: TenantPendingInvitation[]
+      }
+      if (!response.ok) throw new Error(payload.error || 'Failed to remove user')
+      applyUsersPayload(payload)
+      router.refresh()
+      toast.success('Tenant user removed.')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to remove user')
+    } finally {
+      setUsersBusy(false)
+    }
+  }
+
+  async function removePendingInvitation(invitationId: string) {
+    if (!editTenantId) return
+
+    setUsersBusy(true)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/centres/${editTenantId}/users`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'remove_invitation',
+          invitationId,
+        }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        users?: TenantUserRow[]
+        pendingInvitations?: TenantPendingInvitation[]
+      }
+      if (!response.ok) throw new Error(payload.error || 'Failed to remove invitation')
+      applyUsersPayload(payload)
+      toast.success('Pending invite removed.')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to remove invitation')
+    } finally {
+      setUsersBusy(false)
+    }
+  }
+
   return (
     <>
       <Card className="border-cyan-500/20 bg-slate-950/70">
@@ -417,7 +655,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
           {form ? (
             <Tabs defaultValue="general" className="space-y-4">
-              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 border border-cyan-500/20 bg-slate-900/80 p-1 sm:grid-cols-5">
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-1 border border-cyan-500/20 bg-slate-900/80 p-1 sm:grid-cols-6">
                 <TabsTrigger value="general" className="text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100">
                   General
                 </TabsTrigger>
@@ -432,6 +670,9 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                 </TabsTrigger>
                 <TabsTrigger value="operations" className="text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100">
                   Operations
+                </TabsTrigger>
+                <TabsTrigger value="users" className="text-slate-300 data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-100">
+                  Users
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="general" className="space-y-4">
@@ -780,6 +1021,194 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                       </div>
                     </div>
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="users" className="space-y-4">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+                  <p className="text-sm font-medium text-white">Create User (Invite)</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Invite employees/admins and assign ownership privileges from this panel.
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-[1.1fr_1fr_220px_auto]">
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Email</Label>
+                      <Input
+                        type="email"
+                        className={darkInputClass}
+                        placeholder="teacher@centre.co.za"
+                        value={inviteForm.email}
+                        onChange={(event) => setInviteForm((prev) => ({ ...prev, email: event.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Full Name (Optional)</Label>
+                      <Input
+                        className={darkInputClass}
+                        placeholder="Jane Nkosi"
+                        value={inviteForm.fullName}
+                        onChange={(event) => setInviteForm((prev) => ({ ...prev, fullName: event.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Privileges</Label>
+                      <Select
+                        value={inviteForm.role}
+                        onValueChange={(value) =>
+                          setInviteForm((prev) => ({ ...prev, role: value as TenantUserPrivilege }))
+                        }
+                      >
+                        <SelectTrigger className={`${darkInputClass} [&_span]:text-slate-100`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                          <SelectItem value="ecd_staff">Staff</SelectItem>
+                          <SelectItem value="ecd_admin">Admin</SelectItem>
+                          <SelectItem value="owner">Owner</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      type="button"
+                      className="bg-cyan-500 text-black hover:bg-cyan-400"
+                      onClick={() => void createTenantUser()}
+                      disabled={usersBusy || usersLoading}
+                    >
+                      {usersBusy ? 'Creating...' : 'Create User'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-white">Tenant Users</p>
+                  {usersLoading ? (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">
+                      Loading users...
+                    </div>
+                  ) : tenantUsers.length === 0 ? (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">
+                      No users linked to this tenant yet.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/30">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-800 hover:bg-transparent">
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">User</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Email</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Current</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Set Privileges</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Last Invite</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500 text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {tenantUsers.map((user) => (
+                            <TableRow key={user.userId} className="border-slate-800">
+                              <TableCell className="font-medium text-slate-100">
+                                {user.fullName || user.userId}
+                                {user.isOwner ? (
+                                  <span className="ml-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-cyan-200">
+                                    Owner
+                                  </span>
+                                ) : null}
+                              </TableCell>
+                              <TableCell className="text-slate-300">{user.email ?? '-'}</TableCell>
+                              <TableCell className="text-slate-300">{user.effectiveRole}</TableCell>
+                              <TableCell>
+                                <Select
+                                  value={userRoleDrafts[user.userId] ?? user.effectiveRole}
+                                  onValueChange={(value) =>
+                                    setUserRoleDrafts((prev) => ({
+                                      ...prev,
+                                      [user.userId]: value as TenantUserPrivilege,
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger className={`${darkInputClass} h-9 [&_span]:text-slate-100`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                                    <SelectItem value="ecd_staff">Staff</SelectItem>
+                                    <SelectItem value="ecd_admin">Admin</SelectItem>
+                                    <SelectItem value="owner">Owner</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell className="text-slate-300">{formatDateTime(user.invitedAt)}</TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                                    onClick={() => void saveUserPrivileges(user)}
+                                    disabled={usersBusy || usersLoading}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-rose-500/30 bg-slate-900 text-rose-200 hover:bg-slate-800"
+                                    onClick={() => void removeTenantUser(user)}
+                                    disabled={usersBusy || user.isOwner}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-white">Pending Invitations</p>
+                  {pendingInvitations.length === 0 ? (
+                    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-sm text-slate-400">
+                      No pending invites.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/30">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-slate-800 hover:bg-transparent">
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Email</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Role</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500">Invited</TableHead>
+                            <TableHead className="text-xs uppercase tracking-[0.15em] text-slate-500 text-right">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {pendingInvitations.map((invitation) => (
+                            <TableRow key={invitation.invitationId} className="border-slate-800">
+                              <TableCell className="text-slate-100">{invitation.email}</TableCell>
+                              <TableCell className="text-slate-300">{invitation.role}</TableCell>
+                              <TableCell className="text-slate-300">{formatDateTime(invitation.invitedAt)}</TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  className="border-rose-500/30 bg-slate-900 text-rose-200 hover:bg-slate-800"
+                                  onClick={() => void removePendingInvitation(invitation.invitationId)}
+                                  disabled={usersBusy}
+                                >
+                                  Remove
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
