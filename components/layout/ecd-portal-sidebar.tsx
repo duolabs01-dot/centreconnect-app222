@@ -18,7 +18,9 @@ type EcdPortalSidebarProps = {
   attentionBadges?: Partial<Record<string, number>>
 }
 
-const MAIN_GROUP_ORDER: NonNullable<EcdNavItem['group']>[] = [
+type EcdNavGroup = NonNullable<EcdNavItem['group']>
+
+const MAIN_GROUP_ORDER: EcdNavGroup[] = [
   'daily_operations',
   'admissions',
   'finance',
@@ -28,7 +30,7 @@ const MAIN_GROUP_ORDER: NonNullable<EcdNavItem['group']>[] = [
 ]
 
 // === GROUP LABELS (updated for all nav groups including 'admin' from Financials) ===
-const GROUP_LABELS: Record<NonNullable<EcdNavItem['group']>, string> = {
+const GROUP_LABELS: Record<EcdNavGroup, string> = {
   daily_operations: 'Daily Operations',
   admissions: 'Admissions',
   finance: 'Finance',                    // ← from your new Financials page

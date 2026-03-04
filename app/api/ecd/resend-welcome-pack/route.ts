@@ -1,28 +1,31 @@
 import { NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const FROM_ADDRESS = 'CentreConnect <hello@centerconnect.co.za>'
+const OLD_DOMAIN_PATTERN = /centerconnect-app222\.vercel\.app/gi
+
+type Payload = {
+  ecdId?: string
+  ownerEmail?: string
+}
 
 async function fetchWelcomePackHtml(appUrl: string) {
-  const normalizedAppUrl = appUrl.replace(/\/+$/, '')
-  const url = `${normalizedAppUrl}/CentreConnect_Pilot_Welcome_FINAL.html`
-
-  const response = await fetch(url)
+  const normalized = appUrl.replace(/\/+$/, '')
+  const response = await fetch(`${normalized}/CentreConnect_Pilot_Welcome_FINAL.html`)
   if (!response.ok) {
-    throw new Error(`Unable to download welcome pack HTML (${response.status})`)
+    throw new Error(`Failed to download welcome pack HTML (${response.status})`)
   }
-
-  return response.text()
+  const html = await response.text()
+  return html.replace(OLD_DOMAIN_PATTERN, normalized)
 }
 
 export async function POST(request: Request) {
-  let payload: { ecdId?: string; ownerEmail?: string }
-
+  let payload: Payload
   try {
     payload = await request.json()
   } catch (error) {
-    console.error('resend-welcome-pack: failed to parse JSON payload', error)
+    console.error('resend-welcome-pack: unable to parse JSON', error)
     return NextResponse.json({ success: false, error: 'Invalid JSON body' }, { status: 400 })
   }
 
@@ -30,25 +33,41 @@ export async function POST(request: Request) {
   if (!ecdId) {
     return NextResponse.json({ success: false, error: 'ecdId is required' }, { status: 400 })
   }
-
   if (!ownerEmail) {
     return NextResponse.json({ success: false, error: 'ownerEmail is required' }, { status: 400 })
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
   if (!appUrl) {
-    console.error('resend-welcome-pack: missing NEXT_PUBLIC_APP_URL')
+    console.error('resend-welcome-pack: NEXT_PUBLIC_APP_URL missing')
     return NextResponse.json({ success: false, error: 'Application URL is not configured' }, { status: 500 })
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY
-  if (!resendApiKey) {
-    console.error('resend-welcome-pack: missing RESEND_API_KEY')
+  const smtpHost = process.env.SMTP_HOST
+  const smtpPortRaw = process.env.SMTP_PORT
+  const smtpUser = process.env.SMTP_USER
+  const smtpPass = process.env.SMTP_PASS
+  const smtpFrom = process.env.SMTP_FROM
+
+  if (!smtpHost || !smtpPortRaw || !smtpUser || !smtpPass || !smtpFrom) {
+    console.error('resend-welcome-pack: SMTP configuration missing', {
+      smtpHost: Boolean(smtpHost),
+      smtpPort: Boolean(smtpPortRaw),
+      smtpUser: Boolean(smtpUser),
+      smtpPass: Boolean(smtpPass),
+      smtpFrom: Boolean(smtpFrom),
+    })
     return NextResponse.json({ success: false, error: 'Email provider is not configured' }, { status: 500 })
   }
 
-  const supabaseAdmin = createAdminClient()
-  const { data: centre, error: centreError } = await supabaseAdmin
+  const smtpPort = Number(smtpPortRaw)
+  if (!Number.isFinite(smtpPort) || smtpPort <= 0) {
+    console.error('resend-welcome-pack: invalid SMTP_PORT', smtpPortRaw)
+    return NextResponse.json({ success: false, error: 'Invalid SMTP port configured' }, { status: 500 })
+  }
+
+  const admin = createAdminClient()
+  const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
     .select('name')
     .eq('id', ecdId)
@@ -63,35 +82,32 @@ export async function POST(request: Request) {
   try {
     html = await fetchWelcomePackHtml(appUrl)
   } catch (error) {
-    console.error('resend-welcome-pack: could not download welcome pack', error)
+    console.error('resend-welcome-pack: failed to download welcome pack', error)
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
   }
 
-  const subject = `You have been invited to ${centre.name}`
+  const subject = `Welcome to CentreConnect Pilot — ${centre.name ?? 'CentreConnect'}`
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        'Content-Type': 'application/json',
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: true,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
       },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: ownerEmail,
-        subject,
-        html,
-      }),
     })
 
-    if (!response.ok) {
-      const errorBody = await response.text()
-      console.error('resend-welcome-pack: resend API error', response.status, errorBody)
-      return NextResponse.json({ success: false, error: 'Failed to send welcome pack email' }, { status: 502 })
-    }
+    await transporter.sendMail({
+      from: smtpFrom,
+      to: ownerEmail,
+      subject,
+      html,
+    })
   } catch (error) {
-    console.error('resend-welcome-pack: unable to reach Resend API', error)
-    return NextResponse.json({ success: false, error: 'Unable to send welcome pack' }, { status: 502 })
+    console.error('resend-welcome-pack: SMTP send failed', error)
+    return NextResponse.json({ success: false, error: 'Unable to send welcome pack email' }, { status: 502 })
   }
 
   return NextResponse.json({ success: true })
