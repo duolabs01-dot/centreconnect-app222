@@ -19,7 +19,7 @@ interface CentreCardProps {
   address?: string
   distance?: string
   distanceLabel?: string
-  rating: number
+  rating?: number
   fees?: string
   feesLabel?: string
   age_groups: string[]
@@ -40,7 +40,7 @@ export function CentreCard({
   address,
   distance,
   distanceLabel,
-  rating,
+  rating = 4.5,
   fees,
   feesLabel,
   age_groups,
@@ -74,8 +74,8 @@ export function CentreCard({
             src={displayImage}
             alt={name}
             fill
-            priority
             className="object-cover group-hover:scale-105 transition-transform duration-500"
+            priority={false}
           />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
