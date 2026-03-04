@@ -116,7 +116,7 @@ export async function POST(request: Request) {
   })
 
   const centrePageUrl = `${appUrlRoot}/centre/${centreSlug || 'profile'}`
-  const plainText = `Welcome ${ownerName} to ${centreName}! Visit ${centrePageUrl} for your centre details.`
+  const plainText = `Welcome ${ownerName} to ${centreName}! Visit ${centrePageUrl} for your centre details. Need anything? WhatsApp us anytime at +27 68 535 6430.`
 
   const subject = `Welcome to CentreConnect Pilot — ${centreName}`
 

@@ -132,6 +132,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const nowIso = new Date().toISOString()
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
+  const centreSlug = (centre.slug ?? '').trim()
   const ownerName = sanitizeName(centre.primary_contact_name, 'ECD Admin')
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
@@ -181,11 +182,19 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   let combinedWarning: string | undefined = accessLink.warning ?? undefined
   let welcomePackWarning: string | undefined
   if (emailResult.success) {
+    const welcomePackPayload = {
+      ecdId: centre.id,
+      ownerEmail,
+      centreName: centre.name ?? undefined,
+      ownerName,
+      centreSlug: centreSlug || undefined,
+    }
+
     try {
       const welcomeResponse = await fetch(welcomePackEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ecdId: centre.id, ownerEmail }),
+        body: JSON.stringify(welcomePackPayload),
       })
 
       if (!welcomeResponse.ok) {

@@ -1,692 +1,200 @@
-// components/parent/CentreCard.tsx
-// Premium card for directory listings and saved centres.
-// Uses depth (shadow), not gradients. Subtle hover lift.
-
 'use client'
 
-import { useEffect, useState } from 'react'
-import type { KeyboardEvent, MouseEvent } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { MapPin, Users, Star, CheckCircle2, ShieldCheck, Wallet, MessageCircleMore, BadgeCheck, Circle } from 'lucide-react'
-import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
-import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
-import { LiteImage } from '@/components/ui/LiteImage' // Import LiteImage
-import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
-import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
-import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
+import { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { LiteImage } from '@/components/ui/LiteImage'
+import { Heart, MapPin, Star, Users } from 'lucide-react'
 
 interface CentreCardProps {
   id: string
-  slug: string
+  slug?: string
   name: string
   tagline?: string
-  suburb: string
-  city: string
-  capacity?: number
-  age_groups?: string[]
-  is_registered: boolean
-  logo_url?: string
+  city?: string
+  suburb?: string
   cover_image_url?: string
-  rating?: number        // future feature
-  open_spots?: number    // future: calculated from capacity - approved apps
-  variant?: 'default' | 'compact' | 'featured'
-  subsidy_accepted?: boolean
-  fees_display_mode?: 'exact' | 'range' | 'contact' | null
-  is_claimed?: boolean
-  latitude?: number | null // Added
-  longitude?: number | null // Added
+  logo_url?: string
   distanceLabel?: string
-  existingApplicationId?: string | null
-  existingApplicationStatus?: string | null
+  feesLabel?: string
+  age_groups?: string[]
+  rating?: number
+  saved?: boolean
 }
 
-type OperationalState = {
-  isOnline: boolean | null
-  schedule: string
+const cardMotion = {
+  initial: { y: 0, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.22)' },
+  hover: { y: -6, boxShadow: '0 30px 60px rgba(15, 23, 42, 0.35)' },
 }
 
-function formatStatusLabel(status?: string | null) {
-  if (!status) return 'Submitted'
-  return status
-    .split('_')
-    .filter(Boolean)
-    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
-    .join(' ')
+const imageMotion = {
+  rest: { scale: 1, rotate: 0 },
+  hover: { scale: 1.05, rotate: 0.2 },
 }
 
 export default function CentreCard({
-  id,
-  slug,
+  slug = '',
   name,
   tagline,
-  suburb,
   city,
-  capacity,
-  age_groups = [],
-  is_registered,
-  logo_url,
+  suburb,
   cover_image_url,
-  rating,
-  open_spots,
-  variant = 'default',
-  subsidy_accepted = false,
-  fees_display_mode = null,
-  is_claimed = true,
+  logo_url,
   distanceLabel,
-  existingApplicationId,
-  existingApplicationStatus,
+  feesLabel,
+  age_groups = [],
+  rating,
+  saved: initialSaved = false,
 }: CentreCardProps) {
-  const router = useRouter()
-  const heroImage = getCentreHeroImage(slug, cover_image_url)
-  const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ')
-  const [operationalStatus, setOperationalStatus] = useState<OperationalState>({
-    isOnline: null,
-    schedule: 'Mon-Fri 07:00-17:30, Sat 08:00-13:00',
-  })
+  const [isSaved, setIsSaved] = useState(initialSaved)
+  const safeSlug = slug.trim().length ? slug.trim() : 'directory'
+  const encodedSlug = encodeURIComponent(safeSlug)
+  const centreHref = `/c/${encodedSlug}`
+  const applyHref = `/apply/${encodedSlug}`
+  const locationLabel = [suburb?.trim(), city?.trim()].filter(Boolean).join(', ') || 'Location coming soon'
 
-  useEffect(() => {
-    const resolved = getCentreOperationalStatus()
-    setOperationalStatus({
-      isOnline: resolved.isOnline,
-      schedule: resolved.schedule,
-    })
-  }, [])
-  const isPilotCentre = isPilotCentreIdentity({ name, slug })
-  const showPilotTrustInfo = isPilotCentre
-  const showUnclaimedDisclaimer = !is_claimed
-  const hasPriorityListing = showPilotTrustInfo && is_registered
-  const pilotBadges = showPilotTrustInfo
-    ? [
-    is_registered ? 'Verified' : null,
-    hasPriorityListing ? 'Priority Listing' : null,
-      ].filter(Boolean) as string[]
-    : []
+  const ageBadges = useMemo(() => {
+    if (!age_groups.length) return ['Ages all'];
+    return age_groups.slice(0, 3)
+  }, [age_groups])
 
-  const safeSlug = normalizeCentreSlug(slug) ?? slug.trim()
-  const hasValidSlug = safeSlug.length > 0
-  const encodedSlug = hasValidSlug ? encodeURIComponent(safeSlug) : ''
-  const centreHref = hasValidSlug ? `/c/${encodedSlug}` : '/directory'
-  const applyHref = hasValidSlug ? `/apply/${encodedSlug}` : '/directory'
-  const claimHref = hasValidSlug
-    ? `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeSlug)}`
-    : '/for-centres/register'
-  const hasExistingApplication = Boolean(existingApplicationId)
-  const applicationStatusLabel = formatStatusLabel(existingApplicationStatus)
-
-  function handleClaimClick(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
+  function toggleSave(event: React.MouseEvent<HTMLButtonElement>) {
     event.stopPropagation()
-    window.location.href = claimHref
-  }
-
-  function handleApplyClick(event: MouseEvent<HTMLButtonElement>) {
-    event.preventDefault()
-    event.stopPropagation()
-    window.location.href = applyHref
-  }
-
-  function handleViewStatusClick(event: MouseEvent<HTMLButtonElement>) {
-    if (!existingApplicationId) return
-    event.preventDefault()
-    event.stopPropagation()
-    window.location.href = `/parent/applications/${existingApplicationId}`
-  }
-
-  function openCentreProfile() {
-    router.push(centreHref)
-  }
-
-  function handleCardKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key !== 'Enter' && event.key !== ' ') return
-    event.preventDefault()
-    openCentreProfile()
-  }
-
-  if (variant === 'compact') {
-    return (
-      <Link href={centreHref} className="centre-card centre-card--compact">
-        <div className="centre-card__logo-sm">
-          {logo_url ? (
-            <LiteImage src={logo_url} alt={name} width={40} height={40} className="w-full h-full object-cover" sizes="40px" />
-          ) : (
-            <span className="centre-card__initials">{name.charAt(0)}</span>
-          )}
-        </div>
-        <div className="centre-card__body-sm">
-          <p className="centre-card__name-sm">{name}</p>
-          <p className="centre-card__loc-sm">
-            <MapPin size={11} strokeWidth={2} />
-            {suburb}
-          </p>
-        </div>
-        {is_registered && showPilotTrustInfo && (
-          <CheckCircle2 size={16} className="centre-card__check" />
-        )}
-        <style jsx>{`
-          .centre-card--compact {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: white;
-            border-radius: var(--radius-md);
-            border: 1px solid #F1F5F9;
-            box-shadow: var(--shadow-elevation-1);
-            text-decoration: none;
-            transition: box-shadow 0.15s ease;
-          }
-          .centre-card--compact:active {
-            box-shadow: var(--shadow-elevation-2);
-          }
-          .centre-card__logo-sm {
-            width: 40px; height: 40px;
-            border-radius: var(--radius-sm);
-            background: #EFF6FF;
-            overflow: hidden;
-            flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-          }
-          .centre-card__initials {
-            font-size: 18px; font-weight: 700; color: #2563EB;
-          }
-          .centre-card__body-sm { flex: 1; min-width: 0; }
-          .centre-card__name-sm {
-            font-size: 14px; font-weight: 700; color: #0F172A;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          }
-          .centre-card__loc-sm {
-            display: flex; align-items: center; gap: 3px;
-            font-size: 12px; color: #64748B; margin-top: 2px;
-          }
-          .centre-card__check { color: #10B981; flex-shrink: 0; }
-        `}</style>
-      </Link>
-    )
+    setIsSaved((prev) => !prev)
   }
 
   return (
-    <>
-      <article
-        className={`centre-card ${variant === 'featured' ? 'centre-card--featured' : ''}`}
-        role="link"
-        tabIndex={0}
-        aria-label={`View ${name}`}
-        onClick={openCentreProfile}
-        onKeyDown={handleCardKeyDown}
-      >
-        {/* Cover image */}
-        <div className="centre-card__cover">
-          <LiteImage
-            src={heroImage}
-            alt={`${name} cover`}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 50vw"
-            loading="lazy"
-          />
-
-          {/* Registration badge - top right */}
-          {is_registered && showPilotTrustInfo && (
-            <div className="centre-card__reg-badge">
-              <CheckCircle2 size={12} strokeWidth={2.5} />
-              Registered
+    <motion.div
+      initial="initial"
+      whileHover="hover"
+      animate="rest"
+      variants={cardMotion}
+      transition={{ type: 'spring', stiffness: 180, damping: 18 }}
+      className="w-full"
+    >
+      <Card className="overflow-hidden rounded-2xl border-0 bg-slate-950 text-white">
+        <CardHeader className="p-0">
+          <motion.div
+            variants={imageMotion}
+            transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+            className="relative h-52 w-full overflow-hidden rounded-b-none rounded-2xl border-b border-white/10"
+          >
+            <LiteImage
+              src={cover_image_url ?? 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80'}
+              alt={`View of ${name}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 50vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+            <motion.button
+              type="button"
+              onClick={toggleSave}
+              aria-pressed={isSaved}
+              aria-label={isSaved ? 'Remove from saved centres' : 'Save this centre for later'}
+              className="absolute right-4 top-4 z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-black/40 text-rose-400 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+              whileTap={{ scale: 0.92 }}
+            >
+              <Heart className={isSaved ? 'fill-rose-500 text-rose-500' : 'text-white'} size={20} strokeWidth={2.1} />
+            </motion.button>
+            <div className="absolute left-4 bottom-4 rounded-2xl bg-amber-50/80 px-3 py-1 text-xs font-semibold text-amber-900 shadow-[0_12px_24px_rgba(15,23,42,0.45)]">
+              Orbitron
             </div>
-          )}
+          </motion.div>
+          <div className="absolute inset-0 pointer-events-none" />
+        </CardHeader>
 
-          {/* Open spots indicator */}
-          {open_spots !== undefined && (
-            <div className={`centre-card__spots ${open_spots === 0 ? 'centre-card__spots--full' : ''}`}>
-              {open_spots === 0 ? 'Full' : `${open_spots} spots`}
-            </div>
-          )}
-          <div style={{position: 'absolute', bottom: '10px', right: '10px'}}>
-            <SaveCentreButton centreId={id} />
-          </div>
-        </div>
-
-        {/* Card body */}
-        <div className="centre-card__body">
-          {/* Logo + name row */}
-          <div className="centre-card__header">
-            <div className="centre-card__logo">
-              {logo_url ? (
-                <LiteImage src={logo_url} alt={name} width={44} height={44} className="w-full h-full object-cover" loading="lazy" sizes="44px" />
+        <CardContent className="pt-6 text-white">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle style={{ fontFamily: 'Orbitron, sans-serif' }} className="text-2xl tracking-[0.2em]">
+                {name}
+              </CardTitle>
+              {tagline ? (
+                <CardDescription className="text-sm text-slate-300">{tagline}</CardDescription>
               ) : (
-                <span className="centre-card__initials-lg">{name.charAt(0)}</span>
+                <CardDescription className="text-sm text-slate-400">
+                  Crafted for calm mornings and joyful late afternoons.
+                </CardDescription>
               )}
             </div>
-            <div className="centre-card__title-group">
-              <h3 className="centre-card__name">{name}</h3>
-              {tagline && <p className="centre-card__tagline">{tagline}</p>}
-            </div>
+            {logo_url && (
+              <div className="h-12 w-12 overflow-hidden rounded-2xl border border-white/30 bg-white/20 shadow-lg">
+                <LiteImage src={logo_url} alt={`${name} logo`} width={48} height={48} className="object-cover" />
+              </div>
+            )}
           </div>
 
-          {/* Meta row */}
-          <div className="centre-card__meta">
-            <span
-              className={`centre-card__meta-item ${
-                operationalStatus.isOnline === null
-                  ? 'centre-card__meta-item--pending'
-                  : operationalStatus.isOnline
-                    ? 'centre-card__meta-item--online'
-                    : 'centre-card__meta-item--offline'
-              }`}
-            >
-              <Circle size={11} fill="currentColor" strokeWidth={0} />
-              {operationalStatus.isOnline === null ? 'Status' : operationalStatus.isOnline ? 'Online' : 'Offline'}
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-200">
+            <span className="inline-flex items-center gap-1 text-cyan-200 font-semibold">
+              <MapPin size={16} />
+              {locationLabel}
             </span>
-            <span className={`centre-card__meta-item ${!locationLabel ? 'text-orange-500' : ''}`}>
-              <MapPin size={13} strokeWidth={2} />
-              {locationLabel || 'Location to be confirmed'}
-            </span>
-            {distanceLabel && (
-              <span className="centre-card__meta-item" style={{ color: '#0891b2', fontWeight: '700' }}>
-                {distanceLabel}
-              </span>
-            )}
-            {capacity && (
-              <span className="centre-card__meta-item">
-                <Users size={13} strokeWidth={2} />
-                {capacity} children
-              </span>
-            )}
             {rating && (
-              <span className="centre-card__meta-item centre-card__meta-item--rating">
-                <Star size={13} fill="currentColor" strokeWidth={0} />
+              <span className="inline-flex items-center gap-1 font-semibold text-amber-300">
+                <Star size={16} />
                 {rating.toFixed(1)}
               </span>
             )}
+            <span className="inline-flex items-center gap-1 font-semibold text-emerald-200">
+              <Users size={16} />
+              Warm community
+            </span>
           </div>
 
-          {/* Age group chips */}
-          {age_groups.length > 0 && (
-            <div className="centre-card__tags">
-              {age_groups.slice(0, 3).map(age => (
-                <span key={age} className="centre-card__tag">{age} yrs</span>
-              ))}
-              {age_groups.length > 3 && (
-                <span className="centre-card__tag centre-card__tag--more">+{age_groups.length - 3}</span>
-              )}
-            </div>
-          )}
-
-          {pilotBadges.length > 0 ? (
-            <div className="centre-card__badges">
-              {pilotBadges.map((badge) => (
-                <span key={badge} className="centre-card__pilot-badge">
-                  <BadgeCheck size={12} />
-                  {badge}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          {showPilotTrustInfo ? (
-            <div className="centre-card__checklist">
-              <p className="centre-card__checklist-title">Trust checklist</p>
-              <p className="centre-card__checklist-item">
-                <CheckCircle2 size={12} />
-                {is_registered ? 'DSD registered' : 'DSD registration in progress'}
-              </p>
-              <p className="centre-card__checklist-item">
-                <ShieldCheck size={12} />
-                Safety and compliance oversight expected.
-              </p>
-              <p className="centre-card__checklist-item">
-                <BadgeCheck size={12} />
-                Subsidy readiness supports quality operations.
-              </p>
-              <p className="centre-card__checklist-note">
-                Government subsidy = higher quality & safety oversight.
-              </p>
-            </div>
-          ) : null}
-
-          <div className="centre-card__trust">
-            {showPilotTrustInfo && is_registered ? (
-              <span className="centre-card__trust-item">
-                <ShieldCheck size={12} /> Registered
-              </span>
-            ) : null}
-            {showPilotTrustInfo && subsidy_accepted ? (
-              <span className="centre-card__trust-item">
-                <Wallet size={12} /> Subsidy-friendly
-              </span>
-            ) : null}
-            {fees_display_mode && fees_display_mode !== 'contact' ? (
-              <span className="centre-card__trust-item">
-                <MessageCircleMore size={12} /> Clear fees
-              </span>
-            ) : null}
-          </div>
-
-          {showUnclaimedDisclaimer ? (
-            <p className="centre-card__disclaimer" role="note">
-              {UNCLAIMED_CENTRE_DISCLAIMER}
-            </p>
-          ) : null}
-
-          <div className="centre-card__apply-row" onClick={(event) => event.stopPropagation()}>
-            {hasExistingApplication ? (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="centre-card__apply-btn centre-card__apply-btn--disabled rounded-2xl"
-                  disabled
-                >
-                  Apply (Already submitted)
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="centre-card__status-btn rounded-2xl"
-                  onClick={handleViewStatusClick}
-                >
-                  View status: {applicationStatusLabel}
-                </Button>
-              </>
-            ) : (
-              <Button type="button" className="centre-card__apply-btn rounded-2xl" onClick={handleApplyClick}>
-                Apply
-              </Button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {distanceLabel && (
+              <Badge variant="outline" className="border-amber-200 text-amber-200">
+                {distanceLabel}
+              </Badge>
             )}
+            {feesLabel && (
+              <Badge variant="outline" className="border-cyan-200 text-cyan-100">
+                {feesLabel}
+              </Badge>
+            )}
+            {ageBadges.map((group) => (
+              <Badge key={group} variant="outline" className="border-white/30 text-white/90">
+                {group} yrs
+              </Badge>
+            ))}
           </div>
 
-          {!is_claimed ? (
-            <Button type="button" variant="outline" className="centre-card__claim-btn rounded-2xl" onClick={handleClaimClick}>
-              Claim & Update
+          <p className="mt-4 text-sm text-slate-300 leading-relaxed">
+            Drop a message, start a tour, and feel the calm. This centre is built for parents who value
+            intentional care and joyful learning.
+          </p>
+        </CardContent>
+
+        <CardFooter
+          className="flex flex-col gap-3 border-t border-white/10 pt-4"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 1rem) + 1rem)' }}
+        >
+          <div className="flex flex-col gap-3">
+            <Button
+              asChild
+              className="min-h-[52px] rounded-2xl bg-teal-600 px-6 font-semibold text-base text-white shadow-[0_16px_35px_rgba(16,185,129,0.35)] transition hover:bg-teal-500 focus-visible:ring-2 focus-visible:ring-teal-400"
+            >
+              <Link href={applyHref} aria-label={`Apply now to ${name} – it is free`}>
+                Apply Now – It’s Free
+              </Link>
             </Button>
-          ) : null}
-        </div>
-      </article>
-
-      <style jsx>{`
-        .centre-card {
-          display: block;
-          background: white;
-          border-radius: var(--radius-lg);
-          overflow: hidden;
-          box-shadow: var(--shadow-elevation-2);
-          border: 1px solid rgba(241,245,249,1);
-          text-decoration: none;
-          transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-                      box-shadow 0.2s ease;
-          -webkit-tap-highlight-color: transparent;
-          cursor: pointer;
-        }
-        .centre-card:active {
-          transform: scale(0.98);
-          box-shadow: var(--shadow-elevation-1);
-        }
-        @media (hover: hover) {
-          .centre-card:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-elevation-3);
-          }
-        }
-
-        .centre-card--featured {
-          border: 1.5px solid rgba(37,99,235,0.20);
-          box-shadow: var(--shadow-elevation-3);
-        }
-
-        /* Cover */
-        .centre-card__cover {
-          position: relative;
-          height: 140px;
-          background: #EFF6FF;
-        }
-        .centre-card__reg-badge {
-          position: absolute;
-          top: 10px; right: 10px;
-          display: flex; align-items: center; gap: 4px;
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(8px);
-          color: #059669;
-          font-size: 11px; font-weight: 700;
-          padding: 4px 8px;
-          border-radius: 999px;
-          border: 1px solid rgba(16,185,129,0.20);
-        }
-        .centre-card__spots {
-          position: absolute;
-          bottom: 10px; left: 10px;
-          background: rgba(255,255,255,0.92);
-          backdrop-filter: blur(8px);
-          color: #2563EB;
-          font-size: 11px; font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 999px;
-        }
-        .centre-card__spots--full {
-          color: #EF4444;
-        }
-
-        /* Body */
-        .centre-card__body {
-          padding: 14px 16px 16px;
-        }
-        .centre-card__header {
-          display: flex;
-          gap: 10px;
-          align-items: flex-start;
-          margin-bottom: 10px;
-        }
-        .centre-card__logo {
-          width: 44px; height: 44px;
-          border-radius: var(--radius-md);
-          background: #EFF6FF;
-          overflow: hidden;
-          flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-          border: 1.5px solid #DBEAFE;
-          margin-top: -28px; /* Overlap cover */
-          box-shadow: var(--shadow-elevation-2);
-        }
-        .centre-card__initials-lg {
-          font-size: 20px; font-weight: 800; color: #2563EB;
-        }
-        .centre-card__title-group { flex: 1; min-width: 0; padding-top: 2px; }
-        .centre-card__name {
-          font-size: 16px; font-weight: 700; color: #0F172A;
-          line-height: 1.2;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-          margin: 0;
-        }
-        .centre-card__tagline {
-          font-size: 13px; color: #64748B; margin: 2px 0 0;
-          line-height: 1.35;
-          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        /* Meta */
-        .centre-card__meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-          margin-bottom: 10px;
-        }
-        .centre-card__meta-item {
-          display: flex; align-items: center; gap: 4px;
-          font-size: 13px; color: #64748B; font-weight: 500;
-        }
-        .centre-card__meta-item--online {
-          color: #059669;
-          font-weight: 700;
-        }
-        .centre-card__meta-item--offline {
-          color: #dc2626;
-          font-weight: 700;
-        }
-        .centre-card__meta-item--pending {
-          color: #64748b;
-          font-weight: 700;
-        }
-        .centre-card__meta-item--rating {
-          color: #F59E0B;
-        }
-
-        .centre-card__badges {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-          margin-bottom: 10px;
-        }
-        .centre-card__pilot-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          border-radius: 999px;
-          border: 1px solid #99f6e4;
-          background: #ecfeff;
-          color: #0f766e;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 4px 8px;
-        }
-
-        .centre-card__checklist {
-          border: 1px solid #d1fae5;
-          background: #f0fdf4;
-          border-radius: 12px;
-          padding: 10px;
-          margin-bottom: 10px;
-        }
-        .centre-card__checklist-title {
-          margin: 0 0 6px 0;
-          font-size: 10px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #047857;
-        }
-        .centre-card__checklist-item {
-          margin: 0;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          color: #14532d;
-          font-size: 12px;
-          font-weight: 700;
-        }
-        .centre-card__checklist-item + .centre-card__checklist-item {
-          margin-top: 4px;
-        }
-        .centre-card__checklist-note {
-          margin: 6px 0 0 0;
-          color: #166534;
-          font-size: 11px;
-          line-height: 1.35;
-        }
-
-        /* Tags */
-        .centre-card__tags {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-        .centre-card__tag {
-          font-size: 12px; font-weight: 600;
-          padding: 3px 8px;
-          background: #EFF6FF;
-          color: #2563EB;
-          border-radius: 999px;
-          border: 1px solid #DBEAFE;
-        }
-        .centre-card__tag--more {
-          background: #F8FAFC;
-          color: #94A3B8;
-          border-color: #E2E8F0;
-        }
-
-        .centre-card__trust {
-          margin-top: 10px;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-
-        .centre-card__trust-item {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          border-radius: 999px;
-          border: 1px solid #E2E8F0;
-          background: #F8FAFC;
-          color: #334155;
-          font-size: 12px;
-          font-weight: 600;
-          padding: 3px 8px;
-        }
-        .centre-card__disclaimer {
-          margin: 10px 0 0 0;
-          border: 1px solid #fcd34d;
-          background: #fffbeb;
-          border-radius: 12px;
-          padding: 10px;
-          color: #92400e;
-          font-size: 12px;
-          line-height: 1.45;
-          font-weight: 700;
-        }
-
-        .centre-card__apply-row {
-          margin-top: 10px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .centre-card__apply-btn {
-          border: 1px solid #0e7490;
-          background: #ecfeff;
-          color: #0e7490;
-          border-radius: 999px;
-          height: 32px;
-          padding: 0 12px;
-          font-size: 11px;
-          font-weight: 800;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          cursor: pointer;
-        }
-
-        .centre-card__apply-btn--disabled {
-          border-color: #cbd5e1;
-          background: #f1f5f9;
-          color: #64748b;
-          cursor: not-allowed;
-        }
-
-        .centre-card__status-btn {
-          border: 1px solid #cbd5e1;
-          background: #ffffff;
-          color: #475569;
-          border-radius: 999px;
-          height: 32px;
-          padding: 0 12px;
-          font-size: 11px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-
-        .centre-card__claim-btn {
-          width: 100%;
-          margin-top: 10px;
-          border: 1px solid #0f766e;
-          background: #ffffff;
-          color: #0f766e;
-          border-radius: 12px;
-          height: 40px;
-          font-size: 12px;
-          font-weight: 800;
-          letter-spacing: 0.01em;
-          cursor: pointer;
-        }
-      `}</style>
-    </>
+            <Button
+              asChild
+              variant="outline"
+              className="min-h-[48px] rounded-2xl border-white/30 bg-white/10 px-5 font-semibold text-sm tracking-wide text-white hover:border-white hover:bg-white/20"
+            >
+              <Link href={centreHref}>View Details</Link>
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-widest text-slate-400">
+            <span className="text-slate-500">Calm space meets premium care. We reply in less than 24 hours.</span>
+          </div>
+        </CardFooter>
+      </Card>
+    </motion.div>
   )
 }
