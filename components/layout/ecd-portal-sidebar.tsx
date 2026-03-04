@@ -27,15 +27,17 @@ const MAIN_GROUP_ORDER: NonNullable<EcdNavItem['group']>[] = [
   'growth_tools',
 ]
 
+// === GROUP LABELS (updated for all nav groups including 'admin' from Financials) ===
 const GROUP_LABELS: Record<NonNullable<EcdNavItem['group']>, string> = {
   daily_operations: 'Daily Operations',
   admissions: 'Admissions',
-  finance: 'Finance',
+  finance: 'Finance',                    // ← from your new Financials page
   communication: 'Communication',
-  compliance_team: 'Compliance & Team',
-  growth_tools: 'Growth Tools',
+  compliance_team: 'Compliance',
+  growth_tools: 'Growth & Visibility',
   coming_soon: 'Coming Soon',
   settings: 'Settings',
+  admin: 'Admin',                        // ← MISSING KEY (this was the error)
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
