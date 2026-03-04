@@ -6,6 +6,8 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL, SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
+import { sendEmail } from '@/lib/email/send'
+import { sendSmtpMail } from '@/lib/email/smtp'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -70,6 +72,23 @@ function normalizeAppUrl() {
 function toDefaultRedirectTo() {
   const baseUrl = normalizeAppUrl()
   return `${baseUrl}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
+}
+
+function toPlainTextEmail(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 async function generateEcdAccessLink(input: {
@@ -290,7 +309,41 @@ export async function POST(request: Request) {
     supportEmail: SUPPORT_EMAIL,
   })
 
-  const emailQueueResult = await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
+  let directEmailSent = false
+  let directEmailProvider: 'resend' | 'smtp' | null = null
+  const directEmailErrors: string[] = []
+
+  if (process.env.RESEND_API_KEY?.trim()) {
+    const resendResult = await sendEmail({
+      to: normalizedEmail,
+      subject: inviteEmail.subject,
+      html: inviteEmail.html,
+    })
+    if (resendResult.success) {
+      directEmailSent = true
+      directEmailProvider = 'resend'
+    } else if (resendResult.error) {
+      directEmailErrors.push(`Resend: ${resendResult.error}`)
+    }
+  }
+
+  if (!directEmailSent) {
+    const smtpResult = await sendSmtpMail({
+      to: [normalizedEmail],
+      subject: inviteEmail.subject,
+      text: toPlainTextEmail(inviteEmail.html),
+    })
+    if (smtpResult.ok) {
+      directEmailSent = true
+      directEmailProvider = 'smtp'
+    } else if (smtpResult.error) {
+      directEmailErrors.push(`SMTP: ${smtpResult.error}`)
+    }
+  }
+
+  const emailQueueResult = directEmailSent
+    ? { success: true as const, skipped: true as const }
+    : await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
 
   await writeInviteLog(adminClient, {
     centreId: data.ecdId,
@@ -301,7 +354,9 @@ export async function POST(request: Request) {
       ? `Linked existing account to ECD access (${data.role})`
       : pendingLinkOnNextLogin
         ? `Existing email invite recorded (${data.role}); link will finalize on next login`
-        : `ECD access invite (${data.role})${emailQueueResult.success ? '' : ' (delivery queue failed)'}`,
+        : directEmailSent
+          ? `ECD access invite (${data.role}) delivered via ${directEmailProvider}`
+          : `ECD access invite (${data.role})${emailQueueResult.success ? ' queued for delivery' : ' (delivery queue failed)'}`,
   })
 
   return NextResponse.json({
@@ -315,7 +370,11 @@ export async function POST(request: Request) {
     parentAccessRevoked,
     inviteLinkMode: accessLinkResult.mode,
     accessLinkWarning: accessLinkResult.warning,
+    directEmailSent,
+    directEmailProvider,
+    directEmailError: directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : null,
     emailQueued: emailQueueResult.success,
+    emailQueueSkipped: 'skipped' in emailQueueResult ? emailQueueResult.skipped : false,
     emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,
   })
 }

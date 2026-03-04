@@ -429,7 +429,11 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         pendingLinkOnNextLogin?: boolean
         parentAccessRevoked?: boolean
         accessLinkWarning?: string | null
+        directEmailSent?: boolean
+        directEmailProvider?: 'resend' | 'smtp' | null
+        directEmailError?: string | null
         emailQueued?: boolean
+        emailQueueSkipped?: boolean
         emailQueueError?: string | null
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
@@ -450,8 +454,16 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
       if (payload.accessLinkWarning) {
         toast.warning(payload.accessLinkWarning)
       }
-      if (payload.emailQueued === false) {
+      if (payload.directEmailSent) {
+        toast.success(`Invite email delivered via ${payload.directEmailProvider ?? 'mail provider'}.`)
+      }
+      if (payload.directEmailError) {
+        toast.warning(payload.directEmailError)
+      }
+      if (payload.emailQueued === false && !payload.directEmailSent) {
         toast.warning(payload.emailQueueError || 'Invite created, but email queue failed. Please retry.')
+      } else if (payload.emailQueueSkipped) {
+        // Direct send succeeded; queue intentionally skipped to avoid duplicates.
       }
       setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
       setInviteOpen(false)
