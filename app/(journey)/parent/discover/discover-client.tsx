@@ -1,6 +1,7 @@
-'use client'
+ 'use client'
 
-import { useMemo, useState } from 'react'
+import Head from 'next/head'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
@@ -63,8 +64,24 @@ export default function ParentDiscoverClient() {
     )
   }, [query])
 
+  useEffect(() => {
+    const originalZoom = document.documentElement.style.zoom
+    document.documentElement.style.zoom = '1'
+    return () => {
+      document.documentElement.style.zoom = originalZoom
+    }
+  }, [])
+
   return (
-    <div className="min-h-screen bg-slate-950 px-4 pb-24 pt-8 md:px-6 md:pb-8">
+    <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+      </Head>
+
+      <div className="min-h-screen bg-slate-950 px-4 pb-24 pt-8 md:px-6 md:pb-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="space-y-3 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900/80 to-slate-900/60 p-6 shadow-[0_25px_60px_rgba(2,6,23,0.65)]">
           <p className="text-xs uppercase tracking-[0.4em] text-amber-200">Parent discovery</p>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { type LucideIcon } from 'lucide-react'
+import { type LucideIcon, Heart } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
@@ -34,6 +34,7 @@ const NavButton = memo(({
 }) => {
   const Icon = item.icon
   const hasBadge = !active && (item.badge ?? 0) > 0
+  const isSavedTab = item.href === '/parent/saved'
   const handleClick = useCallback(() => {
     onPress(item.href)
   }, [item.href, onPress])
@@ -52,13 +53,17 @@ const NavButton = memo(({
       {active ? (
         <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-200/65 via-sky-100/40 to-indigo-200/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_0_0_1px_rgba(125,211,252,0.55),0_10px_24px_rgba(14,116,144,0.2)]" />
       ) : null}
-      <div className="relative flex flex-col items-center justify-center gap-1">
-        <div className="relative z-10">
-          <Icon
-            size={20}
-            strokeWidth={active ? 2.4 : 2}
-            className={active ? 'drop-shadow-[0_0_10px_rgba(34,211,238,0.45)]' : ''}
-          />
+          <div className="relative flex flex-col items-center justify-center gap-1">
+            <div className="relative z-10">
+              <Icon
+                size={20}
+                strokeWidth={active ? 2.4 : 2}
+                className={cn(
+                  active ? 'drop-shadow-[0_0_12px_rgba(14,165,233,0.55)] text-cyan-900' : 'text-slate-500',
+                  isSavedTab && active ? 'fill-rose-500 text-rose-500' : '',
+                  isSavedTab && !active ? 'text-slate-600' : ''
+                )}
+              />
           {hasBadge ? (
             <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           ) : null}
@@ -103,13 +108,16 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     router.push(href)
   }, [pathname, router])
 
-  const decoratedItems = useMemo(
-    () =>
-      items.map((item) =>
-        item.href === '/parent/saved' ? { ...item, badge: savedBadges } : item
-      ),
-    [items, savedBadges]
-  )
+  const decoratedItems = useMemo(() => {
+    const hasSaved = items.some((item) => item.href === '/parent/saved')
+    const baseItems = hasSaved
+      ? items
+      : [...items, { href: '/parent/saved', label: 'Saved', icon: Heart }]
+
+    return baseItems.map((item) =>
+      item.href === '/parent/saved' ? { ...item, badge: savedBadges } : item
+    )
+  }, [items, savedBadges])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
   if (!isVisible || pathname === '/' || isAuthPage) return null
