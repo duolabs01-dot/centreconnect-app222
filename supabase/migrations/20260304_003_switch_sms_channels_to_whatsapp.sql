@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Move historical bootstrap logs from SMS to WhatsApp before tightening the channel constraint.
 UPDATE public.notification_logs

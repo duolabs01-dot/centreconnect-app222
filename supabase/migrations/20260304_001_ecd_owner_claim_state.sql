@@ -1,4 +1,4 @@
--- Track claimed centres using an explicit owner user id.
+﻿-- Track claimed centres using an explicit owner user id.
 -- Disclaimer visibility and claim CTA now rely on owner_id being NULL/non-NULL.
 
 ALTER TABLE public.ecd_centres

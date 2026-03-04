@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.ecd_financial_snapshots (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

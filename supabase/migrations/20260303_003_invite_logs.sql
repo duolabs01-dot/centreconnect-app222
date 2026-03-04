@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.invite_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

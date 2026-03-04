@@ -1,4 +1,4 @@
--- Admissions/Daily Ops/Comms/Employment schema foundations (additive)
+﻿-- Admissions/Daily Ops/Comms/Employment schema foundations (additive)
 
 -- 1) Extend or create application_status enum
 DO $$

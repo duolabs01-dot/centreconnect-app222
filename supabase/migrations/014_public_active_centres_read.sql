@@ -1,4 +1,4 @@
--- Allow public/parent read of active centre rows so directory and profile pages work.
+﻿-- Allow public/parent read of active centre rows so directory and profile pages work.
 -- Keep write access locked down to platform admins / centre admins via existing policies.
 
 DROP POLICY IF EXISTS "centres_select_strict" ON ecd_centres;

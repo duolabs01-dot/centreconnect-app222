@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.compliance_documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

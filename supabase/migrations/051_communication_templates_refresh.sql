@@ -1,4 +1,4 @@
--- Refresh communication templates with simple, parent-friendly copy.
+﻿-- Refresh communication templates with simple, parent-friendly copy.
 -- South African context, simple English, and clear calls to action.
 
 INSERT INTO communication_templates (template_key, title, body, is_active)

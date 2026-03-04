@@ -1,4 +1,4 @@
--- Table for bookkeeping human workflow assignments
+﻿-- Table for bookkeeping human workflow assignments
 -- This migration ensures platform admins can track and assign bookkeeping requests.
 
 CREATE TABLE IF NOT EXISTS public.bookkeeping_assignments (

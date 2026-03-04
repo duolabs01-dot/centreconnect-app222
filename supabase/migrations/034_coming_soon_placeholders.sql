@@ -1,4 +1,4 @@
--- Table to track user interest in upcoming features.
+﻿-- Table to track user interest in upcoming features.
 
 CREATE TABLE IF NOT EXISTS feature_interest (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

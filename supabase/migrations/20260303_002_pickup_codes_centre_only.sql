@@ -1,4 +1,4 @@
--- Enforce centre-managed pickup code generation.
+﻿-- Enforce centre-managed pickup code generation.
 -- Pickup codes are created automatically when attendance check-in is marked present.
 
 CREATE OR REPLACE FUNCTION public.generate_pickup_code_atomic(

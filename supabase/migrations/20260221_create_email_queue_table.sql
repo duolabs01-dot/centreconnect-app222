@@ -1,4 +1,4 @@
--- supabase/migrations/20260221_create_email_queue_table.sql
+﻿-- supabase/migrations/20260221_create_email_queue_table.sql
 CREATE TABLE IF NOT EXISTS public.email_queue (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     recipient TEXT NOT NULL,

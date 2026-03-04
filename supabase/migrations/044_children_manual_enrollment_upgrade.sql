@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Extend children for richer manual enrollment in ECD dashboard.
 ALTER TABLE public.children

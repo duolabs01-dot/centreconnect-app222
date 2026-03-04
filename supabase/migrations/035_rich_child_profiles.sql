@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Rich child profile fields for manual enrollment workflows.
 ALTER TABLE public.children

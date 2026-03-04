@@ -1,4 +1,4 @@
-ALTER TABLE public.ecd_centres
+﻿ALTER TABLE public.ecd_centres
 ADD COLUMN IF NOT EXISTS primary_contact_name TEXT,
 ADD COLUMN IF NOT EXISTS primary_contact_email TEXT,
 ADD COLUMN IF NOT EXISTS primary_contact_phone TEXT,

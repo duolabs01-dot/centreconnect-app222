@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 ALTER TABLE public.guardians
   ADD COLUMN IF NOT EXISTS email TEXT;

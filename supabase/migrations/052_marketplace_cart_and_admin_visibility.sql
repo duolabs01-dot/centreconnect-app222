@@ -1,4 +1,4 @@
--- Marketplace cart flow + request visibility hardening.
+﻿-- Marketplace cart flow + request visibility hardening.
 -- 1) Allow "cart" as an order status.
 -- 2) Allow ECD admins to move their own orders from cart -> requested.
 -- 3) Prevent duplicate open orders for the same service.

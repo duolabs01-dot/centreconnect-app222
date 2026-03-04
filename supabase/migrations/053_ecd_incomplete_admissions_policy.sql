@@ -1,4 +1,4 @@
--- Let each centre choose whether incomplete applications can still be processed.
+﻿-- Let each centre choose whether incomplete applications can still be processed.
 -- When true: staff can review/approve and request missing docs later.
 -- When false: incomplete profiles must be completed before approval.
 

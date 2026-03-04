@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.attendance_register_imports (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

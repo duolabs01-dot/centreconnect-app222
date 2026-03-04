@@ -1,4 +1,4 @@
--- supabase/migrations/032_daily_reports.sql
+﻿-- supabase/migrations/032_daily_reports.sql
 CREATE TABLE IF NOT EXISTS child_daily_reports (
 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 ecd_id UUID NOT NULL REFERENCES ecd_centres(id) ON DELETE CASCADE,

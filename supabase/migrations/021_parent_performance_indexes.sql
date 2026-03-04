@@ -1,4 +1,4 @@
--- Parent portal performance indexes.
+﻿-- Parent portal performance indexes.
 -- Improves dashboard/application list scans and activity feed joins.
 
 CREATE INDEX IF NOT EXISTS idx_applications_parent_submitted_desc

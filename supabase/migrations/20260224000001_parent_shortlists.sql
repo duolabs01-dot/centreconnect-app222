@@ -1,4 +1,4 @@
-create table if not exists public.parent_shortlists (
+﻿create table if not exists public.parent_shortlists (
   id uuid default gen_random_uuid() primary key,
   parent_id uuid not null references auth.users(id) on delete cascade,
   centre_id uuid not null references public.ecd_centres(id) on delete cascade,

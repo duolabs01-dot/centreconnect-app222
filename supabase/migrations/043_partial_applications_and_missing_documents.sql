@@ -1,4 +1,4 @@
--- Partial applications support + missing document tracking
+﻿-- Partial applications support + missing document tracking
 
 DO $$
 BEGIN

@@ -1,4 +1,4 @@
-create table if not exists public.document_audit_log (
+﻿create table if not exists public.document_audit_log (
   id uuid primary key default gen_random_uuid(),
   document_id text not null,
   document_name text not null,

@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Normalize historical notification logs to WhatsApp click-to-chat provider labels.
 UPDATE public.notification_logs

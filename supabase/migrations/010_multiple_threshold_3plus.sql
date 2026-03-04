@@ -1,4 +1,4 @@
--- Move multiple-application signal to 3+ active applications per parent + child.
+﻿-- Move multiple-application signal to 3+ active applications per parent + child.
 
 ALTER TABLE applications
   ADD COLUMN IF NOT EXISTS share_multiple_flag BOOLEAN NOT NULL DEFAULT TRUE,

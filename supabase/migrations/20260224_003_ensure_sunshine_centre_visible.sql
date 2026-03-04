@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Ensure the canonical Sunshine centre is visible in parent discovery/search.
 UPDATE public.ecd_centres

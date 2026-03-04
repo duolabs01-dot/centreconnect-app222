@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Drivers table
 CREATE TABLE IF NOT EXISTS public.transport_drivers (

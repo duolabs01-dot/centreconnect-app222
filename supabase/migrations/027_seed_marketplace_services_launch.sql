@@ -1,4 +1,4 @@
--- Launch marketplace seed data for existing marketplace_services schema.
+﻿-- Launch marketplace seed data for existing marketplace_services schema.
 -- Table schema in this project: service_name, price, description, is_active.
 
 INSERT INTO public.marketplace_services (service_name, price, description, is_active)

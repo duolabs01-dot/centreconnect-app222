@@ -1,4 +1,4 @@
--- Launch latency pass:
+﻿-- Launch latency pass:
 -- Adds composite indexes for high-frequency ECD portal reads.
 
 -- Announcements list and draft filter per tenant.

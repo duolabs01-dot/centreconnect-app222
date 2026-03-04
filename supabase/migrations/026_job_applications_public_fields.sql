@@ -1,4 +1,4 @@
--- Public jobs application extra fields for launch.
+﻿-- Public jobs application extra fields for launch.
 
 ALTER TABLE public.job_applications
   ADD COLUMN IF NOT EXISTS id_number TEXT,

@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Track co-parent invite lifecycle events so ECD staff can see link progress.
 ALTER TABLE public.guardians

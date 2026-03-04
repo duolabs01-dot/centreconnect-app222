@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Allow one secure invite token to cover multiple guardian rows (multiple children).
 ALTER TABLE public.guardians

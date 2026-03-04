@@ -1,4 +1,4 @@
--- Atomic pickup verification RPC to avoid partial write states.
+﻿-- Atomic pickup verification RPC to avoid partial write states.
 
 CREATE OR REPLACE FUNCTION public.verify_pickup_code_atomic(
   p_ecd_id UUID,

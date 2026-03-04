@@ -1,4 +1,4 @@
--- Adds 'website_build' category to support_ticket_category enum.
+﻿-- Adds 'website_build' category to support_ticket_category enum.
 
 DO $$
 BEGIN

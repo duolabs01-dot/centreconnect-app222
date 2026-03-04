@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 ALTER TABLE public.report_cards
   DROP CONSTRAINT IF EXISTS report_cards_period_range_check;

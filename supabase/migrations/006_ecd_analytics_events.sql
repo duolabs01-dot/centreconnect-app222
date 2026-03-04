@@ -1,4 +1,4 @@
--- Lightweight analytics events for ROI reporting.
+﻿-- Lightweight analytics events for ROI reporting.
 
 DO $$
 BEGIN

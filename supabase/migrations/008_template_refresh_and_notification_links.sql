@@ -1,4 +1,4 @@
--- Ensure required communication templates and per-application notification links.
+﻿-- Ensure required communication templates and per-application notification links.
 
 ALTER TABLE parent_notifications
   ADD COLUMN IF NOT EXISTS application_id UUID REFERENCES applications(id) ON DELETE SET NULL;

@@ -1,4 +1,4 @@
--- supabase/migrations/030_paystack_idempotency.sql
+﻿-- supabase/migrations/030_paystack_idempotency.sql
 -- Add idempotency fields to invoices for Paystack webhook protection.
 
 ALTER TABLE public.invoices

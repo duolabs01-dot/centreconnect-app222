@@ -1,4 +1,4 @@
--- Migration: Ensure Phase 4 Analytics Schema
+﻿-- Migration: Ensure Phase 4 Analytics Schema
 -- Description: Extends ecd_analytics_events with role segmentation, duration, and path tracking.
 
 -- 1. Ensure the enum exists and has all values (idempotent)

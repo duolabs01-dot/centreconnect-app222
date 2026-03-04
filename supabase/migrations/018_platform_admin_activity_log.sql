@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.platform_admin_activity_log (
+﻿CREATE TABLE IF NOT EXISTS public.platform_admin_activity_log (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   actor_user_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
   actor_email TEXT,

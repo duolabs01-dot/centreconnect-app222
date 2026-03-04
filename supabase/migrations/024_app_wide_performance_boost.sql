@@ -1,4 +1,4 @@
--- App-wide performance boost: common indexes + admissions counts RPC.
+﻿-- App-wide performance boost: common indexes + admissions counts RPC.
 
 CREATE INDEX IF NOT EXISTS idx_ecd_admins_user_invited_desc
   ON public.ecd_admins(user_id, invited_at DESC);

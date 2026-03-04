@@ -1,4 +1,4 @@
--- Revenue and billing performance indexes.
+﻿-- Revenue and billing performance indexes.
 -- Speeds up admin revenue ordering and monthly invoice generation lookups.
 
 CREATE INDEX IF NOT EXISTS idx_invoices_created_at_desc

@@ -1,4 +1,4 @@
--- Payments foundation: provider metadata on invoices + webhook event ledger.
+﻿-- Payments foundation: provider metadata on invoices + webhook event ledger.
 
 ALTER TABLE public.invoices
   ADD COLUMN IF NOT EXISTS payment_provider TEXT,

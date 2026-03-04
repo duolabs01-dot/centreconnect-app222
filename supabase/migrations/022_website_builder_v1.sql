@@ -1,4 +1,4 @@
--- Website Builder v1 foundations:
+﻿-- Website Builder v1 foundations:
 -- - website publish flag on centres
 -- - public website visibility respects publish flag
 -- - public read of website content/media for published centres

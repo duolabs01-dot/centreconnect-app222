@@ -1,4 +1,4 @@
--- Communication templates and parent notifications inbox.
+﻿-- Communication templates and parent notifications inbox.
 
 CREATE TABLE IF NOT EXISTS communication_templates (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

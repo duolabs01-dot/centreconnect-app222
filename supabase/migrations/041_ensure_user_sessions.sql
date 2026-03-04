@@ -1,4 +1,4 @@
--- supabase/migrations/041_ensure_user_sessions.sql
+﻿-- supabase/migrations/041_ensure_user_sessions.sql
 CREATE TABLE IF NOT EXISTS public.user_sessions (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   session_token text NOT NULL,

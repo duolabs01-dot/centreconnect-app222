@@ -1,4 +1,4 @@
--- Offer lifecycle fields + explicit parent acceptance flow with auto-withdraw.
+﻿-- Offer lifecycle fields + explicit parent acceptance flow with auto-withdraw.
 
 ALTER TABLE applications
   ADD COLUMN IF NOT EXISTS offer_made_at TIMESTAMPTZ,

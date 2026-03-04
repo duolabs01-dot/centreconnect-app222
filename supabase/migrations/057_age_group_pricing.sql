@@ -1,4 +1,4 @@
--- Add editable age-group pricing for each ECD centre.
+﻿-- Add editable age-group pricing for each ECD centre.
 -- This powers automatic fee defaults across applications, offers, and invoices.
 
 ALTER TABLE public.ecd_centres

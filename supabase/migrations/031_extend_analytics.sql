@@ -1,4 +1,4 @@
--- supabase/migrations/031_extend_analytics.sql
+﻿-- supabase/migrations/031_extend_analytics.sql
 -- Extend analytics events with actor role, path, and duration.
 
 -- 1. Add new event type to the enum

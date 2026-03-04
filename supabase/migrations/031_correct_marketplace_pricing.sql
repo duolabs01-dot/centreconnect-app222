@@ -1,4 +1,4 @@
--- Correct marketplace service pricing as per business proposal.
+﻿-- Correct marketplace service pricing as per business proposal.
 
 UPDATE public.marketplace_services
 SET price = 799.00

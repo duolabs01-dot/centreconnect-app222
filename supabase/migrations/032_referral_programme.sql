@@ -1,4 +1,4 @@
--- Tables for referral program (codes and credits)
+﻿-- Tables for referral program (codes and credits)
 
 -- referral_codes table
 CREATE TABLE IF NOT EXISTS referral_codes (

@@ -3,6 +3,9 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { toast } from 'sonner'
 import {
   CheckCircle2,
@@ -65,6 +68,32 @@ const TIER_PRICE: Record<Tier, number> = {
   premium: 499,
 }
 
+const onboardingSchema = z.object({
+  centreName: z.string().trim().min(1, 'Centre name is required.'),
+  ownerEmail: z.string().trim().email('Valid owner email is required.'),
+  ownerPhone: z.string().trim().min(7, 'Owner phone is required.'),
+  suburb: z.string().trim().min(1, 'Suburb is required.'),
+  city: z.string().trim().min(1),
+  province: z.string().trim().min(1),
+  tier: z.enum(['basic', 'standard', 'premium']),
+  teamRole: z.enum(['ecd_admin', 'ecd_staff']),
+  teamEmails: z.string(),
+})
+
+type OnboardingFormValues = z.infer<typeof onboardingSchema>
+
+const onboardingDefaults: OnboardingFormValues = {
+  centreName: '',
+  ownerEmail: '',
+  ownerPhone: '',
+  suburb: '',
+  city: 'Johannesburg',
+  province: 'Gauteng',
+  tier: 'basic',
+  teamRole: 'ecd_staff',
+  teamEmails: '',
+}
+
 function slugify(value: string) {
   const slug = value
     .trim()
@@ -124,6 +153,11 @@ const darkInputClass =
 
 export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: ExistingCentreOption[] }) {
   const router = useRouter()
+  const onboardingForm = useForm<OnboardingFormValues>({
+    resolver: zodResolver(onboardingSchema),
+    mode: 'onTouched',
+    defaultValues: onboardingDefaults,
+  })
   const [mode, setMode] = useState<OnboardingMode>('single')
   const [busy, setBusy] = useState(false)
   const [inviteBusy, setInviteBusy] = useState(false)
@@ -132,20 +166,13 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [heroFile, setHeroFile] = useState<File | null>(null)
   const [success, setSuccess] = useState<SuccessState | null>(null)
-  const [form, setForm] = useState({
-    centreName: '',
-    ownerEmail: '',
-    ownerPhone: '',
-    suburb: '',
-    city: 'Johannesburg',
-    province: 'Gauteng',
-    tier: 'basic' as Tier,
-    teamRole: 'ecd_staff' as TeamRole,
-    teamEmails: '',
-  })
+  const centreName = onboardingForm.watch('centreName')
+  const teamEmails = onboardingForm.watch('teamEmails')
+  const tier = onboardingForm.watch('tier')
+  const teamRole = onboardingForm.watch('teamRole')
 
-  const teamParsed = useMemo(() => parseTeamEmails(form.teamEmails), [form.teamEmails])
-  const normalizedCentreName = useMemo(() => normalizeCentreSearch(form.centreName), [form.centreName])
+  const teamParsed = useMemo(() => parseTeamEmails(teamEmails), [teamEmails])
+  const normalizedCentreName = useMemo(() => normalizeCentreSearch(centreName), [centreName])
   const matchingCentres = useMemo(() => {
     if (!normalizedCentreName) return []
     return existingCentres
@@ -251,14 +278,11 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     confirmAdminRoleMigration?: boolean
     confirmParentAccessRevocation?: boolean
   }) {
-    const centreName = form.centreName.trim()
-    const ownerEmail = form.ownerEmail.trim().toLowerCase()
-    const ownerPhone = form.ownerPhone.trim()
-    const suburb = form.suburb.trim()
-    if (!centreName || !ownerEmail || !ownerPhone || !suburb) {
-      toast.error('Centre name, owner email, owner phone, and suburb are required.')
-      return
-    }
+    const values = onboardingForm.getValues()
+    const centreName = values.centreName.trim()
+    const ownerEmail = values.ownerEmail.trim().toLowerCase()
+    const ownerPhone = values.ownerPhone.trim()
+    const suburb = values.suburb.trim()
     if (exactCentreMatch) {
       toast.error('Centre already exists - claim it instead.')
       return
@@ -281,12 +305,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
           primaryContactName: contactNameFromEmail(ownerEmail, centreName),
           email: ownerEmail,
           phone: ownerPhone,
-          address: `${suburb}, ${form.city.trim() || 'Johannesburg'}`,
+          address: `${suburb}, ${values.city.trim() || 'Johannesburg'}`,
           suburb,
-          city: form.city.trim() || 'Johannesburg',
-          province: form.province.trim() || 'Gauteng',
-          monthlyPrice: TIER_PRICE[form.tier],
-          tier: form.tier,
+          city: values.city.trim() || 'Johannesburg',
+          province: values.province.trim() || 'Gauteng',
+          monthlyPrice: TIER_PRICE[values.tier],
+          tier: values.tier,
           contractSigned: true,
           onboardingFeePaid: true,
           allowExistingEmailMigration: options?.allowExistingEmailMigration ?? false,
@@ -334,7 +358,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
       let teamSent = 0
       let teamFailed = 0
       if (mode === 'team' && teamParsed.valid.length > 0) {
-        const teamResult = await sendTeamInvites(centre.id, teamParsed.valid, form.teamRole)
+        const teamResult = await sendTeamInvites(centre.id, teamParsed.valid, values.teamRole)
         teamSent = teamResult.sent
         teamFailed = teamResult.failed
         if (teamFailed > 0) {
@@ -374,8 +398,19 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     }
   }
 
+  async function runValidatedCreate(options?: {
+    allowExistingEmailMigration?: boolean
+    confirmAdminRoleMigration?: boolean
+    confirmParentAccessRevocation?: boolean
+  }) {
+    const submit = onboardingForm.handleSubmit(async () => {
+      await handleCreate(options)
+    })
+    await submit()
+  }
+
   async function handleConfirmMigration() {
-    await handleCreate({
+    await runValidatedCreate({
       allowExistingEmailMigration: true,
       confirmAdminRoleMigration: true,
       confirmParentAccessRevocation: true,
@@ -416,7 +451,15 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     setHeroFile(null)
     setMigrationDialogOpen(false)
     setExistingUserConflict(null)
-    setForm((prev) => ({ ...prev, centreName: '', ownerEmail: '', ownerPhone: '', suburb: '', teamEmails: '' }))
+    const current = onboardingForm.getValues()
+    onboardingForm.reset({
+      ...current,
+      centreName: '',
+      ownerEmail: '',
+      ownerPhone: '',
+      suburb: '',
+      teamEmails: '',
+    })
   }
 
   const migrationDialog = (
@@ -628,7 +671,15 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                 <TabsContent value="team" className="mt-5 space-y-4">
                   <div className="space-y-2">
                     <Label className="text-slate-300">Team Role</Label>
-                    <Select value={form.teamRole} onValueChange={(value) => setForm((prev) => ({ ...prev, teamRole: value as TeamRole }))}>
+                    <Select
+                      value={teamRole}
+                      onValueChange={(value) =>
+                        onboardingForm.setValue('teamRole', value as TeamRole, {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                        })
+                      }
+                    >
                       <SelectTrigger className={cn(darkInputClass, '[&_span]:text-slate-100')}>
                         <SelectValue />
                       </SelectTrigger>
@@ -643,8 +694,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                     <Textarea
                       className={cn(darkInputClass, 'min-h-[140px]')}
                       placeholder="staff1@centre.co.za&#10;staff2@centre.co.za&#10;staff3@centre.co.za"
-                      value={form.teamEmails}
-                      onChange={(event) => setForm((prev) => ({ ...prev, teamEmails: event.target.value }))}
+                      {...onboardingForm.register('teamEmails')}
                     />
                     <p className="text-xs text-slate-500">
                       Valid emails: {teamParsed.valid.length} | Invalid entries: {teamParsed.invalidCount}
@@ -661,10 +711,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   <Input
                     id="centre-name"
                     className={darkInputClass}
-                    value={form.centreName}
-                    onChange={(event) => setForm((prev) => ({ ...prev, centreName: event.target.value }))}
+                    {...onboardingForm.register('centreName')}
                     placeholder="Sunshine Early Learning Centre"
                   />
+                  {onboardingForm.formState.errors.centreName ? (
+                    <p className="text-xs text-rose-300">{onboardingForm.formState.errors.centreName.message}</p>
+                  ) : null}
                   {normalizedCentreName && matchingCentres.length > 0 ? (
                     <Card className="border-cyan-500/20 bg-slate-950/95">
                       <CardContent className="space-y-2 p-3">
@@ -686,7 +738,13 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                                 size="sm"
                                 variant="outline"
                                 className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-                                onClick={() => setForm((prev) => ({ ...prev, centreName: centre.name }))}
+                                onClick={() =>
+                                  onboardingForm.setValue('centreName', centre.name, {
+                                    shouldDirty: true,
+                                    shouldTouch: true,
+                                    shouldValidate: true,
+                                  })
+                                }
                               >
                                 Use
                               </Button>
@@ -716,10 +774,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                     id="owner-email"
                     type="email"
                     className={darkInputClass}
-                    value={form.ownerEmail}
-                    onChange={(event) => setForm((prev) => ({ ...prev, ownerEmail: event.target.value }))}
+                    {...onboardingForm.register('ownerEmail')}
                     placeholder="owner@centre.co.za"
                   />
+                  {onboardingForm.formState.errors.ownerEmail ? (
+                    <p className="text-xs text-rose-300">{onboardingForm.formState.errors.ownerEmail.message}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="owner-phone" className="text-slate-300">
@@ -728,10 +788,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   <Input
                     id="owner-phone"
                     className={darkInputClass}
-                    value={form.ownerPhone}
-                    onChange={(event) => setForm((prev) => ({ ...prev, ownerPhone: event.target.value }))}
+                    {...onboardingForm.register('ownerPhone')}
                     placeholder="+27 72 123 4567"
                   />
+                  {onboardingForm.formState.errors.ownerPhone ? (
+                    <p className="text-xs text-rose-300">{onboardingForm.formState.errors.ownerPhone.message}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="suburb" className="text-slate-300">
@@ -740,14 +802,24 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   <Input
                     id="suburb"
                     className={darkInputClass}
-                    value={form.suburb}
-                    onChange={(event) => setForm((prev) => ({ ...prev, suburb: event.target.value }))}
+                    {...onboardingForm.register('suburb')}
                     placeholder="Alexandra"
                   />
+                  {onboardingForm.formState.errors.suburb ? (
+                    <p className="text-xs text-rose-300">{onboardingForm.formState.errors.suburb.message}</p>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Plan</Label>
-                  <Select value={form.tier} onValueChange={(value) => setForm((prev) => ({ ...prev, tier: value as Tier }))}>
+                  <Select
+                    value={tier}
+                    onValueChange={(value) =>
+                      onboardingForm.setValue('tier', value as Tier, {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      })
+                    }
+                  >
                     <SelectTrigger className={cn(darkInputClass, '[&_span]:text-slate-100')}>
                       <SelectValue />
                     </SelectTrigger>
@@ -791,7 +863,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                 Welcome pack and invite flow trigger automatically after successful creation.
               </p>
               <Button
-                onClick={() => void handleCreate()}
+                onClick={() => void runValidatedCreate()}
                 loading={busy}
                 disabled={Boolean(exactCentreMatch)}
                 className="bg-cyan-500 text-black hover:bg-cyan-400"

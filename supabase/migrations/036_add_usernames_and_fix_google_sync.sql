@@ -1,4 +1,4 @@
--- Migration: Add usernames and fix Google profile sync
+﻿-- Migration: Add usernames and fix Google profile sync
 -- Description: Adds unique username column to user_profiles and ensures Google Auth syncs correctly.
 
 BEGIN;

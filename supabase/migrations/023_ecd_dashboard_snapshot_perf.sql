@@ -1,4 +1,4 @@
--- Dashboard performance: single RPC snapshot + targeted indexes.
+﻿-- Dashboard performance: single RPC snapshot + targeted indexes.
 
 CREATE INDEX IF NOT EXISTS idx_applications_ecd_status_submitted
   ON public.applications(ecd_id, status, submitted_at DESC);

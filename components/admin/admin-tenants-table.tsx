@@ -1,8 +1,18 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type ColumnDef,
+  type SortingState,
+  useReactTable,
+} from '@tanstack/react-table'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,36 +105,133 @@ function slugify(value: string) {
     .replace(/^-|-$/g, '')
 }
 
+function statusBadgeClass(status: AdminTenantTableRow['status']) {
+  if (status === 'Claimed') return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200'
+  if (status === 'Inactive') return 'border-slate-600 bg-slate-800 text-slate-300'
+  return 'border-amber-500/30 bg-amber-500/15 text-amber-200'
+}
+
 export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'claimedDate', desc: true }])
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editTenantId, setEditTenantId] = useState<string | null>(null)
   const [form, setForm] = useState<AdminTenantTableRow | null>(null)
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return tenants
-    return tenants.filter((tenant) =>
-      [tenant.name, tenant.slug, tenant.ownerEmail, tenant.ownerPhone, tenant.city, tenant.suburb]
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
-    )
-  }, [tenants, query])
-
-  const statusBadgeClass = (status: AdminTenantTableRow['status']) => {
-    if (status === 'Claimed') return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200'
-    if (status === 'Inactive') return 'border-slate-600 bg-slate-800 text-slate-300'
-    return 'border-amber-500/30 bg-amber-500/15 text-amber-200'
-  }
-
-  function openEdit(tenant: AdminTenantTableRow) {
+  const openEdit = useCallback((tenant: AdminTenantTableRow) => {
     setEditTenantId(tenant.id)
     setForm({ ...tenant })
     setEditOpen(true)
-  }
+  }, [])
+
+  const columns = useMemo<ColumnDef<AdminTenantTableRow>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
+        cell: ({ row }) => <span className="font-semibold text-slate-100">{row.original.name}</span>,
+      },
+      {
+        accessorKey: 'ownerEmail',
+        header: 'Owner Email',
+        cell: ({ row }) => <span className="text-slate-300">{row.original.ownerEmail}</span>,
+      },
+      {
+        accessorKey: 'ownerPhone',
+        header: 'Owner Phone',
+        cell: ({ row }) => <span className="text-slate-300">{row.original.ownerPhone}</span>,
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => <Badge className={statusBadgeClass(row.original.status)}>{row.original.status}</Badge>,
+      },
+      {
+        id: 'claimedDate',
+        accessorFn: (row) => row.claimedDate ?? '',
+        sortingFn: (a, b) => {
+          const left = a.original.claimedDate ? new Date(a.original.claimedDate).getTime() : 0
+          const right = b.original.claimedDate ? new Date(b.original.claimedDate).getTime() : 0
+          return left - right
+        },
+        header: 'Claimed Date',
+        cell: ({ row }) => <span className="text-slate-300">{formatDate(row.original.claimedDate)}</span>,
+      },
+      {
+        id: 'package',
+        accessorFn: (row) => `${row.subscriptionTier} ${row.subscriptionStatus}`,
+        header: 'Package',
+        cell: ({ row }) => (
+          <span className="text-slate-300">
+            {row.original.subscriptionTier === 'none'
+              ? 'NO PLAN'
+              : `${row.original.subscriptionTier.toUpperCase()} / ${row.original.subscriptionStatus}`}
+          </span>
+        ),
+      },
+      {
+        id: 'actions',
+        header: 'Quick Actions',
+        enableSorting: false,
+        enableGlobalFilter: false,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+              onClick={() => openEdit(row.original)}
+            >
+              Edit
+            </Button>
+            <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+              <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+              <Link href={`/admin/tenants/${row.original.id}#invite`}>Invite</Link>
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [openEdit]
+  )
+
+  const table = useReactTable({
+    data: tenants,
+    columns,
+    state: {
+      sorting,
+      globalFilter: query,
+    },
+    onSortingChange: setSorting,
+    globalFilterFn: (row, _, value) => {
+      const q = String(value ?? '').trim().toLowerCase()
+      if (!q) return true
+      const searchable = [
+        row.original.name,
+        row.original.slug,
+        row.original.ownerEmail,
+        row.original.ownerPhone,
+        row.original.city,
+        row.original.suburb,
+      ]
+        .join(' ')
+        .toLowerCase()
+      return searchable.includes(q)
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  })
 
   async function saveEdit() {
     if (!form || !editTenantId) return
@@ -206,7 +313,10 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           <div className="max-w-sm">
             <Input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value)
+                table.setPageIndex(0)
+              }}
               placeholder="Search centres, owners, suburbs..."
               className={darkInputClass}
             />
@@ -216,61 +326,82 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/30">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-800 hover:bg-transparent">
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Name</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner Email</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Owner Phone</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Status</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Claimed Date</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500">Package</TableHead>
-                  <TableHead className="text-xs uppercase tracking-[0.18em] text-slate-500 text-right">Quick Actions</TableHead>
-                </TableRow>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id} className="border-slate-800 hover:bg-transparent">
+                    {headerGroup.headers.map((header) => {
+                      const sorted = header.column.getIsSorted()
+                      const sortIcon = sorted === 'asc' ? '↑' : sorted === 'desc' ? '↓' : ''
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={`text-xs uppercase tracking-[0.18em] text-slate-500 ${header.column.id === 'actions' ? 'text-right' : ''}`}
+                        >
+                          {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                            <button
+                              type="button"
+                              className={`inline-flex items-center gap-1 ${header.column.id === 'actions' ? 'justify-end' : ''}`}
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              <span className="text-slate-400">{sortIcon}</span>
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </TableHead>
+                      )
+                    })}
+                  </TableRow>
+                ))}
               </TableHeader>
               <TableBody>
-                {filtered.length === 0 ? (
+                {table.getRowModel().rows.length === 0 ? (
                   <TableRow className="border-slate-800">
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-slate-500">
+                    <TableCell colSpan={columns.length} className="py-10 text-center text-sm text-slate-500">
                       No tenants found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((tenant) => (
-                    <TableRow key={tenant.id} className="border-slate-800">
-                      <TableCell className="font-semibold text-slate-100">{tenant.name}</TableCell>
-                      <TableCell className="text-slate-300">{tenant.ownerEmail}</TableCell>
-                      <TableCell className="text-slate-300">{tenant.ownerPhone}</TableCell>
-                      <TableCell>
-                        <Badge className={statusBadgeClass(tenant.status)}>{tenant.status}</Badge>
-                      </TableCell>
-                      <TableCell className="text-slate-300">{formatDate(tenant.claimedDate)}</TableCell>
-                      <TableCell className="text-slate-300">
-                        {tenant.subscriptionTier === 'none'
-                          ? 'NO PLAN'
-                          : `${tenant.subscriptionTier.toUpperCase()} / ${tenant.subscriptionStatus}`}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-                            onClick={() => openEdit(tenant)}
-                          >
-                            Edit
-                          </Button>
-                          <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                            <Link href={`/admin/tenants/${tenant.id}`}>View</Link>
-                          </Button>
-                          <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                            <Link href={`/admin/tenants/${tenant.id}#invite`}>Invite</Link>
-                          </Button>
-                        </div>
-                      </TableCell>
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow key={row.id} className="border-slate-800">
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-slate-500">
+              Showing {table.getRowModel().rows.length} of {table.getFilteredRowModel().rows.length} tenants
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-slate-500">
+                Page {table.getState().pagination.pageIndex + 1} of {Math.max(table.getPageCount(), 1)}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800"
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                Next
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

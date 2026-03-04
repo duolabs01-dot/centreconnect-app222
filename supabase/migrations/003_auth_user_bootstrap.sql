@@ -1,4 +1,4 @@
--- Bootstrap profile rows for new auth users.
+﻿-- Bootstrap profile rows for new auth users.
 -- This avoids client-side RLS failures during signup when no session exists yet.
 
 CREATE OR REPLACE FUNCTION public.handle_new_auth_user()

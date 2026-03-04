@@ -1,4 +1,4 @@
--- Real offer system with pricing breakdown, legal agreement payload,
+﻿-- Real offer system with pricing breakdown, legal agreement payload,
 -- and explicit rejection reasons for parent visibility.
 
 BEGIN;

@@ -1,4 +1,4 @@
--- 1. Ensure the enum exists (idempotent)
+﻿-- 1. Ensure the enum exists (idempotent)
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'ecd_analytics_event_type') THEN

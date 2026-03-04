@@ -1,4 +1,4 @@
--- Fix signup bootstrap failures caused by strict RLS on user_profiles/parents.
+﻿-- Fix signup bootstrap failures caused by strict RLS on user_profiles/parents.
 -- Ensures auth user bootstrap trigger runs as SECURITY DEFINER and internal roles
 -- can insert/update bootstrap rows without requiring auth.uid().
 

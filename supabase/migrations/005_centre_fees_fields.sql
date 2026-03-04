@@ -1,4 +1,4 @@
--- Centre fee transparency fields for parent-facing UI and ECD editing.
+﻿-- Centre fee transparency fields for parent-facing UI and ECD editing.
 
 ALTER TABLE ecd_centres
   ADD COLUMN IF NOT EXISTS fees_display_mode TEXT NOT NULL DEFAULT 'range'

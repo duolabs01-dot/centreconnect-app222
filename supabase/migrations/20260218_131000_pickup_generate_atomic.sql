@@ -1,4 +1,4 @@
--- Atomic pickup code generation RPC.
+﻿-- Atomic pickup code generation RPC.
 
 CREATE OR REPLACE FUNCTION public.generate_pickup_code_atomic(
   p_ecd_id UUID,

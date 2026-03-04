@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 UPDATE public.communication_templates
 SET

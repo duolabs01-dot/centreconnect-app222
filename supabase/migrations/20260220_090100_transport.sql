@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.transport_configs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

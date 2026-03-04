@@ -1,4 +1,4 @@
--- supabase/migrations/039_recurring_invoices.sql
+﻿-- supabase/migrations/039_recurring_invoices.sql
 -- Add monthly fee fields to applications and billing month/child links to invoices.
 
 -- 1. Add fee fields to applications

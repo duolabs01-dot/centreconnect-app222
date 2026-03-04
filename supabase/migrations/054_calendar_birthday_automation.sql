@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Centre-level controls for automated parent communication behavior.
 ALTER TABLE public.ecd_centres

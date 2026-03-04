@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.report_cards (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

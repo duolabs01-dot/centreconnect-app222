@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 ALTER TABLE public.children
   ADD COLUMN IF NOT EXISTS enrollment_start_date DATE;

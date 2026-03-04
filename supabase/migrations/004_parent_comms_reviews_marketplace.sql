@@ -1,4 +1,4 @@
--- Phase 2 foundations:
+﻿-- Phase 2 foundations:
 -- 1) Parent <-> Centre direct messaging
 -- 2) Reviews and ratings from verified parents
 -- 3) Marketplace services and purchases for ECD centres

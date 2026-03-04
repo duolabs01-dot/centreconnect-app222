@@ -1,4 +1,4 @@
--- Fix accept_offer_atomic auto-withdraw reason to align with applications_withdraw_reason_chk
+﻿-- Fix accept_offer_atomic auto-withdraw reason to align with applications_withdraw_reason_chk
 -- and parent-side counters that expect auto_after_accept.
 
 BEGIN;

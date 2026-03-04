@@ -1,4 +1,4 @@
--- Privacy-safe multiple-application indicator.
+﻿-- Privacy-safe multiple-application indicator.
 
 ALTER TABLE applications
   ADD COLUMN IF NOT EXISTS applied_multiple BOOLEAN NOT NULL DEFAULT FALSE,

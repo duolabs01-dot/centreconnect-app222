@@ -1,4 +1,4 @@
-  -- supabase/migrations/20260221_create_admin_tasks_table.sql
+﻿  -- supabase/migrations/20260221_create_admin_tasks_table.sql
   CREATE TABLE IF NOT EXISTS public.admin_tasks (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     type        TEXT NOT NULL,

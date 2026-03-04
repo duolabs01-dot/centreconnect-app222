@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 ALTER TABLE public.marketplace_services
   ADD COLUMN IF NOT EXISTS tier public.subscription_tier;

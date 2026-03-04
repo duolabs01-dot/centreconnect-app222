@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.ecd_service_applications (
+﻿CREATE TABLE IF NOT EXISTS public.ecd_service_applications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL,
   applicant_email TEXT NOT NULL,

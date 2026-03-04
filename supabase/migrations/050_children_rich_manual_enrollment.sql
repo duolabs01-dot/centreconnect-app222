@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Ensure children table supports rich manual enrollment fields end-to-end.
 ALTER TABLE public.children

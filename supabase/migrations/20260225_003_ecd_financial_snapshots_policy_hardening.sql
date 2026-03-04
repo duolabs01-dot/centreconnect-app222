@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 DROP POLICY IF EXISTS "ecd_financial_snapshots_staff_read" ON public.ecd_financial_snapshots;
 

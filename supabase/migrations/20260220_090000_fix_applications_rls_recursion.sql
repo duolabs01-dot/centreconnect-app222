@@ -1,4 +1,4 @@
--- Fix recursive policy evaluation on public.applications.
+﻿-- Fix recursive policy evaluation on public.applications.
 -- Rebuild policies with no self-referential lookups.
 
 -- Helper functions must read identity/tenant context from profile tables only.

@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Add invite token to guardians table
 ALTER TABLE public.guardians
@@ -10,7 +10,7 @@ CREATE INDEX IF NOT EXISTS guardians_invite_token_idx ON public.guardians (invit
   WHERE invite_token IS NOT NULL;
 
 -- Policy: anyone with the token can read the guardian row to accept
--- (they are not yet authenticated as a user — they are registering)
+-- (they are not yet authenticated as a user â€” they are registering)
 DO $$
 BEGIN
   IF NOT EXISTS (

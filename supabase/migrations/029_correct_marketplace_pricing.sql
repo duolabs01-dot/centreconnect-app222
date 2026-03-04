@@ -1,4 +1,4 @@
--- Migration: Correct Marketplace Pricing to SA ECD market-appropriate rates.
+﻿-- Migration: Correct Marketplace Pricing to SA ECD market-appropriate rates.
 -- Table: public.marketplace_services
 -- Schema mapping: name -> service_name, price_cents -> price (converted to Rand numeric)
 

@@ -1,4 +1,4 @@
--- RLS helper functions + policies for newly added modules
+﻿-- RLS helper functions + policies for newly added modules
 
 -- ============================================================
 -- HELPER FUNCTIONS

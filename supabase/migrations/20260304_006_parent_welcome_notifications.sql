@@ -1,4 +1,4 @@
--- Allow system-level parent notifications (no centre) and seed onboarding templates.
+﻿-- Allow system-level parent notifications (no centre) and seed onboarding templates.
 
 ALTER TABLE public.parent_notifications
   ALTER COLUMN ecd_id DROP NOT NULL;

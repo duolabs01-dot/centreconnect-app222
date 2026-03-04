@@ -1,4 +1,4 @@
--- supabase/migrations/040_enhance_sessions_and_security.sql
+﻿-- supabase/migrations/040_enhance_sessions_and_security.sql
 ALTER TABLE public.user_sessions
   ADD COLUMN IF NOT EXISTS ip_address TEXT,
   ADD COLUMN IF NOT EXISTS region TEXT,

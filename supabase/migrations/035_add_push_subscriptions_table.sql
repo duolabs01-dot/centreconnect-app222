@@ -1,4 +1,4 @@
--- Table for storing Web Push API subscriptions.
+﻿-- Table for storing Web Push API subscriptions.
 
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

@@ -1,4 +1,4 @@
--- CentreConnect RLS hardening + multi-tenant isolation
+﻿-- CentreConnect RLS hardening + multi-tenant isolation
 -- This migration tightens tenant and parent boundaries and introduces
 -- an internal invitation table for platform-admin onboarding workflows.
 

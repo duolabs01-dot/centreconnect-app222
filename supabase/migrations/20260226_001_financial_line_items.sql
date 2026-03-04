@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 -- Line-item detail for each monthly snapshot
 CREATE TABLE IF NOT EXISTS public.ecd_financial_line_items (

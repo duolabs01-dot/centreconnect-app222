@@ -1,4 +1,4 @@
-create table if not exists public.user_sessions (
+﻿create table if not exists public.user_sessions (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id)
     on delete cascade,

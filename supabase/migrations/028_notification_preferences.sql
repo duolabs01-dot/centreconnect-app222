@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS public.notification_preferences (
+﻿CREATE TABLE IF NOT EXISTS public.notification_preferences (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email_announcements BOOLEAN NOT NULL DEFAULT TRUE,
   email_applications BOOLEAN NOT NULL DEFAULT TRUE,

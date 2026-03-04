@@ -1,4 +1,4 @@
--- Parent profile suite: preferences, contacts, guardians, documents, security events
+﻿-- Parent profile suite: preferences, contacts, guardians, documents, security events
 
 ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS avatar_url TEXT;

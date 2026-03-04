@@ -1,2 +1,2 @@
-ALTER TABLE public.job_applications
+﻿ALTER TABLE public.job_applications
   ADD COLUMN IF NOT EXISTS interview_at TIMESTAMPTZ;

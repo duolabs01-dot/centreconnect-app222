@@ -1,4 +1,4 @@
-BEGIN;
+﻿BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.notification_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

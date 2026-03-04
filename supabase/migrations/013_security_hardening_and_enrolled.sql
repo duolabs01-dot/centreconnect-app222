@@ -1,4 +1,4 @@
--- Security hardening pass:
+﻿-- Security hardening pass:
 -- 1) Add enrolled status
 -- 2) Ensure RLS is enabled/forced on core tables
 -- 3) Replace broad FOR ALL write policies with explicit SELECT/INSERT/UPDATE/DELETE
