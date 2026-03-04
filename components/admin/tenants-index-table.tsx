@@ -428,6 +428,9 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         linkedExistingUser?: boolean
         pendingLinkOnNextLogin?: boolean
         parentAccessRevoked?: boolean
+        accessLinkWarning?: string | null
+        emailQueued?: boolean
+        emailQueueError?: string | null
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
 
@@ -443,6 +446,12 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         )
       } else {
         toast.success(`Invite sent to ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}`)
+      }
+      if (payload.accessLinkWarning) {
+        toast.warning(payload.accessLinkWarning)
+      }
+      if (payload.emailQueued === false) {
+        toast.warning(payload.emailQueueError || 'Invite created, but email queue failed. Please retry.')
       }
       setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
       setInviteOpen(false)

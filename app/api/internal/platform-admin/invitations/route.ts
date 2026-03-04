@@ -3,6 +3,9 @@ import { z } from 'zod'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
+import { queueEmail } from '@/lib/communications/emails'
+import { APP_URL, SUPPORT_EMAIL } from '@/lib/config'
+import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -60,6 +63,71 @@ async function resolveExistingAuthUserId(adminClient: ReturnType<typeof createAd
   return null
 }
 
+function normalizeAppUrl() {
+  return APP_URL.replace(/\/$/, '')
+}
+
+function toDefaultRedirectTo() {
+  const baseUrl = normalizeAppUrl()
+  return `${baseUrl}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
+}
+
+async function generateEcdAccessLink(input: {
+  adminClient: ReturnType<typeof createAdminClient>
+  email: string
+  redirectTo: string
+  preferMagicLink?: boolean
+}) {
+  const { adminClient, email, redirectTo, preferMagicLink = false } = input
+
+  if (!preferMagicLink) {
+    const inviteResult = await adminClient.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: { redirectTo },
+    })
+    const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
+    if (!inviteResult.error && inviteLink) {
+      return {
+        link: inviteLink,
+        authUserId: inviteResult.data?.user?.id ?? null,
+        mode: 'invite' as const,
+        warning: null as string | null,
+      }
+    }
+    if (inviteResult.error && !isEmailAlreadyRegisteredError(inviteResult.error.message)) {
+      return {
+        link: '',
+        authUserId: null,
+        mode: 'invite' as const,
+        warning: inviteResult.error.message ?? 'Failed to generate invite link.',
+      }
+    }
+  }
+
+  const magicResult = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo },
+  })
+  const magicLink = magicResult.data?.properties?.action_link?.trim() ?? ''
+  if (!magicResult.error && magicLink) {
+    return {
+      link: magicLink,
+      authUserId: magicResult.data?.user?.id ?? null,
+      mode: 'magiclink' as const,
+      warning: preferMagicLink ? null : 'Existing account detected. Sent secure sign-in link.',
+    }
+  }
+
+  return {
+    link: '',
+    authUserId: null,
+    mode: 'magiclink' as const,
+    warning: magicResult.error?.message ?? 'Failed to generate access link.',
+  }
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -94,7 +162,7 @@ export async function POST(request: Request) {
   }
 
   const nowIso = new Date().toISOString()
-  const redirectTo = data.redirectTo ?? `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/login`
+  const redirectTo = data.redirectTo ?? toDefaultRedirectTo()
   const inviteResult = await adminClient.auth.admin.inviteUserByEmail(
     normalizedEmail,
     {
@@ -120,6 +188,21 @@ export async function POST(request: Request) {
       pendingLinkOnNextLogin = true
     } else {
       linkedExistingUser = true
+    }
+  }
+
+  const accessLinkResult = await generateEcdAccessLink({
+    adminClient,
+    email: normalizedEmail,
+    redirectTo,
+    preferMagicLink: linkedExistingUser || pendingLinkOnNextLogin,
+  })
+
+  if (!invitedUserId && accessLinkResult.authUserId) {
+    invitedUserId = accessLinkResult.authUserId
+    if (pendingLinkOnNextLogin) {
+      linkedExistingUser = true
+      pendingLinkOnNextLogin = false
     }
   }
 
@@ -197,6 +280,18 @@ export async function POST(request: Request) {
     )
   }
 
+  const accessLink = accessLinkResult.link || `${normalizeAppUrl()}/login`
+  const inviteEmail = renderStaffInviteEmail({
+    centreName: (centre.name ?? 'your centre').trim(),
+    recipientName: fullName,
+    role: data.role,
+    accessLink,
+    loginLink: `${normalizeAppUrl()}/login`,
+    supportEmail: SUPPORT_EMAIL,
+  })
+
+  const emailQueueResult = await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
+
   await writeInviteLog(adminClient, {
     centreId: data.ecdId,
     ownerEmail: normalizedEmail,
@@ -206,7 +301,7 @@ export async function POST(request: Request) {
       ? `Linked existing account to ECD access (${data.role})`
       : pendingLinkOnNextLogin
         ? `Existing email invite recorded (${data.role}); link will finalize on next login`
-        : `ECD access invite (${data.role})`,
+        : `ECD access invite (${data.role})${emailQueueResult.success ? '' : ' (delivery queue failed)'}`,
   })
 
   return NextResponse.json({
@@ -218,5 +313,9 @@ export async function POST(request: Request) {
     pendingLinkOnNextLogin,
     previousRole,
     parentAccessRevoked,
+    inviteLinkMode: accessLinkResult.mode,
+    accessLinkWarning: accessLinkResult.warning,
+    emailQueued: emailQueueResult.success,
+    emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,
   })
 }
