@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { Component, type ErrorInfo, type ReactNode, useEffect, useState } from 'react'
 import { Bell, CheckCheck, Dot } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn, formatDate } from '@/lib/utils'
@@ -26,107 +26,173 @@ type NotificationRow = {
   created_at: string
 }
 
-export function ParentNotificationBell({ parentId }: ParentNotificationBellProps) {
-  const supabase = useMemo(() => createClient(), [])
+type NotificationBellBoundaryProps = {
+  children: ReactNode
+}
+
+type NotificationBellBoundaryState = {
+  hasError: boolean
+}
+
+class NotificationBellBoundary extends Component<NotificationBellBoundaryProps, NotificationBellBoundaryState> {
+  state: NotificationBellBoundaryState = {
+    hasError: false,
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('Parent notification bell crashed; hiding bell to protect parent shell.', error, info)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null
+    }
+    return this.props.children
+  }
+}
+
+function ParentNotificationBellInner({ parentId }: ParentNotificationBellProps) {
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null)
   const [items, setItems] = useState<NotificationRow[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
-    if (!parentId) return
+    try {
+      setSupabase(createClient())
+    } catch (error) {
+      console.error('Unable to create Supabase browser client for parent notification bell:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!parentId || !supabase) return
+    const client = supabase
 
     let mounted = true
 
     async function loadInitial() {
-      const [itemsResult, unreadResult] = await Promise.all([
-        supabase
-          .from('parent_notifications')
-          .select('id,title,message,is_read,created_at')
-          .eq('parent_id', parentId)
-          .order('created_at', { ascending: false })
-          .limit(8),
-        supabase
-          .from('parent_notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('parent_id', parentId)
-          .eq('is_read', false),
-      ])
+      try {
+        const [itemsResult, unreadResult] = await Promise.all([
+          client
+            .from('parent_notifications')
+            .select('id,title,message,is_read,created_at')
+            .eq('parent_id', parentId)
+            .order('created_at', { ascending: false })
+            .limit(8),
+          client
+            .from('parent_notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('parent_id', parentId)
+            .eq('is_read', false),
+        ])
 
-      if (!mounted) return
+        if (!mounted) return
 
-      setItems((itemsResult.data ?? []) as NotificationRow[])
-      setUnreadCount(unreadResult.count ?? 0)
+        setItems((itemsResult.data ?? []) as NotificationRow[])
+        setUnreadCount(unreadResult.count ?? 0)
+      } catch (error) {
+        if (!mounted) return
+        setItems([])
+        setUnreadCount(0)
+        console.error('Failed to load parent notification bell data:', error)
+      }
     }
 
     void loadInitial()
 
-    const channel = supabase
-      .channel(`parent-notification-bell-${parentId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
-          const incoming = payload.new as NotificationRow
-          if (!incoming?.id) return
-          setItems((current) => [incoming, ...current.filter((item) => item.id !== incoming.id)].slice(0, 8))
-          if (!incoming.is_read) {
-            setUnreadCount((count) => count + 1)
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    try {
+      channel = client
+        .channel(`parent-notification-bell-${parentId}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+          (payload) => {
+            const incoming = payload.new as NotificationRow
+            if (!incoming?.id) return
+            setItems((current) => [incoming, ...current.filter((item) => item.id !== incoming.id)].slice(0, 8))
+            if (!incoming.is_read) {
+              setUnreadCount((count) => count + 1)
+            }
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
-          const incoming = payload.new as NotificationRow
-          const previous = payload.old as NotificationRow
-          if (!incoming?.id) return
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+          (payload) => {
+            const incoming = payload.new as NotificationRow
+            const previous = payload.old as NotificationRow
+            if (!incoming?.id) return
 
-          setItems((current) => current.map((item) => (item.id === incoming.id ? { ...item, is_read: incoming.is_read } : item)))
+            setItems((current) =>
+              current.map((item) => (item.id === incoming.id ? { ...item, is_read: incoming.is_read } : item))
+            )
 
-          if (previous?.is_read === false && incoming.is_read === true) {
-            setUnreadCount((count) => Math.max(0, count - 1))
+            if (previous?.is_read === false && incoming.is_read === true) {
+              setUnreadCount((count) => Math.max(0, count - 1))
+            }
+            if (previous?.is_read === true && incoming.is_read === false) {
+              setUnreadCount((count) => count + 1)
+            }
           }
-          if (previous?.is_read === true && incoming.is_read === false) {
-            setUnreadCount((count) => count + 1)
-          }
-        }
-      )
-      .subscribe()
+        )
+        .subscribe()
+    } catch (error) {
+      console.error('Failed to subscribe parent notification bell channel:', error)
+    }
 
     return () => {
       mounted = false
-      void supabase.removeChannel(channel)
+      if (channel) {
+        void client.removeChannel(channel)
+      }
     }
   }, [parentId, supabase])
 
   async function markAsRead(id: string) {
+    if (!supabase) return
+
     const target = items.find((item) => item.id === id)
     if (!target || target.is_read) return
 
     setItems((current) => current.map((item) => (item.id === id ? { ...item, is_read: true } : item)))
     setUnreadCount((count) => Math.max(0, count - 1))
 
-    const { error } = await supabase.from('parent_notifications').update({ is_read: true }).eq('id', id).eq('parent_id', parentId)
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('parent_notifications')
+        .update({ is_read: true })
+        .eq('id', id)
+        .eq('parent_id', parentId)
+      if (!error) return
+      setItems((current) => current.map((item) => (item.id === id ? { ...item, is_read: false } : item)))
+      setUnreadCount((count) => count + 1)
+    } catch (error) {
+      console.error('Failed to mark parent notification as read:', error)
       setItems((current) => current.map((item) => (item.id === id ? { ...item, is_read: false } : item)))
       setUnreadCount((count) => count + 1)
     }
   }
 
   async function markAllAsRead() {
+    if (!supabase) return
     if (unreadCount === 0) return
 
     const unreadIds = items.filter((item) => !item.is_read).map((item) => item.id)
     setItems((current) => current.map((item) => ({ ...item, is_read: true })))
     setUnreadCount(0)
 
-    const { error } = await supabase
-      .from('parent_notifications')
-      .update({ is_read: true })
-      .eq('parent_id', parentId)
-      .eq('is_read', false)
-
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('parent_notifications')
+        .update({ is_read: true })
+        .eq('parent_id', parentId)
+        .eq('is_read', false)
+      if (!error) return
       setItems((current) =>
         current.map((item) => (unreadIds.includes(item.id) ? { ...item, is_read: false } : item))
       )
@@ -136,7 +202,29 @@ export function ParentNotificationBell({ parentId }: ParentNotificationBellProps
         .eq('parent_id', parentId)
         .eq('is_read', false)
       setUnreadCount(count ?? unreadIds.length)
+    } catch (error) {
+      console.error('Failed to mark all parent notifications as read:', error)
+      setItems((current) =>
+        current.map((item) => (unreadIds.includes(item.id) ? { ...item, is_read: false } : item))
+      )
+      setUnreadCount(unreadIds.length)
     }
+  }
+
+  if (!supabase) {
+    return (
+      <Button
+        asChild
+        type="button"
+        variant="outline"
+        size="icon"
+        className="relative h-10 w-10 rounded-2xl border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:bg-cyan-50 hover:text-cyan-700"
+      >
+        <Link href="/parent/notifications" aria-label="Open notifications">
+          <Bell className="h-4 w-4" />
+        </Link>
+      </Button>
+    )
   }
 
   return (
@@ -206,5 +294,13 @@ export function ParentNotificationBell({ parentId }: ParentNotificationBellProps
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+export function ParentNotificationBell(props: ParentNotificationBellProps) {
+  return (
+    <NotificationBellBoundary>
+      <ParentNotificationBellInner {...props} />
+    </NotificationBellBoundary>
   )
 }

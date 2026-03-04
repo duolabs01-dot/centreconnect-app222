@@ -72,7 +72,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   const { userName, avatarUrl, isVerified, profileNudge, userId } = useParentLayout()
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
   useAppNavLock()
   
   const [hideProfileNudge, setHideProfileNudge] = useState(false)
@@ -111,7 +110,22 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     if (isSigningOut) return
     setIsSigningOut(true)
     try {
-      await robustSignOut(supabase)
+      const fallbackAuthClient = {
+        auth: {
+          signOut: async () => ({ error: null }),
+        },
+      }
+
+      const authClient = (() => {
+        try {
+          return createClient()
+        } catch (error) {
+          console.error('Unable to create Supabase browser client for sign out:', error)
+          return fallbackAuthClient
+        }
+      })()
+
+      await robustSignOut(authClient)
       router.replace('/')
       router.refresh()
     } finally {
