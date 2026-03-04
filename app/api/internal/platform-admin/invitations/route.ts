@@ -22,6 +22,37 @@ function fallbackFullName(email: string): string {
   return base.replace(/[._-]+/g, ' ').trim() || 'ECD Admin'
 }
 
+function collectErrorPayload(value: unknown) {
+  if (!value || typeof value !== 'object') return {}
+  const result: Record<string, unknown> = {}
+  for (const key of Object.getOwnPropertyNames(value)) {
+    try {
+      result[key] = (value as Record<string, unknown>)[key]
+    } catch (error) {
+      result[key] = error instanceof Error ? error.message : String(error)
+    }
+  }
+  return result
+}
+
+function formatErrorMessage(value: unknown, fallback: string) {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed.length > 0 ? trimmed : fallback
+  }
+  if (value && typeof value === 'object') {
+    const message = (value as Record<string, unknown>).message
+    if (typeof message === 'string' && message.trim().length > 0) {
+      return message.trim()
+    }
+    const serialized = JSON.stringify(collectErrorPayload(value))
+    if (serialized && serialized !== '{}' && serialized !== '""') {
+      return serialized
+    }
+  }
+  return fallback
+}
+
 function isEmailAlreadyRegisteredError(message?: string | null) {
   const value = (message ?? '').toLowerCase()
   return value.includes('already been registered') || value.includes('already registered') || value.includes('already exists')
@@ -198,7 +229,8 @@ export async function POST(request: Request) {
     .maybeSingle()
 
   if (centreError) {
-    return NextResponse.json({ error: centreError.message }, { status: 400 })
+    const message = formatErrorMessage(centreError, 'Failed to load centre record.')
+    return NextResponse.json({ error: message }, { status: 400 })
   }
 
   if (!centre) {
@@ -224,7 +256,8 @@ export async function POST(request: Request) {
 
   if (inviteResult.error) {
     if (!isEmailAlreadyRegisteredError(inviteResult.error.message)) {
-      return NextResponse.json({ error: inviteResult.error.message }, { status: 400 })
+      const message = formatErrorMessage(inviteResult.error, 'Failed to send admin invite.')
+      return NextResponse.json({ error: message }, { status: 400 })
     }
 
     invitedUserId = await resolveExistingAuthUserId(adminClient, normalizedEmail)
@@ -282,8 +315,10 @@ export async function POST(request: Request) {
       },
       { onConflict: 'id' }
     )
+
     if (profileError) {
-      return NextResponse.json({ error: `Failed to create profile: ${profileError.message}` }, { status: 500 })
+      const message = formatErrorMessage(profileError, 'Failed to create profile.')
+      return NextResponse.json({ error: `Failed to create profile: ${message}` }, { status: 500 })
     }
 
     const { error: adminLinkError } = await adminClient.from('ecd_admins').upsert(
@@ -297,9 +332,11 @@ export async function POST(request: Request) {
       },
       { onConflict: 'ecd_id,user_id' }
     )
+
     if (adminLinkError) {
+      const message = formatErrorMessage(adminLinkError, 'Failed to link admin to centre.')
       return NextResponse.json(
-        { error: `Failed to link admin to centre: ${adminLinkError.message}` },
+        { error: `Failed to link admin to centre: ${message}` },
         { status: 500 }
       )
     }
@@ -318,8 +355,9 @@ export async function POST(request: Request) {
     { onConflict: 'ecd_id,email' }
   )
   if (invitationLogError) {
+    const message = formatErrorMessage(invitationLogError, 'Failed to record invitation.')
     return NextResponse.json(
-      { error: `Failed to record invitation: ${invitationLogError.message}` },
+      { error: `Failed to record invitation: ${message}` },
       { status: 500 }
     )
   }
