@@ -25,7 +25,7 @@ interface CentreCardProps {
   age_groups: string[]
   tagline?: string
   capacity?: number
-  existingApplicationStatus?: string
+  existingApplicationStatus?: string | null
   isSaved?: boolean
   onApply?: () => void
   onSave?: () => void
@@ -68,18 +68,15 @@ export function CentreCard({
       className="group"
     >
       <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
-        {/* Premium Image Header */}
         <div className="relative h-56 overflow-hidden">
           <Image
             src={displayImage}
             alt={name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
-            priority={false}
           />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
-          {/* Warm Badges */}
           <div className="absolute top-4 right-4 flex flex-col gap-2">
             {(distance || distanceLabel) && (
               <Badge variant="secondary" className="bg-white/90 text-xs font-medium">
@@ -93,7 +90,6 @@ export function CentreCard({
             )}
           </div>
 
-          {/* Save Heart */}
           <Button
             variant="ghost"
             size="icon"
