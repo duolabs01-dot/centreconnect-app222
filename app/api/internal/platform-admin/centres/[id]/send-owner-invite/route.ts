@@ -1,0 +1,265 @@
+import { NextResponse } from 'next/server'
+import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { APP_URL } from '@/lib/config'
+import { queueEmail } from '@/lib/communications/emails'
+import { normalizeWhatsappPhone, sendWhatsappTemplateMessage } from '@/lib/communications/whatsapp'
+import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
+import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
+import { writePlatformActivity } from '@/lib/admin/activity-log'
+
+type SendOwnerInviteResponse = {
+  ok: boolean
+  eventKey: string
+  email: { sent: boolean; error?: string | null }
+  whatsapp: { sent: boolean; error?: string | null }
+  warning?: string
+}
+
+function isEmailAlreadyRegisteredError(message?: string | null) {
+  const value = (message ?? '').toLowerCase()
+  return value.includes('already been registered') || value.includes('already exists')
+}
+
+function sanitizeName(value: string | null | undefined, fallback: string) {
+  const trimmed = (value ?? '').trim()
+  return trimmed || fallback
+}
+
+async function generateOwnerAccessLink(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string
+) {
+  const redirectTo = `${APP_URL.replace(/\/$/, '')}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
+  const inviteResult = await admin.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo },
+  })
+
+  const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
+  if (!inviteResult.error && inviteLink) {
+    return {
+      link: inviteLink,
+      authUserId: inviteResult.data?.user?.id ?? null,
+      warning: null as string | null,
+    }
+  }
+
+  if (!isEmailAlreadyRegisteredError(inviteResult.error?.message)) {
+    return {
+      link: '',
+      authUserId: null,
+      warning: inviteResult.error?.message ?? 'Failed to generate owner invite link.',
+    }
+  }
+
+  const magicResult = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo },
+  })
+
+  const magicLink = magicResult.data?.properties?.action_link?.trim() ?? ''
+  if (!magicResult.error && magicLink) {
+    return {
+      link: magicLink,
+      authUserId: magicResult.data?.user?.id ?? null,
+      warning: 'Owner already had an account. Sent a secure login link instead of a first-time invite.',
+    }
+  }
+
+  return {
+    link: '',
+    authUserId: null,
+    warning: magicResult.error?.message ?? 'Failed to generate owner login link.',
+  }
+}
+
+function buildTrackingUrl(eventKey: string, channel: 'email' | 'whatsapp', target: string) {
+  const url = new URL('/api/invites/open', APP_URL)
+  url.searchParams.set('event_key', eventKey)
+  url.searchParams.set('channel', channel)
+  url.searchParams.set('target', target)
+  return url.toString()
+}
+
+export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+  const identity = await requirePlatformAdmin(request)
+  if (!identity) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const { id: centreId } = await context.params
+  if (!centreId) return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data: centre, error: centreError } = await admin
+    .from('ecd_centres')
+    .select('id,name,slug,email,phone,contact_phone,primary_contact_name')
+    .eq('id', centreId)
+    .maybeSingle()
+
+  if (centreError) return NextResponse.json({ error: centreError.message }, { status: 400 })
+  if (!centre) return NextResponse.json({ error: 'Centre not found' }, { status: 404 })
+
+  const ownerEmail = String(centre.email ?? '').trim().toLowerCase()
+  const ownerPhoneRaw = centre.contact_phone ?? centre.phone
+  const ownerPhone = normalizeWhatsappPhone(ownerPhoneRaw)
+  if (!ownerEmail) {
+    return NextResponse.json({ error: 'Centre owner email is missing.' }, { status: 400 })
+  }
+
+  const accessLink = await generateOwnerAccessLink(admin, ownerEmail)
+  if (!accessLink.link) {
+    return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
+  }
+
+  const nowIso = new Date().toISOString()
+  const eventKey = createNotificationEventKey('owner_invite', centre.id)
+  const ownerName = sanitizeName(centre.primary_contact_name, 'ECD Admin')
+  const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
+  const whatsappTrackingUrl = buildTrackingUrl(eventKey, 'whatsapp', accessLink.link)
+
+  const inviteHtml = renderOwnerInviteEmail({
+    centreName: sanitizeName(centre.name, 'your centre'),
+    ownerName,
+    claimUrl: emailTrackingUrl,
+    dashboardUrl: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
+    supportWhatsApp: process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430',
+    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
+  })
+
+  const emailResult = await queueEmail(ownerEmail, inviteHtml.subject, inviteHtml.html)
+  await upsertNotificationLog(admin, {
+    centreId: centre.id,
+    eventKey,
+    eventType: 'owner_invite',
+    channel: 'email',
+    recipient: ownerEmail,
+    status: emailResult.success ? 'sent' : 'failed',
+    provider: 'email_queue',
+    providerMessageId:
+      emailResult.success && Array.isArray(emailResult.data)
+        ? String(emailResult.data[0]?.id ?? '')
+        : null,
+    errorMessage: emailResult.success ? null : emailResult.error,
+    payload: {
+      subject: inviteHtml.subject,
+      tracked_open_url: emailTrackingUrl,
+      centre_slug: centre.slug,
+    },
+    createdAt: nowIso,
+  })
+
+  let whatsappSent = false
+  let whatsappError: string | null = null
+  if (ownerPhone) {
+    const whatsappMessage = [
+      `Hi ${ownerName},`,
+      `${sanitizeName(centre.name, 'Your centre')} is live on CentreConnect.`,
+      `Start now and claim your workspace: ${whatsappTrackingUrl}`,
+      'Parents can already discover your profile, so keep details updated to receive applications quickly.',
+    ].join('\n')
+
+    const whatsappResult = await sendWhatsappTemplateMessage(ownerPhone, whatsappMessage)
+    whatsappSent = whatsappResult.ok
+    whatsappError = whatsappResult.ok ? null : whatsappResult.error
+    await upsertNotificationLog(admin, {
+      centreId: centre.id,
+      eventKey,
+      eventType: 'owner_invite',
+      channel: 'whatsapp',
+      recipient: ownerPhone,
+      status: whatsappResult.ok ? 'sent' : 'failed',
+      provider: 'twilio_whatsapp',
+      providerMessageId: whatsappResult.ok ? whatsappResult.id : null,
+      errorMessage: whatsappResult.ok ? null : whatsappResult.error,
+      payload: {
+        tracked_open_url: whatsappTrackingUrl,
+        preview: whatsappMessage,
+      },
+      createdAt: nowIso,
+    })
+  } else {
+    whatsappError = 'Owner phone is missing. WhatsApp invite not sent.'
+    await upsertNotificationLog(admin, {
+      centreId: centre.id,
+      eventKey,
+      eventType: 'owner_invite',
+      channel: 'whatsapp',
+      recipient: null,
+      status: 'failed',
+      provider: 'twilio_whatsapp',
+      errorMessage: whatsappError,
+      payload: {
+        tracked_open_url: whatsappTrackingUrl,
+      },
+      createdAt: nowIso,
+    })
+  }
+
+  await admin.from('ecd_admin_invitations').upsert(
+    {
+      ecd_id: centre.id,
+      email: ownerEmail,
+      role: 'ecd_admin',
+      invited_by: identity.userId,
+      invited_at: nowIso,
+      auth_user_id: accessLink.authUserId,
+    },
+    { onConflict: 'ecd_id,email' }
+  )
+
+  if (accessLink.authUserId) {
+    await admin.from('user_profiles').upsert(
+      {
+        id: accessLink.authUserId,
+        role: 'ecd_admin',
+        full_name: ownerName,
+        email: ownerEmail,
+        phone: ownerPhoneRaw ?? null,
+      },
+      { onConflict: 'id' }
+    )
+    await admin.from('ecd_admins').upsert(
+      {
+        ecd_id: centre.id,
+        user_id: accessLink.authUserId,
+        role: 'ecd_admin',
+        invited_by: identity.userId,
+        invited_at: nowIso,
+      },
+      { onConflict: 'ecd_id,user_id' }
+    )
+    await admin
+      .from('ecd_centres')
+      .update({ owner_id: accessLink.authUserId })
+      .eq('id', centre.id)
+      .is('owner_id', null)
+  }
+
+  await writePlatformActivity(admin, {
+    actorUserId: identity.userId,
+    actorEmail: identity.email,
+    entityType: 'tenant',
+    entityId: centre.id,
+    action: 'send_owner_invite',
+    summary: `Sent owner invite for ${centre.name ?? centre.id}`,
+    details: {
+      ownerEmail,
+      ownerPhone,
+      emailSent: emailResult.success,
+      whatsappSent,
+      warning: accessLink.warning,
+    },
+  })
+
+  const response: SendOwnerInviteResponse = {
+    ok: true,
+    eventKey,
+    email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
+    whatsapp: { sent: whatsappSent, error: whatsappError },
+    warning: accessLink.warning ?? undefined,
+  }
+
+  return NextResponse.json(response, { status: 200 })
+}

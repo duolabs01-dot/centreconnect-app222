@@ -140,6 +140,22 @@ export async function POST(request: NextRequest) {
             .eq('email', normalizedEmail)
             .eq('role', roleToPersist)
             .is('accepted_at', null)
+
+          await admin
+            .from('notification_logs')
+            .update({ status: 'claimed', updated_at: acceptedAt })
+            .eq('event_type', 'admin_access_invite')
+            .eq('recipient', normalizedEmail)
+            .in('status', ['sent', 'opened'])
+        }
+
+        if (roleToPersist === 'ecd_admin') {
+          await admin
+            .from('notification_logs')
+            .update({ status: 'claimed', updated_at: acceptedAt })
+            .eq('event_type', 'owner_invite')
+            .in('centre_id', ecdIds)
+            .in('status', ['sent', 'opened'])
         }
       }
     }

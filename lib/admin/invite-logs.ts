@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 
 export type InviteLogType = 'email' | 'whatsapp' | 'welcome_pack'
 export type InviteLogStatus = 'sent' | 'opened' | 'claimed'
@@ -21,13 +22,14 @@ export async function writeInviteLog(
 ) {
   const normalizedEmail = input.ownerEmail?.trim().toLowerCase() || null
   const normalizedPhone = input.ownerPhone?.trim() || null
+  const sentAt = input.sentAt ?? new Date().toISOString()
 
   const { error } = await admin.from('invite_logs').insert({
     centre_id: input.centreId ?? null,
     owner_email: normalizedEmail,
     owner_phone: normalizedPhone,
     invite_type: input.inviteType,
-    sent_at: input.sentAt ?? new Date().toISOString(),
+    sent_at: sentAt,
     status: input.status ?? 'sent',
     notes: input.notes ?? null,
   })
@@ -35,6 +37,32 @@ export async function writeInviteLog(
   if (error) {
     console.error('Failed to write invite log:', error.message)
     return { success: false as const, error: error.message }
+  }
+
+  const eventType = input.inviteType === 'welcome_pack' ? 'welcome_pack' : 'admin_access_invite'
+  const channel = input.inviteType === 'whatsapp' ? 'whatsapp' : 'email'
+  const recipient = channel === 'whatsapp' ? normalizedPhone ?? normalizedEmail : normalizedEmail
+  const status = input.status ?? 'sent'
+
+  const { error: notificationError } = await admin.from('notification_logs').insert({
+    centre_id: input.centreId ?? null,
+    event_key: createNotificationEventKey(eventType, input.centreId),
+    event_type: eventType,
+    channel,
+    recipient,
+    status,
+    provider: 'invite_log_writer',
+    payload: {
+      source: 'invite_logs',
+      invite_type: input.inviteType,
+      notes: input.notes ?? null,
+    },
+    created_at: sentAt,
+    updated_at: new Date().toISOString(),
+  })
+
+  if (notificationError) {
+    console.error('Failed to mirror invite log to notification_logs:', notificationError.message)
   }
 
   return { success: true as const }

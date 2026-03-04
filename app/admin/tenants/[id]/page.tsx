@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
+import { SendOwnerInviteButton } from '@/components/admin/send-owner-invite-button'
 import { ROOT_DOMAIN } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
@@ -43,7 +44,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
   const [centreResult, adminsResult, invitationsResult, appsResult, analyticsResult, ticketResult, activityResult, adminTaskResult] = await Promise.all([
     admin
       .from('ecd_centres')
-      .select('id,slug,name,email,phone,address,suburb,city,province,is_active,is_registered,created_at,onboarded_at,contract_signed,onboarding_fee_paid,subscriptions(*)')
+      .select('id,slug,name,email,phone,contact_phone,primary_contact_name,address,suburb,city,province,is_active,is_registered,created_at,onboarded_at,contract_signed,onboarding_fee_paid,subscriptions(*)')
       .eq('id', tenantId)
       .maybeSingle(),
     admin
@@ -166,6 +167,12 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
             <p><span className="text-slate-400">Created:</span> {formatDateTime(centre.created_at)}</p>
             <p><span className="text-slate-400">Onboarded:</span> {formatDateTime(centre.onboarded_at)}</p>
             <p><span className="text-slate-400">Billing cycle end:</span> {formatDateTime(subscription?.current_period_end)}</p>
+            <SendOwnerInviteButton
+              centreId={tenantId}
+              centreName={centre.name}
+              ownerEmail={centre.email}
+              ownerPhone={centre.contact_phone ?? centre.phone}
+            />
           </CardContent>
         </Card>
         <Card>

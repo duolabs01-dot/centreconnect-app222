@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
-import { Mail, PackageCheck, Send, Sparkles } from 'lucide-react'
+import { Mail, MessageCircle, PackageCheck, Send, Sparkles } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,21 +15,26 @@ export const metadata: Metadata = {
   description: 'Track invite dispatch and welcome pack delivery activity across centres.',
 }
 
-const INVITE_TYPES = ['email', 'whatsapp', 'welcome_pack'] as const
-const INVITE_STATUSES = ['sent', 'opened', 'claimed'] as const
+const INVITE_CHANNELS = ['email', 'whatsapp'] as const
+const INVITE_STATUSES = ['sent', 'opened', 'claimed', 'failed'] as const
+const INVITE_EVENT_TYPES = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
 
-type InviteType = (typeof INVITE_TYPES)[number]
+type InviteChannel = (typeof INVITE_CHANNELS)[number]
 type InviteStatus = (typeof INVITE_STATUSES)[number]
+type InviteEventType = (typeof INVITE_EVENT_TYPES)[number]
 
 type InviteRow = {
   id: string
   centre_id: string | null
-  owner_email: string | null
-  owner_phone: string | null
-  invite_type: InviteType
-  sent_at: string
+  event_key: string
+  event_type: InviteEventType
+  channel: InviteChannel
+  recipient: string | null
   status: InviteStatus
-  notes: string | null
+  provider: string
+  error_message: string | null
+  payload: Record<string, unknown> | null
+  created_at: string
   ecd_centres:
     | { name: string | null }
     | Array<{ name: string | null }>
@@ -50,12 +55,16 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
-function normalizeInviteType(value: string): InviteType | '' {
-  return INVITE_TYPES.includes(value as InviteType) ? (value as InviteType) : ''
+function normalizeInviteChannel(value: string): InviteChannel | '' {
+  return INVITE_CHANNELS.includes(value as InviteChannel) ? (value as InviteChannel) : ''
 }
 
 function normalizeInviteStatus(value: string): InviteStatus | '' {
   return INVITE_STATUSES.includes(value as InviteStatus) ? (value as InviteStatus) : ''
+}
+
+function normalizeInviteEventType(value: string): InviteEventType | '' {
+  return INVITE_EVENT_TYPES.includes(value as InviteEventType) ? (value as InviteEventType) : ''
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -63,14 +72,17 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function formatInviteType(value: InviteType) {
-  if (value === 'welcome_pack') return 'Welcome Pack'
-  return value.toUpperCase()
+function formatEventType(value: InviteEventType) {
+  if (value === 'owner_invite') return 'Owner Invite'
+  if (value === 'admin_access_invite') return 'Admin Invite'
+  if (value === 'welcome_pack' || value === 'centre_bootstrap_created') return 'Welcome Pack'
+  return value
 }
 
 function statusClass(status: InviteStatus) {
   if (status === 'claimed') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
   if (status === 'opened') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
+  if (status === 'failed') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
   return 'border-amber-500/30 bg-amber-500/10 text-amber-300'
 }
 
@@ -89,22 +101,25 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  const selectedType = normalizeInviteType(queryValue(searchParams?.type))
+  const selectedChannel = normalizeInviteChannel(queryValue(searchParams?.channel))
   const selectedStatus = normalizeInviteStatus(queryValue(searchParams?.status))
+  const selectedEventType = normalizeInviteEventType(queryValue(searchParams?.event))
   const selectedCentreId = queryValue(searchParams?.centre)
   const searchTerm = sanitizeSearchTerm(queryValue(searchParams?.q))
 
   let logsQuery = admin
-    .from('invite_logs')
-    .select('id,centre_id,owner_email,owner_phone,invite_type,sent_at,status,notes,ecd_centres(name)')
-    .order('sent_at', { ascending: false })
+    .from('notification_logs')
+    .select('id,centre_id,event_key,event_type,channel,recipient,status,provider,error_message,payload,created_at,ecd_centres(name)')
+    .in('event_type', [...INVITE_EVENT_TYPES])
+    .order('created_at', { ascending: false })
     .limit(1000)
 
-  if (selectedType) logsQuery = logsQuery.eq('invite_type', selectedType)
+  if (selectedChannel) logsQuery = logsQuery.eq('channel', selectedChannel)
   if (selectedStatus) logsQuery = logsQuery.eq('status', selectedStatus)
+  if (selectedEventType) logsQuery = logsQuery.eq('event_type', selectedEventType)
   if (selectedCentreId) logsQuery = logsQuery.eq('centre_id', selectedCentreId)
   if (searchTerm) {
-    logsQuery = logsQuery.or(`owner_email.ilike.%${searchTerm}%,owner_phone.ilike.%${searchTerm}%`)
+    logsQuery = logsQuery.or(`recipient.ilike.%${searchTerm}%,event_key.ilike.%${searchTerm}%`)
   }
 
   const [logsResult, centresResult] = await Promise.all([
@@ -118,7 +133,11 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
   const sentCount = logs.filter((row) => row.status === 'sent').length
   const openedCount = logs.filter((row) => row.status === 'opened').length
   const claimedCount = logs.filter((row) => row.status === 'claimed').length
-  const welcomePackCount = logs.filter((row) => row.invite_type === 'welcome_pack').length
+  const failedCount = logs.filter((row) => row.status === 'failed').length
+  const welcomePackCount = logs.filter(
+    (row) => row.event_type === 'welcome_pack' || row.event_type === 'centre_bootstrap_created'
+  ).length
+  const ownerInviteCount = logs.filter((row) => row.event_type === 'owner_invite').length
 
   const fieldClass =
     'h-10 rounded-xl border border-white/10 bg-black/30 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400/60 focus:outline-none'
@@ -167,37 +186,44 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
         <CyberCard accent="cyan" glow className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Email-Type Sends</p>
+              <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Owner Invites / Failed</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">
-                {logs.filter((row) => row.invite_type === 'email').length}
+                {ownerInviteCount} / {failedCount}
               </h3>
-              <p className="mt-1 text-[10px] text-cyan-300">ACCESS_AND_NOTIFY_MAIL</p>
+              <p className="mt-1 text-[10px] text-cyan-300">OWNER_REACHOUT_HEALTH</p>
             </div>
-            <Mail className="h-4 w-4 text-cyan-300" />
+            {failedCount > 0 ? <MessageCircle className="h-4 w-4 text-cyan-300" /> : <Mail className="h-4 w-4 text-cyan-300" />}
           </div>
         </CyberCard>
       </section>
 
       <CyberCard className="mb-6 p-6">
-        <form method="get" className="grid gap-3 md:grid-cols-5">
+        <form method="get" className="grid gap-3 md:grid-cols-6">
           <input
             type="text"
             name="q"
             defaultValue={searchTerm}
-            placeholder="Search email or phone"
+            placeholder="Search recipient or event key"
             className={fieldClass}
           />
-          <select name="type" defaultValue={selectedType} className={`cc-native-field ${fieldClass}`}>
-            <option value="">All types</option>
+          <select name="channel" defaultValue={selectedChannel} className={`cc-native-field ${fieldClass}`}>
+            <option value="">All channels</option>
             <option value="email">Email</option>
             <option value="whatsapp">WhatsApp</option>
+          </select>
+          <select name="event" defaultValue={selectedEventType} className={`cc-native-field ${fieldClass}`}>
+            <option value="">All events</option>
+            <option value="owner_invite">Owner Invite</option>
+            <option value="admin_access_invite">Admin Invite</option>
             <option value="welcome_pack">Welcome Pack</option>
+            <option value="centre_bootstrap_created">Bootstrap Pack</option>
           </select>
           <select name="status" defaultValue={selectedStatus} className={`cc-native-field ${fieldClass}`}>
             <option value="">All statuses</option>
             <option value="sent">Sent</option>
             <option value="opened">Opened</option>
             <option value="claimed">Claimed</option>
+            <option value="failed">Failed</option>
           </select>
           <select name="centre" defaultValue={selectedCentreId} className={`cc-native-field ${fieldClass}`}>
             <option value="">All centres</option>
@@ -243,12 +269,13 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
             <Table>
               <TableHeader>
                 <TableRow className="border-white/5 hover:bg-transparent">
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Sent</TableHead>
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Centre</TableHead>
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Owner Contact</TableHead>
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Type</TableHead>
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Status</TableHead>
-                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Notes</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Sent</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Centre</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Recipient</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Channel</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Event</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Status</TableHead>
+                    <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Provider / Note</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -256,14 +283,16 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
                   const centreName = normalizeOne(row.ecd_centres)?.name ?? 'Unknown centre'
                   return (
                     <TableRow key={row.id} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="p-4 text-xs text-slate-400">{formatDateTime(row.sent_at)}</TableCell>
+                      <TableCell className="p-4 text-xs text-slate-400">{formatDateTime(row.created_at)}</TableCell>
                       <TableCell className="p-4 text-sm font-medium text-white">{centreName}</TableCell>
-                      <TableCell className="p-4">
-                        <p className="text-sm text-slate-200">{row.owner_email ?? '-'}</p>
-                        <p className="text-xs text-slate-500">{row.owner_phone ?? '-'}</p>
+                      <TableCell className="p-4 text-sm text-slate-200">
+                        {row.recipient ?? '-'}
                       </TableCell>
                       <TableCell className="p-4 text-xs font-semibold uppercase tracking-wider text-cyan-300">
-                        {formatInviteType(row.invite_type)}
+                        {row.channel}
+                      </TableCell>
+                      <TableCell className="p-4 text-xs text-slate-300">
+                        {formatEventType(row.event_type)}
                       </TableCell>
                       <TableCell className="p-4">
                         <span
@@ -274,7 +303,10 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
                           {row.status}
                         </span>
                       </TableCell>
-                      <TableCell className="p-4 text-xs text-slate-400">{row.notes?.trim() || '-'}</TableCell>
+                      <TableCell className="p-4 text-xs text-slate-400">
+                        {row.provider}
+                        {row.error_message ? ` | ${row.error_message}` : ''}
+                      </TableCell>
                     </TableRow>
                   )
                 })}
