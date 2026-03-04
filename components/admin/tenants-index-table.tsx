@@ -421,10 +421,24 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           fullName: inviteForm.fullName.trim() || undefined,
         }),
       })
-      const payload = (await response.json().catch(() => ({}))) as { error?: string; invitedEmail?: string; role?: string }
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        invitedEmail?: string
+        role?: string
+        linkedExistingUser?: boolean
+        parentAccessRevoked?: boolean
+      }
       if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
 
-      toast.success(`Invite sent to ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}`)
+      if (payload.linkedExistingUser) {
+        toast.success(
+          `Linked existing account ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}${
+            payload.parentAccessRevoked ? ' (parent access revoked)' : ''
+          }`
+        )
+      } else {
+        toast.success(`Invite sent to ${payload.invitedEmail ?? email} as ${payload.role ?? inviteForm.role}`)
+      }
       setInviteForm({ email: '', fullName: '', role: 'ecd_staff' })
       setInviteOpen(false)
       setInviteTenant(null)

@@ -17,6 +17,24 @@ function fallbackFullName(email: string): string {
   return base.replace(/[._-]+/g, ' ').trim() || 'ECD Admin'
 }
 
+function isEmailAlreadyRegisteredError(message?: string | null) {
+  const value = (message ?? '').toLowerCase()
+  return value.includes('already been registered') || value.includes('already registered') || value.includes('already exists')
+}
+
+async function findAuthUserIdByEmail(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  const { data, error } = await adminClient
+    .schema('auth')
+    .from('users')
+    .select('id,email')
+    .ilike('email', email)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return null
+  return data?.id ?? null
+}
+
 export async function POST(request: Request) {
   const platformAdmin = await requirePlatformAdmin(request)
   if (!platformAdmin) {
@@ -50,8 +68,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'ECD centre not found' }, { status: 404 })
   }
 
+  const nowIso = new Date().toISOString()
   const redirectTo = data.redirectTo ?? `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/login`
-  const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+  const inviteResult = await adminClient.auth.admin.inviteUserByEmail(
     normalizedEmail,
     {
       redirectTo: redirectTo || undefined,
@@ -62,12 +81,45 @@ export async function POST(request: Request) {
     }
   )
 
-  if (inviteError) {
-    return NextResponse.json({ error: inviteError.message }, { status: 400 })
+  let invitedUserId = inviteResult.data.user?.id ?? null
+  let linkedExistingUser = false
+
+  if (inviteResult.error) {
+    if (!isEmailAlreadyRegisteredError(inviteResult.error.message)) {
+      return NextResponse.json({ error: inviteResult.error.message }, { status: 400 })
+    }
+
+    invitedUserId = await findAuthUserIdByEmail(adminClient, normalizedEmail)
+    if (!invitedUserId) {
+      return NextResponse.json(
+        { error: 'Email exists in auth but could not resolve user account for linking.' },
+        { status: 500 }
+      )
+    }
+    linkedExistingUser = true
   }
 
-  const invitedUserId = inviteData.user?.id ?? null
-  const fullName = data.fullName ?? fallbackFullName(normalizedEmail)
+  const { data: existingProfile } = invitedUserId
+    ? await adminClient
+        .from('user_profiles')
+        .select('id,role,full_name,phone')
+        .eq('id', invitedUserId)
+        .maybeSingle()
+    : { data: null as { id: string; role: string | null; full_name?: string | null; phone?: string | null } | null }
+
+  if (existingProfile?.role === 'platform_admin') {
+    return NextResponse.json(
+      { error: 'Platform admin accounts cannot be reassigned via staff invite flow.' },
+      { status: 409 }
+    )
+  }
+
+  const fullName =
+    data.fullName?.trim() ||
+    (typeof existingProfile?.full_name === 'string' ? existingProfile.full_name.trim() : '') ||
+    fallbackFullName(normalizedEmail)
+  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
+  const parentAccessRevoked = previousRole === 'parent_user'
 
   if (invitedUserId) {
     const { error: profileError } = await adminClient.from('user_profiles').upsert(
@@ -75,6 +127,8 @@ export async function POST(request: Request) {
         id: invitedUserId,
         role: data.role,
         full_name: fullName,
+        email: normalizedEmail,
+        phone: existingProfile?.phone ?? null,
       },
       { onConflict: 'id' }
     )
@@ -88,7 +142,8 @@ export async function POST(request: Request) {
         user_id: invitedUserId,
         role: data.role,
         invited_by: platformAdmin.userId,
-        invited_at: new Date().toISOString(),
+        invited_at: nowIso,
+        ...(linkedExistingUser ? { accepted_at: nowIso } : {}),
       },
       { onConflict: 'ecd_id,user_id' }
     )
@@ -107,7 +162,8 @@ export async function POST(request: Request) {
       role: data.role,
       invited_by: platformAdmin.userId,
       auth_user_id: invitedUserId,
-      invited_at: new Date().toISOString(),
+      invited_at: nowIso,
+      ...(linkedExistingUser ? { accepted_at: nowIso } : {}),
     },
     { onConflict: 'ecd_id,email' }
   )
@@ -122,8 +178,10 @@ export async function POST(request: Request) {
     centreId: data.ecdId,
     ownerEmail: normalizedEmail,
     inviteType: 'email',
-    status: 'sent',
-    notes: `ECD access invite (${data.role})`,
+    status: linkedExistingUser ? 'claimed' : 'sent',
+    notes: linkedExistingUser
+      ? `Linked existing account to ECD access (${data.role})`
+      : `ECD access invite (${data.role})`,
   })
 
   return NextResponse.json({
@@ -131,5 +189,8 @@ export async function POST(request: Request) {
     role: data.role,
     ecdId: data.ecdId,
     userId: invitedUserId,
+    linkedExistingUser,
+    previousRole,
+    parentAccessRevoked,
   })
 }
