@@ -9,9 +9,12 @@ export async function sendEmail({
 }): Promise<{ success: boolean; error?: string }> {
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    console.warn('[email] RESEND_API_KEY not set -- email skipped')
-    return { success: true }
+    console.warn('[email] RESEND_API_KEY not set')
+    return { success: false, error: 'RESEND_API_KEY not set' }
   }
+
+  const from = process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev'
+  const replyTo = process.env.RESEND_REPLY_TO?.trim() || undefined
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -20,10 +23,11 @@ export async function sendEmail({
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'CentreConnect <noreply@centreconnect.co.za>',
+      from,
       to: [to],
       subject,
       html,
+      ...(replyTo ? { reply_to: replyTo } : {}),
     }),
   })
 
