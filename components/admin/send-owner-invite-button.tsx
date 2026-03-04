@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { MailPlus } from 'lucide-react'
-import { Button } from '@/components/cc-admin/Button'
+import { Button } from '@/components/ui/button'
 
 type SendOwnerInviteButtonProps = {
   centreId: string
@@ -68,11 +68,21 @@ export function SendOwnerInviteButton({
         Sends a branded email + WhatsApp invite to the centre owner and tracks status in notification logs.
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <Button onClick={() => startTransition(() => void handleSendInvite())} disabled={busy || !ownerEmail?.trim()}>
+        <Button
+          onClick={() => startTransition(() => void handleSendInvite())}
+          loading={busy}
+          loadingText="Sending Invite..."
+          disabled={!ownerEmail?.trim()}
+          className="bg-cyan-500 text-black hover:bg-cyan-400"
+        >
           <MailPlus className="h-4 w-4" />
-          {busy ? 'Sending Invite...' : 'Send Invite'}
+          Send Invite
         </Button>
-        <Button asChild variant="outline">
+        <Button
+          asChild
+          variant="outline"
+          className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+        >
           <Link href="/admin/invites">View Invite Tracking</Link>
         </Button>
       </div>

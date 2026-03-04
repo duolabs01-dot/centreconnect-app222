@@ -1,7 +1,6 @@
 'use client'
 
-import { Button } from '@/components/cc-admin/Button'
-import { adminTheme } from '@/lib/admin-theme'
+import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
@@ -50,12 +49,13 @@ export function ActivateCentreButton({ tenantId, onboardingFeePaid, hasPendingTa
   return (
     <Button
       size="sm"
-      className={adminTheme.buttonPrimary}
-      disabled={isActivating}
+      loading={isActivating}
+      loadingText="Activating..."
+      className="bg-cyan-500 text-black hover:bg-cyan-400"
       onClick={handleActivate}
     >
       <CheckCircle2 className="mr-2 h-4 w-4" />
-      {isActivating ? 'Activating...' : 'Activate Centre'}
+      Activate Centre
     </Button>
   )
 }
