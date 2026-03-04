@@ -151,7 +151,6 @@ export async function POST(request: Request) {
         id: invitedUserId,
         role: data.role,
         full_name: fullName,
-        email: normalizedEmail,
         phone: existingProfile?.phone ?? null,
       },
       { onConflict: 'id' }
