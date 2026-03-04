@@ -23,7 +23,7 @@ type NotificationItem = {
 type InboxTab = 'All' | 'Messages' | 'Announcements' | 'Updates'
 
 function normalizeCentre(value: NotificationItem['ecd_centres']) {
-  if (!value) return { name: 'Crèche update', contactWhatsapp: null as string | null, contactPhone: null as string | null }
+  if (!value) return { name: 'CentreConnect Team', contactWhatsapp: null as string | null, contactPhone: null as string | null }
   const centre = Array.isArray(value) ? value[0] : value
   return {
     name: centre?.name ?? 'Crèche update',

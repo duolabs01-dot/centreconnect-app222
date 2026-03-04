@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
+import { enqueueParentWelcomeSequence } from '@/lib/notifications/parent-welcome-sequence'
 
 type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
@@ -97,6 +98,14 @@ export async function POST(request: NextRequest) {
       if (parentError) {
         console.error('[ensure-profile] Parent upsert error:', parentError)
         return NextResponse.json({ error: parentError.message }, { status: 400 })
+      }
+
+      const welcomeResult = await enqueueParentWelcomeSequence(admin as any, {
+        parentId: user.id,
+        parentName: fullName,
+      })
+      if (!welcomeResult.ok) {
+        console.error('[ensure-profile] Parent welcome sequence failed:', welcomeResult.error)
       }
     }
 
