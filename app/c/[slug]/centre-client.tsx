@@ -300,12 +300,9 @@ export function CentreClient({ slug }: { slug: string }) {
   const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
   const operationalStatus = getCentreOperationalStatus()
   const isClaimed = typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : Boolean(centre.is_registered)
-  const normalizedSuburb = centre.suburb?.trim().toLowerCase() ?? ''
-  const isFoundingPartner = normalizedSuburb === 'alexandra'
   const pilotBadges = [
     centre.is_registered ? 'Verified' : null,
-    isFoundingPartner ? 'Founding Partner' : null,
-    centre.is_registered || isFoundingPartner ? 'Priority Listing' : null,
+    centre.is_registered ? 'Priority Listing' : null,
   ].filter(Boolean) as string[]
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = locationLabel || 'Address shared on request'

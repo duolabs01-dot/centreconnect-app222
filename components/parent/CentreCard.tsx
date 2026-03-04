@@ -90,11 +90,9 @@ export default function CentreCard({
       schedule: resolved.schedule,
     })
   }, [])
-  const isFoundingPartner = suburb?.trim().toLowerCase() === 'alexandra'
-  const hasPriorityListing = is_registered || isFoundingPartner
+  const hasPriorityListing = is_registered
   const pilotBadges = [
     is_registered ? 'Verified' : null,
-    isFoundingPartner ? 'Founding Partner' : null,
     hasPriorityListing ? 'Priority Listing' : null,
   ].filter(Boolean) as string[]
 
