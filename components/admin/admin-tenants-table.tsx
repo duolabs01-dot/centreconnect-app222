@@ -336,7 +336,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       toast.error('Owner email is required to send the welcome pack.')
       return
     }
-    await runWelcomePack(editTenantId, ownerEmail)
+    await runWelcomePack(editTenantId, ownerEmail, ' Welcome pack sent successfully!')
   }, [editTenantId, form?.email, runWelcomePack])
 
   const loadTenantUsers = useCallback(async (tenantId: string) => {
