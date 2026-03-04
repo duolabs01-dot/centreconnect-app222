@@ -432,13 +432,24 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         directEmailSent?: boolean
         directEmailProvider?: 'resend' | 'smtp' | null
         directEmailError?: string | null
-        emailDeliveryStatus?: 'sent' | 'queued' | 'failed'
+        emailDeliveryStatus?: 'sent' | 'failed'
         emailDeliveryMessage?: string | null
+        manualAccessLink?: string | null
         emailQueued?: boolean
         emailQueueSkipped?: boolean
         emailQueueError?: string | null
       }
-      if (!response.ok) throw new Error(payload.error || 'Failed to send invite')
+      if (!response.ok) {
+        if (payload.manualAccessLink && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(payload.manualAccessLink)
+            toast.warning('Invite email failed. Access link copied to clipboard - share it manually.')
+          } catch {
+            toast.warning('Invite email failed. Copy the access link manually from server response/logs.')
+          }
+        }
+        throw new Error(payload.error || payload.emailDeliveryMessage || 'Failed to send invite')
+      }
 
       const targetLabel = payload.invitedEmail ?? email
       const roleLabel = payload.role ?? inviteForm.role
@@ -453,8 +464,6 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         } else {
           toast.success(`Invite sent to ${targetLabel} as ${roleLabel}`)
         }
-      } else if (payload.emailDeliveryStatus === 'queued') {
-        toast.warning(payload.emailDeliveryMessage || 'Invite queued, but email not delivered yet.')
       } else if (payload.emailDeliveryStatus === 'failed') {
         toast.error(payload.emailDeliveryMessage || 'Invite created, but email delivery failed.')
       }

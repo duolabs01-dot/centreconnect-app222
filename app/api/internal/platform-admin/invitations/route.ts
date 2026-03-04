@@ -345,19 +345,17 @@ export async function POST(request: Request) {
     ? { success: true as const, skipped: true as const }
     : await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
 
-  const emailDeliveryStatus: 'sent' | 'queued' | 'failed' = directEmailSent
-    ? 'sent'
-    : emailQueueResult.success
-      ? 'queued'
-      : 'failed'
+  const emailDeliveryStatus: 'sent' | 'failed' = directEmailSent ? 'sent' : 'failed'
   const emailDeliveryMessage =
     emailDeliveryStatus === 'sent'
       ? `Invite email sent via ${directEmailProvider ?? 'direct provider'}.`
-      : emailDeliveryStatus === 'queued'
-        ? `Invite was queued but not delivered immediately. Configure RESEND_API_KEY or SMTP_* and run your email worker to deliver queued emails.`
-        : `Invite email failed. ${directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : ''}${
-            emailQueueResult.success ? '' : ` Queue error: ${emailQueueResult.error ?? 'unknown'}`
-          }`
+      : `Invite email was NOT delivered. ${
+          directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : 'No direct email provider succeeded.'
+        }${
+          emailQueueResult.success
+            ? ' A queue fallback was created, but that does not confirm delivery.'
+            : ` Queue error: ${emailQueueResult.error ?? 'unknown'}`
+        }`
 
   await writeInviteLog(adminClient, {
     centreId: data.ecdId,
@@ -373,7 +371,7 @@ export async function POST(request: Request) {
           : `ECD access invite (${data.role})${emailQueueResult.success ? ' queued for delivery' : ' (delivery queue failed)'}`,
   })
 
-  return NextResponse.json({
+  const responsePayload = {
     invitedEmail: normalizedEmail,
     role: data.role,
     ecdId: data.ecdId,
@@ -384,6 +382,7 @@ export async function POST(request: Request) {
     parentAccessRevoked,
     inviteLinkMode: accessLinkResult.mode,
     accessLinkWarning: accessLinkResult.warning,
+    manualAccessLink: accessLink,
     directEmailSent,
     directEmailProvider,
     directEmailError: directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : null,
@@ -392,5 +391,17 @@ export async function POST(request: Request) {
     emailQueued: emailQueueResult.success,
     emailQueueSkipped: 'skipped' in emailQueueResult ? emailQueueResult.skipped : false,
     emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,
-  })
+  }
+
+  if (!directEmailSent) {
+    return NextResponse.json(
+      {
+        ...responsePayload,
+        error: emailDeliveryMessage,
+      },
+      { status: emailQueueResult.success ? 502 : 500 }
+    )
+  }
+
+  return NextResponse.json(responsePayload)
 }
