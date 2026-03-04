@@ -16,6 +16,7 @@ import {
   Store,
   Truck,
   UserCheck,
+  TrendingUp,
   Briefcase,
   ShieldAlert,
   Users,
@@ -28,14 +29,15 @@ export type EcdNavItem = {
   label: string
   icon: LucideIcon
   group?:
-    | 'daily_operations'
-    | 'admissions'
-    | 'finance'
-    | 'communication'
-    | 'compliance_team'
-    | 'growth_tools'
-    | 'coming_soon'
-    | 'settings'
+  | 'daily_operations'
+  | 'admissions'
+  | 'finance'
+  | 'communication'
+  | 'compliance_team'
+  | 'growth_tools'
+  | 'coming_soon'
+  | 'settings'
+  | 'admin'
   comingSoon?: boolean
   adminOnly?: boolean
   supervisorAllowed?: boolean
@@ -53,6 +55,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/communications', label: 'Messages', icon: MessageSquare, group: 'communication', supervisorAllowed: true },
   { href: '/ecd/announcements', label: 'Announcements', icon: Megaphone, group: 'communication', supervisorAllowed: true },
   { href: '/ecd/calendar', label: 'Calendar', icon: CalendarDays, group: 'communication', supervisorAllowed: true },
+  { href: '/ecd/financials', label: 'Financials', icon: TrendingUp, group: 'admin', supervisorAllowed: true },
   { href: '/ecd/compliance', label: 'Compliance Documents', icon: ShieldAlert, group: 'compliance_team', supervisorAllowed: true },
   { href: '/ecd/employment', label: 'Staff & Employment', icon: Briefcase, group: 'compliance_team', supervisorAllowed: true },
   { href: '/ecd/website', label: 'Website', icon: Globe, group: 'growth_tools' },

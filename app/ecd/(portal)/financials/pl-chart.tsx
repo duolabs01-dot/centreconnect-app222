@@ -19,8 +19,10 @@ function toNumber(value: number | string | null | undefined) {
 export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
   if (!snapshots.length) {
     return (
-      <div className="rounded-2xl border border-border bg-card/90 p-6 text-center">
-        <p className="text-sm text-muted-foreground">No financial data yet. Enter your first month above.</p>
+      <div className="rounded-2xl border border-cyber-cyan/40 bg-slate-950/80 p-6 text-center shadow-[0_22px_55px_-35px_rgba(6,182,212,0.85)] text-white">
+        <p className="font-orbitron text-[11px] uppercase tracking-[0.4em] text-cyber-cyan">
+          No financial data yet. Enter your first month above.
+        </p>
       </div>
     )
   }
@@ -40,7 +42,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
   const minPl = Math.min(...plValues, 0)
   const maxPl = Math.max(...plValues, 0)
   const plSpan = Math.max(1, maxPl - minPl)
-  const plStroke = plValues[plValues.length - 1] >= 0 ? '#059669' : '#F43F5E'
+  const plStroke = plValues[plValues.length - 1] >= 0 ? '#14b8a6' : '#f43f5e'
 
   const polylinePoints = snapshots
     .map((item, index) => {
@@ -52,12 +54,14 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
     .join(' ')
 
   return (
-    <div className="rounded-2xl border border-border bg-card/90 p-5">
+    <div className="rounded-2xl border border-cyber-cyan/30 bg-slate-950/80 p-6 shadow-[0_30px_70px_-40px_rgba(6,182,212,0.85)] text-white">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-foreground">6-Month Revenue vs Expenses Trend</p>
-        <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+        <p className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-cyber-cyan">
+          6-Month Revenue vs Expenses Trend
+        </p>
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-white/70">
           <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-cyan-700" />
+            <span className="h-2 w-2 rounded-full bg-cyan-500" />
             Revenue
           </span>
           <span className="inline-flex items-center gap-1">
@@ -65,7 +69,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
             Expenses
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-emerald-600" />
+            <span className="h-2 w-2 rounded-full bg-emerald-500" />
             P&amp;L
           </span>
         </div>
@@ -74,7 +78,17 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
       <svg viewBox={`0 0 ${svgW} ${svgH}`} className="h-56 w-full">
         {[0.25, 0.5, 0.75].map((fraction) => {
           const y = topPad + chartH * fraction
-          return <line key={fraction} x1={leftPad} y1={y} x2={svgW - rightPad} y2={y} stroke="#cbd5e1" strokeWidth="0.7" />
+          return (
+            <line
+              key={fraction}
+              x1={leftPad}
+              y1={y}
+              x2={svgW - rightPad}
+              y2={y}
+              stroke="rgba(255,255,255,0.18)"
+              strokeWidth="0.7"
+            />
+          )
         })}
 
         {snapshots.map((item, index) => {
@@ -106,7 +120,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
                 rx={2}
                 fill="#f43f5e"
               />
-              <text x={labelX} y={labelY} textAnchor="middle" fontSize="10" fill="#64748b">
+              <text x={labelX} y={labelY} textAnchor="middle" fontSize="10" fill="#cbd5f5">
                 {monthLabel(item.period_month)}
               </text>
             </g>
@@ -119,7 +133,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
           const centreX = leftPad + index * slotW + slotW * 0.5
           const pl = toNumber(item.revenue_total) - toNumber(item.expenses_total)
           const y = topPad + chartH - ((pl - minPl) / plSpan) * chartH
-          const dotFill = pl >= 0 ? '#059669' : '#f43f5e'
+          const dotFill = pl >= 0 ? '#14b8a6' : '#f43f5e'
           return <circle key={`pl-${item.period_month}-${index}`} cx={centreX} cy={y} r="3.1" fill={dotFill} />
         })}
       </svg>

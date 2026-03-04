@@ -64,11 +64,11 @@ function getMonthOptions(period: string) {
 function PLSummary({ revenue, expenses }: { revenue: number; expenses: number }) {
   const pl = revenue - expenses
   const label = pl > 0 ? 'Profit' : pl < 0 ? 'Loss' : 'Break-even'
-  const cls = pl > 0 ? 'text-emerald-700' : pl < 0 ? 'text-rose-700' : 'text-slate-500'
+  const cls = pl > 0 ? 'text-emerald-600' : pl < 0 ? 'text-rose-500' : 'text-slate-500'
   return (
-    <div className="rounded-2xl border border-border bg-card/90 p-4 text-center">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Monthly P&amp;L</p>
-      <p className={`mt-2 text-4xl font-black ${cls}`}>
+    <div className="rounded-2xl border border-cyan-200/40 bg-white/95 p-5 text-center shadow-[0_25px_45px_-30px_rgba(6,182,212,0.8)]">
+      <p className="font-orbitron text-[10px] uppercase tracking-[0.6em] text-cyber-cyan">Monthly P&amp;L</p>
+      <p className={`mt-3 text-[2.7rem] leading-tight font-orbitron ${cls}`}>
         {label}: {formatRand(Math.abs(pl))}
       </p>
       <p className="mt-1 text-xs text-slate-500">Revenue - Expenses</p>
@@ -167,18 +167,20 @@ export function FinancialEntryClient({
 
   return (
     <section className="space-y-6">
-      <Card className="border-border">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-base">Monthly Financial Entry</CardTitle>
+      <Card className="rounded-2xl border border-cyan-200/40 bg-gradient-to-br from-white/90 to-slate-100/80 shadow-[0_25px_45px_-30px_rgba(6,182,212,0.85)]">
+        <CardHeader className="space-y-3">
+          <CardTitle className="font-orbitron text-base uppercase tracking-[0.25em] text-cyber-cyan">
+            Monthly Financial Entry
+          </CardTitle>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Crèche</p>
               <p className="text-sm text-foreground">{ecdId.slice(0, 8)}...</p>
             </div>
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label className="font-orbitron text-[10px] uppercase tracking-[0.6em] text-slate-500">
               Month
               <select
-                className="cc-native-field mt-1 min-w-[220px]"
+                className="cc-native-field mt-1 min-w-[220px] border border-cyan-200/40 bg-white/90 shadow-[0_12px_30px_-24px_rgba(6,182,212,0.85)]"
                 value={monthKey}
                 onChange={(event) => {
                   const nextMonth = event.target.value
@@ -198,7 +200,7 @@ export function FinancialEntryClient({
           <form onSubmit={onSaveSnapshot} className="space-y-4">
             {canEdit ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-slate-500">
                   Revenue (R)
                   <input
                     type="number"
@@ -209,33 +211,33 @@ export function FinancialEntryClient({
                     onChange={(event) => setRevenueTotal(Number(event.target.value) || 0)}
                   />
                 </label>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-slate-500">
                   Expenses (R)
                   <input
                     type="number"
-                    className="cc-native-field mt-1"
+                    className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.8)]"
                     min="0"
                     step="0.01"
                     value={expensesTotal}
                     onChange={(event) => setExpensesTotal(Number(event.target.value) || 0)}
                   />
                 </label>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-slate-500">
                   Assets (R)
                   <input
                     type="number"
-                    className="cc-native-field mt-1"
+                    className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.8)]"
                     min="0"
                     step="0.01"
                     value={assetsTotal}
                     onChange={(event) => setAssetsTotal(Number(event.target.value) || 0)}
                   />
                 </label>
-                <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <label className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-slate-500">
                   Liabilities (R)
                   <input
                     type="number"
-                    className="cc-native-field mt-1"
+                    className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.8)]"
                     min="0"
                     step="0.01"
                     value={liabilitiesTotal}
@@ -245,30 +247,30 @@ export function FinancialEntryClient({
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-lg border border-border bg-card/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Revenue</p>
-                  <p className="mt-1 text-lg font-bold text-foreground">{formatRand(revenueTotal)}</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Expenses</p>
-                  <p className="mt-1 text-lg font-bold text-foreground">{formatRand(expensesTotal)}</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assets</p>
-                  <p className="mt-1 text-lg font-bold text-foreground">{formatRand(assetsTotal)}</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card/80 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Liabilities</p>
-                  <p className="mt-1 text-lg font-bold text-foreground">{formatRand(liabilitiesTotal)}</p>
-                </div>
+                {[
+                  { label: 'Revenue', value: formatRand(revenueTotal) },
+                  { label: 'Expenses', value: formatRand(expensesTotal) },
+                  { label: 'Assets', value: formatRand(assetsTotal) },
+                  { label: 'Liabilities', value: formatRand(liabilitiesTotal) },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-cyan-200/40 bg-white/90 px-4 py-3 shadow-[0_12px_30px_-25px_rgba(6,182,212,0.6)]"
+                  >
+                    <p className="font-orbitron text-[10px] uppercase tracking-[0.35em] text-cyber-cyan">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">{item.value}</p>
+                  </div>
+                ))}
               </div>
             )}
 
             <div className="grid gap-4 lg:grid-cols-2">
               <PLSummary revenue={revenueTotal} expenses={expensesTotal} />
-              <div className="rounded-2xl border border-border bg-card/90 p-4 text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Net Worth</p>
-                <p className={`mt-2 text-4xl font-black ${netWorth >= 0 ? 'text-cyan-700' : 'text-rose-700'}`}>
+              <div className="rounded-2xl border border-cyan-200/40 bg-white/95 p-5 text-center shadow-[0_18px_35px_-28px_rgba(6,182,212,0.9)]">
+                <p className="font-orbitron text-[10px] uppercase tracking-[0.6em] text-cyber-violet">Net Worth</p>
+                <p className={`mt-2 text-[2.5rem] font-orbitron ${netWorth >= 0 ? 'text-cyan-700' : 'text-rose-700'}`}>
                   {netWorth >= 0 ? '+' : '-'}
                   {formatRand(Math.abs(netWorth))}
                 </p>
@@ -295,7 +297,11 @@ export function FinancialEntryClient({
             </div>
 
             {canEdit ? (
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="font-orbitron text-[10px] uppercase tracking-[0.5em]"
+              >
                 {isPending ? 'Saving...' : 'Save Monthly Snapshot'}
               </Button>
             ) : (
@@ -306,37 +312,47 @@ export function FinancialEntryClient({
           </form>
 
           {status ? (
-            <p className={`text-sm ${status.type === 'ok' ? 'text-emerald-700' : 'text-rose-700'}`}>{status.message}</p>
+            <p
+              className={`text-sm font-orbitron uppercase tracking-[0.3em] ${
+                status.type === 'ok' ? 'text-cyber-cyan' : 'text-rose-500'
+              }`}
+            >
+              {status.message}
+            </p>
           ) : null}
         </CardContent>
       </Card>
 
-      <Card className="border-border">
-        <CardHeader>
-          <CardTitle className="text-base">Line Items ({lineItems.length})</CardTitle>
+      <Card className="rounded-2xl border border-cyan-200/40 bg-white/95 shadow-[0_25px_45px_-30px_rgba(6,182,212,0.75)]">
+        <CardHeader className="space-y-1">
+          <CardTitle className="font-orbitron text-base uppercase tracking-[0.25em] text-cyber-violet">
+            Line Items ({lineItems.length})
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {lineItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No line items for this month yet.</p>
+            <p className="text-sm font-orbitron uppercase tracking-[0.4em] text-muted-foreground">
+              No line items for this month yet.
+            </p>
           ) : (
             <div className="overflow-x-auto rounded-md border border-border">
               <table className="min-w-full divide-y divide-border text-sm">
                 <thead className="bg-muted/30">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-2 text-left text-[10px] font-orbitron uppercase tracking-[0.5em] text-cyber-cyan/80">
                       Type
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-2 text-left text-[10px] font-orbitron uppercase tracking-[0.5em] text-cyber-cyan/80">
                       Category
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-2 text-left text-[10px] font-orbitron uppercase tracking-[0.5em] text-cyber-cyan/80">
                       Label
                     </th>
-                    <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <th className="px-3 py-2 text-right text-[10px] font-orbitron uppercase tracking-[0.5em] text-cyber-cyan/80">
                       Amount
                     </th>
                     {canEdit ? (
-                      <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      <th className="px-3 py-2 text-right text-[10px] font-orbitron uppercase tracking-[0.5em] text-cyber-cyan/80">
                         Action
                       </th>
                     ) : null}
@@ -345,9 +361,9 @@ export function FinancialEntryClient({
                 <tbody className="divide-y divide-border">
                   {lineItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="px-3 py-2 capitalize text-foreground">{item.type}</td>
-                      <td className="px-3 py-2 text-foreground">{item.category}</td>
-                      <td className="px-3 py-2 text-foreground">{item.label}</td>
+                      <td className="px-3 py-2 capitalize text-cyber-cyan">{item.type}</td>
+                      <td className="px-3 py-2 text-slate-900">{item.category}</td>
+                      <td className="px-3 py-2 text-slate-900">{item.label}</td>
                       <td className="px-3 py-2 text-right font-semibold text-foreground">
                         {formatRand(parseNumberish(item.amount))}
                       </td>
@@ -359,6 +375,7 @@ export function FinancialEntryClient({
                             variant="outline"
                             disabled={isDeleting}
                             onClick={() => onDeleteLineItem(item.id)}
+                            className="font-orbitron text-[9px] uppercase tracking-[0.4em]"
                           >
                             Delete
                           </Button>
@@ -373,11 +390,11 @@ export function FinancialEntryClient({
 
           {canEdit ? (
             <form onSubmit={onAddLineItem} className="grid gap-3 border-t border-border pt-4 md:grid-cols-2 xl:grid-cols-5">
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-slate-500">
                 Type
                 <select
                   name="type"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.85)]"
                   value={lineItemType}
                   onChange={(event) =>
                     setLineItemType(event.target.value as 'revenue' | 'expense' | 'asset' | 'liability')
@@ -389,34 +406,51 @@ export function FinancialEntryClient({
                   <option value="liability">Liability</option>
                 </select>
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-slate-500">
                 Category
-                <input name="category" className="cc-native-field mt-1" placeholder="General" />
+                <input
+                  name="category"
+                  className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.85)]"
+                  placeholder="General"
+                />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-slate-500">
                 Label
-                <input name="label" className="cc-native-field mt-1" placeholder="Item label" required />
+                <input
+                  name="label"
+                  className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.85)]"
+                  placeholder="Item label"
+                  required
+                />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-slate-500">
                 Amount (R)
                 <input
                   name="amount"
                   type="number"
                   min="0"
                   step="0.01"
-                  className="cc-native-field mt-1"
+                  className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.85)]"
                   placeholder="0.00"
                   required
                 />
               </label>
-              <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <label className="font-orbitron text-[10px] uppercase tracking-[0.4em] text-slate-500">
                 Notes
-                <input name="line_item_notes" className="cc-native-field mt-1" placeholder="Optional" />
+                <input
+                  name="line_item_notes"
+                  className="cc-native-field mt-1 shadow-[0_10px_25px_-20px_rgba(6,182,212,0.85)]"
+                  placeholder="Optional"
+                />
               </label>
               <div className="md:col-span-2 xl:col-span-5">
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? 'Adding...' : 'Add Line Item'}
-                </Button>
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="font-orbitron text-[10px] uppercase tracking-[0.5em]"
+              >
+                {isPending ? 'Adding...' : 'Add Line Item'}
+              </Button>
               </div>
             </form>
           ) : null}

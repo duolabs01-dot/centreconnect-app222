@@ -84,19 +84,32 @@ export default async function EcdFinancialsPage({ searchParams }: FinancialsPage
     <EcdOsShell
       title="Financial Intelligence"
       description="Track monthly P&L, manage line items, and monitor 6-month trends."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
+      roleLabel={
+        role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'
+      }
       userEmail={user.email ?? ''}
       userRole={role}
     >
-      <div className="space-y-8">
-        <FinancialEntryClient
-          ecdId={ecdId}
-          canEdit={canEdit}
-          currentPeriod={currentPeriod}
-          currentSnapshot={currentSnapshot}
-          lineItems={lineItems}
-        />
-        <PlChart snapshots={snapshots} />
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:px-6 lg:px-8">
+        <header className="space-y-2">
+          <p className="font-orbitron text-[11px] uppercase tracking-[0.6em] text-cyber-cyan">
+            Financial Intelligence
+          </p>
+          <h1 className="font-orbitron text-3xl text-slate-900 sm:text-4xl">Financial Intelligence Centre</h1>
+          <p className="max-w-3xl text-sm text-slate-500">
+            Enter monthly totals, manage detailed line items, and keep an eye on profit/loss and net worth trends.
+          </p>
+        </header>
+        <div className="space-y-8">
+          <FinancialEntryClient
+            ecdId={ecdId}
+            canEdit={canEdit}
+            currentPeriod={currentPeriod}
+            currentSnapshot={currentSnapshot}
+            lineItems={lineItems}
+          />
+          <PlChart snapshots={snapshots} />
+        </div>
       </div>
     </EcdOsShell>
   )
