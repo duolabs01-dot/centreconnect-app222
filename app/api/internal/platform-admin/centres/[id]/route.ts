@@ -39,6 +39,11 @@ const actionSchema = z.discriminatedUnion('action', [
     slug: z.string().min(3).max(80).regex(slugPattern),
   }),
   z.object({
+    action: z.literal('set_brand_media'),
+    logoUrl: z.string().url().nullable().optional(),
+    coverImageUrl: z.string().url().nullable().optional(),
+  }),
+  z.object({
     action: z.literal('set_subscription'),
     tier: z.enum(['pilot', 'basic', 'standard', 'premium']),
     status: z.enum(['trial', 'active', 'past_due', 'canceled', 'suspended']),
@@ -156,6 +161,41 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       details: { slug: payload.slug },
     })
     return NextResponse.json({ ok: true, slug: payload.slug })
+  }
+
+  if (payload.action === 'set_brand_media') {
+    const updatePayload: { logo_url?: string | null; cover_image_url?: string | null } = {}
+    if (Object.prototype.hasOwnProperty.call(payload, 'logoUrl')) {
+      updatePayload.logo_url = payload.logoUrl ?? null
+    }
+    if (Object.prototype.hasOwnProperty.call(payload, 'coverImageUrl')) {
+      updatePayload.cover_image_url = payload.coverImageUrl ?? null
+    }
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json({ error: 'No media fields provided.' }, { status: 400 })
+    }
+
+    const { error } = await admin.from('ecd_centres').update(updatePayload).eq('id', centreId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'set_brand_media',
+      summary: 'Updated tenant logo/hero media',
+      details: {
+        logo_url: updatePayload.logo_url ?? undefined,
+        cover_image_url: updatePayload.cover_image_url ?? undefined,
+      },
+    })
+
+    return NextResponse.json({
+      ok: true,
+      logoUrl: updatePayload.logo_url ?? null,
+      coverImageUrl: updatePayload.cover_image_url ?? null,
+    })
   }
 
   if (payload.action === 'bootstrap_tenant') {
