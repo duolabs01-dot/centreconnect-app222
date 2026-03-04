@@ -178,6 +178,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     createdAt: nowIso,
   })
 
+  const pilotWelcomeGuideUrl = `${emailAppUrlRoot}/pilot/welcome-pack`
   const welcomePackHtml = await renderPilotWelcomePackEmail({
     centreName: sanitizeName(centre.name, 'your centre'),
     contactName: ownerName,
@@ -189,6 +190,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     supportWhatsApp: supportWhatsapp,
     supportEmail,
     supportLink: `${emailAppUrlRoot}/ecd/support`,
+    welcomeGuideLink: pilotWelcomeGuideUrl,
+    packageLabel: 'Pilot package',
   })
   const welcomePackResult = await queueEmail(
     ownerEmail,

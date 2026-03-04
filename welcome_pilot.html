@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CentreConnect — Pilot Welcome Pack</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:#0f172a;color:#1e293b;}
+
+  /* PAGE SYSTEM */
+  .page{width:794px;min-height:1123px;margin:0 auto 40px;background:#fff;position:relative;overflow:hidden;page-break-after:always;}
+
+  /* BRAND COLORS */
+  :root{
+    --navy:#0D1F3C;
+    --amber:#F5A623;
+    --teal:#0EA5A0;
+    --light:#F8FAFC;
+    --muted:#64748b;
+    --pilot:#8B5CF6;
+  }
+
+  /* ── PAGE 1: COVER ─────────────────────────────────── */
+  .cover{background:var(--navy);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:60px;}
+  .cover-badge{background:var(--pilot);color:#fff;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:6px 16px;border-radius:20px;width:fit-content;margin-bottom:40px;}
+  .cover-logo{display:flex;align-items:center;gap:12px;margin-bottom:60px;}
+  .logo-icon{width:44px;height:44px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;}
+  .logo-text{font-size:22px;font-weight:800;color:#fff;}
+  .logo-text span{color:var(--amber);}
+  .cover-headline{font-size:52px;font-weight:900;line-height:1.05;margin-bottom:24px;}
+  .cover-headline em{color:var(--amber);font-style:normal;}
+  .cover-sub{font-size:18px;color:#94a3b8;font-weight:300;line-height:1.6;max-width:480px;}
+  .cover-bottom{display:flex;justify-content:space-between;align-items:flex-end;}
+  .cover-stats{display:flex;gap:40px;}
+  .stat{text-align:center;}
+  .stat-num{font-size:28px;font-weight:900;color:var(--amber);}
+  .stat-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;}
+  .cover-wave{position:absolute;bottom:0;left:0;right:0;opacity:.06;}
+  .pilot-ribbon{position:absolute;top:40px;right:-30px;background:var(--pilot);color:#fff;font-size:11px;font-weight:700;letter-spacing:2px;padding:8px 50px;transform:rotate(45deg);text-transform:uppercase;}
+
+  /* ── SECTION HEADER ────────────────────────────────── */
+  .section-header{background:var(--light);border-left:5px solid var(--amber);padding:20px 30px;margin-bottom:0;}
+  .section-header h2{font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+  .section-header h1{font-size:30px;font-weight:900;color:var(--navy);margin-top:4px;}
+
+  /* ── CONTENT PAGE LAYOUT ───────────────────────────── */
+  .content-page{padding:50px;}
+  .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;padding-bottom:16px;border-bottom:2px solid var(--light);}
+  .page-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--navy);}
+  .page-logo .dot{color:var(--amber);}
+  .page-tag{font-size:11px;background:var(--pilot);color:#fff;padding:4px 12px;border-radius:20px;font-weight:600;letter-spacing:1px;}
+
+  /* ── STEP CARDS ─────────────────────────────────────── */
+  .steps{display:flex;flex-direction:column;gap:20px;}
+  .step{display:flex;gap:20px;align-items:flex-start;background:var(--light);border-radius:16px;padding:24px;}
+  .step-num{min-width:48px;height:48px;background:var(--navy);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;}
+  .step-body h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:6px;}
+  .step-body p{font-size:14px;color:var(--muted);line-height:1.6;}
+  .step-body .tip{display:inline-block;margin-top:10px;font-size:12px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;color:var(--navy);font-weight:600;}
+
+  /* ── FEATURE GRID ───────────────────────────────────── */
+  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .feature-card{background:var(--light);border-radius:16px;padding:24px;}
+  .feature-card.highlight{background:var(--navy);color:#fff;}
+  .feature-card.highlight p{color:#94a3b8;}
+  .feature-icon{font-size:28px;margin-bottom:12px;}
+  .feature-card h3{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:8px;}
+  .feature-card.highlight h3{color:#fff;}
+  .feature-card p{font-size:13px;color:var(--muted);line-height:1.6;}
+  .feature-tag{display:inline-block;margin-top:10px;font-size:11px;font-weight:700;color:var(--pilot);text-transform:uppercase;letter-spacing:1px;}
+  .feature-card.highlight .feature-tag{color:var(--amber);}
+
+  /* ── MOCK SCREEN ────────────────────────────────────── */
+  .mock-wrap{background:var(--navy);border-radius:20px;padding:20px;margin-bottom:20px;}
+  .mock-bar{display:flex;gap:6px;margin-bottom:16px;}
+  .mock-bar span{width:10px;height:10px;border-radius:50%;background:#334155;}
+  .mock-bar span:nth-child(1){background:#ef4444;}
+  .mock-bar span:nth-child(2){background:#f59e0b;}
+  .mock-bar span:nth-child(3){background:#22c55e;}
+  .mock-screen{background:#1e293b;border-radius:12px;padding:16px;}
+  .mock-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0f172a;border-radius:10px;margin-bottom:8px;}
+  .mock-row:last-child{margin-bottom:0;}
+  .mock-name{font-size:13px;font-weight:600;color:#e2e8f0;}
+  .mock-detail{font-size:11px;color:#64748b;margin-top:2px;}
+  .mock-badge{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .badge-green{background:#dcfce7;color:#16a34a;}
+  .badge-amber{background:#fef3c7;color:#d97706;}
+  .badge-blue{background:#dbeafe;color:#1d4ed8;}
+
+  /* ── PICKUP DEMO ────────────────────────────────────── */
+  .pickup-demo{background:var(--navy);border-radius:20px;padding:28px;color:#fff;text-align:center;}
+  .pickup-code{font-size:48px;font-weight:900;letter-spacing:12px;color:var(--amber);margin:20px 0;}
+  .pickup-label{font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:2px;}
+  .pickup-steps{display:flex;gap:12px;margin-top:20px;}
+  .pickup-step{flex:1;background:#1e293b;border-radius:12px;padding:14px;text-align:center;}
+  .pickup-step .ps-icon{font-size:24px;margin-bottom:8px;}
+  .pickup-step p{font-size:11px;color:#94a3b8;line-height:1.5;}
+
+  /* ── CHECKLIST ──────────────────────────────────────── */
+  .checklist{list-style:none;display:flex;flex-direction:column;gap:12px;}
+  .checklist li{display:flex;gap:14px;align-items:center;background:var(--light);border-radius:12px;padding:16px 20px;}
+  .check-icon{font-size:20px;min-width:32px;text-align:center;}
+  .check-text{font-size:14px;color:var(--navy);font-weight:500;}
+
+  /* ── TIER COMPARE ───────────────────────────────────── */
+  .tier-row{display:flex;gap:12px;margin-top:24px;}
+  .tier-box{flex:1;border-radius:14px;padding:20px;text-align:center;border:2px solid #e2e8f0;}
+  .tier-box.active{border-color:var(--pilot);background:#f5f3ff;}
+  .tier-box h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;}
+  .tier-box.active h4{color:var(--pilot);}
+  .tier-items{font-size:12px;color:var(--muted);line-height:2;}
+  .tier-box.active .tier-items{color:#1e293b;}
+
+  /* ── CTA PAGE ───────────────────────────────────────── */
+  .cta-page{background:var(--navy);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:60px;}
+  .cta-emoji{font-size:64px;margin-bottom:24px;}
+  .cta-page h1{font-size:42px;font-weight:900;line-height:1.1;margin-bottom:16px;}
+  .cta-page h1 em{color:var(--amber);font-style:normal;}
+  .cta-page p{font-size:17px;color:#94a3b8;max-width:480px;line-height:1.7;margin-bottom:40px;}
+  .cta-btn{background:var(--amber);color:var(--navy);font-size:16px;font-weight:800;padding:16px 40px;border-radius:14px;text-decoration:none;display:inline-block;margin-bottom:20px;}
+  .cta-link{font-size:14px;color:#64748b;}
+  .cta-link strong{color:#94a3b8;}
+  .pilot-note{background:#1e293b;border-radius:14px;padding:20px 30px;margin-top:32px;max-width:420px;text-align:left;}
+  .pilot-note p{font-size:13px;color:#94a3b8;line-height:1.7;}
+  .pilot-note strong{color:var(--amber);}
+
+  /* PAGE NUMBER */
+  .pg{position:absolute;bottom:24px;right:40px;font-size:11px;color:#cbd5e1;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 1 — COVER
+════════════════════════════════════════════════ -->
+<div class="page cover">
+  <div class="pilot-ribbon">PILOT</div>
+  <div>
+    <div class="cover-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">Centre<span>Connect</span></div>
+    </div>
+    <div class="cover-badge">🚀 Pilot Programme</div>
+    <div class="cover-headline">
+      Welcome to<br/><em>CentreConnect.</em><br/>Let's get you set up.
+    </div>
+    <div class="cover-sub">
+      This is your quick-start guide. In the next few pages, you'll see exactly what CentreConnect does for your centre — and how to use it from day one.
+    </div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-stats">
+      <div class="stat"><div class="stat-num">300+</div><div class="stat-label">Centres Listed</div></div>
+      <div class="stat"><div class="stat-num">Free</div><div class="stat-label">For Parents</div></div>
+      <div class="stat"><div class="stat-num">1</div><div class="stat-label">Screen. Everything.</div></div>
+    </div>
+    <div style="font-size:12px;color:#475569;">centerconnect.co.za</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 2 — WHAT IS CENTRECONNECT
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 1</h2>
+    <h1>What is CentreConnect?</h1>
+  </div>
+
+  <p style="font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:28px;">
+    CentreConnect is a platform built <strong style="color:var(--navy);">specifically for South African ECD centres.</strong> It connects you with parents looking for a crèche — and gives you the tools to run your centre professionally, all from your phone.
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card highlight">
+      <div class="feature-icon">📱</div>
+      <h3>Your Centre, Online</h3>
+      <p>Parents in your area can find you, see your details, and apply — without a single phone call.</p>
+      <span class="feature-tag">✦ Always Active</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Manage Applications</h3>
+      <p>See all parent applications in one place. Accept, decline, or waitlist — with one tap.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>Safe Pickup System</h3>
+      <p>Every child gets a secure code. Only verified guardians can collect. Parents are notified instantly.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Daily Reports</h3>
+      <p>Send parents a daily update on their child — meals, activities, mood. Straight to their phone.</p>
+      <span class="feature-tag" style="color:var(--teal);">✦ Pilot Included</span>
+    </div>
+  </div>
+
+  <div style="background:#f0fdf4;border-radius:14px;padding:20px 24px;margin-top:24px;display:flex;gap:16px;align-items:flex-start;">
+    <div style="font-size:24px;">💡</div>
+    <div>
+      <strong style="color:var(--navy);font-size:14px;">Why it matters:</strong>
+      <p style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6;">Most ECD centres are run on WhatsApp voice notes, paper registers, and word of mouth. CentreConnect gives you what a R50,000 admin system would — for free, during your pilot.</p>
+    </div>
+  </div>
+  <div class="pg">2</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 3 — HOW TO GET STARTED (Steps)
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 2</h2>
+    <h1>Getting Started in 4 Steps</h1>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Register Your Centre</h3>
+        <p>Go to <strong>centerconnect.co.za/for-centres</strong> on your phone or computer. Fill in your centre's name, address, contact details, and age groups. Takes about 5 minutes.</p>
+        <span class="tip">📍 Tip: Use your exact street address so parents nearby can find you.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Complete Your Profile</h3>
+        <p>Add your fees, operating hours, and a short description of your centre. The more complete your profile, the higher you appear in parent searches.</p>
+        <span class="tip">📸 Tip: A photo of your classroom makes a huge difference to parents choosing a crèche.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Receive Your First Application</h3>
+        <p>When a parent applies, you get a notification. You can view the child's details, accept the application, and start a child profile — all from your dashboard.</p>
+        <span class="tip">✅ Tip: Respond within 24 hours. Parents choose the centre that responds fastest.</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Activate Pickup Codes & Daily Reports</h3>
+        <p>Once a child is enrolled, set up their secure pickup code and start sending daily reports to parents. This is the feature parents love most.</p>
+        <span class="tip">🔐 Tip: Show parents how the pickup code works on Day 1. It builds trust immediately.</span>
+      </div>
+    </div>
+  </div>
+  <div class="pg">3</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 4 — PICKUP CODE FEATURE DEMO
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 3</h2>
+    <h1>The Pickup Code — How It Works</h1>
+  </div>
+
+  <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+    Every child enrolled at your centre gets a unique, secure pickup code. <strong style="color:var(--navy);">Only people the parent has approved</strong> can use it. This protects children and protects your centre.
+  </p>
+
+  <div class="pickup-demo">
+    <div class="pickup-label">Today's Pickup Code for</div>
+    <div style="font-size:16px;font-weight:700;color:#e2e8f0;margin-top:8px;">Lebo Dlamini · Grade R</div>
+    <div class="pickup-code">8 · 4 · 7</div>
+    <div style="font-size:12px;color:#475569;">Expires at 18:00 today · Resets tomorrow morning</div>
+    <div class="pickup-steps">
+      <div class="pickup-step">
+        <div class="ps-icon">👩</div>
+        <p>Parent sets approved guardians in the app</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">🔢</div>
+        <p>Guardian shows the daily code at pickup</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">✅</div>
+        <p>You confirm in the app — one tap</p>
+      </div>
+      <div class="pickup-step">
+        <div class="ps-icon">📲</div>
+        <p>Parent gets an instant notification</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;">
+    <div style="background:#fef2f2;border-radius:14px;padding:20px;">
+      <div style="font-size:20px;margin-bottom:8px;">😰</div>
+      <strong style="font-size:13px;color:#991b1b;">Before CentreConnect</strong>
+      <p style="font-size:12px;color:#7f1d1d;margin-top:6px;line-height:1.6;">An unknown person arrives to collect a child. You have no way to verify if they're authorised. You call the parent. No answer. You're stuck.</p>
+    </div>
+    <div style="background:#f0fdf4;border-radius:14px;padding:20px;">
+      <div style="font-size:20px;margin-bottom:8px;">😌</div>
+      <strong style="font-size:13px;color:#166534;">With CentreConnect</strong>
+      <p style="font-size:12px;color:#14532d;margin-top:6px;line-height:1.6;">They show the code. You check it in the app. Green light — you release the child. Parent already got the notification. Done. Safe. Documented.</p>
+    </div>
+  </div>
+  <div class="pg">4</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 5 — APPLICATIONS DASHBOARD MOCK
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 4</h2>
+    <h1>Your Applications Dashboard</h1>
+  </div>
+
+  <p style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;">
+    When a parent finds your centre and applies, it appears here instantly. No forms, no paperwork, no WhatsApp messages to scroll through. Everything in one place.
+  </p>
+
+  <div class="mock-wrap">
+    <div class="mock-bar"><span></span><span></span><span></span></div>
+    <div style="font-size:11px;color:#475569;margin-bottom:12px;text-transform:uppercase;letter-spacing:2px;">📋 Incoming Applications</div>
+    <div class="mock-screen">
+      <div class="mock-row">
+        <div><div class="mock-name">👧 Ayanda Mokoena · 3 yrs</div><div class="mock-detail">Applied 2 hours ago · Preschool class</div></div>
+        <span class="mock-badge badge-amber">Pending</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👦 Siphiwe Dlamini · 2 yrs</div><div class="mock-detail">Applied yesterday · Toddler class</div></div>
+        <span class="mock-badge badge-green">Accepted ✓</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👧 Nomsa Khumalo · 5 yrs</div><div class="mock-detail">Applied 3 days ago · Grade R</div></div>
+        <span class="mock-badge badge-green">Accepted ✓</span>
+      </div>
+      <div class="mock-row">
+        <div><div class="mock-name">👦 Lebo Sithole · 4 yrs</div><div class="mock-detail">Applied 4 days ago · Preschool</div></div>
+        <span class="mock-badge badge-blue">Waitlisted</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:16px;">
+    <div style="flex:1;background:var(--light);border-radius:14px;padding:20px;">
+      <div style="font-size:24px;margin-bottom:8px;">📄</div>
+      <strong style="font-size:14px;color:var(--navy);">Every application includes:</strong>
+      <ul style="margin-top:10px;list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:var(--muted);">✅ Child's name, age, date of birth</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Parent/guardian details</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Which class they're applying for</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Any special needs or notes</li>
+        <li style="font-size:13px;color:var(--muted);">✅ Contact number — click to call</li>
+      </ul>
+    </div>
+    <div style="flex:1;background:var(--navy);border-radius:14px;padding:20px;">
+      <div style="font-size:24px;margin-bottom:8px;">⚡</div>
+      <strong style="font-size:14px;color:#fff;">You can:</strong>
+      <ul style="margin-top:10px;list-style:none;display:flex;flex-direction:column;gap:8px;">
+        <li style="font-size:13px;color:#94a3b8;">✦ Accept with one tap</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Add to waitlist</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Message the parent directly</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Create the child's profile</li>
+        <li style="font-size:13px;color:#94a3b8;">✦ Track all history</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg">5</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 6 — WHAT'S INCLUDED IN PILOT + UPGRADE
+════════════════════════════════════════════════ -->
+<div class="page content-page">
+  <div class="page-header">
+    <div class="page-logo">Centre<span class="dot">Connect</span></div>
+    <div class="page-tag">PILOT</div>
+  </div>
+
+  <div class="section-header" style="margin-bottom:28px;">
+    <h2>Chapter 5</h2>
+    <h1>What's Included in Your Pilot</h1>
+  </div>
+
+  <ul class="checklist">
+    <li><span class="check-icon">🏫</span><span class="check-text">Your centre listed in the CentreConnect directory — searchable by parents nearby</span></li>
+    <li><span class="check-icon">📋</span><span class="check-text">Unlimited incoming applications from parents</span></li>
+    <li><span class="check-icon">🔐</span><span class="check-text">Secure pickup code system for all enrolled children</span></li>
+    <li><span class="check-icon">📊</span><span class="check-text">Daily reports to parents (activities, meals, mood)</span></li>
+    <li><span class="check-icon">👶</span><span class="check-text">Child profiles — basic records per enrolled child</span></li>
+    <li><span class="check-icon">📞</span><span class="check-text">Direct support from the CentreConnect team</span></li>
+  </ul>
+
+  <div style="margin-top:28px;">
+    <p style="font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;">Coming when you upgrade:</p>
+    <div class="tier-row">
+      <div class="tier-box active">
+        <h4>🚀 Pilot (You are here)</h4>
+        <div class="tier-items">Directory listing<br/>Applications<br/>Pickup codes<br/>Daily reports<br/>Basic profiles</div>
+      </div>
+      <div class="tier-box">
+        <h4>⭐ Standard</h4>
+        <div class="tier-items">+ DSD Subsidy Export<br/>+ Transport Manager<br/>+ Compliance tracker<br/>+ Staff profiles<br/>+ Priority listing</div>
+      </div>
+      <div class="tier-box">
+        <h4>🏆 Premium</h4>
+        <div class="tier-items">+ Marketplace access<br/>+ Advanced reports<br/>+ Custom branding<br/>+ Job postings<br/>+ Dedicated support</div>
+      </div>
+    </div>
+  </div>
+  <div class="pg">6</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 7 — CTA / BACK COVER
+════════════════════════════════════════════════ -->
+<div class="page cta-page">
+  <div class="cta-emoji">🇿🇦</div>
+  <h1>You're part of<br/><em>something bigger.</em></h1>
+  <p>You're one of the first ECD centres in South Africa to run on CentreConnect. Your feedback shapes the future of this platform — for every crèche in the country.</p>
+  <a class="cta-btn" href="https://centerconnect.co.za/for-centres">Complete Your Centre Profile →</a>
+  <div class="cta-link">Need help? WhatsApp us at <strong>your number here</strong></div>
+
+  <div class="pilot-note">
+    <p><strong>📌 Pilot Programme Note:</strong><br/>
+    Your pilot access is free. We ask only that you use the platform, give us honest feedback, and tell us what's working — and what's not. Together, we build something that works for every ECD in South Africa.</p>
+  </div>
+
+  <div style="position:absolute;bottom:30px;font-size:12px;color:#334155;">
+    centerconnect.co.za &nbsp;·&nbsp; Built in South Africa, for South Africa &nbsp;·&nbsp; v1.0.2
+  </div>
+</div>
+
+</body>
+</html>

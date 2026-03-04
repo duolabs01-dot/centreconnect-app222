@@ -17,6 +17,8 @@ type PilotWelcomePackEmailInput = {
   supportWhatsApp?: string
   supportEmail?: string
   supportLink?: string
+  welcomeGuideLink?: string
+  packageLabel?: string
 }
 
 type ParentToEcdAdminMigrationEmailInput = {
@@ -194,6 +196,25 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   const supportWhatsappLaunchLink = `https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(
     `Hi CentreConnect team, this is ${input.contactName} from ${input.centreName}. We just got the welcome pack and want help to launch faster.`
   )}`
+  const welcomeGuideUrl = input.welcomeGuideLink?.trim()
+  const packageLabel = input.packageLabel ?? 'Pilot package'
+  const welcomeGuideSection = welcomeGuideUrl
+    ? `
+        <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFFFFF;margin:0 0 16px;">
+          <tr>
+            <td style="padding:12px 14px;">
+              <p style="margin:0 0 6px;font-size:12px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">
+                Pilot Welcome Pack
+              </p>
+              <p style="margin:0 0 10px;font-size:13px;line-height:1.7;color:${BRAND.body};">
+                This guide mirrors your ${packageLabel} benefits and walks you through every step of the pilot experience. Open it when you want the full booklet or to share with your staff.
+              </p>
+              <div style="margin-top:5px;">${button('Open the Pilot Guide', welcomeGuideUrl)}</div>
+            </td>
+          </tr>
+        </table>
+      `
+    : ''
 
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName} 👋,</p>
@@ -257,6 +278,8 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       ${button('Go Live in Website Builder 🚀', input.websiteBuilderLink)}
       ${button('Open Pickup 🔐', input.pickupLink)}
     </div>
+
+    ${welcomeGuideSection}
 
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 12px;">
       <tr>
