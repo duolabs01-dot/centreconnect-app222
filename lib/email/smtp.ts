@@ -1,4 +1,5 @@
 import 'server-only'
+import { randomBytes } from 'node:crypto'
 import net from 'node:net'
 import tls from 'node:tls'
 
@@ -7,6 +8,7 @@ type SendSmtpMailInput = {
   cc?: string[]
   subject: string
   text: string
+  html?: string
 }
 
 type SendSmtpMailResult = {
@@ -138,6 +140,17 @@ function normalizeRecipients(values: string[]) {
   return Array.from(new Set(values.map((item) => item.trim()).filter(Boolean)))
 }
 
+function normalizeSmtpBody(value: string) {
+  return value.replace(/\r?\n/g, '\r\n')
+}
+
+function dotStuff(value: string) {
+  return value
+    .split('\r\n')
+    .map((line) => (line.startsWith('.') ? `.${line}` : line))
+    .join('\r\n')
+}
+
 function parseFromAddress(from: string): { headerValue: string; envelopeValue: string } | null {
   const value = from.trim()
   if (!value) return null
@@ -166,26 +179,50 @@ function buildMessage(input: SendSmtpMailInput, fromHeader: string) {
   const cc = normalizeRecipients(input.cc ?? [])
   const allRecipients = normalizeRecipients([...to, ...cc])
   const subject = sanitizeHeaderValue(input.subject)
-  const body = input.text
-    .replace(/\r?\n/g, '\r\n')
-    .split('\r\n')
-    .map((line) => (line.startsWith('.') ? `.${line}` : line))
-    .join('\r\n')
-
-  const headers = [
+  const baseHeaders = [
     `From: ${fromHeader}`,
     `To: ${to.join(', ')}`,
     ...(cc.length > 0 ? [`Cc: ${cc.join(', ')}`] : []),
     `Subject: ${subject}`,
     'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding: 8bit',
     `Date: ${new Date().toUTCString()}`,
-  ].join('\r\n')
+  ]
+
+  const html = typeof input.html === 'string' ? input.html.trim() : ''
+  let headers: string
+  let body: string
+  if (html) {
+    const boundary = `cc-alt-${randomBytes(12).toString('hex')}`
+    headers = [...baseHeaders, `Content-Type: multipart/alternative; boundary="${boundary}"`].join('\r\n')
+
+    const textBody = normalizeSmtpBody(input.text)
+    const htmlBody = normalizeSmtpBody(html)
+    body = [
+      `--${boundary}`,
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: 8bit',
+      '',
+      textBody,
+      `--${boundary}`,
+      'Content-Type: text/html; charset=UTF-8',
+      'Content-Transfer-Encoding: 8bit',
+      '',
+      htmlBody,
+      `--${boundary}--`,
+      '',
+    ].join('\r\n')
+  } else {
+    headers = [
+      ...baseHeaders,
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: 8bit',
+    ].join('\r\n')
+    body = normalizeSmtpBody(input.text)
+  }
 
   return {
     allRecipients,
-    raw: `${headers}\r\n\r\n${body}\r\n.\r\n`,
+    raw: `${headers}\r\n\r\n${dotStuff(body)}\r\n.\r\n`,
   }
 }
 

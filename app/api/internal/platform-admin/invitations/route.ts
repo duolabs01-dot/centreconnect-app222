@@ -74,10 +74,16 @@ function toDefaultRedirectTo() {
   return `${baseUrl}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
 }
 
+function toPasswordRedirectTo(email: string) {
+  const baseUrl = normalizeAppUrl()
+  return `${baseUrl}/reset-password?locked_email=${encodeURIComponent(email)}`
+}
+
 function toPlainTextEmail(html: string) {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, '')
     .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<a[^>]*href=['"]([^'"]+)['"][^>]*>(.*?)<\/a>/gi, '$2 ($1)')
     .replace(/<\/p>/gi, '\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/tr>/gi, '\n')
@@ -99,6 +105,7 @@ async function generateEcdAccessLink(input: {
 }) {
   const { adminClient, email, redirectTo, preferMagicLink = false } = input
 
+  const errors: string[] = []
   if (!preferMagicLink) {
     const inviteResult = await adminClient.auth.admin.generateLink({
       type: 'invite',
@@ -114,13 +121,8 @@ async function generateEcdAccessLink(input: {
         warning: null as string | null,
       }
     }
-    if (inviteResult.error && !isEmailAlreadyRegisteredError(inviteResult.error.message)) {
-      return {
-        link: '',
-        authUserId: null,
-        mode: 'invite' as const,
-        warning: inviteResult.error.message ?? 'Failed to generate invite link.',
-      }
+    if (inviteResult.error?.message) {
+      errors.push(`invite: ${inviteResult.error.message}`)
     }
   }
 
@@ -138,12 +140,35 @@ async function generateEcdAccessLink(input: {
       warning: preferMagicLink ? null : 'Existing account detected. Sent secure sign-in link.',
     }
   }
+  if (magicResult.error?.message) {
+    errors.push(`magiclink: ${magicResult.error.message}`)
+  }
 
   return {
     link: '',
     authUserId: null,
-    mode: 'magiclink' as const,
-    warning: magicResult.error?.message ?? 'Failed to generate access link.',
+    mode: preferMagicLink ? ('magiclink' as const) : ('invite' as const),
+    warning: errors.length > 0 ? errors.join(' | ') : 'Failed to generate access link.',
+  }
+}
+
+async function generatePasswordSetupLink(input: {
+  adminClient: ReturnType<typeof createAdminClient>
+  email: string
+}) {
+  const { adminClient, email } = input
+  const recoveryResult = await adminClient.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: toPasswordRedirectTo(email) },
+  })
+  const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
+  if (!recoveryResult.error && recoveryLink) {
+    return { link: recoveryLink, warning: null as string | null }
+  }
+  return {
+    link: '',
+    warning: recoveryResult.error?.message ?? 'Failed to generate password setup link.',
   }
 }
 
@@ -299,14 +324,34 @@ export async function POST(request: Request) {
     )
   }
 
-  const accessLink = accessLinkResult.link || `${normalizeAppUrl()}/login`
+  if (!accessLinkResult.link) {
+    return NextResponse.json(
+      {
+        error: `Could not generate secure access link for ${normalizedEmail}. ${accessLinkResult.warning ?? ''}`.trim(),
+        inviteLinkMode: accessLinkResult.mode,
+        accessLinkWarning: accessLinkResult.warning,
+      },
+      { status: 500 }
+    )
+  }
+
+  const baseAppUrl = normalizeAppUrl()
+  const accessLink = accessLinkResult.link
+  const passwordSetupResult = await generatePasswordSetupLink({
+    adminClient,
+    email: normalizedEmail,
+  })
   const inviteEmail = renderStaffInviteEmail({
     centreName: (centre.name ?? 'your centre').trim(),
     recipientName: fullName,
     role: data.role,
     accessLink,
-    loginLink: `${normalizeAppUrl()}/login`,
+    loginLink: `${baseAppUrl}/login`,
     supportEmail: SUPPORT_EMAIL,
+    passwordSetupLink: passwordSetupResult.link || null,
+    accessMode: accessLinkResult.mode,
+    logoUrl: `${baseAppUrl}/icon-192.png`,
+    appBaseUrl: baseAppUrl,
   })
 
   let directEmailSent = false
@@ -332,6 +377,7 @@ export async function POST(request: Request) {
       to: [normalizedEmail],
       subject: inviteEmail.subject,
       text: toPlainTextEmail(inviteEmail.html),
+      html: inviteEmail.html,
     })
     if (smtpResult.ok) {
       directEmailSent = true
@@ -383,6 +429,9 @@ export async function POST(request: Request) {
     inviteLinkMode: accessLinkResult.mode,
     accessLinkWarning: accessLinkResult.warning,
     manualAccessLink: accessLink,
+    passwordSetupLinkGenerated: Boolean(passwordSetupResult.link),
+    manualPasswordSetupLink: passwordSetupResult.link || null,
+    passwordSetupWarning: passwordSetupResult.warning,
     directEmailSent,
     directEmailProvider,
     directEmailError: directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : null,
