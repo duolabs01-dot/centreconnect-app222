@@ -7,6 +7,25 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 const OLD_DOMAIN_PATTERN = /centerconnect-app222\.vercel\.app/gi
 
+function sanitizeName(value: string | null | undefined, fallback: string) {
+  const trimmed = (value ?? '').trim()
+  return trimmed || fallback
+}
+
+function friendlyNameFromEmail(email: string, fallback: string) {
+  const local = email.split('@')[0] ?? ''
+  const normalized = local.replace(/[._-]+/g, ' ').trim()
+  return normalized.length >= 2 ? normalized : fallback
+}
+
+function applyTemplateReplacements(html: string, replacements: Record<string, string>) {
+  let content = html
+  for (const [token, value] of Object.entries(replacements)) {
+    content = content.split(token).join(value ?? '')
+  }
+  return content
+}
+
 type Payload = {
   ecdId?: string
   ownerEmail?: string
@@ -68,7 +87,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('name')
+    .select('name,slug,primary_contact_name')
     .eq('id', ecdId)
     .single()
 
@@ -76,6 +95,11 @@ export async function POST(request: Request) {
     console.error('resend-welcome-pack: centre lookup failed', centreError)
     return NextResponse.json({ success: false, error: 'ECD centre not found' }, { status: 404 })
   }
+
+  const centreName = centre.name?.trim() || 'CentreConnect'
+  const centreSlug = centre.slug?.trim() ?? ''
+  const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
+  const ownerName = sanitizeName(centre.primary_contact_name, ownerNameFallback)
 
   let html: string
   try {
@@ -85,7 +109,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
   }
 
-  const subject = `Welcome to CentreConnect Pilot — ${centre.name ?? 'CentreConnect'}`
+  html = applyTemplateReplacements(html, {
+    '{{ownerName}}': ownerName,
+    '{{centreName}}': centreName,
+    '{{centreSlug}}': centreSlug,
+  })
+
+  const subject = `Welcome to CentreConnect Pilot — ${centreName}`
 
   try {
     const transporter = nodemailer.createTransport({

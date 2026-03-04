@@ -162,6 +162,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
   const [mode, setMode] = useState<OnboardingMode>('single')
   const [busy, setBusy] = useState(false)
   const [inviteBusy, setInviteBusy] = useState(false)
+  const [welcomeBusy, setWelcomeBusy] = useState(false)
   const [migrationDialogOpen, setMigrationDialogOpen] = useState(false)
   const [existingUserConflict, setExistingUserConflict] = useState<ExistingUserConflict | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -435,6 +436,27 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     }
   }
 
+  async function handleResendWelcomePack() {
+    if (!success) return
+    setWelcomeBusy(true)
+    try {
+      const response = await fetch('/api/ecd/resend-welcome-pack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ecdId: success.centreId, ownerEmail: success.ownerEmail }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as { success?: boolean; error?: string }
+      if (!response.ok || payload.success === false) {
+        throw new Error(payload.error || 'Failed to send welcome pack.')
+      }
+      toast.success('Welcome pack sent successfully!')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to send welcome pack.')
+    } finally {
+      setWelcomeBusy(false)
+    }
+  }
+
   async function copyTrackingLink() {
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const url = `${origin}${trackingLinkHref}`
@@ -583,6 +605,15 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                 >
                   <Send className="h-4 w-4" />
                   Send Invite
+                </Button>
+                <Button
+                  onClick={() => void handleResendWelcomePack()}
+                  loading={welcomeBusy}
+                  variant="outline"
+                  className="border-cyan-500/30 bg-slate-900/80 text-cyan-200 hover:bg-slate-800"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Resend Welcome Pack
                 </Button>
                 <Button
                   variant="outline"
