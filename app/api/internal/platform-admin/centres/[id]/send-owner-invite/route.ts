@@ -5,7 +5,6 @@ import { EMAIL_APP_URL } from '@/lib/config'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
-import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
@@ -178,38 +177,41 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     createdAt: nowIso,
   })
 
-  const pilotWelcomeGuideUrl = `${emailAppUrlRoot}/pilot/welcome-pack`
-  const welcomePackHtml = await renderPilotWelcomePackEmail({
-    centreName: sanitizeName(centre.name, 'your centre'),
-    contactName: ownerName,
-    dashboardLink: `${emailAppUrlRoot}/ecd/dashboard`,
-    websiteBuilderLink: `${emailAppUrlRoot}/ecd/website`,
-    attendanceLink: `${emailAppUrlRoot}/ecd/attendance`,
-    pickupLink: `${emailAppUrlRoot}/ecd/pickup`,
-    qrPosterLink: `${emailAppUrlRoot}/ecd/pickup`,
-    supportWhatsApp: supportWhatsapp,
-    supportEmail,
-    supportLink: `${emailAppUrlRoot}/ecd/support`,
-    welcomeGuideLink: pilotWelcomeGuideUrl,
-    packageLabel: 'Pilot package',
-  })
-  const welcomePackResult = await queueEmail(
-    ownerEmail,
-    `Pilot Welcome Pack | ${sanitizeName(centre.name, 'CentreConnect')}`,
-    welcomePackHtml
-  )
+  const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', emailAppUrlRoot)
   let combinedWarning: string | undefined = accessLink.warning ?? undefined
-  if (!welcomePackResult.success) {
-    combinedWarning = combinedWarning ?? welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.'
-  } else {
-    await writeInviteLog(admin, {
-      centreId: centre.id,
-      ownerEmail,
-      ownerPhone: ownerPhoneRaw ?? null,
-      inviteType: 'welcome_pack',
-      status: 'sent',
-      notes: 'Pilot welcome pack queued with owner invite.',
-    })
+  let welcomePackWarning: string | undefined
+  if (emailResult.success) {
+    try {
+      const welcomeResponse = await fetch(welcomePackEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ecdId: centre.id, ownerEmail }),
+      })
+
+      if (!welcomeResponse.ok) {
+        const errorText = (await welcomeResponse.text().catch(() => '')).trim()
+        welcomePackWarning =
+          errorText.length > 0
+            ? `Welcome pack send failed (${welcomeResponse.status}): ${errorText}`
+            : `Welcome pack send failed (${welcomeResponse.status})`
+        console.error('resend-welcome-pack:', welcomePackWarning)
+      } else {
+        await writeInviteLog(admin, {
+          centreId: centre.id,
+          ownerEmail,
+          ownerPhone: ownerPhoneRaw ?? null,
+          inviteType: 'welcome_pack',
+          status: 'sent',
+          notes: 'Pilot welcome pack sent with owner invite.',
+        })
+      }
+    } catch (error) {
+      welcomePackWarning = 'Failed to send welcome pack email.'
+      console.error('resend-welcome-pack: error while sending', error)
+    }
+  }
+  if (welcomePackWarning) {
+    combinedWarning = combinedWarning ?? welcomePackWarning
   }
 
   const whatsappMessage = [

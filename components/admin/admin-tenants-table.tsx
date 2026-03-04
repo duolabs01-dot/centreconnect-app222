@@ -302,21 +302,23 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     }
   }, [])
 
-  const sendWelcomePackRequest = useCallback(async (tenantId: string) => {
-    const response = await fetch(`/api/internal/platform-admin/tenants/${tenantId}/welcome-pack`, {
+  const sendWelcomePackRequest = useCallback(async (tenantId: string, ownerEmail: string) => {
+    const response = await fetch('/api/ecd/resend-welcome-pack', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ecdId: tenantId, ownerEmail }),
     })
     const payload = (await response.json().catch(() => ({}))) as { error?: string }
     if (!response.ok) {
-      throw new Error(payload.error || 'Failed to resend welcome pack.')
+      throw new Error(payload.error || 'Failed to send welcome pack.')
     }
   }, [])
 
   const runWelcomePack = useCallback(
-    async (tenantId: string, successMessage: string) => {
+    async (tenantId: string, ownerEmail: string, successMessage = 'Welcome pack sent!') => {
       setWelcomePackBusy(true)
       try {
-        await sendWelcomePackRequest(tenantId)
+        await sendWelcomePackRequest(tenantId, ownerEmail)
         toast.success(successMessage)
       } catch (error: any) {
         toast.error(error?.message || 'Failed to send welcome pack.')
@@ -329,8 +331,13 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
   const handleResendWelcomePack = useCallback(async () => {
     if (!editTenantId) return
-    await runWelcomePack(editTenantId, 'Welcome pack resent.')
-  }, [editTenantId, runWelcomePack])
+    const ownerEmail = form?.email?.trim()
+    if (!ownerEmail) {
+      toast.error('Owner email is required to send the welcome pack.')
+      return
+    }
+    await runWelcomePack(editTenantId, ownerEmail)
+  }, [editTenantId, form?.email, runWelcomePack])
 
   const loadTenantUsers = useCallback(async (tenantId: string) => {
     setUsersLoading(true)
@@ -585,7 +592,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         toast.warning(error?.message || 'Tenant pages refreshed separately.')
       }
       if (packageChanged) {
-        await runWelcomePack(editTenantId, 'Welcome pack requeued with updated package.')
+        await runWelcomePack(editTenantId, form.email.trim(), 'Welcome pack requeued with updated package.')
       }
 
       toast.success('Tenant profile updated.')
@@ -1496,7 +1503,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
               className="border-emerald-500/30 bg-slate-900 text-emerald-200 hover:bg-slate-800"
               onClick={() => void handleResendWelcomePack()}
               loading={welcomePackBusy}
-              disabled={welcomePackBusy || !editTenantId}
+              disabled={welcomePackBusy || !editTenantId || !form?.email?.trim()}
             >
               Resend Welcome Pack
             </Button>
