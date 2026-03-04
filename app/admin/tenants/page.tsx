@@ -138,6 +138,11 @@ export default async function AdminTenantsPage({
       claimedDate: claimedDate ?? (isClaimed ? centre.created_at : null),
     }
   })
+  const existingCentres = tenants.map((tenant) => ({
+    id: tenant.id,
+    name: tenant.name,
+    ownerEmail: tenant.ownerEmail === '-' ? null : tenant.ownerEmail,
+  }))
 
   return (
     <div className="space-y-8 pb-16">
@@ -180,7 +185,7 @@ export default async function AdminTenantsPage({
         </CardHeader>
       </Card>
 
-      <AdminTenantsOnboarding />
+      <AdminTenantsOnboarding existingCentres={existingCentres} />
 
       <Card className="border-cyan-500/20 bg-slate-950/70">
         <CardHeader>

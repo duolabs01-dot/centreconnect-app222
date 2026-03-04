@@ -53,6 +53,12 @@ type ExistingUserConflict = {
   parentAccessWillBeRevoked?: boolean
 }
 
+type ExistingCentreOption = {
+  id: string
+  name: string
+  ownerEmail?: string | null
+}
+
 const TIER_PRICE: Record<Tier, number> = {
   pilot: 0,
   basic: 199,
@@ -100,6 +106,14 @@ function parseTeamEmails(raw: string) {
   return { valid, invalidCount }
 }
 
+function normalizeCentreSearch(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+}
+
 function extensionOf(file: File) {
   const value = file.name.split('.').pop()?.toLowerCase() ?? ''
   if (!value) return 'jpg'
@@ -109,7 +123,7 @@ function extensionOf(file: File) {
 const darkInputClass =
   'border-cyan-500/20 bg-slate-950/80 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-400/70'
 
-export function AdminTenantsOnboarding() {
+export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: ExistingCentreOption[] }) {
   const router = useRouter()
   const [mode, setMode] = useState<OnboardingMode>('single')
   const [busy, setBusy] = useState(false)
@@ -132,6 +146,29 @@ export function AdminTenantsOnboarding() {
   })
 
   const teamParsed = useMemo(() => parseTeamEmails(form.teamEmails), [form.teamEmails])
+  const normalizedCentreName = useMemo(() => normalizeCentreSearch(form.centreName), [form.centreName])
+  const matchingCentres = useMemo(() => {
+    if (!normalizedCentreName) return []
+    return existingCentres
+      .map((centre) => ({ centre, normalized: normalizeCentreSearch(centre.name) }))
+      .filter(
+        (entry) =>
+          Boolean(entry.normalized) &&
+          (entry.normalized.includes(normalizedCentreName) || normalizedCentreName.includes(entry.normalized))
+      )
+      .sort((a, b) => {
+        const aStarts = a.normalized.startsWith(normalizedCentreName) ? 0 : 1
+        const bStarts = b.normalized.startsWith(normalizedCentreName) ? 0 : 1
+        if (aStarts !== bStarts) return aStarts - bStarts
+        return a.centre.name.localeCompare(b.centre.name)
+      })
+      .slice(0, 6)
+      .map((entry) => entry.centre)
+  }, [existingCentres, normalizedCentreName])
+  const exactCentreMatch = useMemo(() => {
+    if (!normalizedCentreName) return null
+    return existingCentres.find((centre) => normalizeCentreSearch(centre.name) === normalizedCentreName) ?? null
+  }, [existingCentres, normalizedCentreName])
   const trackingLinkHref = success ? success.trackingLink : '/admin/invites'
 
   async function uploadBrandMedia(centreId: string) {
@@ -221,6 +258,10 @@ export function AdminTenantsOnboarding() {
     const suburb = form.suburb.trim()
     if (!centreName || !ownerEmail || !ownerPhone || !suburb) {
       toast.error('Centre name, owner email, owner phone, and suburb are required.')
+      return
+    }
+    if (exactCentreMatch) {
+      toast.error('Centre already exists - claim it instead.')
       return
     }
 
@@ -625,6 +666,48 @@ export function AdminTenantsOnboarding() {
                     onChange={(event) => setForm((prev) => ({ ...prev, centreName: event.target.value }))}
                     placeholder="Sunshine Early Learning Centre"
                   />
+                  {normalizedCentreName && matchingCentres.length > 0 ? (
+                    <Card className="border-cyan-500/20 bg-slate-950/95">
+                      <CardContent className="space-y-2 p-3">
+                        <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Existing centres</p>
+                        <div className="space-y-2">
+                          {matchingCentres.map((centre) => (
+                            <div
+                              key={centre.id}
+                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2"
+                            >
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-slate-100">{centre.name}</p>
+                                {centre.ownerEmail ? (
+                                  <p className="truncate text-xs text-slate-400">{centre.ownerEmail}</p>
+                                ) : null}
+                              </div>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+                                onClick={() => setForm((prev) => ({ ...prev, centreName: centre.name }))}
+                              >
+                                Use
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : null}
+                  {exactCentreMatch ? (
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                      Centre already exists - claim it instead?{' '}
+                      <Link
+                        href={`/admin/tenants/${exactCentreMatch.id}`}
+                        className="font-semibold text-cyan-300 underline decoration-cyan-400/70 underline-offset-4"
+                      >
+                        Open existing profile
+                      </Link>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="owner-email" className="text-slate-300">
@@ -712,6 +795,7 @@ export function AdminTenantsOnboarding() {
               <Button
                 onClick={() => void handleCreate()}
                 loading={busy}
+                disabled={Boolean(exactCentreMatch)}
                 className="bg-cyan-500 text-black hover:bg-cyan-400"
               >
                 <UploadCloud className="h-4 w-4" />
