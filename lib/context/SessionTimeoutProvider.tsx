@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react'
+import React, { createContext, useContext, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { robustSignOut } from '@/lib/auth/client-sign-out'
@@ -16,11 +16,13 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
   const router = useRouter()
   const pathname = usePathname()
   const lastActivityRef = useRef<number>(Date.now())
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const isProtectedRoute = (path: string) => {
     return path.startsWith('/admin') || path.startsWith('/ecd') || path.startsWith('/parent')
   }
+
+  const getSession = useCallback(() => supabase.auth.getSession(), [supabase])
 
   const logout = useCallback(async () => {
     await robustSignOut(supabase)
@@ -42,7 +44,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
     const interval = setInterval(async () => {
       const now = Date.now()
       if (now - lastActivityRef.current > INACTIVITY_LIMIT) {
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await getSession()
         if (session) {
           await logout()
         }
@@ -53,7 +55,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
       events.forEach(event => window.removeEventListener(event, handleActivity))
       clearInterval(interval)
     }
-  }, [pathname, router, supabase, logout])
+  }, [pathname, getSession, logout])
 
   // Also handle coming back online / tab focus
   useEffect(() => {
@@ -61,7 +63,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
       if (document.visibilityState === 'visible' && isProtectedRoute(pathname)) {
         const now = Date.now()
         if (now - lastActivityRef.current > INACTIVITY_LIMIT) {
-          const { data: { session } } = await supabase.auth.getSession()
+          const { data: { session } } = await getSession()
           if (session) {
             await logout()
           }
@@ -71,7 +73,7 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
 
     window.addEventListener('visibilitychange', handleVisibilityChange)
     return () => window.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [pathname, router, supabase, logout])
+  }, [pathname, getSession, logout])
 
   return (
     <SessionTimeoutContext.Provider value={{}}>

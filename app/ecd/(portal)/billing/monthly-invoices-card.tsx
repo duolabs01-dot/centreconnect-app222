@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -24,6 +25,7 @@ export function MonthlyInvoicesCard({
   month
 }: MonthlyInvoicesCardProps) {
   const [isGenerating, setIsGenerating] = useState(false)
+  const router = useRouter()
 
   async function handleGenerate() {
     if (!confirm(`Generate invoices for ${currentMonthName} ${year}? This will notify parents.`)) {
@@ -44,8 +46,8 @@ export function MonthlyInvoicesCard({
       const data = await response.json()
       if (data.success) {
         toast.success(`Generated ${data.count} invoices successfully.`)
-        // Small delay to allow DB to propagate
-        setTimeout(() => window.location.reload(), 1500)
+        // Soft refresh avoids a full shell reload while still revalidating server data.
+        setTimeout(() => router.refresh(), 800)
       } else {
         toast.error(data.error || 'Failed to generate invoices')
       }

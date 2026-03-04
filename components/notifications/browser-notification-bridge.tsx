@@ -27,7 +27,7 @@ export function BrowserNotificationBridge({
   mode,
   ecdId,
   parentId,
-  pollMs = 10000,
+  pollMs = 0,
 }: BrowserNotificationBridgeProps) {
   const supabase = useMemo(() => createClient(), [])
   const initializedRef = useRef(false)
@@ -116,9 +116,11 @@ export function BrowserNotificationBridge({
     if (!canRun) return
 
     void fetchLatest()
-    const interval = window.setInterval(() => {
-      void fetchLatest()
-    }, pollMs)
+    const interval = pollMs > 0
+      ? window.setInterval(() => {
+          void fetchLatest()
+        }, pollMs)
+      : null
 
     const channelName = `cc-notif-${mode}-${filterKey}`
     const filter =
@@ -151,7 +153,9 @@ export function BrowserNotificationBridge({
       .subscribe()
 
     return () => {
-      window.clearInterval(interval)
+      if (interval !== null) {
+        window.clearInterval(interval)
+      }
       void supabase.removeChannel(channel)
     }
   }, [canRun, ecdId, fetchLatest, filterKey, markSeen, mode, notify, parentId, pollMs, supabase, table])
