@@ -20,7 +20,8 @@ type SmtpConfig = {
   secure: boolean
   user: string
   pass: string
-  from: string
+  fromHeader: string
+  fromEnvelope: string
 }
 
 class SmtpClient {
@@ -115,7 +116,18 @@ function getSmtpConfig(): SmtpConfig | null {
 
   const secure = secureRaw ? secureRaw === 'true' : port === 465
 
-  return { host, port, secure, user, pass, from }
+  const parsedFrom = parseFromAddress(from)
+  if (!parsedFrom) return null
+
+  return {
+    host,
+    port,
+    secure,
+    user,
+    pass,
+    fromHeader: parsedFrom.headerValue,
+    fromEnvelope: parsedFrom.envelopeValue,
+  }
 }
 
 function sanitizeHeaderValue(value: string) {
@@ -126,7 +138,30 @@ function normalizeRecipients(values: string[]) {
   return Array.from(new Set(values.map((item) => item.trim()).filter(Boolean)))
 }
 
-function buildMessage(input: SendSmtpMailInput, from: string) {
+function parseFromAddress(from: string): { headerValue: string; envelopeValue: string } | null {
+  const value = from.trim()
+  if (!value) return null
+
+  const angleMatch = value.match(/<\s*([^<>\s]+@[^<>\s]+)\s*>/)
+  if (angleMatch?.[1]) {
+    return {
+      headerValue: sanitizeHeaderValue(value),
+      envelopeValue: angleMatch[1].trim(),
+    }
+  }
+
+  const plain = value.replace(/^["']|["']$/g, '').trim()
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(plain)) {
+    return {
+      headerValue: sanitizeHeaderValue(plain),
+      envelopeValue: plain,
+    }
+  }
+
+  return null
+}
+
+function buildMessage(input: SendSmtpMailInput, fromHeader: string) {
   const to = normalizeRecipients(input.to)
   const cc = normalizeRecipients(input.cc ?? [])
   const allRecipients = normalizeRecipients([...to, ...cc])
@@ -138,7 +173,7 @@ function buildMessage(input: SendSmtpMailInput, from: string) {
     .join('\r\n')
 
   const headers = [
-    `From: ${from}`,
+    `From: ${fromHeader}`,
     `To: ${to.join(', ')}`,
     ...(cc.length > 0 ? [`Cc: ${cc.join(', ')}`] : []),
     `Subject: ${subject}`,
@@ -180,11 +215,12 @@ export async function sendSmtpMail(input: SendSmtpMailInput): Promise<SendSmtpMa
   if (!config) {
     return {
       ok: false,
-      error: 'Missing SMTP configuration (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM).',
+      error:
+        'Missing or invalid SMTP configuration (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM). SMTP_FROM must include a valid email.',
     }
   }
 
-  const message = buildMessage(input, config.from)
+  const message = buildMessage(input, config.fromHeader)
   if (message.allRecipients.length === 0) {
     return { ok: false, error: 'No recipients provided.' }
   }
@@ -204,7 +240,7 @@ export async function sendSmtpMail(input: SendSmtpMailInput): Promise<SendSmtpMa
     client.writeLine(Buffer.from(config.pass).toString('base64'))
     await client.expect(235)
 
-    client.writeLine(`MAIL FROM:<${config.from}>`)
+    client.writeLine(`MAIL FROM:<${config.fromEnvelope}>`)
     await client.expect(250)
 
     for (const recipient of message.allRecipients) {
