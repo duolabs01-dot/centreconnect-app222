@@ -1,4 +1,4 @@
-export type AutomationSendChannel = 'in_app' | 'whatsapp' | 'sms' | 'in_app_whatsapp' | 'in_app_sms'
+export type AutomationSendChannel = 'in_app' | 'whatsapp' | 'in_app_whatsapp'
 
 export type CommunicationAutomationSettings = {
   enabled: boolean
@@ -33,15 +33,9 @@ export const DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS: CommunicationAutomationS
 }
 
 function normalizeSendChannel(value: unknown): AutomationSendChannel {
-  if (
-    value === 'in_app' ||
-    value === 'whatsapp' ||
-    value === 'sms' ||
-    value === 'in_app_whatsapp' ||
-    value === 'in_app_sms'
-  ) {
-    return value
-  }
+  if (value === 'in_app' || value === 'whatsapp' || value === 'in_app_whatsapp') return value
+  if (value === 'sms') return 'whatsapp'
+  if (value === 'in_app_sms') return 'in_app_whatsapp'
   return DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS.send_channel
 }
 
@@ -113,15 +107,11 @@ export function normalizeCommunicationAutomationSettings(value: unknown): Commun
 }
 
 export function channelIncludesInApp(channel: AutomationSendChannel) {
-  return channel === 'in_app' || channel === 'in_app_whatsapp' || channel === 'in_app_sms'
+  return channel === 'in_app' || channel === 'in_app_whatsapp'
 }
 
 export function channelIncludesWhatsapp(channel: AutomationSendChannel) {
   return channel === 'whatsapp' || channel === 'in_app_whatsapp'
-}
-
-export function channelIncludesSms(channel: AutomationSendChannel) {
-  return channel === 'sms' || channel === 'in_app_sms'
 }
 
 export function renderAutomationTemplate(template: string, variables: Record<string, string>) {

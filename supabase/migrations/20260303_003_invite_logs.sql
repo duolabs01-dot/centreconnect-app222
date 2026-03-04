@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.invite_logs (
   owner_email TEXT,
   owner_phone TEXT,
   invite_type TEXT NOT NULL
-    CHECK (invite_type IN ('email', 'sms', 'welcome_pack')),
+    CHECK (invite_type IN ('email', 'whatsapp', 'welcome_pack')),
   sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   status TEXT NOT NULL DEFAULT 'sent'
     CHECK (status IN ('sent', 'opened', 'claimed')),

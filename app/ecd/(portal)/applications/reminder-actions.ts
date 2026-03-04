@@ -9,7 +9,6 @@ import {
 import {
   appendProfessionalSignature,
   channelIncludesInApp,
-  channelIncludesSms,
   channelIncludesWhatsapp,
   normalizeCommunicationAutomationSettings,
   renderAutomationTemplate,
@@ -26,7 +25,6 @@ type ReminderResult = {
   error?: string
   message?: string
   whatsappHref?: string
-  smsHref?: string
 }
 
 type ApplicationProfile = { full_name: string | null; phone: string | null }
@@ -61,13 +59,6 @@ function getAppOrigin() {
   if (vercelUrl) return `https://${vercelUrl.replace(/\/+$/, '')}`
 
   return 'http://localhost:3010'
-}
-
-function toSmsHref(rawPhone: string | null | undefined, message: string) {
-  const digits = String(rawPhone ?? '').replace(/[^\d]/g, '')
-  if (!digits || !message.trim()) return null
-  const target = digits.startsWith('0') ? `+27${digits.slice(1)}` : digits.startsWith('27') ? `+${digits}` : digits
-  return `sms:${target}?body=${encodeURIComponent(message)}`
 }
 
 function parseMissingCodes(value: unknown) {
@@ -182,7 +173,6 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
   })
   const shouldSendInApp = channelIncludesInApp(automationSettings.send_channel)
   const shouldExposeWhatsapp = channelIncludesWhatsapp(automationSettings.send_channel)
-  const shouldExposeSms = channelIncludesSms(automationSettings.send_channel)
 
   if (shouldSendInApp) {
     const notificationResult = await sendParentInAppNotification(session.supabase as any, {
@@ -255,6 +245,5 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
       ? 'Reminder sent with professional centre details.'
       : 'Reminder prepared. Open your selected channel to deliver it.',
     whatsappHref: shouldExposeWhatsapp ? toWhatsappHref(parentPhone, message) ?? undefined : undefined,
-    smsHref: shouldExposeSms ? toSmsHref(parentPhone, message) ?? undefined : undefined,
   }
 }

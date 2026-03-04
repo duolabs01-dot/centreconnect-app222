@@ -22,7 +22,7 @@ export function SendReminderButton({ applicationId }: SendReminderButtonProps) {
 
       toast.success(result.message || 'Reminder sent.')
 
-      const outboundHref = result.whatsappHref ?? result.smsHref ?? null
+      const outboundHref = result.whatsappHref ?? null
       if (outboundHref) {
         window.open(outboundHref, '_blank', 'noopener,noreferrer')
       }
@@ -41,4 +41,3 @@ export function SendReminderButton({ applicationId }: SendReminderButtonProps) {
     </Button>
   )
 }
-

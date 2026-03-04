@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description: 'Track invite dispatch and welcome pack delivery activity across centres.',
 }
 
-const INVITE_TYPES = ['email', 'sms', 'welcome_pack'] as const
+const INVITE_TYPES = ['email', 'whatsapp', 'welcome_pack'] as const
 const INVITE_STATUSES = ['sent', 'opened', 'claimed'] as const
 
 type InviteType = (typeof INVITE_TYPES)[number]
@@ -190,7 +190,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
           <select name="type" defaultValue={selectedType} className={`cc-native-field ${fieldClass}`}>
             <option value="">All types</option>
             <option value="email">Email</option>
-            <option value="sms">SMS</option>
+            <option value="whatsapp">WhatsApp</option>
             <option value="welcome_pack">Welcome Pack</option>
           </select>
           <select name="status" defaultValue={selectedStatus} className={`cc-native-field ${fieldClass}`}>

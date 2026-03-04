@@ -2,7 +2,7 @@ import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export type InviteLogType = 'email' | 'sms' | 'welcome_pack'
+export type InviteLogType = 'email' | 'whatsapp' | 'welcome_pack'
 export type InviteLogStatus = 'sent' | 'opened' | 'claimed'
 
 type WriteInviteLogInput = {

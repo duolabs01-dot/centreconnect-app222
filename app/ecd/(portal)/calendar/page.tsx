@@ -703,9 +703,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                     <select name="send_channel" defaultValue={automationSettings.send_channel} className="cc-native-field h-11 rounded-2xl">
                       <option value="in_app">In-app only</option>
                       <option value="whatsapp">WhatsApp only</option>
-                      <option value="sms">SMS only</option>
                       <option value="in_app_whatsapp">In-app + WhatsApp</option>
-                      <option value="in_app_sms">In-app + SMS</option>
                     </select>
                   </label>
                   <label className="grid gap-1">

@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.notification_logs (
   centre_id UUID REFERENCES public.ecd_centres(id) ON DELETE SET NULL,
   event_key TEXT NOT NULL,
   event_type TEXT NOT NULL,
-  channel TEXT NOT NULL CHECK (channel IN ('email', 'sms')),
+  channel TEXT NOT NULL CHECK (channel IN ('email', 'whatsapp')),
   recipient TEXT,
   status TEXT NOT NULL CHECK (status IN ('sent', 'failed')),
   provider TEXT NOT NULL,
