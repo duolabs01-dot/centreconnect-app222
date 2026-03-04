@@ -138,6 +138,18 @@ function statusBadgeClass(status: AdminTenantTableRow['status']) {
   return 'border-amber-500/30 bg-amber-500/15 text-amber-200'
 }
 
+function hasPackageChanged(
+  before: AdminTenantTableRow | null,
+  after: AdminTenantTableRow | null
+) {
+  if (!before || !after) return false
+  return (
+    before.subscriptionTier !== after.subscriptionTier ||
+    before.subscriptionStatus !== after.subscriptionStatus ||
+    before.subscriptionMonthlyPrice !== after.subscriptionMonthlyPrice
+  )
+}
+
 export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -148,6 +160,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [usersBusy, setUsersBusy] = useState(false)
   const [editTenantId, setEditTenantId] = useState<string | null>(null)
   const [form, setForm] = useState<AdminTenantTableRow | null>(null)
+  const [initialForm, setInitialForm] = useState<AdminTenantTableRow | null>(null)
   const [tenantUsers, setTenantUsers] = useState<TenantUserRow[]>([])
   const [pendingInvitations, setPendingInvitations] = useState<TenantPendingInvitation[]>([])
   const [userRoleDrafts, setUserRoleDrafts] = useState<Record<string, TenantUserPrivilege>>({})
@@ -160,6 +173,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [bulkInvitesBusy, setBulkInvitesBusy] = useState(false)
   const [bulkUpgradeBusy, setBulkUpgradeBusy] = useState(false)
   const [rowUpgrading, setRowUpgrading] = useState<Record<string, boolean>>({})
+  const [welcomePackBusy, setWelcomePackBusy] = useState(false)
 
   useEffect(() => {
     setSelectedIds(new Set())
@@ -276,6 +290,48 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     [router, upgradeTenant]
   )
 
+  const revalidateTenantPages = useCallback(async (tenantId: string) => {
+    const response = await fetch('/api/internal/platform-admin/revalidate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paths: [`/admin/tenants/${tenantId}`, '/admin/tenants'] }),
+    })
+    const payload = (await response.json().catch(() => ({}))) as { error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Failed to refresh tenant pages.')
+    }
+  }, [])
+
+  const sendWelcomePackRequest = useCallback(async (tenantId: string) => {
+    const response = await fetch(`/api/internal/platform-admin/tenants/${tenantId}/welcome-pack`, {
+      method: 'POST',
+    })
+    const payload = (await response.json().catch(() => ({}))) as { error?: string }
+    if (!response.ok) {
+      throw new Error(payload.error || 'Failed to resend welcome pack.')
+    }
+  }, [])
+
+  const runWelcomePack = useCallback(
+    async (tenantId: string, successMessage: string) => {
+      setWelcomePackBusy(true)
+      try {
+        await sendWelcomePackRequest(tenantId)
+        toast.success(successMessage)
+      } catch (error: any) {
+        toast.error(error?.message || 'Failed to send welcome pack.')
+      } finally {
+        setWelcomePackBusy(false)
+      }
+    },
+    [sendWelcomePackRequest]
+  )
+
+  const handleResendWelcomePack = useCallback(async () => {
+    if (!editTenantId) return
+    await runWelcomePack(editTenantId, 'Welcome pack resent.')
+  }, [editTenantId, runWelcomePack])
+
   const loadTenantUsers = useCallback(async (tenantId: string) => {
     setUsersLoading(true)
     try {
@@ -307,6 +363,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const openEdit = useCallback((tenant: AdminTenantTableRow) => {
     setEditTenantId(tenant.id)
     setForm({ ...tenant })
+    setInitialForm(tenant)
     setTenantUsers([])
     setPendingInvitations([])
     setUserRoleDrafts({})
@@ -315,11 +372,20 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     void loadTenantUsers(tenant.id)
   }, [loadTenantUsers])
 
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    setEditOpen(open)
+    if (!open) {
+      setEditTenantId(null)
+      setForm(null)
+      setInitialForm(null)
+    }
+  }, [])
+
   const columns = useMemo<ColumnDef<AdminTenantTableRow>[]>(
     () => [
       {
         id: 'select',
-        header: 'Select',
+        header: () => <span className="sr-only">Select</span>,
         cell: ({ row }) => (
           <input
             type="checkbox"
@@ -329,6 +395,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
             aria-label={`Select ${row.original.name}`}
           />
         ),
+        enableSorting: false,
       },
       {
         accessorKey: 'name',
@@ -373,34 +440,44 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           </span>
         ),
       },
-        {
-          id: 'actions',
-          header: 'Quick Actions',
-          enableSorting: false,
-          enableGlobalFilter: false,
-          cell: ({ row }) => (
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
-                onClick={() => openEdit(row.original)}
-              >
-                Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-emerald-500/30 bg-slate-900 text-emerald-200 hover:bg-slate-800"
-                onClick={() => void handleRowUpgrade(row.original.id)}
-                disabled={Boolean(rowUpgrading[row.original.id])}
-              >
-                {rowUpgrading[row.original.id] ? 'Upgrading…' : 'Upgrade'}
-              </Button>
-              <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
-                <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
-              </Button>
-            <Button asChild size="sm" variant="outline" className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800">
+      {
+        id: 'actions',
+        header: 'Quick Actions',
+        enableSorting: false,
+        enableGlobalFilter: false,
+        cell: ({ row }) => (
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+              onClick={() => openEdit(row.original)}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-emerald-500/30 bg-slate-900 text-emerald-200 hover:bg-slate-800"
+              onClick={() => void handleRowUpgrade(row.original.id)}
+              disabled={Boolean(rowUpgrading[row.original.id])}
+            >
+              {rowUpgrading[row.original.id] ? 'Upgrading…' : 'Upgrade'}
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+            >
+              <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
+            </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
+            >
               <Link href={`/admin/tenants/${row.original.id}#invite`}>Invite</Link>
             </Button>
           </div>
@@ -501,10 +578,21 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       const body = (await response.json().catch(() => ({}))) as { error?: string }
       if (!response.ok) throw new Error(body.error || 'Failed to update tenant.')
 
+      const packageChanged = hasPackageChanged(initialForm, form)
+      try {
+        await revalidateTenantPages(editTenantId)
+      } catch (error: any) {
+        toast.warning(error?.message || 'Tenant pages refreshed separately.')
+      }
+      if (packageChanged) {
+        await runWelcomePack(editTenantId, 'Welcome pack requeued with updated package.')
+      }
+
       toast.success('Tenant profile updated.')
       setEditOpen(false)
       setEditTenantId(null)
       setForm(null)
+      setInitialForm(null)
       router.refresh()
     } catch (error: any) {
       toast.error(error?.message || 'Failed to update tenant.')
@@ -824,7 +912,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         </Card>
       </div>
 
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+      <Dialog open={editOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent className="max-h-[92vh] overflow-y-auto border-cyan-500/30 bg-slate-950 text-slate-100 sm:max-w-5xl">
           <DialogHeader>
             <DialogTitle className="text-cyan-200">Edit Tenant</DialogTitle>
@@ -1402,6 +1490,15 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
               disabled={saving}
             >
               Cancel
+            </Button>
+            <Button
+              variant="outline"
+              className="border-emerald-500/30 bg-slate-900 text-emerald-200 hover:bg-slate-800"
+              onClick={() => void handleResendWelcomePack()}
+              loading={welcomePackBusy}
+              disabled={welcomePackBusy || !editTenantId}
+            >
+              Resend Welcome Pack
             </Button>
             <Button onClick={() => void saveEdit()} loading={saving} className="bg-cyan-500 text-black hover:bg-cyan-400">
               Save Tenant Changes
