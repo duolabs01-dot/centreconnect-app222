@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('name,slug,primary_contact_name')
+    .select('name,slug,primary_contact_name,city,suburb')
     .eq('id', ecdId)
     .single()
 
@@ -98,6 +98,7 @@ export async function POST(request: Request) {
 
   const centreName = centre.name?.trim() || 'CentreConnect'
   const centreSlug = centre.slug?.trim() ?? ''
+  const location = centre.suburb?.trim() || centre.city?.trim() || 'your area'
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
   const ownerName = sanitizeName(centre.primary_contact_name, ownerNameFallback)
 
@@ -112,11 +113,12 @@ export async function POST(request: Request) {
   html = applyTemplateReplacements(html, {
     '{{ownerName}}': ownerName,
     '{{centreName}}': centreName,
+    '{{location}}': location,
     '{{centreSlug}}': centreSlug,
   })
 
   const centrePageUrl = `${appUrlRoot}/centre/${centreSlug || 'profile'}`
-  const plainText = `Welcome ${ownerName} to ${centreName}! Visit ${centrePageUrl} for your centre details. Need anything? WhatsApp us anytime at +27 68 535 6430.`
+  const plainText = `Welcome ${ownerName} to ${centreName}! Run ${centreName} in ${location} with CentreConnect. Visit ${centrePageUrl} for your admin dashboard. Need anything? WhatsApp +27 68 535 6430.`
 
   const subject = `Welcome to CentreConnect Pilot — ${centreName}`
 
