@@ -6,127 +6,303 @@
   <title>CentreConnect Pilot Welcome</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --surface:#ffffff;
-      --soft-teal:#14b8a6;
+      --soft-teal:#14B8A6;
       --amber:#f59e0b;
-      --ink:#0f172a;
-      --muted:#6b7280;
-      --radius:28px;
-      --shadow:0 18px 45px rgba(15,23,42,0.1);
+      --ink:#0F172A;
+      --muted:#475569;
+      --card-radius:28px;
+      --shadow:0 20px 60px rgba(15,23,42,0.08);
     }
     * {box-sizing:border-box;}
-    body {margin:0;background:#f1f5f9;font-family:'Nunito',sans-serif;color:var(--ink);min-height:100vh;}
-    .page {max-width:1024px;margin:0 auto;padding:32px 20px 64px;}
-    .hero {background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);padding:36px;display:flex;flex-direction:column;gap:24px;}
-    .hero-top {display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-    .logo-pill {font-family:'Orbitron',sans-serif;font-size:1.2rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--soft-teal);}
-    .hero-headline {font-family:'Orbitron',sans-serif;font-size:clamp(2rem,4.5vw,3rem);margin:0;line-height:1.2;}
-    .hero-subtext {max-width:680px;font-size:1rem;color:var(--muted);line-height:1.6;}
-    .hero-image {width:100%;border-radius:24px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(15,23,42,0.08);}
-    .hero-image img {width:100%;display:block;height:auto;object-fit:cover;}
-    .cta-row {display:flex;flex-wrap:wrap;gap:12px;}
-    .btn-primary,.btn-secondary {border-radius:999px;padding:14px 32px;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:transform 0.2s ease,box-shadow 0.2s ease;}
-    .btn-primary {background:linear-gradient(120deg,var(--soft-teal),#0c9488);color:#fff;box-shadow:0 12px 24px rgba(20,184,166,0.4);}
-    .btn-secondary {background:#fff;border:1px solid rgba(15,23,42,0.2);color:var(--ink);}
-    .btn-primary:hover,.btn-secondary:hover {transform:translateY(-2px);}
-    .hero-note {font-size:0.95rem;color:#334155;}
-    .scenario-section {margin-top:48px;}
-    .section-title {text-align:center;margin-bottom:24px;}
-    .section-title h2 {margin:0;font-size:0.85rem;letter-spacing:0.4em;text-transform:uppercase;color:var(--muted);}
-    .section-title h1 {margin:8px auto 0;font-size:clamp(1.9rem,3vw,2.6rem);font-family:'Orbitron',sans-serif;line-height:1.2;max-width:600px;}
-    .scenario-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:20px;}
-    .card {background:#fff;border-radius:24px;padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px;transition:transform 0.2s ease,border 0.2s ease;}
-    .card:hover {transform:translateY(-4px);border:1px solid rgba(20,184,166,0.4);}
-    .card h3 {margin:0;font-family:'Bitter',serif;font-size:1.25rem;}
-    .card p {margin:0;color:var(--muted);line-height:1.5;font-size:0.95rem;}
-    .card .tag {font-size:0.75rem;text-transform:uppercase;letter-spacing:0.2em;color:var(--soft-teal);font-weight:700;}
-    .learn-btn {margin-top:auto;padding:10px 18px;border-radius:999px;border:none;background:var(--soft-teal);color:#fff;font-weight:700;cursor:pointer;align-self:flex-start;box-shadow:0 8px 20px rgba(20,184,166,0.35);}
-    .learn-btn:hover {transform:translateY(-2px);}
-    .divider {height:1px;background:linear-gradient(90deg,var(--muted),rgba(255,255,255,0));margin:40px 0;}
-    .tips {display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;}
-    .tip-card {background:#fff;border-radius:22px;padding:20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;}
-    .tip-card span {font-size:1.5rem;}
-    .footer {margin-top:56px;text-align:center;padding:32px 24px;border-radius:28px;background:#fff;box-shadow:var(--shadow);}
-    .footer a {font-family:'Orbitron',sans-serif;text-transform:uppercase;letter-spacing:0.2em;background:var(--soft-teal);color:#fff;padding:16px 32px;border-radius:999px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;box-shadow:0 12px 24px rgba(20,184,166,0.4);}
-    .footer p {margin:8px 0 0;color:#475569;}
-    @media (max-width:640px){.hero{padding:28px;} .card{padding:18px;} .footer{padding:28px 18px;}}\n  </style>
+    body {
+      margin:0;
+      font-family:'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background:#F7FAFC;
+      color:var(--ink);
+    }
+    .page {
+      max-width:1100px;
+      margin:0 auto;
+      padding:32px 16px 64px;
+    }
+    .hero {
+      background:#fff;
+      border-radius:var(--card-radius);
+      box-shadow:var(--shadow);
+      padding:32px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:32px;
+    }
+    .hero-text h1 {
+      margin:0;
+      font-size:clamp(2.2rem,3vw,3rem);
+      font-weight:700;
+      line-height:1.2;
+    }
+    .hero-text p {
+      margin:16px 0;
+      line-height:1.6;
+      color:var(--muted);
+    }
+    .hero-text .pill {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 16px;
+      border-radius:999px;
+      font-size:0.85rem;
+      font-weight:600;
+      background:rgba(20,184,166,0.15);
+      color:var(--soft-teal);
+    }
+    .hero-image {
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 20px 40px rgba(15,23,42,0.15);
+      min-height:280px;
+    }
+    .hero-image img {
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+    }
+    .hero-actions {
+      margin-top:24px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .btn {
+      border:none;
+      border-radius:999px;
+      padding:14px 32px;
+      font-weight:600;
+      font-size:1rem;
+      cursor:pointer;
+      transition:transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-teal {
+      background:linear-gradient(120deg,var(--soft-teal),#0F976D);
+      color:#fff;
+      box-shadow:0 14px 30px rgba(20,184,166,0.35);
+    }
+    .btn-outline {
+      background:#fff;
+      border:1px solid rgba(15,23,42,0.15);
+      color:var(--ink);
+    }
+    .btn:hover {transform:translateY(-2px);}
+    .hero-whatsapp {
+      margin-top:16px;
+      font-size:0.95rem;
+      color:var(--muted);
+    }
+    .hero-whatsapp a {
+      color:var(--soft-teal);
+      font-weight:600;
+      text-decoration:none;
+    }
+    .scenario-section {
+      margin-top:48px;
+    }
+    .section-heading {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:6px;
+      margin-bottom:32px;
+    }
+    .section-heading small {
+      letter-spacing:0.4em;
+      text-transform:uppercase;
+      font-size:0.75rem;
+      color:var(--soft-teal);
+      font-weight:700;
+    }
+    .section-heading h2 {
+      margin:0;
+      font-size:2rem;
+      font-weight:700;
+    }
+    .scenario-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:20px;
+    }
+    .scenario-card {
+      background:#fff;
+      border-radius:calc(var(--card-radius) - 6px);
+      padding:24px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      transition:transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .scenario-card:hover {
+      transform:translateY(-4px);
+      box-shadow:0 32px 60px rgba(15,23,42,0.13);
+    }
+    .scenario-card h3 {
+      margin:0;
+      font-size:1.35rem;
+      font-weight:700;
+    }
+    .scenario-card p {
+      margin:0;
+      color:var(--muted);
+      line-height:1.5;
+    }
+    .scenario-card .tag {
+      font-size:0.8rem;
+      text-transform:uppercase;
+      letter-spacing:0.3em;
+      color:var(--soft-teal);
+      font-weight:700;
+    }
+    .learn-link {
+      margin-top:auto;
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+      font-weight:700;
+      color:#0F172A;
+      border-radius:999px;
+      padding:10px 20px;
+      border:2px solid rgba(15,23,42,0.15);
+      text-decoration:none;
+      transition:background 0.2s ease,transform 0.2s ease;
+    }
+    .learn-link:hover {
+      background:#F3F7F9;
+      transform:translateY(-2px);
+    }
+    .tips {
+      margin-top:48px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+    }
+    .tip-card {
+      background:#fff;
+      border-radius:20px;
+      padding:20px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .tip-card strong {
+      color:var(--ink);
+    }
+    .final-cta {
+      margin-top:48px;
+      text-align:center;
+    }
+    .final-cta a {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--soft-teal);
+      color:#fff;
+      padding:16px 48px;
+      border-radius:999px;
+      font-size:1.1rem;
+      font-weight:700;
+      text-decoration:none;
+      box-shadow:0 20px 40px rgba(20,184,166,0.35);
+    }
+    .final-note {
+      margin-top:16px;
+      color:var(--muted);
+      line-height:1.6;
+      font-size:0.95rem;
+    }
+    @media (max-width:640px) {
+      .hero {padding:24px;}
+      .hero-actions {flex-direction:column;}
+    }
+  </style>
 </head>
 <body>
   <div class="page">
-    <div class="hero">
-      <div class="hero-top">
-        <div class="logo-pill">CentreConnect Pilot</div>
-        <div class="hero-note">Hey {{ownerName}}, this page feels like a warm chat, not a product deck.</div>
+    <section class="hero">
+      <div class="hero-text">
+        <div class="pill">CentreConnect Pilot</div>
+        <h1>Hey {{ownerName}}, {{centreName}} is ready for a calmer {{location}} day.</h1>
+        <p>I know WhatsApp blows up with documents, pickup confirmations, and parents asking if you saw their message. Parents are already asking for the app, so we captured the calm parts inside this welcome pack — tap what feels most like your morning and let us walk you through the next move.</p>
+        <p class="hero-whatsapp">Need anything? WhatsApp us at <a href="https://wa.me/27685356430">+27 68 535 6430</a>. We reply like a neighbour who has your back.</p>
+        <div class="hero-actions">
+          <button class="btn btn-teal" onclick="document.getElementById('scenario-attendance').scrollIntoView({behavior:'smooth'})">Daily Attendance &amp; Reports</button>
+          <button class="btn btn-outline" onclick="document.getElementById('scenario-pickup').scrollIntoView({behavior:'smooth'})">Safe Pickup Time</button>
+          <button class="btn btn-outline" onclick="document.getElementById('scenario-applications').scrollIntoView({behavior:'smooth'})">Parent Applications</button>
+          <button class="btn btn-outline" onclick="document.getElementById('scenario-parents').scrollIntoView({behavior:'smooth'})">What Parents Are Saying</button>
+        </div>
       </div>
-      <h1 class="hero-headline">Hello {{ownerName}} — {{centreName}} already shines in {{location}}</h1>
-      <p class="hero-subtext">I know WhatsApp blows up with applications, pickup confirmations, and parents waiting for updates. Parents are already asking for the app, so we captured the calm bits inside this welcome pack. Tap the scenario that feels like your day and we’ll walk you through the next move.</p>
       <div class="hero-image">
         <img src="https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg" alt="Children playing outside"/>
       </div>
-      <div class="cta-row">
-        <button class="btn-primary" onclick="document.getElementById('section-attendance').scrollIntoView({behavior:'smooth'})">Daily attendance & reports</button>
-        <button class="btn-secondary" onclick="document.getElementById('section-pickup').scrollIntoView({behavior:'smooth'})">Safe pickup time</button>
-        <button class="btn-secondary" onclick="document.getElementById('section-applications').scrollIntoView({behavior:'smooth'})">Parent applications</button>
-        <button class="btn-secondary" onclick="document.getElementById('section-parents').scrollIntoView({behavior:'smooth'})">What parents say</button>
-      </div>
-      <p class="hero-note">Need anything? WhatsApp me at <a href="https://wa.me/27685356430" style="color:var(--soft-teal);font-weight:700;text-decoration:none;">+27 68 535 6430</a>. I reply like a friend.</p>
-    </div>
-    <div class="scenario-section">
-      <div class="section-title">
-        <h2>Everyday life</h2>
-        <h1>Choose the moment that feels real right now</h1>
+    </section>
+
+    <section class="scenario-section">
+      <div class="section-heading">
+        <small>Everyday moments</small>
+        <h2>Choose the scene that feels most like your morning</h2>
       </div>
       <div class="scenario-grid">
-        <article class="card" id="section-attendance">
-          <div class="tag">Daily attendance & reports</div>
+        <article class="scenario-card" id="scenario-attendance">
+          <span class="tag">Daily Attendance &amp; Reports</span>
           <h3>Attendance in under a minute</h3>
-          <p>I know roll call used to fill half your morning. Tap each child once, save it, and the monthly totals are already counted. Parents get a polished report without you typing a single message.</p>
-          <button class="learn-btn" onclick="location.href='#section-pickup'">Learn more</button>
+          <p>Tap each child once, save it, and the monthly totals are already counted. Parents get a polished daily note without you typing a single extra message.</p>
+          <a class="learn-link" href="#scenario-pickup">Learn more about attendance</a>
         </article>
-        <article class="card" id="section-pickup">
-          <div class="tag">Safe pickup time</div>
+        <article class="scenario-card" id="scenario-pickup">
+          <span class="tag">Safe Pickup Time</span>
           <h3>Gate-time calm</h3>
-          <p>That moment at the gate when someone says they are picking up little Lethabo — you feel the pressure. With QR codes and a quick scan, you know exactly who to release, and parents get notified right away.</p>
-          <button class="learn-btn" onclick="location.href='#section-applications'">Learn more</button>
+          <p>Someone says they are picking up little Lethabo — your heart races. Scan the QR code and you know instantly if they are authorised while parents get notified.</p>
+          <a class="learn-link" href="#scenario-applications">Learn more about pickup</a>
         </article>
-        <article class="card" id="section-applications">
-          <div class="tag">Parent applications</div>
+        <article class="scenario-card" id="scenario-applications">
+          <span class="tag">Parent Applications</span>
           <h3>Stop chasing documents</h3>
-          <p>Parents no longer send four different WhatsApp messages. Their application lands in one clean place with everything you need. Accept, decline, or waitlist — we notify them automatically.</p>
-          <button class="learn-btn" onclick="location.href='#section-parents'">Learn more</button>
+          <p>Applications arrive in one neat place with every detail you need. Accept, decline, or waitlist, and parents hear back automatically.</p>
+          <a class="learn-link" href="#scenario-parents">Learn more about applications</a>
         </article>
-        <article class="card" id="section-parents">
-          <div class="tag">What parents are saying</div>
+        <article class="scenario-card" id="scenario-parents">
+          <span class="tag">What Parents Are Saying</span>
           <h3>Warm feedback every day</h3>
-          <p>Parents love the daily notes, photos, and the certainty of pickup codes. Share the story: <strong>https://centerconnect.co.za/centre/{{centreSlug}}</strong> and invite them into the calm.</p>
-          <button class="learn-btn" onclick="location.href='https://centerconnect.co.za/centre/{{centreSlug}}'">Learn more</button>
+          <p>Parents love the daily notes, photos, and pickup certainty. Share <strong>https://centerconnect.co.za/centre/{{centreSlug}}</strong> so they can feel the calm too.</p>
+          <a class="learn-link" href="https://centerconnect.co.za/centre/{{centreSlug}}">Learn more from parents</a>
         </article>
       </div>
-    </div>
-    <div class="divider"></div>
-    <div class="tips">
+    </section>
+
+    <section class="tips">
       <div class="tip-card">
-        <span>📱</span>
-        <p>Add CentreConnect to your home screen so this feels like an app you keep coming back to.</p>
+        <strong>Tip 1</strong>
+        <p>Add CentreConnect to your home screen so it feels like an app you can open anytime.</p>
       </div>
       <div class="tip-card">
-        <span>📝</span>
-        <p>Start by adding five children from your register. Once you feel the pace, add the rest.</p>
+        <strong>Tip 2</strong>
+        <p>Start with five children from your register. Once you feel the flow, add the rest — the system remembers everything.</p>
       </div>
       <div class="tip-card">
-        <span>🪪</span>
-        <p>Print the Safe Pickup QR poster and pin it near the gate. It makes you look professional and keeps kids safe.</p>
+        <strong>Tip 3</strong>
+        <p>Print the Safe Pickup QR poster and pin it near the gate. It looks professional and keeps the children safe.</p>
       </div>
-    </div>
-    <div class="divider"></div>
-    <div class="footer">
+    </section>
+
+    <section class="final-cta">
       <a href="https://centerconnect.co.za/ecd/profile">Get Started</a>
-      <p>Need a hand? WhatsApp +27 68 535 6430 and we’ll walk the steps with you. This pilot is built for {{centreName}} in {{location}}, with you leading.</p>
-      <p>CentreConnect · built for South African ECDs · friendly guidance every step.</p>
-    </div>
+      <p class="final-note">Need a hand? WhatsApp +27 68 535 6430 and we’ll walk the steps with you. This welcome pack was created for {{centreName}} in {{location}} — we are neighbours who understand the grind and the joy.</p>
+    </section>
   </div>
 </body>
 </html>
