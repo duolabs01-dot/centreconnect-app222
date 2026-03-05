@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>CentreConnect Pilot Welcome</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --soft-teal:#14B8A6;
@@ -14,13 +14,13 @@
       --ink:#0F172A;
       --muted:#475569;
       --card-radius:28px;
-      --shadow:0 20px 60px rgba(15,23,42,0.08);
+      --shadow:0 25px 70px rgba(15,23,42,0.08);
     }
     * {box-sizing:border-box;}
     body {
       margin:0;
       font-family:'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background:#F7FAFC;
+      background:#F8FAFC;
       color:var(--ink);
     }
     .page {
@@ -62,7 +62,7 @@
     .hero-image {
       border-radius:24px;
       overflow:hidden;
-      box-shadow:0 20px 40px rgba(15,23,42,0.15);
+      box-shadow:0 25px 50px rgba(15,23,42,0.15);
       min-height:280px;
     }
     .hero-image img {
@@ -107,28 +107,14 @@
       font-weight:600;
       text-decoration:none;
     }
-    .scenario-section {
-      margin-top:48px;
-    }
-    .section-heading {
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      text-align:center;
-      gap:6px;
-      margin-bottom:32px;
-    }
-    .section-heading small {
-      letter-spacing:0.4em;
-      text-transform:uppercase;
-      font-size:0.75rem;
-      color:var(--soft-teal);
-      font-weight:700;
-    }
-    .section-heading h2 {
-      margin:0;
-      font-size:2rem;
-      font-weight:700;
+    .parent-demand {
+      margin-top:8px;
+      padding:12px 16px;
+      border-radius:16px;
+      background:#F0FDFA;
+      color:var(--muted);
+      border:1px solid rgba(20,184,166,0.25);
+      font-size:0.95rem;
     }
     .scenario-grid {
       display:grid;
@@ -137,7 +123,7 @@
     }
     .scenario-card {
       background:#fff;
-      border-radius:calc(var(--card-radius) - 6px);
+      border-radius:24px;
       padding:24px;
       box-shadow:var(--shadow);
       display:flex;
@@ -160,7 +146,7 @@
       line-height:1.5;
     }
     .scenario-card .tag {
-      font-size:0.8rem;
+      font-size:0.85rem;
       text-transform:uppercase;
       letter-spacing:0.3em;
       color:var(--soft-teal);
@@ -185,7 +171,7 @@
       transform:translateY(-2px);
     }
     .tips {
-      margin-top:48px;
+      margin-top:32px;
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       gap:16px;
@@ -203,7 +189,7 @@
       color:var(--ink);
     }
     .final-cta {
-      margin-top:48px;
+      margin-top:32px;
       text-align:center;
     }
     .final-cta a {
@@ -237,7 +223,7 @@
       <div class="hero-text">
         <div class="pill">CentreConnect Pilot</div>
         <h1>Hey {{ownerName}}, {{centreName}} is ready for a calmer {{location}} day.</h1>
-        <p>I know WhatsApp blows up with documents, pickup confirmations, and parents asking if you saw their message. Parents are already asking for the app, so we captured the calm parts inside this welcome pack — tap what feels most like your morning and let us walk you through the next move.</p>
+        <p>I know WhatsApp blows up with documents, pickup confirmations, and parents wondering if you saw their message. Parents are already asking for the app, so we captured the calm parts inside this welcome pack — tap what feels most like your morning and let us walk you through how it works.</p>
         <p class="hero-whatsapp">Need anything? WhatsApp us at <a href="https://wa.me/27685356430">+27 68 535 6430</a>. We reply like a neighbour who has your back.</p>
         <div class="hero-actions">
           <button class="btn btn-teal" onclick="document.getElementById('scenario-attendance').scrollIntoView({behavior:'smooth'})">Daily Attendance &amp; Reports</button>
@@ -245,12 +231,12 @@
           <button class="btn btn-outline" onclick="document.getElementById('scenario-applications').scrollIntoView({behavior:'smooth'})">Parent Applications</button>
           <button class="btn btn-outline" onclick="document.getElementById('scenario-parents').scrollIntoView({behavior:'smooth'})">What Parents Are Saying</button>
         </div>
+        <div class="parent-demand">Parents are already asking for CentreConnect in {{location}} — this is how we keep them calm and connected.</div>
       </div>
       <div class="hero-image">
-        <img src="https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg" alt="Children playing outside"/>
+        <img src="https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg" alt="Children playing outside" />
       </div>
     </section>
-
     <section class="scenario-section">
       <div class="section-heading">
         <small>Everyday moments</small>
@@ -260,13 +246,13 @@
         <article class="scenario-card" id="scenario-attendance">
           <span class="tag">Daily Attendance &amp; Reports</span>
           <h3>Attendance in under a minute</h3>
-          <p>Tap each child once, save it, and the monthly totals are already counted. Parents get a polished daily note without you typing a single extra message.</p>
+          <p>Tap each child once, save it, and the monthly totals are already counted. Parents receive a polished note without you needing extra typing.</p>
           <a class="learn-link" href="#scenario-pickup">Learn more about attendance</a>
         </article>
         <article class="scenario-card" id="scenario-pickup">
           <span class="tag">Safe Pickup Time</span>
           <h3>Gate-time calm</h3>
-          <p>Someone says they are picking up little Lethabo — your heart races. Scan the QR code and you know instantly if they are authorised while parents get notified.</p>
+          <p>That moment when someone says they are picking up little Lethabo — your heart beats a little faster. Scan the QR code and know instantly who is authorised while parents get notified.</p>
           <a class="learn-link" href="#scenario-applications">Learn more about pickup</a>
         </article>
         <article class="scenario-card" id="scenario-applications">
@@ -283,22 +269,20 @@
         </article>
       </div>
     </section>
-
     <section class="tips">
       <div class="tip-card">
         <strong>Tip 1</strong>
-        <p>Add CentreConnect to your home screen so it feels like an app you can open anytime.</p>
+        <p>Add CentreConnect to your home screen so it feels like an app you can open anytime without hunting for a link.</p>
       </div>
       <div class="tip-card">
         <strong>Tip 2</strong>
-        <p>Start with five children from your register. Once you feel the flow, add the rest — the system remembers everything.</p>
+        <p>Start with five children from your register. Once you feel the rhythm, add the rest — the system remembers everything for you.</p>
       </div>
       <div class="tip-card">
         <strong>Tip 3</strong>
         <p>Print the Safe Pickup QR poster and pin it near the gate. It looks professional and keeps the children safe.</p>
       </div>
     </section>
-
     <section class="final-cta">
       <a href="https://centerconnect.co.za/ecd/profile">Get Started</a>
       <p class="final-note">Need a hand? WhatsApp +27 68 535 6430 and we’ll walk the steps with you. This welcome pack was created for {{centreName}} in {{location}} — we are neighbours who understand the grind and the joy.</p>
