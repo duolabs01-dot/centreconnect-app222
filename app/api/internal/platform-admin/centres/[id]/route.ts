@@ -44,6 +44,12 @@ const actionSchema = z.discriminatedUnion('action', [
     coverImageUrl: z.string().url().nullable().optional(),
   }),
   z.object({
+    action: z.literal('delete'),
+  }),
+  z.object({
+    action: z.literal('restore'),
+  }),
+  z.object({
     action: z.literal('set_profile'),
     name: z.string().min(2).max(160).optional(),
     slug: z.string().min(3).max(80).regex(slugPattern).optional(),
@@ -455,6 +461,71 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       reverted: true,
       centreId,
     })
+  }
+
+  if (payload.action === 'delete') {
+    const now = new Date().toISOString()
+    const { error } = await admin.from('ecd_centres').update({
+      is_deleted: true,
+      deleted_at: now,
+      deleted_by: platformAdmin.userId,
+      is_active: false,
+    }).eq('id', centreId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'delete',
+      summary: 'Moved tenant to bin',
+      details: { deletedAt: now },
+    })
+    void sendPlatformAdminActionNotification({
+      subject: 'Centre moved to bin',
+      heading: 'A centre was moved to the admin bin.',
+      lines: [
+        `Centre: ${centreName}`,
+        `Slug: ${centreSlug}`,
+        `Centre ID: ${centreId}`,
+        `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
+      ],
+      details: { deleted: true, deletedAt: now },
+    })
+
+    return NextResponse.json({ ok: true, deleted: true })
+  }
+
+  if (payload.action === 'restore') {
+    const { error } = await admin.from('ecd_centres').update({
+      is_deleted: false,
+      deleted_at: null,
+      deleted_by: null,
+    }).eq('id', centreId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'restore',
+      summary: 'Restored tenant from bin',
+    })
+    void sendPlatformAdminActionNotification({
+      subject: 'Centre restored',
+      heading: 'A centre was restored from the bin.',
+      lines: [
+        `Centre: ${centreName}`,
+        `Slug: ${centreSlug}`,
+        `Centre ID: ${centreId}`,
+        `Actor: ${platformAdmin.email ?? 'platform-admin'}`,
+      ],
+      details: { restored: true },
+    })
+
+    return NextResponse.json({ ok: true, restored: true })
   }
 
   const normalizedPlan = normalizeRequestedTier(payload.tier, payload.status, payload.monthlyPrice)

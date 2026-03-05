@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { AdminTenantsOnboarding } from '@/components/admin/admin-tenants-onboarding'
 import {
   AdminTenantInviteTracking,
   type AdminTenantInviteLog,
-} from '@/components/admin/admin-tenant-invite-tracking'
+  } from '@/components/admin/admin-tenant-invite-tracking'
 import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/admin-tenants-table'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +58,7 @@ export default async function AdminTenantsPage() {
   const [centresResult, invitationsResult, inviteLogsResult] = await Promise.all([
     admin
       .from('ecd_centres')
+      .eq('is_deleted', false)
       .select(
         'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
       )
@@ -221,6 +224,13 @@ export default async function AdminTenantsPage() {
         </div>
         <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_25px_100px_rgba(2,6,23,0.65)]">
           <AdminTenantsOnboarding existingCentres={existingCentres} />
+        </div>
+        <div className="flex justify-end">
+          <Link href="/admin/tenants/bin">
+            <Button className="border-amber-400 text-amber-200 hover:bg-amber-500/10" variant="outline">
+              View deleted centres
+            </Button>
+          </Link>
         </div>
       </section>
 

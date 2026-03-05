@@ -174,6 +174,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [bulkUpgradeBusy, setBulkUpgradeBusy] = useState(false)
   const [rowUpgrading, setRowUpgrading] = useState<Record<string, boolean>>({})
   const [welcomePackBusy, setWelcomePackBusy] = useState(false)
+  const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     setSelectedIds(new Set())
@@ -288,6 +289,33 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       }
     },
     [router, upgradeTenant]
+  )
+
+  const deleteTenant = useCallback(
+    async (tenantId: string) => {
+      if (!confirm('Are you sure you want to move this centre to the bin?')) return
+      setDeletingIds((prev) => ({ ...prev, [tenantId]: true }))
+      try {
+        const response = await fetch(`/api/internal/platform-admin/centres/${tenantId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'delete' }),
+        })
+        const payload = (await response.json().catch(() => ({}))) as { error?: string }
+        if (!response.ok) throw new Error(payload.error || 'Failed to delete centre.')
+        toast.success('Centre moved to bin.')
+        router.refresh()
+      } catch (error: any) {
+        toast.error(error?.message || 'Delete failed.')
+      } finally {
+        setDeletingIds((prev) => {
+          const next = { ...prev }
+          delete next[tenantId]
+          return next
+        })
+      }
+    },
+    [router]
   )
 
   const revalidateTenantPages = useCallback(async (tenantId: string) => {
@@ -487,11 +515,20 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
             >
               <Link href={`/admin/tenants/${row.original.id}#invite`}>Invite</Link>
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-rose-500/30 bg-slate-900 text-rose-200 hover:bg-slate-800"
+              onClick={() => void deleteTenant(row.original.id)}
+              disabled={Boolean(deletingIds[row.original.id])}
+            >
+              {deletingIds[row.original.id] ? 'Deleting…' : 'Delete'}
+            </Button>
           </div>
         ),
       },
     ],
-    [openEdit, selectedIds, toggleSelection, rowUpgrading, handleRowUpgrade]
+    [openEdit, selectedIds, toggleSelection, rowUpgrading, handleRowUpgrade, deleteTenant, deletingIds]
   )
 
   const table = useReactTable({
