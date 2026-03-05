@@ -14,13 +14,19 @@ interface CentreCardProps {
   id: string;
   slug?: string;
   name: string;
+  image?: string;
   cover_image_url?: string;
+  logo_url?: string;
   address?: string;
+  distance?: string;
   distanceLabel?: string;
+  rating?: number;
+  fees?: string;
   feesLabel?: string;
   age_groups: string[];
-  rating?: number;
   tagline?: string;
+  capacity?: number;
+  existingApplicationStatus?: string | null;
   isSaved?: boolean;
   onApply?: () => void;
   onSave?: () => void;
@@ -61,6 +67,10 @@ export function CentreCard({
       return;
     }
 
+    router.push(`/centres/${id}`);
+  };
+
+  const handleViewDetails = () => {
     router.push(`/centres/${id}`);
   };
 
@@ -142,7 +152,7 @@ export function CentreCard({
 
           <Button
             variant="outline"
-            onClick={() => window.open(`/centres/${id}`, '_blank')}
+            onClick={handleViewDetails}
             className="flex-1 border-2 border-navy-200 hover:border-navy-400 py-6 rounded-2xl text-base"
           >
             View Details
