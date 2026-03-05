@@ -66,10 +66,15 @@ export default function ParentDiscoverClient() {
   }, [query])
 
   useEffect(() => {
-    const originalZoom = document.documentElement.style.zoom
-    document.documentElement.style.zoom = '1'
+    const root = document.documentElement
+    const body = document.body
+    const originalRootZoom = root.style.zoom
+    const originalBodyZoom = body.style.zoom
+    root.style.zoom = '1'
+    body.style.zoom = '1'
     return () => {
-      document.documentElement.style.zoom = originalZoom
+      root.style.zoom = originalRootZoom
+      body.style.zoom = originalBodyZoom
     }
   }, [])
 

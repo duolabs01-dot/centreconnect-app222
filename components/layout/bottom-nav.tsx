@@ -33,8 +33,8 @@ const NavButton = memo(({
   onPress: (href: string) => void
 }) => {
   const Icon = item.icon
-  const hasBadge = !active && (item.badge ?? 0) > 0
   const isSavedTab = item.href === '/parent/saved'
+  const hasBadge = !active && (item.badge ?? 0) > 0
   const handleClick = useCallback(() => {
     onPress(item.href)
   }, [item.href, onPress])
@@ -43,7 +43,7 @@ const NavButton = memo(({
     <button
       onClick={handleClick}
       className={cn(
-        'mobile-nav-item relative flex h-12 flex-1 items-center justify-center overflow-hidden rounded-2xl px-1 outline-none',
+        'mobile-nav-item relative flex h-12 flex-1 items-center justify-center overflow-hidden rounded-2xl px-1 outline-none transition-colors duration-200',
         active ? 'text-cyan-900' : 'text-slate-600 hover:text-slate-900'
       )}
       aria-current={active ? 'page' : undefined}
@@ -51,19 +51,19 @@ const NavButton = memo(({
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
       {active ? (
-        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-200/65 via-sky-100/40 to-indigo-200/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_0_0_1px_rgba(125,211,252,0.55),0_10px_24px_rgba(14,116,144,0.2)]" />
+        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-200/80 via-sky-100/60 to-indigo-200/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_1px_rgba(14,165,233,0.6),0_14px_38px_rgba(14,165,233,0.25)]" />
       ) : null}
-          <div className="relative flex flex-col items-center justify-center gap-1">
-            <div className="relative z-10">
-              <Icon
-                size={20}
-                strokeWidth={active ? 2.4 : 2}
-                className={cn(
-                  active ? 'drop-shadow-[0_0_12px_rgba(14,165,233,0.55)] text-cyan-900' : 'text-slate-500',
-                  isSavedTab && active ? 'fill-rose-500 text-rose-500' : '',
-                  isSavedTab && !active ? 'text-slate-600' : ''
-                )}
-              />
+
+      <div className="relative z-10 flex flex-col items-center justify-center gap-1">
+        <div className="relative">
+          <Icon
+            size={20}
+            strokeWidth={active ? 2.4 : 2}
+            className={cn(
+              active ? 'drop-shadow-[0_0_16px_rgba(14,165,233,0.5)] text-cyan-900' : 'text-slate-500',
+              isSavedTab && active ? 'fill-rose-500 text-rose-500' : isSavedTab && !active ? 'text-slate-500' : ''
+            )}
+          />
           {hasBadge ? (
             <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
           ) : null}
@@ -71,7 +71,7 @@ const NavButton = memo(({
 
         <span
           className={cn(
-            'text-[10px] font-semibold tracking-wide',
+            'text-[10px] font-semibold tracking-[0.3em] uppercase',
             active ? 'text-cyan-800' : 'text-slate-500'
           )}
         >
@@ -87,7 +87,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()
   const { isVisible } = useBottomNav()
   const prefetchedRef = useRef(false)
-  const [savedBadges, setSavedBadges] = useState(2)
+  const [savedBadges, setSavedBadges] = useState(0)
 
   useEffect(() => {
     if (prefetchedRef.current) return
@@ -96,37 +96,49 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [items, router])
 
   useEffect(() => {
-    // Placeholder logic - replace with real saved centres count from context/api
-    const stored = typeof window !== 'undefined' ? window.localStorage.getItem('cc:saved-count') : null
-    if (stored) {
-      setSavedBadges(Number(stored) || 0)
+    const readSavedCount = () => {
+      if (typeof window === 'undefined') return
+      const stored = window.localStorage.getItem('cc:saved-count')
+      if (stored) {
+        setSavedBadges(Number(stored) || 0)
+      }
     }
+
+    readSavedCount()
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'cc:saved-count') {
+        readSavedCount()
+      }
+    }
+
+    window.addEventListener('storage', handleStorage)
+    return () => window.removeEventListener('storage', handleStorage)
   }, [])
+
+  const decoratedItems = useMemo(() => {
+    const hasSaved = items.some((item) => item.href === '/parent/saved')
+    const baseItems = hasSaved ? items : [...items, { href: '/parent/saved', label: 'Saved', icon: Heart }]
+
+    return baseItems.map((item) =>
+      item.href === '/parent/saved'
+        ? { ...item, badge: savedBadges > 0 ? savedBadges : undefined }
+        : item
+    )
+  }, [items, savedBadges])
 
   const handleNav = useCallback((href: string) => {
     if (href === pathname) return
     router.push(href)
   }, [pathname, router])
 
-  const decoratedItems = useMemo(() => {
-    const hasSaved = items.some((item) => item.href === '/parent/saved')
-    const baseItems = hasSaved
-      ? items
-      : [...items, { href: '/parent/saved', label: 'Saved', icon: Heart }]
-
-    return baseItems.map((item) =>
-      item.href === '/parent/saved' ? { ...item, badge: savedBadges } : item
-    )
-  }, [items, savedBadges])
-
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
   if (!isVisible || pathname === '/' || isAuthPage) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
-      <div className="pointer-events-auto mb-[calc(1rem+env(safe-area-inset-bottom))] w-full max-w-[400px] px-4">
+      <div className="pointer-events-auto mb-[calc(1rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-4">
         <nav
-          className="ios-liquid-nav flex items-center gap-1 rounded-[2rem] border border-white/55 bg-white/35 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.75)]"
+          className="ios-liquid-nav flex items-center gap-1 rounded-[2rem] border border-white/55 bg-white/35 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.25),inset_0_1px_0_rgba(255,255,255,0.75)]"
           style={{
             WebkitBackdropFilter: 'blur(28px) saturate(185%)',
             backdropFilter: 'blur(28px) saturate(185%)',
