@@ -190,7 +190,7 @@ function ScenarioModal({ scenario, onClose }: { scenario: Scenario; onClose: () 
             <p className="mt-2 text-base text-slate-700">{scenario.pain}</p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Here's how it works now</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Here&apos;s how it works now</p>
             <p className="mt-2 text-base text-slate-700">{scenario.solution}</p>
           </div>
           <div>
@@ -231,7 +231,7 @@ export default function CentreConnectWelcomePack() {
             <BrandMark compact className="h-12 w-auto" />
             <span className="hidden text-xs font-black uppercase tracking-[0.5em] text-slate-400 sm:inline">Early Childhood Development</span>
           </div>
-          <p className="text-base text-slate-600">This is your living welcome pack. Tap any card, read the story, and follow the CTA to start the right page.</p>
+      <p className="text-base text-slate-600">This is your living welcome pack. Tap any card, read the story, and follow the CTA to start the right page.</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Button asChild className="rounded-full bg-[#14B8A6] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#0ea5a0]/40 transition hover:-translate-y-0.5">
               <Link href="/ecd/profile">Launch your starter page</Link>

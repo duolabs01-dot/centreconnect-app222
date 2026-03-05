@@ -101,7 +101,24 @@ export async function POST(request: Request) {
   const locationParts = [centre.suburb, centre.city].map((part) => part?.trim()).filter(Boolean)
   const location = locationParts.length ? locationParts.join(', ') : 'your area'
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
-  const ownerName = sanitizeName(centre.primary_contact_name, ownerNameFallback)
+  let ownerFullName: string | null = null
+  const { data: ownerUser, error: ownerUserError } = await admin
+    .from('auth.users')
+    .select('id')
+    .eq('email', ownerEmail)
+    .maybeSingle()
+
+  if (!ownerUserError && ownerUser?.id) {
+    const { data: profile, error: profileError } = await admin
+      .from('user_profiles')
+      .select('full_name')
+      .eq('id', ownerUser.id)
+      .maybeSingle()
+    if (!profileError && profile?.full_name) {
+      ownerFullName = profile.full_name
+    }
+  }
+  const ownerName = sanitizeName(ownerFullName ?? centre.primary_contact_name, ownerNameFallback)
 
   let html: string
   try {
