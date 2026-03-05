@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
+import {
+  normalizeAppUrl,
+  sanitizeGeneratedAccessLinkWithDiagnostics,
+  type SanitizedAccessLinkDiagnostics,
+} from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
@@ -59,14 +63,15 @@ async function generateOwnerAccessLink(
 
   const magicLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicLink) {
-    const safeLink = sanitizeGeneratedAccessLink({
+    const sanitized = sanitizeGeneratedAccessLinkWithDiagnostics({
       actionLink: magicLink,
       fallbackRedirectTo: redirectTo,
     })
     return {
-      link: safeLink,
+      link: sanitized.link,
       authUserId: magicLinkResult.data?.user?.id ?? null,
       warning: null as string | null,
+      diagnostics: sanitized.diagnostics,
     }
   }
 
@@ -74,6 +79,14 @@ async function generateOwnerAccessLink(
     link: '',
     authUserId: null,
     warning: magicLinkResult.error?.message ?? 'Failed to generate owner login link.',
+    diagnostics: {
+      originalHost: null,
+      originalPath: null,
+      sanitizedHost: null,
+      sanitizedPath: null,
+      usedFallback: false,
+      changed: false,
+    } as SanitizedAccessLinkDiagnostics,
   }
 }
 
@@ -148,6 +161,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!accessLink.link) {
     return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
   }
+  if (accessLink.diagnostics.changed || accessLink.diagnostics.usedFallback) {
+    console.warn('send-owner-invite: onboarding link sanitized', accessLink.diagnostics)
+  }
   const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
   const { data: existingProfile } = resolvedAuthUserId
     ? await admin
@@ -198,6 +214,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       subject: inviteHtml.subject,
       tracked_open_url: emailTrackingUrl,
       centre_slug: centre.slug,
+      link_sanitization: accessLink.diagnostics,
     },
     createdAt: nowIso,
   })
@@ -388,6 +405,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       whatsappSent,
       whatsappLink: trackedOwnerWhatsappLink,
       warning: combinedWarning,
+      linkSanitization: accessLink.diagnostics,
     },
   })
 

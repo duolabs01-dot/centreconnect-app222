@@ -1,6 +1,14 @@
 import { APP_URL, EMAIL_APP_URL, ROOT_DOMAIN } from '@/lib/config'
 
 export type AccessLinkMode = 'magiclink' | 'invite'
+export type SanitizedAccessLinkDiagnostics = {
+  originalHost: string | null
+  originalPath: string | null
+  sanitizedHost: string | null
+  sanitizedPath: string | null
+  usedFallback: boolean
+  changed: boolean
+}
 
 type LinkGenerationInput = {
   type: AccessLinkMode
@@ -183,6 +191,47 @@ export function sanitizeGeneratedAccessLink(input: {
     return parsed.toString()
   } catch {
     return fallback
+  }
+}
+
+function extractHostAndPath(raw: string | null | undefined) {
+  const value = (raw ?? '').trim()
+  if (!value) return { host: null, path: null }
+  try {
+    const parsed = new URL(value)
+    return { host: parsed.hostname, path: parsed.pathname || '/' }
+  } catch {
+    return { host: null, path: null }
+  }
+}
+
+export function sanitizeGeneratedAccessLinkWithDiagnostics(input: {
+  actionLink: string | null | undefined
+  fallbackRedirectTo: string
+}) {
+  const sanitizedLink = sanitizeGeneratedAccessLink(input)
+  const fallback = input.fallbackRedirectTo
+  const original = (input.actionLink ?? '').trim()
+
+  const originalInfo = extractHostAndPath(original)
+  const sanitizedInfo = extractHostAndPath(sanitizedLink)
+  const fallbackInfo = extractHostAndPath(fallback)
+
+  const diagnostics: SanitizedAccessLinkDiagnostics = {
+    originalHost: originalInfo.host,
+    originalPath: originalInfo.path,
+    sanitizedHost: sanitizedInfo.host,
+    sanitizedPath: sanitizedInfo.path,
+    usedFallback:
+      sanitizedInfo.host === fallbackInfo.host &&
+      sanitizedInfo.path === fallbackInfo.path &&
+      sanitizedLink.startsWith(fallback),
+    changed: original.length > 0 && sanitizedLink !== original,
+  }
+
+  return {
+    link: sanitizedLink,
+    diagnostics,
   }
 }
 

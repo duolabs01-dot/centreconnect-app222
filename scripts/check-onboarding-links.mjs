@@ -16,13 +16,29 @@ const checks = [
   },
   {
     file: 'app/api/internal/platform-admin/centres/[id]/send-owner-invite/route.ts',
-    mustInclude: ['/ecd/welcome?onboarding=1'],
+    mustInclude: ['/ecd/welcome?onboarding=1', 'sanitizeGeneratedAccessLinkWithDiagnostics(', 'link_sanitization'],
     mustNotInclude: ["encodeURIComponent('/ecd/dashboard')", "encodeURIComponent(\"/ecd/dashboard\")"],
   },
   {
     file: 'app/api/ecd/resend-welcome-pack/route.ts',
-    mustInclude: ["onboarding: '1'"],
+    mustInclude: ["onboarding: '1'", 'sanitizeGeneratedAccessLinkWithDiagnostics('],
     mustNotInclude: ["buildUrl(appUrlRoot, '/ecd/login'"],
+  },
+  {
+    file: 'lib/email/templates/pilot-welcome-pack.tsx',
+    mustInclude: [
+      'See your ${packageLabel}',
+      'Get started now',
+      'Print parent QR poster',
+      'Daily attendance and reports',
+    ],
+    ordered: ['See your ${packageLabel}', 'Daily attendance and reports', 'Get started now', 'Print parent QR poster'],
+    mustNotInclude: ['<details', '<summary'],
+  },
+  {
+    file: 'app/centre/[slug]/poster/page.tsx',
+    mustInclude: ['Large QR code for', 'Print-ready gate poster', 'h-[70vw] w-[70vw]'],
+    mustNotInclude: [],
   },
 ]
 
@@ -46,6 +62,21 @@ for (const check of checks) {
   for (const token of check.mustNotInclude) {
     if (content.includes(token)) {
       issues.push(`${check.file}: found forbidden token "${token}"`)
+    }
+  }
+
+  if (Array.isArray(check.ordered) && check.ordered.length > 1) {
+    let lastIndex = -1
+    for (const token of check.ordered) {
+      const idx = content.indexOf(token)
+      if (idx === -1) {
+        issues.push(`${check.file}: missing ordered token "${token}"`)
+        continue
+      }
+      if (idx < lastIndex) {
+        issues.push(`${check.file}: token order invalid around "${token}"`)
+      }
+      lastIndex = idx
     }
   }
 }
