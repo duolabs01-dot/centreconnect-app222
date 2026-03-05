@@ -17,7 +17,7 @@ export const PARENT_NAV_ITEMS: NavItem[] = [
   { href: '/parent/dashboard', label: 'Home', icon: Home },
   { href: '/directory', label: 'Search', icon: Search },
   { href: '/parent/saved', label: 'Saved', icon: Heart },
-  { href: '/parent/applications', label: 'Applications', icon: ClipboardList },
+  { href: '/parent/applications', label: 'My Applications', icon: ClipboardList },
   { href: '/parent/profile', label: 'Profile', icon: User },
 ]
 
