@@ -171,6 +171,53 @@ export default async function CentrePosterPage({
           </div>
         </section>
 
+        <section className="border-t border-slate-200 bg-white p-6 print:border-t-0">
+          <div className="rounded-3xl border border-teal-200 bg-teal-50/70 p-5 print:border-slate-200 print:bg-white">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-teal-700">Print-ready gate poster</p>
+                <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">
+                  Find {centreName} on CentreConnect
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg border border-slate-200 bg-white px-2 py-1">
+                  <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-6 w-auto object-contain" />
+                </div>
+                <div className="h-9 w-9 overflow-hidden rounded-full border border-slate-200 bg-white">
+                  {logoImage ? (
+                    <img src={logoImage} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs font-black text-teal-700">
+                      {centreName.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 grid gap-3 text-sm text-slate-700 md:grid-cols-3">
+              <p className="rounded-xl border border-white bg-white/90 px-3 py-2">
+                Get more involved and see daily updates of your child.
+              </p>
+              <p className="rounded-xl border border-white bg-white/90 px-3 py-2">
+                Message the centre team in one simple place.
+              </p>
+              <p className="rounded-xl border border-white bg-white/90 px-3 py-2">
+                Know your child is always safe with verified pickup flow.
+              </p>
+            </div>
+
+            <div className="mt-5 rounded-3xl border border-teal-200 bg-white p-4 text-center shadow-sm">
+              <img src={qrSvgUrl} alt={`Large QR code for ${centreName}`} className="mx-auto h-[70vw] w-[70vw] max-h-[560px] max-w-[560px]" />
+            </div>
+
+            <p className="mt-3 text-center text-[11px] font-medium leading-relaxed text-slate-500 break-all">
+              Scan to open: {centreUrl}
+            </p>
+          </div>
+        </section>
+
         <footer className="border-t border-slate-200 bg-slate-50 px-6 py-4 text-xs text-slate-500">
           CentreConnect | built for South African ECD communities
         </footer>

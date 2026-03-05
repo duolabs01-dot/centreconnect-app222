@@ -49,7 +49,40 @@ const BRAND = {
   border: '#E2E8F0',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+function BrandLogoMark({ size = 30 }: { size?: number }) {
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: '8px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #ccfbf1',
+      }}
+    >
+      <svg width={Math.max(14, size - 12)} height={Math.max(14, size - 12)} viewBox="0 0 64 64" aria-hidden="true">
+        <defs>
+          <linearGradient id="cc-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0F766E" />
+            <stop offset="100%" stopColor="#14B8A6" />
+          </linearGradient>
+        </defs>
+        <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#cc-logo-gradient)" />
+        <path
+          d="M40 18a16 16 0 1 0 0 28"
+          fill="none"
+          stroke="#FFFFFF"
+          strokeWidth="7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  )
+}
 
 function isSafeHttpImage(url: string | null | undefined) {
   if (!url) return false
@@ -129,13 +162,7 @@ async function renderShell(title: string, subtitle: string, contentHtml: string)
                           <tbody>
                             <tr>
                               <td style={{ width: '42px' }}>
-                                <img
-                                  src={CENTRECONNECT_LOGO_URL}
-                                  width="34"
-                                  height="34"
-                                  alt="CentreConnect logo"
-                                  style={{ display: 'block', borderRadius: '8px', backgroundColor: '#ffffff', padding: '4px' }}
-                                />
+                                <BrandLogoMark size={34} />
                               </td>
                               <td>
                                 <p
@@ -293,7 +320,11 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 
     ${centreLogoBlock}
 
-    <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 16px;">
+    <div style="margin:0 0 16px;">
+      ${button(`See your ${packageLabel}`, welcomeGuideUrl)}
+    </div>
+
+    <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 14px;">
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
           <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Daily attendance and reports</p>
@@ -321,7 +352,6 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     </table>
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
-      ${button(`See your ${packageLabel}`, welcomeGuideUrl)}
       ${button('Get started now', input.dashboardLink)}
       ${button('Print parent QR poster', input.qrPosterLink, 'secondary')}
     </div>

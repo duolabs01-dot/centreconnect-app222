@@ -17,7 +17,19 @@ const BRAND = {
   primary: '#0d9488',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+const CENTRECONNECT_LOGO_MARKUP = `
+<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #ccfbf1;">
+  <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
+    <defs>
+      <linearGradient id="cc-owner-email-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#0F766E"></stop>
+        <stop offset="100%" stop-color="#14B8A6"></stop>
+      </linearGradient>
+    </defs>
+    <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#cc-owner-email-logo-gradient)"></rect>
+    <path d="M40 18a16 16 0 1 0 0 28" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+  </svg>
+</span>`
 
 function escapeHtml(value: string) {
   return value
@@ -79,7 +91,7 @@ export function renderOwnerInviteEmail(input: OwnerInviteTemplateInput) {
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:14px;">
                   <tr>
                     <td width="44" valign="middle">
-                      <img src="${CENTRECONNECT_LOGO_URL}" width="34" height="34" alt="CentreConnect logo" style="display:block;border-radius:8px;background:#fff;padding:4px;" />
+                      ${CENTRECONNECT_LOGO_MARKUP}
                     </td>
                     <td valign="middle">
                       <p style="margin:0;font-size:12px;letter-spacing:0.12em;font-weight:800;color:${BRAND.primary};text-transform:uppercase;">CentreConnect</p>

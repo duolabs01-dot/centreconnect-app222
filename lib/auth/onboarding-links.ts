@@ -122,13 +122,23 @@ function isAllowedAppHost(hostname: string) {
 
 function sanitizeRedirectUrl(redirectTo: string, fallback: string) {
   try {
-    const parsed = new URL(redirectTo)
+    const parsed = new URL(redirectTo, normalizeAppUrl())
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback
     if (!isAllowedAppHost(parsed.hostname)) return fallback
     return parsed.toString()
   } catch {
     return fallback
   }
+}
+
+function isExpectedSupabaseAuthPath(pathname: string) {
+  const normalized = pathname.trim().toLowerCase()
+  return normalized.startsWith('/auth/v1/')
+}
+
+function looksLikeDomainPath(pathname: string) {
+  const normalized = pathname.trim().replace(/^\/+/, '').replace(/\/+$/, '')
+  return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalized)
 }
 
 export function sanitizeGeneratedAccessLink(input: {
@@ -144,8 +154,24 @@ export function sanitizeGeneratedAccessLink(input: {
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback
 
     if (parsed.hostname.endsWith('.supabase.co')) {
+      if (!isExpectedSupabaseAuthPath(parsed.pathname)) {
+        if (looksLikeDomainPath(parsed.pathname) && parsed.hash.includes('access_token')) {
+          try {
+            const fallbackUrl = new URL(fallback)
+            fallbackUrl.hash = parsed.hash
+            return fallbackUrl.toString()
+          } catch {
+            return fallback
+          }
+        }
+        return fallback
+      }
+
       const redirectTo = parsed.searchParams.get('redirect_to')
-      if (!redirectTo) return parsed.toString()
+      if (!redirectTo) {
+        parsed.searchParams.set('redirect_to', fallback)
+        return parsed.toString()
+      }
       const safeRedirect = sanitizeRedirectUrl(redirectTo, fallback)
       if (safeRedirect !== redirectTo) {
         parsed.searchParams.set('redirect_to', safeRedirect)

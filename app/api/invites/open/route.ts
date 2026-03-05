@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,22 +8,30 @@ function normalizeChannel(value: string | null) {
   return value === 'whatsapp' ? 'whatsapp' : 'email'
 }
 
+function isSupabaseAuthPath(pathname: string) {
+  return pathname.trim().toLowerCase().startsWith('/auth/v1/')
+}
+
 function sanitizeTarget(target: string | null, request: NextRequest) {
-  const fallback = new URL('/ecd/login', request.url)
+  const canonicalLogin = `${normalizeAppUrl()}/ecd/login`
+  const fallback = new URL(canonicalLogin)
   if (!target) return fallback
 
   try {
-    const parsed = new URL(target, request.url)
+    const normalizedTarget = sanitizeGeneratedAccessLink({
+      actionLink: target,
+      fallbackRedirectTo: canonicalLogin,
+    })
+    const parsed = new URL(normalizedTarget, request.url)
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback
 
     const requestHost = new URL(request.url).hostname
-    const appHost = process.env.NEXT_PUBLIC_APP_URL
-      ? new URL(process.env.NEXT_PUBLIC_APP_URL).hostname
-      : requestHost
+    const appHost = new URL(normalizeAppUrl()).hostname
 
     const isSameHost = parsed.hostname === requestHost || parsed.hostname === appHost
     const isSupabaseAuthHost = parsed.hostname.endsWith('.supabase.co')
     if (!isSameHost && !isSupabaseAuthHost) return fallback
+    if (isSupabaseAuthHost && !isSupabaseAuthPath(parsed.pathname)) return fallback
 
     return parsed
   } catch {
