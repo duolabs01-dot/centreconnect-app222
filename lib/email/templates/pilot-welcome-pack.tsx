@@ -73,7 +73,7 @@ function renderChecklist(items: PilotWelcomeChecklistItem[]) {
   return items
     .map((item) => {
       const done = Boolean(item.done)
-      const marker = done ? '✅' : '⬜'
+      const marker = done ? '&#9989;' : '&#11036;'
       const itemLabel = done ? `<s>${item.label}</s>` : item.label
       const where = item.whereItShows
         ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${item.whereItShows}</p>`
@@ -198,7 +198,7 @@ function button(label: string, href: string, tone: 'primary' | 'secondary' = 'pr
 export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   const firstName = toFirstName(input.contactName)
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${firstName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
       Your CentreConnect workspace for <strong>${input.centreName}</strong> is ready.
       Use this secure link to set your password and open your ECD account.
@@ -275,7 +275,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     : ''
 
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${firstName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
       Welcome to CentreConnect for <strong>${input.centreName}</strong>.
       We know WhatsApp admin can feel heavy, so this email keeps your next steps clear.
@@ -292,12 +292,6 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     </table>
 
     ${centreLogoBlock}
-
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
-      ${button(`See your ${packageLabel}`, welcomeGuideUrl)}
-      ${button('Get started now', input.dashboardLink)}
-      ${button('Print parent QR poster', input.qrPosterLink, 'secondary')}
-    </div>
 
     <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 16px;">
       <tr>
@@ -325,6 +319,12 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
         </td>
       </tr>
     </table>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
+      ${button(`See your ${packageLabel}`, welcomeGuideUrl)}
+      ${button('Get started now', input.dashboardLink)}
+      ${button('Print parent QR poster', input.qrPosterLink, 'secondary')}
+    </div>
 
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 16px;">
       <tr>
@@ -370,7 +370,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigrationEmailInput) {
   const firstName = toFirstName(input.contactName)
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${firstName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
     <p style="margin:0 0 12px;font-size:14px;line-height:1.65;">
       Your CentreConnect account was upgraded from <strong>Parent</strong> to <strong>ECD Admin</strong> for
       <strong> ${input.centreName}</strong>.
@@ -405,4 +405,3 @@ export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigr
     body
   )
 }
-

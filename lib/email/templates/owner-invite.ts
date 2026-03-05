@@ -86,7 +86,7 @@ export function renderOwnerInviteEmail(input: OwnerInviteTemplateInput) {
                     </td>
                   </tr>
                 </table>
-                <h1 style="margin:12px 0 8px;font-size:28px;line-height:1.2;color:${BRAND.text};">Sawubona, Dumela, Hello 👋 ${escapeHtml(input.ownerName)}!</h1>
+                <h1 style="margin:12px 0 8px;font-size:28px;line-height:1.2;color:${BRAND.text};">Hey ${escapeHtml(input.ownerName)},</h1>
                 <p style="margin:0;font-size:15px;color:${BRAND.muted};line-height:1.6;">
                   Great news. <strong>${escapeHtml(input.centreName)}</strong> is now live on CentreConnect.
                   Parents can discover you, so this is the perfect time to activate and review your profile.

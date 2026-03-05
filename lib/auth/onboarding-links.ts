@@ -114,6 +114,52 @@ export function buildLockedResetPasswordRedirect(email: string) {
   return `${normalizeAppUrl()}/reset-password?locked_email=${encodeURIComponent(email)}`
 }
 
+function isAllowedAppHost(hostname: string) {
+  const appHost = new URL(normalizeAppUrl()).hostname
+  const canonicalHost = new URL(resolveCanonicalOrigin()).hostname
+  return hostname === appHost || hostname === canonicalHost
+}
+
+function sanitizeRedirectUrl(redirectTo: string, fallback: string) {
+  try {
+    const parsed = new URL(redirectTo)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback
+    if (!isAllowedAppHost(parsed.hostname)) return fallback
+    return parsed.toString()
+  } catch {
+    return fallback
+  }
+}
+
+export function sanitizeGeneratedAccessLink(input: {
+  actionLink: string | null | undefined
+  fallbackRedirectTo: string
+}) {
+  const fallback = input.fallbackRedirectTo
+  const candidate = (input.actionLink ?? '').trim()
+  if (!candidate) return fallback
+
+  try {
+    const parsed = new URL(candidate)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return fallback
+
+    if (parsed.hostname.endsWith('.supabase.co')) {
+      const redirectTo = parsed.searchParams.get('redirect_to')
+      if (!redirectTo) return parsed.toString()
+      const safeRedirect = sanitizeRedirectUrl(redirectTo, fallback)
+      if (safeRedirect !== redirectTo) {
+        parsed.searchParams.set('redirect_to', safeRedirect)
+      }
+      return parsed.toString()
+    }
+
+    if (!isAllowedAppHost(parsed.hostname)) return fallback
+    return parsed.toString()
+  } catch {
+    return fallback
+  }
+}
+
 export async function generateMagicFirstAccessLink(input: {
   adminClient: AdminClientLike
   email: string

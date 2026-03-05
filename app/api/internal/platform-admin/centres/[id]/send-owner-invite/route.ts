@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
+import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
@@ -59,8 +59,12 @@ async function generateOwnerAccessLink(
 
   const magicLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicLink) {
+    const safeLink = sanitizeGeneratedAccessLink({
+      actionLink: magicLink,
+      fallbackRedirectTo: redirectTo,
+    })
     return {
-      link: magicLink,
+      link: safeLink,
       authUserId: magicLinkResult.data?.user?.id ?? null,
       warning: null as string | null,
     }

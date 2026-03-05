@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
-import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
+import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
@@ -172,9 +172,13 @@ export async function POST(request: Request) {
   })
   const magicActionLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicActionLink) {
+    const safeTargetLink = sanitizeGeneratedAccessLink({
+      actionLink: magicActionLink,
+      fallbackRedirectTo: callbackRedirectUrl,
+    })
     getStartedUrl = buildUrl(appUrlRoot, '/api/invites/open', {
       channel: 'email',
-      target: magicActionLink,
+      target: safeTargetLink,
     })
   } else if (magicLinkResult.error) {
     console.error('resend-welcome-pack: magic link generation failed', magicLinkResult.error)
