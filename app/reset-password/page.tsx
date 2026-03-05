@@ -140,14 +140,16 @@ export default function ResetPasswordPage() {
                         required
                         className="pr-11"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-slate-500 hover:text-slate-700"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-10 w-10 text-slate-500 hover:bg-transparent hover:text-slate-700"
                         onClick={() => setShowPassword((prev) => !prev)}
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -162,14 +164,16 @@ export default function ResetPasswordPage() {
                         required
                         className="pr-11"
                       />
-                      <button
+                      <Button
                         type="button"
-                        className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center text-slate-500 hover:text-slate-700"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0 top-0 h-10 w-10 text-slate-500 hover:bg-transparent hover:text-slate-700"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
                         aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
                       >
                         {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <Button type="submit" size="lg" className="h-12 w-full" disabled={loading}>

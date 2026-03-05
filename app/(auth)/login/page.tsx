@@ -191,13 +191,15 @@ export default function LoginPage() {
                     className="h-12 bg-slate-50 border-slate-200 rounded-2xl pr-12 focus:ring-2 focus:ring-cyan-500/20 outline-none"
                     required
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="absolute right-0 top-0 flex h-12 w-12 items-center justify-center rounded-2xl text-slate-400 hover:text-slate-600"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-12 w-12 rounded-2xl text-slate-400 hover:bg-transparent hover:text-slate-600"
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  </Button>
                 </div>
               </div>
               

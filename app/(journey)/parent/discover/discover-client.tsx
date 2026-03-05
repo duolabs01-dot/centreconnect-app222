@@ -91,10 +91,7 @@ export default function ParentDiscoverClient() {
         <div className="mx-auto max-w-6xl space-y-6">
           <header className="space-y-3 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900/80 to-slate-900/60 p-6 shadow-[0_25px_60px_rgba(2,6,23,0.65)]">
             <p className="text-xs uppercase tracking-[0.4em] text-amber-200">Parent discovery</p>
-            <h1
-              style={{ fontFamily: 'Orbitron, sans-serif' }}
-              className="text-3xl font-black uppercase tracking-[0.3em] text-amber-50 md:text-4xl"
-            >
+            <h1 className="text-3xl font-black uppercase tracking-[0.2em] text-amber-50 md:text-4xl">
               Discover calm crèches
             </h1>
             <p className="max-w-2xl text-sm text-slate-300">

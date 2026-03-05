@@ -232,10 +232,11 @@ function ScenarioCard({
   onOpen: (scenario: Scenario) => void
 }) {
   return (
-    <button
+    <Button
       type="button"
       onClick={() => onOpen(scenario)}
-      className="group rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      variant="outline"
+      className="group h-auto w-full rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
@@ -248,7 +249,7 @@ function ScenarioCard({
       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
         Tap to learn more
       </p>
-    </button>
+    </Button>
   )
 }
 
@@ -287,14 +288,16 @@ function ScenarioModal({
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/80">Scenario</p>
             <h3 className="mt-2 text-xl font-black">{scenario.title}</h3>
           </div>
-          <button
+          <Button
             type="button"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-white/20 text-white transition hover:bg-white/30 hover:text-white"
             onClick={onClose}
             aria-label="Close"
           >
             <X className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-4 p-6">

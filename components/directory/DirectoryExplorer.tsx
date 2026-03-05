@@ -8,6 +8,7 @@ import { Search, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check, X, MapPin
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
 import type { DirectoryCentre } from '@/types/directory-centre'
@@ -181,12 +182,12 @@ export default function DirectoryExplorer({
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
+            <Input
               type="text"
               placeholder="Search creches or suburbs..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm font-bold shadow-sm focus:border-cyan-400 focus:ring-4 focus:ring-cyan-500/10 transition-all outline-none"
+              className="h-12 rounded-2xl border-slate-200 bg-white pl-10 pr-4 text-sm font-bold shadow-sm focus-visible:ring-2 focus-visible:ring-cyan-500/20"
             />
           </div>
           
