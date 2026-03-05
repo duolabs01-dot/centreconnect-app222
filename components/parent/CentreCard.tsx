@@ -23,6 +23,8 @@ interface CentreCardProps {
   feesLabel?: string
   age_groups: string[]
   tagline?: string
+  capacity?: number
+  existing_application_status?: string | null
   isSaved?: boolean
   onApply?: () => void
   onSave?: () => void
