@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
   }
 
-  const loginUrl = `${appUrlRoot}/login?next=/parent/onboarding`
+  const loginUrl = `${appUrlRoot}/login?next=/ecd/welcome`
   html = applyTemplateReplacements(html, {
     '{{ownerName}}': ownerName,
     '{{centreName}}': centreName,

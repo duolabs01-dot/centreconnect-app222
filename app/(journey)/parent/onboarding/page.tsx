@@ -1,11 +1,11 @@
+import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import CentreConnectWelcomePack from './CentreConnectWelcomePack'
 
 export const metadata: Metadata = {
-  title: 'Welcome to CentreConnect',
-  description: 'Complete your 1-minute setup to start finding the right crèche for your family.',
+  title: 'Parent onboarding redirect',
+  description: 'Redirecting you to the ECD welcome experience.',
 }
 
 export default function ParentOnboardingPage() {
-  return <CentreConnectWelcomePack />
+  redirect('/ecd/welcome')
 }
