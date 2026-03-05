@@ -26,11 +26,11 @@ export function PublicShell({ children }: PublicShellProps) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Button asChild size="sm" className="h-9 rounded-2xl bg-cyan-500 text-slate-900 font-black hover:bg-cyan-400 shadow-lg shadow-cyan-600/20 px-4">
-              <Link href="/login">Sign in/ Sign up</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm" className="h-9 rounded-2xl border-white/40 text-white bg-transparent font-bold hover:bg-white/5 px-4">
+            <Button variant="ghost" asChild>
               <Link href="/login">Sign In</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/register">Get Started</Link>
             </Button>
           </div>
         </Container>
