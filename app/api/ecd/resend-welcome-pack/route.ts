@@ -98,7 +98,8 @@ export async function POST(request: Request) {
 
   const centreName = centre.name?.trim() || 'CentreConnect'
   const centreSlug = centre.slug?.trim() ?? ''
-  const location = centre.suburb?.trim() || centre.city?.trim() || 'your area'
+  const locationParts = [centre.suburb, centre.city].map((part) => part?.trim()).filter(Boolean)
+  const location = locationParts.length ? locationParts.join(', ') : 'your area'
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
   const ownerName = sanitizeName(centre.primary_contact_name, ownerNameFallback)
 
