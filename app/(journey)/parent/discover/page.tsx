@@ -11,10 +11,11 @@ const parentDiscoverViewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Discover Crèches | CentreConnect',
-  description: 'Browse premium, parent-friendly crèches and apply with confidence.',
-  viewport: parentDiscoverViewport,
+  title: 'Discover Creches | CentreConnect',
+  description: 'Browse premium, parent-friendly creches and apply with confidence.',
 }
+
+export const viewport: Viewport = parentDiscoverViewport
 
 export default function ParentDiscoverPage() {
   return <ParentDiscoverClient />

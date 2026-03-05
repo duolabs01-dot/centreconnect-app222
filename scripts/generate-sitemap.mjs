@@ -6,22 +6,15 @@ const baseUrl = 'https://centerconnect.co.za'
 const now = new Date().toISOString()
 const outputDir = resolve(process.cwd(), 'public')
 
-function requireEnvValue(value, description) {
-  if (!value) {
-    throw new Error(`Missing environment variable for ${description}`)
-  }
-  return value
-}
+const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY
+const canUseSupabase = Boolean(supabaseUrl && serviceRoleKey)
 
-const supabaseUrl = requireEnvValue(process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL, 'Supabase URL')
-const serviceRoleKey = requireEnvValue(
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY,
-  'Supabase service role key'
-)
-
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  auth: { autoRefreshToken: false, persistSession: false },
-})
+const supabase = canUseSupabase
+  ? createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null
 
 const staticPaths = [
   '/',
@@ -50,6 +43,11 @@ const staticPaths = [
 
 async function fetchDynamicCentrePaths() {
   const pathSet = new Set()
+  if (!supabase) {
+    console.warn('Skipping dynamic centre sitemap entries: missing Supabase env variables.')
+    return pathSet
+  }
+
   const { data: centres, error } = await supabase
     .from('ecd_centres')
     .select('slug')
@@ -74,6 +72,11 @@ async function fetchDynamicCentrePaths() {
 
 async function fetchJobPaths() {
   const pathSet = new Set()
+  if (!supabase) {
+    console.warn('Skipping dynamic job sitemap entries: missing Supabase env variables.')
+    return pathSet
+  }
+
   const { data: jobs, error } = await supabase
     .from('jobs')
     .select('id, ecd_centres ( slug )')

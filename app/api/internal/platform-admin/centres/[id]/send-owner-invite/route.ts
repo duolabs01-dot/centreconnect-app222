@@ -30,11 +30,16 @@ function sanitizeName(value: string | null | undefined, fallback: string) {
 const emailAppUrlRoot = EMAIL_APP_URL.replace(/\/$/, '')
 
 async function findUserIdByEmail(admin: ReturnType<typeof createAdminClient>, email: string) {
-  const { data, error } = await admin.auth.admin.getUserByEmail(email)
-  if (!error && data?.user) {
-    return data.user.id
-  }
-  return null
+  const { data, error } = await admin
+    .schema('auth')
+    .from('users')
+    .select('id,email')
+    .ilike('email', email)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return null
+  return data?.id ?? null
 }
 
 async function generateOwnerAccessLink(
