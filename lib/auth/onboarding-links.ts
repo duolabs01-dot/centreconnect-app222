@@ -25,6 +25,8 @@ type LinkGenerationResult = {
     } | null
     properties?: {
       action_link?: string | null
+      hashed_token?: string | null
+      verification_type?: string | null
     } | null
   } | null
   error?: {
@@ -93,6 +95,28 @@ function sanitizeNextPath(nextPath: string) {
   return nextPath
 }
 
+type SupportedOtpType = 'signup' | 'magiclink' | 'invite' | 'recovery' | 'email_change'
+
+function sanitizeConfirmType(value: string | null | undefined): SupportedOtpType {
+  const normalized = (value ?? '').trim().toLowerCase()
+  if (
+    normalized === 'signup' ||
+    normalized === 'magiclink' ||
+    normalized === 'invite' ||
+    normalized === 'recovery' ||
+    normalized === 'email_change'
+  ) {
+    return normalized
+  }
+  return 'magiclink'
+}
+
+function sanitizeConfirmNextPath(value: string) {
+  if (!value.startsWith('/')) return '/ecd/welcome?onboarding=1'
+  if (value.startsWith('//')) return '/ecd/welcome?onboarding=1'
+  return value
+}
+
 export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
   const params = new URLSearchParams()
 
@@ -112,6 +136,21 @@ export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
 export function buildAuthCallbackRedirect(nextPath: string) {
   const safeNext = sanitizeNextPath(nextPath)
   return `${normalizeAppUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`
+}
+
+export function buildFirstPartyConfirmLink(input: {
+  hashedToken: string | null | undefined
+  verificationType?: string | null | undefined
+  nextPath: string
+}) {
+  const token = (input.hashedToken ?? '').trim()
+  if (!token) return null
+
+  const url = new URL('/auth/confirm', normalizeAppUrl())
+  url.searchParams.set('token_hash', token)
+  url.searchParams.set('type', sanitizeConfirmType(input.verificationType))
+  url.searchParams.set('next', sanitizeConfirmNextPath(input.nextPath))
+  return url.toString()
 }
 
 export function buildDefaultEcdOnboardingRedirect() {

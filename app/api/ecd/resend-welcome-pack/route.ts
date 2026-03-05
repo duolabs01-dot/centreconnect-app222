@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
-import { normalizeAppUrl, sanitizeGeneratedAccessLinkWithDiagnostics } from '@/lib/auth/onboarding-links'
+import {
+  buildFirstPartyConfirmLink,
+  normalizeAppUrl,
+  sanitizeGeneratedAccessLinkWithDiagnostics,
+} from '@/lib/auth/onboarding-links'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
@@ -172,11 +176,17 @@ export async function POST(request: Request) {
   })
   const magicActionLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicActionLink) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: magicLinkResult.data?.properties?.hashed_token ?? null,
+      verificationType: magicLinkResult.data?.properties?.verification_type ?? 'magiclink',
+      nextPath: welcomeNextPath,
+    })
+
     const sanitizedTarget = sanitizeGeneratedAccessLinkWithDiagnostics({
       actionLink: magicActionLink,
       fallbackRedirectTo: callbackRedirectUrl,
     })
-    const safeTargetLink = sanitizedTarget.link
+    const safeTargetLink = firstPartyConfirmLink ?? sanitizedTarget.link
     getStartedUrl = buildUrl(appUrlRoot, '/api/invites/open', {
       channel: 'email',
       target: safeTargetLink,

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  buildFirstPartyConfirmLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
   type SanitizedAccessLinkDiagnostics,
@@ -63,12 +64,17 @@ async function generateOwnerAccessLink(
 
   const magicLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicLink) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: magicLinkResult.data?.properties?.hashed_token ?? null,
+      verificationType: magicLinkResult.data?.properties?.verification_type ?? 'magiclink',
+      nextPath: onboardingPath,
+    })
     const sanitized = sanitizeGeneratedAccessLinkWithDiagnostics({
       actionLink: magicLink,
       fallbackRedirectTo: redirectTo,
     })
     return {
-      link: sanitized.link,
+      link: firstPartyConfirmLink ?? sanitized.link,
       authUserId: magicLinkResult.data?.user?.id ?? null,
       warning: null as string | null,
       diagnostics: sanitized.diagnostics,

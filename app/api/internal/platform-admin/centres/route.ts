@@ -12,7 +12,11 @@ import {
 } from '@/lib/email/templates/pilot-welcome-pack'
 import { randomBytes } from 'crypto'
 import { combineName, resolveFirstName } from '@/lib/utils/name'
-import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
+import {
+  buildFirstPartyConfirmLink,
+  normalizeAppUrl,
+  sanitizeGeneratedAccessLink,
+} from '@/lib/auth/onboarding-links'
 
 const APP_BASE_URL = normalizeAppUrl()
 
@@ -49,6 +53,7 @@ function toLockedResetUrl(email: string) {
 }
 
 async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdminClient>, email: string) {
+  const resetPath = `/reset-password?locked_email=${encodeURIComponent(email)}`
   const fallbackRedirect = toLockedResetUrl(email)
   const result = await adminClient.auth.admin.generateLink({
     type: 'recovery',
@@ -60,11 +65,19 @@ async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdmi
 
   const actionLink = result.data?.properties?.action_link?.trim() ?? ''
   if (!result.error && actionLink.length > 0) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: result.data?.properties?.hashed_token ?? null,
+      verificationType: result.data?.properties?.verification_type ?? 'recovery',
+      nextPath: resetPath,
+    })
+
     return {
-      link: sanitizeGeneratedAccessLink({
-        actionLink,
-        fallbackRedirectTo: fallbackRedirect,
-      }),
+      link:
+        firstPartyConfirmLink ??
+        sanitizeGeneratedAccessLink({
+          actionLink,
+          fallbackRedirectTo: fallbackRedirect,
+        }),
       error: null as string | null,
     }
   }
