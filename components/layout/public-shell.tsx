@@ -25,13 +25,7 @@ export function PublicShell({ children }: PublicShellProps) {
             <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">For ECDs</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <Button size="sm" variant="default" className="h-10 rounded-2xl bg-teal-600 px-5 text-sm font-bold text-white hover:bg-teal-700" asChild>
-              <Link href="/login">
-                Sign In
-              </Link>
-            </Button>
-          </div>
+          <div className="flex items-center gap-3" />
         </Container>
       </header>
 
