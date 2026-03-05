@@ -318,6 +318,8 @@ export function CentreClient({ slug }: { slug: string }) {
 
   const fallbackHeroImage = getCentreHeroImage(centre.slug, null)
   const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
+  const centreLogo = centre.logo_url && isSafeImageUrl(centre.logo_url) ? centre.logo_url : null
+  const centreInitial = (centre.name?.trim().charAt(0) || 'C').toUpperCase()
   const operationalStatus = getCentreOperationalStatus()
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
   const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
@@ -381,14 +383,31 @@ export function CentreClient({ slug }: { slug: string }) {
         
         <Container className="relative h-full">
           <div className="flex h-full flex-col justify-end pb-16">
-            <div className="flex flex-wrap items-center gap-3 mb-6">
-              <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                4.8 Premium ECD
+            <div className="mb-6 flex flex-wrap items-end gap-4">
+              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white/90 bg-white shadow-2xl">
+                {centreLogo ? (
+                  <Image
+                    src={centreLogo}
+                    alt={`${centre.name} logo`}
+                    width={80}
+                    height={80}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-cyan-50 text-2xl font-black text-cyan-700">
+                    {centreInitial}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
-                <MapPin className="h-3.5 w-3.5" />
-                {centre.suburb}, {centre.city}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  4.8 Premium ECD
+                </div>
+                <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {centre.suburb}, {centre.city}
+                </div>
               </div>
             </div>
             

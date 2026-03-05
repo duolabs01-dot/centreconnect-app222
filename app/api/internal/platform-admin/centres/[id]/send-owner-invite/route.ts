@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { EMAIL_APP_URL } from '@/lib/config'
+import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
+import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
 
 type SendOwnerInviteResponse = {
   ok: boolean
@@ -22,7 +23,7 @@ function sanitizeName(value: string | null | undefined, fallback: string) {
   return trimmed || fallback
 }
 
-const emailAppUrlRoot = EMAIL_APP_URL.replace(/\/$/, '')
+const emailAppUrlRoot = normalizeAppUrl()
 
 async function findUserIdByEmail(admin: ReturnType<typeof createAdminClient>, email: string) {
   const { data, error } = await admin
@@ -97,7 +98,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('id,name,slug,email,phone,contact_phone,primary_contact_name')
+    .select('id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url')
     .eq('id', centreId)
     .maybeSingle()
 
@@ -128,12 +129,20 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const nowIso = new Date().toISOString()
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
   const centreSlug = (centre.slug ?? '').trim()
-  const ownerName = sanitizeName(centre.primary_contact_name, 'ECD Admin')
+  const splitPrimaryName = splitFullName(centre.primary_contact_name)
+  const ownerFirstName = resolveFirstName({
+    firstName: centre.primary_contact_first_name ?? splitPrimaryName.firstName,
+    fullName: centre.primary_contact_name,
+    email: ownerEmail,
+    fallback: 'Friend',
+  })
+  const ownerSurname = (centre.primary_contact_surname ?? splitPrimaryName.surname ?? '').trim()
+  const ownerDisplayName = combineName(ownerFirstName, ownerSurname) || ownerFirstName
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
   const supportWhatsappMessage = [
-    `Hi CentreConnect team, this is ${ownerName} from ${sanitizeName(centre.name, 'my centre')}.`,
+    `Hi CentreConnect team, this is ${ownerFirstName} from ${sanitizeName(centre.name, 'my centre')}.`,
     'Please help me complete setup so we can start receiving applications.',
   ].join('\n')
   const supportWhatsappLink = createWhatsappClickToChatLink(supportWhatsapp, supportWhatsappMessage)
@@ -143,12 +152,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const inviteHtml = renderOwnerInviteEmail({
     centreName: sanitizeName(centre.name, 'your centre'),
-    ownerName,
+    ownerName: ownerFirstName,
     claimUrl: emailTrackingUrl,
     dashboardUrl: `${emailAppUrlRoot}/ecd/dashboard`,
     whatsappChatLink: trackedSupportWhatsappLink,
     supportWhatsApp: supportWhatsapp,
     supportEmail,
+    centreLogoUrl: centre.logo_url ?? null,
   })
 
   const emailResult = await queueEmail(ownerEmail, inviteHtml.subject, inviteHtml.html)
@@ -189,7 +199,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       ecdId: centre.id,
       ownerEmail,
       centreName: centre.name ?? undefined,
-      ownerName,
+      ownerName: ownerFirstName,
       centreSlug: centreSlug || undefined,
     }
 
@@ -229,7 +239,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const whatsappMessage = [
-    `Hi ${ownerName},`,
+    `Hi ${ownerFirstName},`,
     `${sanitizeName(centre.name, 'Your centre')} is live on CentreConnect.`,
     `Start now and claim your workspace: ${emailTrackingUrl}`,
     'Parents can already discover your profile, so keep details updated to receive applications quickly.',
@@ -300,7 +310,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       {
         id: resolvedAuthUserId,
         role: 'ecd_admin',
-        full_name: ownerName,
+        first_name: ownerFirstName,
+        surname: ownerSurname || null,
+        full_name: ownerDisplayName,
         email: ownerEmail,
         phone: ownerPhoneRaw ?? null,
       },

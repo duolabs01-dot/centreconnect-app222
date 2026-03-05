@@ -4,6 +4,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
+import { combineName, splitFullName } from '@/lib/utils/name'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
@@ -54,6 +55,8 @@ const actionSchema = z.discriminatedUnion('action', [
     name: z.string().min(2).max(160).optional(),
     slug: z.string().min(3).max(80).regex(slugPattern).optional(),
     primaryContactName: z.string().min(2).max(160).nullable().optional(),
+    primaryContactFirstName: z.string().min(1).max(120).nullable().optional(),
+    primaryContactSurname: z.string().max(120).nullable().optional(),
     email: z.string().email().optional(),
     phone: z.string().min(5).max(40).optional(),
     contactPhone: z.string().min(5).max(40).nullable().optional(),
@@ -238,7 +241,45 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const updatePayload: Record<string, unknown> = {}
     if (payload.name !== undefined) updatePayload.name = payload.name
     if (payload.slug !== undefined) updatePayload.slug = payload.slug
-    if (payload.primaryContactName !== undefined) updatePayload.primary_contact_name = payload.primaryContactName
+    const hasContactFieldUpdate =
+      payload.primaryContactName !== undefined ||
+      payload.primaryContactFirstName !== undefined ||
+      payload.primaryContactSurname !== undefined
+
+    if (hasContactFieldUpdate) {
+      const { data: currentCentreContact, error: currentCentreContactError } = await admin
+        .from('ecd_centres')
+        .select('primary_contact_name,primary_contact_first_name,primary_contact_surname')
+        .eq('id', centreId)
+        .maybeSingle()
+      if (currentCentreContactError) {
+        return NextResponse.json({ error: currentCentreContactError.message }, { status: 400 })
+      }
+
+      const currentFullName = currentCentreContact?.primary_contact_name?.trim() ?? ''
+      const splitCurrentFullName = splitFullName(currentFullName)
+      const currentFirstName =
+        currentCentreContact?.primary_contact_first_name?.trim() || splitCurrentFullName.firstName
+      const currentSurname =
+        currentCentreContact?.primary_contact_surname?.trim() || splitCurrentFullName.surname
+
+      const inputFullName = payload.primaryContactName !== undefined ? payload.primaryContactName?.trim() ?? '' : currentFullName
+      const splitInputFullName = splitFullName(inputFullName)
+      const inputFirstName =
+        payload.primaryContactFirstName !== undefined
+          ? payload.primaryContactFirstName?.trim() ?? ''
+          : currentFirstName || splitInputFullName.firstName
+      const inputSurname =
+        payload.primaryContactSurname !== undefined
+          ? payload.primaryContactSurname?.trim() ?? ''
+          : currentSurname || splitInputFullName.surname
+
+      const resolvedFullName = combineName(inputFirstName, inputSurname) || inputFullName || null
+      updatePayload.primary_contact_first_name = inputFirstName || null
+      updatePayload.primary_contact_surname = inputSurname || null
+      updatePayload.primary_contact_name = resolvedFullName
+    }
+
     if (payload.email !== undefined) updatePayload.email = payload.email.toLowerCase()
     if (payload.phone !== undefined) updatePayload.phone = payload.phone
     if (payload.contactPhone !== undefined) updatePayload.contact_phone = payload.contactPhone

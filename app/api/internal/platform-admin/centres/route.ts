@@ -5,18 +5,23 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
-import { APP_URL } from '@/lib/config'
 import {
   renderEcdPasswordSetupEmail,
   renderParentToEcdAdminMigrationEmail,
   renderPilotWelcomePackEmail,
 } from '@/lib/email/templates/pilot-welcome-pack'
 import { randomBytes } from 'crypto'
+import { combineName, resolveFirstName } from '@/lib/utils/name'
+import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
+
+const APP_BASE_URL = normalizeAppUrl()
 
 const createCentreSchema = z.object({
   slug: z.string().min(2).max(80),
   name: z.string().min(2).max(160),
-  primaryContactName: z.string().min(2).max(160),
+  primaryContactFirstName: z.string().min(1).max(120),
+  primaryContactSurname: z.string().max(120).optional().default(''),
+  primaryContactName: z.string().min(2).max(160).optional(),
   email: z.string().email(),
   phone: z.string().min(5).max(40),
   address: z.string().min(3).max(255),
@@ -35,11 +40,11 @@ const createCentreSchema = z.object({
 
 function toLockedResetUrl(email: string) {
   try {
-    const url = new URL('/reset-password', APP_URL)
+    const url = new URL('/reset-password', APP_BASE_URL)
     url.searchParams.set('locked_email', email)
     return url.toString()
   } catch {
-    return `${APP_URL.replace(/\/$/, '')}/reset-password?locked_email=${encodeURIComponent(email)}`
+    return `${APP_BASE_URL}/reset-password?locked_email=${encodeURIComponent(email)}`
   }
 }
 
@@ -57,7 +62,7 @@ async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdmi
     return { link: actionLink, error: null as string | null }
   }
 
-  const fallback = `${APP_URL.replace(/\/$/, '')}/forgot-password`
+  const fallback = `${APP_BASE_URL}/forgot-password`
   return { link: fallback, error: result.error?.message ?? 'Password setup link generation failed.' }
 }
 
@@ -110,6 +115,18 @@ export async function POST(request: Request) {
   const data = parsed.data
   const normalizedSlug = normalizeSlug(data.slug)
   const normalizedEmail = data.email.trim().toLowerCase()
+  const contactFirstName = data.primaryContactFirstName.trim()
+  const contactSurname = data.primaryContactSurname?.trim() ?? ''
+  const contactFullName =
+    combineName(contactFirstName, contactSurname) ||
+    data.primaryContactName?.trim() ||
+    contactFirstName
+  const contactFirstNameForComms = resolveFirstName({
+    firstName: contactFirstName,
+    fullName: contactFullName,
+    email: normalizedEmail,
+    fallback: 'Friend',
+  })
   const isPilotPlan = data.tier === 'pilot'
   const normalizedTier = isPilotPlan ? 'basic' : data.tier
   const normalizedMonthlyPrice = isPilotPlan ? 0 : data.monthlyPrice
@@ -209,7 +226,9 @@ export async function POST(request: Request) {
   const centreWritePayload = {
     slug: normalizedSlug,
     name: data.name,
-    primary_contact_name: data.primaryContactName,
+    primary_contact_name: contactFullName,
+    primary_contact_first_name: contactFirstName,
+    primary_contact_surname: contactSurname || null,
     email: normalizedEmail,
     phone: data.phone,
     address: data.address,
@@ -331,7 +350,9 @@ export async function POST(request: Request) {
 
   const { error: profileError } = await adminClient.from('user_profiles').upsert({
     id: adminUserId,
-    full_name: data.primaryContactName,
+    first_name: contactFirstName,
+    surname: contactSurname || null,
+    full_name: contactFullName,
     email: normalizedEmail,
     phone: data.phone,
     role: 'ecd_admin',
@@ -461,11 +482,11 @@ export async function POST(request: Request) {
   if (setupLinkResult.error) {
     emailWarnings.push(setupLinkResult.error)
   }
-  const appBaseUrl = APP_URL.replace(/\/$/, '')
+  const appBaseUrl = APP_BASE_URL
   const onboardingLocation = [data.suburb, data.city].filter(Boolean).join(', ')
   const welcomePackQuery = new URLSearchParams({
     onboarding: '1',
-    name: data.primaryContactName,
+    name: contactFirstNameForComms,
     centre: data.name,
     location: onboardingLocation || 'your area',
   }).toString()
@@ -476,7 +497,7 @@ export async function POST(request: Request) {
 
   const setupEmailHtml = await renderEcdPasswordSetupEmail({
     centreName: data.name,
-    contactName: data.primaryContactName,
+    contactName: contactFirstNameForComms,
     lockedEmail: normalizedEmail,
     setupLink: setupLinkResult.link,
     loginLink: `${appBaseUrl}/ecd/login`,
@@ -502,7 +523,7 @@ export async function POST(request: Request) {
   if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
     const migrationEmailHtml = await renderParentToEcdAdminMigrationEmail({
       centreName: data.name,
-      contactName: data.primaryContactName,
+      contactName: contactFirstNameForComms,
       dashboardLink: `${appBaseUrl}/ecd/dashboard`,
       websiteBuilderLink: `${appBaseUrl}/ecd/website`,
       applicationsLink: `${appBaseUrl}/ecd/applications`,
@@ -529,7 +550,7 @@ export async function POST(request: Request) {
   if (isPilotPlan) {
     const welcomePackHtml = await renderPilotWelcomePackEmail({
       centreName: data.name,
-      contactName: data.primaryContactName,
+      contactName: contactFirstNameForComms,
       dashboardLink: welcomePackGetStartedLink,
       websiteBuilderLink: `${appBaseUrl}/ecd/website`,
       attendanceLink: `${appBaseUrl}/ecd/attendance`,
@@ -539,6 +560,13 @@ export async function POST(request: Request) {
       supportEmail: 'admin@centerconnect.co.za',
       supportLink: `${appBaseUrl}/ecd/support`,
       welcomeGuideLink: welcomePackGuideLink,
+      quickSteps: [
+        { label: 'Upload your centre logo', href: `${appBaseUrl}/ecd/website`, done: false, whereItShows: 'Welcome pack + centre cards' },
+        { label: 'Add your hero cover photo', href: `${appBaseUrl}/ecd/website`, done: false, whereItShows: 'Welcome pack header' },
+        { label: 'Add your first five children', href: `${appBaseUrl}/ecd/children/new`, done: false, whereItShows: 'Attendance + reports' },
+        { label: 'Take attendance once', href: `${appBaseUrl}/ecd/attendance`, done: false, whereItShows: 'Parent daily updates' },
+        { label: 'Turn on safe pickup', href: `${appBaseUrl}/ecd/pickup`, done: false, whereItShows: 'Gate-time verification' },
+      ],
     })
     const welcomePackResult = await queueEmail(
       normalizedEmail,

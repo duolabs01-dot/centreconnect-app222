@@ -37,6 +37,7 @@ export function CentreCard({
   slug,
   name,
   cover_image_url,
+  logo_url,
   address,
   distanceLabel,
   feesLabel,
@@ -115,9 +116,16 @@ export function CentreCard({
           >
             <Heart className={cn('w-5 h-5 transition-colors', saved ? 'fill-red-500 text-red-500' : 'text-gray-600')} />
           </Button>
+
+          {logo_url ? (
+            <div className="absolute -bottom-7 left-4 z-10 h-14 w-14 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
+              {/* Plain img avoids Next/Image domain constraints for tenant-uploaded logos */}
+              <img src={logo_url} alt={`${name} logo`} className="h-full w-full object-cover" loading="lazy" />
+            </div>
+          ) : null}
         </div>
 
-        <CardContent className="p-6 space-y-4">
+        <CardContent className={cn('p-6 space-y-4', logo_url ? 'pt-10' : undefined)}>
           <div>
             <h3 className="font-orbitron text-2xl text-navy-950 font-bold tracking-tight">{name}</h3>
             {tagline && <p className="text-muted-foreground text-sm mt-1">{tagline}</p>}

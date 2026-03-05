@@ -41,6 +41,8 @@ export type AdminTenantTableRow = {
   status: 'Claimed' | 'Unclaimed' | 'Inactive'
   claimedDate: string | null
   primaryContactName: string
+  primaryContactFirstName: string
+  primaryContactSurname: string
   email: string
   phone: string
   contactPhone: string
@@ -136,6 +138,12 @@ function statusBadgeClass(status: AdminTenantTableRow['status']) {
   if (status === 'Claimed') return 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200'
   if (status === 'Inactive') return 'border-slate-600 bg-slate-800 text-slate-300'
   return 'border-amber-500/30 bg-amber-500/15 text-amber-200'
+}
+
+function buildContactName(firstName: string, surname: string, fallback: string) {
+  const combined = [firstName.trim(), surname.trim()].filter(Boolean).join(' ').trim()
+  if (combined) return combined
+  return fallback.trim()
 }
 
 function hasPackageChanged(
@@ -567,8 +575,19 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
   async function saveEdit() {
     if (!form || !editTenantId) return
+    const primaryContactFirstName = form.primaryContactFirstName.trim()
+    const primaryContactSurname = form.primaryContactSurname.trim()
+    const primaryContactName = buildContactName(
+      primaryContactFirstName,
+      primaryContactSurname,
+      form.primaryContactName
+    )
     if (!form.name.trim() || !form.slug.trim() || !form.email.trim() || !form.phone.trim()) {
       toast.error('Name, slug, email and phone are required.')
+      return
+    }
+    if (!primaryContactFirstName) {
+      toast.error('Primary contact first name is required.')
       return
     }
 
@@ -579,7 +598,9 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         action: 'set_profile',
         name: form.name.trim(),
         slug: slugify(form.slug),
-        primaryContactName: form.primaryContactName.trim() || null,
+        primaryContactName: primaryContactName || null,
+        primaryContactFirstName: primaryContactFirstName || null,
+        primaryContactSurname: primaryContactSurname || null,
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
         contactPhone: form.contactPhone.trim() || null,
@@ -1006,12 +1027,22 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-300">Primary Contact Name</Label>
+                    <Label className="text-slate-300">Primary Contact First Name</Label>
                     <Input
                       className={darkInputClass}
-                      value={form.primaryContactName}
+                      value={form.primaryContactFirstName}
                       onChange={(event) =>
-                        setForm((prev) => (prev ? { ...prev, primaryContactName: event.target.value } : prev))
+                        setForm((prev) => (prev ? { ...prev, primaryContactFirstName: event.target.value } : prev))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Primary Contact Surname</Label>
+                    <Input
+                      className={darkInputClass}
+                      value={form.primaryContactSurname}
+                      onChange={(event) =>
+                        setForm((prev) => (prev ? { ...prev, primaryContactSurname: event.target.value } : prev))
                       }
                     />
                   </div>

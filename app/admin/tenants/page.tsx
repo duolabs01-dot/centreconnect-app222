@@ -10,6 +10,7 @@ import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
+import { splitFullName } from '@/lib/utils/name'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,8 +60,9 @@ export default async function AdminTenantsPage() {
     admin
       .from('ecd_centres')
       .select(
-        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
+        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,primary_contact_first_name,primary_contact_surname,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
       )
+      .or('is_deleted.is.null,is_deleted.eq.false')
       .order('created_at', { ascending: false })
       .limit(1000),
     admin
@@ -86,6 +88,8 @@ export default async function AdminTenantsPage() {
     contact_phone: string | null
     contact_whatsapp: string | null
     primary_contact_name: string | null
+    primary_contact_first_name: string | null
+    primary_contact_surname: string | null
     address: string | null
     suburb: string | null
     city: string | null
@@ -132,6 +136,7 @@ export default async function AdminTenantsPage() {
   }
 
   const tenants: AdminTenantTableRow[] = centres.map((centre) => {
+    const splitContactName = splitFullName(centre.primary_contact_name)
     const subscription = normalizeOne(centre.subscriptions)
     const claimedDate = claimedByCentre.get(centre.id) ?? null
     const ownerPhone = centre.contact_phone?.trim() || centre.phone?.trim() || '-'
@@ -163,6 +168,8 @@ export default async function AdminTenantsPage() {
       status,
       claimedDate: claimedDate ?? (isClaimed ? centre.created_at : null),
       primaryContactName: centre.primary_contact_name?.trim() || '',
+      primaryContactFirstName: centre.primary_contact_first_name?.trim() || splitContactName.firstName || '',
+      primaryContactSurname: centre.primary_contact_surname?.trim() || splitContactName.surname || '',
       email: centre.email?.trim() || '',
       phone: centre.phone?.trim() || '',
       contactPhone: centre.contact_phone?.trim() || '',

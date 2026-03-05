@@ -71,6 +71,8 @@ const TIER_PRICE: Record<Tier, number> = {
 
 const onboardingSchema = z.object({
   centreName: z.string().trim().min(1, 'Centre name is required.'),
+  ownerFirstName: z.string().trim().min(1, 'First name is required.'),
+  ownerSurname: z.string().trim().max(120).optional(),
   ownerEmail: z.string().trim().email('Valid owner email is required.'),
   ownerPhone: z.string().trim().min(7, 'Owner phone is required.'),
   suburb: z.string().trim().min(1, 'Suburb is required.'),
@@ -85,6 +87,8 @@ type OnboardingFormValues = z.infer<typeof onboardingSchema>
 
 const onboardingDefaults: OnboardingFormValues = {
   centreName: '',
+  ownerFirstName: '',
+  ownerSurname: '',
   ownerEmail: '',
   ownerPhone: '',
   suburb: '',
@@ -108,10 +112,10 @@ function slugify(value: string) {
   return fallback
 }
 
-function contactNameFromEmail(email: string, fallback: string) {
-  const local = email.split('@')[0] ?? ''
-  const normalized = local.replace(/[._-]+/g, ' ').trim()
-  return normalized.length >= 2 ? normalized : `${fallback} Admin`
+function buildContactName(firstName: string, surname: string, fallback: string) {
+  const combined = `${firstName} ${surname}`.trim()
+  if (combined.length >= 2) return combined
+  return fallback
 }
 
 function parseTeamEmails(raw: string) {
@@ -282,6 +286,8 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
   }) {
     const values = onboardingForm.getValues()
     const centreName = values.centreName.trim()
+    const ownerFirstName = values.ownerFirstName.trim()
+    const ownerSurname = (values.ownerSurname ?? '').trim()
     const ownerEmail = values.ownerEmail.trim().toLowerCase()
     const ownerPhone = values.ownerPhone.trim()
     const suburb = values.suburb.trim()
@@ -304,7 +310,9 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         body: JSON.stringify({
           slug,
           name: centreName,
-          primaryContactName: contactNameFromEmail(ownerEmail, centreName),
+          primaryContactFirstName: ownerFirstName,
+          primaryContactSurname: ownerSurname,
+          primaryContactName: buildContactName(ownerFirstName, ownerSurname, `${centreName} Admin`),
           email: ownerEmail,
           phone: ownerPhone,
           address: `${suburb}, ${values.city.trim() || 'Johannesburg'}`,
@@ -478,6 +486,8 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     onboardingForm.reset({
       ...current,
       centreName: '',
+      ownerFirstName: '',
+      ownerSurname: '',
       ownerEmail: '',
       ownerPhone: '',
       suburb: '',
@@ -808,6 +818,31 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                       </Link>
                     </div>
                   ) : null}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner-first-name" className="text-slate-300">
+                    Owner First Name
+                  </Label>
+                  <Input
+                    id="owner-first-name"
+                    className={darkInputClass}
+                    {...onboardingForm.register('ownerFirstName')}
+                    placeholder="Mandla"
+                  />
+                  {onboardingForm.formState.errors.ownerFirstName ? (
+                    <p className="text-xs text-rose-300">{onboardingForm.formState.errors.ownerFirstName.message}</p>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner-surname" className="text-slate-300">
+                    Owner Surname
+                  </Label>
+                  <Input
+                    id="owner-surname"
+                    className={darkInputClass}
+                    {...onboardingForm.register('ownerSurname')}
+                    placeholder="Ngwenya"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="owner-email" className="text-slate-300">

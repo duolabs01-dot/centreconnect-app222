@@ -6,6 +6,13 @@ type PasswordSetupEmailInput = {
   loginLink: string
 }
 
+type PilotWelcomeChecklistItem = {
+  label: string
+  href: string
+  done?: boolean
+  whereItShows?: string
+}
+
 type PilotWelcomePackEmailInput = {
   centreName: string
   contactName: string
@@ -19,6 +26,8 @@ type PilotWelcomePackEmailInput = {
   supportLink?: string
   welcomeGuideLink?: string
   packageLabel?: string
+  centreLogoUrl?: string | null
+  quickSteps?: PilotWelcomeChecklistItem[]
 }
 
 type ParentToEcdAdminMigrationEmailInput = {
@@ -38,6 +47,43 @@ const BRAND = {
   primary: '#0F766E',
   accent: '#14B8A6',
   border: '#E2E8F0',
+}
+
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+
+function isSafeHttpImage(url: string | null | undefined) {
+  if (!url) return false
+  const value = url.trim()
+  if (!value) return false
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+function renderChecklist(items: PilotWelcomeChecklistItem[]) {
+  return items
+    .map((item) => {
+      const done = Boolean(item.done)
+      const marker = done ? '✅' : '⬜'
+      const itemLabel = done ? `<s>${item.label}</s>` : item.label
+      const where = item.whereItShows
+        ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${item.whereItShows}</p>`
+        : ''
+
+      return `
+      <tr>
+        <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.border};">
+          <a href="${item.href}" style="color:${BRAND.body};text-decoration:none;font-size:13px;line-height:1.6;">
+            ${marker} ${itemLabel}
+          </a>
+          ${where}
+        </td>
+      </tr>`
+    })
+    .join('')
 }
 
 async function renderShell(title: string, subtitle: string, contentHtml: string) {
@@ -73,18 +119,35 @@ async function renderShell(title: string, subtitle: string, contentHtml: string)
                           color: '#FFFFFF',
                         }}
                       >
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: '11px',
-                            letterSpacing: '0.12em',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          CentreConnect
-                        </p>
-                        <h1 style={{ margin: '10px 0 6px', fontSize: '24px', lineHeight: 1.2, fontWeight: 800 }}>
+                        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} style={{ marginBottom: '10px' }}>
+                          <tbody>
+                            <tr>
+                              <td style={{ width: '42px' }}>
+                                <img
+                                  src={CENTRECONNECT_LOGO_URL}
+                                  width="34"
+                                  height="34"
+                                  alt="CentreConnect logo"
+                                  style={{ display: 'block', borderRadius: '8px', backgroundColor: '#ffffff', padding: '4px' }}
+                                />
+                              </td>
+                              <td>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '11px',
+                                    letterSpacing: '0.12em',
+                                    fontWeight: 700,
+                                    textTransform: 'uppercase',
+                                  }}
+                                >
+                                  CentreConnect
+                                </p>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <h1 style={{ margin: '4px 0 6px', fontSize: '24px', lineHeight: 1.2, fontWeight: 800 }}>
                           {title}
                         </h1>
                         <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.5, opacity: 0.95 }}>{subtitle}</p>
@@ -102,8 +165,7 @@ async function renderShell(title: string, subtitle: string, contentHtml: string)
                 </p>
                 <p style={{ margin: '6px 0 0', color: BRAND.muted, fontSize: '12px', lineHeight: 1.5 }}>
                   This email may contain private information for the named recipient.
-                  If you received it by mistake, please delete it and let us know at
-                  {' '}
+                  If you received it by mistake, please delete it and let us know at{' '}
                   <a href="mailto:admin@centerconnect.co.za" style={{ color: BRAND.muted }}>
                     admin@centerconnect.co.za
                   </a>
@@ -124,7 +186,7 @@ function button(label: string, href: string) {
 
 export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${input.contactName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
       Your CentreConnect workspace for <strong>${input.centreName}</strong> is ready.
       Use this secure link to create your password and open your ECD portal.
@@ -167,8 +229,40 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   const welcomeGuideUrl = input.welcomeGuideLink?.trim() || input.websiteBuilderLink
   const packageLabel = input.packageLabel ?? 'welcome pack'
 
+  const checklistItems =
+    input.quickSteps && input.quickSteps.length > 0
+      ? input.quickSteps
+      : [
+          { label: 'Upload your centre logo', href: input.websiteBuilderLink, done: false, whereItShows: 'Welcome pack + centre cards' },
+          { label: 'Add your hero cover photo', href: input.websiteBuilderLink, done: false, whereItShows: 'Welcome pack header' },
+          { label: 'Add your first five children', href: `${input.websiteBuilderLink.replace('/website', '/children/new')}`, done: false, whereItShows: 'Attendance + reports' },
+          { label: 'Take attendance once', href: input.attendanceLink, done: false, whereItShows: 'Parent daily updates' },
+          { label: 'Turn on safe pickup', href: input.pickupLink, done: false, whereItShows: 'Gate-time verification' },
+        ]
+
+  const centreLogoBlock = isSafeHttpImage(input.centreLogoUrl)
+    ? `
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFFFFF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:10px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="width:56px;vertical-align:middle;">
+                <img src="${input.centreLogoUrl}" width="48" height="48" alt="${input.centreName} logo" style="display:block;border-radius:999px;border:1px solid ${BRAND.border};background:#fff;" />
+              </td>
+              <td style="vertical-align:middle;">
+                <p style="margin:0;font-size:12px;font-weight:700;color:${BRAND.heading};">${input.centreName} brand is ready</p>
+                <p style="margin:2px 0 0;font-size:11px;color:${BRAND.muted};">This logo appears in your welcome pack and parent-facing centre cards.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>`
+    : ''
+
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${input.contactName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
       Welcome to CentreConnect for <strong>${input.centreName}</strong>.
       We know WhatsApp and paper admin can get heavy, so this flow keeps setup simple and clear.
@@ -183,32 +277,34 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       </tr>
     </table>
 
+    ${centreLogoBlock}
+
     <div style="margin:0 0 10px;">${button(`See Your ${packageLabel}`, welcomeGuideUrl)}</div>
     <div style="margin:0 0 16px;">${button('Get Started Now', input.dashboardLink)}</div>
 
     <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 16px;">
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Daily Attendance and Reports</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Tap once per child. Monthly totals are ready automatically.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">📘 Daily Attendance and Reports</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Tap once per child, then monthly totals are ready automatically. Parents get clear updates without extra WhatsApp admin.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Safe Pickup Time</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Use QR checks at the gate so staff stay calm and children stay safe.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">🛡️ Safe Pickup Time</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Use QR checks at the gate so staff stay calm, children stay safe, and pickup decisions are quick and clear.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Parent Applications</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Review all applications in one place with no WhatsApp chasing.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">📥 Parent Applications</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Review applications in one place with no WhatsApp chasing. Accept or decline with confidence and keep records tidy.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">What Parents Are Saying</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Families want this experience. You can deliver it from day one.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">💬 What Parents Are Saying</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Families want this experience. You can deliver it from day one and build trust faster.</p>
         </td>
       </tr>
     </table>
@@ -216,13 +312,10 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 16px;">
       <tr>
         <td style="padding:12px 14px;">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Quick first steps</p>
-          <p style="margin:0;font-size:13px;color:${BRAND.body};line-height:1.65;">
-            1. Upload your logo and centre photo.<br/>
-            2. Add your first five children.<br/>
-            3. Take attendance once.<br/>
-            4. Turn on safe pickup.
-          </p>
+          <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Quick first steps</p>
+          <table role="presentation" width="100%" style="border-collapse:collapse;">
+            ${renderChecklist(checklistItems)}
+          </table>
         </td>
       </tr>
     </table>
@@ -259,7 +352,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 
 export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigrationEmailInput) {
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${input.contactName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Sawubona, Dumela, Hello 👋 ${input.contactName},</p>
     <p style="margin:0 0 12px;font-size:14px;line-height:1.65;">
       Your CentreConnect account was upgraded from <strong>Parent</strong> to <strong>ECD Admin</strong> for
       <strong> ${input.centreName}</strong>.

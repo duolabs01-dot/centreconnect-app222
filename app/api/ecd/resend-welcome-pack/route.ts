@@ -4,13 +4,14 @@ import nodemailer from 'nodemailer'
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
 
 type Payload = {
   ecdId?: string
   ownerEmail?: string
 }
 
-function sanitizeName(value: string | null | undefined, fallback: string) {
+function sanitizeText(value: string | null | undefined, fallback: string) {
   const trimmed = (value ?? '').trim()
   return trimmed || fallback
 }
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('name,slug,primary_contact_name,city,suburb')
+    .select('name,slug,primary_contact_name,primary_contact_first_name,primary_contact_surname,city,suburb,logo_url,cover_image_url')
     .eq('id', ecdId)
     .single()
 
@@ -94,6 +95,8 @@ export async function POST(request: Request) {
 
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
   let ownerFullName: string | null = null
+  let ownerFirstName: string | null = null
+  let ownerSurname: string | null = null
 
   const { data: ownerUser, error: ownerUserError } = await admin
     .schema('auth')
@@ -105,15 +108,42 @@ export async function POST(request: Request) {
   if (!ownerUserError && ownerUser?.id) {
     const { data: profile, error: profileError } = await admin
       .from('user_profiles')
-      .select('full_name')
+      .select('first_name,surname,full_name')
       .eq('id', ownerUser.id)
       .maybeSingle()
-    if (!profileError && profile?.full_name) {
-      ownerFullName = profile.full_name
+    if (!profileError && profile) {
+      if (profile.full_name) ownerFullName = profile.full_name
+      ownerFirstName = profile.first_name ?? null
+      ownerSurname = profile.surname ?? null
     }
   }
 
-  const ownerName = sanitizeName(ownerFullName ?? centre.primary_contact_name, ownerNameFallback)
+  const centreFallbackNames = splitFullName(centre.primary_contact_name)
+  const fallbackFirstName = centre.primary_contact_first_name?.trim() || centreFallbackNames.firstName
+  const fallbackSurname = centre.primary_contact_surname?.trim() || centreFallbackNames.surname
+
+  const ownerName = resolveFirstName({
+    firstName: ownerFirstName ?? fallbackFirstName,
+    fullName: ownerFullName ?? centre.primary_contact_name,
+    email: ownerEmail,
+    fallback: ownerNameFallback,
+  })
+  const ownerDisplayName = combineName(
+    ownerName,
+    ownerSurname ?? fallbackSurname
+  ) || ownerName
+
+  const [childrenCountResult, attendanceCountResult, pickupCountResult] = await Promise.all([
+    admin.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+    admin.from('attendance').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+    admin.from('pickup_codes').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+  ])
+
+  const hasChildren = (childrenCountResult.count ?? 0) > 0
+  const hasAttendance = (attendanceCountResult.count ?? 0) > 0
+  const hasPickup = (pickupCountResult.count ?? 0) > 0
+  const hasLogo = Boolean(centre.logo_url?.trim())
+  const hasHero = Boolean(centre.cover_image_url?.trim())
 
   const welcomeQuery = new URLSearchParams({
     name: ownerName,
@@ -160,6 +190,39 @@ export async function POST(request: Request) {
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
     welcomeGuideLink: welcomeGuideUrl,
     packageLabel: 'Welcome Pack',
+    centreLogoUrl: centre.logo_url ?? null,
+    quickSteps: [
+      {
+        label: 'Upload your centre logo',
+        href: buildUrl(appUrlRoot, '/ecd/website'),
+        done: hasLogo,
+        whereItShows: 'Welcome pack + centre cards',
+      },
+      {
+        label: 'Add your hero cover photo',
+        href: buildUrl(appUrlRoot, '/ecd/website'),
+        done: hasHero,
+        whereItShows: 'Welcome pack header',
+      },
+      {
+        label: 'Add your first five children',
+        href: buildUrl(appUrlRoot, '/ecd/children/new'),
+        done: hasChildren,
+        whereItShows: 'Attendance + reports',
+      },
+      {
+        label: 'Take attendance once',
+        href: buildUrl(appUrlRoot, '/ecd/attendance'),
+        done: hasAttendance,
+        whereItShows: 'Parent daily updates',
+      },
+      {
+        label: 'Turn on safe pickup',
+        href: buildUrl(appUrlRoot, '/ecd/pickup'),
+        done: hasPickup,
+        whereItShows: 'Gate-time verification',
+      },
+    ],
   })
 
   const publicCentreLink = buildUrl(appUrlRoot, `/centre/${centreSlug || 'profile'}`)
@@ -169,6 +232,7 @@ export async function POST(request: Request) {
     `Welcome to CentreConnect for ${centreName}.`,
     'Parents are already asking for the app.',
     '',
+    `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
     `See your welcome pack: ${welcomeGuideUrl}`,
     `Get started: ${getStartedUrl}`,
     `Public centre page: ${publicCentreLink}`,
