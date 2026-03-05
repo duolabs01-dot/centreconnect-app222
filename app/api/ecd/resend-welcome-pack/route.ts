@@ -34,6 +34,12 @@ function buildUrl(root: string, pathname: string, query?: Record<string, string>
   return url.toString()
 }
 
+function firstName(value: string | null | undefined, fallback: string) {
+  const clean = (value ?? '').trim()
+  if (!clean) return fallback
+  return clean.split(' ')[0] || fallback
+}
+
 export async function POST(request: Request) {
   let payload: Payload
   try {
@@ -128,10 +134,11 @@ export async function POST(request: Request) {
     email: ownerEmail,
     fallback: ownerNameFallback,
   })
+  const ownerFirstNameForComms = firstName(ownerName, ownerNameFallback)
   const ownerDisplayName = combineName(
-    ownerName,
+    ownerFirstNameForComms,
     ownerSurname ?? fallbackSurname
-  ) || ownerName
+  ) || ownerFirstNameForComms
 
   const [childrenCountResult, attendanceCountResult, pickupCountResult] = await Promise.all([
     admin.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
@@ -146,9 +153,10 @@ export async function POST(request: Request) {
   const hasHero = Boolean(centre.cover_image_url?.trim())
 
   const welcomeQuery = new URLSearchParams({
-    name: ownerName,
+    name: ownerFirstNameForComms,
     centre: centreName,
     location,
+    slug: centreSlug,
     onboarding: '1',
   }).toString()
   const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
@@ -172,19 +180,23 @@ export async function POST(request: Request) {
     console.error('resend-welcome-pack: magic link generation failed', magicLinkResult.error)
   }
   const welcomeGuideUrl = buildUrl(appUrlRoot, '/ecd/welcome', {
-    name: ownerName,
+    name: ownerFirstNameForComms,
     centre: centreName,
     location,
+    slug: centreSlug,
   })
+  const qrPosterLink = centreSlug
+    ? buildUrl(appUrlRoot, `/centre/${centreSlug}/poster`)
+    : buildUrl(appUrlRoot, '/ecd/website')
 
   const html = await renderPilotWelcomePackEmail({
     centreName,
-    contactName: ownerName,
+    contactName: ownerFirstNameForComms,
     dashboardLink: getStartedUrl,
     websiteBuilderLink: buildUrl(appUrlRoot, '/ecd/website'),
     attendanceLink: buildUrl(appUrlRoot, '/ecd/attendance'),
     pickupLink: buildUrl(appUrlRoot, '/ecd/pickup'),
-    qrPosterLink: buildUrl(appUrlRoot, '/ecd/pickup'),
+    qrPosterLink,
     supportWhatsApp: '+27685356430',
     supportEmail: 'admin@centerconnect.co.za',
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
@@ -222,12 +234,18 @@ export async function POST(request: Request) {
         done: hasPickup,
         whereItShows: 'Gate-time verification',
       },
+      {
+        label: 'Print parent QR poster for your gate',
+        href: qrPosterLink,
+        done: false,
+        whereItShows: 'Parent onboarding and gate pickup',
+      },
     ],
   })
 
   const publicCentreLink = buildUrl(appUrlRoot, `/centre/${centreSlug || 'profile'}`)
   const plainText = [
-    `Hi ${ownerName},`,
+    `Hi ${ownerFirstNameForComms},`,
     '',
     `Welcome to CentreConnect for ${centreName}.`,
     'Parents are already asking for the app.',
@@ -235,6 +253,7 @@ export async function POST(request: Request) {
     `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
     `See your welcome pack: ${welcomeGuideUrl}`,
     `Get started: ${getStartedUrl}`,
+    `Print parent QR poster: ${qrPosterLink}`,
     `Public centre page: ${publicCentreLink}`,
     '',
     'Need help? WhatsApp +27 68 535 6430.',

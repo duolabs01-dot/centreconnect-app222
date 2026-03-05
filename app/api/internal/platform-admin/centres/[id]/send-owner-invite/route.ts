@@ -24,6 +24,7 @@ function sanitizeName(value: string | null | undefined, fallback: string) {
 }
 
 const emailAppUrlRoot = normalizeAppUrl()
+const DEFAULT_ONBOARDING_PATH = '/ecd/welcome?onboarding=1'
 
 async function findUserIdByEmail(admin: ReturnType<typeof createAdminClient>, email: string) {
   const { data, error } = await admin
@@ -46,9 +47,10 @@ async function revokeParentAccess(admin: ReturnType<typeof createAdminClient>, u
 
 async function generateOwnerAccessLink(
   admin: ReturnType<typeof createAdminClient>,
-  email: string
+  email: string,
+  onboardingPath: string
 ) {
-  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent('/ecd/welcome?onboarding=1')}`
+  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent(onboardingPath)}`
   const magicLinkResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
@@ -98,7 +100,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url')
+    .select('id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url,suburb,city')
     .eq('id', centreId)
     .maybeSingle()
 
@@ -112,20 +114,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: 'Centre owner email is missing.' }, { status: 400 })
   }
 
-  const accessLink = await generateOwnerAccessLink(admin, ownerEmail)
-  if (!accessLink.link) {
-    return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
-  }
-  const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
-  const { data: existingProfile } = resolvedAuthUserId
-    ? await admin
-        .from('user_profiles')
-        .select('role')
-        .eq('id', resolvedAuthUserId)
-        .maybeSingle()
-    : { data: null as { role?: string | null } | null }
-  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
-
   const nowIso = new Date().toISOString()
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
   const centreSlug = (centre.slug ?? '').trim()
@@ -138,6 +126,33 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
   const ownerSurname = (centre.primary_contact_surname ?? splitPrimaryName.surname ?? '').trim()
   const ownerDisplayName = combineName(ownerFirstName, ownerSurname) || ownerFirstName
+  const locationLabel = [centre.suburb, centre.city]
+    .map((value) => (value ?? '').trim())
+    .filter(Boolean)
+    .join(', ')
+  const onboardingQuery = new URLSearchParams({
+    onboarding: '1',
+    name: ownerFirstName,
+    centre: sanitizeName(centre.name, 'your centre'),
+    location: locationLabel || 'your area',
+    slug: centreSlug,
+  })
+  const onboardingPath = onboardingQuery.toString().length > 0
+    ? `/ecd/welcome?${onboardingQuery.toString()}`
+    : DEFAULT_ONBOARDING_PATH
+  const accessLink = await generateOwnerAccessLink(admin, ownerEmail, onboardingPath)
+  if (!accessLink.link) {
+    return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
+  }
+  const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
+  const { data: existingProfile } = resolvedAuthUserId
+    ? await admin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', resolvedAuthUserId)
+        .maybeSingle()
+    : { data: null as { role?: string | null } | null }
+  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'

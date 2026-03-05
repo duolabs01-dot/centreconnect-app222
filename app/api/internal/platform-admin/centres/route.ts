@@ -489,17 +489,22 @@ export async function POST(request: Request) {
     name: contactFirstNameForComms,
     centre: data.name,
     location: onboardingLocation || 'your area',
+    slug: centre.slug,
   }).toString()
   const welcomePackPath = `/ecd/welcome?${welcomePackQuery}`
   const welcomePackGuideLink = `${appBaseUrl}${welcomePackPath}`
   const welcomePackAuthRedirect = `${appBaseUrl}/auth/callback?next=${encodeURIComponent(welcomePackPath)}`
-  const welcomePackGetStartedLink = setupLinkResult.link || welcomePackAuthRedirect
+  const trackedSetupLink = setupLinkResult.link
+    ? `${appBaseUrl}/api/invites/open?channel=email&target=${encodeURIComponent(setupLinkResult.link)}`
+    : ''
+  const welcomePackGetStartedLink = trackedSetupLink || welcomePackAuthRedirect
+  const qrPosterLink = `${appBaseUrl}/centre/${centre.slug}/poster`
 
   const setupEmailHtml = await renderEcdPasswordSetupEmail({
     centreName: data.name,
     contactName: contactFirstNameForComms,
     lockedEmail: normalizedEmail,
-    setupLink: setupLinkResult.link,
+    setupLink: trackedSetupLink || setupLinkResult.link,
     loginLink: `${appBaseUrl}/ecd/login`,
   })
   const setupEmailResult = await queueEmail(
@@ -555,7 +560,7 @@ export async function POST(request: Request) {
       websiteBuilderLink: `${appBaseUrl}/ecd/website`,
       attendanceLink: `${appBaseUrl}/ecd/attendance`,
       pickupLink: `${appBaseUrl}/ecd/pickup`,
-      qrPosterLink: `${appBaseUrl}/ecd/pickup`,
+      qrPosterLink,
       supportWhatsApp: '+27685356430',
       supportEmail: 'admin@centerconnect.co.za',
       supportLink: `${appBaseUrl}/ecd/support`,
@@ -566,6 +571,7 @@ export async function POST(request: Request) {
         { label: 'Add your first five children', href: `${appBaseUrl}/ecd/children/new`, done: false, whereItShows: 'Attendance + reports' },
         { label: 'Take attendance once', href: `${appBaseUrl}/ecd/attendance`, done: false, whereItShows: 'Parent daily updates' },
         { label: 'Turn on safe pickup', href: `${appBaseUrl}/ecd/pickup`, done: false, whereItShows: 'Gate-time verification' },
+        { label: 'Print parent QR poster for your gate', href: qrPosterLink, done: false, whereItShows: 'Parent onboarding and gate pickup' },
       ],
     })
     const welcomePackResult = await queueEmail(

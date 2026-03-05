@@ -1,7 +1,22 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import {
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  HeartHandshake,
+  MessageCircle,
+  QrCode,
+  Sparkles,
+  X,
+} from 'lucide-react'
+
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
 
 type Scenario = {
   id: string
@@ -10,7 +25,6 @@ type Scenario = {
   bg: string
   accent: string
   title: string
-  shortTitle: string
   pain: string
   solution: string
   steps: string[]
@@ -20,10 +34,17 @@ type Scenario = {
   quoteAuthor: string
 }
 
-type Tip = {
-  emoji: string
-  tip: string
+type CentreProfile = {
+  slug: string
+  name: string
+  logoUrl: string | null
+  coverImageUrl: string | null
+  suburb: string | null
+  city: string | null
 }
+
+const HERO_IMAGE =
+  'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
 
 const scenarios: Scenario[] = [
   {
@@ -33,46 +54,44 @@ const scenarios: Scenario[] = [
     bg: '#F0FDFA',
     accent: '#CCFBF1',
     title: 'No more chasing parents on WhatsApp',
-    shortTitle: 'Applications',
     pain:
-      'You post in WhatsApp, wait, and then chase parents again. Documents arrive in many messages and your day gets interrupted.',
+      'Documents arrive in many messages and your team keeps scrolling through chats to find what matters.',
     solution:
-      'When a parent applies through CentreConnect, all details arrive in one clean place. You accept or decline in one tap and the parent is notified automatically.',
+      'Applications arrive in one clean board. You can accept, decline, or waitlist quickly and parents are updated automatically.',
     steps: [
-      'A parent finds your centre and applies',
-      'You get a notification in your dashboard',
-      'Review the child details quickly',
-      'Accept, decline, or waitlist with one tap',
-      'Parent gets the update automatically',
+      'Parent finds your centre and applies.',
+      'You get one clear notification.',
+      'Review details in one place.',
+      'Accept, decline, or waitlist in one tap.',
+      'Parent receives instant status update.',
     ],
-    ctaLabel: 'See the Applications Board',
+    ctaLabel: 'Open Applications',
     ctaHref: '/ecd/pipeline',
-    quote: '"I used to spend hours sorting messages. Now it is minutes."',
-    quoteAuthor: 'Mama Thandi, Soweto ECD Centre',
+    quote: 'I used to spend two hours sorting messages. Now it is ten minutes.',
+    quoteAuthor: 'Mama Thandi, Soweto',
   },
   {
     id: 'children',
-    emoji: '👧🏾',
+    emoji: '🧒',
     color: '#7C3AED',
     bg: '#FAF5FF',
     accent: '#EDE9FE',
-    title: 'Your children records are finally organised',
-    shortTitle: 'Children',
+    title: 'Children records are finally organised',
     pain:
-      'The paper register works until you must find one detail fast while a parent is waiting at the gate.',
+      'At pickup or emergency time, looking through paper files creates pressure and delays.',
     solution:
-      'Add each child once and keep profile, guardians, pickup contacts, and health notes in one place.',
+      'Store child profiles, guardians, pickup contacts, and health notes in one searchable place.',
     steps: [
-      'Add child name and date of birth',
-      'Choose age group',
-      'Add parent and guardian contacts',
-      'Add pickup people',
-      'Add allergy and health notes',
+      'Add child name and date of birth.',
+      'Choose age group.',
+      'Add guardian and emergency contacts.',
+      'Add approved pickup people.',
+      'Add medical notes and allergies.',
     ],
-    ctaLabel: 'Start Adding Children',
+    ctaLabel: 'Open Children',
     ctaHref: '/ecd/children/new',
-    quote: '"Now I find records in seconds on my phone."',
-    quoteAuthor: 'Auntie Rose, Alexandra Creche',
+    quote: 'Now I can find records in seconds on my phone.',
+    quoteAuthor: 'Auntie Rose, Alexandra',
   },
   {
     id: 'attendance',
@@ -81,21 +100,20 @@ const scenarios: Scenario[] = [
     bg: '#F0F9FF',
     accent: '#BAE6FD',
     title: 'Attendance in 30 seconds, not 30 minutes',
-    shortTitle: 'Attendance',
     pain:
-      'Morning roll call and month end counting can eat your time and create mistakes.',
+      'Roll call and month-end counting can take too long and leave room for mistakes.',
     solution:
-      'Mark present or absent with a few taps. Monthly totals are ready for invoicing.',
+      'Tap present or absent once per child. Monthly totals are ready automatically.',
     steps: [
-      'Open attendance each morning',
-      'Tap each child present or absent',
-      'Add reason for absence if needed',
-      'It saves automatically',
-      'View monthly summary any time',
+      'Open Attendance each morning.',
+      'Tap child status quickly.',
+      'Add absence note if needed.',
+      'Everything saves immediately.',
+      'Use monthly totals for invoicing.',
     ],
     ctaLabel: 'Open Attendance',
     ctaHref: '/ecd/attendance',
-    quote: '"Month end counting became easy and fast."',
+    quote: 'Month-end is no longer a stressful weekend job.',
     quoteAuthor: 'Mama Precious, Tembisa',
   },
   {
@@ -105,21 +123,20 @@ const scenarios: Scenario[] = [
     bg: '#FFFBEB',
     accent: '#FDE68A',
     title: 'Safe pickup with less gate confusion',
-    shortTitle: 'Safe Pickup',
     pain:
-      'Someone unknown arrives at the gate and says they are picking up a child. That moment is stressful.',
+      'Gate-time pressure is real when an unknown person arrives and you need a fast, safe decision.',
     solution:
-      'Authorised pickup people are registered. You scan QR, verify quickly, and release only when safe.',
+      'Use QR verification so your staff can confirm authorised pickups in seconds.',
     steps: [
-      'Add pickup people to each child profile',
-      'Print your centre QR poster',
-      'Guardian shows QR at pickup',
-      'You scan and verify',
-      'System confirms authorised or not',
+      'Add pickup people to each child profile.',
+      'Print your centre QR poster for the gate.',
+      'Guardian scans or presents code.',
+      'Staff confirms authorisation quickly.',
+      'Parents get calm, clear pickup flow.',
     ],
-    ctaLabel: 'Set Up Safe Pickup',
+    ctaLabel: 'Open Safe Pickup',
     ctaHref: '/ecd/pickup',
-    quote: '"The system helps us stay calm and safe at the gate."',
+    quote: 'The system helps us stay calm and firm at pickup time.',
     quoteAuthor: 'Mama Lindiwe, Katlehong',
   },
   {
@@ -129,21 +146,20 @@ const scenarios: Scenario[] = [
     bg: '#F0FDF4',
     accent: '#A7F3D0',
     title: 'Invite parents and keep them involved',
-    shortTitle: 'Invite Parents',
     pain:
-      'Parents can feel disconnected during the day and then everything becomes urgent.',
+      'Parents often feel disconnected during the day and then everything becomes urgent after hours.',
     solution:
-      'Parents see attendance, notes, and updates in one place. Trust grows without extra calls.',
+      'Parents can follow attendance, updates, and key communication in one trusted place.',
     steps: [
-      'Share your centre link',
-      'Parents register for free',
-      'They apply through the app',
-      'You approve and onboard quickly',
-      'Parents follow updates daily',
+      'Share your centre link with families.',
+      'Parents register for free.',
+      'Parents apply through CentreConnect.',
+      'You review and onboard smoothly.',
+      'Families stay informed without WhatsApp noise.',
     ],
-    ctaLabel: 'Get Your Share Link',
+    ctaLabel: 'Open Centre Profile',
     ctaHref: '/ecd/profile',
-    quote: '"Parents started thanking us for clear updates."',
+    quote: 'Parents thanked us for clear updates and faster responses.',
     quoteAuthor: 'Auntie Grace, Mamelodi',
   },
   {
@@ -152,33 +168,61 @@ const scenarios: Scenario[] = [
     color: '#9D174D',
     bg: '#FFF1F2',
     accent: '#FECDD3',
-    title: 'Give staff access without losing control',
-    shortTitle: 'Your Staff',
+    title: 'Give staff access without giving up control',
     pain:
-      'You cannot be everywhere, but sharing one password is not safe.',
+      'You cannot be everywhere, and shared passwords are not safe for daily operations.',
     solution:
-      'Invite each staff member with their own role and login, so they can help without seeing everything.',
+      'Invite each staff member with role-based access and keep sensitive settings protected.',
     steps: [
-      'Open centre settings',
-      'Click Invite Staff',
-      'Enter staff email',
-      'Choose role access',
-      'Staff activate their own login',
+      'Open centre settings.',
+      'Invite each team member by email.',
+      'Choose their role permissions.',
+      'They activate their own login.',
+      'Your operations stay secure and organised.',
     ],
-    ctaLabel: 'Invite Your Staff',
+    ctaLabel: 'Open Staff Setup',
     ctaHref: '/ecd/profile',
-    quote: '"My team can help while I keep control."',
+    quote: 'My team can support daily tasks while I keep full oversight.',
     quoteAuthor: 'Mama Ntombi, Soweto',
   },
 ]
 
-const tips: Tip[] = [
-  { emoji: '📱', tip: 'Add CentreConnect to your home screen. It works like an app with no download.' },
-  { emoji: '💾', tip: 'Start with five children from your register, then add more later.' },
-  { emoji: '🖨️', tip: 'Print your QR poster and place it at the gate for safer pickup.' },
-  { emoji: '📸', tip: 'Upload a clear centre photo and logo. Parents choose with their eyes first.' },
-  { emoji: '🗓️', tip: 'Set one weekly catch up slot so onboarding becomes easy and consistent.' },
+const tips = [
+  'Add CentreConnect to your home screen so it feels like an app.',
+  'Start by adding five children first, then continue in batches.',
+  'Print the parent QR poster and place it near the gate.',
+  'Upload your logo and hero photo so families trust your profile quickly.',
+  'Set one weekly admin slot so setup never feels heavy.',
 ]
+
+function toSafeText(value: string | null | undefined, fallback: string) {
+  const next = (value ?? '').trim()
+  return next.length > 0 ? next : fallback
+}
+
+function toLocation(suburb: string | null | undefined, city: string | null | undefined) {
+  const parts = [suburb, city].map((part) => (part ?? '').trim()).filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : 'your area'
+}
+
+function isSafeImageUrl(value: string | null | undefined) {
+  const next = (value ?? '').trim()
+  if (!next) return false
+  try {
+    const parsed = new URL(next)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+function toSlug(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 function ScenarioCard({
   scenario,
@@ -191,45 +235,19 @@ function ScenarioCard({
     <button
       type="button"
       onClick={() => onOpen(scenario)}
+      className="group rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        gap: '10px',
-        padding: '22px',
         background: scenario.bg,
-        border: `2px solid ${scenario.accent}`,
-        borderRadius: '20px',
-        cursor: 'pointer',
-        textAlign: 'left',
-        transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        width: '100%',
-      }}
-      onMouseEnter={(event) => {
-        event.currentTarget.style.transform = 'translateY(-3px)'
-        event.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.12)'
-      }}
-      onMouseLeave={(event) => {
-        event.currentTarget.style.transform = 'translateY(0)'
-        event.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+        borderColor: scenario.accent,
       }}
     >
-      <span style={{ fontSize: '2rem' }}>{scenario.emoji}</span>
-      <span
-        style={{
-          fontFamily: "'Bitter', Georgia, serif",
-          fontSize: '1.05rem',
-          fontWeight: 700,
-          color: scenario.color,
-          lineHeight: 1.3,
-        }}
-      >
+      <div className="mb-2 text-2xl">{scenario.emoji}</div>
+      <h3 className="text-base font-black leading-snug" style={{ color: scenario.color }}>
         {scenario.title}
-      </span>
-      <span style={{ fontSize: '0.82rem', color: '#6B7280', lineHeight: 1.5 }}>
-        Tap to read more →
-      </span>
+      </h3>
+      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
+        Tap to learn more
+      </p>
     </button>
   )
 }
@@ -253,178 +271,68 @@ function ScenarioModal({
 
   return (
     <div
+      className="fixed inset-0 z-[100] bg-slate-950/70 p-4 backdrop-blur-sm"
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.55)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        animation: 'fadeIn 0.2s ease',
-      }}
+      role="presentation"
     >
       <div
+        className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white shadow-[0_30px_90px_rgba(15,23,42,0.35)]"
         onClick={(event) => event.stopPropagation()}
-        style={{
-          background: '#fff',
-          borderRadius: '28px',
-          maxWidth: '560px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.3)',
-          animation: 'slideUp 0.25s ease',
-        }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={scenario.title}
       >
-        <div style={{ background: scenario.color, borderRadius: '28px 28px 0 0', padding: '28px 28px 24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '2.5rem' }}>{scenario.emoji}</span>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                color: '#fff',
-                borderRadius: '50%',
-                width: '36px',
-                height: '36px',
-                cursor: 'pointer',
-                fontSize: '1.1rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              aria-label="Close scenario"
-            >
-              ✕
-            </button>
+        <div className="flex items-start justify-between rounded-t-3xl px-6 pb-5 pt-6 text-white" style={{ background: scenario.color }}>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-white/80">Scenario</p>
+            <h3 className="mt-2 text-xl font-black">{scenario.title}</h3>
           </div>
-          <h2
-            style={{
-              fontFamily: "'Bitter', Georgia, serif",
-              fontSize: '1.4rem',
-              fontWeight: 800,
-              color: '#fff',
-              margin: '12px 0 0',
-              lineHeight: 1.3,
-            }}
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-white transition hover:bg-white/30"
+            onClick={onClose}
+            aria-label="Close"
           >
-            {scenario.title}
-          </h2>
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        <div style={{ padding: '28px' }}>
-          <div style={{ background: '#FEF3C7', borderRadius: '16px', padding: '18px', marginBottom: '20px' }}>
-            <p
-              style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: '#92400E',
-                margin: '0 0 8px',
-              }}
-            >
-              You know this situation
-            </p>
-            <p style={{ fontSize: '0.95rem', color: '#374151', lineHeight: 1.7, margin: 0 }}>
-              {scenario.pain}
-            </p>
+        <div className="space-y-4 p-6">
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-700">You know this situation</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">{scenario.pain}</p>
           </div>
 
-          <div
-            style={{
-              background: scenario.bg,
-              border: `2px solid ${scenario.accent}`,
-              borderRadius: '16px',
-              padding: '18px',
-              marginBottom: '20px',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '0.78rem',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: scenario.color,
-                margin: '0 0 8px',
-              }}
-            >
+          <div className="rounded-2xl border p-4" style={{ background: scenario.bg, borderColor: scenario.accent }}>
+            <p className="text-xs font-bold uppercase tracking-[0.12em]" style={{ color: scenario.color }}>
               Here is how it works now
             </p>
-            <p style={{ fontSize: '0.95rem', color: '#374151', lineHeight: 1.7, margin: 0 }}>
-              {scenario.solution}
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">{scenario.solution}</p>
           </div>
 
-          <div style={{ marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: '#374151', margin: '0 0 12px' }}>
-              Step by step
-            </p>
+          <div className="space-y-2">
+            <p className="text-sm font-bold text-slate-900">Step by step</p>
             {scenario.steps.map((step, index) => (
-              <div key={step} style={{ display: 'flex', gap: '14px', marginBottom: '10px', alignItems: 'flex-start' }}>
+              <div key={step} className="flex gap-3">
                 <span
-                  style={{
-                    minWidth: '28px',
-                    height: '28px',
-                    background: scenario.color,
-                    color: '#fff',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '0.78rem',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}
+                  className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-white"
+                  style={{ background: scenario.color }}
                 >
                   {index + 1}
                 </span>
-                <p style={{ fontSize: '0.9rem', color: '#374151', margin: 0, paddingTop: '4px', lineHeight: 1.5 }}>
-                  {step}
-                </p>
+                <p className="pt-1 text-sm text-slate-700">{step}</p>
               </div>
             ))}
           </div>
 
-          <div style={{ borderLeft: `4px solid ${scenario.color}`, paddingLeft: '16px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '0.9rem', color: '#374151', lineHeight: 1.7, fontStyle: 'italic', margin: '0 0 6px' }}>
-              {scenario.quote}
-            </p>
-            <p style={{ fontSize: '0.78rem', color: '#9CA3AF', margin: 0, fontWeight: 600 }}>
-              — {scenario.quoteAuthor}
-            </p>
-          </div>
+          <blockquote className="rounded-r-2xl border-l-4 bg-slate-50 px-4 py-3 text-sm italic text-slate-700" style={{ borderColor: scenario.color }}>
+            {scenario.quote}
+            <span className="mt-2 block text-xs font-semibold not-italic text-slate-500">- {scenario.quoteAuthor}</span>
+          </blockquote>
 
-          <a
-            href={scenario.ctaHref}
-            style={{
-              display: 'block',
-              textAlign: 'center',
-              background: scenario.color,
-              color: '#fff',
-              borderRadius: '16px',
-              padding: '16px',
-              fontWeight: 800,
-              fontSize: '1rem',
-              textDecoration: 'none',
-              transition: 'opacity 0.15s',
-            }}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.opacity = '0.88'
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.opacity = '1'
-            }}
-          >
-            {scenario.ctaLabel}
-          </a>
+          <Button asChild className="h-11 w-full rounded-2xl text-sm font-black" style={{ backgroundColor: scenario.color }}>
+            <Link href={scenario.ctaHref}>{scenario.ctaLabel}</Link>
+          </Button>
         </div>
       </div>
     </div>
@@ -433,10 +341,17 @@ function ScenarioModal({
 
 export default function CentreConnectWelcomePack() {
   const supabase = useMemo(() => createClient(), [])
+
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null)
-  const [centreName, setCentreName] = useState('your centre')
-  const [contactName, setContactName] = useState('Friend')
   const [step, setStep] = useState<0 | 1>(0)
+  const [contactName, setContactName] = useState('Friend')
+  const [centreName, setCentreName] = useState('your centre')
+  const [location, setLocation] = useState('your area')
+  const [centreSlug, setCentreSlug] = useState('')
+  const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
+  const [coverImageUrl, setCoverImageUrl] = useState<string>(HERO_IMAGE)
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle')
+
   const [onboardingMode, setOnboardingMode] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const [hasSession, setHasSession] = useState(false)
@@ -447,55 +362,147 @@ export default function CentreConnectWelcomePack() {
   const [passwordDone, setPasswordDone] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
+  const firstName = useMemo(() => {
+    const clean = contactName.trim()
+    if (!clean) return 'Friend'
+    return clean.split(' ')[0] || clean
+  }, [contactName])
+
+  const centrePublicPath = centreSlug ? `/centre/${centreSlug}` : ''
+
+  const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
+
   useEffect(() => {
-    let isMounted = true
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('centre')) setCentreName(params.get('centre') as string)
-    if (params.get('name')) setContactName(params.get('name') as string)
-    const onboarding = params.get('onboarding') === '1'
-    setOnboardingMode(onboarding)
+    let mounted = true
 
-    if (!onboarding) {
-      setCheckingSession(false)
-      return () => {
-        isMounted = false
+    const load = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const onboarding = params.get('onboarding') === '1'
+      const queryName = toSafeText(params.get('name'), 'Friend')
+      const queryCentre = toSafeText(params.get('centre'), 'your centre')
+      const queryLocation = toSafeText(params.get('location'), 'your area')
+      const querySlug = toSafeText(params.get('slug'), '')
+
+      const applyCentreProfile = (profile: CentreProfile) => {
+        setCentreSlug(profile.slug)
+        setCentreName(toSafeText(profile.name, queryCentre))
+        setCentreLogoUrl(isSafeImageUrl(profile.logoUrl) ? profile.logoUrl : null)
+        setCoverImageUrl(isSafeImageUrl(profile.coverImageUrl) ? (profile.coverImageUrl as string) : HERO_IMAGE)
+        setLocation(toLocation(profile.suburb, profile.city))
       }
-    }
 
-    void (async () => {
+      setOnboardingMode(onboarding)
+      setContactName(queryName)
+      setCentreName(queryCentre)
+      setLocation(queryLocation)
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
-      if (!isMounted) return
+      if (!mounted) return
+
       const signedIn = Boolean(session)
       setHasSession(signedIn)
-      setShowPasswordPanel(signedIn)
-      setCheckingSession(false)
-    })()
+      setShowPasswordPanel(onboarding && signedIn)
 
+      if (querySlug) {
+        const { data: bySlug } = await supabase
+          .from('public_ecd_centres')
+          .select('slug,name,logo_url,cover_image_url,suburb,city')
+          .eq('slug', querySlug)
+          .maybeSingle()
+        if (mounted && bySlug) {
+          applyCentreProfile({
+            slug: toSafeText(bySlug.slug, querySlug),
+            name: toSafeText(bySlug.name, queryCentre),
+            logoUrl: bySlug.logo_url,
+            coverImageUrl: bySlug.cover_image_url,
+            suburb: bySlug.suburb,
+            city: bySlug.city,
+          })
+        } else if (mounted) {
+          setCentreSlug(querySlug)
+        }
+      } else if (signedIn && session?.user?.id) {
+        const ownerCentre = await supabase
+          .from('ecd_centres')
+          .select('slug,name,logo_url,cover_image_url,suburb,city')
+          .eq('owner_id', session.user.id)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .maybeSingle()
+
+        if (mounted && ownerCentre.data) {
+          applyCentreProfile({
+            slug: toSafeText(ownerCentre.data.slug, ''),
+            name: toSafeText(ownerCentre.data.name, queryCentre),
+            logoUrl: ownerCentre.data.logo_url,
+            coverImageUrl: ownerCentre.data.cover_image_url,
+            suburb: ownerCentre.data.suburb,
+            city: ownerCentre.data.city,
+          })
+        } else {
+          const membershipResult = await supabase
+            .from('ecd_admins')
+            .select('ecd_centres:ecd_id(slug,name,logo_url,cover_image_url,suburb,city)')
+            .eq('user_id', session.user.id)
+            .limit(1)
+
+          const firstMembership = Array.isArray(membershipResult.data)
+            ? (membershipResult.data[0]?.ecd_centres as {
+                slug?: string | null
+                name?: string | null
+                logo_url?: string | null
+                cover_image_url?: string | null
+                suburb?: string | null
+                city?: string | null
+              } | null)
+            : null
+
+          if (mounted && firstMembership) {
+            applyCentreProfile({
+              slug: toSafeText(firstMembership.slug, ''),
+              name: toSafeText(firstMembership.name, queryCentre),
+              logoUrl: firstMembership.logo_url ?? null,
+              coverImageUrl: firstMembership.cover_image_url ?? null,
+              suburb: firstMembership.suburb ?? null,
+              city: firstMembership.city ?? null,
+            })
+          }
+        }
+      } else {
+        const fallbackSlug = toSlug(queryCentre)
+        if (fallbackSlug) setCentreSlug(fallbackSlug)
+      }
+
+      if (mounted) {
+        setCheckingSession(false)
+      }
+    }
+
+    void load()
     return () => {
-      isMounted = false
+      mounted = false
     }
   }, [supabase])
-
-  const firstName = useMemo(() => contactName.split(' ')[0] || contactName, [contactName])
 
   async function handlePasswordSetup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPasswordError(null)
 
     if (password.length < 8) {
-      setPasswordError('Use at least 8 characters for your password.')
+      setPasswordError('Use at least 8 characters.')
       return
     }
     if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match. Please try again.')
+      setPasswordError('Passwords do not match.')
       return
     }
 
     setPasswordSaving(true)
     const { error } = await supabase.auth.updateUser({ password })
     setPasswordSaving(false)
+
     if (error) {
       setPasswordError(error.message || 'Could not save password right now.')
       return
@@ -507,447 +514,245 @@ export default function CentreConnectWelcomePack() {
     setShowPasswordPanel(false)
   }
 
+  async function handleCopyCentreLink() {
+    if (!centrePublicPath) return
+    try {
+      const absolute = `${window.location.origin}${centrePublicPath}`
+      await navigator.clipboard.writeText(absolute)
+      setCopyStatus('done')
+      window.setTimeout(() => setCopyStatus('idle'), 1800)
+    } catch {
+      setCopyStatus('idle')
+    }
+  }
+
   return (
-    <>
+    <div className="min-h-screen bg-[linear-gradient(160deg,#fff7ed_0%,#f0fdfa_50%,#eff6ff_100%)] pb-20">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #FFF7ED; }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { transform: translateY(30px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
-        @keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
-        .pulse { animation: float 3s ease-in-out infinite; }
-        .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        @media (max-width: 640px) { .scenario-grid { grid-template-columns: 1fr; } }
+        @keyframes welcomeFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8px); }
+        }
       `}</style>
 
-      <div
-        style={{
-          fontFamily: "'Nunito', sans-serif",
-          minHeight: '100vh',
-          background: 'linear-gradient(160deg, #FFF7ED 0%, #F0FDFA 50%, #EFF6FF 100%)',
-        }}
-      >
-        {onboardingMode && (
-          <div
-            style={{
-              maxWidth: '660px',
-              margin: '0 auto',
-              padding: '18px 20px 0',
-            }}
-          >
-            <div
-              style={{
-                background: '#ffffff',
-                border: '1px solid #CCFBF1',
-                borderRadius: '16px',
-                boxShadow: '0 10px 28px rgba(15, 23, 42, 0.08)',
-                padding: '18px',
-              }}
-            >
-              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0F766E' }}>
-                Account setup
-              </p>
-              <p style={{ margin: '8px 0 0', fontSize: '0.95rem', color: '#334155', lineHeight: 1.6 }}>
-                Set your password now so future sign-ins are simple.
-              </p>
-
-              {checkingSession ? (
-                <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: '#64748B' }}>Checking secure session...</p>
-              ) : null}
-
+      {onboardingMode ? (
+        <div className="mx-auto w-full max-w-4xl px-4 pt-5">
+          <Card className="border-teal-100 bg-white/90 shadow-lg">
+            <CardHeader className="space-y-2 pb-3">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">Account setup</p>
+              <CardTitle className="text-base font-black text-slate-900">
+                Secure your sign-in before you continue
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {checkingSession ? <p className="text-sm text-slate-600">Checking secure session...</p> : null}
               {!checkingSession && !hasSession ? (
-                <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: '#B45309' }}>
-                  Open this page from your secure invite email link to finish setup.
+                <p className="text-sm text-amber-700">
+                  Open this page directly from your invite email link to finish account setup.
                 </p>
               ) : null}
 
               {!checkingSession && hasSession && showPasswordPanel ? (
-                <form onSubmit={handlePasswordSetup} style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
-                  <label style={{ fontSize: '0.85rem', color: '#334155', display: 'grid', gap: '6px' }}>
+                <form onSubmit={handlePasswordSetup} className="grid gap-3">
+                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
                     New password
                     <input
                       type="password"
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
                       minLength={8}
                       required
-                      style={{
-                        height: '42px',
-                        borderRadius: '12px',
-                        border: '1px solid #CBD5E1',
-                        padding: '0 12px',
-                        fontSize: '0.9rem',
-                      }}
+                      onChange={(event) => setPassword(event.target.value)}
+                      className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
                     />
                   </label>
-                  <label style={{ fontSize: '0.85rem', color: '#334155', display: 'grid', gap: '6px' }}>
+                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
                     Confirm password
                     <input
                       type="password"
                       value={confirmPassword}
-                      onChange={(event) => setConfirmPassword(event.target.value)}
                       minLength={8}
                       required
-                      style={{
-                        height: '42px',
-                        borderRadius: '12px',
-                        border: '1px solid #CBD5E1',
-                        padding: '0 12px',
-                        fontSize: '0.9rem',
-                      }}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
                     />
                   </label>
-                  {passwordError ? (
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#B91C1C' }}>{passwordError}</p>
-                  ) : null}
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    <button
-                      type="submit"
-                      disabled={passwordSaving}
-                      style={{
-                        border: 'none',
-                        borderRadius: '12px',
-                        padding: '10px 14px',
-                        fontWeight: 700,
-                        fontSize: '0.88rem',
-                        color: '#FFFFFF',
-                        background: '#0D9488',
-                        cursor: passwordSaving ? 'not-allowed' : 'pointer',
-                        opacity: passwordSaving ? 0.7 : 1,
-                      }}
-                    >
+                  {passwordError ? <p className="text-sm font-medium text-rose-600">{passwordError}</p> : null}
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="submit" className="rounded-xl bg-teal-600 hover:bg-teal-500" disabled={passwordSaving}>
                       {passwordSaving ? 'Saving...' : 'Save password'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowPasswordPanel(false)}
-                      style={{
-                        borderRadius: '12px',
-                        border: '1px solid #CBD5E1',
-                        padding: '10px 14px',
-                        fontWeight: 700,
-                        fontSize: '0.88rem',
-                        color: '#334155',
-                        background: '#FFFFFF',
-                        cursor: 'pointer',
-                      }}
-                    >
+                    </Button>
+                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => setShowPasswordPanel(false)}>
                       Skip for now
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : null}
 
               {passwordDone ? (
-                <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: '#047857' }}>
-                  Password saved. You can now sign in anytime with email and password.
+                <p className="text-sm font-semibold text-emerald-700">
+                  Password saved. You can now sign in any time with your email and password.
                 </p>
               ) : null}
-            </div>
-          </div>
-        )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
-        {step === 0 && (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minHeight: '100vh',
-              padding: '32px 24px',
-              textAlign: 'center',
-            }}
-          >
-            <div className="pulse" style={{ fontSize: '4rem', marginBottom: '24px' }}>
-              🏫
+      {step === 0 ? (
+        <section className="mx-auto flex min-h-[90vh] w-full max-w-5xl flex-col items-center justify-center px-4 pb-8 pt-10">
+          <div className="relative w-full overflow-hidden rounded-[32px] border border-white/60 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.15)]">
+            <img src={coverImageUrl} alt={`${centreName} hero`} className="h-72 w-full object-cover sm:h-80" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/25 to-transparent" />
+
+            <div className="absolute left-6 top-6 rounded-xl border border-white/40 bg-white/95 px-3 py-2 shadow-sm">
+              <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-8 w-auto" />
             </div>
 
-            <p
-              style={{
-                fontSize: '0.75rem',
-                fontWeight: 800,
-                letterSpacing: '0.18em',
-                textTransform: 'uppercase',
-                color: '#0D9488',
-                margin: '0 0 16px',
-              }}
-            >
-              CentreConnect
-            </p>
-
-            <h1
-              style={{
-                fontFamily: "'Bitter', Georgia, serif",
-                fontSize: 'clamp(2rem, 6vw, 2.8rem)',
-                fontWeight: 800,
-                color: '#1E293B',
-                margin: '0 0 12px',
-                lineHeight: 1.15,
-              }}
-            >
-              Sawubona, {firstName}
-            </h1>
-
-            <h2
-              style={{
-                fontFamily: "'Bitter', Georgia, serif",
-                fontSize: 'clamp(1.1rem, 4vw, 1.4rem)',
-                fontWeight: 600,
-                color: '#0D9488',
-                margin: '0 0 28px',
-                lineHeight: 1.4,
-              }}
-            >
-              {centreName} is now on CentreConnect.
-            </h2>
-
-            <div
-              style={{
-                maxWidth: '480px',
-                background: '#fff',
-                borderRadius: '24px',
-                padding: '28px',
-                boxShadow: '0 8px 40px rgba(0,0,0,0.1)',
-                marginBottom: '32px',
-                textAlign: 'left',
-              }}
-            >
-              <p style={{ fontSize: '1rem', color: '#374151', lineHeight: 1.8, margin: '0 0 14px' }}>
-                We know you have been running your centre with paper and WhatsApp for years.
-              </p>
-              <p style={{ fontSize: '1rem', color: '#374151', lineHeight: 1.8, margin: '0 0 14px' }}>
-                You already do incredible work. This guide simply helps you remove admin stress and save time.
-              </p>
-              <p style={{ fontSize: '1rem', color: '#374151', lineHeight: 1.8, margin: 0 }}>
-                Think of CentreConnect as your trusted helper, step by step.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              style={{
-                background: 'linear-gradient(135deg, #0D9488 0%, #0369A1 100%)',
-                color: '#fff',
-                border: 'none',
-                borderRadius: '20px',
-                padding: '20px 48px',
-                fontSize: '1.1rem',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: "'Nunito', sans-serif",
-                boxShadow: '0 8px 24px rgba(13,148,136,0.35)',
-                transition: 'transform 0.15s, box-shadow 0.15s',
-              }}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-2px)'
-                event.currentTarget.style.boxShadow = '0 12px 32px rgba(13,148,136,0.45)'
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0)'
-                event.currentTarget.style.boxShadow = '0 8px 24px rgba(13,148,136,0.35)'
-              }}
-            >
-              Let us get started →
-            </button>
-
-            <p style={{ fontSize: '0.8rem', color: '#9CA3AF', margin: '16px 0 0' }}>
-              Simple steps. Real support. No complicated setup.
-            </p>
-          </div>
-        )}
-
-        {step === 1 && (
-          <div style={{ maxWidth: '660px', margin: '0 auto', padding: '32px 20px 64px' }}>
-            <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-              <p
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: '#0D9488',
-                  margin: '0 0 12px',
-                }}
-              >
-                CentreConnect
-              </p>
-              <h1
-                style={{
-                  fontFamily: "'Bitter', Georgia, serif",
-                  fontSize: 'clamp(1.6rem, 5vw, 2.2rem)',
-                  fontWeight: 800,
-                  color: '#1E293B',
-                  margin: '0 0 12px',
-                }}
-              >
-                Your centre, your way
-              </h1>
-              <p style={{ fontSize: '1rem', color: '#6B7280', lineHeight: 1.7, margin: 0 }}>
-                Tap any card below to see exactly how CentreConnect helps in real daily situations.
-              </p>
-            </div>
-
-            <div
-              style={{
-                background: 'linear-gradient(135deg, #0D9488 0%, #0369A1 100%)',
-                borderRadius: '24px',
-                padding: '28px',
-                marginBottom: '32px',
-                color: '#fff',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-            >
-              <div style={{ position: 'absolute', top: '-20px', right: '-20px', fontSize: '6rem', opacity: 0.1 }}>
-                🏫
+            {centreLogoUrl ? (
+              <div className="absolute right-6 top-6 h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-xl">
+                <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
               </div>
-              <p
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  margin: '0 0 12px',
-                  opacity: 0.8,
-                }}
-              >
-                A personal note for {firstName}
-              </p>
-              <p style={{ fontSize: '1rem', lineHeight: 1.75, margin: '0 0 16px', opacity: 0.95 }}>
-                This platform is built for centres like {centreName}. It helps reduce the admin load so your team can focus on children.
-              </p>
-              <p style={{ fontSize: '1rem', lineHeight: 1.75, margin: 0, opacity: 0.95 }}>
-                Parents are already asking for this type of experience.
-              </p>
-            </div>
+            ) : null}
 
-            <h2
-              style={{
-                fontFamily: "'Bitter', Georgia, serif",
-                fontSize: '1.3rem',
-                fontWeight: 800,
-                color: '#1E293B',
-                margin: '0 0 6px',
-              }}
-            >
-              What would you like to tackle first?
-            </h2>
-            <p style={{ fontSize: '0.88rem', color: '#9CA3AF', margin: '0 0 18px' }}>
-              Each card explains one common situation.
-            </p>
-
-            <div className="scenario-grid" style={{ marginBottom: '40px' }}>
-              {scenarios.map((scenario) => (
-                <ScenarioCard key={scenario.id} scenario={scenario} onOpen={setActiveScenario} />
-              ))}
-            </div>
-
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '24px',
-                padding: '28px',
-                marginBottom: '32px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-              }}
-            >
-              <h2
-                style={{
-                  fontFamily: "'Bitter', Georgia, serif",
-                  fontSize: '1.2rem',
-                  fontWeight: 800,
-                  color: '#1E293B',
-                  margin: '0 0 6px',
-                }}
-              >
-                Quick tips from other principals
-              </h2>
-              <p style={{ fontSize: '0.85rem', color: '#9CA3AF', margin: '0 0 20px' }}>
-                Small actions that make setup easier.
+            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100">CentreConnect Welcome</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+                Sawubona, {firstName}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-100 sm:text-base">
+                {centreName} in {location} is ready. We know WhatsApp can blow up and paper admin can drain the day.
+                This welcome guide keeps setup simple so your team can focus on children.
               </p>
-              {tips.map((tip) => (
-                <div key={tip.tip} style={{ display: 'flex', gap: '14px', marginBottom: '16px', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>{tip.emoji}</span>
-                  <p style={{ fontSize: '0.9rem', color: '#374151', lineHeight: 1.65, margin: 0 }}>{tip.tip}</p>
-                </div>
-              ))}
-            </div>
-
-            <div
-              style={{
-                background: '#F0FDF4',
-                border: '2px solid #A7F3D0',
-                borderRadius: '24px',
-                padding: '28px',
-                marginBottom: '32px',
-              }}
-            >
-              <p
-                style={{
-                  fontSize: '0.75rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.15em',
-                  textTransform: 'uppercase',
-                  color: '#047857',
-                  margin: '0 0 12px',
-                }}
-              >
-                We are here always
-              </p>
-              <p style={{ fontSize: '1rem', color: '#374151', lineHeight: 1.75, margin: '0 0 20px' }}>
-                If anything is confusing, WhatsApp us. A real person will help you.
-              </p>
-              <a
-                href="https://wa.me/27685356430?text=Hi%2C%20I%20need%20help%20with%20CentreConnect"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  background: '#25D366',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  borderRadius: '16px',
-                  padding: '14px 24px',
-                  fontWeight: 800,
-                  fontSize: '0.95rem',
-                  boxShadow: '0 4px 16px rgba(37,211,102,0.35)',
-                }}
-              >
-                <span style={{ fontSize: '1.2rem' }}>💬</span>
-                WhatsApp us right now
-              </a>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '0.9rem', color: '#6B7280', margin: '0 0 16px', lineHeight: 1.6 }}>
-                Ready to go in? Your dashboard is waiting.
-              </p>
-              <a
-                href="/ecd/dashboard"
-                style={{
-                  display: 'inline-block',
-                  background: 'linear-gradient(135deg, #0D9488 0%, #0369A1 100%)',
-                  color: '#fff',
-                  textDecoration: 'none',
-                  borderRadius: '20px',
-                  padding: '20px 48px',
-                  fontWeight: 800,
-                  fontSize: '1.1rem',
-                  boxShadow: '0 8px 24px rgba(13,148,136,0.35)',
-                  fontFamily: "'Nunito', sans-serif",
-                }}
-              >
-                Open my dashboard
-              </a>
             </div>
           </div>
-        )}
 
-        <ScenarioModal scenario={activeScenario} onClose={() => setActiveScenario(null)} />
-      </div>
-    </>
+          <div className="mt-8 max-w-3xl space-y-5 text-center">
+            <p
+              className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-md"
+              style={{ animation: 'welcomeFloat 4s ease-in-out infinite' }}
+            >
+              🏫
+            </p>
+            <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
+              Parents are already asking for the app. Let us show you the practical steps so your centre feels calm, trusted, and ready from day one.
+            </p>
+            <Button
+              type="button"
+              className="h-12 rounded-2xl bg-teal-600 px-8 text-base font-black hover:bg-teal-500"
+              onClick={() => setStep(1)}
+            >
+              Start my welcome tour
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+      ) : (
+        <section className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-10 pt-8">
+          <Card className="border-white/70 bg-white/95 shadow-[0_25px_80px_rgba(15,23,42,0.14)]">
+            <CardContent className="space-y-5 p-6 sm:p-7">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.18em] text-teal-700">Your centre, your pace</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                    What would you like to tackle first?
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-600">Tap any card for a clear, real-life walkthrough.</p>
+                </div>
+                {centreLogoUrl ? (
+                  <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-lg">
+                    <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {scenarios.map((scenario) => (
+                  <ScenarioCard key={scenario.id} scenario={scenario} onOpen={setActiveScenario} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-teal-100 bg-teal-50/80 shadow-lg">
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-teal-700" />
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-teal-700">Quick First Steps</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {tips.map((tip) => (
+                  <div key={tip} className="rounded-2xl border border-teal-100 bg-white px-4 py-3 text-sm text-slate-700">
+                    {tip}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-4">
+                <Button asChild className="h-11 rounded-2xl bg-teal-600 hover:bg-teal-500">
+                  <Link href="/ecd/dashboard">Open Dashboard</Link>
+                </Button>
+                <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-300 bg-white">
+                  <Link href="/ecd/website">Website Setup</Link>
+                </Button>
+                {posterHref ? (
+                  <Button asChild variant="outline" className="h-11 rounded-2xl border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100">
+                    <Link href={posterHref}>
+                      <QrCode className="mr-2 h-4 w-4" />
+                      Print Parent QR Poster
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    disabled
+                    variant="outline"
+                    className="h-11 rounded-2xl border-slate-200 bg-slate-100 text-slate-400"
+                  >
+                    Upload profile to enable QR poster
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyCentreLink}
+                  className={cn(
+                    'h-11 rounded-2xl border-slate-300 bg-white',
+                    copyStatus === 'done' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : ''
+                  )}
+                  disabled={!centrePublicPath}
+                >
+                  {copyStatus === 'done' ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                  {copyStatus === 'done' ? 'Copied link' : 'Copy centre link'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-emerald-100 bg-emerald-50/70 shadow-lg">
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="h-5 w-5 text-emerald-700" />
+                <p className="text-sm font-black text-emerald-900">A note from Mandlenkosi, founder of CentreConnect</p>
+              </div>
+              <p className="text-sm leading-relaxed text-emerald-900">
+                Thank you for trusting us with your business. Every centre we onboard helps another family feel safer and better informed.
+                Your growth is our growth, and we are committed to walking this journey with you, step by step.
+              </p>
+              <p className="text-sm font-semibold text-emerald-800">
+                Need a hand now? Send us a WhatsApp and we will respond like a neighbour, not a call centre.
+              </p>
+              <Button asChild className="h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500">
+                <Link href="https://wa.me/27685356430?text=Hi%20CentreConnect%2C%20please%20help%20me%20finish%20onboarding.">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  WhatsApp support
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
+      <ScenarioModal scenario={activeScenario} onClose={() => setActiveScenario(null)} />
+    </div>
   )
 }
