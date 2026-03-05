@@ -4,10 +4,16 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
-import { APP_URL, SUPPORT_EMAIL } from '@/lib/config'
+import { SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
 import { sendEmail } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
+import {
+  buildDefaultEcdOnboardingRedirect,
+  buildLockedResetPasswordRedirect,
+  generateMagicFirstAccessLink,
+  normalizeAppUrl,
+} from '@/lib/auth/onboarding-links'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -102,20 +108,6 @@ async function revokeParentAccess(adminClient: ReturnType<typeof createAdminClie
   return null
 }
 
-function normalizeAppUrl() {
-  return APP_URL.replace(/\/$/, '')
-}
-
-function toDefaultRedirectTo() {
-  const baseUrl = normalizeAppUrl()
-  return `${baseUrl}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
-}
-
-function toPasswordRedirectTo(email: string) {
-  const baseUrl = normalizeAppUrl()
-  return `${baseUrl}/reset-password?locked_email=${encodeURIComponent(email)}`
-}
-
 function toPlainTextEmail(html: string) {
   return html
     .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -134,61 +126,6 @@ function toPlainTextEmail(html: string) {
     .trim()
 }
 
-async function generateEcdAccessLink(input: {
-  adminClient: ReturnType<typeof createAdminClient>
-  email: string
-  redirectTo: string
-  preferMagicLink?: boolean
-}) {
-  const { adminClient, email, redirectTo, preferMagicLink = false } = input
-
-  const errors: string[] = []
-  if (!preferMagicLink) {
-    const inviteResult = await adminClient.auth.admin.generateLink({
-      type: 'invite',
-      email,
-      options: { redirectTo },
-    })
-    const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
-    if (!inviteResult.error && inviteLink) {
-      return {
-        link: inviteLink,
-        authUserId: inviteResult.data?.user?.id ?? null,
-        mode: 'invite' as const,
-        warning: null as string | null,
-      }
-    }
-    if (inviteResult.error?.message) {
-      errors.push(`invite: ${inviteResult.error.message}`)
-    }
-  }
-
-  const magicResult = await adminClient.auth.admin.generateLink({
-    type: 'magiclink',
-    email,
-    options: { redirectTo },
-  })
-  const magicLink = magicResult.data?.properties?.action_link?.trim() ?? ''
-  if (!magicResult.error && magicLink) {
-    return {
-      link: magicLink,
-      authUserId: magicResult.data?.user?.id ?? null,
-      mode: 'magiclink' as const,
-      warning: preferMagicLink ? null : 'Existing account detected. Sent secure sign-in link.',
-    }
-  }
-  if (magicResult.error?.message) {
-    errors.push(`magiclink: ${magicResult.error.message}`)
-  }
-
-  return {
-    link: '',
-    authUserId: null,
-    mode: preferMagicLink ? ('magiclink' as const) : ('invite' as const),
-    warning: errors.length > 0 ? errors.join(' | ') : 'Failed to generate access link.',
-  }
-}
-
 async function generatePasswordSetupLink(input: {
   adminClient: ReturnType<typeof createAdminClient>
   email: string
@@ -197,7 +134,7 @@ async function generatePasswordSetupLink(input: {
   const recoveryResult = await adminClient.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: toPasswordRedirectTo(email) },
+    options: { redirectTo: buildLockedResetPasswordRedirect(email) },
   })
   const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
   if (!recoveryResult.error && recoveryLink) {
@@ -244,7 +181,7 @@ export async function POST(request: Request) {
   }
 
   const nowIso = new Date().toISOString()
-  const redirectTo = data.redirectTo ?? toDefaultRedirectTo()
+  const redirectTo = data.redirectTo ?? buildDefaultEcdOnboardingRedirect()
   const inviteResult = await adminClient.auth.admin.inviteUserByEmail(
     normalizedEmail,
     {
@@ -274,7 +211,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const accessLinkResult = await generateEcdAccessLink({
+  const accessLinkResult = await generateMagicFirstAccessLink({
     adminClient,
     email: normalizedEmail,
     redirectTo,

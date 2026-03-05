@@ -154,6 +154,20 @@ export default function EcdLoginPage() {
                 Parent login
               </Link>
             </div>
+
+            <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-center">
+              <p className="text-xs font-medium leading-relaxed text-slate-700">
+                Got an ECD invite email? Open the secure link from that email first to activate access.
+              </p>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold">
+                <Link href="/forgot-password" className="text-cyan-700 hover:underline">
+                  Set or reset password
+                </Link>
+                <a href="mailto:admin@centerconnect.co.za" className="text-cyan-700 hover:underline">
+                  Contact support
+                </a>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </Section>
