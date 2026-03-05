@@ -17,18 +17,9 @@ const BRAND = {
   primary: '#0d9488',
 }
 
-const CENTRECONNECT_LOGO_MARKUP = `
-<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #ccfbf1;">
-  <svg width="22" height="22" viewBox="0 0 64 64" aria-hidden="true">
-    <defs>
-      <linearGradient id="cc-owner-email-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#0F766E"></stop>
-        <stop offset="100%" stop-color="#14B8A6"></stop>
-      </linearGradient>
-    </defs>
-    <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#cc-owner-email-logo-gradient)"></rect>
-    <path d="M40 18a16 16 0 1 0 0 28" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
-  </svg>
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/Logo.jpeg'
+const CENTRECONNECT_LOGO_MARKUP = `<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #ccfbf1;overflow:hidden;">
+  <img src="${CENTRECONNECT_LOGO_URL}" width="34" height="34" alt="CentreConnect logo" style="display:block;width:34px;height:34px;object-fit:cover;" />
 </span>`
 
 function escapeHtml(value: string) {

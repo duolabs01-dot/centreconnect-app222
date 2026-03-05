@@ -49,6 +49,8 @@ const BRAND = {
   border: '#E2E8F0',
 }
 
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/Logo.jpeg'
+
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (
     <span
@@ -61,25 +63,16 @@ function BrandLogoMark({ size = 30 }: { size?: number }) {
         borderRadius: '8px',
         backgroundColor: '#ffffff',
         border: '1px solid #ccfbf1',
+        overflow: 'hidden',
       }}
     >
-      <svg width={Math.max(14, size - 12)} height={Math.max(14, size - 12)} viewBox="0 0 64 64" aria-hidden="true">
-        <defs>
-          <linearGradient id="cc-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0F766E" />
-            <stop offset="100%" stopColor="#14B8A6" />
-          </linearGradient>
-        </defs>
-        <rect x="4" y="4" width="56" height="56" rx="14" fill="url(#cc-logo-gradient)" />
-        <path
-          d="M40 18a16 16 0 1 0 0 28"
-          fill="none"
-          stroke="#FFFFFF"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <img
+        src={CENTRECONNECT_LOGO_URL}
+        width={size}
+        height={size}
+        alt="CentreConnect"
+        style={{ display: 'block', width: `${size}px`, height: `${size}px`, objectFit: 'cover' }}
+      />
     </span>
   )
 }
