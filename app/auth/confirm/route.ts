@@ -3,17 +3,13 @@ import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
+import {
+  resolveProvisionRole,
+  syncAuthUserMetadataRole,
+  type AllowedRole,
+} from '@/lib/auth/provision-role'
 
 export const dynamic = 'force-dynamic'
-
-type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
-
-function sanitizeRole(role: unknown): AllowedRole {
-  if (role === 'platform_admin' || role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor' || role === 'parent_user') {
-    return role
-  }
-  return 'parent_user'
-}
 
 function fallbackName(email?: string | null) {
   const local = (email ?? '').split('@')[0]?.trim()
@@ -72,6 +68,7 @@ async function verifyWithTokenHash(input: {
 }
 
 async function provisionProfileWithAdmin(input: {
+  admin: ReturnType<typeof createAdminClient>
   userId: string
   role: AllowedRole
   fullName: string
@@ -79,8 +76,7 @@ async function provisionProfileWithAdmin(input: {
   username: string
 }) {
   try {
-    const admin = createAdminClient()
-    const { error: profileError } = await admin.from('user_profiles').upsert(
+    const { error: profileError } = await input.admin.from('user_profiles').upsert(
       {
         id: input.userId,
         role: input.role,
@@ -93,8 +89,11 @@ async function provisionProfileWithAdmin(input: {
     if (profileError) throw profileError
 
     if (input.role === 'parent_user') {
-      const { error: parentError } = await admin.from('parents').upsert({ id: input.userId }, { onConflict: 'id' })
+      const { error: parentError } = await input.admin.from('parents').upsert({ id: input.userId }, { onConflict: 'id' })
       if (parentError) throw parentError
+    } else {
+      const { error: parentDeleteError } = await input.admin.from('parents').delete().eq('id', input.userId)
+      if (parentDeleteError) throw parentDeleteError
     }
 
     return true
@@ -194,7 +193,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-session-missing', request))
     }
 
-    const desiredRole = sanitizeRole(user.user_metadata?.role)
+    const admin = createAdminClient()
+    const resolvedRole = await resolveProvisionRole({
+      adminClient: admin,
+      userId: user.id,
+      email: user.email ?? null,
+      metadataRole: user.user_metadata?.role,
+    })
+    const desiredRole = resolvedRole.role
     const fullName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? fallbackName(user.email)
     const phone = user.user_metadata?.phone ?? null
     const username = user.user_metadata?.username ?? `user_${user.id.split('-')[0].toLowerCase()}`
@@ -220,7 +226,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const metadataSync = await syncAuthUserMetadataRole({
+      adminClient: admin,
+      userId,
+      role: desiredRole,
+    })
+    if (!metadataSync.ok) {
+      console.warn('[auth/confirm] Failed to sync user_metadata role:', metadataSync.error)
+    }
+
     const provisionedWithAdmin = await provisionProfileWithAdmin({
+      admin,
       userId,
       role: desiredRole,
       fullName,
@@ -240,6 +256,14 @@ export async function GET(request: NextRequest) {
 
     if (!provisioned) {
       console.warn('[auth/confirm] Profile provisioning deferred until first authenticated request')
+    }
+
+    if (resolvedRole.source !== 'metadata') {
+      console.info('[auth/confirm] Role resolved from non-metadata source', {
+        userId,
+        source: resolvedRole.source,
+        role: desiredRole,
+      })
     }
 
     return NextResponse.redirect(buildRedirectUrl(next, request))

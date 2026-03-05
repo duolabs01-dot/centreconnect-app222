@@ -14,6 +14,7 @@ import {
   generateMagicFirstAccessLink,
   normalizeAppUrl,
 } from '@/lib/auth/onboarding-links'
+import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -263,6 +264,15 @@ export async function POST(request: Request) {
     if (profileError) {
       const message = formatErrorMessage(profileError, 'Failed to create profile.')
       return NextResponse.json({ error: `Failed to create profile: ${message}` }, { status: 500 })
+    }
+
+    const metadataSync = await syncAuthUserMetadataRole({
+      adminClient,
+      userId: invitedUserId,
+      role: data.role,
+    })
+    if (!metadataSync.ok) {
+      console.warn('[platform-admin/invitations] Failed to sync auth metadata role:', metadataSync.error)
     }
 
     const { error: adminLinkError } = await adminClient.from('ecd_admins').upsert(

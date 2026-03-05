@@ -14,6 +14,7 @@ import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/n
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
+import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
 type SendOwnerInviteResponse = {
   ok: boolean
@@ -365,6 +366,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         { error: `Failed to upsert owner profile: ${profileUpsertError.message}` },
         { status: 500 }
       )
+    }
+
+    const metadataSync = await syncAuthUserMetadataRole({
+      adminClient: admin,
+      userId: resolvedAuthUserId,
+      role: 'ecd_admin',
+    })
+    if (!metadataSync.ok) {
+      combinedWarning = combinedWarning
+        ? `${combinedWarning} | Failed to sync auth metadata role: ${metadataSync.error}`
+        : `Failed to sync auth metadata role: ${metadataSync.error}`
     }
 
     const { error: membershipUpsertError } = await admin.from('ecd_admins').upsert(

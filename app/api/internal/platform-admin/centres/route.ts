@@ -17,6 +17,7 @@ import {
   normalizeAppUrl,
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
+import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
 const APP_BASE_URL = normalizeAppUrl()
 
@@ -389,6 +390,15 @@ export async function POST(request: Request) {
       { error: `Failed to create primary admin profile: ${profileError.message}` },
       { status: 500 }
     )
+  }
+
+  const metadataSync = await syncAuthUserMetadataRole({
+    adminClient,
+    userId: adminUserId,
+    role: 'ecd_admin',
+  })
+  if (!metadataSync.ok) {
+    console.warn('[admin/centres] Failed to sync auth metadata role:', metadataSync.error)
   }
 
   const { error: ecdAdminError } = await adminClient.from('ecd_admins').upsert({
