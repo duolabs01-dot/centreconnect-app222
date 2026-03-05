@@ -6,11 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Heart, MapPin, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
 interface CentreCardProps {
   id: string;
+  slug?: string;
   name: string;
   cover_image_url?: string;
   address?: string;
@@ -26,6 +28,7 @@ interface CentreCardProps {
 
 export function CentreCard({
   id,
+  slug,
   name,
   cover_image_url,
   address,
@@ -43,6 +46,22 @@ export function CentreCard({
   const handleSave = () => {
     setSaved(!saved);
     onSave?.();
+  };
+
+  const router = useRouter();
+
+  const handleApply = () => {
+    if (onApply) {
+      onApply();
+      return;
+    }
+
+    if (slug) {
+      router.push(`/apply/${slug}`);
+      return;
+    }
+
+    router.push(`/centres/${id}`);
   };
 
   return (
@@ -115,7 +134,7 @@ export function CentreCard({
 
         <CardFooter className="px-6 pb-6 pt-0 gap-3">
           <Button
-            onClick={onApply}   {/* ← This line must be present and not overridden */}
+            onClick={handleApply}
             className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-6 rounded-2xl text-base shadow-md active:scale-95 transition-all"
           >
             Apply Now – It’s Free
