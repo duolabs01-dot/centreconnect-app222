@@ -207,6 +207,7 @@ function isEcdRole(role: UserRole | null | undefined): role is 'ecd_admin' | 'ec
 function getProtectedArea(pathname: string): ProtectedArea | null {
   if (pathname === '/ecd/login') return null
   if (pathname === '/ecd/register') return null
+  if (pathname === '/ecd/welcome' || pathname.startsWith('/ecd/welcome/')) return null
   if (pathname.startsWith('/admin')) return 'admin'
   if (pathname.startsWith('/ecd')) return 'ecd'
   if (pathname.startsWith('/parent')) return 'parent'

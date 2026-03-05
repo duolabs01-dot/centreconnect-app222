@@ -1,4 +1,4 @@
-import { APP_URL } from '@/lib/config'
+import { APP_URL, EMAIL_APP_URL, ROOT_DOMAIN } from '@/lib/config'
 
 export type AccessLinkMode = 'magiclink' | 'invite'
 
@@ -39,8 +39,44 @@ type WelcomePathInput = {
   onboarding?: boolean
 }
 
-export function normalizeAppUrl(value: string = APP_URL) {
-  return value.replace(/\/$/, '')
+function toOrigin(raw: string | null | undefined): string | null {
+  const value = (raw ?? '').trim()
+  if (!value) return null
+  const withProtocol = /^https?:\/\//i.test(value) ? value : `https://${value}`
+  try {
+    return new URL(withProtocol).origin
+  } catch {
+    return null
+  }
+}
+
+function resolveCanonicalOrigin() {
+  return toOrigin(ROOT_DOMAIN) ?? 'https://centerconnect.co.za'
+}
+
+function shouldForceCanonicalOrigin() {
+  if (process.env.CC_FORCE_CANONICAL_URL === '1') return true
+  return process.env.VERCEL_ENV === 'production'
+}
+
+export function resolvePublicAppUrl(preferred?: string) {
+  const canonicalOrigin = resolveCanonicalOrigin()
+  if (shouldForceCanonicalOrigin()) return canonicalOrigin
+
+  const preferredOrigin = toOrigin(preferred)
+  if (preferredOrigin) return preferredOrigin
+
+  const emailOrigin = toOrigin(EMAIL_APP_URL)
+  if (emailOrigin) return emailOrigin
+
+  const appOrigin = toOrigin(APP_URL)
+  if (appOrigin) return appOrigin
+
+  return canonicalOrigin
+}
+
+export function normalizeAppUrl(value?: string) {
+  return resolvePublicAppUrl(value).replace(/\/$/, '')
 }
 
 function sanitizeNextPath(nextPath: string) {

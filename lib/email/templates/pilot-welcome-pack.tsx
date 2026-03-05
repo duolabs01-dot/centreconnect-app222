@@ -183,8 +183,8 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       </tr>
     </table>
 
-    <div style="margin:0 0 10px;">${button('Get Started Now', input.dashboardLink)}</div>
-    <div style="margin:0 0 16px;">${button(`See Your ${packageLabel}`, welcomeGuideUrl)}</div>
+    <div style="margin:0 0 10px;">${button(`See Your ${packageLabel}`, welcomeGuideUrl)}</div>
+    <div style="margin:0 0 16px;">${button('Get Started Now', input.dashboardLink)}</div>
 
     <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 16px;">
       <tr>

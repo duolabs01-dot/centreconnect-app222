@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
+import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -49,12 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'ownerEmail is required' }, { status: 400 })
   }
 
-  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL
-  if (!rawAppUrl) {
-    console.error('resend-welcome-pack: NEXT_PUBLIC_APP_URL missing')
-    return NextResponse.json({ success: false, error: 'Application URL is not configured' }, { status: 500 })
-  }
-  const appUrlRoot = rawAppUrl.replace(/\/+$/, '')
+  const appUrlRoot = normalizeAppUrl()
 
   const smtpHost = process.env.SMTP_HOST
   const smtpPortRaw = process.env.SMTP_PORT
@@ -138,7 +134,10 @@ export async function POST(request: Request) {
   })
   const magicActionLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicLinkResult.error && magicActionLink) {
-    getStartedUrl = magicActionLink
+    getStartedUrl = buildUrl(appUrlRoot, '/api/invites/open', {
+      channel: 'email',
+      target: magicActionLink,
+    })
   } else if (magicLinkResult.error) {
     console.error('resend-welcome-pack: magic link generation failed', magicLinkResult.error)
   }
@@ -170,8 +169,8 @@ export async function POST(request: Request) {
     `Welcome to CentreConnect for ${centreName}.`,
     'Parents are already asking for the app.',
     '',
-    `Get started: ${getStartedUrl}`,
     `See your welcome pack: ${welcomeGuideUrl}`,
+    `Get started: ${getStartedUrl}`,
     `Public centre page: ${publicCentreLink}`,
     '',
     'Need help? WhatsApp +27 68 535 6430.',
