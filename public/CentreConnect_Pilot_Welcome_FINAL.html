@@ -1,108 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>CentreConnect — Your Pilot Welcome Pack</title>
-<style>
-  :root {
-    --bg: #0d1f3c;
-    --bg-soft: #f5f7ff;
-    --accent: #8b5cf6;
-    --accent-2: #0ea5e9;
-    --text: #0f172a;
-    --text-muted: #475569;
-    --card: #ffffff;
-    font-family: 'Inter', 'Orbitron', system-ui, sans-serif;
-  }
-  body {
-    margin: 0;
-    background: #f5f7ff;
-    color: var(--text);
-  }
-  .page {
-    padding: 60px;
-    background: #fff;
-  }
-  .page h1,
-  .page h2,
-  .page h3 {
-    font-family: 'Orbitron', sans-serif;
-  }
-  .page .accent {
-    color: var(--accent);
-  }
-  .card {
-    background: var(--card);
-    border-radius: 2rem;
-    padding: 24px;
-    margin-top: 24px;
-    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.1);
-  }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #0891b2, #0ea5e9);
-    color: #fff;
-    text-decoration: none;
-    font-weight: 800;
-    padding: 14px 32px;
-    font-size: 18px;
-    transition: transform .2s ease, box-shadow .2s ease;
-    box-shadow: 0 18px 36px rgba(3, 105, 161, 0.35);
-  }
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 24px 48px rgba(3, 105, 161, 0.45);
-  }
-  pre {
-    font-family: 'Inter', monospace;
-    background: #f3f4f6;
-    padding: 12px;
-    border-radius: 12px;
-    overflow-x: auto;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CentreConnect — Welcome, {{ownerName}}!</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@600;700&display=swap');
+    :root {
+      --bg-dark: #0d1f3c;
+      --bg-soft: #eff6ff;
+      --accent: #f5a623;
+      --accent-strong: #0ea5e9;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f8fafc;
+      color: var(--text-dark);
+    }
+    .cover {
+      min-height: 85vh;
+      background: radial-gradient(circle at 20% 20%, rgba(13,148,136,.35), transparent 45%),
+        linear-gradient(135deg, var(--bg-dark), #111d35);
+      color: #fff;
+      padding: 64px 24px;
+      text-align: center;
+    }
+    .cover h1 {
+      margin: 0 0 16px;
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2.4rem, 5vw, 3.4rem);
+      line-height: 1.2;
+    }
+    .cover p {
+      margin: 0 auto 32px;
+      max-width: 520px;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.85);
+    }
+    .btn,
+    .scenario-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 32px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform .2s ease, box-shadow .2s ease;
+      box-shadow: 0 12px 26px rgba(3,15,71,.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn { background: var(--accent); color: var(--bg-dark); }
+    .btn:hover { transform: translateY(-2px); }
+    .section {
+      padding: 56px 24px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(2rem, 3vw, 2.6rem);
+      margin-bottom: 12px;
+      color: var(--text-dark);
+    }
+    .section p { margin-top: 0; color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px,1fr));
+      gap: 18px;
+      margin-top: 32px;
+    }
+    .scenario-card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 24px;
+      border: 1px solid rgba(15,23,42,.08);
+      box-shadow: 0 10px 30px rgba(15,23,42,.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform .2s ease;
+    }
+    .scenario-card:hover { transform: translateY(-4px); }
+    .scenario-card h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: var(--text-dark);
+      font-family: 'Orbitron', sans-serif;
+    }
+    .tag { font-size: 0.8rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+    .modal-backdrop.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 28px;
+      max-width: 560px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 40px 80px rgba(2,6,23,.35);
+      animation: slideUp .3s ease;
+    }
+    .modal-header {
+      background: linear-gradient(135deg, #0d9488, #0369a1);
+      border-radius: 28px 28px 0 0;
+      padding: 32px;
+      color: #fff;
+    }
+    .modal-content { padding: 28px; }
+    .modal h3 { margin-top: 0; }
+    .steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .steps li { display: flex; gap: 12px; align-items: flex-start; }
+    .steps li span { background: #0d9488; color: #fff; border-radius: 999px; width: 32px; height: 32px; display:flex; align-items:center; justify-content:center; font-size:0.9rem; }
+    .quote { border-left: 4px solid #0ea5e9; padding-left: 16px; margin: 18px 0; color: #374151; font-style: italic; }
+    .close-button { background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; }
+    pre { background: #0f172a; color: #fff; padding: 12px; border-radius: 12px; overflow-x: auto; }
+  </style>
 </head>
 <body>
 
-<!-- PAGE 1: PERSONAL COVER -->
-<div class="page" style="background:var(--bg);color:#fff;text-align:center;position:relative;">
-  <div style="position:absolute;top:40px;right:40px;background:var(--accent);color:#fff;font-size:12px;padding:6px 20px;border-radius:9999px;font-weight:700;">PILOT PROGRAMME</div>
-  <div style="font-family:'Orbitron',sans-serif;font-size:42px;margin-bottom:20px;">Centre<span class="accent">Connect</span></div>
-  <h1 style="font-size:56px;line-height:1.1;margin:40px 0;">Hey {{ownerName}},<br/>welcome to the family!<br/>{{centreName}} is set up and ready.</h1>
-  <p style="font-size:18px;max-width:520px;margin:0 auto 40px;color:#cbd5f5;">I know running a crèche in {{location}} means dealing with WhatsApp chaos and paper stacks every day. Parents are loving CentreConnect — they're already demanding the app! Let's make your life easier, step by step.</p>
-  <a href="https://centerconnect.co.za/ecd/profile" class="btn">Edit My Centre Profile Now →</a>
-</div>
-
-<!-- PAGE 2: FRIENDLY INTRO -->
-<div class="page" style="background:var(--bg-soft);">
-  <h1 style="font-size:42px;margin-bottom:16px;">What if running your centre felt simple?</h1>
-  <p style="font-size:18px;line-height:1.6;color:var(--text-muted);max-width:740px;">Hey {{ownerName}}, you've been doing incredible work with WhatsApp threads, spreadsheets, and note pads. CentreConnect isn't here to replace what works—it attaches to your flow, moving the daily heavy lifting into one calm dashboard. Think of it as your friendly sidekick that handles the boring admin so you can focus on the children.</p>
-  <div class="card">
-    <h3 style="margin-top:0;">Parents are demanding it!</h3>
-    <p style="margin-bottom:0;color:var(--text-muted);">“I want pickup codes on my phone!” is what parents keep telling us. Let’s give them that inbox-level calm and make {{centreName}} the centre every family talks about.</p>
+  <div class="cover" id="top">
+    <h1>Sawubona, {{ownerName}}!</h1>
+    <p>You are already doing an incredible job. We're here to take some of the weight off.</p>
+    <button class="btn" onclick="document.getElementById('scenario-section').scrollIntoView({ behavior: 'smooth' })">Let's get started →</button>
   </div>
-  <p style="margin-top:24px;font-size:16px;color:var(--text-muted);">Let’s chat about tailoring the rollout for {{centreName}}. Reply to this email or WhatsApp us anytime.</p>
-</div>
 
-<!-- ORIGINAL PAGES PLACEHOLDER -->
-<!-- Keep your original pages 3–6 (steps, pickup, applications) but add personal touches, e.g., "For a centre like {{centreName}}, this saves you time on..." -->
-
-<!-- FINAL CTA PAGE -->
-<div class="page" style="background:var(--bg);color:#fff;text-align:center;">
-  <h2 style="font-size:42px;margin-bottom:16px;">You're not alone in this, {{ownerName}}.</h2>
-  <p style="font-size:18px;max-width:620px;margin:0 auto 32px;color:#cbd5f5;">We’re here every step — like that friend who's been through the WhatsApp/paper relay. Need help? WhatsApp us anytime at <a href="https://wa.me/27685356430" style="color:#fff;text-decoration:underline;">+27 68 535 6430</a>.</p>
-  <a href="https://centerconnect.co.za/ecd/profile" class="btn">Get Started with {{centreName}}</a>
-  <div class="card" style="margin-top:32px;">
-    <h3 style="margin-top:0;">Share with parents</h3>
-    <p style="color:var(--text-muted);">Copy and send this to your WhatsApp group:</p>
-    <pre>"Hi parents! We're now on CentreConnect for easy pickup codes, daily reports, and encrypted messaging. Join here: https://centerconnect.co.za/centre/{{centreSlug}}"</pre>
+  <div class="section" id="scenario-section">
+    <h2>Real-life moments—exactly like your day</h2>
+    <p>Tap a card to open the story. We stay warm, personal, and built for Mama Bajabulile.</p>
+    <div class="scenario-grid" id="scenarioGrid"></div>
   </div>
-</div>
+
+  <div class="scenario-grid" style="padding:0 24px 60px;">
+    <div style="text-align:center;width:100%;">
+      <p style="margin:0;font-size:0.9rem;color:#94a3b8;">Need the guide later? Just open this page again.</p>
+      <button class="btn" onclick="document.getElementById('top').scrollIntoView({ behavior: 'smooth' })" style="margin-top:16px;">Back to top</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="scenarioModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:12px;justify-content:space-between;">
+          <div>
+            <div class="tag" id="modalTag">You know this situation...</div>
+            <h3 id="modalTitle"></h3>
+          </div>
+          <button class="close-button" onclick="closeModal()">×</button>
+        </div>
+      </div>
+      <div class="modal-content">
+        <p id="modalPain" style="margin-top:0;"></p>
+        <div style="margin:24px 0;">
+          <div style="font-size:0.78rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#0f172a;margin-bottom:12px;">Here's how it works now</div>
+          <p id="modalSolution" style="margin:0;color:#1f2937;line-height:1.7;"></p>
+        </div>
+        <ul class="steps" id="modalSteps"></ul>
+        <div class="quote" id="modalQuote"></div>
+        <a id="modalCTA" class="btn" style="background:#0ea5e9;" target="_blank">See the feature</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        id: 'applications',
+        title: 'No more chasing parents on WhatsApp',
+        pain: "You post in the group, you wait, you chase, and the documents arrive all over the place. Then another parent asks if there's space and you close the register.",
+        solution: 'When a parent applies through CentreConnect, everything lands in one spot. You open the dashboard, review, accept or decline, and the parent is notified automatically.',
+        steps: [
+          'Parent applies through the centre listing',
+          'You receive a notification and open the applications board',
+          'Review their child details quickly',
+          'Accept or decline with one tap',
+          'Parent is notified automatically',
+        ],
+        quote: '"I used to spend two hours on Monday sorting messages. Now it is 10 minutes." — Mama Thandi, Soweto',
+        cta: { label: 'See the Applications Board →', href: '/ecd/pipeline' },
+      },
+      {
+        id: 'children',
+        title: 'Children’s records — finally organised',
+        pain: 'You flip through the book when parents call, when a new child arrives, when you need an allergy note. It takes time and the papers get misplaced.',
+        solution: 'Add every child once: birthday, guardians, pickups, medical notes. It is searchable, accessible, and shared with approved staff.',
+        steps: [
+          'Add the child’s name and birth date',
+          'Choose the age group',
+          'Add parent/guardian contacts',
+          'List who can pick the child up',
+          'Save any allergies or health notes',
+        ],
+        quote: '"When a parent asked about an allergy I simply checked on my phone — no panic." — Auntie Rose, Alexandra',
+        cta: { label: 'Start Adding Children →', href: '/ecd/children' },
+      },
+      {
+        id: 'attendance',
+        title: 'Attendance in 30 seconds',
+        pain: 'Roll call every morning, then counting ticks at the end of the month for invoices. It is slow and inaccurate.',
+        solution: 'Tap present or absent; the system remembers and prepares your monthly summary automatically.',
+        steps: [
+          'Open attendance each morning',
+          'Tap each child — green/gray',
+          'Add absence reasons when needed',
+          'Everything saves instantly',
+          'Check monthly reports anytime',
+        ],
+        quote: '"End of month was a full weekend. Now my phone already knows the count." — Mama Precious, Tembisa',
+        cta: { label: 'Open Attendance →', href: '/ecd/attendance' },
+      },
+      {
+        id: 'pickup',
+        title: 'Safe pickup — no confusion at the gate',
+        pain: 'Stranger at the gate, parent not picking up, you need to call while others wait. Your heart races.',
+        solution: 'Authorized guardians have QR codes. Scan, confirm, green light, no drama. If unauthorized, the system tells you exactly who to call.',
+        steps: [
+          'Add authorized pickups per child',
+          'Print the centre QR poster',
+          'Guardian shows their QR code',
+          'You scan or they scan yours',
+          'System confirms instantly',
+        ],
+        quote: '"I used to let people through because I didn’t want trouble. Now the system protects me." — Mama Lindiwe, Katlehong',
+        cta: { label: 'Set Up Safe Pickup →', href: '/ecd/pickup' },
+      },
+      {
+        id: 'parents',
+        title: 'Invite parents to see what you are doing',
+        pain: 'Parents feel disconnected. They don’t see the work you do between drop-off and pickup.',
+        solution: 'Share a link. They register, apply, and once enrolled they see attendance, notes, and can upload documents directly.',
+        steps: [
+          'Share your unique centre link',
+          'Parents register for free',
+          'They apply through the app',
+          'Once approved they view updates',
+          'They upload documents without WhatsApp',
+        ],
+        quote: '"Parents texted to say thank you for keeping them updated." — Auntie Grace, Mamelodi',
+        cta: { label: 'Get Your Share Link →', href: '/ecd/profile' },
+      },
+      {
+        id: 'staff',
+        title: 'Give staff access without giving up control',
+        pain: 'You can’t be everywhere. Staff need to mark attendance, help with pickups, but you can’t hand them your password.',
+        solution: 'Invite staff, choose roles (admin or staff), and they get their own logins just for their duties.',
+        steps: [
+          'Open centre settings',
+          'Click invite staff',
+          'Enter their email',
+          'Choose their role',
+          'They set up their login',
+        ],
+        quote: '"Now I know my teacher can handle things when I’m away and she can’t see my financing." — Mama Ntombi, Soweto',
+        cta: { label: 'Invite Your Staff →', href: '/ecd/staff' },
+      },
+    ];
+
+    const scenarioGrid = document.getElementById('scenarioGrid');
+    const scenarioModal = document.getElementById('scenarioModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPain = document.getElementById('modalPain');
+    const modalSolution = document.getElementById('modalSolution');
+    const modalSteps = document.getElementById('modalSteps');
+    const modalQuote = document.getElementById('modalQuote');
+    const modalCTA = document.getElementById('modalCTA');
+    const modalTag = document.getElementById('modalTag');
+
+    function buildScenarioCards() {
+      scenarios.forEach((scenario, idx) => {
+        const card = document.createElement('button');
+        card.className = 'scenario-card';
+        card.innerHTML = `
+          <span class="tag">Scenario ${idx + 1}</span>
+          <h3>${scenario.title}</h3>
+          <p>${scenario.pain.slice(0, 120)}...</p>
+        `;
+        card.addEventListener('click', () => openModal(scenario));
+        scenarioGrid.appendChild(card);
+      });
+    }
+
+    function openModal(scenario) {
+      modalTitle.textContent = scenario.title;
+      modalPain.textContent = scenario.pain;
+      modalSolution.textContent = scenario.solution;
+      modalSteps.innerHTML = scenario.steps.map((step, index) => `
+        <li>
+          <span>${index + 1}</span>
+          <span>${step}</span>
+        </li>
+      `).join('');
+      modalQuote.textContent = scenario.quote;
+      modalCTA.textContent = scenario.cta.label;
+      modalCTA.href = scenario.cta.href;
+      modalTag.textContent = 'You know this situation...';
+      scenarioModal.classList.add('active');
+    }
+
+    function closeModal() {
+      scenarioModal.classList.remove('active');
+    }
+
+    window.closeModal = closeModal;
+
+    buildScenarioCards();
+
+    // personalize
+    const params = new URLSearchParams(window.location.search);
+    const ownerName = params.get('name') || '{{ownerName}}';
+    const centreName = params.get('centre') || '{{centreName}}';
+    document.querySelector('.cover h1').innerHTML = `Sawubona, ${ownerName}!`;
+    document.querySelector('.cover p').innerHTML = `You are already doing an incredible job at ${centreName}. We're here to take some of the weight off.`;
+  </script>
 
 </body>
 </html>
