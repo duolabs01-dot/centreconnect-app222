@@ -42,6 +42,12 @@ async function findUserIdByEmail(admin: ReturnType<typeof createAdminClient>, em
   return data?.id ?? null
 }
 
+async function revokeParentAccess(admin: ReturnType<typeof createAdminClient>, userId: string) {
+  const { error } = await admin.from('parents').delete().eq('id', userId)
+  if (error) return error.message
+  return null
+}
+
 async function generateOwnerAccessLink(
   admin: ReturnType<typeof createAdminClient>,
   email: string
@@ -152,6 +158,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
   }
   const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
+  const { data: existingProfile } = resolvedAuthUserId
+    ? await admin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', resolvedAuthUserId)
+        .maybeSingle()
+    : { data: null as { role?: string | null } | null }
+  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
 
   const nowIso = new Date().toISOString()
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
@@ -203,6 +217,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', emailAppUrlRoot)
   let combinedWarning: string | undefined = accessLink.warning ?? undefined
+  if (resolvedAuthUserId && previousRole === 'parent_user') {
+    const parentAccessRevocationError = await revokeParentAccess(admin, resolvedAuthUserId)
+    if (parentAccessRevocationError) {
+      combinedWarning = combinedWarning
+        ? `${combinedWarning} | Failed to revoke parent access: ${parentAccessRevocationError}`
+        : `Failed to revoke parent access: ${parentAccessRevocationError}`
+    }
+  }
   let welcomePackWarning: string | undefined
   if (emailResult.success) {
     const welcomePackPayload = {

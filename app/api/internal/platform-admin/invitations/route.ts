@@ -96,6 +96,12 @@ async function resolveExistingAuthUserId(adminClient: ReturnType<typeof createAd
   return null
 }
 
+async function revokeParentAccess(adminClient: ReturnType<typeof createAdminClient>, userId: string) {
+  const { error } = await adminClient.from('parents').delete().eq('id', userId)
+  if (error) return error.message
+  return null
+}
+
 function normalizeAppUrl() {
   return APP_URL.replace(/\/$/, '')
 }
@@ -303,7 +309,8 @@ export async function POST(request: Request) {
     (typeof existingProfile?.full_name === 'string' ? existingProfile.full_name.trim() : '') ||
     fallbackFullName(normalizedEmail)
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
-  const parentAccessRevoked = previousRole === 'parent_user'
+  let parentAccessRevoked = false
+  let parentAccessRevocationError: string | null = null
 
   if (invitedUserId) {
     const { error: profileError } = await adminClient.from('user_profiles').upsert(
@@ -339,6 +346,11 @@ export async function POST(request: Request) {
         { error: `Failed to link admin to centre: ${message}` },
         { status: 500 }
       )
+    }
+
+    if (previousRole === 'parent_user') {
+      parentAccessRevocationError = await revokeParentAccess(adminClient, invitedUserId)
+      parentAccessRevoked = !parentAccessRevocationError
     }
   }
 
@@ -464,6 +476,7 @@ export async function POST(request: Request) {
     pendingLinkOnNextLogin,
     previousRole,
     parentAccessRevoked,
+    parentAccessRevocationError,
     inviteLinkMode: accessLinkResult.mode,
     accessLinkWarning: accessLinkResult.warning,
     manualAccessLink: accessLink,
