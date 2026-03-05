@@ -123,9 +123,25 @@ export async function POST(request: Request) {
     name: ownerName,
     centre: centreName,
     location,
+    onboarding: '1',
   }).toString()
   const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
-  const getStartedUrl = buildUrl(appUrlRoot, '/ecd/login', { next: welcomeNextPath })
+  const callbackRedirectUrl = buildUrl(appUrlRoot, '/auth/callback', { next: welcomeNextPath })
+  let getStartedUrl = callbackRedirectUrl
+
+  const magicLinkResult = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email: ownerEmail.toLowerCase(),
+    options: {
+      redirectTo: callbackRedirectUrl,
+    },
+  })
+  const magicActionLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
+  if (!magicLinkResult.error && magicActionLink) {
+    getStartedUrl = magicActionLink
+  } else if (magicLinkResult.error) {
+    console.error('resend-welcome-pack: magic link generation failed', magicLinkResult.error)
+  }
   const welcomeGuideUrl = buildUrl(appUrlRoot, '/ecd/welcome', {
     name: ownerName,
     centre: centreName,

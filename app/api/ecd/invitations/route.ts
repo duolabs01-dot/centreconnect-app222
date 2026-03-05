@@ -131,26 +131,6 @@ async function generateEcdAccessLink(input: {
   const { adminClient, email, redirectTo, preferMagicLink = false } = input
 
   const errors: string[] = []
-  if (!preferMagicLink) {
-    const inviteResult = await adminClient.auth.admin.generateLink({
-      type: 'invite',
-      email,
-      options: { redirectTo },
-    })
-    const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
-    if (!inviteResult.error && inviteLink) {
-      return {
-        link: inviteLink,
-        authUserId: inviteResult.data?.user?.id ?? null,
-        mode: 'invite' as const,
-        warning: null as string | null,
-      }
-    }
-    if (inviteResult.error?.message) {
-      errors.push(`invite: ${inviteResult.error.message}`)
-    }
-  }
-
   const magicResult = await adminClient.auth.admin.generateLink({
     type: 'magiclink',
     email,
@@ -167,6 +147,24 @@ async function generateEcdAccessLink(input: {
   }
   if (magicResult.error?.message) {
     errors.push(`magiclink: ${magicResult.error.message}`)
+  }
+
+  const inviteResult = await adminClient.auth.admin.generateLink({
+    type: 'invite',
+    email,
+    options: { redirectTo },
+  })
+  const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
+  if (!inviteResult.error && inviteLink) {
+    return {
+      link: inviteLink,
+      authUserId: inviteResult.data?.user?.id ?? null,
+      mode: 'invite' as const,
+      warning: preferMagicLink ? 'Sent invite link as fallback.' : null,
+    }
+  }
+  if (inviteResult.error?.message) {
+    errors.push(`invite: ${inviteResult.error.message}`)
   }
 
   return {

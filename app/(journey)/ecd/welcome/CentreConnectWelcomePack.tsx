@@ -1,7 +1,7 @@
 'use client'
 
-import Image from 'next/image'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 type Scenario = {
   id: string
@@ -432,18 +432,80 @@ function ScenarioModal({
 }
 
 export default function CentreConnectWelcomePack() {
+  const supabase = useMemo(() => createClient(), [])
   const [activeScenario, setActiveScenario] = useState<Scenario | null>(null)
   const [centreName, setCentreName] = useState('your centre')
   const [contactName, setContactName] = useState('Friend')
   const [step, setStep] = useState<0 | 1>(0)
+  const [onboardingMode, setOnboardingMode] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [hasSession, setHasSession] = useState(false)
+  const [showPasswordPanel, setShowPasswordPanel] = useState(false)
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordDone, setPasswordDone] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   useEffect(() => {
+    let isMounted = true
     const params = new URLSearchParams(window.location.search)
     if (params.get('centre')) setCentreName(params.get('centre') as string)
     if (params.get('name')) setContactName(params.get('name') as string)
-  }, [])
+    const onboarding = params.get('onboarding') === '1'
+    setOnboardingMode(onboarding)
+
+    if (!onboarding) {
+      setCheckingSession(false)
+      return () => {
+        isMounted = false
+      }
+    }
+
+    void (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!isMounted) return
+      const signedIn = Boolean(session)
+      setHasSession(signedIn)
+      setShowPasswordPanel(signedIn)
+      setCheckingSession(false)
+    })()
+
+    return () => {
+      isMounted = false
+    }
+  }, [supabase])
 
   const firstName = useMemo(() => contactName.split(' ')[0] || contactName, [contactName])
+
+  async function handlePasswordSetup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setPasswordError(null)
+
+    if (password.length < 8) {
+      setPasswordError('Use at least 8 characters for your password.')
+      return
+    }
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match. Please try again.')
+      return
+    }
+
+    setPasswordSaving(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setPasswordSaving(false)
+    if (error) {
+      setPasswordError(error.message || 'Could not save password right now.')
+      return
+    }
+
+    setPassword('')
+    setConfirmPassword('')
+    setPasswordDone(true)
+    setShowPasswordPanel(false)
+  }
 
   return (
     <>
@@ -466,6 +528,126 @@ export default function CentreConnectWelcomePack() {
           background: 'linear-gradient(160deg, #FFF7ED 0%, #F0FDFA 50%, #EFF6FF 100%)',
         }}
       >
+        {onboardingMode && (
+          <div
+            style={{
+              maxWidth: '660px',
+              margin: '0 auto',
+              padding: '18px 20px 0',
+            }}
+          >
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #CCFBF1',
+                borderRadius: '16px',
+                boxShadow: '0 10px 28px rgba(15, 23, 42, 0.08)',
+                padding: '18px',
+              }}
+            >
+              <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0F766E' }}>
+                Account setup
+              </p>
+              <p style={{ margin: '8px 0 0', fontSize: '0.95rem', color: '#334155', lineHeight: 1.6 }}>
+                Set your password now so future sign-ins are simple.
+              </p>
+
+              {checkingSession ? (
+                <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: '#64748B' }}>Checking secure session...</p>
+              ) : null}
+
+              {!checkingSession && !hasSession ? (
+                <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: '#B45309' }}>
+                  Open this page from your secure invite email link to finish setup.
+                </p>
+              ) : null}
+
+              {!checkingSession && hasSession && showPasswordPanel ? (
+                <form onSubmit={handlePasswordSetup} style={{ marginTop: '14px', display: 'grid', gap: '10px' }}>
+                  <label style={{ fontSize: '0.85rem', color: '#334155', display: 'grid', gap: '6px' }}>
+                    New password
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      minLength={8}
+                      required
+                      style={{
+                        height: '42px',
+                        borderRadius: '12px',
+                        border: '1px solid #CBD5E1',
+                        padding: '0 12px',
+                        fontSize: '0.9rem',
+                      }}
+                    />
+                  </label>
+                  <label style={{ fontSize: '0.85rem', color: '#334155', display: 'grid', gap: '6px' }}>
+                    Confirm password
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(event) => setConfirmPassword(event.target.value)}
+                      minLength={8}
+                      required
+                      style={{
+                        height: '42px',
+                        borderRadius: '12px',
+                        border: '1px solid #CBD5E1',
+                        padding: '0 12px',
+                        fontSize: '0.9rem',
+                      }}
+                    />
+                  </label>
+                  {passwordError ? (
+                    <p style={{ margin: 0, fontSize: '0.82rem', color: '#B91C1C' }}>{passwordError}</p>
+                  ) : null}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <button
+                      type="submit"
+                      disabled={passwordSaving}
+                      style={{
+                        border: 'none',
+                        borderRadius: '12px',
+                        padding: '10px 14px',
+                        fontWeight: 700,
+                        fontSize: '0.88rem',
+                        color: '#FFFFFF',
+                        background: '#0D9488',
+                        cursor: passwordSaving ? 'not-allowed' : 'pointer',
+                        opacity: passwordSaving ? 0.7 : 1,
+                      }}
+                    >
+                      {passwordSaving ? 'Saving...' : 'Save password'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordPanel(false)}
+                      style={{
+                        borderRadius: '12px',
+                        border: '1px solid #CBD5E1',
+                        padding: '10px 14px',
+                        fontWeight: 700,
+                        fontSize: '0.88rem',
+                        color: '#334155',
+                        background: '#FFFFFF',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Skip for now
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+
+              {passwordDone ? (
+                <p style={{ margin: '12px 0 0', fontSize: '0.85rem', color: '#047857' }}>
+                  Password saved. You can now sign in anytime with email and password.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )}
+
         {step === 0 && (
           <div
             style={{

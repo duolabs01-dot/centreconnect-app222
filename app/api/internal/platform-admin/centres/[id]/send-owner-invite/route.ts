@@ -17,11 +17,6 @@ type SendOwnerInviteResponse = {
   warning?: string
 }
 
-function isEmailAlreadyRegisteredError(message?: string | null) {
-  const value = (message ?? '').toLowerCase()
-  return value.includes('already been registered') || value.includes('already exists')
-}
-
 function sanitizeName(value: string | null | undefined, fallback: string) {
   const trimmed = (value ?? '').trim()
   return trimmed || fallback
@@ -52,63 +47,26 @@ async function generateOwnerAccessLink(
   admin: ReturnType<typeof createAdminClient>,
   email: string
 ) {
-  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent('/ecd/dashboard')}`
-  const inviteResult = await admin.auth.admin.generateLink({
-    type: 'invite',
-    email,
-    options: { redirectTo },
-  })
-
-  const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
-  if (!inviteResult.error && inviteLink) {
-    return {
-      link: inviteLink,
-      authUserId: inviteResult.data?.user?.id ?? null,
-      warning: null as string | null,
-    }
-  }
-
-  if (!isEmailAlreadyRegisteredError(inviteResult.error?.message)) {
-    return {
-      link: '',
-      authUserId: null,
-      warning: inviteResult.error?.message ?? 'Failed to generate owner invite link.',
-    }
-  }
-
-  const recoveryResult = await admin.auth.admin.generateLink({
-    type: 'recovery',
-    email,
-    options: { redirectTo },
-  })
-  const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
-  if (!recoveryResult.error && recoveryLink) {
-    return {
-      link: recoveryLink,
-      authUserId: recoveryResult.data?.user?.id ?? inviteResult.data?.user?.id ?? null,
-      warning: null,
-    }
-  }
-
-  const magicResult = await admin.auth.admin.generateLink({
+  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent('/ecd/welcome?onboarding=1')}`
+  const magicLinkResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
     options: { redirectTo },
   })
 
-  const magicLink = magicResult.data?.properties?.action_link?.trim() ?? ''
-  if (!magicResult.error && magicLink) {
+  const magicLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
+  if (!magicLinkResult.error && magicLink) {
     return {
       link: magicLink,
-      authUserId: magicResult.data?.user?.id ?? null,
-      warning: 'Owner already had an account. Sent a secure login link instead of a first-time invite.',
+      authUserId: magicLinkResult.data?.user?.id ?? null,
+      warning: null as string | null,
     }
   }
 
   return {
     link: '',
     authUserId: null,
-    warning: magicResult.error?.message ?? 'Failed to generate owner login link.',
+    warning: magicLinkResult.error?.message ?? 'Failed to generate owner login link.',
   }
 }
 

@@ -461,13 +461,25 @@ export async function POST(request: Request) {
   if (setupLinkResult.error) {
     emailWarnings.push(setupLinkResult.error)
   }
+  const appBaseUrl = APP_URL.replace(/\/$/, '')
+  const onboardingLocation = [data.suburb, data.city].filter(Boolean).join(', ')
+  const welcomePackQuery = new URLSearchParams({
+    onboarding: '1',
+    name: data.primaryContactName,
+    centre: data.name,
+    location: onboardingLocation || 'your area',
+  }).toString()
+  const welcomePackPath = `/ecd/welcome?${welcomePackQuery}`
+  const welcomePackGuideLink = `${appBaseUrl}${welcomePackPath}`
+  const welcomePackAuthRedirect = `${appBaseUrl}/auth/callback?next=${encodeURIComponent(welcomePackPath)}`
+  const welcomePackGetStartedLink = setupLinkResult.link || welcomePackAuthRedirect
 
   const setupEmailHtml = await renderEcdPasswordSetupEmail({
     centreName: data.name,
     contactName: data.primaryContactName,
     lockedEmail: normalizedEmail,
     setupLink: setupLinkResult.link,
-    loginLink: `${APP_URL.replace(/\/$/, '')}/ecd/login`,
+    loginLink: `${appBaseUrl}/ecd/login`,
   })
   const setupEmailResult = await queueEmail(
     normalizedEmail,
@@ -491,9 +503,9 @@ export async function POST(request: Request) {
     const migrationEmailHtml = await renderParentToEcdAdminMigrationEmail({
       centreName: data.name,
       contactName: data.primaryContactName,
-      dashboardLink: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
-      websiteBuilderLink: `${APP_URL.replace(/\/$/, '')}/ecd/website`,
-      applicationsLink: `${APP_URL.replace(/\/$/, '')}/ecd/applications`,
+      dashboardLink: `${appBaseUrl}/ecd/dashboard`,
+      websiteBuilderLink: `${appBaseUrl}/ecd/website`,
+      applicationsLink: `${appBaseUrl}/ecd/applications`,
     })
     const migrationEmailResult = await queueEmail(
       normalizedEmail,
@@ -518,14 +530,15 @@ export async function POST(request: Request) {
     const welcomePackHtml = await renderPilotWelcomePackEmail({
       centreName: data.name,
       contactName: data.primaryContactName,
-      dashboardLink: `${APP_URL.replace(/\/$/, '')}/ecd/dashboard`,
-      websiteBuilderLink: `${APP_URL.replace(/\/$/, '')}/ecd/website`,
-      attendanceLink: `${APP_URL.replace(/\/$/, '')}/ecd/attendance`,
-      pickupLink: `${APP_URL.replace(/\/$/, '')}/ecd/pickup`,
-      qrPosterLink: `${APP_URL.replace(/\/$/, '')}/ecd/pickup`,
+      dashboardLink: welcomePackGetStartedLink,
+      websiteBuilderLink: `${appBaseUrl}/ecd/website`,
+      attendanceLink: `${appBaseUrl}/ecd/attendance`,
+      pickupLink: `${appBaseUrl}/ecd/pickup`,
+      qrPosterLink: `${appBaseUrl}/ecd/pickup`,
       supportWhatsApp: '+27685356430',
       supportEmail: 'admin@centerconnect.co.za',
-      supportLink: `${APP_URL.replace(/\/$/, '')}/ecd/support`,
+      supportLink: `${appBaseUrl}/ecd/support`,
+      welcomeGuideLink: welcomePackGuideLink,
     })
     const welcomePackResult = await queueEmail(
       normalizedEmail,
