@@ -15,6 +15,7 @@
     "task:finish": "npm run build && npm run dev:ensure",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3010",
+    "sitemap": "node scripts/generate-sitemap.mjs",
     "smoke:parent": "node scripts/smoke-parent.mjs",
     "test": "node tests/qa/security-hardening.test.mjs",
     "test:report-cards": "node tests/qa/report-cards-feature.test.mjs",

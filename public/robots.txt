@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://centerconnect.co.za/sitemap.xml
+Host: centerconnect.co.za
