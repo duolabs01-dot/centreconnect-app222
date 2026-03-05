@@ -100,6 +100,15 @@ async function renderShell(title: string, subtitle: string, contentHtml: string)
                 <p style={{ margin: '14px 0 0', color: BRAND.muted, fontSize: '12px' }}>
                   This is a transactional onboarding email from CentreConnect.
                 </p>
+                <p style={{ margin: '6px 0 0', color: BRAND.muted, fontSize: '12px', lineHeight: 1.5 }}>
+                  This email may contain private information for the named recipient.
+                  If you received it by mistake, please delete it and let us know at
+                  {' '}
+                  <a href="mailto:admin@centerconnect.co.za" style={{ color: BRAND.muted }}>
+                    admin@centerconnect.co.za
+                  </a>
+                  .
+                </p>
               </td>
             </tr>
           </tbody>
