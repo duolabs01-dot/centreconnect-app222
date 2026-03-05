@@ -1,295 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CentreConnect Pilot Welcome</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    :root {
-      --soft-teal:#14B8A6;
-      --amber:#f59e0b;
-      --ink:#0F172A;
-      --muted:#475569;
-      --card-radius:28px;
-      --shadow:0 25px 70px rgba(15,23,42,0.08);
-    }
-    * {box-sizing:border-box;}
-    body {
-      margin:0;
-      font-family:'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background:#F8FAFC;
-      color:var(--ink);
-    }
-    .page {
-      max-width:1100px;
-      margin:0 auto;
-      padding:32px 16px 64px;
-    }
-    .hero {
-      background:#fff;
-      border-radius:var(--card-radius);
-      box-shadow:var(--shadow);
-      padding:32px;
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-      gap:32px;
-    }
-    .hero-text h1 {
-      margin:0;
-      font-size:clamp(2.2rem,3vw,3rem);
-      font-weight:700;
-      line-height:1.2;
-    }
-    .hero-text p {
-      margin:16px 0;
-      line-height:1.6;
-      color:var(--muted);
-    }
-    .hero-text .pill {
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:6px 16px;
-      border-radius:999px;
-      font-size:0.85rem;
-      font-weight:600;
-      background:rgba(20,184,166,0.15);
-      color:var(--soft-teal);
-    }
-    .hero-image {
-      border-radius:24px;
-      overflow:hidden;
-      box-shadow:0 25px 50px rgba(15,23,42,0.15);
-      min-height:280px;
-    }
-    .hero-image img {
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit:cover;
-    }
-    .hero-actions {
-      margin-top:24px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-    }
-    .btn {
-      border:none;
-      border-radius:999px;
-      padding:14px 32px;
-      font-weight:600;
-      font-size:1rem;
-      cursor:pointer;
-      transition:transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .btn-teal {
-      background:linear-gradient(120deg,var(--soft-teal),#0F976D);
-      color:#fff;
-      box-shadow:0 14px 30px rgba(20,184,166,0.35);
-    }
-    .btn-outline {
-      background:#fff;
-      border:1px solid rgba(15,23,42,0.15);
-      color:var(--ink);
-    }
-    .btn:hover {transform:translateY(-2px);}
-    .hero-whatsapp {
-      margin-top:16px;
-      font-size:0.95rem;
-      color:var(--muted);
-    }
-    .hero-whatsapp a {
-      color:var(--soft-teal);
-      font-weight:600;
-      text-decoration:none;
-    }
-    .parent-demand {
-      margin-top:8px;
-      padding:12px 16px;
-      border-radius:16px;
-      background:#F0FDFA;
-      color:var(--muted);
-      border:1px solid rgba(20,184,166,0.25);
-      font-size:0.95rem;
-    }
-    .scenario-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:20px;
-    }
-    .scenario-card {
-      background:#fff;
-      border-radius:24px;
-      padding:24px;
-      box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      transition:transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .scenario-card:hover {
-      transform:translateY(-4px);
-      box-shadow:0 32px 60px rgba(15,23,42,0.13);
-    }
-    .scenario-card h3 {
-      margin:0;
-      font-size:1.35rem;
-      font-weight:700;
-    }
-    .scenario-card p {
-      margin:0;
-      color:var(--muted);
-      line-height:1.5;
-    }
-    .scenario-card .tag {
-      font-size:0.85rem;
-      text-transform:uppercase;
-      letter-spacing:0.3em;
-      color:var(--soft-teal);
-      font-weight:700;
-    }
-    .learn-link {
-      margin-top:auto;
-      display:inline-flex;
-      justify-content:center;
-      align-items:center;
-      gap:8px;
-      font-weight:700;
-      color:#0F172A;
-      border-radius:999px;
-      padding:10px 20px;
-      border:2px solid rgba(15,23,42,0.15);
-      text-decoration:none;
-      transition:background 0.2s ease,transform 0.2s ease;
-    }
-    .learn-link:hover {
-      background:#F3F7F9;
-      transform:translateY(-2px);
-    }
-    .tips {
-      margin-top:32px;
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:16px;
-    }
-    .tip-card {
-      background:#fff;
-      border-radius:20px;
-      padding:20px;
-      box-shadow:var(--shadow);
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .tip-card strong {
-      color:var(--ink);
-    }
-    .final-cta {
-      margin-top:32px;
-      text-align:center;
-    }
-    .final-cta a {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      background:var(--soft-teal);
-      color:#fff;
-      padding:16px 48px;
-      border-radius:999px;
-      font-size:1.1rem;
-      font-weight:700;
-      text-decoration:none;
-      box-shadow:0 20px 40px rgba(20,184,166,0.35);
-    }
-    .final-note {
-      margin-top:16px;
-      color:var(--muted);
-      line-height:1.6;
-      font-size:0.95rem;
-    }
-    @media (max-width:640px) {
-      .hero {padding:24px;}
-      .hero-actions {flex-direction:column;}
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CentreConnect — Welcome, {{ownerName}}!</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',system-ui,sans-serif; background:#f8fafc; color:#1e293b; line-height:1.6; }
+.page { max-width:794px; margin:20px auto; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 8px 25px rgba(0,0,0,0.06); page-break-after:always; }
+h1, h2 { font-weight:700; color:#0D1F3C; }
+.accent { color:#14B8A6; }
+.card { background:#f8fafc; border-radius:12px; padding:24px; margin:16px 0; border:1px solid #e2e8f0; }
+.btn { background:#14B8A6; color:#fff; padding:14px 32px; border-radius:9999px; font-weight:600; text-decoration:none; display:inline-block; transition:all .2s; }
+.btn:hover { background:#0ea5a0; transform:translateY(-1px); }
+</style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <div class="hero-text">
-        <div class="pill">CentreConnect Pilot</div>
-        <h1>Hey {{ownerName}}, {{centreName}} is ready for a calmer {{location}} day.</h1>
-        <p>I know WhatsApp blows up with documents, pickup confirmations, and parents wondering if you saw their message. Parents are already asking for the app, so we captured the calm parts inside this welcome pack — tap what feels most like your morning and let us walk you through how it works.</p>
-        <p class="hero-whatsapp">Need anything? WhatsApp us at <a href="https://wa.me/27685356430">+27 68 535 6430</a>. We reply like a neighbour who has your back.</p>
-        <div class="hero-actions">
-          <button class="btn btn-teal" onclick="document.getElementById('scenario-attendance').scrollIntoView({behavior:'smooth'})">Daily Attendance &amp; Reports</button>
-          <button class="btn btn-outline" onclick="document.getElementById('scenario-pickup').scrollIntoView({behavior:'smooth'})">Safe Pickup Time</button>
-          <button class="btn btn-outline" onclick="document.getElementById('scenario-applications').scrollIntoView({behavior:'smooth'})">Parent Applications</button>
-          <button class="btn btn-outline" onclick="document.getElementById('scenario-parents').scrollIntoView({behavior:'smooth'})">What Parents Are Saying</button>
-        </div>
-        <div class="parent-demand">Parents are already asking for CentreConnect in {{location}} — this is how we keep them calm and connected.</div>
-      </div>
-      <div class="hero-image">
-        <img src="https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg" alt="Children playing outside" />
-      </div>
-    </section>
-    <section class="scenario-section">
-      <div class="section-heading">
-        <small>Everyday moments</small>
-        <h2>Choose the scene that feels most like your morning</h2>
-      </div>
-      <div class="scenario-grid">
-        <article class="scenario-card" id="scenario-attendance">
-          <span class="tag">Daily Attendance &amp; Reports</span>
-          <h3>Attendance in under a minute</h3>
-          <p>Tap each child once, save it, and the monthly totals are already counted. Parents receive a polished note without you needing extra typing.</p>
-          <a class="learn-link" href="#scenario-attendance">Learn more</a>
-        </article>
-        <article class="scenario-card" id="scenario-pickup">
-          <span class="tag">Safe Pickup Time</span>
-          <h3>Gate-time calm</h3>
-          <p>That moment when someone says they are picking up little Lethabo — your heart beats a little faster. Scan the QR code and know instantly who is authorised while parents get notified.</p>
-          <a class="learn-link" href="#scenario-pickup">Learn more</a>
-        </article>
-        <article class="scenario-card" id="scenario-applications">
-          <span class="tag">Parent Applications</span>
-          <h3>Stop chasing documents</h3>
-          <p>Applications arrive in one neat place with every detail you need. Accept, decline, or waitlist, and parents hear back automatically.</p>
-          <a class="learn-link" href="#scenario-applications">Learn more</a>
-        </article>
-        <article class="scenario-card" id="scenario-parents">
-          <span class="tag">What Parents Are Saying</span>
-          <h3>Warm feedback every day</h3>
-          <p>Parents love the daily notes, photos, and pickup certainty. Share <strong>https://centerconnect.co.za/centre/{{centreSlug}}</strong> so they can feel the calm too.</p>
-          <a class="learn-link" href="#scenario-parents">Learn more</a>
-        </article>
-      </div>
-    </section>
-    <section class="tips">
-      <div class="tip-card">
-        <strong>Tip 1</strong>
-        <p>Add CentreConnect to your home screen so it feels like an app you can open anytime without hunting for a link.</p>
-      </div>
-      <div class="tip-card">
-        <strong>Tip 2</strong>
-        <p>Start with five children from your register. Once you feel the rhythm, add the rest — the system remembers everything for you.</p>
-      </div>
-      <div class="tip-card">
-        <strong>Tip 3</strong>
-        <p>Print the Safe Pickup QR poster and pin it near the gate. It looks professional and keeps the children safe.</p>
-      </div>
-    </section>
-    <section class="final-cta">
-      <a href="https://centerconnect.co.za/ecd/profile">Get Started</a>
-      <p class="final-note">Need a hand? WhatsApp +27 68 535 6430 and we’ll walk the steps with you. This welcome pack was created for {{centreName}} in {{location}} — we are neighbours who understand the grind and the joy.</p>
-    </section>
-  </div>
+
+<!-- PAGE 1: COVER -->
+<div class="page" style="padding:60px;text-align:center;">
+  <h1 style="font-size:42px;margin-bottom:16px;">Hey {{ownerName}},</h1>
+  <h2 style="font-size:32px;margin-bottom:24px;">welcome to {{centreName}} on CentreConnect</h2>
+  <p style="font-size:18px;max-width:520px;margin:0 auto 40px;">I know running a centre means WhatsApp groups and paper lists every day. Parents are already asking for the app — let's make this easy together, like a friend who's got your back.</p>
+  <a href="#scenario1" class="btn">See how it helps your daily life →</a>
+</div>
+
+<!-- SCENARIO BUTTONS -->
+<div class="page" style="padding:60px;">
+  <h2 style="margin-bottom:24px;">Real scenarios — not just features</h2>
+  <a href="#scenario1" class="btn">1. Daily Attendance & Reports</a><br/><br/>
+  <a href="#scenario2" class="btn">2. Safe Pickup Time</a><br/><br/>
+  <a href="#scenario3" class="btn">3. Parent Applications</a><br/><br/>
+  <a href="#scenario4" class="btn">4. What Parents Are Saying</a>
+</div>
+
+<!-- SCENARIO 1 -->
+<div id="scenario1" class="page" style="padding:60px;">
+  <h2>Scenario 1: Daily Attendance & Reports</h2>
+  <p>Right now you mark attendance on paper and send WhatsApp voice notes. With CentreConnect, you tap once in the app and parents get a beautiful daily report automatically.</p>
+  <p><strong>Time saved:</strong> 45 minutes every day.</p>
+  <a href="#top" class="btn">Back to top</a>
+</div>
+
+<!-- SCENARIO 2 -->
+<div id="scenario2" class="page" style="padding:60px;">
+  <h2>Scenario 2: Safe Pickup Time</h2>
+  <p>Every child gets a unique daily code. Guardians show it at pickup — you tap to confirm. Parents get instant notification. Simple and safe.</p>
+  <a href="#top" class="btn">Back to top</a>
+</div>
+
+<!-- SCENARIO 3 -->
+<div id="scenario3" class="page" style="padding:60px;">
+  <h2>Scenario 3: Parent Applications</h2>
+  <p>Parents apply directly through the app. You see everything in one place — accept, decline, or waitlist with one tap.</p>
+  <a href="#top" class="btn">Back to top</a>
+</div>
+
+<!-- SCENARIO 4 -->
+<div id="scenario4" class="page" style="padding:60px;">
+  <h2>Scenario 4: What Parents Are Saying</h2>
+  <p>Parents are already asking for CentreConnect because it makes life easier for everyone. You're giving them the modern experience they want while keeping your current systems.</p>
+  <a href="#top" class="btn">Back to top</a>
+</div>
+
+<!-- FINAL CLOSE -->
+<div class="page" style="padding:60px;text-align:center;">
+  <h2>You're not alone in this, {{ownerName}}.</h2>
+  <p>We’re here every step. If you need help, just WhatsApp us at <a href="https://wa.me/27685356430" style="color:#14B8A6;">+27 68 535 6430</a>.</p>
+  <a href="https://centerconnect.co.za/ecd/profile" class="btn">Get Started with {{centreName}}</a>
+</div>
+
 </body>
 </html>
