@@ -114,6 +114,17 @@ export async function updateSession(request: NextRequest) {
   const cachedRole = isAuthRoute ? null : getCachedRole(request, user.id)
   let role: UserRole | null = cachedRole
 
+  if (cachedRole === 'parent_user' && protectedArea === 'parent') {
+    const freshRoleLookup = await withTimeout(
+      getUserRole(supabase, user.id).then((value) => ({ value })),
+      4000
+    )
+    if (freshRoleLookup?.value && freshRoleLookup.value !== cachedRole) {
+      role = freshRoleLookup.value
+      setRoleCache(response, request, user.id, role)
+    }
+  }
+
   if (!cachedRole) {
     const roleLookup = await withTimeout(
       getUserRole(supabase, user.id).then((value) => ({ value })),
