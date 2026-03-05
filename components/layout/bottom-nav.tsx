@@ -43,7 +43,7 @@ const NavButton = memo(({
     <button
       onClick={handleClick}
       className={cn(
-        'mobile-nav-item relative flex h-11 flex-1 items-center justify-center overflow-hidden rounded-2xl px-2 outline-none transition-colors duration-200',
+        'mobile-nav-item relative flex min-h-[46px] flex-1 items-center justify-center overflow-hidden rounded-2xl px-2 outline-none transition-colors duration-200',
         active ? 'text-cyan-900' : 'text-slate-600 hover:text-slate-900'
       )}
       aria-current={active ? 'page' : undefined}
@@ -51,17 +51,17 @@ const NavButton = memo(({
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
       {active ? (
-        <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-cyan-400/60 bg-gradient-to-b from-white/10 to-transparent" />
+        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan-50/40" />
       ) : null}
 
           <div className="relative z-10 flex flex-col items-center justify-center gap-0.5">
             <div className="relative">
-              <Icon
+          <Icon
             size={20}
             strokeWidth={active ? 2.4 : 2}
             className={cn(
-              active ? 'drop-shadow-[0_0_16px_rgba(14,165,233,0.5)] text-cyan-900' : 'text-slate-500',
-              isSavedTab && active ? 'fill-rose-500 text-rose-500' : isSavedTab && !active ? 'text-slate-500' : ''
+              active ? 'drop-shadow-[0_0_16px_rgba(14,165,233,0.4)] text-cyan-900' : 'text-slate-500',
+              isSavedTab ? 'text-cyan-600' : ''
             )}
           />
           {hasBadge ? (
