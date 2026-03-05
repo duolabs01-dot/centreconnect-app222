@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
-import { readFile } from 'fs/promises'
-import path from 'path'
 import nodemailer from 'nodemailer'
 
+import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const OLD_DOMAIN_PATTERN = /centerconnect-app222\.vercel\.app/gi
+type Payload = {
+  ecdId?: string
+  ownerEmail?: string
+}
 
 function sanitizeName(value: string | null | undefined, fallback: string) {
   const trimmed = (value ?? '').trim()
@@ -18,23 +20,16 @@ function friendlyNameFromEmail(email: string, fallback: string) {
   return normalized.length >= 2 ? normalized : fallback
 }
 
-function applyTemplateReplacements(html: string, replacements: Record<string, string>) {
-  let content = html
-  for (const [token, value] of Object.entries(replacements)) {
-    content = content.split(token).join(value ?? '')
+function buildUrl(root: string, pathname: string, query?: Record<string, string>) {
+  const url = new URL(pathname, `${root.replace(/\/+$/, '')}/`)
+  if (query) {
+    for (const [key, value] of Object.entries(query)) {
+      if (value) {
+        url.searchParams.set(key, value)
+      }
+    }
   }
-  return content
-}
-
-type Payload = {
-  ecdId?: string
-  ownerEmail?: string
-}
-
-async function fetchWelcomePackHtml(appUrlRoot: string) {
-  const htmlPath = path.join(process.cwd(), 'public', 'CentreConnect_Pilot_Welcome_FINAL.html')
-  const html = await readFile(htmlPath, 'utf-8')
-  return html.replace(OLD_DOMAIN_PATTERN, appUrlRoot)
+  return url.toString()
 }
 
 export async function POST(request: Request) {
@@ -100,12 +95,15 @@ export async function POST(request: Request) {
   const centreSlug = centre.slug?.trim() ?? ''
   const locationParts = [centre.suburb, centre.city].map((part) => part?.trim()).filter(Boolean)
   const location = locationParts.length ? locationParts.join(', ') : 'your area'
+
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
   let ownerFullName: string | null = null
+
   const { data: ownerUser, error: ownerUserError } = await admin
-    .from('auth.users')
+    .schema('auth')
+    .from('users')
     .select('id')
-    .eq('email', ownerEmail)
+    .eq('email', ownerEmail.toLowerCase())
     .maybeSingle()
 
   if (!ownerUserError && ownerUser?.id) {
@@ -118,29 +116,52 @@ export async function POST(request: Request) {
       ownerFullName = profile.full_name
     }
   }
+
   const ownerName = sanitizeName(ownerFullName ?? centre.primary_contact_name, ownerNameFallback)
 
-  let html: string
-  try {
-    html = await fetchWelcomePackHtml(appUrlRoot)
-  } catch (error) {
-    console.error('resend-welcome-pack: failed to read welcome pack', error)
-    return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
-  }
-
-  const loginUrl = `${appUrlRoot}/login?next=/ecd/welcome`
-  html = applyTemplateReplacements(html, {
-    '{{ownerName}}': ownerName,
-    '{{centreName}}': centreName,
-    '{{location}}': location,
-    '{{centreSlug}}': centreSlug,
-    '{{loginUrl}}': loginUrl,
+  const welcomeQuery = new URLSearchParams({
+    name: ownerName,
+    centre: centreName,
+    location,
+  }).toString()
+  const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
+  const getStartedUrl = buildUrl(appUrlRoot, '/ecd/login', { next: welcomeNextPath })
+  const welcomeGuideUrl = buildUrl(appUrlRoot, '/ecd/welcome', {
+    name: ownerName,
+    centre: centreName,
+    location,
   })
 
-  const centrePageUrl = `${appUrlRoot}/centre/${centreSlug || 'profile'}`
-  const plainText = `Welcome ${ownerName} to ${centreName}! Create your account at ${loginUrl}, then return to ${centrePageUrl} for the starter guide. Need anything? WhatsApp +27 68 535 6430.`
+  const html = await renderPilotWelcomePackEmail({
+    centreName,
+    contactName: ownerName,
+    dashboardLink: getStartedUrl,
+    websiteBuilderLink: buildUrl(appUrlRoot, '/ecd/website'),
+    attendanceLink: buildUrl(appUrlRoot, '/ecd/attendance'),
+    pickupLink: buildUrl(appUrlRoot, '/ecd/pickup'),
+    qrPosterLink: buildUrl(appUrlRoot, '/ecd/pickup'),
+    supportWhatsApp: '+27685356430',
+    supportEmail: 'admin@centerconnect.co.za',
+    supportLink: buildUrl(appUrlRoot, '/ecd/support'),
+    welcomeGuideLink: welcomeGuideUrl,
+    packageLabel: 'Welcome Pack',
+  })
 
-  const subject = `Welcome to CentreConnect Pilot — ${centreName}`
+  const publicCentreLink = buildUrl(appUrlRoot, `/centre/${centreSlug || 'profile'}`)
+  const plainText = [
+    `Hi ${ownerName},`,
+    '',
+    `Welcome to CentreConnect for ${centreName}.`,
+    'Parents are already asking for the app.',
+    '',
+    `Get started: ${getStartedUrl}`,
+    `See your welcome pack: ${welcomeGuideUrl}`,
+    `Public centre page: ${publicCentreLink}`,
+    '',
+    'Need help? WhatsApp +27 68 535 6430.',
+  ].join('\n')
+
+  const subject = `Welcome to CentreConnect Pilot - ${centreName}`
 
   try {
     const transporter = nodemailer.createTransport({
@@ -160,9 +181,7 @@ export async function POST(request: Request) {
       html,
       text: plainText,
       headers: {
-        'List-Unsubscribe': `<mailto:hello@centerconnect.co.za?subject=unsubscribe>`,
-        'Reply-To': 'hello@centerconnect.co.za',
-        Precedence: 'bulk',
+        'Reply-To': 'admin@centerconnect.co.za',
       },
     })
   } catch (error) {
