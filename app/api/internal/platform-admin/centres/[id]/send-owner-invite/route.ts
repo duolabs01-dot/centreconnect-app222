@@ -29,6 +29,14 @@ function sanitizeName(value: string | null | undefined, fallback: string) {
 
 const emailAppUrlRoot = EMAIL_APP_URL.replace(/\/$/, '')
 
+async function findUserIdByEmail(admin: ReturnType<typeof createAdminClient>, email: string) {
+  const { data, error } = await admin.auth.admin.getUserByEmail(email)
+  if (!error && data?.user) {
+    return data.user.id
+  }
+  return null
+}
+
 async function generateOwnerAccessLink(
   admin: ReturnType<typeof createAdminClient>,
   email: string
@@ -93,6 +101,15 @@ async function generateOwnerAccessLink(
   }
 }
 
+async function resolveAuthUserId(
+  admin: ReturnType<typeof createAdminClient>,
+  existingId: string | null,
+  email: string
+) {
+  if (existingId) return existingId
+  return (await findUserIdByEmail(admin, email)) ?? null
+}
+
 function buildTrackingUrl(eventKey: string, channel: 'email' | 'whatsapp', target: string) {
   const url = new URL('/api/invites/open', emailAppUrlRoot)
   url.searchParams.set('event_key', eventKey)
@@ -129,6 +146,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!accessLink.link) {
     return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
   }
+  const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
 
   const nowIso = new Date().toISOString()
   const eventKey = createNotificationEventKey('owner_invite', centre.id)
@@ -273,32 +291,32 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   await admin.from('ecd_admin_invitations').upsert(
-    {
-      ecd_id: centre.id,
-      email: ownerEmail,
-      role: 'ecd_admin',
-      invited_by: identity.userId,
-      invited_at: nowIso,
-      auth_user_id: accessLink.authUserId,
-    },
+      {
+        ecd_id: centre.id,
+        email: ownerEmail,
+        role: 'ecd_admin',
+        invited_by: identity.userId,
+        invited_at: nowIso,
+        auth_user_id: resolvedAuthUserId,
+      },
     { onConflict: 'ecd_id,email' }
   )
 
-  if (accessLink.authUserId) {
-    await admin.from('user_profiles').upsert(
-      {
-        id: accessLink.authUserId,
-        role: 'ecd_admin',
-        full_name: ownerName,
-        email: ownerEmail,
-        phone: ownerPhoneRaw ?? null,
-      },
+    if (resolvedAuthUserId) {
+      await admin.from('user_profiles').upsert(
+        {
+          id: resolvedAuthUserId,
+          role: 'ecd_admin',
+          full_name: ownerName,
+          email: ownerEmail,
+          phone: ownerPhoneRaw ?? null,
+        },
       { onConflict: 'id' }
     )
     await admin.from('ecd_admins').upsert(
       {
         ecd_id: centre.id,
-        user_id: accessLink.authUserId,
+        user_id: resolvedAuthUserId,
         role: 'ecd_admin',
         invited_by: identity.userId,
         invited_at: nowIso,
@@ -307,7 +325,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     )
     await admin
       .from('ecd_centres')
-      .update({ owner_id: accessLink.authUserId })
+      .update({ owner_id: resolvedAuthUserId })
       .eq('id', centre.id)
       .is('owner_id', null)
   }
