@@ -15,6 +15,7 @@ interface CentreCardProps {
   name: string
   image?: string
   cover_image_url?: string
+  logo_url?: string
   address?: string
   distance?: string
   distanceLabel?: string
