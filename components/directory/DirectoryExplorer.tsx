@@ -457,8 +457,8 @@ export default function DirectoryExplorer({
                   Join 500+ parents who use CentreConnect to manage documents, get daily reports, and track applications in real-time.
                 </p>
                 <div className="flex flex-wrap gap-4">
-                  <Button asChild size="lg" className="h-14 rounded-2xl bg-cyan-500 text-slate-900 font-black hover:bg-cyan-400 shadow-xl shadow-cyan-500/20 px-8">
-                    <Link href="/login?next=%2Fdirectory">Sign in/ Sign up</Link>
+                  <Button asChild size="lg" className="h-14 rounded-2xl border border-white/30 bg-white/10 text-white font-black hover:bg-white/20 px-8">
+                    <Link href="/login">Sign in/ Sign up</Link>
                   </Button>
                   <Button asChild variant="outline" size="lg" className="h-14 rounded-2xl border-white/20 text-white bg-transparent font-bold hover:bg-white/10 px-8">
                     <Link href="/login">Sign In</Link>
