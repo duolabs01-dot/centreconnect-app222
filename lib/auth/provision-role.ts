@@ -5,6 +5,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export type AllowedRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 export type EcdRole = 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
 export type ProvisionRoleSource = 'profile' | 'membership' | 'invitation' | 'metadata' | 'fallback'
+export type ProvisionRoleSignals = {
+  existingProfileRole?: unknown
+  membershipRole?: unknown
+  invitationRole?: unknown
+  metadataRole?: unknown
+}
 
 type ResolveProvisionRoleInput = {
   adminClient: ReturnType<typeof createAdminClient>
@@ -45,6 +51,37 @@ export function sanitizeAllowedRole(value: unknown): AllowedRole {
   return parseRole(value) ?? 'parent_user'
 }
 
+export function resolveProvisionRoleFromSignals(signals: ProvisionRoleSignals): {
+  role: AllowedRole
+  source: ProvisionRoleSource
+} {
+  const roleFromExisting = parseRole(signals.existingProfileRole)
+  if (roleFromExisting === 'platform_admin') {
+    return { role: 'platform_admin', source: 'profile' }
+  }
+
+  if (roleFromExisting === 'ecd_admin' || roleFromExisting === 'ecd_staff' || roleFromExisting === 'ecd_supervisor') {
+    return { role: roleFromExisting, source: 'profile' }
+  }
+
+  const roleFromMembership = parseEcdRole(signals.membershipRole)
+  if (roleFromMembership) {
+    return { role: roleFromMembership, source: 'membership' }
+  }
+
+  const roleFromInvitation = parseEcdRole(signals.invitationRole)
+  if (roleFromInvitation) {
+    return { role: roleFromInvitation, source: 'invitation' }
+  }
+
+  const roleFromMetadata = parseRole(signals.metadataRole)
+  if (roleFromMetadata) {
+    return { role: roleFromMetadata, source: 'metadata' }
+  }
+
+  return { role: 'parent_user', source: 'fallback' }
+}
+
 export async function resolveProvisionRole(
   input: ResolveProvisionRoleInput
 ): Promise<ResolveProvisionRoleResult> {
@@ -60,28 +97,6 @@ export async function resolveProvisionRole(
         .maybeSingle()
       return parseRole(data?.role)
     })())
-
-  if (roleFromExisting === 'platform_admin') {
-    return {
-      role: 'platform_admin',
-      source: 'profile',
-      existingProfileRole: roleFromExisting,
-      membershipRole: null,
-      invitationRole: null,
-      ecdIds: [],
-    }
-  }
-
-  if (roleFromExisting === 'ecd_admin' || roleFromExisting === 'ecd_staff' || roleFromExisting === 'ecd_supervisor') {
-    return {
-      role: roleFromExisting,
-      source: 'profile',
-      existingProfileRole: roleFromExisting,
-      membershipRole: roleFromExisting,
-      invitationRole: null,
-      ecdIds: [],
-    }
-  }
 
   const { data: membershipRows } = await input.adminClient
     .from('ecd_admins')
@@ -130,34 +145,40 @@ export async function resolveProvisionRole(
       .find((role): role is EcdRole => Boolean(role)) ?? null
   const invitationEcdIds = uniq(invitationRows.map((row) => row.ecd_id))
 
-  if (invitationRole) {
+  const resolved = resolveProvisionRoleFromSignals({
+    existingProfileRole: roleFromExisting,
+    membershipRole,
+    invitationRole,
+    metadataRole: roleFromMetadata,
+  })
+
+  if (resolved.source === 'membership') {
     return {
-      role: invitationRole,
-      source: 'invitation',
+      role: resolved.role,
+      source: resolved.source,
       existingProfileRole: roleFromExisting,
-      membershipRole: null,
+      membershipRole,
+      invitationRole,
+      ecdIds: membershipEcdIds,
+    }
+  }
+  if (resolved.source === 'invitation') {
+    return {
+      role: resolved.role,
+      source: resolved.source,
+      existingProfileRole: roleFromExisting,
+      membershipRole,
       invitationRole,
       ecdIds: invitationEcdIds,
     }
   }
 
-  if (roleFromMetadata) {
-    return {
-      role: roleFromMetadata,
-      source: 'metadata',
-      existingProfileRole: roleFromExisting,
-      membershipRole: null,
-      invitationRole: null,
-      ecdIds: [],
-    }
-  }
-
   return {
-    role: 'parent_user',
-    source: 'fallback',
+    role: resolved.role,
+    source: resolved.source,
     existingProfileRole: roleFromExisting,
-    membershipRole: null,
-    invitationRole: null,
+    membershipRole,
+    invitationRole,
     ecdIds: [],
   }
 }
