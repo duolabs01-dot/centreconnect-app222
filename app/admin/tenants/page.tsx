@@ -58,7 +58,7 @@ export default async function AdminTenantsPage() {
   const [centresResult, invitationsResult, inviteLogsResult] = await Promise.all([
     admin
       .from('ecd_centres')
-      .match({ is_deleted: false })
+      .filter('is_deleted', 'eq', false)
       .select(
         'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
       )
