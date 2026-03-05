@@ -1,63 +1,49 @@
-'use client'
+'use client';
 
-import Image from 'next/image'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Heart, MapPin, Star } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useState } from 'react'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Heart, MapPin, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface CentreCardProps {
-  id: string
-  slug?: string
-  name: string
-  image?: string
-  cover_image_url?: string
-  logo_url?: string
-  address?: string
-  distance?: string
-  distanceLabel?: string
-  rating?: number
-  fees?: string
-  feesLabel?: string
-  age_groups: string[]
-  tagline?: string
-  capacity?: number
-  existing_application_status?: string | null
-  isSaved?: boolean
-  onApply?: () => void
-  onSave?: () => void
+  id: string;
+  name: string;
+  cover_image_url?: string;
+  address?: string;
+  distanceLabel?: string;
+  feesLabel?: string;
+  age_groups: string[];
+  rating?: number;
+  tagline?: string;
+  isSaved?: boolean;
+  onApply?: () => void;
+  onSave?: () => void;
 }
 
 export function CentreCard({
   id,
   name,
-  image,
   cover_image_url,
   address,
-  distance,
   distanceLabel,
-  rating = 4.8,
-  fees,
   feesLabel,
   age_groups,
+  rating = 4.8,
   tagline,
   isSaved = false,
   onApply,
   onSave,
 }: CentreCardProps) {
-  const [saved, setSaved] = useState(isSaved)
-  const displayImage =
-    cover_image_url ||
-    image ||
-    'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
+  const [saved, setSaved] = useState(isSaved);
 
   const handleSave = () => {
-    setSaved(!saved)
-    onSave?.()
-  }
+    setSaved(!saved);
+    onSave?.();
+  };
 
   return (
     <motion.div
@@ -70,7 +56,7 @@ export function CentreCard({
       <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
         <div className="relative h-56 overflow-hidden">
           <Image
-            src={displayImage}
+            src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
             alt={name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
@@ -79,14 +65,14 @@ export function CentreCard({
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
           <div className="absolute top-4 right-4 flex flex-col gap-2">
-            {(distance || distanceLabel) && (
+            {distanceLabel && (
               <Badge variant="secondary" className="bg-white/90 text-xs font-medium">
-                <MapPin className="w-3 h-3 mr-1" /> {distance || distanceLabel}
+                <MapPin className="w-3 h-3 mr-1" /> {distanceLabel}
               </Badge>
             )}
-            {(fees || feesLabel) && (
+            {feesLabel && (
               <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
-                {fees || feesLabel}
+                {feesLabel}
               </Badge>
             )}
           </div>
@@ -129,7 +115,7 @@ export function CentreCard({
 
         <CardFooter className="px-6 pb-6 pt-0 gap-3">
           <Button
-            onClick={onApply}
+            onClick={onApply}   {/* ← This line must be present and not overridden */}
             className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-6 rounded-2xl text-base shadow-md active:scale-95 transition-all"
           >
             Apply Now – It’s Free
@@ -145,7 +131,7 @@ export function CentreCard({
         </CardFooter>
       </Card>
     </motion.div>
-  )
+  );
 }
 
-export default CentreCard
+export default CentreCard;
