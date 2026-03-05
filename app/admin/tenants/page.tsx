@@ -58,9 +58,8 @@ export default async function AdminTenantsPage() {
   const [centresResult, invitationsResult, inviteLogsResult] = await Promise.all([
     admin
       .from('ecd_centres')
-      .match({ is_deleted: false })
       .select(
-        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
+        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price),is_deleted'
       )
       .order('created_at', { ascending: false })
       .limit(1000),
@@ -78,7 +77,7 @@ export default async function AdminTenantsPage() {
       .limit(150),
   ])
 
-  const centres = (centresResult.data ?? []) as Array<{
+  const centresRaw = (centresResult.data ?? []) as Array<{
     id: string
     slug: string | null
     name: string | null
@@ -116,7 +115,9 @@ export default async function AdminTenantsPage() {
           monthly_price: number
         }>
       | null
+    is_deleted: boolean | null
   }>
+  const centres = centresRaw.filter((centre) => !centre.is_deleted)
   const invitationRows = (invitationsResult.data ?? []) as Array<{
     ecd_id: string
     accepted_at: string | null
