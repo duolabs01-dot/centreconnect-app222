@@ -14,7 +14,8 @@ const mockCentres = [
     tagline: 'Warm light, calm routines, joyful discoveries.',
     city: 'Johannesburg',
     suburb: 'Melville',
-    cover_image_url: 'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1800&q=80',
+    cover_image_url:
+      'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg',
     logo_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
     distanceLabel: '2.3 km away',
     feesLabel: 'R1,250 per month',
