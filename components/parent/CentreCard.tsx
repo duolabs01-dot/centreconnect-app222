@@ -52,7 +52,9 @@ export function CentreCard({
   onSave,
 }: CentreCardProps) {
   const [saved, setSaved] = useState(isSaved)
-  const displayImage = cover_image_url || image || '/placeholder-centre.jpg'
+  const gradientPlaceholder =
+    'data:image/svg+xml,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221920%22 height=%22960%22 viewBox=%220 0 1920 960%22%3e%3crect width=%221920%22 height=%22960%22 fill=%22url(%23g)%22/%3e%3cdefs%3e%3clinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3e%3cstop offset=%220%22 stop-color=%22%2313273b%22/%3e%3cstop offset=%221%22 stop-color=%22%230a1828%22/%3e%3c/linearGradient%3e%3c/defs%3e%3c/svg%3e'
+  const displayImage = cover_image_url || image || gradientPlaceholder
 
   const handleSave = () => {
     setSaved(!saved)
@@ -74,6 +76,7 @@ export function CentreCard({
             alt={name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-500"
+            unoptimized
           />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
