@@ -43,7 +43,7 @@ const NavButton = memo(({
     <button
       onClick={handleClick}
       className={cn(
-        'mobile-nav-item relative flex h-12 flex-1 items-center justify-center overflow-hidden rounded-2xl px-1 outline-none transition-colors duration-200',
+        'mobile-nav-item relative flex h-11 flex-1 items-center justify-center overflow-hidden rounded-2xl px-2 outline-none transition-colors duration-200',
         active ? 'text-cyan-900' : 'text-slate-600 hover:text-slate-900'
       )}
       aria-current={active ? 'page' : undefined}
@@ -51,12 +51,12 @@ const NavButton = memo(({
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
       {active ? (
-        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-200/80 via-sky-100/60 to-indigo-200/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_0_0_1px_rgba(14,165,233,0.6),0_14px_38px_rgba(14,165,233,0.25)]" />
+        <span className="pointer-events-none absolute inset-0 rounded-2xl ring-2 ring-cyan-400/60 bg-gradient-to-b from-white/10 to-transparent" />
       ) : null}
 
-      <div className="relative z-10 flex flex-col items-center justify-center gap-1">
-        <div className="relative">
-          <Icon
+          <div className="relative z-10 flex flex-col items-center justify-center gap-0.5">
+            <div className="relative">
+              <Icon
             size={20}
             strokeWidth={active ? 2.4 : 2}
             className={cn(
@@ -69,15 +69,15 @@ const NavButton = memo(({
           ) : null}
         </div>
 
-        <span
-          className={cn(
-            'text-[10px] font-semibold tracking-[0.3em] uppercase',
-            active ? 'text-cyan-800' : 'text-slate-500'
-          )}
-        >
-          {item.label}
-        </span>
-      </div>
+          <span
+            className={cn(
+              'text-[10px] font-semibold tracking-[0.3em] uppercase',
+              active ? 'text-cyan-800' : 'text-slate-500'
+            )}
+          >
+            {item.label}
+          </span>
+        </div>
     </button>
   )
 })
@@ -136,12 +136,12 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
-      <div className="pointer-events-auto mb-[calc(1rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-4">
+      <div className="pointer-events-auto mb-[calc(0.75rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-3">
         <nav
-          className="ios-liquid-nav flex items-center gap-1 rounded-[2rem] border border-white/55 bg-white/35 p-2 shadow-[0_18px_45px_rgba(15,23,42,0.25),inset_0_1px_0_rgba(255,255,255,0.75)]"
+          className="flex items-center gap-1 rounded-[1.75rem] border border-white/40 bg-white/30 p-1.5 shadow-[0_12px_30px_rgba(15,23,42,0.22)]"
           style={{
-            WebkitBackdropFilter: 'blur(28px) saturate(185%)',
-            backdropFilter: 'blur(28px) saturate(185%)',
+            WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+            backdropFilter: 'blur(18px) saturate(160%)',
           }}
         >
           {decoratedItems.map((item) => (
