@@ -225,13 +225,16 @@ export default async function AdminTenantsPage() {
           <AdminTenantsOnboarding existingCentres={existingCentres} />
         </div>
         <div className="flex justify-end">
-          <Link href="/admin/tenants/bin">
-            <Button className="border-amber-400 text-amber-200 hover:bg-amber-500/10" variant="outline">
-              View deleted centres
-            </Button>
-          </Link>
-        </div>
-      </section>
+        <Link href="/admin/tenants/bin">
+          <Button
+            className="inline-flex items-center justify-center rounded-full border border-slate-800 bg-slate-950 px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(2,6,23,0.6)] transition hover:border-slate-300 hover:bg-slate-900/80 hover:shadow-[0_20px_60px_rgba(15,118,110,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+            variant="outline"
+          >
+            View deleted centres
+          </Button>
+        </Link>
+      </div>
+    </section>
 
       <section className="space-y-4">
         <div className="space-y-1">
