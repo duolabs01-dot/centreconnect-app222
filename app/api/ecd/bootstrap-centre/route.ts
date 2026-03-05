@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { queueEmail } from '@/lib/communications/emails'
 import { APP_URL } from '@/lib/config'
-import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 function slugify(input: string) {
@@ -26,19 +24,6 @@ function isPilotRequested(selectedTier: string | null | undefined, adminNotes: s
   if (tier === 'pilot') return true
   const notes = (adminNotes ?? '').toLowerCase()
   return notes.includes('"pilotrequested": true') || notes.includes('"requestedplan": "pilot"')
-}
-
-function resolveContactName(user: { email?: string | null; user_metadata?: Record<string, unknown> | null }) {
-  const metadata = user.user_metadata ?? {}
-  const metadataName =
-    typeof metadata.full_name === 'string'
-      ? metadata.full_name.trim()
-      : typeof metadata.name === 'string'
-      ? metadata.name.trim()
-      : ''
-  if (metadataName) return metadataName
-  const local = (user.email ?? '').split('@')[0]?.trim()
-  return local || 'ECD Admin'
 }
 
 export async function POST() {
@@ -219,34 +204,36 @@ export async function POST() {
     )
 
     if (shouldSendPilotWelcomePack && user.email) {
-      const baseUrl = APP_URL.replace(/\/$/, '')
-      const welcomePackHtml = await renderPilotWelcomePackEmail({
-        centreName,
-        contactName: resolveContactName(user),
-        dashboardLink: `${baseUrl}/ecd/dashboard`,
-        websiteBuilderLink: `${baseUrl}/ecd/website`,
-        attendanceLink: `${baseUrl}/ecd/attendance`,
-        pickupLink: `${baseUrl}/ecd/pickup`,
-        qrPosterLink: `${baseUrl}/ecd/pickup`,
-        supportWhatsApp: '+27685356430',
-        supportEmail: 'admin@centerconnect.co.za',
-        supportLink: `${baseUrl}/ecd/support`,
-      })
-      const welcomePackResult = await queueEmail(
-        user.email,
-        `Pilot Welcome Pack 🚀 | ${centreName}`,
-        welcomePackHtml
-      )
-      if (!welcomePackResult.success) {
-        warnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
-      } else {
-        await writeInviteLog(admin, {
-          centreId: centre.id,
-          ownerEmail: user.email,
-          inviteType: 'welcome_pack',
-          status: 'sent',
-          notes: 'Pilot welcome pack (bootstrap-centre).',
+      const appUrlRoot = APP_URL.replace(/\/$/, '')
+      const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', `${appUrlRoot}/`)
+      try {
+        const welcomeResponse = await fetch(welcomePackEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ecdId: centre.id,
+            ownerEmail: user.email,
+          }),
         })
+
+        if (!welcomeResponse.ok) {
+          const errorText = (await welcomeResponse.text().catch(() => '')).trim()
+          warnings.push(
+            errorText.length > 0
+              ? `Failed to send pilot welcome pack (${welcomeResponse.status}): ${errorText}`
+              : `Failed to send pilot welcome pack (${welcomeResponse.status}).`
+          )
+        } else {
+          await writeInviteLog(admin, {
+            centreId: centre.id,
+            ownerEmail: user.email,
+            inviteType: 'welcome_pack',
+            status: 'sent',
+            notes: 'Pilot welcome pack (bootstrap-centre).',
+          })
+        }
+      } catch (error) {
+        warnings.push(error instanceof Error ? error.message : 'Failed to queue pilot welcome pack email.')
       }
     }
 

@@ -265,7 +265,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
   }
   if (welcomePackWarning) {
-    combinedWarning = combinedWarning ?? welcomePackWarning
+    combinedWarning = combinedWarning
+      ? `${combinedWarning} | ${welcomePackWarning}`
+      : welcomePackWarning
   }
 
   const whatsappMessage = [
@@ -317,30 +319,43 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     })
   }
 
-  await admin.from('ecd_admin_invitations').upsert(
-      {
-        ecd_id: centre.id,
-        email: ownerEmail,
-        role: 'ecd_admin',
-        invited_by: identity.userId,
-        invited_at: nowIso,
-        auth_user_id: resolvedAuthUserId,
-      },
+  const { error: invitationUpsertError } = await admin.from('ecd_admin_invitations').upsert(
+    {
+      ecd_id: centre.id,
+      email: ownerEmail,
+      role: 'ecd_admin',
+      invited_by: identity.userId,
+      invited_at: nowIso,
+      auth_user_id: resolvedAuthUserId,
+    },
     { onConflict: 'ecd_id,email' }
   )
+  if (invitationUpsertError) {
+    return NextResponse.json(
+      { error: `Failed to record owner invitation: ${invitationUpsertError.message}` },
+      { status: 500 }
+    )
+  }
 
-    if (resolvedAuthUserId) {
-      await admin.from('user_profiles').upsert(
-        {
-          id: resolvedAuthUserId,
-          role: 'ecd_admin',
-          full_name: ownerName,
-          email: ownerEmail,
-          phone: ownerPhoneRaw ?? null,
-        },
+  if (resolvedAuthUserId) {
+    const { error: profileUpsertError } = await admin.from('user_profiles').upsert(
+      {
+        id: resolvedAuthUserId,
+        role: 'ecd_admin',
+        full_name: ownerName,
+        email: ownerEmail,
+        phone: ownerPhoneRaw ?? null,
+      },
       { onConflict: 'id' }
     )
-    await admin.from('ecd_admins').upsert(
+    if (profileUpsertError) {
+      return NextResponse.json(
+        { error: `Failed to upsert owner profile: ${profileUpsertError.message}` },
+        { status: 500 }
+      )
+    }
+
+    const { error: membershipUpsertError } = await admin.from('ecd_admins').upsert(
       {
         ecd_id: centre.id,
         user_id: resolvedAuthUserId,
@@ -350,11 +365,24 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       },
       { onConflict: 'ecd_id,user_id' }
     )
-    await admin
+    if (membershipUpsertError) {
+      return NextResponse.json(
+        { error: `Failed to link owner membership: ${membershipUpsertError.message}` },
+        { status: 500 }
+      )
+    }
+
+    const { error: ownerAssignError } = await admin
       .from('ecd_centres')
       .update({ owner_id: resolvedAuthUserId })
       .eq('id', centre.id)
       .is('owner_id', null)
+    if (ownerAssignError) {
+      return NextResponse.json(
+        { error: `Failed to assign centre owner: ${ownerAssignError.message}` },
+        { status: 500 }
+      )
+    }
   }
 
   await writePlatformActivity(admin, {

@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { APP_URL, SUPPORT_EMAIL } from '@/lib/config'
-import { queueEmail } from '@/lib/communications/emails'
-import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
+import { APP_URL } from '@/lib/config'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 export async function POST(
@@ -41,27 +39,34 @@ export async function POST(
   }
 
   const appUrlRoot = APP_URL.replace(/\/$/, '')
-  const emailHtml = await renderPilotWelcomePackEmail({
-    centreName: centre.name ?? 'your centre',
-    contactName: centre.primary_contact_name ?? 'Centre owner',
-    dashboardLink: `${appUrlRoot}/ecd/dashboard`,
-    websiteBuilderLink: `${appUrlRoot}/ecd/website`,
-    attendanceLink: `${appUrlRoot}/ecd/attendance`,
-    pickupLink: `${appUrlRoot}/ecd/pickup`,
-    qrPosterLink: `${appUrlRoot}/ecd/pickup`,
-    supportWhatsApp: process.env.SUPPORT_WHATSAPP ?? '+27685356430',
-    supportEmail: SUPPORT_EMAIL,
-    supportLink: `${appUrlRoot}/ecd/support`,
-  })
+  const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', `${appUrlRoot}/`)
+  try {
+    const welcomeResponse = await fetch(welcomePackEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ecdId: centre.id,
+        ownerEmail,
+      }),
+    })
 
-  const emailResult = await queueEmail(
-    ownerEmail,
-    `Pilot Welcome Pack | ${centre.name ?? 'CentreConnect'}`,
-    emailHtml
-  )
-
-  if (!emailResult.success) {
-    return NextResponse.json({ error: emailResult.error ?? 'Failed to queue welcome pack email.' }, { status: 500 })
+    if (!welcomeResponse.ok) {
+      const errorText = (await welcomeResponse.text().catch(() => '')).trim()
+      return NextResponse.json(
+        {
+          error:
+            errorText.length > 0
+              ? `Failed to send welcome pack (${welcomeResponse.status}): ${errorText}`
+              : `Failed to send welcome pack (${welcomeResponse.status})`,
+        },
+        { status: 502 }
+      )
+    }
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to send welcome pack email.' },
+      { status: 502 }
+    )
   }
 
   await writeInviteLog(admin, {

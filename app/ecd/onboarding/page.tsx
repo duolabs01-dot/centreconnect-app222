@@ -56,7 +56,6 @@ export default function EcdOnboardingPage() {
   const [saving, setSaving] = useState(false)
 
   const [ecdId, setEcdId] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
   const [slug, setSlug] = useState<string>('')
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
@@ -84,8 +83,6 @@ export default function EcdOnboardingPage() {
         router.replace('/ecd/login')
         return
       }
-
-      setUserId(user.id)
 
       const { data: membership, error } = await supabase
         .from('ecd_admins')
@@ -195,57 +192,45 @@ export default function EcdOnboardingPage() {
   }
 
   async function saveStepThree() {
-    if (!ecdId || !userId) return
+    if (!ecdId) return
     if (!inviteEmail.trim()) {
       toast.error('Enter an email or skip this step')
       return
     }
 
     setSaving(true)
-    const token = crypto.randomUUID()
-    const payload = {
-      ecd_id: ecdId,
-      email: inviteEmail.trim().toLowerCase(),
-      role: inviteRole,
-      invited_by: userId,
-      token,
-    }
-
-    const withToken = await supabase.from('ecd_admin_invitations').insert(payload)
-    if (withToken.error) {
-      const tokenMissing =
-        typeof withToken.error.message === 'string' &&
-        (withToken.error.message.includes('token') || withToken.error.message.includes('schema cache'))
-
-      if (tokenMissing) {
-        const fallback = await supabase.from('ecd_admin_invitations').insert({
-          ecd_id: ecdId,
+    try {
+      const response = await fetch('/api/ecd/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ecdId,
           email: inviteEmail.trim().toLowerCase(),
           role: inviteRole,
-          invited_by: userId,
-        })
-        if (fallback.error) {
-          setSaving(false)
-          toast.error(fallback.error.message || 'Failed to invite staff member')
-          return
-        }
-      } else {
-        setSaving(false)
-        toast.error(withToken.error.message || 'Failed to invite staff member')
+        }),
+      })
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string; linkedExistingUser?: boolean }
+      if (!response.ok) {
+        toast.error(payload.error || 'Failed to invite staff member')
         return
       }
-    }
 
-    setSaving(false)
-    toast.success('Invitation sent')
-    setCurrentStep(4)
+      toast.success(payload.linkedExistingUser ? 'Existing account linked and invited' : 'Invitation sent')
+      setCurrentStep(4)
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to invite staff member')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function skipTo(step: Step) {
     setCurrentStep(step)
   }
 
-  const publicUrl = slug ? `https://centreconnect-app222.vercel.app/c/${slug}` : 'https://centreconnect-app222.vercel.app/c/your-centre'
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://centerconnect.co.za').replace(/\/$/, '')
+  const publicUrl = slug ? `${appUrl}/c/${slug}` : `${appUrl}/c/your-centre`
 
   if (loadingCentre) {
     return (

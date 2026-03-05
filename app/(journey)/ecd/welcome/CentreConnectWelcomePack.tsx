@@ -1,308 +1,458 @@
 'use client'
 
+import {
+  ClipboardCheck,
+  type LucideIcon,
+  MessageCircleMore,
+  NotebookPen,
+  ShieldCheck,
+  UserRoundPlus,
+  Users,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 import { BrandMark } from '@/components/ecd/BrandMark'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
-const scenarios = [
+type Scenario = {
+  id: string
+  shortTitle: string
+  title: string
+  color: string
+  bg: string
+  accent: string
+  icon: LucideIcon
+  pain: string
+  solution: string
+  steps: string[]
+  ctaLabel: string
+  ctaHref: string
+  quote: string
+  quoteAuthor: string
+}
+
+const scenarios: Scenario[] = [
   {
     id: 'applications',
+    shortTitle: 'Applications',
+    title: 'No more chasing parents on WhatsApp',
     color: '#0D9488',
     bg: '#F0FDFA',
     accent: '#CCFBF1',
-    title: 'No more chasing parents on WhatsApp',
-    solution:
-      'When a parent applies through CentreConnect, everything lands in one place. You just review the child, accept or decline, and a polite notification goes out automatically.',
+    icon: MessageCircleMore,
     pain:
-      'You post in the WhatsApp group, wait, chase, then chase again. Documents land in four different messages and you have to stop everything to find them.',
+      'You post, wait, follow up, and then documents arrive in many messages. It wastes your day.',
+    solution:
+      'Applications come into one clean list. Open, review, accept or decline, and parents are updated instantly.',
     steps: [
-      'A parent finds your centre and fills in the application',
-      'You hear the ping and open your dashboard',
-      'Everything is already organised — review once, decide once',
-      'Hit Accept, Decline, or Waitlist with one tap',
-      'The parent gets a clear notification straight away',
+      'Parent applies from your centre page',
+      'You get a clear notification',
+      'Open one card with all details',
+      'Accept, decline, or waitlist with one tap',
+      'Parent receives the result automatically',
     ],
-    ctaLabel: 'See the Applications board',
+    ctaLabel: 'See Applications Board',
     ctaHref: '/ecd/pipeline',
-    quote: '"I used to spend two hours every Monday sorting messages. Now it is ten minutes."',
-    quoteAuthor: 'Mama Thandi, Soweto ECD Centre',
+    quote: '"Monday admin used to take two hours. Now it takes ten minutes."',
+    quoteAuthor: 'Mama Thandi, Soweto',
   },
   {
     id: 'children',
+    shortTitle: 'Children',
+    title: 'Children records are finally organised',
     color: '#7C3AED',
     bg: '#FAF5FF',
     accent: '#EDE9FE',
-    title: "Your children's records — finally organised",
-    solution:
-      'Add every child once. Birthdays, guardians, authorised pick-ups, health notes — everything lives on your phone so you can find it in seconds.',
+    icon: NotebookPen,
     pain:
-      'The big register works until you need something quickly. A parent is waiting, you are flipping to the right page — it takes forever.',
+      'The register works until you must find one detail quickly while a parent is waiting at the gate.',
+    solution:
+      'Each child profile keeps age group, guardians, pickups, and notes in one place that your team can search fast.',
     steps: [
-      "Add a child's name, DOB and age group",
-      'Attach guardian contact details',
-      'Add anyone allowed to pick them up',
-      'Drop in allergies or medical notes',
-      'Let staff open the file even when you are not there',
+      'Add child name and date of birth',
+      'Add parent and guardian contacts',
+      'Add approved pickup people',
+      'Save health notes and allergies',
+      'Find any record in seconds',
     ],
-    ctaLabel: 'Start adding children',
-    ctaHref: '/ecd/children',
-    quote: '"When a mum called about an allergy, I used to panic. Now I just check on my phone."',
-    quoteAuthor: 'Auntie Rose, Alexandra Crèche',
+    ctaLabel: 'Open Children Setup',
+    ctaHref: '/ecd/children/new',
+    quote: '"I stopped paging through files during busy pickup time."',
+    quoteAuthor: 'Auntie Rose, Alexandra',
   },
   {
     id: 'attendance',
+    shortTitle: 'Attendance',
+    title: 'Attendance in under a minute',
     color: '#0369A1',
     bg: '#F0F9FF',
     accent: '#BAE6FD',
-    title: 'Attendance in 30 seconds, not 30 minutes',
-    solution:
-      'Mark every child present or absent with a tap. The system remembers, totals the month, and keeps parents informed without extra typing.',
+    icon: ClipboardCheck,
     pain:
-      'Roll call takes half the morning. At the end of the month you count ticks and try to remember who was away — it is draining.',
+      'Morning roll call and month-end counting can eat hours and create mistakes.',
+    solution:
+      'Tap present or absent and the system keeps totals for billing and reports.',
     steps: [
-      'Open the attendance screen each morning',
-      'Tap each child — green for present, grey for absent',
-      'Add a reason when needed',
-      'It saves automatically',
-      'Use the monthly summary for invoicing or reports',
+      'Open attendance each morning',
+      'Tap present or absent per child',
+      'Add absence reason only if needed',
+      'Everything saves automatically',
+      'Use monthly summaries when invoicing',
     ],
-    ctaLabel: 'Open attendance',
+    ctaLabel: 'Open Attendance',
     ctaHref: '/ecd/attendance',
-    quote: '"End of month used to take a whole weekend. Now the counts are ready on Monday."',
+    quote: '"Month-end counting used to be painful. Now it is already done."',
     quoteAuthor: 'Mama Precious, Tembisa',
   },
   {
     id: 'pickup',
+    shortTitle: 'Safe Pickup',
+    title: 'Safe pickup with less gate stress',
     color: '#B45309',
     bg: '#FFFBEB',
     accent: '#FDE68A',
-    title: 'Safe pickup — no more gate confusion',
-    solution:
-      'Authorised people show a QR code at the gate. Scan it, get a green light, and send parents a delivery confirmation. No arguments, no guessing.',
+    icon: ShieldCheck,
     pain:
-      'Someone you have never seen says they are picking up little Lethabo. You call the mum, she does not pick up, the guardian is getting restless.',
+      'Someone unknown says they are collecting a child and you are forced to make a risky call.',
+    solution:
+      'QR pickup checks show if the person is approved before release, so staff can stay calm and consistent.',
     steps: [
-      'Add authorised pickup people to each child',
-      'Print the QR poster for your gate',
-      'Guardians show or scan the code',
-      'You confirm with a tap',
-      'Parents receive instant notification',
+      'Add approved pickup people once',
+      'Print your gate QR poster',
+      'Guardian scans or shows their code',
+      'Staff confirms on screen',
+      'Parent gets a pickup update',
     ],
-    ctaLabel: 'Set up safe pickup',
+    ctaLabel: 'Set Up Safe Pickup',
     ctaHref: '/ecd/pickup',
-    quote: '"Before I sometimes let people through because conflict is hard. Now I say, the system says no."',
+    quote: '"Now I can protect children and still keep the gate calm."',
     quoteAuthor: 'Mama Lindiwe, Katlehong',
   },
   {
     id: 'parents',
+    shortTitle: 'Invite Parents',
+    title: 'Parents feel included every day',
     color: '#047857',
     bg: '#F0FDF4',
     accent: '#A7F3D0',
-    title: 'Invite parents — show them what you are doing',
-    solution:
-      'Parents can see attendance, daily notes, and upload documents. They feel involved without you needing extra phone calls.',
+    icon: Users,
     pain:
-      'They drop their child, pick them up, and still do not know what happened. Communication waits until there is a problem.',
+      'Parents often feel disconnected, then everything becomes urgent at the last minute.',
+    solution:
+      'Parents can view updates, attendance, and notes in app. Trust grows without extra calls.',
     steps: [
-      'Share your centre link with parents',
-      'They register on the app',
-      'They apply for a space',
-      'Enrolled parents see updates and notes',
-      'Documents upload directly — no more WhatsApp images',
+      'Share your centre link',
+      'Parents create free accounts',
+      'They apply through your profile',
+      'You approve and onboard faster',
+      'Parents follow updates daily',
     ],
-    ctaLabel: 'Get your share link',
+    ctaLabel: 'Get Parent Link',
     ctaHref: '/ecd/profile',
-    quote: '"Parents started thanking me just for keeping them updated. That had never happened before."',
+    quote: '"Parents started thanking us for clear daily communication."',
     quoteAuthor: 'Auntie Grace, Mamelodi',
   },
   {
     id: 'staff',
+    shortTitle: 'Your Staff',
+    title: 'Give staff access without losing control',
     color: '#9D174D',
     bg: '#FFF1F2',
     accent: '#FECDD3',
-    title: 'Your staff — let them help without giving away control',
-    solution:
-      'Invite teachers, pick a role, and they get their own login. They can mark attendance and check pickup without seeing your billing.',
+    icon: UserRoundPlus,
     pain:
-      'You are not everywhere. Someone needs to mark attendance or check pickup while you are in a meeting.',
+      'You cannot be everywhere, but sharing one password is not safe.',
+    solution:
+      'Each team member gets their own login and role, so they can help while your data stays protected.',
     steps: [
-      'Go to centre settings',
-      'Click invite staff',
-      'Enter email and pick a role',
-      'They receive a secure invite',
-      'They work without touching your financials',
+      'Open centre profile settings',
+      'Invite staff by email',
+      'Assign role permissions',
+      'They activate their own login',
+      'Track who did what in the system',
     ],
-    ctaLabel: 'Invite your staff',
-    ctaHref: '/ecd/staff',
-    quote: '"My teacher now has her own login. I know she can handle things while I am away."',
+    ctaLabel: 'Invite Staff',
+    ctaHref: '/ecd/profile',
+    quote: '"My team can help more, and I still keep full control."',
     quoteAuthor: 'Mama Ntombi, Soweto',
   },
 ]
 
-const timeline = [
-  { label: 'Create your account', detail: 'Finish sign-up, confirm email, and pick a password.' },
-  { label: 'Open the welcome pack', detail: 'Tap the CTA and walk through the animated scenarios.' },
-  { label: 'Visit your starter page', detail: 'Head to the website/setup screen and start importing children.' },
-]
-
 const tips = [
-  'Add CentreConnect to your home screen — no download required.',
-  'Start with five children from your register; add the rest once you feel the pace.',
-  'Print the Safe Pickup QR poster and pin it by the gate.',
-  'Upload a great centre photo; parents choose with their eyes first.',
+  'Add CentreConnect to your home screen. It works like an app.',
+  'Start with five children today, then add the rest tomorrow.',
+  'Print your Safe Pickup QR poster and place it at the gate.',
+  'Upload your logo and a clear centre photo to build trust quickly.',
 ]
-
-type Scenario = (typeof scenarios)[number]
-
-function ScenarioModal({ scenario, onClose }: { scenario: Scenario; onClose: () => void }) {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [])
-
-  return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-    >
-      <div className="w-full max-w-2xl rounded-[28px] bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="rounded-t-[28px] p-8" style={{ background: scenario.color }}>
-          <div className="flex items-start justify-between">
-            <p className="text-4xl text-white">•</p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full bg-white/20 px-3 py-1 text-xl text-white"
-            >
-              ✕
-            </button>
-          </div>
-          <h2 className="mt-4 text-2xl font-bold text-white">{scenario.title}</h2>
-        </div>
-        <div className="space-y-6 px-8 py-10">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">You know this situation...</p>
-            <p className="mt-2 text-base text-slate-700">{scenario.pain}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Here&apos;s how it works now</p>
-            <p className="mt-2 text-base text-slate-700">{scenario.solution}</p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Step by step</p>
-            <div className="mt-3 space-y-2 text-sm text-slate-700">
-              {scenario.steps.map((step, index) => (
-                <p key={step} className="flex items-start gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  {step}
-                </p>
-              ))}
-            </div>
-          </div>
-          <blockquote className="rounded-2xl border-l-4 border-slate-200 bg-slate-50 p-4 text-sm italic text-slate-700">
-            <p>{scenario.quote}</p>
-            <footer className="mt-2 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{scenario.quoteAuthor}</footer>
-          </blockquote>
-          <Button asChild className="block rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
-            <Link href={scenario.ctaHref}>{scenario.ctaLabel}</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default function CentreConnectWelcomePack() {
-  const [active, setActive] = useState<Scenario | null>(null)
-  const timelineSteps = useMemo(() => timeline, [])
+  const searchParams = useSearchParams()
+  const [step, setStep] = useState<0 | 1>(0)
+  const [activeScenario, setActiveScenario] = useState<Scenario | null>(null)
+
+  const ownerName = useMemo(
+    () => searchParams.get('name')?.trim() || 'Friend',
+    [searchParams]
+  )
+  const centreName = useMemo(
+    () => searchParams.get('centre')?.trim() || 'your centre',
+    [searchParams]
+  )
+  const location = useMemo(
+    () => searchParams.get('location')?.trim() || 'your community',
+    [searchParams]
+  )
+  const firstName = ownerName.split(' ')[0] || ownerName
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F7FAFC] via-white to-[#EFF6FF] px-4 py-10">
-      <div className="mx-auto max-w-5xl space-y-10 rounded-[32px] bg-white p-8 shadow-[0_25px_60px_rgba(15,23,42,0.12)]">
-        <header className="space-y-4 text-center">
-          <div className="flex items-center justify-center gap-3">
+    <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] via-white to-[#ECFEFF] px-4 py-8 sm:py-10">
+      <div className="mx-auto max-w-5xl space-y-8 rounded-[32px] border border-slate-100 bg-white p-5 shadow-[0_25px_70px_rgba(2,6,23,0.08)] sm:p-8">
+        <header className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <BrandMark compact className="h-12 w-auto" />
-            <span className="hidden text-xs font-black uppercase tracking-[0.5em] text-slate-400 sm:inline">Early Childhood Development</span>
-          </div>
-      <p className="text-base text-slate-600">This is your living welcome pack. Tap any card, read the story, and follow the CTA to start the right page.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button asChild className="rounded-full bg-[#14B8A6] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#0ea5a0]/40 transition hover:-translate-y-0.5">
-              <Link href="/ecd/profile">Launch your starter page</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-full border-[#14B8A6] px-5 py-2 text-sm font-semibold text-[#0D1F3C] transition hover:border-[#0ea5a0]">
-              <Link href="https://centerconnect.co.za/CentreConnect_Pilot_Welcome_FINAL.html">Open the welcome pack</Link>
-            </Button>
+            <Badge className="rounded-full bg-[#E6FFFB] px-4 py-1 text-xs font-semibold text-[#0F766E]">
+              Sawubona, Dumela, Hello
+            </Badge>
           </div>
         </header>
 
-        <section className="grid gap-6 md:grid-cols-3">
-          {timelineSteps.map((item) => (
-            <Card key={item.label} className="rounded-2xl border-slate-100 bg-[#F8FAFC] p-0 shadow-sm">
-              <CardContent className="space-y-2 p-5 text-center">
-                <p className="text-xs font-black uppercase tracking-[0.4em] text-slate-500">{item.label}</p>
-                <p className="text-sm text-slate-600">{item.detail}</p>
+        {step === 0 ? (
+          <section className="space-y-6">
+            <Card className="overflow-hidden rounded-3xl border border-slate-100">
+              <div className="relative h-60 w-full sm:h-80">
+                <img
+                  src="https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg"
+                  alt="Children playing at an ECD centre"
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-900/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5 text-white sm:p-8">
+                  <p className="text-sm font-semibold tracking-wide text-amber-200">
+                    CentreConnect Pilot Welcome
+                  </p>
+                  <h1 className="mt-1 text-2xl font-bold leading-tight sm:text-4xl">
+                    Hey {firstName}, welcome to CentreConnect.
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-100 sm:text-base">
+                    {centreName} in {location} is ready. Parents are already asking for the app.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-3xl border-[#CCFBF1] bg-[#F0FDFA]">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">
+                  We know how WhatsApp blows up.
+                </h2>
+                <p className="text-sm leading-7 text-slate-700 sm:text-base">
+                  You are already doing great work for children. This guide just helps you
+                  move faster with less stress. No jargon, no pressure, just practical steps.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="rounded-2xl bg-[#14B8A6] px-6 py-6 text-base font-semibold text-white hover:bg-[#0F766E]"
+                  >
+                    Let&apos;s get started
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-2xl border-[#14B8A6] px-6 py-6 text-base font-semibold text-[#0F172A]"
+                  >
+                    <Link href="/ecd/profile">Open my setup page</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
-          ))}
-        </section>
-
-        <section className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
-            {scenarios.map((scenario) => (
-              <button
-                key={scenario.id}
-                type="button"
-                onClick={() => setActive(scenario)}
-                className="group flex min-h-[220px] flex-col gap-3 rounded-2xl border-2 p-5 text-left transition hover:-translate-y-1 hover:shadow-2xl"
-                style={{ background: scenario.bg, borderColor: scenario.accent }}
-              >
-                <span className="text-3xl" aria-hidden>
-                  •
-                </span>
-                <div className="space-y-1">
-                  <p className="text-xs uppercase tracking-[0.4em] text-slate-600">{scenario.id}</p>
-                  <h3 className="text-xl font-bold" style={{ color: scenario.color }}>
-                    {scenario.title}
-                  </h3>
-                  <p className="text-sm text-slate-600">{scenario.pain}</p>
+          </section>
+        ) : (
+          <section className="space-y-8">
+            <Card className="rounded-3xl border-[#E2E8F0]">
+              <CardContent className="space-y-4 p-6 sm:p-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
+                  Your Welcome Guide
+                </p>
+                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+                  Your centre, your way.
+                </h2>
+                <p className="text-sm leading-7 text-slate-600 sm:text-base">
+                  Tap any card below. You will see a real situation, simple steps,
+                  and the best next button to press.
+                </p>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  Friendly note: parents already expect digital updates and safe pickup checks.
+                  You are in the right place.
                 </div>
-                <span className="text-sm font-semibold text-slate-900">Tap to explore →</span>
-              </button>
-            ))}
-          </div>
-        </section>
+              </CardContent>
+            </Card>
 
-        <section className="space-y-4">
-          <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Quick tips</p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {tips.map((tip) => (
-              <Card key={tip} className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-600 shadow-sm">
-                <CardContent>{tip}</CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+            <div className="grid gap-4 md:grid-cols-2">
+              {scenarios.map((scenario) => {
+                const Icon = scenario.icon
+                return (
+                  <button
+                    key={scenario.id}
+                    type="button"
+                    onClick={() => setActiveScenario(scenario)}
+                    className="group flex h-full min-h-[220px] flex-col justify-between rounded-3xl border-2 p-5 text-left transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(2,6,23,0.12)]"
+                    style={{ background: scenario.bg, borderColor: scenario.accent }}
+                  >
+                    <div className="space-y-3">
+                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm">
+                        <Icon className="h-5 w-5" color={scenario.color} />
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                        {scenario.shortTitle}
+                      </p>
+                      <h3
+                        className="text-lg font-bold leading-snug sm:text-xl"
+                        style={{ color: scenario.color }}
+                      >
+                        {scenario.title}
+                      </h3>
+                      <p className="text-sm leading-6 text-slate-700">
+                        {scenario.pain}
+                      </p>
+                    </div>
+                    <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      Learn more
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
 
-        <footer className="space-y-4 border-t border-slate-100 pt-6 text-center">
-          <p className="text-sm text-slate-500">Need help? WhatsApp +27 68 535 6430 — real humans answer in minutes.</p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button asChild className="rounded-full bg-[#0D9488] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#0d9488]/40">
-              <Link href="/ecd/dashboard">Open my dashboard</Link>
-            </Button>
-            <Button asChild variant="ghost" className="rounded-full border border-[#0D1F3C] px-5 py-2 text-sm font-semibold text-[#0D1F3C]">
-              <Link href="https://centerconnect.co.za/website">Visit the website setup page</Link>
-            </Button>
-          </div>
-        </footer>
+            <Card className="rounded-3xl border-[#E2E8F0]">
+              <CardContent className="space-y-4 p-6 sm:p-8">
+                <h3 className="text-xl font-bold text-slate-900">
+                  Quick tips from other principals
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {tips.map((tip) => (
+                    <div
+                      key={tip}
+                      className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm leading-6 text-slate-700"
+                    >
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-[#A7F3D0] bg-[#F0FDF4]">
+              <CardContent className="space-y-5 p-6 text-center sm:p-8">
+                <h3 className="text-2xl font-bold text-slate-900">
+                  You are not doing this alone.
+                </h3>
+                <p className="text-sm leading-7 text-slate-700 sm:text-base">
+                  Need a hand right now? WhatsApp us and we will walk the setup
+                  with you, step by step.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <Button
+                    asChild
+                    className="rounded-2xl bg-[#14B8A6] px-6 py-6 text-base font-semibold text-white hover:bg-[#0F766E]"
+                  >
+                    <Link href="/ecd/profile">Get Started</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="rounded-2xl border-[#22C55E] px-6 py-6 text-base font-semibold text-[#166534]"
+                  >
+                    <Link href="https://wa.me/27685356430?text=Hi%20CentreConnect%2C%20please%20help%20me%20set%20up.">
+                      WhatsApp +27 68 535 6430
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+        )}
       </div>
-      {active && <ScenarioModal scenario={active} onClose={() => setActive(null)} />}
+
+      <Dialog open={Boolean(activeScenario)} onOpenChange={(open) => !open && setActiveScenario(null)}>
+        {activeScenario && (
+          <DialogContent className="max-h-[92vh] max-w-2xl overflow-hidden rounded-[28px] p-0">
+            <div style={{ background: activeScenario.color }} className="px-6 pb-6 pt-8 sm:px-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/70">
+                {activeScenario.shortTitle}
+              </p>
+              <h3 className="mt-3 text-2xl font-bold leading-snug text-white sm:text-3xl">
+                {activeScenario.title}
+              </h3>
+            </div>
+            <div className="max-h-[65vh] space-y-5 overflow-y-auto px-6 py-6 sm:px-8">
+              <div className="rounded-2xl bg-amber-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">
+                  You know this situation
+                </p>
+                <p className="mt-2 text-sm leading-7 text-amber-900 sm:text-base">
+                  {activeScenario.pain}
+                </p>
+              </div>
+
+              <div
+                className="rounded-2xl border-2 p-4"
+                style={{ borderColor: activeScenario.accent, background: activeScenario.bg }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                  Here is how it works now
+                </p>
+                <p className="mt-2 text-sm leading-7 text-slate-700 sm:text-base">
+                  {activeScenario.solution}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                  Step by step
+                </p>
+                <div className="space-y-2">
+                  {activeScenario.steps.map((stepText, index) => (
+                    <div key={stepText} className="flex items-start gap-3 rounded-xl bg-slate-50 p-3">
+                      <span
+                        className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-full text-xs font-bold text-white"
+                        style={{ background: activeScenario.color }}
+                      >
+                        {index + 1}
+                      </span>
+                      <p className="text-sm leading-6 text-slate-700">{stepText}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <blockquote className="rounded-2xl border-l-4 border-slate-300 bg-slate-50 p-4 text-sm italic text-slate-700">
+                <p>{activeScenario.quote}</p>
+                <footer className="mt-2 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  {activeScenario.quoteAuthor}
+                </footer>
+              </blockquote>
+
+              <Button
+                asChild
+                className="w-full rounded-2xl bg-slate-900 py-6 text-base font-semibold text-white hover:bg-slate-800"
+              >
+                <Link href={activeScenario.ctaHref}>{activeScenario.ctaLabel}</Link>
+              </Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   )
 }
