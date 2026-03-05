@@ -79,6 +79,14 @@ async function findAuthUserIdByEmail(adminClient: ReturnType<typeof createAdminC
   return data?.id ?? null
 }
 
+async function removeParentRecord(adminClient: ReturnType<typeof createAdminClient>, userId: string) {
+  const { error } = await adminClient.from('parents').delete().eq('id', userId)
+  if (error) {
+    return error.message
+  }
+  return null
+}
+
 function normalizeSlug(slug: string) {
   return slug.trim().toLowerCase()
 }
@@ -412,6 +420,21 @@ export async function POST(request: Request) {
     )
   }
 
+  const emailWarnings: string[] = []
+  let parentAccessRevoked = false
+  let parentAccessRevocationError: string | null = null
+
+  if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
+    parentAccessRevocationError = await removeParentRecord(adminClient, adminUserId)
+    if (parentAccessRevocationError) {
+      emailWarnings.push(
+        'Failed to remove the parent profile record for this user. They may still hit the parent workspace until the cleanup is rerun.'
+      )
+    } else {
+      parentAccessRevoked = true
+    }
+  }
+
   await writePlatformActivity(adminClient, {
     actorUserId: platformAdmin.userId,
     actorEmail: platformAdmin.email,
@@ -429,11 +452,11 @@ export async function POST(request: Request) {
       migratedExistingUser: reusedExistingUser,
       previousRole: resolvedExistingRole,
       roleForcedTo: 'ecd_admin',
-      parentAccessRevoked: reusedExistingUser && resolvedExistingRole === 'parent_user',
+      parentAccessRevoked,
+      parentAccessRevocationError,
       linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,
     },
   })
-  const emailWarnings: string[] = []
   const setupLinkResult = await createPasswordSetupLink(adminClient, normalizedEmail)
   if (setupLinkResult.error) {
     emailWarnings.push(setupLinkResult.error)
