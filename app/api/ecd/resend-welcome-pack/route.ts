@@ -111,15 +111,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: 'Unable to load welcome pack content' }, { status: 502 })
   }
 
+  const loginUrl = `${appUrlRoot}/login?next=/parent/onboarding`
   html = applyTemplateReplacements(html, {
     '{{ownerName}}': ownerName,
     '{{centreName}}': centreName,
     '{{location}}': location,
     '{{centreSlug}}': centreSlug,
+    '{{loginUrl}}': loginUrl,
   })
 
   const centrePageUrl = `${appUrlRoot}/centre/${centreSlug || 'profile'}`
-  const plainText = `Welcome ${ownerName} to ${centreName}! Run ${centreName} in ${location} with CentreConnect. Visit ${centrePageUrl} for your admin dashboard. Need anything? WhatsApp +27 68 535 6430.`
+  const plainText = `Welcome ${ownerName} to ${centreName}! Create your account at ${loginUrl}, then return to ${centrePageUrl} for the starter guide. Need anything? WhatsApp +27 68 535 6430.`
 
   const subject = `Welcome to CentreConnect Pilot — ${centreName}`
 

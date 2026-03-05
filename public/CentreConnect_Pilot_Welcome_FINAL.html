@@ -14,6 +14,7 @@ h1, h2 { font-weight:700; color:#0D1F3C; }
 .card { background:#f8fafc; border-radius:12px; padding:24px; margin:16px 0; border:1px solid #e2e8f0; }
 .btn { background:#14B8A6; color:#fff; padding:14px 32px; border-radius:9999px; font-weight:600; text-decoration:none; display:inline-block; transition:all .2s; }
 .btn:hover { background:#0ea5a0; transform:translateY(-1px); }
+.hero-note { font-size:0.95rem; color:#475569; margin-top:16px; }
 </style>
 </head>
 <body>
@@ -23,7 +24,8 @@ h1, h2 { font-weight:700; color:#0D1F3C; }
   <h1 style="font-size:42px;margin-bottom:16px;">Hey {{ownerName}},</h1>
   <h2 style="font-size:32px;margin-bottom:24px;">welcome to {{centreName}} on CentreConnect</h2>
   <p style="font-size:18px;max-width:520px;margin:0 auto 40px;">I know running a centre means WhatsApp groups and paper lists every day. Parents are already asking for the app — let's make this easy together, like a friend who's got your back.</p>
-  <a href="#scenario1" class="btn">See how it helps your daily life →</a>
+  <a href="{{loginUrl}}" class="btn">Get Started — See your welcome pack →</a>
+  <p class="hero-note">Create your account, and once you confirm your email you'll return to this welcome pack with guided steps and a quick CTA at the bottom pointing to the best starter page.</p>
 </div>
 
 <!-- SCENARIO BUTTONS -->
