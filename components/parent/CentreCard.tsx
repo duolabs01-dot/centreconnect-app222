@@ -62,16 +62,17 @@ export function CentreCard({
       return;
     }
 
-    if (slug) {
-      router.push(`/apply/${slug}`);
-      return;
-    }
-
-    router.push(`/centres/${id}`);
+    const identifier = slug ? encodeURIComponent(slug) : id
+    router.push(`/apply/${identifier}`)
   };
 
   const handleViewDetails = () => {
-    router.push(`/centres/${id}`);
+    if (slug) {
+      router.push(`/c/${encodeURIComponent(slug)}`);
+      return;
+    }
+
+    router.push('/for-centres');
   };
 
   return (
