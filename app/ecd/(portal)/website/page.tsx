@@ -616,7 +616,7 @@ export default async function EcdWebsitePage({
                 />
               </div>
 
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <div id="brand-media" className="scroll-mt-28 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brand media</p>
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">

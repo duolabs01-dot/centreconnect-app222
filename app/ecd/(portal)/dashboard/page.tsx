@@ -4,6 +4,7 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { EcdLogoAvatar } from '@/components/ecd/dashboard/ecd-logo-avatar'
 import { cn, getJohannesburgNowParts, isSameJohannesburgDay, getJohannesburgGreeting } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { StatCard } from '@/components/ui/StatCard'
@@ -195,8 +196,13 @@ export default async function EcdDashboardPage() {
     >
       <div className="space-y-8 pb-12">
         <section className="relative overflow-hidden rounded-[2.5rem] border border-border bg-card px-8 py-10 text-foreground shadow-[var(--shadow-elevation-1)]">
-          <div className="absolute right-0 top-0 h-64 w-64 -mr-32 -mt-32 bg-teal-500/10" />
-          <div className="relative z-10">
+          <EcdLogoAvatar
+            centreName={centreName}
+            logoUrl={centre?.logo_url ?? null}
+            updateHref="/ecd/website#brand-media"
+            className="absolute right-5 top-5 z-20 sm:right-7 sm:top-7"
+          />
+          <div className="relative z-10 pr-20 sm:pr-28">
             <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-400">
               {getJohannesburgGreeting()}
             </p>
