@@ -5,6 +5,14 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { MailPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type SendOwnerInviteButtonProps = {
   centreId: string
@@ -28,6 +36,18 @@ export function SendOwnerInviteButton({
 }: SendOwnerInviteButtonProps) {
   const [busy, setBusy] = useState(false)
   const [, startTransition] = useTransition()
+  const [whatsappLink, setWhatsappLink] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  const copyLinkToClipboard = async () => {
+    if (!whatsappLink) return
+    try {
+      await navigator.clipboard.writeText(whatsappLink)
+      toast.success('WhatsApp link copied to clipboard.')
+    } catch (error) {
+      toast.error('Unable to copy link. Please copy manually.')
+    }
+  }
 
   async function handleSendInvite() {
     if (!ownerEmail?.trim()) {
@@ -52,7 +72,8 @@ export function SendOwnerInviteButton({
 
       toast.success(`${centreName}: ${emailState}. ${whatsappState}.`)
       if (payload.whatsapp?.link) {
-        window.open(payload.whatsapp.link, '_blank', 'noopener,noreferrer')
+        setWhatsappLink(payload.whatsapp.link)
+        setDialogOpen(true)
       }
       if (payload.warning) toast.warning(payload.warning)
     } catch (error: any) {
@@ -89,6 +110,37 @@ export function SendOwnerInviteButton({
       <p className="text-[11px] text-slate-500">
         Owner email: {ownerEmail || 'Missing'} | Owner phone: {ownerPhone || 'Missing'}
       </p>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>WhatsApp link ready</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            A WhatsApp link was prepared for {centreName}. Open it when you are ready so the owner can respond.
+          </DialogDescription>
+          {whatsappLink && (
+            <div className="mt-4 flex flex-col gap-3">
+              <Button
+                asChild
+                className="w-full justify-center bg-cyan-500 text-black hover:bg-cyan-400"
+              >
+                <a href={whatsappLink} rel="noreferrer" className="w-full text-center">
+                  Open WhatsApp link
+                </a>
+              </Button>
+              <Button variant="outline" className="w-full justify-center" onClick={copyLinkToClipboard}>
+                Copy link for later
+              </Button>
+            </div>
+          )}
+          <DialogFooter className="mt-6">
+            <Button variant="ghost" className="w-full" onClick={() => setDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
