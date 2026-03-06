@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (parent dashboard readiness card shipped)
+Last updated: 2026-03-06 (next parent reliability slice defined)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -9,24 +9,25 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Need to define the next parent-side reliability/activation slice after dashboard readiness work.
+- Current bottleneck: Parent submit-failure telemetry is now captured but not visible in an operator review surface.
 - Active lane: `parent reliability + copy quality`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-013` `parent` Define the next parent reliability + activation slice.
-  - Why: We need the next concrete parent deliverable queued now that readiness, copy, and telemetry are in place.
+- [ACTIVE] `BL-PARENT-014` `parent` Add parent reliability monitor for submit failures in admin.
+  - Why: Founder/admin needs visibility into failure hotspots by route and failure type.
   - Definition of done:
-    - Publish one concrete backlog item with scope, definition of done, and validation commands.
-    - Keep exactly one active item in this scoreboard.
-    - Tie the item to measurable parent-side impact (reliability or activation).
+    - Add an admin-facing read view summarizing `parent_form_submit_failures` by route and failure type.
+    - Include at least one 24h trend and one recent failure table.
+    - Keep access platform-admin only.
   - Validation:
-    - Scoreboard review
-  - Est: 30-60m
+    - `npm.cmd run -s test:parent-uat`
+    - `npm.cmd run -s lint`
+  - Est: 2-4h
 
 ## Next
 
-- [READY] `BL-PARENT-014` `parent` Define after `BL-PARENT-013` completion.
+- [READY] `BL-PARENT-015` `parent` Define after `BL-PARENT-014` completion.
 
 ## Blocked
 
@@ -42,6 +43,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-PARENT-010` Added parent submit-failure telemetry (`route_path` + `failure_type`) across key parent forms with API ingestion and persistence migration.
 - [DONE] `BL-PARENT-011` Added parent smoke audit artifact output (`tmp/reports/parent-uat-*.json` + latest json/txt) while preserving non-zero exit on failures.
 - [DONE] `BL-PARENT-012` Added parent dashboard readiness health card with completion percentage and CTA links for missing setup actions.
+- [DONE] `BL-PARENT-013` Defined and activated the next concrete parent reliability slice (`BL-PARENT-014`) with scope and validation criteria.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.

@@ -294,7 +294,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-010`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-011`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-012`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-013`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
