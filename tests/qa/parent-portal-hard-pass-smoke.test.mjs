@@ -3,6 +3,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const root = process.cwd()
+const suiteStartedAt = Date.now()
+const results = []
 
 function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8')
@@ -15,11 +17,81 @@ function exists(relativePath) {
 function test(name, fn) {
   try {
     fn()
+    results.push({
+      name,
+      status: 'pass',
+    })
     console.log(`PASS: ${name}`)
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    results.push({
+      name,
+      status: 'fail',
+      message,
+    })
     console.error(`FAIL: ${name}`)
-    throw error
+    console.error(message)
   }
+}
+
+function buildTextReport(report) {
+  const lines = [
+    `Suite: ${report.suite}`,
+    `Status: ${report.status.toUpperCase()}`,
+    `Started: ${report.startedAt}`,
+    `Finished: ${report.finishedAt}`,
+    `DurationMs: ${report.durationMs}`,
+    `TotalChecks: ${report.summary.total}`,
+    `Passed: ${report.summary.passed}`,
+    `Failed: ${report.summary.failed}`,
+    '',
+    'Checks:',
+  ]
+
+  for (const check of report.checks) {
+    lines.push(`- [${check.status.toUpperCase()}] ${check.name}`)
+    if (check.status === 'fail' && check.message) {
+      lines.push(`  ${check.message}`)
+    }
+  }
+
+  return `${lines.join('\n')}\n`
+}
+
+function writeAuditReport() {
+  const finishedAtMs = Date.now()
+  const failedChecks = results.filter((item) => item.status === 'fail')
+  const report = {
+    suite: 'parent-portal-hard-pass-smoke',
+    status: failedChecks.length === 0 ? 'pass' : 'fail',
+    startedAt: new Date(suiteStartedAt).toISOString(),
+    finishedAt: new Date(finishedAtMs).toISOString(),
+    durationMs: finishedAtMs - suiteStartedAt,
+    summary: {
+      total: results.length,
+      passed: results.length - failedChecks.length,
+      failed: failedChecks.length,
+    },
+    checks: results,
+  }
+
+  const reportDir = path.join(root, 'tmp', 'reports')
+  fs.mkdirSync(reportDir, { recursive: true })
+
+  const timestamp = report.finishedAt.replace(/[:.]/g, '-')
+  const jsonPath = path.join(reportDir, `parent-uat-${timestamp}.json`)
+  const latestJsonPath = path.join(reportDir, 'parent-uat-latest.json')
+  const latestTxtPath = path.join(reportDir, 'parent-uat-latest.txt')
+
+  fs.writeFileSync(jsonPath, JSON.stringify(report, null, 2))
+  fs.writeFileSync(latestJsonPath, JSON.stringify(report, null, 2))
+  fs.writeFileSync(latestTxtPath, buildTextReport(report))
+
+  console.log(`AUDIT_REPORT_JSON: ${jsonPath}`)
+  console.log(`AUDIT_REPORT_LATEST_JSON: ${latestJsonPath}`)
+  console.log(`AUDIT_REPORT_LATEST_TXT: ${latestTxtPath}`)
+
+  return report
 }
 
 const parentRouteMatrix = [
@@ -203,7 +275,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-008`/)
   assert.match(scoreboard, /\[(DONE|ACTIVE)\]\s+`BL-PARENT-009`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-010`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-011`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
@@ -214,5 +287,11 @@ test('Parent live smoke command and script are wired', () => {
   assert.ok(pkg.scripts?.['test:parent-live'], 'Missing test:parent-live script')
   assert.equal(exists('scripts/run-parent-create-live-smoke.mjs'), true)
 })
+
+const report = writeAuditReport()
+if (report.summary.failed > 0) {
+  process.exitCode = 1
+  throw new Error(`Parent portal hard-pass smoke checks failed (${report.summary.failed}/${report.summary.total}).`)
+}
 
 console.log('Parent portal hard-pass smoke checks passed.')
