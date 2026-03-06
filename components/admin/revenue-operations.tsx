@@ -218,6 +218,17 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
               <p className="mt-1 font-semibold text-slate-100">Runbook + Audit Trail</p>
             </div>
           </div>
+          <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">Billing State Glossary</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">draft:</span> invoice created, not yet sent for payment.</p>
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">sent:</span> payment link issued, awaiting charge result.</p>
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">overdue:</span> due date passed, reminder/dunning can escalate.</p>
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">paid:</span> charge reconciled and invoice settled.</p>
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">canceled:</span> manually closed exception path.</p>
+              <p className="text-xs text-slate-300"><span className="font-semibold text-slate-100">trial/active/past_due/suspended:</span> event-driven subscription lifecycle states.</p>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             <Link
               href="/admin/webhook-failures"
