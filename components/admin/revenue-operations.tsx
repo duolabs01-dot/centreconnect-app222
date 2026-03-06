@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
 import { Button } from '@/components/cc-admin/Button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
@@ -31,6 +30,10 @@ type InvoiceRow = {
   issued_at: string | null
   due_at: string | null
   paid_at: string | null
+  payment_reference?: string | null
+  payment_url?: string | null
+  reminder_last_stage?: string | null
+  dunning_state?: string | null
   centre_name?: string
   centre_slug?: string
 }
@@ -57,11 +60,6 @@ type RevenueOperationsProps = {
   webhookEvents: WebhookEventRow[]
 }
 
-type PendingAction =
-  | { kind: 'subscription'; id: string; nextStatus: SubscriptionStatus; entityLabel: string }
-  | { kind: 'invoice'; id: string; nextStatus: InvoiceStatus; entityLabel: string }
-  | null
-
 function formatDateTime(value: string | null | undefined) {
   if (!value) return '-'
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
@@ -87,22 +85,6 @@ function invoiceStatusClass(status: InvoiceStatus) {
   return 'bg-slate-800 text-slate-200'
 }
 
-function subActions(status: SubscriptionStatus) {
-  if (status === 'active') return ['suspended', 'canceled'] as const
-  if (status === 'trial') return ['active', 'suspended'] as const
-  if (status === 'past_due') return ['active', 'suspended'] as const
-  if (status === 'suspended') return ['active', 'canceled'] as const
-  return ['active'] as const
-}
-
-function invoiceActions(status: InvoiceStatus) {
-  if (status === 'draft') return ['sent', 'canceled'] as const
-  if (status === 'sent') return ['paid', 'overdue', 'canceled'] as const
-  if (status === 'overdue') return ['paid', 'sent', 'canceled'] as const
-  if (status === 'paid') return ['sent'] as const
-  return ['sent'] as const
-}
-
 function labelForStatus(status: SubscriptionStatus | InvoiceStatus) {
   return status.replace(/_/g, ' ')
 }
@@ -118,43 +100,6 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
   const router = useRouter()
   const [, startTransition] = useTransition()
   const [busyKey, setBusyKey] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-
-  async function patchJson(url: string, body: unknown) {
-    const response = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    })
-    const payload = (await response.json().catch(() => ({}))) as { error?: string }
-    if (!response.ok) throw new Error(payload.error || 'Request failed')
-  }
-
-  async function setSubscriptionStatus(subscriptionId: string, nextStatus: SubscriptionStatus) {
-    setBusyKey(`sub:${subscriptionId}:${nextStatus}`)
-    try {
-      await patchJson(`/api/internal/platform-admin/subscriptions/${subscriptionId}`, { status: nextStatus })
-      toast.success(`Subscription set to ${labelForStatus(nextStatus)}`)
-      startTransition(() => router.refresh())
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to update subscription')
-    } finally {
-      setBusyKey(null)
-    }
-  }
-
-  async function setInvoiceStatus(invoiceId: string, nextStatus: InvoiceStatus) {
-    setBusyKey(`inv:${invoiceId}:${nextStatus}`)
-    try {
-      await patchJson(`/api/internal/platform-admin/invoices/${invoiceId}`, { status: nextStatus })
-      toast.success(`Invoice set to ${labelForStatus(nextStatus)}`)
-      startTransition(() => router.refresh())
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to update invoice')
-    } finally {
-      setBusyKey(null)
-    }
-  }
 
   async function collectInvoice(invoiceId: string, invoiceLabel: string) {
     setBusyKey(`collect:${invoiceId}`)
@@ -174,6 +119,31 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
       startTransition(() => router.refresh())
     } catch (error: any) {
       toast.error(error?.message || 'Failed to initialize payment collection')
+    } finally {
+      setBusyKey(null)
+    }
+  }
+
+  async function resendPaymentLink(invoiceId: string, invoiceLabel: string) {
+    setBusyKey(`resend:${invoiceId}`)
+    try {
+      const response = await fetch(`/api/internal/platform-admin/invoices/${invoiceId}/resend-payment-link`, {
+        method: 'POST',
+      })
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
+        paymentUrl?: string
+        reference?: string
+      }
+      if (!response.ok) throw new Error(payload.error || 'Failed to resend payment link')
+
+      if (payload.paymentUrl) {
+        await navigator.clipboard.writeText(payload.paymentUrl)
+      }
+      toast.success(`Payment link resent for ${invoiceLabel}${payload.reference ? ` (${payload.reference})` : ''}`)
+      startTransition(() => router.refresh())
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to resend payment link')
     } finally {
       setBusyKey(null)
     }
@@ -200,17 +170,6 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
     } finally {
       setBusyKey(null)
     }
-  }
-
-  async function runPendingAction() {
-    if (!pendingAction) return
-    if (pendingAction.kind === 'subscription') {
-      await setSubscriptionStatus(pendingAction.id, pendingAction.nextStatus)
-      setPendingAction(null)
-      return
-    }
-    await setInvoiceStatus(pendingAction.id, pendingAction.nextStatus)
-    setPendingAction(null)
   }
 
   async function replayWebhook(eventId: string, eventLabel: string) {
@@ -248,7 +207,7 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
                   <TableHead>Status</TableHead>
                   <TableHead>Monthly</TableHead>
                   <TableHead>Cycle End</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">Control</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -267,30 +226,7 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
                     <TableCell>{currency(sub.monthly_price)}</TableCell>
                     <TableCell>{formatDateTime(sub.current_period_end)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {subActions(sub.status).map((nextStatus) => {
-                          const key = `sub:${sub.id}:${nextStatus}`
-                          return (
-                            <Button
-                              key={nextStatus}
-                              size="sm"
-                              variant={nextStatus === 'canceled' ? 'destructive' : 'outline'}
-                              className={nextStatus === 'canceled' ? '' : 'border-slate-600 bg-slate-900 text-slate-100 hover:bg-slate-800'}
-                              disabled={busyKey === key}
-                              onClick={() =>
-                                setPendingAction({
-                                  kind: 'subscription',
-                                  id: sub.id,
-                                  nextStatus,
-                                  entityLabel: sub.centre_name ?? sub.ecd_id,
-                                })
-                              }
-                            >
-                              {labelForStatus(nextStatus)}
-                            </Button>
-                          )
-                        })}
-                      </div>
+                      <span className="text-xs text-slate-400">Event-driven billing state</span>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -313,14 +249,21 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
           </Button>
         </CardHeader>
         <CardContent>
+          <p className="mb-3 text-xs text-slate-400">
+            Status transitions are event-driven. Use collect/resend/replay controls to trigger provider-backed updates.
+          </p>
           <div className="overflow-x-auto rounded-md border border-slate-700/80 bg-slate-950/30">
             <Table>
-              <TableCaption className="sr-only">Invoice records with status-change operations</TableCaption>
+              <TableCaption className="sr-only">Invoice records with collection and reminder operations</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead>Invoice</TableHead>
                   <TableHead>Tenant</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Payment Ref</TableHead>
+                  <TableHead>Checkout</TableHead>
+                  <TableHead>Reminder</TableHead>
+                  <TableHead>Dunning</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Paid</TableHead>
@@ -340,6 +283,23 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
                         {labelForStatus(invoice.status)}
                       </span>
                     </TableCell>
+                    <TableCell className="font-mono text-xs">{invoice.payment_reference ?? '-'}</TableCell>
+                    <TableCell>
+                      {invoice.payment_url ? (
+                        <a
+                          href={invoice.payment_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs font-semibold text-cyan-300 underline-offset-2 hover:underline"
+                        >
+                          Link ready
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400">Not ready</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs uppercase text-slate-300">{invoice.reminder_last_stage ?? '-'}</TableCell>
+                    <TableCell className="text-xs uppercase text-slate-300">{invoice.dunning_state ?? 'none'}</TableCell>
                     <TableCell>{currency(Number(invoice.total ?? 0))}</TableCell>
                     <TableCell>{formatDateTime(invoice.due_at)}</TableCell>
                     <TableCell>{formatDateTime(invoice.paid_at)}</TableCell>
@@ -354,28 +314,15 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
                         >
                           Collect
                         </Button>
-                        {invoiceActions(invoice.status).map((nextStatus) => {
-                          const key = `inv:${invoice.id}:${nextStatus}`
-                          return (
-                            <Button
-                              key={nextStatus}
-                              size="sm"
-                              variant={nextStatus === 'canceled' ? 'destructive' : 'outline'}
-                              className={nextStatus === 'canceled' ? '' : 'border-slate-600 bg-slate-900 text-slate-100 hover:bg-slate-800'}
-                              disabled={busyKey === key}
-                              onClick={() =>
-                                setPendingAction({
-                                  kind: 'invoice',
-                                  id: invoice.id,
-                                  nextStatus,
-                                  entityLabel: invoice.invoice_number,
-                                })
-                              }
-                            >
-                              {labelForStatus(nextStatus)}
-                            </Button>
-                          )
-                        })}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-cyan-700 bg-cyan-950/30 text-cyan-100 hover:bg-cyan-900/40"
+                          disabled={busyKey === `resend:${invoice.id}` || invoice.status === 'paid' || invoice.status === 'canceled'}
+                          onClick={() => void resendPaymentLink(invoice.id, invoice.invoice_number)}
+                        >
+                          Resend Link
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -451,26 +398,6 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
         </CardContent>
       </Card>
 
-      <Dialog open={Boolean(pendingAction)} onOpenChange={(open) => (!open ? setPendingAction(null) : null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm status change</DialogTitle>
-            <DialogDescription>
-              {pendingAction
-                ? `Set ${pendingAction.kind} "${pendingAction.entityLabel}" to "${labelForStatus(pendingAction.nextStatus)}"?`
-                : ''}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingAction(null)} disabled={Boolean(busyKey)}>
-              Cancel
-            </Button>
-            <Button onClick={() => void runPendingAction()} disabled={Boolean(busyKey)}>
-              Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

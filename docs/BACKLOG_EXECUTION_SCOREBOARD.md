@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Revenue UI still exposes stale manual status controls after backend guard changes.
+- Current bottleneck: Persisting activity-log alert throttling across server restarts and instances.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-REV-010` `revenue` Remove stale manual status controls from admin revenue UI
-  - Why: Backend event-driven guards are live; UI should not present unsupported manual transitions.
+- [ACTIVE] `BL-REL-003` `platform` Add persistence-backed throttling for activity-log failure alerts
+  - Why: Current cooldown is in-memory and can reset between runtime instances.
   - Definition of done:
-    - Revenue operations UI no longer offers event-owned status mutation actions.
-    - UI copy clarifies event-driven billing transitions.
-    - Operator actions align with supported collect/resend/replay controls.
+    - Alert throttling survives process restart and multi-instance execution.
+    - Repeated identical failures do not spam alerts.
+    - Context-rich failures remain visible in logs.
   - Validation:
+    - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-    - Manual sanity check in `/admin/revenue`
-  - Est: 2-3h
+  - Est: 3-5h
 
 ## Next
 
-- [READY] `BL-REL-003` `platform` Add persistence-backed throttling for activity-log failure alerts
 - [READY] `BL-QA-003` `quality` Extend smoke checks to cover activity-log alerting failure simulation
 - [READY] `BL-UX-010` `admin` Add read-only status guidance panel to Revenue Ops for operator clarity
+- [READY] `BL-OPS-006` `platform` Add admin runbook deep-links to Revenue Ops summary panel
 
 ## Blocked
 
@@ -60,3 +60,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-REL-002` Activity-log write failures now emit structured fallback telemetry with throttled operator alerting.
 - [DONE] `BL-TEST-002` Added regression checks for admin audit trail and webhook incident dashboard surfaces.
 - [DONE] `BL-OPS-005` Added one-click operator quick-links to incident runbook and triage surfaces.
+- [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.

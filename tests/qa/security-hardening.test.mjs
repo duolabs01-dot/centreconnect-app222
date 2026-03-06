@@ -63,6 +63,14 @@ check('webhook failures dashboard route exposes replay-focused incident surface'
   assert.match(dashboardSource, /Failed Event Queue/)
 })
 
+check('revenue operations UI avoids stale manual status mutation controls', () => {
+  const source = read('components/admin/revenue-operations.tsx')
+  assert.match(source, /Status transitions are event-driven/)
+  assert.doesNotMatch(source, /setSubscriptionStatus\(/)
+  assert.doesNotMatch(source, /setInvoiceStatus\(/)
+  assert.doesNotMatch(source, /Confirm status change/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
