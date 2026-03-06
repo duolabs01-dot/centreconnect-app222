@@ -6,9 +6,12 @@ import { redirect } from 'next/navigation'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cn } from '@/lib/utils'
+import { filterWebsiteSectionsByTier, getAllowedWebsiteSections, type WebsiteSectionKey } from '@/lib/billing/entitlements'
+import { toInternalTier } from '@/lib/billing/plans'
 import {
   AGE_GROUP_PRICE_BANDS,
   buildAgeGroupPricingFromRandInput,
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
   description: 'Build your crèche website and submit website upgrade requests.',
 }
 
-const sectionOptions = [
+const sectionOptions: Array<{ key: WebsiteSectionKey; label: string }> = [
   { key: 'hero', label: 'Hero' },
   { key: 'about', label: 'About Us' },
   { key: 'programs', label: 'Programs' },
@@ -44,18 +47,18 @@ const tierGuide: Record<
   { label: string; includes: string[]; suggestedAddOns: string[] }
 > = {
   basic: {
-    label: 'Basic',
+    label: 'Starter',
     includes: ['Crèche profile page', 'Contact details + map', 'Programs + about sections'],
     suggestedAddOns: ['Custom domain setup', 'Extra gallery/content design'],
   },
   standard: {
-    label: 'Standard',
-    includes: ['Everything in Basic', 'Richer section controls', 'Better public presentation'],
+    label: 'Growth',
+    includes: ['Everything in Starter', 'Richer section controls', 'Better public presentation'],
     suggestedAddOns: ['Domain connection help', 'Premium design pass'],
   },
   premium: {
-    label: 'Premium',
-    includes: ['Everything in Standard', 'Highest website support priority', 'Full growth stack compatibility'],
+    label: 'Pro',
+    includes: ['Everything in Growth', 'Highest website support priority', 'Full growth stack compatibility'],
     suggestedAddOns: ['Extra seasonal campaign design', 'Advanced integrations'],
   },
 }
@@ -277,7 +280,7 @@ export default async function EcdWebsitePage({
       .in('section', ['about', 'programs', 'gallery', 'website_sections']),
     supabase
       .from('subscriptions')
-      .select('tier,status,monthly_price,current_period_end')
+      .select('tier,status,monthly_price,current_period_end,trial_ends_at')
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -288,9 +291,12 @@ export default async function EcdWebsitePage({
   const aboutText = fromParagraphBlocks(sectionMap.get('about'))
   const programsText = fromProgramBlocks(sectionMap.get('programs'))
   const existingGalleryUrls = toGalleryUrls(sectionMap.get('gallery'))
-  const enabledSections = Array.isArray(sectionMap.get('website_sections'))
+  const tier = toInternalTier(subscription?.tier, 'basic')
+  const allowedSections = getAllowedWebsiteSections(tier)
+  const enabledSectionsRaw = Array.isArray(sectionMap.get('website_sections'))
     ? (sectionMap.get('website_sections') as string[])
     : sectionOptions.map((item) => item.key)
+  const enabledSections = filterWebsiteSectionsByTier(enabledSectionsRaw, tier)
   const hasTagline = Boolean((centre?.tagline ?? '').trim())
   const hasAbout = Boolean(aboutText.trim())
   const hasPrograms = Boolean(programsText.trim())
@@ -298,7 +304,6 @@ export default async function EcdWebsitePage({
   const hasVisibleSections = enabledSections.length > 0
   const completedSteps = [hasTagline, hasAbout, hasPrograms && hasVisibleSections, hasBrandMedia].filter(Boolean).length
   const completionPct = Math.round((completedSteps / 4) * 100)
-  const tier = (subscription?.tier ?? 'basic') as 'basic' | 'standard' | 'premium'
   const guide = tierGuide[tier]
   const ageGroupPricing = normalizeAgeGroupPricing(centre?.age_group_pricing, centre?.monthly_fee_min ?? null)
   const pricingSummary = getAgeGroupPricingSummary(ageGroupPricing)
@@ -310,7 +315,17 @@ export default async function EcdWebsitePage({
     const tagline = String(formData.get('tagline') ?? '').trim()
     const about = String(formData.get('about') ?? '').trim()
     const programs = String(formData.get('programs') ?? '').trim()
-    const sectionKeys = formData.getAll('sections').map((value) => String(value))
+    const { data: liveSubscription } = await session.supabase
+      .from('subscriptions')
+      .select('tier')
+      .eq('ecd_id', session.ecdId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const sectionKeys = filterWebsiteSectionsByTier(
+      formData.getAll('sections').map((value) => String(value)),
+      toInternalTier(liveSubscription?.tier, 'basic')
+    )
     const logoFileValue = formData.get('logo_file')
     const heroFileValue = formData.get('hero_file')
     const galleryFileValues = formData.getAll('gallery_files')
@@ -518,6 +533,15 @@ export default async function EcdWebsitePage({
           <p className="mt-1 text-xs font-medium">{statusMeta.description}</p>
         </div>
       ) : null}
+      <TrialStatusBanner
+        className="mb-6"
+        subscription={{
+          tier,
+          status: subscription?.status ?? 'trial',
+          monthlyPrice: subscription?.monthly_price ?? null,
+          trialEndsAt: subscription?.trial_ends_at ?? null,
+        }}
+      />
       <section className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
         <Card className="border-slate-100 bg-white lg:col-span-2 shadow-sm text-slate-900 rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
@@ -765,15 +789,37 @@ export default async function EcdWebsitePage({
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 mb-2">Visible sections</p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {sectionOptions.map((section) => (
+                  {sectionOptions.map((section) => {
+                    const canUse = allowedSections.includes(section.key)
+                    return (
                     <label
                       key={section.key}
-                      className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors"
+                      className={cn(
+                        'flex items-center gap-3 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-colors',
+                        canUse
+                          ? 'cursor-pointer border-slate-100 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                          : 'cursor-not-allowed border-slate-100 bg-slate-100/80 text-slate-400'
+                      )}
                     >
-                      <input type="checkbox" name="sections" value={section.key} defaultChecked={enabledSections.includes(section.key)} className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500" />
-                      {section.label}
+                      <input
+                        type="checkbox"
+                        name="sections"
+                        value={section.key}
+                        defaultChecked={enabledSections.includes(section.key)}
+                        disabled={!canUse}
+                        className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500 disabled:opacity-60"
+                      />
+                      <span>
+                        {section.label}
+                        {!canUse ? (
+                          <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-amber-600">
+                            Growth+
+                          </span>
+                        ) : null}
+                      </span>
                     </label>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
 

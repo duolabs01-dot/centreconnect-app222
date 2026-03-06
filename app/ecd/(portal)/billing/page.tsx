@@ -9,6 +9,8 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
+import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
+import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
 import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
 export const metadata: Metadata = {
@@ -89,6 +91,14 @@ export default async function EcdBillingPage() {
             month={month}
           />
         )}
+        <TrialStatusBanner
+          subscription={{
+            tier: subscription?.tier ?? 'basic',
+            status: subscription?.status ?? 'trial',
+            monthlyPrice: subscription?.monthly_price ?? null,
+            trialEndsAt: subscription?.trial_ends_at ?? null,
+          }}
+        />
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden lg:col-span-2">
             <CardHeader className="bg-slate-50/50">
@@ -104,7 +114,9 @@ export default async function EcdBillingPage() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tier</p>
-                    <p className="mt-1 text-lg font-bold text-teal-700 capitalize">{subscription.tier}</p>
+                    <p className="mt-1 text-lg font-bold text-teal-700">
+                      {getInternalTierLabel(toInternalTier(subscription.tier, 'basic'))}
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>

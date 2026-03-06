@@ -5,6 +5,7 @@ import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EcdLogoAvatar } from '@/components/ecd/dashboard/ecd-logo-avatar'
+import { OnboardingChecklistCard, TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { cn, getJohannesburgNowParts, isSameJohannesburgDay, getJohannesburgGreeting } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { StatCard } from '@/components/ui/StatCard'
@@ -39,7 +40,7 @@ export default async function EcdDashboardPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')
-    .select('name,logo_url,cover_image_url,description,phone,address,suburb')
+    .select('name,slug,is_active,logo_url,cover_image_url,description,phone,address,suburb')
     .eq('id', ecdId)
     .maybeSingle()
   const nowJhb = getJohannesburgNowParts()
@@ -61,6 +62,7 @@ export default async function EcdDashboardPage() {
     enrolledResult,
     revenueResult,
     staffResult,
+    subscriptionResult,
     previousRevenueResult,
   ] = await Promise.all([
     pendingQuery,
@@ -68,6 +70,13 @@ export default async function EcdDashboardPage() {
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId).eq('status', 'enrolled'),
     supabase.from('invoices').select('total').eq('ecd_id', ecdId).eq('status', 'paid').gte('paid_at', monthStartIso),
     supabase.from('ecd_admins').select('user_id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+    supabase
+      .from('subscriptions')
+      .select('tier,status,monthly_price,trial_ends_at')
+      .eq('ecd_id', ecdId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
     supabase
       .from('invoices')
       .select('total')
@@ -93,6 +102,7 @@ export default async function EcdDashboardPage() {
   const revenueThisMonth = (revenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
   const revenuePreviousMonth = (previousRevenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
   const staffCount = staffResult.count ?? 0
+  const subscription = subscriptionResult.data
 
   const applications = (pendingApplicationsResult.data ?? []) as PendingApplicationRow[]
   const nowTs = Date.now()
@@ -133,6 +143,24 @@ export default async function EcdDashboardPage() {
   ]
   const profileDone = profileItems.filter((item) => item.done).length
   const profilePct = pct(profileDone, profileItems.length)
+  const onboardingChecklistItems = [
+    { id: 'quick-logo', label: 'Upload centre logo', done: !!centre?.logo_url, href: '/ecd/website#brand-media' },
+    { id: 'quick-hero', label: 'Add hero cover image', done: !!centre?.cover_image_url, href: '/ecd/website#brand-media' },
+    {
+      id: 'quick-profile',
+      label: 'Complete profile basics',
+      done: Boolean(centre?.description && centre?.phone && centre?.address && centre?.suburb),
+      href: '/ecd/profile',
+    },
+    { id: 'quick-staff', label: 'Invite first staff member', done: staffCount > 1, href: '/ecd/profile' },
+    {
+      id: 'quick-pickup',
+      label: 'Configure safe pickup',
+      done: (snapshot.active_pickup_codes_count ?? 0) > 0,
+      href: '/ecd/pickup',
+    },
+    { id: 'quick-publish', label: 'Publish your centre page', done: Boolean(centre?.is_active), href: '/ecd/website' },
+  ]
   const recommendationItems = [
     stale72h > 0
       ? {
@@ -222,6 +250,15 @@ export default async function EcdDashboardPage() {
             </div>
           </div>
         </section>
+
+        <TrialStatusBanner
+          subscription={{
+            tier: subscription?.tier ?? 'basic',
+            status: subscription?.status ?? 'trial',
+            monthlyPrice: subscription?.monthly_price ?? null,
+            trialEndsAt: subscription?.trial_ends_at ?? null,
+          }}
+        />
 
         {/* Primary Action Hub */}
         <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -365,6 +402,7 @@ export default async function EcdDashboardPage() {
           </div>
           <div className="space-y-6">
             <ProfileCompleteness items={profileItems} />
+            <OnboardingChecklistCard items={onboardingChecklistItems} />
             <Card className="shadow-sm border-none rounded-[2.5rem] bg-white overflow-hidden">
               <CardHeader className="border-b border-slate-50 px-8 py-6">
                 <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Efficiency Metrics</CardTitle>

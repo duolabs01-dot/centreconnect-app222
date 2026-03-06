@@ -11,9 +11,18 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Section } from '@/components/layout/Section'
 import { TurnstileWidget } from '@/components/security/turnstile-widget'
+import {
+  PUBLIC_PLAN_OPTIONS,
+  getPublicPlanDefinition,
+  getPublicPlanLabel,
+  getPublicPlanPrice,
+  isKnownPlanAlias,
+  toInternalTier,
+  toPublicPlan,
+  type PublicPlan,
+} from '@/lib/billing/plans'
 
-type InternalTier = 'basic' | 'standard' | 'premium'
-type PublicTier = 'starter' | 'growth' | 'pro'
+type PublicTier = PublicPlan
 type WizardStep = 1 | 2 | 3 | 4
 type RegisterFormState = {
   fullName: string
@@ -41,36 +50,21 @@ type RegisterFormState = {
 }
 
 const TIER_PRICES: Record<PublicTier, number> = {
-  starter: 199,
-  growth: 299,
-  pro: 499,
+  starter: getPublicPlanPrice('starter'),
+  growth: getPublicPlanPrice('growth'),
+  pro: getPublicPlanPrice('pro'),
 }
 
 const TIER_DESCRIPTIONS: Record<PublicTier, string> = {
-  starter: 'Best for centres that want to fill open spaces and start quickly.',
-  growth: 'For busy centres that need stronger daily operations and follow-up.',
-  pro: 'For high-volume centres that want full control and priority support.',
+  starter: getPublicPlanDefinition('starter').description,
+  growth: getPublicPlanDefinition('growth').description,
+  pro: getPublicPlanDefinition('pro').description,
 }
 
 const TIER_BENEFITS: Record<PublicTier, string[]> = {
-  starter: [
-    'Parent applications in one dashboard',
-    'Announcements and direct parent messages',
-    'Professional centre listing',
-    'Structured child profile intake',
-  ],
-  growth: [
-    'Everything in Starter',
-    'Attendance and calendar workflows',
-    'Faster admissions follow-up and reminders',
-    'Daily operational tracking',
-  ],
-  pro: [
-    'Everything in Growth',
-    'Website and growth tools',
-    'Priority onboarding and support',
-    'Advanced configuration support',
-  ],
+  starter: getPublicPlanDefinition('starter').includes,
+  growth: getPublicPlanDefinition('growth').includes,
+  pro: getPublicPlanDefinition('pro').includes,
 }
 
 const TIER_PACKAGE_DETAILS: Record<
@@ -79,65 +73,22 @@ const TIER_PACKAGE_DETAILS: Record<
 > = {
   starter: {
     bestFor: 'Community and small centres starting digital admissions.',
-    packageIncludes: [
-      'Public centre profile with branding and contact setup',
-      'Admissions pipeline with status tracking',
-      'Parent messaging and announcements',
-      'Core onboarding guidance',
-    ],
-    outcomes: [
-      'Capture parent interest faster from your listing',
-      'Reduce manual admission follow-up',
-      'Standardize parent communication from day one',
-    ],
+    packageIncludes: getPublicPlanDefinition('starter').includes,
+    outcomes: getPublicPlanDefinition('starter').outcomes,
   },
   growth: {
     bestFor: 'Growing centres handling more children and daily operations.',
-    packageIncludes: [
-      'Everything in Starter',
-      'Attendance and routine operations workflows',
-      'Daily reporting foundations and reminders',
-      'Enhanced admissions follow-up tooling',
-    ],
-    outcomes: [
-      'Improve daily operations consistency',
-      'Increase conversion from application to enrollment',
-      'Keep teams aligned on child updates and attendance',
-    ],
+    packageIncludes: getPublicPlanDefinition('growth').includes,
+    outcomes: getPublicPlanDefinition('growth').outcomes,
   },
   pro: {
     bestFor: 'Established centres scaling admissions, operations, and visibility.',
-    packageIncludes: [
-      'Everything in Growth',
-      'Website builder and growth presentation tools',
-      'Priority onboarding and support guidance',
-      'Advanced implementation support',
-    ],
-    outcomes: [
-      'Operate admissions and centre visibility in one place',
-      'Present a stronger public profile to parents',
-      'Move faster with high-touch rollout support',
-    ],
+    packageIncludes: getPublicPlanDefinition('pro').includes,
+    outcomes: getPublicPlanDefinition('pro').outcomes,
   },
 }
 
-const PUBLIC_TO_INTERNAL_TIER: Record<PublicTier, InternalTier> = {
-  starter: 'basic',
-  growth: 'standard',
-  pro: 'premium',
-}
-
-const PLAN_ALIAS_TO_PUBLIC_TIER: Record<string, PublicTier> = {
-  starter: 'starter',
-  basic: 'starter',
-  pilot: 'starter',
-  growth: 'growth',
-  standard: 'growth',
-  pro: 'pro',
-  premium: 'pro',
-}
-
-const PLAN_OPTIONS: PublicTier[] = ['starter', 'growth', 'pro']
+const PLAN_OPTIONS: PublicTier[] = [...PUBLIC_PLAN_OPTIONS]
 const REGISTER_DRAFT_STORAGE_KEY = 'cc-ecd-register-draft-v1'
 const REGISTER_FAST_TRACK_KEY = 'cc-ecd-register-fast-track'
 
@@ -190,10 +141,10 @@ export default function EcdRegisterPage() {
   const flowParam = (searchParams.get('flow') || '').toLowerCase()
   const fastTrackRequested = (searchParams.get('fast') || '').trim() === '1'
   const claimSlugParam = (searchParams.get('claim') || '').trim()
-  const hasPresetPlan = Boolean(PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam])
+  const hasPresetPlan = isKnownPlanAlias(requestedPlanParam)
   const isConfirmFlow = hasPresetPlan && flowParam === 'confirm'
-  const initialSelectedTier: PublicTier = PLAN_ALIAS_TO_PUBLIC_TIER[requestedPlanParam] ?? 'growth'
-  const presetPlanLabel = initialSelectedTier === 'starter' ? 'Starter' : initialSelectedTier === 'growth' ? 'Growth' : 'Pro'
+  const initialSelectedTier: PublicTier = toPublicPlan(requestedPlanParam, 'growth')
+  const presetPlanLabel = getPublicPlanLabel(initialSelectedTier)
   const [step, setStep] = useState<WizardStep>(1)
   const [loading, setLoading] = useState(false)
   const [captchaToken, setCaptchaToken] = useState('')
@@ -399,8 +350,8 @@ export default function EcdRegisterPage() {
           operatingHours: form.operatingHours.trim() || undefined,
           monthlyBudget: Number(form.monthlyBudget || 0),
           expectedChildren: Number(form.expectedChildren || 0),
-          selectedTier: PUBLIC_TO_INTERNAL_TIER[form.selectedTier],
-          recommendedTier: PUBLIC_TO_INTERNAL_TIER[recommendedTier],
+          selectedTier: toInternalTier(form.selectedTier),
+          recommendedTier: toInternalTier(recommendedTier),
           keyNeeds: form.keyNeeds,
           additionalContext: form.additionalContext.trim() || undefined,
           claimSlug: form.claimSlug || undefined,
