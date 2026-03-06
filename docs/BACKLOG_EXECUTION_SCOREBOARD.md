@@ -9,28 +9,27 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Failed-event operations workflow and recovery runbook readiness.
+- Current bottleneck: Incident response documentation and manual recovery readiness.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-003` `platform` Dashboard for failed webhook events with replay action
-  - Why: Audit identified failed-event triage speed as a remaining operational risk.
+- [ACTIVE] `BL-OPS-004` `platform` Payment incident + manual recovery runbook completion
+  - Why: Failed-event dashboard is now in place; runbook clarity is next for incident readiness.
   - Definition of done:
-    - Dedicated admin view highlights failed/ignored webhook events with filters.
-    - Replay action is available from the failed-events surface.
-    - Replay outcomes are visible and auditable.
+    - Incident runbook covers detection, containment, replay, reconciliation, and comms.
+    - Runbook includes exact command/API steps and escalation paths.
+    - Admin operators can complete tabletop recovery without hidden context.
   - Validation:
-    - `npm.cmd exec tsc --noEmit`
-    - `npm.cmd run -s lint`
-    - Manual replay flow on failed event
-  - Est: 3-5h
+    - Tabletop walkthrough against latest webhook failure scenarios
+    - Linked from admin operations docs
+  - Est: 2-3h
 
 ## Next
 
-- [READY] `BL-OPS-004` `platform` Payment incident + manual recovery runbook completion
 - [READY] `BL-REV-009` `revenue` Replace manual status edits with event-driven transitions from real payment events
 - [READY] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
+- [READY] `BL-TEST-002` `quality` Add regression checks for new admin audit and webhook-incident surfaces
 
 ## Blocked
 
@@ -54,3 +53,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-SEC-001` Added webhook event audit fields for source IP and user-agent.
 - [DONE] `BL-AUDIT-001` CC Admin production-readiness audit report published with severity-ranked findings and evidence.
 - [DONE] `BL-UX-009` Immutable audit trail viewer shipped at `/admin/audit-trail` with actor/action/date filters.
+- [DONE] `BL-OPS-003` Dedicated failed webhook incident dashboard shipped at `/admin/webhook-failures` with replay controls.
