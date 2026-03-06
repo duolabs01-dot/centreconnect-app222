@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Alert observability lacks quick visual trend shape for fast scanning.
+- Current bottleneck: QA must lock escalation-note/badge threshold behavior to prevent drift.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OBS-003` `platform` Add alert trend mini-chart sparkline for sent/suppressed counters
-  - Why: Counters and deltas are present, but visual trend shape is still missing.
+- [ACTIVE] `BL-QA-006` `quality` Add regression checks for escalation-note copy and badge thresholds
+  - Why: Revenue summary helper logic is richer and needs explicit regression coverage.
   - Definition of done:
-    - Reliability surface shows compact sparkline for sent/suppressed alert trends.
-    - Sparkline updates with current data window and matches reported counters.
-    - Visual remains legible on mobile and desktop.
+    - QA checks assert escalation note exists and remains adjacent to summary badges.
+    - QA checks cover badge threshold labels for failures/suppression/lag.
+    - Existing quality lane remains green.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-QA-006` `quality` Add regression checks for escalation-note copy and badge thresholds
 - [READY] `BL-OPS-009` `platform` Add explicit stale-data warning when counter age exceeds SLA
 - [READY] `BL-UX-013` `admin` Add legend explaining healthy/warning/critical badge thresholds
+- [READY] `BL-OBS-004` `platform` Add trend tooltip metadata (bucket window + max value) on sparkline
 
 ## Blocked
 
@@ -73,3 +73,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-QA-005` Locked regression checks for revenue summary deep-links and glossary/guidance presence.
 - [DONE] `BL-UX-012` Added compact escalation note beside revenue summary health badges.
 - [DONE] `BL-OPS-008` Added revenue summary refresh timestamp, counter age label, and one-click refresh control.
+- [DONE] `BL-OBS-003` Added sent/suppressed alert trend sparkline to webhook incident observability surface.

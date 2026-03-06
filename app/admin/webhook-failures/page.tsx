@@ -81,6 +81,19 @@ export default async function AdminWebhookFailuresPage() {
   const sentCountPrevious = countInWindow('alert_activity_log_write_failure', previousWindowStartMs, currentWindowStartMs)
   const suppressedCountCurrent = countInWindow('suppress_activity_log_write_failure', currentWindowStartMs, nowMs)
   const suppressedCountPrevious = countInWindow('suppress_activity_log_write_failure', previousWindowStartMs, currentWindowStartMs)
+  const trendBucketCount = 8
+  const trendBucketSizeMs = Math.max(1, Math.floor((nowMs - previousWindowStartMs) / trendBucketCount))
+  const sentTrend = Array.from({ length: trendBucketCount }, () => 0)
+  const suppressedTrend = Array.from({ length: trendBucketCount }, () => 0)
+
+  for (const row of activityRows ?? []) {
+    const ts = Date.parse(String(row.created_at))
+    if (Number.isNaN(ts)) continue
+    if (ts < previousWindowStartMs || ts >= nowMs) continue
+    const index = Math.min(trendBucketCount - 1, Math.floor((ts - previousWindowStartMs) / trendBucketSizeMs))
+    if (row.action === 'alert_activity_log_write_failure') sentTrend[index] += 1
+    if (row.action === 'suppress_activity_log_write_failure') suppressedTrend[index] += 1
+  }
 
   const activityAlertMetrics = {
     windowHours: ACTIVITY_ALERT_LOOKBACK_HOURS,
@@ -88,6 +101,8 @@ export default async function AdminWebhookFailuresPage() {
     suppressedCount: suppressedCountCurrent,
     sentDelta: sentCountCurrent - sentCountPrevious,
     suppressedDelta: suppressedCountCurrent - suppressedCountPrevious,
+    sentTrend,
+    suppressedTrend,
   }
 
   return (

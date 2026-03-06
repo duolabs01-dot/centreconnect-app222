@@ -30,6 +30,8 @@ type Props = {
     suppressedCount: number
     sentDelta: number
     suppressedDelta: number
+    sentTrend: number[]
+    suppressedTrend: number[]
   }
 }
 
@@ -66,6 +68,24 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
     if (value < 0) return `${value} vs previous window`
     return 'No change vs previous window'
   }
+
+  function sparklinePoints(series: number[], maxValue: number, width: number, height: number) {
+    if (series.length === 0) return ''
+    const safeMax = Math.max(1, maxValue)
+    return series
+      .map((value, index) => {
+        const x = series.length === 1 ? width / 2 : (index / (series.length - 1)) * width
+        const y = height - (value / safeMax) * height
+        return `${x},${y}`
+      })
+      .join(' ')
+  }
+
+  const sparklineMax = Math.max(
+    1,
+    ...activityAlertMetrics.sentTrend,
+    ...activityAlertMetrics.suppressedTrend
+  )
 
   const visibleRows = useMemo(() => {
     const search = query.trim().toLowerCase()
@@ -160,6 +180,36 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
           </CardContent>
         </Card>
       </section>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm text-slate-100">Alert Trend Sparkline (last 48h)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <svg viewBox="0 0 220 64" className="h-20 w-full rounded-lg border border-slate-800 bg-slate-950/40 p-2">
+            <polyline
+              fill="none"
+              stroke="rgb(34 211 238)"
+              strokeWidth="2"
+              points={sparklinePoints(activityAlertMetrics.sentTrend, sparklineMax, 220, 64)}
+            />
+            <polyline
+              fill="none"
+              stroke="rgb(251 191 36)"
+              strokeWidth="2"
+              points={sparklinePoints(activityAlertMetrics.suppressedTrend, sparklineMax, 220, 64)}
+            />
+          </svg>
+          <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-300">
+            <span className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-cyan-400" /> Sent alerts
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-amber-400" /> Suppressed alerts
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
