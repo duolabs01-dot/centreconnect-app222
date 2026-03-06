@@ -216,6 +216,23 @@ test('Parent submit-failure telemetry is wired for key parent forms', () => {
   assert.match(preferencesAction, /route_path:\s*'\/parent\/preferences'/)
 })
 
+test('Parent dashboard readiness card is wired with completion and CTA links', () => {
+  const sectionPath = 'app/(journey)/parent/dashboard/_sections/profile-readiness-card.tsx'
+  assert.equal(exists(sectionPath), true, 'Missing profile readiness card section')
+
+  const sectionSource = read(sectionPath)
+  assert.match(sectionSource, /evaluateParentIntakeReadiness/)
+  assert.match(sectionSource, /completionPct/)
+  assert.match(sectionSource, /\/parent\/profile/)
+  assert.match(sectionSource, /\/parent\/profile\/emergency/)
+  assert.match(sectionSource, /\/parent\/profile\/documents/)
+  assert.match(sectionSource, /\/parent\/children\/new/)
+
+  const dashboardSource = read('app/(journey)/parent/dashboard/page.tsx')
+  assert.match(dashboardSource, /ProfileReadinessCard/)
+  assert.match(dashboardSource, /ProfileReadinessCardSkeleton/)
+})
+
 test('Child create path normalizes list fields for array DB columns', () => {
   const source = read('app/(journey)/parent/children/new/page.tsx')
   assert.match(source, /parseListField\(/)
@@ -276,7 +293,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(DONE|ACTIVE)\]\s+`BL-PARENT-009`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-010`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-011`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-012`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {

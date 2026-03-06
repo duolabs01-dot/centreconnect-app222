@@ -19,6 +19,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 
 // Sections
 import { DashboardSummary, DashboardSummarySkeleton } from './_sections/summary-section'
+import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ParentJobsSection } from './_sections/parent-jobs-section'
@@ -158,6 +159,9 @@ export default async function ParentDashboardPage() {
           {/* Header Section â€” Suspended for instant shell */}
           <Suspense fallback={<DashboardSummarySkeleton />}>
             <DashboardSummary />
+          </Suspense>
+          <Suspense fallback={<ProfileReadinessCardSkeleton />}>
+            <ProfileReadinessCard />
           </Suspense>
 
           {screenState === 'empty' ? (
