@@ -201,6 +201,11 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const window24hHref = buildReliabilityHref('24h', { routeFilter, failureTypeFilter })
   const window7dHref = buildReliabilityHref('7d', { routeFilter, failureTypeFilter })
   const clearFiltersHref = buildReliabilityHref(selectedWindow)
+  const clearRouteOnlyHref = buildReliabilityHref(selectedWindow, { failureTypeFilter })
+  const clearFailureTypeOnlyHref = buildReliabilityHref(selectedWindow, { routeFilter })
+  const alternateWindow: ReliabilityWindow = selectedWindow === '24h' ? '7d' : '24h'
+  const alternateWindowLabel = selectedWindow === '24h' ? 'Expand to 7d' : 'Narrow to 24h'
+  const alternateWindowHref = buildReliabilityHref(alternateWindow)
   const midLabelIndex = Math.floor(bucketCount / 2)
   const topRoute = routeHotspots[0] ?? null
   const topFailureType = failureTypeHotspots[0] ?? null
@@ -400,6 +405,26 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             Clear filters
           </Link>
         </form>
+        {routeFilter || failureTypeFilter ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {routeFilter ? (
+              <Link
+                href={clearRouteOnlyHref}
+                className="inline-flex h-8 items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 hover:bg-cyan-500/20"
+              >
+                Clear route filter
+              </Link>
+            ) : null}
+            {failureTypeFilter ? (
+              <Link
+                href={clearFailureTypeOnlyHref}
+                className="inline-flex h-8 items-center rounded-full border border-violet-500/30 bg-violet-500/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-violet-200 hover:bg-violet-500/20"
+              >
+                Clear failure type filter
+              </Link>
+            ) : null}
+          </div>
+        ) : null}
       </CyberCard>
 
       <div className="grid gap-6 xl:grid-cols-3">
@@ -479,9 +504,17 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
               routeHotspots.map((row) => (
                 <div key={row.route} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
                   <p className="truncate pr-3 text-sm text-slate-200">{row.route}</p>
-                  <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-xs font-bold text-cyan-300">
-                    {row.count}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-xs font-bold text-cyan-300">
+                      {row.count}
+                    </span>
+                    <Link
+                      href={buildReliabilityHref(selectedWindow, { routeFilter: row.route, failureTypeFilter })}
+                      className="inline-flex h-7 items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 hover:bg-cyan-500/20"
+                    >
+                      Focus route
+                    </Link>
+                  </div>
                 </div>
               ))
             )}
@@ -499,9 +532,17 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
               failureTypeHotspots.map((row) => (
                 <div key={row.failureType} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
                   <p className="truncate pr-3 text-sm text-slate-200">{row.failureType}</p>
-                  <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-bold text-violet-300">
-                    {row.count}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-2 py-0.5 text-xs font-bold text-violet-300">
+                      {row.count}
+                    </span>
+                    <Link
+                      href={buildReliabilityHref(selectedWindow, { routeFilter, failureTypeFilter: row.failureType })}
+                      className="inline-flex h-7 items-center rounded-lg border border-violet-500/30 bg-violet-500/10 px-2 text-[10px] font-semibold uppercase tracking-wider text-violet-200 hover:bg-violet-500/20"
+                    >
+                      Focus type
+                    </Link>
+                  </div>
                 </div>
               ))
             )}
@@ -528,13 +569,28 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Failure Type</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Message</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Source</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Triage</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow className="border-white/5 hover:bg-transparent">
-                  <TableCell colSpan={7} className="px-6 py-10 text-sm text-slate-500">
-                    No submit failures found in the selected filter window.
+                  <TableCell colSpan={8} className="px-6 py-10 text-sm text-slate-500">
+                    <p>No submit failures found in the selected filter window.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={clearFiltersHref}
+                        className="inline-flex h-8 items-center rounded-lg border border-slate-700 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-300 hover:bg-slate-900"
+                      >
+                        Reset filters
+                      </Link>
+                      <Link
+                        href={alternateWindowHref}
+                        className="inline-flex h-8 items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 text-[10px] font-semibold uppercase tracking-wider text-cyan-200 hover:bg-cyan-500/20"
+                      >
+                        {alternateWindowLabel}
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
@@ -542,6 +598,15 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
                   const parentProfile = profileMap.get(row.parent_id)
                   const parentName = parentProfile?.full_name?.trim() || 'Parent account'
                   const parentPhone = parentProfile?.phone?.trim() || null
+                  const rowRouteFilter = row.route_path?.trim() ?? ''
+                  const rowFailureTypeFilter = row.failure_type?.trim() ?? ''
+                  const rowFocusHref =
+                    rowRouteFilter && rowFailureTypeFilter
+                      ? buildReliabilityHref(selectedWindow, {
+                          routeFilter: rowRouteFilter,
+                          failureTypeFilter: rowFailureTypeFilter,
+                        })
+                      : null
                   return (
                     <TableRow key={row.id} className="border-white/5 hover:bg-white/5">
                       <TableCell className="p-4 text-xs text-slate-400">{formatDateTime(row.created_at)}</TableCell>
@@ -558,6 +623,18 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
                       </TableCell>
                       <TableCell className="max-w-[360px] p-4 text-xs text-slate-300">{truncate(row.error_message, 180)}</TableCell>
                       <TableCell className="p-4 text-xs uppercase tracking-wider text-slate-400">{row.source}</TableCell>
+                      <TableCell className="p-4">
+                        {rowFocusHref ? (
+                          <Link
+                            href={rowFocusHref}
+                            className="inline-flex h-7 items-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 text-[10px] font-semibold uppercase tracking-wider text-emerald-200 hover:bg-emerald-500/20"
+                          >
+                            Focus row
+                          </Link>
+                        ) : (
+                          <span className="text-[10px] uppercase tracking-wider text-slate-500">N/A</span>
+                        )}
+                      </TableCell>
                     </TableRow>
                   )
                 })
