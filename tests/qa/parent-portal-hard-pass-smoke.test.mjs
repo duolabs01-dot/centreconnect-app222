@@ -251,6 +251,16 @@ test('Admin parent reliability monitor is platform-admin guarded with trend and 
   assert.match(sidebarSource, /\/admin\/parent-reliability/)
 })
 
+test('Admin dashboard parent audience surfaces reliability severity card with deep-link', () => {
+  const dashboardSource = read('app/admin/dashboard/page.tsx')
+  assert.match(dashboardSource, /from\('parent_form_submit_failures'\)/)
+  assert.match(dashboardSource, /Parent Reliability \(24h\)/)
+  assert.match(dashboardSource, /HEALTHY/)
+  assert.match(dashboardSource, /WARNING/)
+  assert.match(dashboardSource, /CRITICAL/)
+  assert.match(dashboardSource, /\/admin\/parent-reliability/)
+})
+
 test('Child create path normalizes list fields for array DB columns', () => {
   const source = read('app/(journey)/parent/children/new/page.tsx')
   assert.match(source, /parseListField\(/)
@@ -314,7 +324,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-012`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-013`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-014`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-015`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {

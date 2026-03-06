@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Activity, ArrowUpRight, BellRing, Building2, Signal, Users } from 'lucide-react'
+import { Activity, AlertTriangle, ArrowUpRight, BellRing, Building2, Signal, Users } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
 import { DashboardAudience } from '@/components/admin/admin-audience-context'
@@ -27,6 +27,14 @@ const PARENT_WELCOME_KEYS = ['cc_welcome_intro', 'cc_welcome_inbox_guide', 'cc_w
 
 type NotificationStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'claimed' | 'failed'
 type RowStatus = NotificationStatus | 'read' | 'unread'
+type ParentReliabilitySeverity = 'healthy' | 'warning' | 'critical'
+type ParentReliabilityCard = {
+  failureCount24h: number
+  severity: ParentReliabilitySeverity
+  severityLabel: string
+  severityHint: string
+  badgeClass: string
+}
 
 type SearchParams = Record<string, string | string[] | undefined>
 
@@ -86,6 +94,41 @@ function statusClass(status: RowStatus) {
   if (status === 'queued') return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
   if (status === 'failed') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
   return 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+}
+
+function parentReliabilitySeverityFromCount(failureCount24h: number): ParentReliabilitySeverity {
+  if (failureCount24h >= 12) return 'critical'
+  if (failureCount24h >= 4) return 'warning'
+  return 'healthy'
+}
+
+function parentReliabilityCard(failureCount24h: number): ParentReliabilityCard {
+  const severity = parentReliabilitySeverityFromCount(failureCount24h)
+  if (severity === 'critical') {
+    return {
+      failureCount24h,
+      severity,
+      severityLabel: 'CRITICAL',
+      severityHint: 'Escalate now. Parent submit failures are materially elevated.',
+      badgeClass: 'border-rose-500/30 bg-rose-500/10 text-rose-300',
+    }
+  }
+  if (severity === 'warning') {
+    return {
+      failureCount24h,
+      severity,
+      severityLabel: 'WARNING',
+      severityHint: 'Investigate route hotspots before this becomes a trust blocker.',
+      badgeClass: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
+    }
+  }
+  return {
+    failureCount24h,
+    severity,
+    severityLabel: 'HEALTHY',
+    severityHint: 'Parent submit reliability is stable in the last 24 hours.',
+    badgeClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+  }
 }
 
 function seriesFromDates(values: Array<string | null | undefined>, days = 14) {
@@ -162,6 +205,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
   }> = []
   let totalRows = 0
   let pendingRows = 0
+  let parentReliability: ParentReliabilityCard | null = null
   let primaryLabel = 'Invite Dispatch (14 Days)'
   let primarySeries: number[] = []
   let secondaryLabel = 'User Signups'
@@ -186,6 +230,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       parentSeriesResult,
       welcomeSeriesResult,
       applicationRowsResult,
+      parentFailure24hCountResult,
     ] = await Promise.all([
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
       admin
@@ -214,6 +259,10 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       admin.from('user_profiles').select('created_at').eq('role', 'parent_user').order('created_at', { ascending: false }).limit(360),
       admin.from('parent_notifications').select('created_at').in('template_key', [...PARENT_WELCOME_KEYS]).order('created_at', { ascending: false }).limit(360),
       admin.from('applications').select('ecd_id,created_at').order('created_at', { ascending: false }).limit(800),
+      admin
+        .from('parent_form_submit_failures')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
     ])
 
     const welcomeRows = (welcomeRowsResult.data ?? []) as Array<{
@@ -247,6 +296,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     const unreadWelcome = unreadWelcomeResult.count ?? 0
     const readWelcome = Math.max(0, totalWelcome - unreadWelcome)
     const readRate = totalWelcome > 0 ? Math.round((readWelcome / totalWelcome) * 100) : 0
+    const parentFailureCount24h = parentFailure24hCountResult.count ?? 0
+
+    parentReliability = parentReliabilityCard(parentFailureCount24h)
 
     primarySeries = seriesFromDates(((welcomeSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
     secondarySeries = seriesFromDates(((parentSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
@@ -467,6 +519,38 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
           />
         ))}
       </div>
+
+      {audience === 'parent' && parentReliability ? (
+        <section className="overflow-hidden rounded-[2rem] border border-white/5 bg-[#080B13] shadow-2xl">
+          <div className="flex flex-col gap-4 border-b border-white/5 bg-black/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/10">
+                <AlertTriangle className="h-4 w-4 text-cyan-300" />
+              </span>
+              <div>
+                <h2 className="text-sm font-black uppercase tracking-[0.24em] text-white">Parent Reliability (24h)</h2>
+                <p className="mt-1 text-xs text-slate-400">{parentReliability.severityHint}</p>
+              </div>
+            </div>
+            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${parentReliability.badgeClass}`}>
+              {parentReliability.severityLabel}
+            </span>
+          </div>
+          <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-slate-300">
+              Submit failures recorded in last 24h:{' '}
+              <span className="font-black text-white">{parentReliability.failureCount24h.toLocaleString()}</span>
+            </p>
+            <Link
+              href="/admin/parent-reliability"
+              className="inline-flex h-10 items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
+            >
+              Open Parent Reliability
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <section className="relative lg:col-span-2">
