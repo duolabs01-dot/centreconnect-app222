@@ -37,7 +37,7 @@ function getTitle(pathname: string) {
   if (pathname.startsWith('/parent/support')) return 'Support'
   if (pathname.startsWith('/parent/preferences')) return 'Preferences'
   if (pathname.startsWith('/parent/profile/security')) return 'Security'
-  if (pathname.startsWith('/parent/profile/documents')) return 'Vault'
+  if (pathname.startsWith('/parent/profile/documents')) return 'Documents'
   if (pathname.startsWith('/parent/profile')) return 'Profile'
   if (pathname.startsWith('/parent/children')) return 'Children'
   if (pathname.startsWith('/parent/notifications')) return 'Inbox'
@@ -220,7 +220,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                         className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
                       >
                         <FileText className="h-4 w-4" />
-                        Documents Vault
+                        Documents
                       </Link>
 
                       <Link
@@ -298,13 +298,13 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Priority Action Required</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Complete your profile</p>
                   </div>
                   <p className="text-base font-black text-slate-900 tracking-tight">
-                    Complete your profile to unlock faster admissions.
+                    Complete your profile to get faster responses.
                   </p>
                   <p className="mt-1 text-sm text-slate-600 leading-relaxed">
-                    You are {profileNudge?.completionPct ?? 0}% ready. Centres are <span className="font-bold text-slate-900">3x more likely</span> to respond to complete profiles.
+                    You are {profileNudge?.completionPct ?? 0}% ready. Add missing details so centres can respond faster.
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Button size="sm" className="h-10 rounded-2xl bg-teal-600 text-white font-bold hover:bg-teal-500" asChild>
@@ -337,7 +337,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-600">Quick boost</p>
           <p className="mt-1 text-sm font-bold text-slate-900">Complete your profile for faster responses.</p>
           <p className="mt-1 text-xs text-slate-600">
-            You are {profileNudge?.completionPct ?? 0}% ready. Add missing info to help crèches review quicker.
+            You are {profileNudge?.completionPct ?? 0}% ready. Add missing details so centres can review quicker.
           </p>
           <div className="mt-3 flex items-center gap-2">
             <Button size="sm" className="h-9 rounded-2xl bg-teal-600 text-white hover:bg-teal-500" asChild>

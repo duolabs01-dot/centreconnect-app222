@@ -38,7 +38,7 @@ export default async function ParentSecurityPage() {
     <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-2">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600 mb-1">Security Protocol</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600 mb-1">Account security</p>
           <h1 className="text-3xl font-black tracking-tight text-slate-900">Account Security</h1>
           <p className="mt-1 text-sm text-slate-500 font-medium">Review active sessions and security history.</p>
         </div>
@@ -137,7 +137,7 @@ export default async function ParentSecurityPage() {
                       </p>
                     </div>
                     <p className="text-xs text-slate-500 font-medium mt-1 leading-relaxed">
-                      {event.details || 'System verified account protocol.'}
+                      {event.details || 'Account activity recorded.'}
                     </p>
                     {(event.ip_address || event.region) && (
                       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">

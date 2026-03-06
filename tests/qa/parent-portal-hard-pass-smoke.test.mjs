@@ -43,12 +43,12 @@ const routeActions = [
   },
   {
     file: 'components/parent/EmergencyContactsManager.tsx',
-    pattern: /Register Contact/,
+    pattern: /(Register Contact|Save contact)/,
     label: 'Emergency contact create action',
   },
   {
     file: 'components/parent/DocumentsVaultManager.tsx',
-    pattern: /Upload & Vault/,
+    pattern: /(Upload & Vault|Upload document)/,
     label: 'Document upload action',
   },
   {
@@ -163,7 +163,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   const scoreboard = read('docs/BACKLOG_EXECUTION_SCOREBOARD.md')
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-007`/)
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-008`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-009`/)
+  assert.match(scoreboard, /\[(DONE|ACTIVE)\]\s+`BL-PARENT-009`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {

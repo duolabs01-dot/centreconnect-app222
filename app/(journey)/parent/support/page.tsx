@@ -179,9 +179,9 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
                       <p className="text-sm font-bold text-slate-900 line-clamp-1">{ticket.subject}</p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                         <span className="text-cyan-600">{ticket.ticket_number}</span>
-                        <span>â€¢</span>
+                        <span>-</span>
                         <span>{ticket.category}</span>
-                        <span>â€¢</span>
+                        <span>-</span>
                         <span>{formatDate(ticket.created_at)}</span>
                       </div>
                     </div>

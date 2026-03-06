@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: 'Documents Vault | Parent Portal | CentreConnect',
+  title: 'Documents | Parent Portal | CentreConnect',
   description: 'Securely upload and manage parent and child documents for faster applications.',
 }
 
@@ -62,9 +62,9 @@ export default async function ParentDocumentsPage() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <ShieldCheck className="h-3 w-3 text-cyan-600" />
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-1">Security Vault</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 px-1">Documents</p>
             </div>
-            <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents Vault</h1>
+            <h1 className="text-3xl font-black tracking-tighter text-slate-900">Documents</h1>
             <p className="mt-1 text-sm text-slate-500 font-medium">Securely manage your family documents.</p>
           </div>
           <Button variant="outline" className="hidden h-11 rounded-2xl font-bold md:inline-flex" asChild>
@@ -82,8 +82,8 @@ export default async function ParentDocumentsPage() {
               <ShieldCheck className="h-6 w-6 text-cyan-400" />
             </div>
             <div>
-              <p className="font-black text-white leading-tight">POPIA Compliant Storage</p>
-              <p className="text-xs text-slate-400 font-medium mt-1">End-to-end encrypted - Private - Controlled Access</p>
+              <p className="font-black text-white leading-tight">Secure document storage</p>
+              <p className="text-xs text-slate-400 font-medium mt-1">Your files stay private and are only shared with authorised staff.</p>
             </div>
           </div>
         </SurfaceCard>

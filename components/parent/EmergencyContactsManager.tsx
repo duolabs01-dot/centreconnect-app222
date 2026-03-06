@@ -105,7 +105,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <UserPlus className="h-4 w-4 text-cyan-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Add Protocol</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Add contact</p>
         </div>
         <SurfaceCard className="p-6">
           <form onSubmit={addContact} className="space-y-6">
@@ -163,7 +163,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
               disabled={saving} 
               className="w-full h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95"
             >
-              {saving ? 'Safeguarding...' : 'Register Contact'}
+              {saving ? 'Saving...' : 'Save contact'}
             </Button>
           </form>
         </SurfaceCard>
@@ -172,13 +172,13 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <Shield className="h-4 w-4 text-emerald-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Trusted Network</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Saved contacts</p>
         </div>
         <div className="space-y-3">
           {contacts.length === 0 ? (
             <SurfaceCard className="p-12 text-center border-dashed border-2 bg-slate-50/50">
               <Shield className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-sm font-bold text-slate-500 italic">No emergency protocols defined yet.</p>
+              <p className="text-sm font-bold text-slate-500 italic">No emergency contacts yet.</p>
             </SurfaceCard>
           ) : (
             contacts.map((contact) => (
@@ -194,7 +194,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
                       )}
                     </div>
                     <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">
-                      {contact.relationship || 'Verified Contact'} • {contact.phone}
+                      {contact.relationship || 'No relationship'} - {contact.phone}
                     </p>
                   </div>
                   <button 

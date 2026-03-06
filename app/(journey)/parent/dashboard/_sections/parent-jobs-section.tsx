@@ -61,7 +61,7 @@ export async function ParentJobsSection() {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-slate-900 truncate group-hover:text-cyan-700 transition-colors">{job.title}</p>
-                <p className="text-xs text-slate-500 truncate">{job.centreName} â€¢ {job.suburb}</p>
+                <p className="text-xs text-slate-500 truncate">{job.centreName} - {job.suburb}</p>
               </div>
               <div className="flex items-center gap-3 ml-4">
                 {job.closesAt && (

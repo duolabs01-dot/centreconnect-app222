@@ -171,7 +171,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <FileUp className="h-4 w-4 text-cyan-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Secure Upload</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Upload documents</p>
         </div>
         <SurfaceCard className="p-6">
           <form onSubmit={uploadDocument} className="space-y-6">
@@ -226,23 +226,23 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
               disabled={saving} 
               className="w-full h-16 rounded-[2rem] font-black text-lg bg-slate-900 hover:bg-slate-800 text-white shadow-2xl transition-all active:scale-95"
             >
-              {saving ? 'Encrypting...' : 'Upload & Vault'}
+              {saving ? 'Uploading...' : 'Upload document'}
             </Button>
           </form>
         </SurfaceCard>
       </section>
 
-      {/* Vault Section */}
+      {/* Documents Section */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <Shield className="h-4 w-4 text-emerald-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Personal Vault</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Your documents</p>
         </div>
         <div className="space-y-3">
           {documents.length === 0 ? (
             <SurfaceCard className="p-12 text-center border-dashed border-2 bg-slate-50/50">
               <FileText className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-              <p className="text-sm font-bold text-slate-500 italic">No documents vaulted yet.</p>
+              <p className="text-sm font-bold text-slate-500 italic">No documents uploaded yet.</p>
             </SurfaceCard>
           ) : (
             documents.map((doc) => (
@@ -252,7 +252,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
                     <p className="truncate font-black text-slate-900 tracking-tight">{doc.file_name}</p>
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
                       {doc.doc_type.replace(/_/g, ' ')}
-                      {doc.expiry_date ? ` · Expires ${new Date(doc.expiry_date).toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}` : ''}
+                      {doc.expiry_date ? ` - Expires ${new Date(doc.expiry_date).toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}` : ''}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -281,13 +281,13 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       <section className="space-y-4">
         <div className="flex items-center gap-2 px-1">
           <History className="h-4 w-4 text-slate-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Access Protocols</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Activity log</p>
         </div>
         <SurfaceCard className="p-0 overflow-hidden">
           <div className="divide-y divide-slate-100">
             {auditLog.length === 0 ? (
               <div className="py-12 text-center">
-                <p className="text-sm font-bold text-slate-400 italic">No access recorded yet.</p>
+                <p className="text-sm font-bold text-slate-400 italic">No activity yet.</p>
               </div>
             ) : (
               auditLog.map((entry) => (

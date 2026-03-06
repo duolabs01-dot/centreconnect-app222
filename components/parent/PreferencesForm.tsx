@@ -70,7 +70,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
         return
       }
 
-      toast.success('Preferences safely stored')
+      toast.success('Preferences saved')
       router.refresh()
     })
   }
@@ -231,7 +231,7 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
           {isPending ? (
             <span className="flex items-center gap-2">
               <Save className="h-5 w-5 animate-pulse" />
-              Applying Protocols...
+              Saving preferences...
             </span>
           ) : (
             <span className="flex items-center gap-2">

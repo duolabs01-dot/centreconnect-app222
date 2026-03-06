@@ -221,8 +221,8 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
             </div>
           )
         },
-        { label: 'Documents Vault', icon: FileText, href: '/parent/profile/documents' },
-        { label: 'Discovery Engine', icon: Sliders, href: '/parent/preferences' },
+        { label: 'Documents', icon: FileText, href: '/parent/profile/documents' },
+        { label: 'Search Preferences', icon: Sliders, href: '/parent/preferences' },
         { label: 'Security History', icon: Lock, href: '/parent/profile/security' },
       ]
     }
@@ -242,10 +242,10 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <p className="text-xl font-black text-slate-900 truncate tracking-tight">{profile.full_name || 'Operative'}</p>
+              <p className="text-xl font-black text-slate-900 truncate tracking-tight">{profile.full_name || 'Parent'}</p>
               <BadgeCheck className="h-5 w-5 text-cyan-500 fill-cyan-50 shrink-0" />
             </div>
-            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Family Account</p>
+            <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Parent account</p>
           </div>
         </div>
       </SurfaceCard>

@@ -34,10 +34,10 @@ export default async function ParentEmergencyContactsPage() {
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-600 mb-1 flex items-center gap-2">
               <ShieldAlert className="h-3 w-3" />
-              Safety Protocol
+              Emergency contacts
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Emergency Hub</h1>
-            <p className="mt-1 text-sm text-slate-500 font-medium">Maintain trusted contacts for rapid response.</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900">Emergency contacts</h1>
+            <p className="mt-1 text-sm text-slate-500 font-medium">Add people we can contact quickly in an emergency.</p>
           </div>
           <Button variant="outline" className="hidden h-11 rounded-2xl font-bold md:inline-flex" asChild>
             <Link href="/parent/profile">
