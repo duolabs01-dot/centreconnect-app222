@@ -264,7 +264,7 @@ test('Admin dashboard parent audience surfaces reliability severity card with de
   assert.match(dashboardSource, /HEALTHY/)
   assert.match(dashboardSource, /WARNING/)
   assert.match(dashboardSource, /CRITICAL/)
-  assert.match(dashboardSource, /\/admin\/parent-reliability/)
+  assert.match(dashboardSource, /\/admin\/parent-reliability\?window=24h/)
 })
 
 test('Child create path normalizes list fields for array DB columns', () => {
@@ -332,7 +332,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-014`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-015`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-016`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-017`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {

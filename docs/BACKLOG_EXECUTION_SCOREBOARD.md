@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (parent reliability triage filters shipped)
+Last updated: 2026-03-06 (dashboard reliability deep-link context shipped)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -9,26 +9,26 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Reliability triage is filterable, but dashboard deep-link does not carry filter context into incident review.
+- Current bottleneck: Reliability review is filter-aware, but no concise incident summary is available for fast handoff.
 - Active lane: `parent reliability + copy quality`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-017` `parent` Carry filter context from dashboard severity card into reliability console.
-  - Why: Faster incident review needs a direct jump from dashboard summary into the correct reliability window.
+- [ACTIVE] `BL-PARENT-018` `parent` Add compact incident handoff summary on reliability console.
+  - Why: Platform admin still needs a copy-ready summary to hand over issues quickly without manual synthesis.
   - Definition of done:
-    - Update dashboard parent reliability deep-link to include `window=24h` by default.
-    - Preserve existing behavior when query parameters are absent.
-    - Add smoke assertions that dashboard link and reliability view stay wired with query context.
+    - Add a concise incident summary block to `/admin/parent-reliability` showing active window, current failure count, top route, and top failure type.
+    - Include a copy-ready plain text snippet for WhatsApp/support handoff.
+    - Keep summary scoped to selected filters without regressing existing cards/tables.
   - Validation:
     - `npm.cmd run -s test:parent-uat`
     - `npm.cmd run -s lint`
     - `npm.cmd run -s build`
-  - Est: 1-2h
+  - Est: 2-3h
 
 ## Next
 
-- [READY] `BL-PARENT-018` `parent` Define after `BL-PARENT-017` completion.
+- [READY] `BL-PARENT-019` `parent` Define after `BL-PARENT-018` completion.
 
 ## Blocked
 
@@ -48,6 +48,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-PARENT-014` Added platform-admin parent reliability monitor with 24h trend, route/failure-type summaries, and recent failure table.
 - [DONE] `BL-PARENT-015` Added parent reliability severity card on `/admin/dashboard` with 24h failure count, healthy/warning/critical badge, and deep-link to `/admin/parent-reliability`.
 - [DONE] `BL-PARENT-016` Added query-parameter triage controls on `/admin/parent-reliability` (`window` + `route`) with scoped cards/trends/hotspots and clear-filters control.
+- [DONE] `BL-PARENT-017` Updated dashboard parent reliability deep-link to carry `window=24h` context into reliability console and added regression assertions.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.

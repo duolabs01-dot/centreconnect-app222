@@ -542,7 +542,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               <span className="font-black text-white">{parentReliability.failureCount24h.toLocaleString()}</span>
             </p>
             <Link
-              href="/admin/parent-reliability"
+              href="/admin/parent-reliability?window=24h"
               className="inline-flex h-10 items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
             >
               Open Parent Reliability
