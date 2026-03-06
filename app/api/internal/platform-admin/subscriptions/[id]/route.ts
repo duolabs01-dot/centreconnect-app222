@@ -26,6 +26,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (readError || !subscription) return NextResponse.json({ error: readError?.message || 'Subscription not found' }, { status: 404 })
 
   const nextStatus = parsed.data.status
+  if (nextStatus === 'trial' || nextStatus === 'active' || nextStatus === 'past_due') {
+    return NextResponse.json(
+      {
+        error:
+          `Subscription status "${nextStatus}" is event-driven and cannot be set manually. ` +
+          'Use billing events, dunning automation, or webhook reconciliation.',
+      },
+      { status: 409 }
+    )
+  }
+
   const patch: Record<string, unknown> = { status: nextStatus }
   if (nextStatus === 'canceled') patch.canceled_at = new Date().toISOString()
   if (nextStatus !== 'canceled') patch.canceled_at = null
@@ -40,7 +51,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     entityId: subscription.ecd_id,
     action: 'set_subscription_status',
     summary: `Subscription status changed ${subscription.status} -> ${nextStatus}`,
-    details: { subscriptionId, from: subscription.status, to: nextStatus },
+    details: { subscriptionId, from: subscription.status, to: nextStatus, mode: 'manual_override' },
   })
   const centre = Array.isArray((subscription as any).ecd_centres) ? (subscription as any).ecd_centres[0] : (subscription as any).ecd_centres
   void sendPlatformAdminActionNotification({

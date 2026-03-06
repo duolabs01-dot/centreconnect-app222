@@ -28,19 +28,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (readError || !invoice) return NextResponse.json({ error: readError?.message || 'Invoice not found' }, { status: 404 })
 
   const nextStatus = parsed.data.status
+  if (nextStatus !== 'canceled') {
+    return NextResponse.json(
+      {
+        error:
+          `Invoice status "${nextStatus}" is event-driven and cannot be set manually. ` +
+          'Use collection workflows, webhook reconciliation, and billing automation.',
+      },
+      { status: 409 }
+    )
+  }
+  if (invoice.status === 'paid') {
+    return NextResponse.json({ error: 'Paid invoices cannot be manually canceled.' }, { status: 409 })
+  }
+
   const patch: Record<string, unknown> = { status: nextStatus }
 
-  if (nextStatus === 'paid') {
-    patch.paid_at = new Date().toISOString()
-    if (!invoice.issued_at) {
-      patch.issued_at = new Date().toISOString()
-    }
-  } else {
-    patch.paid_at = null
-    if ((nextStatus === 'sent' || nextStatus === 'overdue') && !invoice.issued_at) {
-      patch.issued_at = new Date().toISOString()
-    }
-  }
+  patch.paid_at = null
 
   const { error } = await admin.from('invoices').update(patch).eq('id', invoiceId)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
@@ -53,7 +57,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     entityId: invoice.ecd_id,
     action: 'set_invoice_status',
     summary: `Invoice ${invoice.invoice_number} status changed ${invoice.status} -> ${nextStatus}`,
-    details: { invoiceId, invoiceNumber: invoice.invoice_number, ecdId: invoice.ecd_id, from: invoice.status, to: nextStatus },
+    details: {
+      invoiceId,
+      invoiceNumber: invoice.invoice_number,
+      ecdId: invoice.ecd_id,
+      from: invoice.status,
+      to: nextStatus,
+      mode: 'manual_override',
+    },
   })
   const centre = Array.isArray((invoice as any).ecd_centres) ? (invoice as any).ecd_centres[0] : (invoice as any).ecd_centres
   void sendPlatformAdminActionNotification({

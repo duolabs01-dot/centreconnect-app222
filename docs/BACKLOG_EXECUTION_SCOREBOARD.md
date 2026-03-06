@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Closing event-driven billing integrity gaps from manual status mutation paths.
+- Current bottleneck: Hardening activity-log reliability and adding regression coverage for new admin surfaces.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-REV-009` `revenue` Replace manual status edits with event-driven transitions from real payment events
-  - Why: Audit marked this as highest-severity remaining billing integrity risk.
+- [ACTIVE] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
+  - Why: Event-driven mutation guards are now enforced; audit log durability is the next reliability risk.
   - Definition of done:
-    - Invoice/subscription status APIs reject event-owned transitions without explicit override controls.
-    - Admin UI no longer encourages direct manual mutation for event-owned states.
-    - Integration tests verify event-driven transitions remain authoritative.
+    - Activity write failures trigger explicit alerting path.
+    - Failure telemetry includes actor/action context for follow-up.
+    - Runbook includes remediation for audit-log degradation.
   - Validation:
-    - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-  - Est: 4-6h
+    - Failure simulation path documented
+  - Est: 2-4h
 
 ## Next
 
-- [READY] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
 - [READY] `BL-TEST-002` `quality` Add regression checks for new admin audit and webhook-incident surfaces
 - [READY] `BL-OPS-005` `platform` Add operator quick-links to incident runbook from revenue/incident screens
+- [READY] `BL-REV-010` `revenue` Remove stale manual status controls from admin revenue UI
 
 ## Blocked
 
@@ -56,3 +56,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-UX-009` Immutable audit trail viewer shipped at `/admin/audit-trail` with actor/action/date filters.
 - [DONE] `BL-OPS-003` Dedicated failed webhook incident dashboard shipped at `/admin/webhook-failures` with replay controls.
 - [DONE] `BL-OPS-004` Payment incident and manual recovery runbook published (`docs/PAYMENT_INCIDENT_MANUAL_RECOVERY_RUNBOOK.md`).
+- [DONE] `BL-REV-009` Manual invoice/subscription mutation endpoints now reject event-owned state transitions.
