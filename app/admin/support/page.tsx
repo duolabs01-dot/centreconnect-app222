@@ -41,6 +41,11 @@ export interface SupportTicket {
   ecd_centres: any 
 }
 
+type SupportAssigneeProfile = {
+  id: string
+  full_name: string | null
+}
+
 type MarketplaceOrder = {
   id: string
   status: 'cart' | 'requested' | 'paid' | 'fulfilled' | 'cancelled'
@@ -67,7 +72,7 @@ export default async function AdminSupportPage() {
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  const [ticketsResult, centresResult, marketplaceOrdersResult] = await Promise.all([
+  const [ticketsResult, centresResult, marketplaceOrdersResult, assigneesResult] = await Promise.all([
     admin
       .from('support_tickets')
       .select('*, ecd_centres(id,name,slug,city,suburb)')
@@ -83,11 +88,20 @@ export default async function AdminSupportPage() {
       .eq('status', 'requested')
       .order('created_at', { ascending: false })
       .limit(200),
+    admin
+      .from('user_profiles')
+      .select('id,full_name')
+      .eq('role', 'platform_admin')
+      .order('full_name', { ascending: true }),
   ])
 
   const tickets = (ticketsResult.data ?? []) as SupportTicket[]
   const marketplaceOrders = (marketplaceOrdersResult.data ?? []) as MarketplaceOrder[]
   const availableCentres = (centresResult.data ?? []) as Array<{ id: string; name: string }>
+  const availableAssignees = ((assigneesResult.data ?? []) as SupportAssigneeProfile[]).map((assignee) => ({
+    id: assignee.id,
+    name: assignee.full_name?.trim() || 'Platform Admin',
+  }))
   const totalTickets = tickets.length
   const unresolvedTickets = tickets.filter((t) => ['open', 'in_progress', 'waiting_response'].includes(t.status))
   const priorityIssues = tickets.filter((t) => t.priority >= 3)
@@ -200,7 +214,11 @@ export default async function AdminSupportPage() {
         </div>
       </CyberCard>
 
-      <SupportPageClientLayout tickets={tickets} availableCentres={availableCentres} />
+      <SupportPageClientLayout
+        tickets={tickets}
+        availableCentres={availableCentres}
+        availableAssignees={availableAssignees}
+      />
     </AdminPageLayout>
   )
 }

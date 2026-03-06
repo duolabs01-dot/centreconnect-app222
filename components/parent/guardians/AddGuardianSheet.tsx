@@ -34,6 +34,18 @@ type ChildOption = {
   last_name: string
 }
 
+type ContactPickerContact = {
+  name?: string[]
+  tel?: string[]
+  email?: string[]
+}
+
+type ContactPickerNavigator = Navigator & {
+  contacts?: {
+    select: (properties: Array<'name' | 'tel' | 'email'>, options?: { multiple?: boolean }) => Promise<ContactPickerContact[]>
+  }
+}
+
 function parseWhatsappContact(text: string) {
   const trimmed = text.trim()
   if (!trimmed) return { name: '', phone: '', email: '' }
@@ -128,15 +140,15 @@ export function AddGuardianSheet({
       label: 'Import from Contacts',
       sub: 'Pick from your phone contact list',
       action: async () => {
-        if (!('contacts' in navigator)) {
+        const contactsApi = (navigator as ContactPickerNavigator).contacts
+        if (!contactsApi) {
           toast.info('Device contact picker not available. Use manual or WhatsApp paste.')
           setSource('manual')
           setStep('form')
           return
         }
         try {
-          // @ts-ignore Contact Picker API support varies by browser.
-          const [contact] = await navigator.contacts.select(['name', 'tel', 'email'], { multiple: false })
+          const [contact] = await contactsApi.select(['name', 'tel', 'email'], { multiple: false })
           if (contact) {
             form.setValue('full_name', contact.name?.[0] ?? '')
             form.setValue('phone', contact.tel?.[0] ?? '')

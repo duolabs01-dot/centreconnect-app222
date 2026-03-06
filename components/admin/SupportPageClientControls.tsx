@@ -7,9 +7,10 @@ import { CreateSupportTicketDialog } from './CreateSupportTicketDialog'
 
 interface SupportPageClientControlsProps {
   availableCentres: Array<{ id: string; name: string }>
+  availableAssignees: Array<{ id: string; name: string }>
 }
 
-export function SupportPageClientControls({ availableCentres }: SupportPageClientControlsProps) {
+export function SupportPageClientControls({ availableCentres, availableAssignees }: SupportPageClientControlsProps) {
   const [createTicketOpen, setCreateTicketOpen] = useState(false)
 
   return (
@@ -19,6 +20,7 @@ export function SupportPageClientControls({ availableCentres }: SupportPageClien
         open={createTicketOpen}
         onOpenChange={setCreateTicketOpen}
         availableCentres={availableCentres}
+        availableAssignees={availableAssignees}
       />
     </>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   ArrowRight,
@@ -910,11 +911,25 @@ export default function CentreConnectWelcomePack() {
           {step === 0 ? (
         <section className="mx-auto flex min-h-[90vh] w-full max-w-5xl flex-col items-center justify-center px-4 pb-8 pt-10">
           <div className="relative w-full overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
-            <img src={coverImageUrl} alt={`${centreName} hero`} className="h-72 w-full object-cover sm:h-80" loading="lazy" />
+            <Image
+              src={coverImageUrl}
+              alt={`${centreName} hero`}
+              width={1600}
+              height={640}
+              className="h-72 w-full object-cover sm:h-80"
+              sizes="(max-width: 768px) 100vw, 1024px"
+              unoptimized
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-slate-900/5" />
 
             <div className="absolute left-6 top-6 rounded-xl border border-white/40 bg-white/95 px-3 py-2 shadow-sm">
-              <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-8 w-auto" />
+              <Image
+                src="/centreconnect-logo.svg"
+                alt="CentreConnect logo"
+                width={128}
+                height={32}
+                className="h-8 w-auto"
+              />
             </div>
 
             <div
@@ -924,7 +939,15 @@ export default function CentreConnectWelcomePack() {
               )}
             >
               {centreLogoUrl ? (
-                <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                <Image
+                  src={centreLogoUrl}
+                  alt={`${centreName} logo`}
+                  width={64}
+                  height={64}
+                  className="h-full w-full object-cover"
+                  sizes="64px"
+                  unoptimized
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
                   {centreInitial}
@@ -997,7 +1020,15 @@ export default function CentreConnectWelcomePack() {
                   )}
                 >
                   {centreLogoUrl ? (
-                    <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                    <Image
+                      src={centreLogoUrl}
+                      alt={`${centreName} logo`}
+                      width={64}
+                      height={64}
+                      className="h-full w-full object-cover"
+                      sizes="64px"
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
                       {centreInitial}
@@ -1161,11 +1192,12 @@ export default function CentreConnectWelcomePack() {
           <Card className="border-emerald-100 bg-emerald-50/70 shadow-lg">
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-3">
-                <img
+                <Image
                   src={FOUNDER_PHOTO}
                   alt="Mandlenkosi Ngwenya"
+                  width={56}
+                  height={56}
                   className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-md"
-                  loading="lazy"
                 />
                 <div>
                   <div className="flex items-center gap-2">

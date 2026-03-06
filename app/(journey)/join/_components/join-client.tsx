@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, XCircle, Clock, Users, Baby } from 'lucide-react'
@@ -31,7 +31,7 @@ export function JoinClient({
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
-  async function acceptInvite() {
+  const acceptInvite = useCallback(async () => {
     setStatus('loading')
     try {
       const res = await fetch('/api/parent/guardian-invite/accept', {
@@ -51,14 +51,13 @@ export function JoinClient({
       setErrorMsg('Could not connect. Check your internet and try again.')
       setStatus('error')
     }
-  }
+  }, [router, token])
 
   useEffect(() => {
     if (isLoggedIn && !expired && !alreadyLinked && status === 'idle') {
       void acceptInvite()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, expired, alreadyLinked, status])
+  }, [acceptInvite, alreadyLinked, expired, isLoggedIn, status])
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">

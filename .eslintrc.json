@@ -1,5 +1,15 @@
 {
   "extends": [
     "next/core-web-vitals"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "lib/email/templates/**/*.{ts,tsx}"
+      ],
+      "rules": {
+        "@next/next/no-img-element": "off"
+      }
+    }
   ]
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
@@ -102,17 +103,21 @@ export default async function CentrePosterPage({
       <div className="mx-auto w-full max-w-[820px] rounded-3xl border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.12)] print:rounded-none print:border-0 print:shadow-none">
         <PosterAnalyticsTracker ecdId={centre.id} />
         <header className="relative overflow-hidden border-b border-slate-200">
-          <img
+          <Image
             src={heroImage}
             alt={`${centreName} children`}
+            width={1600}
+            height={640}
             className="h-52 w-full object-cover sm:h-64"
-            loading="lazy"
+            unoptimized
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/20 to-transparent" />
           <div className="absolute left-5 top-5 rounded-xl border border-white/40 bg-white/90 px-3 py-2">
-            <img
+            <Image
               src="/centreconnect-logo.svg"
               alt="CentreConnect logo"
+              width={128}
+              height={32}
               className="h-8 w-auto object-contain"
             />
           </div>
@@ -157,7 +162,15 @@ export default async function CentrePosterPage({
           <div className="space-y-3 rounded-3xl border border-teal-100 bg-teal-50 p-4 text-center">
             <div className="mx-auto h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
               {logoImage ? (
-                <img src={logoImage} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                <Image
+                  src={logoImage}
+                  alt={`${centreName} logo`}
+                  width={96}
+                  height={96}
+                  className="h-full w-full object-cover"
+                  sizes="96px"
+                  unoptimized
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-xl font-black text-teal-700">
                   {centreName.slice(0, 2).toUpperCase()}
@@ -168,7 +181,15 @@ export default async function CentrePosterPage({
               Scan to open
             </p>
             <div className="rounded-2xl border border-teal-200 bg-white p-3 shadow-sm">
-              <img src={qrSvgUrl} alt={`QR code for ${centreName}`} className="mx-auto h-56 w-56" />
+              <Image
+                src={qrSvgUrl}
+                alt={`QR code for ${centreName}`}
+                width={224}
+                height={224}
+                className="mx-auto h-56 w-56"
+                sizes="224px"
+                unoptimized
+              />
             </div>
             <p className="break-all text-[11px] leading-relaxed text-slate-500">{centreUrl}</p>
           </div>
@@ -185,11 +206,25 @@ export default async function CentrePosterPage({
               </div>
               <div className="flex items-center gap-2">
                 <div className="rounded-lg border border-slate-200 bg-white px-2 py-1">
-                  <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-6 w-auto object-contain" />
+                  <Image
+                    src="/centreconnect-logo.svg"
+                    alt="CentreConnect logo"
+                    width={96}
+                    height={24}
+                    className="h-6 w-auto object-contain"
+                  />
                 </div>
                 <div className="h-9 w-9 overflow-hidden rounded-full border border-slate-200 bg-white">
                   {logoImage ? (
-                    <img src={logoImage} alt={`${centreName} logo`} className="h-full w-full object-cover" />
+                    <Image
+                      src={logoImage}
+                      alt={`${centreName} logo`}
+                      width={36}
+                      height={36}
+                      className="h-full w-full object-cover"
+                      sizes="36px"
+                      unoptimized
+                    />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs font-black text-teal-700">
                       {centreName.slice(0, 2).toUpperCase()}
@@ -212,7 +247,15 @@ export default async function CentrePosterPage({
             </div>
 
             <div className="mt-5 rounded-3xl border border-teal-200 bg-white p-4 text-center shadow-sm">
-              <img src={qrSvgUrl} alt={`Large QR code for ${centreName}`} className="mx-auto h-[70vw] w-[70vw] max-h-[560px] max-w-[560px]" />
+              <Image
+                src={qrSvgUrl}
+                alt={`Large QR code for ${centreName}`}
+                width={560}
+                height={560}
+                className="mx-auto h-[70vw] w-[70vw] max-h-[560px] max-w-[560px]"
+                sizes="(max-width: 768px) 70vw, 560px"
+                unoptimized
+              />
             </div>
 
             <p className="mt-3 text-center text-[11px] font-medium leading-relaxed text-slate-500 break-all">

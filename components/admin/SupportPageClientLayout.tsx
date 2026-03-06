@@ -13,6 +13,7 @@ import { updateTicketStatus } from '@/lib/actions/support-tickets' // Import the
 interface SupportPageClientLayoutProps {
   tickets: SupportTicket[]
   availableCentres: Array<{ id: string; name: string }>
+  availableAssignees: Array<{ id: string; name: string }>
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -45,7 +46,7 @@ function getTicketAge(createdAt: string): string {
   return `${diffDays} days ago`
 }
 
-export function SupportPageClientLayout({ tickets, availableCentres }: SupportPageClientLayoutProps) {
+export function SupportPageClientLayout({ tickets, availableCentres, availableAssignees }: SupportPageClientLayoutProps) {
   const [isPipelineView, setIsPipelineView] = useState(false)
   const [isPending, startTransition] = useTransition() // Use useTransition
 
@@ -85,7 +86,7 @@ export function SupportPageClientLayout({ tickets, availableCentres }: SupportPa
           >
             Pipeline View
           </Button>
-          <SupportPageClientControls availableCentres={availableCentres} />
+          <SupportPageClientControls availableCentres={availableCentres} availableAssignees={availableAssignees} />
         </div>
       </div>
       <div className="bg-slate-950/40">

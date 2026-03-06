@@ -50,7 +50,7 @@ export async function PATCH(
     }
 
     // 3. Send welcome email to ECD admin with login link
-    const loginLink = `${APP_URL}/login` // TODO: Make this specific to ECD admin login page if different
+    const loginLink = `${APP_URL}/ecd/login`
     const welcomeSubject = `Welcome to CentreConnect, ${updatedCentre.name}!`
     const welcomeBody = `Dear ${updatedCentre.primary_contact_name},
 
@@ -64,8 +64,14 @@ We're excited to have you on board!
 Best regards,
 The CentreConnect Team`
 
-    await queueEmail(updatedCentre.email, welcomeSubject, welcomeBody)
-    // TODO: Add specific logging for email queuing failure if needed
+    const queuedWelcomeEmail = await queueEmail(updatedCentre.email, welcomeSubject, welcomeBody)
+    if (!queuedWelcomeEmail.success) {
+      console.error('Failed to queue centre activation welcome email', {
+        centreId: updatedCentre.id,
+        recipient: updatedCentre.email,
+        error: queuedWelcomeEmail.error ?? 'Unknown error',
+      })
+    }
 
     await writePlatformActivity(adminClient, {
       actorUserId: platformAdmin.userId,

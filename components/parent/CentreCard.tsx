@@ -129,8 +129,15 @@ export function CentreCard({
 
           {logo_url ? (
             <div className="absolute -bottom-7 left-4 z-10 h-14 w-14 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
-              {/* Plain img avoids Next/Image domain constraints for tenant-uploaded logos */}
-              <img src={logo_url} alt={`${name} logo`} className="h-full w-full object-cover" loading="lazy" />
+              <Image
+                src={logo_url}
+                alt={`${name} logo`}
+                width={56}
+                height={56}
+                className="h-full w-full object-cover"
+                sizes="56px"
+                unoptimized
+              />
             </div>
           ) : null}
         </div>

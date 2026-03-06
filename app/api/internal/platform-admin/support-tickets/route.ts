@@ -8,6 +8,7 @@ const createSupportTicketSchema = z.object({
   priority: z.number().int().min(1).max(5),
   ecdId: z.string().uuid(),
   description: z.string().min(5).max(5000),
+  assigneeId: z.string().uuid().optional(),
 })
 
 export async function POST(req: Request) {
@@ -31,7 +32,25 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json({ error: 'Invalid payload', issues: parsed.error.flatten() }, { status: 400 })
     }
-    const { subject, priority, ecdId, description } = parsed.data
+    const { subject, priority, ecdId, description, assigneeId } = parsed.data
+
+    let assignedTo: string | null = null
+    if (assigneeId) {
+      const { data: assigneeProfile, error: assigneeError } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id,role')
+        .eq('id', assigneeId)
+        .maybeSingle()
+
+      if (assigneeError) {
+        return NextResponse.json({ error: assigneeError.message }, { status: 400 })
+      }
+      if (!assigneeProfile || assigneeProfile.role !== 'platform_admin') {
+        return NextResponse.json({ error: 'Assignee must be a platform admin.' }, { status: 400 })
+      }
+
+      assignedTo = assigneeProfile.id
+    }
 
     // Generate ticket_number - a simple timestamp based one for now
     const ticket_number = `TICKET-${Date.now()}`
@@ -46,6 +65,7 @@ export async function POST(req: Request) {
         description,
         status: 'open', // Default status
         created_by: user.id, // Use the authenticated user's ID
+        assigned_to: assignedTo,
       })
       .select()
 

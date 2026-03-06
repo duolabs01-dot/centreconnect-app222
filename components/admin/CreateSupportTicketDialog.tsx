@@ -16,6 +16,7 @@ interface CreateSupportTicketDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   availableCentres: Array<{ id: string; name: string }>
+  availableAssignees: Array<{ id: string; name: string }>
 }
 
 const PRIORITY_OPTIONS = [
@@ -25,7 +26,9 @@ const PRIORITY_OPTIONS = [
   { value: '4', label: 'Critical' },
 ]
 
-export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres }: CreateSupportTicketDialogProps) {
+const UNASSIGNED_VALUE = '__unassigned__'
+
+export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres, availableAssignees }: CreateSupportTicketDialogProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [, startTransition] = useTransition()
@@ -34,7 +37,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
     priority: '2', // Default to Medium
     ecdId: '',
     description: '',
-    assignee: '', // TODO: Implement proper assignee selection
+    assignee: UNASSIGNED_VALUE,
   })
 
   const premiumInputClass =
@@ -62,7 +65,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
           priority: parseInt(form.priority),
           ecdId: form.ecdId,
           description: form.description.trim(),
-          // assignee: form.assignee.trim() || undefined, // TODO: Send assignee if implemented
+          assigneeId: form.assignee !== UNASSIGNED_VALUE ? form.assignee : undefined,
         }),
       })
 
@@ -77,7 +80,7 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
         priority: '2',
         ecdId: '',
         description: '',
-        assignee: '',
+        assignee: UNASSIGNED_VALUE,
       })
       onOpenChange(false)
       startTransition(() => router.refresh())
@@ -154,17 +157,27 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
             />
           </div>
 
-          {/* Assignee (TODO: Implement proper assignee selection) */}
           <div className="space-y-1">
-            <Label htmlFor="ticket-assignee" className={adminTheme.body}>Assignee (TODO)</Label>
-            <Input
-              id="ticket-assignee"
-              className={premiumInputClass}
-              placeholder="e.g., John Doe"
-              value={form.assignee}
-              onChange={(e) => setForm((prev) => ({ ...prev, assignee: e.target.value }))}
-              disabled // Disable until implemented
-            />
+            <Label htmlFor="ticket-assignee" className={adminTheme.body}>Assignee</Label>
+            <Select value={form.assignee} onValueChange={(value) => setForm((prev) => ({ ...prev, assignee: value }))}>
+              <SelectTrigger id="ticket-assignee" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
+                <SelectValue placeholder="Assign ticket (optional)" />
+              </SelectTrigger>
+              <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
+                <SelectItem value={UNASSIGNED_VALUE} className="focus:bg-cyan-500/20 focus:text-cyan-100">
+                  Unassigned
+                </SelectItem>
+                {availableAssignees.length === 0 ? (
+                  <SelectItem value="__no_assignees__" disabled>No assignees available</SelectItem>
+                ) : (
+                  availableAssignees.map((assignee) => (
+                    <SelectItem key={assignee.id} value={assignee.id} className="focus:bg-cyan-500/20 focus:text-cyan-100">
+                      {assignee.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         <DialogFooter>
