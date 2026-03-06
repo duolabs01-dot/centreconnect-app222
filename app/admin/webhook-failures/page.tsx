@@ -39,12 +39,19 @@ export default async function AdminWebhookFailuresPage() {
     .order('created_at', { ascending: false })
     .limit(400)
 
-  const lookbackStart = new Date(Date.now() - ACTIVITY_ALERT_LOOKBACK_HOURS * 60 * 60 * 1000).toISOString()
+  const nowMs = Date.now()
+  const currentWindowStartMs = nowMs - ACTIVITY_ALERT_LOOKBACK_HOURS * 60 * 60 * 1000
+  const previousWindowStartMs = currentWindowStartMs - ACTIVITY_ALERT_LOOKBACK_HOURS * 60 * 60 * 1000
+  const currentWindowStartIso = new Date(currentWindowStartMs).toISOString()
+  const previousWindowStartIso = new Date(previousWindowStartMs).toISOString()
+  const nowIso = new Date(nowMs).toISOString()
+
   const { data: activityRows } = await admin
     .from('platform_admin_activity_log')
-    .select('action')
+    .select('action,created_at')
     .in('action', ['alert_activity_log_write_failure', 'suppress_activity_log_write_failure'])
-    .gte('created_at', lookbackStart)
+    .gte('created_at', previousWindowStartIso)
+    .lt('created_at', nowIso)
 
   const mappedRows = (rows ?? []).map((row) => {
     const invoice = normalizeOne(row.invoices as { invoice_number?: string } | { invoice_number?: string }[] | null)
@@ -62,10 +69,25 @@ export default async function AdminWebhookFailuresPage() {
     }
   })
 
+  const countInWindow = (actionName: string, fromMs: number, toMs: number) =>
+    (activityRows ?? []).filter((row) => {
+      if (row.action !== actionName) return false
+      const createdMs = Date.parse(String(row.created_at))
+      if (Number.isNaN(createdMs)) return false
+      return createdMs >= fromMs && createdMs < toMs
+    }).length
+
+  const sentCountCurrent = countInWindow('alert_activity_log_write_failure', currentWindowStartMs, nowMs)
+  const sentCountPrevious = countInWindow('alert_activity_log_write_failure', previousWindowStartMs, currentWindowStartMs)
+  const suppressedCountCurrent = countInWindow('suppress_activity_log_write_failure', currentWindowStartMs, nowMs)
+  const suppressedCountPrevious = countInWindow('suppress_activity_log_write_failure', previousWindowStartMs, currentWindowStartMs)
+
   const activityAlertMetrics = {
     windowHours: ACTIVITY_ALERT_LOOKBACK_HOURS,
-    sentCount: (activityRows ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length,
-    suppressedCount: (activityRows ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length,
+    sentCount: sentCountCurrent,
+    suppressedCount: suppressedCountCurrent,
+    sentDelta: sentCountCurrent - sentCountPrevious,
+    suppressedDelta: suppressedCountCurrent - suppressedCountPrevious,
   }
 
   return (

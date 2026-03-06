@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Reliability counters need trend context to differentiate spikes vs baseline.
+- Current bottleneck: QA coverage for new revenue summary UX additions needs explicit checks.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OBS-002` `platform` Add trend deltas for alert sent vs suppressed counters (24h vs previous 24h)
-  - Why: Counters now exist, but operators still lack trend direction for escalation decisions.
+- [ACTIVE] `BL-QA-005` `quality` Add regression checks for revenue summary deep-links and glossary presence
+  - Why: Revenue summary and guidance UI expanded; smoke checks need to lock expected affordances.
   - Definition of done:
-    - Dashboard surfaces current window vs previous window deltas.
-    - Positive/negative trend markers are obvious.
-    - Trend logic is deterministic and test-covered.
+    - QA asserts deep-link shortcuts remain in revenue summary panel.
+    - QA asserts billing glossary and event-driven guidance remain present.
+    - Test lane catches accidental regression in new UI helper content.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-QA-005` `quality` Add regression checks for revenue summary deep-links and glossary presence
 - [READY] `BL-UX-012` `admin` Add compact incident escalation note beside summary badges
 - [READY] `BL-OPS-008` `platform` Add one-click refresh timestamp and data age label for revenue summary counters
+- [READY] `BL-OBS-003` `platform` Add alert trend mini-chart sparkline for sent/suppressed counters
 
 ## Blocked
 
@@ -69,3 +69,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-QA-004` Added negative-case regression checks for blocked manual event-owned status transitions in admin APIs.
 - [DONE] `BL-UX-011` Added compact billing state glossary in Revenue Ops guidance panel.
 - [DONE] `BL-OPS-007` Added incident health badge indicators to Revenue Ops summary.
+- [DONE] `BL-OBS-002` Added 24h vs previous-24h trend deltas for activity-log alert sent/suppressed counters.

@@ -28,6 +28,8 @@ type Props = {
     windowHours: number
     sentCount: number
     suppressedCount: number
+    sentDelta: number
+    suppressedDelta: number
   }
 }
 
@@ -58,6 +60,12 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
       processed: rows.filter((row) => row.status === 'processed').length,
     }
   }, [rows])
+
+  function formatDelta(value: number) {
+    if (value > 0) return `+${value} vs previous window`
+    if (value < 0) return `${value} vs previous window`
+    return 'No change vs previous window'
+  }
 
   const visibleRows = useMemo(() => {
     const search = query.trim().toLowerCase()
@@ -135,6 +143,7 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-black text-white">{activityAlertMetrics.sentCount}</p>
+            <p className="mt-1 text-xs text-slate-300">{formatDelta(activityAlertMetrics.sentDelta)}</p>
             <p className="mt-1 text-xs text-slate-400">Action: alert_activity_log_write_failure</p>
           </CardContent>
         </Card>
@@ -146,6 +155,7 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-black text-white">{activityAlertMetrics.suppressedCount}</p>
+            <p className="mt-1 text-xs text-slate-300">{formatDelta(activityAlertMetrics.suppressedDelta)}</p>
             <p className="mt-1 text-xs text-slate-400">Action: suppress_activity_log_write_failure</p>
           </CardContent>
         </Card>

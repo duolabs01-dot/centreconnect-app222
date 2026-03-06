@@ -61,10 +61,13 @@ check('webhook failures dashboard route exposes replay-focused incident surface'
   assert.match(pageSource, /from\('payment_webhook_events'\)/)
   assert.match(pageSource, /alert_activity_log_write_failure/)
   assert.match(pageSource, /suppress_activity_log_write_failure/)
+  assert.match(pageSource, /sentDelta/)
+  assert.match(pageSource, /suppressedDelta/)
   assert.match(dashboardSource, /\/api\/internal\/platform-admin\/webhooks\/paystack\/events\/\$\{row\.id\}\/replay/)
   assert.match(dashboardSource, /Failed Event Queue/)
   assert.match(dashboardSource, /Activity-Log Alerts Sent/)
   assert.match(dashboardSource, /Activity-Log Alerts Suppressed/)
+  assert.match(dashboardSource, /vs previous window/)
 })
 
 check('revenue operations UI avoids stale manual status mutation controls', () => {
