@@ -9,27 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Incident response documentation and manual recovery readiness.
+- Current bottleneck: Closing event-driven billing integrity gaps from manual status mutation paths.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-004` `platform` Payment incident + manual recovery runbook completion
-  - Why: Failed-event dashboard is now in place; runbook clarity is next for incident readiness.
+- [ACTIVE] `BL-REV-009` `revenue` Replace manual status edits with event-driven transitions from real payment events
+  - Why: Audit marked this as highest-severity remaining billing integrity risk.
   - Definition of done:
-    - Incident runbook covers detection, containment, replay, reconciliation, and comms.
-    - Runbook includes exact command/API steps and escalation paths.
-    - Admin operators can complete tabletop recovery without hidden context.
+    - Invoice/subscription status APIs reject event-owned transitions without explicit override controls.
+    - Admin UI no longer encourages direct manual mutation for event-owned states.
+    - Integration tests verify event-driven transitions remain authoritative.
   - Validation:
-    - Tabletop walkthrough against latest webhook failure scenarios
-    - Linked from admin operations docs
-  - Est: 2-3h
+    - `npm.cmd test`
+    - `npm.cmd exec tsc --noEmit`
+    - `npm.cmd run -s lint`
+  - Est: 4-6h
 
 ## Next
 
-- [READY] `BL-REV-009` `revenue` Replace manual status edits with event-driven transitions from real payment events
 - [READY] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
 - [READY] `BL-TEST-002` `quality` Add regression checks for new admin audit and webhook-incident surfaces
+- [READY] `BL-OPS-005` `platform` Add operator quick-links to incident runbook from revenue/incident screens
 
 ## Blocked
 
@@ -54,3 +55,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-AUDIT-001` CC Admin production-readiness audit report published with severity-ranked findings and evidence.
 - [DONE] `BL-UX-009` Immutable audit trail viewer shipped at `/admin/audit-trail` with actor/action/date filters.
 - [DONE] `BL-OPS-003` Dedicated failed webhook incident dashboard shipped at `/admin/webhook-failures` with replay controls.
+- [DONE] `BL-OPS-004` Payment incident and manual recovery runbook published (`docs/PAYMENT_INCIDENT_MANUAL_RECOVERY_RUNBOOK.md`).
