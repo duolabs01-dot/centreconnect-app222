@@ -156,6 +156,18 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const window7dHref = buildReliabilityHref('7d', routeFilter)
   const clearFiltersHref = '/admin/parent-reliability'
   const midLabelIndex = Math.floor(bucketCount / 2)
+  const topRoute = routeHotspots[0] ?? null
+  const topFailureType = failureTypeHotspots[0] ?? null
+  const generatedAtLabel = new Date(nowMs).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
+  const incidentSummaryText = [
+    'CentreConnect parent reliability handoff',
+    `Window: ${windowLabel}`,
+    routeFilter ? `Route filter: ${routeFilter}` : 'Route filter: (none)',
+    `Current failures: ${rows.length}`,
+    `Top route: ${topRoute ? `${topRoute.route} (${topRoute.count})` : 'none'}`,
+    `Top failure type: ${topFailureType ? `${topFailureType.failureType} (${topFailureType.count})` : 'none'}`,
+    `Generated: ${generatedAtLabel}`,
+  ].join('\n')
 
   return (
     <AdminPageLayout
@@ -202,6 +214,39 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
           <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-emerald-300">Distinct failure categories</p>
         </CyberCard>
       </section>
+
+      <CyberCard className="p-6">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">Incident Handoff Summary</h2>
+          <p className="text-[11px] uppercase tracking-wider text-slate-400">Scoped to selected filters</p>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">Active window</p>
+            <p className="mt-1 text-sm font-semibold text-white">{windowLabel}</p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">Current failures</p>
+            <p className="mt-1 text-sm font-semibold text-white">{rows.length.toLocaleString()}</p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">Top route</p>
+            <p className="mt-1 truncate text-sm font-semibold text-white">{topRoute?.route || 'none'}</p>
+          </div>
+          <div className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wider text-slate-500">Top failure type</p>
+            <p className="mt-1 truncate text-sm font-semibold text-white">{topFailureType?.failureType || 'none'}</p>
+          </div>
+        </div>
+        <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-cyan-200">Copy-ready snippet</p>
+          <textarea
+            readOnly
+            value={incidentSummaryText}
+            className="cc-native-field mt-2 min-h-28 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 focus:outline-none"
+          />
+        </div>
+      </CyberCard>
 
       <CyberCard className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">

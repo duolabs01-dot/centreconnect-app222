@@ -250,6 +250,10 @@ test('Admin parent reliability monitor is platform-admin guarded with trend and 
   assert.match(pageSource, /name=\"route\"/)
   assert.match(pageSource, /Clear filters/)
   assert.match(pageSource, /ilike\('route_path'/)
+  assert.match(pageSource, /Incident Handoff Summary/)
+  assert.match(pageSource, /Copy-ready snippet/)
+  assert.match(pageSource, /Top route/)
+  assert.match(pageSource, /Top failure type/)
 
   const navSource = read('components/admin/admin-nav.ts')
   const sidebarSource = read('components/admin/admin-sidebar.tsx')
@@ -333,7 +337,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-015`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-016`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-017`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-018`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
