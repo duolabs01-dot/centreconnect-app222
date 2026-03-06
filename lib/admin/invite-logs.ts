@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { NotificationLogStatus } from '@/lib/admin/notification-logs'
 import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 
 export type InviteLogType = 'email' | 'whatsapp' | 'welcome_pack'
@@ -14,6 +15,12 @@ type WriteInviteLogInput = {
   sentAt?: string
   status?: InviteLogStatus
   notes?: string | null
+  notificationEventKey?: string | null
+  notificationStatus?: NotificationLogStatus
+  notificationProvider?: string
+  notificationProviderMessageId?: string | null
+  notificationPayload?: Record<string, unknown>
+  notificationErrorMessage?: string | null
 }
 
 export async function writeInviteLog(
@@ -42,24 +49,29 @@ export async function writeInviteLog(
   const eventType = input.inviteType === 'welcome_pack' ? 'welcome_pack' : 'admin_access_invite'
   const channel = input.inviteType === 'whatsapp' ? 'whatsapp' : 'email'
   const recipient = channel === 'whatsapp' ? normalizedPhone ?? normalizedEmail : normalizedEmail
-  const status = input.status ?? 'sent'
+  const inviteStatus = input.status ?? 'sent'
+  const notificationStatus = input.notificationStatus ?? (inviteStatus as NotificationLogStatus)
 
-  const { error: notificationError } = await admin.from('notification_logs').insert({
+  const { error: notificationError } = await admin.from('notification_logs').upsert({
     centre_id: input.centreId ?? null,
-    event_key: createNotificationEventKey(eventType, input.centreId),
+    event_key:
+      input.notificationEventKey?.trim() || createNotificationEventKey(eventType, input.centreId),
     event_type: eventType,
     channel,
     recipient,
-    status,
-    provider: 'invite_log_writer',
+    status: notificationStatus,
+    provider: input.notificationProvider?.trim() || 'invite_log_writer',
+    provider_message_id: input.notificationProviderMessageId?.trim() || null,
     payload: {
       source: 'invite_logs',
       invite_type: input.inviteType,
       notes: input.notes ?? null,
+      ...(input.notificationPayload ?? {}),
     },
-    created_at: sentAt,
+    error_message: input.notificationErrorMessage ?? null,
     updated_at: new Date().toISOString(),
-  })
+    created_at: sentAt,
+  }, { onConflict: 'event_key,channel' })
 
   if (notificationError) {
     console.error('Failed to mirror invite log to notification_logs:', notificationError.message)

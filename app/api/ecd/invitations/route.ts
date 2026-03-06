@@ -9,6 +9,7 @@ import { SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
 import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
+import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 import {
   buildFirstPartyConfirmLink,
   buildDefaultEcdOnboardingRedirect,
@@ -165,6 +166,7 @@ export async function POST(request: Request) {
   const data = parsed.data
   const normalizedEmail = data.email.trim().toLowerCase()
   const nowIso = new Date().toISOString()
+  const notificationEventKey = createNotificationEventKey('admin_access_invite', data.ecdId)
 
   const supabase = await createClient()
   const {
@@ -365,6 +367,7 @@ export async function POST(request: Request) {
 
   let directEmailSent = false
   let directEmailProvider: 'resend' | 'smtp' | null = null
+  let directEmailMessageId: string | null = null
   const directEmailErrors: string[] = []
   const directEmailNotes: string[] = []
 
@@ -378,6 +381,7 @@ export async function POST(request: Request) {
     if (resendResult.success) {
       directEmailSent = true
       directEmailProvider = 'resend'
+      directEmailMessageId = resendResult.messageId ?? null
     } else if (resendResult.error) {
       directEmailErrors.push(`Resend: ${resendResult.error}`)
     }
@@ -404,6 +408,20 @@ export async function POST(request: Request) {
     ? { success: true as const, skipped: true as const }
     : await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
 
+  const emailDeliveryStatus: 'queued' | 'sent' | 'failed' = directEmailSent
+    ? 'sent'
+    : emailQueueResult.success
+      ? 'queued'
+      : 'failed'
+
+  const queuedMessageId =
+    !directEmailSent &&
+    emailQueueResult.success &&
+    'data' in emailQueueResult &&
+    Array.isArray(emailQueueResult.data)
+      ? String((emailQueueResult.data[0] as { id?: string } | undefined)?.id ?? '').trim() || null
+      : null
+
   await writeInviteLog(adminClient, {
     centreId: data.ecdId,
     ownerEmail: normalizedEmail,
@@ -416,6 +434,24 @@ export async function POST(request: Request) {
         : directEmailSent
           ? `ECD access invite (${data.role}) delivered via ${directEmailProvider}`
           : `ECD access invite (${data.role})${emailQueueResult.success ? ' queued for delivery' : ' (delivery queue failed)'}`,
+    notificationEventKey,
+    notificationStatus: emailDeliveryStatus,
+    notificationProvider: directEmailSent
+      ? directEmailProvider === 'resend'
+        ? 'resend'
+        : 'smtp'
+      : 'email_queue',
+    notificationProviderMessageId: directEmailSent ? directEmailMessageId : queuedMessageId,
+    notificationPayload: {
+      invite_role: data.role,
+      direct_provider: directEmailProvider,
+      direct_email_sent: directEmailSent,
+      queued_fallback: !directEmailSent && emailQueueResult.success,
+    },
+    notificationErrorMessage:
+      emailDeliveryStatus === 'failed'
+        ? [...directEmailNotes, ...directEmailErrors].join(' | ') || 'Email delivery failed.'
+        : null,
   })
 
   if (!directEmailSent) {
