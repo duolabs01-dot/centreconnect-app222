@@ -4,37 +4,67 @@ import path from 'node:path'
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has('--dry-run') || String(process.env.UAT_DRY_RUN ?? '').trim() === '1'
 
+function parseEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) return {}
+  const content = fs.readFileSync(filePath, 'utf8')
+  const parsed = {}
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith('#')) continue
+    const idx = line.indexOf('=')
+    if (idx <= 0) continue
+    const key = line.slice(0, idx).trim()
+    const value = line.slice(idx + 1).trim().replace(/^['"]|['"]$/g, '')
+    parsed[key] = value
+  }
+  return parsed
+}
+
+function loadMergedEnv() {
+  const root = process.cwd()
+  const fileEnv = {
+    ...parseEnvFile(path.join(root, '.env')),
+    ...parseEnvFile(path.join(root, '.env.local')),
+  }
+  return {
+    ...fileEnv,
+    ...process.env,
+  }
+}
+
+const env = loadMergedEnv()
+
 const BASE_URL = String(
-  process.env.UAT_BASE_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
+  env.UAT_BASE_URL ??
+    env.NEXT_PUBLIC_APP_URL ??
     'https://centerconnect.co.za'
 ).replace(/\/+$/, '')
 const ADMIN_TOKEN = String(
-  process.env.UAT_PLATFORM_ADMIN_TOKEN ??
-    process.env.PLATFORM_ADMIN_BEARER_TOKEN ??
+  env.UAT_PLATFORM_ADMIN_TOKEN ??
+    env.PLATFORM_ADMIN_BEARER_TOKEN ??
     ''
 ).trim()
-const ECD_ID = String(process.env.UAT_ECD_ID ?? '').trim()
+const ECD_ID = String(env.UAT_ECD_ID ?? '').trim()
 
 const matrix = [
   {
     key: 'new_email_as_ecd_admin',
-    email: String(process.env.UAT_NEW_EMAIL ?? '').trim().toLowerCase(),
+    email: String(env.UAT_NEW_EMAIL ?? '').trim().toLowerCase(),
     role: 'ecd_admin',
   },
   {
     key: 'existing_parent_as_ecd_staff',
-    email: String(process.env.UAT_EXISTING_PARENT_EMAIL ?? '').trim().toLowerCase(),
+    email: String(env.UAT_EXISTING_PARENT_EMAIL ?? '').trim().toLowerCase(),
     role: 'ecd_staff',
   },
   {
     key: 'existing_parent_as_ecd_admin',
-    email: String(process.env.UAT_EXISTING_PARENT_EMAIL ?? '').trim().toLowerCase(),
+    email: String(env.UAT_EXISTING_PARENT_EMAIL ?? '').trim().toLowerCase(),
     role: 'ecd_admin',
   },
   {
     key: 'existing_ecd_as_ecd_admin',
-    email: String(process.env.UAT_EXISTING_ECD_EMAIL ?? '').trim().toLowerCase(),
+    email: String(env.UAT_EXISTING_ECD_EMAIL ?? '').trim().toLowerCase(),
     role: 'ecd_admin',
   },
 ]
