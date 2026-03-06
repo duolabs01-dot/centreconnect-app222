@@ -15,6 +15,7 @@ import {
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -35,6 +36,7 @@ type Scenario = {
 }
 
 type CentreProfile = {
+  id: string
   slug: string
   name: string
   logoUrl: string | null
@@ -351,6 +353,7 @@ export default function CentreConnectWelcomePack() {
   const [centreName, setCentreName] = useState('your centre')
   const [location, setLocation] = useState('your area')
   const [centreSlug, setCentreSlug] = useState('')
+  const [ecdId, setEcdId] = useState<string | null>(null)
   const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
   const [coverImageUrl, setCoverImageUrl] = useState<string>(HERO_IMAGE)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle')
@@ -387,6 +390,7 @@ export default function CentreConnectWelcomePack() {
       const querySlug = toSafeText(params.get('slug'), '')
 
       const applyCentreProfile = (profile: CentreProfile) => {
+        setEcdId(profile.id)
         setCentreSlug(profile.slug)
         setCentreName(toSafeText(profile.name, queryCentre))
         setCentreLogoUrl(isSafeImageUrl(profile.logoUrl) ? profile.logoUrl : null)
@@ -411,11 +415,12 @@ export default function CentreConnectWelcomePack() {
       if (querySlug) {
         const { data: bySlug } = await supabase
           .from('public_ecd_centres')
-          .select('slug,name,logo_url,cover_image_url,suburb,city')
+          .select('id,slug,name,logo_url,cover_image_url,suburb,city')
           .eq('slug', querySlug)
           .maybeSingle()
         if (mounted && bySlug) {
           applyCentreProfile({
+            id: bySlug.id,
             slug: toSafeText(bySlug.slug, querySlug),
             name: toSafeText(bySlug.name, queryCentre),
             logoUrl: bySlug.logo_url,
@@ -429,7 +434,7 @@ export default function CentreConnectWelcomePack() {
       } else if (signedIn && session?.user?.id) {
         const ownerCentre = await supabase
           .from('ecd_centres')
-          .select('slug,name,logo_url,cover_image_url,suburb,city')
+          .select('id,slug,name,logo_url,cover_image_url,suburb,city')
           .eq('owner_id', session.user.id)
           .order('created_at', { ascending: true })
           .limit(1)
@@ -437,6 +442,7 @@ export default function CentreConnectWelcomePack() {
 
         if (mounted && ownerCentre.data) {
           applyCentreProfile({
+            id: ownerCentre.data.id,
             slug: toSafeText(ownerCentre.data.slug, ''),
             name: toSafeText(ownerCentre.data.name, queryCentre),
             logoUrl: ownerCentre.data.logo_url,
@@ -447,7 +453,7 @@ export default function CentreConnectWelcomePack() {
         } else {
           const membershipResult = await supabase
             .from('ecd_admins')
-            .select('ecd_centres:ecd_id(slug,name,logo_url,cover_image_url,suburb,city)')
+            .select('ecd_centres:ecd_id(id,slug,name,logo_url,cover_image_url,suburb,city)')
             .eq('user_id', session.user.id)
             .limit(1)
 
@@ -455,6 +461,7 @@ export default function CentreConnectWelcomePack() {
             ? (membershipResult.data[0]?.ecd_centres as {
                 slug?: string | null
                 name?: string | null
+                id?: string | null
                 logo_url?: string | null
                 cover_image_url?: string | null
                 suburb?: string | null
@@ -464,6 +471,7 @@ export default function CentreConnectWelcomePack() {
 
           if (mounted && firstMembership) {
             applyCentreProfile({
+              id: toSafeText(firstMembership.id, ''),
               slug: toSafeText(firstMembership.slug, ''),
               name: toSafeText(firstMembership.name, queryCentre),
               logoUrl: firstMembership.logo_url ?? null,
@@ -488,6 +496,71 @@ export default function CentreConnectWelcomePack() {
       mounted = false
     }
   }, [supabase])
+
+  useEffect(() => {
+    if (!ecdId) return
+    void trackAnalyticsEvent({
+      ecdId,
+      actorRole: 'ecd_admin',
+      eventType: 'welcome_pack_viewed',
+      path: '/ecd/welcome',
+      metadata: {
+        onboarding_mode: onboardingMode,
+      },
+    })
+  }, [ecdId, onboardingMode])
+
+  useEffect(() => {
+    if (!ecdId) return
+    void trackAnalyticsEvent({
+      ecdId,
+      actorRole: 'ecd_admin',
+      eventType: 'onboarding_step_viewed',
+      path: '/ecd/welcome',
+      metadata: {
+        step,
+      },
+    })
+  }, [ecdId, step])
+
+  const handleScenarioOpen = (scenario: Scenario) => {
+    setActiveScenario(scenario)
+    if (!ecdId) return
+    void trackAnalyticsEvent({
+      ecdId,
+      actorRole: 'ecd_admin',
+      eventType: 'welcome_pack_scenario_opened',
+      path: '/ecd/welcome',
+      metadata: {
+        scenario_id: scenario.id,
+      },
+    })
+  }
+
+  const trackCtaClick = (label: string, nextEvent: 'onboarding_completed' | null = null) => {
+    if (!ecdId) return
+    void trackAnalyticsEvent({
+      ecdId,
+      actorRole: 'ecd_admin',
+      eventType: 'welcome_pack_cta_clicked',
+      path: '/ecd/welcome',
+      metadata: {
+        cta: label,
+        step,
+      },
+    })
+    if (nextEvent) {
+      void trackAnalyticsEvent({
+        ecdId,
+        actorRole: 'ecd_admin',
+        eventType: nextEvent,
+        path: '/ecd/welcome',
+        metadata: {
+          cta: label,
+        },
+      })
+    }
+  }
 
   async function handlePasswordSetup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -519,6 +592,7 @@ export default function CentreConnectWelcomePack() {
 
   async function handleCopyCentreLink() {
     if (!centrePublicPath) return
+    trackCtaClick('copy_centre_link')
     try {
       const absolute = `${window.location.origin}${centrePublicPath}`
       await navigator.clipboard.writeText(absolute)
@@ -642,7 +716,21 @@ export default function CentreConnectWelcomePack() {
             <Button
               type="button"
               className="h-12 rounded-2xl bg-teal-600 px-8 text-base font-black hover:bg-teal-500"
-              onClick={() => setStep(1)}
+              onClick={() => {
+                setStep(1)
+                if (ecdId) {
+                  void trackAnalyticsEvent({
+                    ecdId,
+                    actorRole: 'ecd_admin',
+                    eventType: 'onboarding_step_completed',
+                    path: '/ecd/welcome',
+                    metadata: {
+                      completed_step: 0,
+                      next_step: 1,
+                    },
+                  })
+                }
+              }}
             >
               Start my welcome tour
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -670,7 +758,7 @@ export default function CentreConnectWelcomePack() {
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {scenarios.map((scenario) => (
-                  <ScenarioCard key={scenario.id} scenario={scenario} onOpen={setActiveScenario} />
+                  <ScenarioCard key={scenario.id} scenario={scenario} onOpen={handleScenarioOpen} />
                 ))}
               </div>
             </CardContent>
@@ -692,14 +780,18 @@ export default function CentreConnectWelcomePack() {
 
               <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-4">
                 <Button asChild className="h-11 rounded-2xl bg-teal-600 hover:bg-teal-500">
-                  <Link href="/ecd/dashboard">Open Dashboard</Link>
+                  <Link href="/ecd/dashboard" onClick={() => trackCtaClick('open_dashboard', 'onboarding_completed')}>
+                    Open Dashboard
+                  </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-300 bg-white">
-                  <Link href="/ecd/website">Website Setup</Link>
+                  <Link href="/ecd/website" onClick={() => trackCtaClick('website_setup')}>
+                    Website Setup
+                  </Link>
                 </Button>
                 {posterHref ? (
                   <Button asChild variant="outline" className="h-11 rounded-2xl border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100">
-                    <Link href={posterHref}>
+                    <Link href={posterHref} onClick={() => trackCtaClick('print_parent_qr_poster')}>
                       <QrCode className="mr-2 h-4 w-4" />
                       Print Parent QR Poster
                     </Link>
@@ -745,7 +837,10 @@ export default function CentreConnectWelcomePack() {
                 Need a hand now? Send us a WhatsApp and we will respond like a neighbour, not a call centre.
               </p>
               <Button asChild className="h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500">
-                <Link href="https://wa.me/27685356430?text=Hi%20CentreConnect%2C%20please%20help%20me%20finish%20onboarding.">
+                <Link
+                  href="https://wa.me/27685356430?text=Hi%20CentreConnect%2C%20please%20help%20me%20finish%20onboarding."
+                  onClick={() => trackCtaClick('whatsapp_support')}
+                >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   WhatsApp support
                 </Link>

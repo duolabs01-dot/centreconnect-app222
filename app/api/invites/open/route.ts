@@ -49,13 +49,39 @@ export async function GET(request: NextRequest) {
     const admin = createAdminClient()
     const { error } = await admin
       .from('notification_logs')
-      .update({ status: 'opened', updated_at: new Date().toISOString() })
+      .update({ status: 'clicked', updated_at: new Date().toISOString() })
       .eq('event_key', eventKey)
       .eq('channel', channel)
-      .in('status', ['sent'])
+      .in('status', ['queued', 'sent', 'delivered', 'opened'])
 
     if (error) {
       console.error('Failed to mark notification as opened:', error.message)
+    }
+
+    try {
+      const { data: logRow } = await admin
+        .from('notification_logs')
+        .select('centre_id')
+        .eq('event_key', eventKey)
+        .eq('channel', channel)
+        .maybeSingle()
+
+      if (logRow?.centre_id) {
+        await admin.from('ecd_analytics_events').insert({
+          ecd_id: logRow.centre_id,
+          event_type: 'invite_link_opened',
+          actor_role: 'anonymous',
+          path: '/api/invites/open',
+          metadata: {
+            channel,
+            event_key: eventKey,
+            target_host: target.hostname,
+            target_path: target.pathname,
+          },
+        })
+      }
+    } catch (trackError) {
+      console.error('Failed to append invite_link_opened analytics event:', trackError)
     }
   }
 

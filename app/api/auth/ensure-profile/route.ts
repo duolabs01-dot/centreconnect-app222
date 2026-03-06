@@ -7,9 +7,9 @@ import { resolveProvisionRole, syncAuthUserMetadataRole } from '@/lib/auth/provi
 
 function fallbackName(email?: string | null) {
   const local = (email ?? '').split('@')[0]?.trim()
-  if (!local) return 'New User'
+  if (!local) return 'Friend'
   const clean = local.replace(/[._-]+/g, ' ').trim()
-  return clean || 'New User'
+  return clean || 'Friend'
 }
 
 function generateUsernameFromId(id: string) {
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
             .update({ status: 'claimed', updated_at: acceptedAt })
             .eq('event_type', 'admin_access_invite')
             .eq('recipient', normalizedEmail)
-            .in('status', ['sent', 'opened'])
+            .in('status', ['queued', 'sent', 'delivered', 'opened', 'clicked'])
         }
 
         if (roleToPersist === 'ecd_admin') {
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
             .update({ status: 'claimed', updated_at: acceptedAt })
             .eq('event_type', 'owner_invite')
             .in('centre_id', ecdIds)
-            .in('status', ['sent', 'opened'])
+            .in('status', ['queued', 'sent', 'delivered', 'opened', 'clicked'])
         }
       }
     }

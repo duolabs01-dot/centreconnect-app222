@@ -6,6 +6,7 @@ import {
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
 } from '@/lib/auth/onboarding-links'
+import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
@@ -62,6 +63,13 @@ export async function POST(request: Request) {
   }
 
   const appUrlRoot = normalizeAppUrl()
+  const eventKey = createNotificationEventKey('welcome_pack', ecdId)
+  const toTrackedLink = (targetUrl: string) =>
+    buildUrl(appUrlRoot, '/api/invites/open', {
+      event_key: eventKey,
+      channel: 'email',
+      target: targetUrl,
+    })
 
   const smtpHost = process.env.SMTP_HOST
   const smtpPortRaw = process.env.SMTP_PORT
@@ -187,10 +195,7 @@ export async function POST(request: Request) {
       fallbackRedirectTo: callbackRedirectUrl,
     })
     const safeTargetLink = firstPartyConfirmLink ?? sanitizedTarget.link
-    getStartedUrl = buildUrl(appUrlRoot, '/api/invites/open', {
-      channel: 'email',
-      target: safeTargetLink,
-    })
+    getStartedUrl = toTrackedLink(safeTargetLink)
     if (sanitizedTarget.diagnostics.changed || sanitizedTarget.diagnostics.usedFallback) {
       console.warn('resend-welcome-pack: onboarding link sanitized', sanitizedTarget.diagnostics)
     }
@@ -203,9 +208,11 @@ export async function POST(request: Request) {
     location,
     slug: centreSlug,
   })
-  const qrPosterLink = centreSlug
+  const qrPosterRawLink = centreSlug
     ? buildUrl(appUrlRoot, `/centre/${centreSlug}/poster`)
     : buildUrl(appUrlRoot, '/ecd/website')
+  const welcomeGuideTracked = toTrackedLink(welcomeGuideUrl)
+  const qrPosterLink = toTrackedLink(qrPosterRawLink)
 
   const html = await renderPilotWelcomePackEmail({
     centreName,
@@ -218,7 +225,7 @@ export async function POST(request: Request) {
     supportWhatsApp: '+27685356430',
     supportEmail: 'admin@centerconnect.co.za',
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
-    welcomeGuideLink: welcomeGuideUrl,
+    welcomeGuideLink: welcomeGuideTracked,
     packageLabel: 'Welcome Pack',
     centreLogoUrl: centre.logo_url ?? null,
     quickSteps: [
@@ -269,7 +276,7 @@ export async function POST(request: Request) {
     'Parents are already asking for the app.',
     '',
     `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
-    `See your welcome pack: ${welcomeGuideUrl}`,
+    `See your welcome pack: ${welcomeGuideTracked}`,
     `Get started: ${getStartedUrl}`,
     `Print parent QR poster: ${qrPosterLink}`,
     `Public centre page: ${publicCentreLink}`,
@@ -298,6 +305,24 @@ export async function POST(request: Request) {
       text: plainText,
       headers: {
         'Reply-To': 'admin@centerconnect.co.za',
+      },
+    })
+
+    await upsertNotificationLog(admin, {
+      centreId: ecdId,
+      eventKey,
+      eventType: 'welcome_pack',
+      channel: 'email',
+      recipient: ownerEmail.toLowerCase(),
+      status: 'sent',
+      provider: 'smtp_nodemailer',
+      payload: {
+        subject,
+        tracked_links: {
+          get_started: getStartedUrl,
+          welcome_pack: welcomeGuideTracked,
+          qr_poster: qrPosterLink,
+        },
       },
     })
   } catch (error) {

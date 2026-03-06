@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Laptop, Smartphone } from 'lucide-react'
+import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -89,11 +90,24 @@ export function PwaInstallCard() {
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault()
       setInstallPrompt(event as BeforeInstallPromptEvent)
+      void trackAnalyticsEvent({
+        eventType: 'pwa_prompt_shown',
+        actorRole: 'anonymous',
+        path: window.location.pathname,
+        metadata: {
+          platform: platform.ios ? 'ios' : platform.android ? 'android' : 'desktop',
+        },
+      })
     }
 
     const onAppInstalled = () => {
       setInstalled(true)
       setInstallPrompt(null)
+      void trackAnalyticsEvent({
+        eventType: 'pwa_install_accepted',
+        actorRole: 'anonymous',
+        path: window.location.pathname,
+      })
       try {
         window.localStorage.setItem(installedKey, '1')
         window.localStorage.removeItem(dismissedKey)
@@ -109,10 +123,15 @@ export function PwaInstallCard() {
       window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
       window.removeEventListener('appinstalled', onAppInstalled)
     }
-  }, [dismissedKey, installedKey])
+  }, [dismissedKey, installedKey, platform.android, platform.desktop, platform.ios])
 
   async function handleInstallClick() {
     if (!installPrompt) return
+    void trackAnalyticsEvent({
+      eventType: 'pwa_install_clicked',
+      actorRole: 'anonymous',
+      path: window.location.pathname,
+    })
     await installPrompt.prompt()
     const choice = await installPrompt.userChoice
     if (choice.outcome === 'accepted') {
@@ -123,12 +142,26 @@ export function PwaInstallCard() {
       } catch {
         // no-op
       }
+    } else {
+      void trackAnalyticsEvent({
+        eventType: 'pwa_install_dismissed',
+        actorRole: 'anonymous',
+        path: window.location.pathname,
+      })
     }
     setInstallPrompt(null)
   }
 
   function dismissCard() {
     setDismissed(true)
+    void trackAnalyticsEvent({
+      eventType: 'pwa_install_dismissed',
+      actorRole: 'anonymous',
+      path: window.location.pathname,
+      metadata: {
+        reason: 'card_dismissed',
+      },
+    })
     try {
       window.localStorage.setItem(dismissedKey, '1')
     } catch {

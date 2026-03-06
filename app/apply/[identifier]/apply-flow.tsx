@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { cn, calculateAge, formatDate } from '@/lib/utils'
 import { ApplyForm } from './apply-form'
 import { createChildAction, createChildSchema, CreateChildInput } from '@/lib/actions/parents/create-child'
@@ -52,6 +53,15 @@ export function ApplyFlow({ centreId, centreSlug, centreName, childProfiles }: A
     setAutoSelectChildId(child.id)
     setMode('existing')
     toast.success(`${child.first_name} has been saved. Now finish your application.`)
+    void trackAnalyticsEvent({
+      ecdId: centreId,
+      actorRole: 'parent_user',
+      eventType: 'parent_record_created',
+      path: `/apply/${centreSlug}`,
+      metadata: {
+        source: 'apply_flow',
+      },
+    })
   }
 
   return (

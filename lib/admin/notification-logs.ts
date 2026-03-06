@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export type NotificationLogChannel = 'email' | 'whatsapp'
-export type NotificationLogStatus = 'sent' | 'opened' | 'claimed' | 'failed'
+export type NotificationLogStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'claimed' | 'failed'
 
 type AdminClient = ReturnType<typeof createAdminClient>
 

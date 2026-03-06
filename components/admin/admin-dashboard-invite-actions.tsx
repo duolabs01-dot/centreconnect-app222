@@ -6,7 +6,7 @@ import { BellRing, CheckCircle2, RefreshCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/cc-admin/Button'
 
-type EcdNotificationStatus = 'sent' | 'opened' | 'claimed' | 'failed'
+type EcdNotificationStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'claimed' | 'failed'
 
 type EcdInviteActionProps = {
   audience: 'ecd'
@@ -148,4 +148,3 @@ export function AdminDashboardInviteActions(props: AdminDashboardInviteActionsPr
     </div>
   )
 }
-

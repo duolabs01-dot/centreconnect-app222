@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 }
 
 const INVITE_CHANNELS = ['email', 'whatsapp'] as const
-const INVITE_STATUSES = ['sent', 'opened', 'claimed', 'failed'] as const
+const INVITE_STATUSES = ['queued', 'sent', 'delivered', 'opened', 'clicked', 'claimed', 'failed'] as const
 const INVITE_EVENT_TYPES = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
 
 type InviteChannel = (typeof INVITE_CHANNELS)[number]
@@ -81,7 +81,10 @@ function formatEventType(value: InviteEventType) {
 
 function statusClass(status: InviteStatus) {
   if (status === 'claimed') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+  if (status === 'clicked') return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
   if (status === 'opened') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
+  if (status === 'delivered') return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+  if (status === 'queued') return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
   if (status === 'failed') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
   return 'border-amber-500/30 bg-amber-500/10 text-amber-300'
 }
@@ -122,22 +125,32 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
     logsQuery = logsQuery.or(`recipient.ilike.%${searchTerm}%,event_key.ilike.%${searchTerm}%`)
   }
 
-  const [logsResult, centresResult] = await Promise.all([
+  const [logsResult, centresResult, analyticsResult] = await Promise.all([
     logsQuery,
     admin.from('ecd_centres').select('id,name').order('name', { ascending: true }).limit(500),
+    admin.from('ecd_analytics_events').select('event_type').order('created_at', { ascending: false }).limit(5000),
   ])
 
   const logs = (logsResult.data ?? []) as InviteRow[]
   const centres = (centresResult.data ?? []) as Array<{ id: string; name: string }>
+  const analyticsEvents = (analyticsResult.data ?? []) as Array<{ event_type: string }>
 
   const sentCount = logs.filter((row) => row.status === 'sent').length
+  const deliveredCount = logs.filter((row) => row.status === 'delivered').length
   const openedCount = logs.filter((row) => row.status === 'opened').length
+  const clickedCount = logs.filter((row) => row.status === 'clicked').length
   const claimedCount = logs.filter((row) => row.status === 'claimed').length
   const failedCount = logs.filter((row) => row.status === 'failed').length
   const welcomePackCount = logs.filter(
     (row) => row.event_type === 'welcome_pack' || row.event_type === 'centre_bootstrap_created'
   ).length
   const ownerInviteCount = logs.filter((row) => row.event_type === 'owner_invite').length
+  const welcomeViewedCount = analyticsEvents.filter((event) => event.event_type === 'welcome_pack_viewed').length
+  const qrViewedCount = analyticsEvents.filter((event) => event.event_type === 'qr_poster_viewed').length
+  const qrPrintedCount = analyticsEvents.filter((event) => event.event_type === 'qr_poster_print_completed').length
+  const onboardingCompleteCount = analyticsEvents.filter(
+    (event) => event.event_type === 'onboarding_completed'
+  ).length
 
   const fieldClass =
     'h-10 rounded-xl border border-white/10 bg-black/30 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400/60 focus:outline-none'
@@ -164,8 +177,10 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
         <CyberCard accent="violet" glow className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Sent / Opened / Claimed</p>
-              <h3 className="font-orbitron text-2xl font-bold text-white">{sentCount} / {openedCount} / {claimedCount}</h3>
+              <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Sent / Delivered / Clicked / Claimed</p>
+              <h3 className="font-orbitron text-2xl font-bold text-white">
+                {sentCount} / {deliveredCount} / {clickedCount} / {claimedCount}
+              </h3>
               <p className="mt-1 text-[10px] text-cyber-violet">STATE_DISTRIBUTION</p>
             </div>
             <Sparkles className="h-4 w-4 text-cyber-violet" />
@@ -195,6 +210,19 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
             {failedCount > 0 ? <MessageCircle className="h-4 w-4 text-cyan-300" /> : <Mail className="h-4 w-4 text-cyan-300" />}
           </div>
         </CyberCard>
+
+        <CyberCard accent="green" glow className="p-5 md:col-span-2 xl:col-span-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Activation Funnel Signals</p>
+              <h3 className="font-orbitron text-lg font-bold text-white">
+                Welcome Viewed: {welcomeViewedCount} | QR Viewed: {qrViewedCount} | QR Printed: {qrPrintedCount} | Onboarding Completed: {onboardingCompleteCount}
+              </h3>
+              <p className="mt-1 text-[10px] text-cyber-green">LIVE_ONBOARDING_FUNNEL</p>
+            </div>
+            <Sparkles className="h-4 w-4 text-cyber-green" />
+          </div>
+        </CyberCard>
       </section>
 
       <CyberCard className="mb-6 p-6">
@@ -220,8 +248,11 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
           </select>
           <select name="status" defaultValue={selectedStatus} className={`cc-native-field ${fieldClass}`}>
             <option value="">All statuses</option>
+            <option value="queued">Queued</option>
             <option value="sent">Sent</option>
+            <option value="delivered">Delivered</option>
             <option value="opened">Opened</option>
+            <option value="clicked">Clicked</option>
             <option value="claimed">Claimed</option>
             <option value="failed">Failed</option>
           </select>

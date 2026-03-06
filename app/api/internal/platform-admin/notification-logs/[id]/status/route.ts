@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const VALID_STATUSES = new Set(['sent', 'opened', 'claimed', 'failed'])
+const VALID_STATUSES = new Set(['queued', 'sent', 'delivered', 'opened', 'clicked', 'claimed', 'failed'])
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const identity = await requirePlatformAdmin(request)
@@ -30,4 +30,3 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   return NextResponse.json({ ok: true, id: data.id, status })
 }
-

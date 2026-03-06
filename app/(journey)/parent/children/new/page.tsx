@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -75,6 +76,14 @@ export default function NewChildPage() {
       }
 
       toast.success('Child added successfully')
+      void trackAnalyticsEvent({
+        eventType: 'parent_record_created',
+        actorRole: 'parent_user',
+        path: '/parent/children/new',
+        metadata: {
+          entity: 'child_profile',
+        },
+      })
       triggerFirstTimeConfetti('parent-first-child', 'child')
       router.push('/parent/children')
     } catch (error: any) {

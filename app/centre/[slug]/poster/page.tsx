@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation'
 
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { createClient } from '@/lib/supabase/server'
+import { PosterAnalyticsTracker } from './poster-analytics-tracker'
 import { PrintPosterButton } from './print-button'
 
 type CentrePosterRow = {
+  id: string
   slug: string | null
   name: string | null
   logo_url: string | null
@@ -40,7 +42,7 @@ function isSafeImage(value: string | null | undefined) {
 
 async function loadCentre(slug: string) {
   const supabase = await createClient()
-  const selectColumns = 'slug,name,logo_url,cover_image_url,suburb,city'
+  const selectColumns = 'id,slug,name,logo_url,cover_image_url,suburb,city'
 
   const { data: publicCentre } = await supabase
     .from('public_ecd_centres')
@@ -98,6 +100,7 @@ export default async function CentrePosterPage({
       `}</style>
 
       <div className="mx-auto w-full max-w-[820px] rounded-3xl border border-slate-200 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.12)] print:rounded-none print:border-0 print:shadow-none">
+        <PosterAnalyticsTracker ecdId={centre.id} />
         <header className="relative overflow-hidden border-b border-slate-200">
           <img
             src={heroImage}
@@ -141,7 +144,7 @@ export default async function CentrePosterPage({
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <PrintPosterButton />
+              <PrintPosterButton ecdId={centre.id} />
               <Link
                 href={centreUrl}
                 className="no-print inline-flex items-center rounded-2xl border border-slate-300 bg-white px-5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:text-slate-900"

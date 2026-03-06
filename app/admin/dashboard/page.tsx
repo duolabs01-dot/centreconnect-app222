@@ -25,7 +25,7 @@ const ECD_ROLES = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'] as const
 const ECD_INVITE_EVENTS = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
 const PARENT_WELCOME_KEYS = ['cc_welcome_intro', 'cc_welcome_inbox_guide', 'cc_welcome_legal', 'cc_welcome_security'] as const
 
-type NotificationStatus = 'sent' | 'opened' | 'claimed' | 'failed'
+type NotificationStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'claimed' | 'failed'
 type RowStatus = NotificationStatus | 'read' | 'unread'
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -80,7 +80,10 @@ function templateLabel(templateKey: string | null | undefined) {
 
 function statusClass(status: RowStatus) {
   if (status === 'claimed' || status === 'read') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+  if (status === 'clicked') return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
   if (status === 'opened') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
+  if (status === 'delivered') return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+  if (status === 'queued') return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
   if (status === 'failed') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
   return 'border-amber-500/30 bg-amber-500/10 text-amber-300'
 }
@@ -331,7 +334,11 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }),
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
-      admin.from('notification_logs').select('id', { count: 'exact', head: true }).in('event_type', [...ECD_INVITE_EVENTS]).in('status', ['sent', 'opened']),
+      admin
+        .from('notification_logs')
+        .select('id', { count: 'exact', head: true })
+        .in('event_type', [...ECD_INVITE_EVENTS])
+        .in('status', ['queued', 'sent', 'delivered', 'opened', 'clicked']),
       admin.from('notification_logs').select('id', { count: 'exact', head: true }).in('event_type', [...ECD_INVITE_EVENTS]),
       admin.from('user_profiles').select('id,full_name,phone,role,created_at').in('role', [...ECD_ROLES]).order('created_at', { ascending: false }).limit(8),
       admin.from('ecd_centres').select('id,name,city,is_active').order('created_at', { ascending: false }).limit(8),
