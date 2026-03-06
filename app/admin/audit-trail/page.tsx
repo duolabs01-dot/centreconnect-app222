@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -117,6 +118,22 @@ export default async function AdminAuditTrailPage({ searchParams }: { searchPara
       description="Immutable timeline for platform admin and billing actions."
       roleLabel="Audit Console"
       wide
+      actions={
+        <div className="flex gap-2">
+          <Link
+            href="/admin/webhook-failures"
+            className="inline-flex h-10 items-center rounded-xl border border-slate-700 px-4 text-xs font-semibold text-slate-200 hover:bg-slate-900"
+          >
+            Webhook Incident Desk
+          </Link>
+          <Link
+            href="/admin/runbooks/payment-incidents"
+            className="inline-flex h-10 items-center rounded-xl bg-cyan-500 px-4 text-xs font-black uppercase tracking-[0.08em] text-slate-900 hover:bg-cyan-400"
+          >
+            Payment Runbook
+          </Link>
+        </div>
+      }
     >
       <Card>
         <CardHeader>

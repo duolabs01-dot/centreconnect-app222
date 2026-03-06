@@ -15,6 +15,7 @@ import {
   Activity,
   ScrollText,
   AlertTriangle,
+  BookOpen,
   Cpu,
   LifeBuoy,
   Mail
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
   { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf' },
   { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit' },
+  { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook' },
   { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
   { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites' },

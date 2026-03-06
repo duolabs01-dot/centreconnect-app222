@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Operator quick-access and UI cleanup after backend reliability hardening.
+- Current bottleneck: Revenue UI still exposes stale manual status controls after backend guard changes.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-005` `platform` Add operator quick-links to incident runbook from revenue/incident screens
-  - Why: Reliability tooling is shipped; operators need one-click guidance during incidents.
+- [ACTIVE] `BL-REV-010` `revenue` Remove stale manual status controls from admin revenue UI
+  - Why: Backend event-driven guards are live; UI should not present unsupported manual transitions.
   - Definition of done:
-    - Runbook links are visible from `/admin/revenue` and `/admin/webhook-failures`.
-    - Links open the incident runbook and audit trail quickly.
-    - Operator can reach recovery instructions in one click during triage.
+    - Revenue operations UI no longer offers event-owned status mutation actions.
+    - UI copy clarifies event-driven billing transitions.
+    - Operator actions align with supported collect/resend/replay controls.
   - Validation:
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-    - Manual navigation check
-  - Est: 1-2h
+    - Manual sanity check in `/admin/revenue`
+  - Est: 2-3h
 
 ## Next
 
-- [READY] `BL-REV-010` `revenue` Remove stale manual status controls from admin revenue UI
 - [READY] `BL-REL-003` `platform` Add persistence-backed throttling for activity-log failure alerts
 - [READY] `BL-QA-003` `quality` Extend smoke checks to cover activity-log alerting failure simulation
+- [READY] `BL-UX-010` `admin` Add read-only status guidance panel to Revenue Ops for operator clarity
 
 ## Blocked
 
@@ -59,3 +59,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-REV-009` Manual invoice/subscription mutation endpoints now reject event-owned state transitions.
 - [DONE] `BL-REL-002` Activity-log write failures now emit structured fallback telemetry with throttled operator alerting.
 - [DONE] `BL-TEST-002` Added regression checks for admin audit trail and webhook incident dashboard surfaces.
+- [DONE] `BL-OPS-005` Added one-click operator quick-links to incident runbook and triage surfaces.
