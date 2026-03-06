@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 }
 
 type WebhookStatus = 'received' | 'processed' | 'ignored' | 'failed'
+const ACTIVITY_ALERT_LOOKBACK_HOURS = 24
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
@@ -38,6 +39,13 @@ export default async function AdminWebhookFailuresPage() {
     .order('created_at', { ascending: false })
     .limit(400)
 
+  const lookbackStart = new Date(Date.now() - ACTIVITY_ALERT_LOOKBACK_HOURS * 60 * 60 * 1000).toISOString()
+  const { data: activityRows } = await admin
+    .from('platform_admin_activity_log')
+    .select('action')
+    .in('action', ['alert_activity_log_write_failure', 'suppress_activity_log_write_failure'])
+    .gte('created_at', lookbackStart)
+
   const mappedRows = (rows ?? []).map((row) => {
     const invoice = normalizeOne(row.invoices as { invoice_number?: string } | { invoice_number?: string }[] | null)
     return {
@@ -53,6 +61,12 @@ export default async function AdminWebhookFailuresPage() {
       processed_at: (row.processed_at as string | null) ?? null,
     }
   })
+
+  const activityAlertMetrics = {
+    windowHours: ACTIVITY_ALERT_LOOKBACK_HOURS,
+    sentCount: (activityRows ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length,
+    suppressedCount: (activityRows ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length,
+  }
 
   return (
     <AdminPageLayout
@@ -77,7 +91,7 @@ export default async function AdminWebhookFailuresPage() {
         </div>
       }
     >
-      <WebhookFailureDashboard rows={mappedRows} />
+      <WebhookFailureDashboard rows={mappedRows} activityAlertMetrics={activityAlertMetrics} />
     </AdminPageLayout>
   )
 }

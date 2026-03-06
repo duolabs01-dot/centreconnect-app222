@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Missing observability counters for activity-log alert suppression vs sent events.
+- Current bottleneck: Need explicit negative-case API checks for blocked manual event-owned transitions.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OBS-001` `platform` Add metric counters for activity-log alert suppression vs sent alerts
-  - Why: Alerting now exists with throttling, but operator visibility into suppression behavior is missing.
+- [ACTIVE] `BL-QA-004` `quality` Add negative-case checks for blocked manual event-owned status transitions in admin APIs
+  - Why: Event-driven guards are in place; tests must assert blocked manual transitions explicitly.
   - Definition of done:
-    - Counter metrics show sent alerts vs suppressed alerts over recent window.
-    - Metrics are queryable from admin reliability surfaces.
-    - Guidance clarifies what suppression means operationally.
+    - QA checks assert invoice manual status endpoint blocks event-owned statuses.
+    - QA checks assert subscription manual status endpoint blocks event-owned statuses.
+    - Regression lane fails if guard copy or 409 behavior is removed.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-  - Est: 2-4h
+  - Est: 1-2h
 
 ## Next
 
-- [READY] `BL-QA-004` `quality` Add negative-case checks for blocked manual event-owned status transitions in admin APIs
 - [READY] `BL-UX-011` `admin` Add compact glossary for billing states in Revenue Ops
 - [READY] `BL-OPS-007` `platform` Add quick badge indicators for recent incident health on revenue summary
+- [READY] `BL-OBS-002` `platform` Add trend deltas for alert sent vs suppressed counters (24h vs previous 24h)
 
 ## Blocked
 
@@ -65,3 +65,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.
 - [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.
 - [DONE] `BL-OPS-006` Added one-click incident/runbook/audit deep-links to the Revenue Ops KPI summary panel.
+- [DONE] `BL-OBS-001` Added activity-log alert sent vs suppressed counters to the webhook incident reliability surface.

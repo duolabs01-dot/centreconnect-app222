@@ -59,8 +59,12 @@ check('webhook failures dashboard route exposes replay-focused incident surface'
   const dashboardSource = read('components/admin/webhook-failure-dashboard.tsx')
   assert.match(pageSource, /profile\?\.role !== 'platform_admin'/)
   assert.match(pageSource, /from\('payment_webhook_events'\)/)
+  assert.match(pageSource, /alert_activity_log_write_failure/)
+  assert.match(pageSource, /suppress_activity_log_write_failure/)
   assert.match(dashboardSource, /\/api\/internal\/platform-admin\/webhooks\/paystack\/events\/\$\{row\.id\}\/replay/)
   assert.match(dashboardSource, /Failed Event Queue/)
+  assert.match(dashboardSource, /Activity-Log Alerts Sent/)
+  assert.match(dashboardSource, /Activity-Log Alerts Suppressed/)
 })
 
 check('revenue operations UI avoids stale manual status mutation controls', () => {
@@ -75,8 +79,11 @@ check('activity log failure alerts use persistence-backed throttle markers', () 
   const source = read('lib/admin/activity-log.ts')
   assert.match(source, /ACTIVITY_LOG_ALERT_MARKER_ACTION/)
   assert.match(source, /alert_activity_log_write_failure/)
+  assert.match(source, /ACTIVITY_LOG_ALERT_SUPPRESSED_ACTION/)
+  assert.match(source, /suppress_activity_log_write_failure/)
   assert.match(source, /shouldSendFailureAlert\(/)
   assert.match(source, /persistFailureAlertMarker\(/)
+  assert.match(source, /persistFailureSuppressionMarker\(/)
 })
 
 check('activity log forced-failure simulation is documented and non-production guarded', () => {

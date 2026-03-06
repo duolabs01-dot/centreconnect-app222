@@ -24,6 +24,11 @@ type WebhookFailureRow = {
 
 type Props = {
   rows: WebhookFailureRow[]
+  activityAlertMetrics: {
+    windowHours: number
+    sentCount: number
+    suppressedCount: number
+  }
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -38,7 +43,7 @@ function statusClass(status: WebhookStatus) {
   return 'bg-emerald-500/20 text-emerald-200'
 }
 
-export function WebhookFailureDashboard({ rows }: Props) {
+export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
   const [statusFilter, setStatusFilter] = useState<'all' | WebhookStatus>('failed')
   const [query, setQuery] = useState('')
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -117,6 +122,31 @@ export function WebhookFailureDashboard({ rows }: Props) {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-black text-white">{stats.processed}</p>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-cyan-200">
+              Activity-Log Alerts Sent ({activityAlertMetrics.windowHours}h)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-black text-white">{activityAlertMetrics.sentCount}</p>
+            <p className="mt-1 text-xs text-slate-400">Action: alert_activity_log_write_failure</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm text-amber-200">
+              Activity-Log Alerts Suppressed ({activityAlertMetrics.windowHours}h)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-black text-white">{activityAlertMetrics.suppressedCount}</p>
+            <p className="mt-1 text-xs text-slate-400">Action: suppress_activity_log_write_failure</p>
           </CardContent>
         </Card>
       </section>
@@ -210,4 +240,3 @@ export function WebhookFailureDashboard({ rows }: Props) {
     </div>
   )
 }
-

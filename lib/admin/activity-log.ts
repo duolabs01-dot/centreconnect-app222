@@ -16,7 +16,9 @@ type WritePlatformActivityInput = {
 
 const ACTIVITY_LOG_ALERT_COOLDOWN_MS = 15 * 60 * 1000
 const ACTIVITY_LOG_ALERT_MARKER_ACTION = 'alert_activity_log_write_failure'
+const ACTIVITY_LOG_ALERT_SUPPRESSED_ACTION = 'suppress_activity_log_write_failure'
 const lastFailureAlertByKey = new Map<string, number>()
+const lastSuppressionMarkerByKey = new Map<string, number>()
 
 type ActivityLogFailureContext = {
   message: string
@@ -50,6 +52,7 @@ function logActivityFailure(
     | 'platform_activity_log_alert_failed'
     | 'platform_activity_log_alert_marker_query_failed'
     | 'platform_activity_log_alert_marker_write_failed'
+    | 'platform_activity_log_suppression_marker_write_failed'
 ) {
   console.error(
     JSON.stringify({
@@ -59,6 +62,13 @@ function logActivityFailure(
       ...context,
     })
   )
+}
+
+function shouldPersistSuppressionMarker(alertKey: string, nowMs: number) {
+  const previous = lastSuppressionMarkerByKey.get(alertKey)
+  if (previous && nowMs - previous < ACTIVITY_LOG_ALERT_COOLDOWN_MS) return false
+  lastSuppressionMarkerByKey.set(alertKey, nowMs)
+  return true
 }
 
 function isSuppressedInMemory(alertKey: string, nowMs: number) {
@@ -74,13 +84,47 @@ function readAlertKey(details: unknown) {
   return value
 }
 
+async function persistFailureSuppressionMarker(
+  admin: ReturnType<typeof createAdminClient>,
+  context: ActivityLogFailureContext,
+  alertKey: string,
+  source: 'memory' | 'persistent',
+  nowMs: number
+) {
+  if (!shouldPersistSuppressionMarker(alertKey, nowMs)) return
+
+  const { error } = await admin.from('platform_admin_activity_log').insert({
+    actor_user_id: null,
+    actor_email: context.actorEmail,
+    entity_type: context.entityType,
+    entity_id: context.entityId,
+    action: ACTIVITY_LOG_ALERT_SUPPRESSED_ACTION,
+    summary: `Activity log failure alert suppressed for ${context.action}`,
+    details: {
+      alertKey,
+      sourceAction: context.action,
+      sourceSummary: context.summary,
+      suppressionSource: source,
+      cooldownMinutes: ACTIVITY_LOG_ALERT_COOLDOWN_MS / 60000,
+      detailsKeys: context.detailsKeys,
+    },
+  })
+
+  if (error) {
+    logActivityFailure({ ...context, message: error.message }, 'platform_activity_log_suppression_marker_write_failed')
+  }
+}
+
 async function shouldSendFailureAlert(
   admin: ReturnType<typeof createAdminClient>,
   context: ActivityLogFailureContext,
   alertKey: string,
   nowMs: number
 ) {
-  if (!isSuppressedInMemory(alertKey, nowMs)) return false
+  if (!isSuppressedInMemory(alertKey, nowMs)) {
+    await persistFailureSuppressionMarker(admin, context, alertKey, 'memory', nowMs)
+    return false
+  }
 
   const { data, error } = await admin
     .from('platform_admin_activity_log')
@@ -105,6 +149,7 @@ async function shouldSendFailureAlert(
 
   if (hasRecentMarker) {
     lastFailureAlertByKey.set(alertKey, nowMs)
+    await persistFailureSuppressionMarker(admin, context, alertKey, 'persistent', nowMs)
     return false
   }
 
