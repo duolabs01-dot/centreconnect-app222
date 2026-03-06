@@ -272,6 +272,10 @@ test('Admin parent reliability monitor is platform-admin guarded with trend and 
   assert.match(pageSource, /Focus Top Failure Type/)
   assert.match(pageSource, /topRouteHref/)
   assert.match(pageSource, /topFailureTypeHref/)
+  assert.match(pageSource, /buildReliabilityHref\(selectedWindow,\s*\{/)
+  assert.match(pageSource, /routeFilter:\s*item\.route/)
+  assert.match(pageSource, /failureTypeFilter:\s*item\.failureType/)
+  assert.match(pageSource, /Focus Pair/)
   assert.match(pageSource, /IncidentHandoffActions/)
   assert.match(pageSource, /wa\.me\/\?text=/)
 
@@ -371,7 +375,9 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-021`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-022`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-023`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19|20|21|22|23)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-024`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-025`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {

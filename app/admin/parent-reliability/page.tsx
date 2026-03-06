@@ -560,13 +560,25 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             </Link>
           </div>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {routeFailureHotspots.map((item) => (
-              <div key={`${item.route}:${item.failureType}`} className="rounded-xl border border-white/5 bg-black/20 p-3">
-                <p className="truncate text-sm font-semibold text-slate-100">{item.route}</p>
-                <p className="mt-1 text-xs uppercase tracking-wider text-amber-300">{item.failureType}</p>
-                <p className="mt-1 text-xs text-slate-400">{item.count} failures</p>
-              </div>
-            ))}
+            {routeFailureHotspots.map((item) => {
+              const pairHref = buildReliabilityHref(selectedWindow, {
+                routeFilter: item.route,
+                failureTypeFilter: item.failureType,
+              })
+              return (
+                <div key={`${item.route}:${item.failureType}`} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                  <p className="truncate text-sm font-semibold text-slate-100">{item.route}</p>
+                  <p className="mt-1 text-xs uppercase tracking-wider text-amber-300">{item.failureType}</p>
+                  <p className="mt-1 text-xs text-slate-400">{item.count} failures</p>
+                  <Link
+                    href={pairHref}
+                    className="mt-2 inline-flex h-8 items-center rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-200 hover:bg-emerald-500/20"
+                  >
+                    Focus Pair
+                  </Link>
+                </div>
+              )
+            })}
           </div>
         </CyberCard>
       ) : null}
