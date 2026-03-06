@@ -39,12 +39,16 @@ const BASE_URL = String(
     env.NEXT_PUBLIC_APP_URL ??
     'https://centerconnect.co.za'
 ).replace(/\/+$/, '')
-const ADMIN_TOKEN = String(
+let adminToken = String(
   env.UAT_PLATFORM_ADMIN_TOKEN ??
     env.PLATFORM_ADMIN_BEARER_TOKEN ??
     ''
 ).trim()
 const ECD_ID = String(env.UAT_ECD_ID ?? '').trim()
+const SUPABASE_URL = String(env.NEXT_PUBLIC_SUPABASE_URL ?? env.SUPABASE_URL ?? '').trim()
+const SUPABASE_ANON_KEY = String(env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? env.SUPABASE_ANON_KEY ?? '').trim()
+const PLATFORM_ADMIN_EMAIL = String(env.UAT_PLATFORM_ADMIN_EMAIL ?? env.PLATFORM_ADMIN_EMAIL ?? '').trim()
+const PLATFORM_ADMIN_PASSWORD = String(env.UAT_PLATFORM_ADMIN_PASSWORD ?? env.PLATFORM_ADMIN_PASSWORD ?? '').trim()
 
 const matrix = [
   {
@@ -72,7 +76,12 @@ const matrix = [
 function requiredEnvCheck() {
   const missing = []
   if (!ECD_ID) missing.push('UAT_ECD_ID')
-  if (!ADMIN_TOKEN) missing.push('UAT_PLATFORM_ADMIN_TOKEN')
+  if (
+    !adminToken &&
+    (!SUPABASE_URL || !SUPABASE_ANON_KEY || !PLATFORM_ADMIN_EMAIL || !PLATFORM_ADMIN_PASSWORD)
+  ) {
+    missing.push('UAT_PLATFORM_ADMIN_TOKEN (or UAT_PLATFORM_ADMIN_EMAIL/UAT_PLATFORM_ADMIN_PASSWORD with Supabase URL+anon key)')
+  }
   if (!matrix[0].email) missing.push('UAT_NEW_EMAIL')
   if (!matrix[1].email) missing.push('UAT_EXISTING_PARENT_EMAIL')
   if (!matrix[3].email) missing.push('UAT_EXISTING_ECD_EMAIL')
@@ -84,13 +93,53 @@ function toSummary(result) {
   return `${result.httpStatus} ${result.ok ? 'OK' : 'FAILED'} | ${result.emailDeliveryStatus ?? 'n/a'}`
 }
 
-async function postInvite({ email, role }) {
+function canRefreshAdminToken() {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && PLATFORM_ADMIN_EMAIL && PLATFORM_ADMIN_PASSWORD)
+}
+
+async function fetchAdminToken() {
+  if (!canRefreshAdminToken()) {
+    return { ok: false, error: 'Missing Supabase auth credentials for token refresh.' }
+  }
+
+  const tokenUrl = `${SUPABASE_URL.replace(/\/+$/, '')}/auth/v1/token?grant_type=password`
+  const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({
+      email: PLATFORM_ADMIN_EMAIL,
+      password: PLATFORM_ADMIN_PASSWORD,
+    }),
+  })
+
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok || !payload?.access_token) {
+    return {
+      ok: false,
+      error:
+        payload?.error_description ??
+        payload?.error ??
+        payload?.msg ??
+        `Token refresh failed with HTTP ${response.status}`,
+    }
+  }
+
+  return {
+    ok: true,
+    token: String(payload.access_token),
+  }
+}
+
+async function postInvite({ email, role, token }) {
   const url = `${BASE_URL}/api/internal/platform-admin/invitations`
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${ADMIN_TOKEN}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       ecdId: ECD_ID,
@@ -115,6 +164,7 @@ async function postInvite({ email, role }) {
 async function run() {
   const startedAt = new Date().toISOString()
   const missing = requiredEnvCheck()
+  let refreshedTokenDuringRun = false
 
   if (missing.length > 0) {
     const channel = dryRun ? console.warn : console.error
@@ -128,11 +178,23 @@ async function run() {
     return
   }
 
+  if (!dryRun && !adminToken && canRefreshAdminToken()) {
+    const refreshed = await fetchAdminToken()
+    if (refreshed.ok) {
+      adminToken = refreshed.token
+      refreshedTokenDuringRun = true
+    }
+  }
+
   const report = {
     startedAt,
     mode: dryRun ? 'dry-run' : 'live',
     baseUrl: BASE_URL,
     ecdId: ECD_ID,
+    tokenRefresh: {
+      attempted: false,
+      succeeded: refreshedTokenDuringRun,
+    },
     scenarios: [],
     summary: {
       total: matrix.length,
@@ -167,7 +229,25 @@ async function run() {
       continue
     }
 
-    const result = await postInvite(scenario)
+    let result = await postInvite({
+      ...scenario,
+      token: adminToken,
+    })
+
+    if ((result.httpStatus === 401 || result.httpStatus === 403) && canRefreshAdminToken()) {
+      report.tokenRefresh.attempted = true
+      const refreshed = await fetchAdminToken()
+      if (refreshed.ok) {
+        adminToken = refreshed.token
+        refreshedTokenDuringRun = true
+        report.tokenRefresh.succeeded = true
+        result = await postInvite({
+          ...scenario,
+          token: adminToken,
+        })
+      }
+    }
+
     report.scenarios.push({
       key: scenario.key,
       role: scenario.role,
