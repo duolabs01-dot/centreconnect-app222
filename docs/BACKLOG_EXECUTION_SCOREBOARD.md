@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Need explicit negative-case API checks for blocked manual event-owned transitions.
+- Current bottleneck: Revenue operator UX still needs compact billing-state glossary for faster support handling.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-QA-004` `quality` Add negative-case checks for blocked manual event-owned status transitions in admin APIs
-  - Why: Event-driven guards are in place; tests must assert blocked manual transitions explicitly.
+- [ACTIVE] `BL-UX-011` `admin` Add compact glossary for billing states in Revenue Ops
+  - Why: Operators now need consistent status interpretation without leaving the page.
   - Definition of done:
-    - QA checks assert invoice manual status endpoint blocks event-owned statuses.
-    - QA checks assert subscription manual status endpoint blocks event-owned statuses.
-    - Regression lane fails if guard copy or 409 behavior is removed.
+    - Revenue Ops includes concise definitions for `draft/sent/overdue/paid/canceled` and subscription states.
+    - Glossary is visible near operations context.
+    - Copy aligns with event-driven controls and runbook language.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-UX-011` `admin` Add compact glossary for billing states in Revenue Ops
 - [READY] `BL-OPS-007` `platform` Add quick badge indicators for recent incident health on revenue summary
 - [READY] `BL-OBS-002` `platform` Add trend deltas for alert sent vs suppressed counters (24h vs previous 24h)
+- [READY] `BL-QA-005` `quality` Add regression checks for revenue summary deep-links and glossary presence
 
 ## Blocked
 
@@ -66,3 +66,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.
 - [DONE] `BL-OPS-006` Added one-click incident/runbook/audit deep-links to the Revenue Ops KPI summary panel.
 - [DONE] `BL-OBS-001` Added activity-log alert sent vs suppressed counters to the webhook incident reliability surface.
+- [DONE] `BL-QA-004` Added negative-case regression checks for blocked manual event-owned status transitions in admin APIs.

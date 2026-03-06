@@ -94,6 +94,21 @@ check('activity log forced-failure simulation is documented and non-production g
   assert.match(runbook, /CC_ACTIVITY_LOG_FORCE_FAIL=1/)
 })
 
+check('admin invoice status route blocks manual event-owned transitions with 409 responses', () => {
+  const source = read('app/api/internal/platform-admin/invoices/[id]/route.ts')
+  assert.match(source, /if \(nextStatus !== 'canceled'\)/)
+  assert.match(source, /event-driven and cannot be set manually/)
+  assert.match(source, /\{ status: 409 \}/)
+  assert.match(source, /Paid invoices cannot be manually canceled/)
+})
+
+check('admin subscription status route blocks manual event-owned transitions with 409 responses', () => {
+  const source = read('app/api/internal/platform-admin/subscriptions/[id]/route.ts')
+  assert.match(source, /nextStatus === 'trial' \|\| nextStatus === 'active' \|\| nextStatus === 'past_due'/)
+  assert.match(source, /event-driven and cannot be set manually/)
+  assert.match(source, /\{ status: 409 \}/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
