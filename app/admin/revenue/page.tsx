@@ -7,6 +7,7 @@ import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { RevenueOperations } from '@/components/admin/revenue-operations'
+import { StaleWarningAckButton } from '@/components/admin/stale-warning-ack-button'
 import { cn } from '@/lib/utils'
 import { TrendingUp, TrendingDown, CreditCard, Clock } from 'lucide-react'
 
@@ -304,10 +305,16 @@ export default async function AdminRevenuePage() {
               Last refreshed: {formatDateTime(currentRefreshIso)}. Counter data age: {formatCounterAgeLabel(counterAgeMinutes)}.
             </p>
             {isCounterStale ? (
-              <p className="mt-1 text-xs font-semibold text-rose-300">
-                Counter data stale warning: age exceeds {counterStaleWarningMinutes} minutes. Refresh counters and verify
-                Webhook Incident Desk before making escalation decisions.
-              </p>
+              <div className="mt-1">
+                <p className="text-xs font-semibold text-rose-300">
+                  Counter data stale warning: age exceeds {counterStaleWarningMinutes} minutes. Refresh counters and verify
+                  Webhook Incident Desk before making escalation decisions.
+                </p>
+                <StaleWarningAckButton
+                  counterAgeMinutes={counterAgeMinutes}
+                  thresholdMinutes={counterStaleWarningMinutes}
+                />
+              </div>
             ) : (
               <p className="mt-1 text-xs text-emerald-300">
                 Freshness status: within SLA ({counterStaleWarningMinutes} min threshold).

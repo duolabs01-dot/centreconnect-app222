@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: No explicit operator acknowledgement trail when stale warning appears.
+- Current bottleneck: Escalation context is present but lacks a compact “what to do now” action strip.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-010` `platform` Add stale-warning acknowledgement action log entry for operator accountability
-  - Why: Stale warnings should leave an auditable acknowledgement footprint.
+- [ACTIVE] `BL-UX-014` `admin` Add compact “what to do now” CTA strip keyed to escalation level
+  - Why: Operators still need immediate next-step CTAs mapped to current incident severity.
   - Definition of done:
-    - Operator acknowledgement action writes to platform activity log.
-    - Acknowledgement captures actor and stale-age context.
-    - Revenue summary surface can trigger acknowledgement quickly.
+    - Revenue summary shows CTA strip with actions keyed to healthy/warning/critical state.
+    - CTA labels map directly to incident desk, runbook, or monitor actions.
+    - Strip remains compact and visible on mobile.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-UX-014` `admin` Add compact “what to do now” CTA strip keyed to escalation level
 - [READY] `BL-OBS-005` `platform` Add 7-day/24h toggle for alert trend sparkline
 - [READY] `BL-QA-008` `quality` Add regression checks for stale-warning acknowledgement flow
+- [READY] `BL-OPS-011` `platform` Add acknowledgement history snippet on revenue summary
 
 ## Blocked
 
@@ -78,4 +78,5 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-OPS-009` Added explicit stale-data warning state when counter age exceeds SLA threshold.
 - [DONE] `BL-UX-013` Added compact legend explaining healthy/warning/critical incident badge thresholds.
 - [DONE] `BL-OBS-004` Added sparkline tooltip metadata including bucket window and max-scale context.
+- [DONE] `BL-OPS-010` Added stale-warning acknowledgement flow with auditable platform activity entries.
 - [DONE] `BL-QA-007` Added regression checks for stale-warning threshold configuration and copy branches.

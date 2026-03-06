@@ -133,6 +133,17 @@ check('revenue stale-data warning threshold behavior remains configured and expl
   assert.match(source, /isCounterStale/)
   assert.match(source, /Counter data stale warning:/)
   assert.match(source, /Freshness status:/)
+  assert.match(source, /StaleWarningAckButton/)
+})
+
+check('stale-warning acknowledgement endpoint is admin-guarded and auditable', () => {
+  const routeSource = read('app/api/internal/platform-admin/revenue/stale-warning-ack/route.ts')
+  const buttonSource = read('components/admin/stale-warning-ack-button.tsx')
+  assert.match(routeSource, /requirePlatformAdmin\(/)
+  assert.match(routeSource, /writePlatformActivity\(/)
+  assert.match(routeSource, /ack_revenue_stale_warning/)
+  assert.match(buttonSource, /Acknowledge warning/)
+  assert.match(buttonSource, /\/api\/internal\/platform-admin\/revenue\/stale-warning-ack/)
 })
 
 if (hasFailure) {
