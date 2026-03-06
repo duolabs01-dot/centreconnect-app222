@@ -210,6 +210,15 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const topFailureTypeHref = topFailureType
     ? buildReliabilityHref(selectedWindow, { routeFilter, failureTypeFilter: topFailureType.failureType })
     : null
+  const latestIncidentRouteFilter = latestFailure?.route_path?.trim() ?? ''
+  const latestIncidentFailureTypeFilter = latestFailure?.failure_type?.trim() ?? ''
+  const latestIncidentHref =
+    latestIncidentRouteFilter && latestIncidentFailureTypeFilter
+      ? buildReliabilityHref(selectedWindow, {
+          routeFilter: latestIncidentRouteFilter,
+          failureTypeFilter: latestIncidentFailureTypeFilter,
+        })
+      : null
   const generatedAtLabel = new Date(nowMs).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
   const incidentSummaryText = [
     'CentreConnect parent reliability handoff',
@@ -443,6 +452,14 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
               <p className="text-xs uppercase tracking-wider text-amber-300">{latestFailure.failure_type}</p>
               <p className="text-xs text-slate-400">{truncate(latestFailure.error_message, 140)}</p>
               <p className="text-[11px] text-slate-500">{formatDateTime(latestFailure.created_at)}</p>
+              {latestIncidentHref ? (
+                <Link
+                  href={latestIncidentHref}
+                  className="mt-1 inline-flex h-8 items-center rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-amber-200 hover:bg-amber-500/20"
+                >
+                  Focus Latest Pair
+                </Link>
+              ) : null}
             </div>
           ) : (
             <p className="mt-4 text-sm text-slate-500">No submit failures found for the selected filters.</p>

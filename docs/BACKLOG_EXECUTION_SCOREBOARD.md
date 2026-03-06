@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (route+failure pair drill-in actions shipped)
+Last updated: 2026-03-06 (latest-incident drill-in action shipped)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Latest incident card is visible but does not provide a one-click combined triage drill-in.
+- Current bottleneck: Recent failure rows are visible but row-level combined drill-in still requires manual filter entry.
 - Active lane: `parent reliability + copy quality`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-024` `parent` Add one-click combined triage drill-in from the latest incident card.
-  - Why: Latest incident information is visible, but admins still have to manually type route/failure filters to investigate.
+- [ACTIVE] `BL-PARENT-025` `parent` Add row-level combined drill-in actions in recent submit failures table.
+  - Why: Table rows contain exact route/failure pairs, but triage still needs manual typing to scope to that row context.
   - Definition of done:
-    - Add direct CTA in latest-incident panel that applies both `route` and `failureType` from the latest failure row.
-    - Preserve selected `window` while applying latest-incident combined filters.
-    - Keep existing hotspot pair CTAs, summary CTAs, filter form, and trend delta behavior intact.
+    - Add a direct CTA on each recent-failure row to apply that row's `route` + `failureType`.
+    - Preserve selected `window` while applying row-level combined filters.
+    - Keep existing latest-incident CTA, hotspot pair CTAs, summary CTAs, filter form, and trend delta behavior intact.
   - Validation:
     - `npm.cmd run -s test:parent-uat`
     - `npm.cmd run -s lint`
@@ -28,7 +28,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-PARENT-025` `parent` Define after `BL-PARENT-024` completion.
+- [READY] `BL-PARENT-026` `parent` Define after `BL-PARENT-025` completion.
 
 ## Blocked
 
@@ -55,6 +55,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-PARENT-021` Added trend delta indicator (up/down/flat + percentage) comparing first half vs second half of selected reliability window.
 - [DONE] `BL-PARENT-022` Added direct failure-type triage input and preserved `window` context on filter apply/clear flows.
 - [DONE] `BL-PARENT-023` Added one-click combined route+failure drill-in actions on hotspot pair cards with selected-window preservation.
+- [DONE] `BL-PARENT-024` Added one-click latest-incident combined drill-in action with selected-window preservation.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.
