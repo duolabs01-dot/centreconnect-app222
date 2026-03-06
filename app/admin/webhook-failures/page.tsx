@@ -83,6 +83,7 @@ export default async function AdminWebhookFailuresPage() {
   const suppressedCountPrevious = countInWindow('suppress_activity_log_write_failure', previousWindowStartMs, currentWindowStartMs)
   const trendBucketCount = 8
   const trendBucketSizeMs = Math.max(1, Math.floor((nowMs - previousWindowStartMs) / trendBucketCount))
+  const trendBucketHours = Number((trendBucketSizeMs / (60 * 60 * 1000)).toFixed(1))
   const sentTrend = Array.from({ length: trendBucketCount }, () => 0)
   const suppressedTrend = Array.from({ length: trendBucketCount }, () => 0)
 
@@ -103,6 +104,7 @@ export default async function AdminWebhookFailuresPage() {
     suppressedDelta: suppressedCountCurrent - suppressedCountPrevious,
     sentTrend,
     suppressedTrend,
+    trendBucketHours,
   }
 
   return (

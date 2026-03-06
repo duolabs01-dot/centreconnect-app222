@@ -32,6 +32,7 @@ type Props = {
     suppressedDelta: number
     sentTrend: number[]
     suppressedTrend: number[]
+    trendBucketHours: number
   }
 }
 
@@ -199,7 +200,23 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
               strokeWidth="2"
               points={sparklinePoints(activityAlertMetrics.suppressedTrend, sparklineMax, 220, 64)}
             />
+            {activityAlertMetrics.sentTrend.map((_, index) => {
+              const bucketWidth = 220 / Math.max(1, activityAlertMetrics.sentTrend.length)
+              const x = index * bucketWidth
+              const sentValue = activityAlertMetrics.sentTrend[index] ?? 0
+              const suppressedValue = activityAlertMetrics.suppressedTrend[index] ?? 0
+              return (
+                <rect key={`bucket-${index}`} x={x} y={0} width={bucketWidth} height={64} fill="transparent">
+                  <title>
+                    {`Bucket ${index + 1} (${activityAlertMetrics.trendBucketHours}h): sent ${sentValue}, suppressed ${suppressedValue}, max scale ${sparklineMax}`}
+                  </title>
+                </rect>
+              )
+            })}
           </svg>
+          <p className="mt-2 text-xs text-slate-400">
+            Bucket window: {activityAlertMetrics.trendBucketHours}h. Max scale: {sparklineMax}.
+          </p>
           <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-300">
             <span className="inline-flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-cyan-400" /> Sent alerts

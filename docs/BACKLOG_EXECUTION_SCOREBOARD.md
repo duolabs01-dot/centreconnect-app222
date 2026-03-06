@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Sparkline lacks tooltip metadata for precise interpretation of trend buckets.
+- Current bottleneck: QA still needs explicit stale-warning threshold regression coverage.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OBS-004` `platform` Add trend tooltip metadata (bucket window + max value) on sparkline
-  - Why: Sparkline shape is visible, but operators cannot inspect bucket details quickly.
+- [ACTIVE] `BL-QA-007` `quality` Add regression checks for stale-data warning threshold behavior
+  - Why: Stale warning is now introduced and must remain tied to threshold logic.
   - Definition of done:
-    - Sparkline hover metadata exposes bucket window and values.
-    - Max-scale context is visible so lines are interpretable.
-    - Tooltip content matches computed trend arrays.
+    - QA checks assert stale warning copy and threshold config path exist.
+    - QA checks assert healthy-state copy remains available when data is fresh.
+    - Regression lane fails if stale-warning branch is removed.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-QA-007` `quality` Add regression checks for stale-data warning threshold behavior
 - [READY] `BL-OPS-010` `platform` Add stale-warning acknowledgement action log entry for operator accountability
 - [READY] `BL-UX-014` `admin` Add compact “what to do now” CTA strip keyed to escalation level
+- [READY] `BL-OBS-005` `platform` Add 7-day/24h toggle for alert trend sparkline
 
 ## Blocked
 
@@ -77,3 +77,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-QA-006` Added regression checks for escalation-note copy and badge threshold logic.
 - [DONE] `BL-OPS-009` Added explicit stale-data warning state when counter age exceeds SLA threshold.
 - [DONE] `BL-UX-013` Added compact legend explaining healthy/warning/critical incident badge thresholds.
+- [DONE] `BL-OBS-004` Added sparkline tooltip metadata including bucket window and max-scale context.
