@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
+  assertInviteDomainHealth,
   buildFirstPartyConfirmLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
@@ -117,6 +118,18 @@ function buildTrackingUrl(eventKey: string, channel: 'email' | 'whatsapp', targe
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const identity = await requirePlatformAdmin(request)
   if (!identity) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+
+  const inviteDomainHealth = assertInviteDomainHealth()
+  if (!inviteDomainHealth.ok) {
+    return NextResponse.json(
+      {
+        error: inviteDomainHealth.message,
+        code: 'invite_domain_misconfigured',
+        details: inviteDomainHealth.details,
+      },
+      { status: 412 }
+    )
+  }
 
   const { id: centreId } = await context.params
   if (!centreId) return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })

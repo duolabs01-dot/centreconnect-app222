@@ -9,6 +9,7 @@ import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
 import { sendEmail } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
 import {
+  assertInviteDomainHealth,
   buildDefaultEcdOnboardingRedirect,
   buildLockedResetPasswordRedirect,
   generateMagicFirstAccessLink,
@@ -159,6 +160,18 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: 'Invalid payload', issues: parsed.error.flatten() },
       { status: 400 }
+    )
+  }
+
+  const inviteDomainHealth = assertInviteDomainHealth()
+  if (!inviteDomainHealth.ok) {
+    return NextResponse.json(
+      {
+        error: inviteDomainHealth.message,
+        code: 'invite_domain_misconfigured',
+        details: inviteDomainHealth.details,
+      },
+      { status: 412 }
     )
   }
 

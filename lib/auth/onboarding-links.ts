@@ -10,6 +10,13 @@ export type SanitizedAccessLinkDiagnostics = {
   changed: boolean
 }
 
+export type InviteDomainHealth = {
+  ok: boolean
+  code: 'ok' | 'invalid_url' | 'blocked_host' | 'non_canonical_host'
+  message: string
+  details: Array<{ key: string; value: string }>
+}
+
 type LinkGenerationInput = {
   type: AccessLinkMode
   email: string
@@ -69,6 +76,90 @@ function shouldForceCanonicalOrigin() {
   return process.env.VERCEL_ENV === 'production'
 }
 
+function isLocalHostname(hostname: string) {
+  return hostname === 'localhost' || hostname === '127.0.0.1'
+}
+
+function isBlockedHostname(hostname: string) {
+  return hostname.endsWith('.supabase.co') || hostname.endsWith('.vercel.app')
+}
+
+function allowedInviteHosts(canonicalHost: string) {
+  return new Set([canonicalHost, `www.${canonicalHost}`, 'localhost', '127.0.0.1'])
+}
+
+function readInviteUrlEnvValues() {
+  return [
+    { key: 'NEXT_PUBLIC_APP_URL', value: process.env.NEXT_PUBLIC_APP_URL ?? '' },
+    { key: 'NEXT_PUBLIC_EMAIL_APP_URL', value: process.env.NEXT_PUBLIC_EMAIL_APP_URL ?? '' },
+    { key: 'SUPABASE_SITE_URL', value: process.env.SUPABASE_SITE_URL ?? '' },
+    { key: 'GOTRUE_SITE_URL', value: process.env.GOTRUE_SITE_URL ?? '' },
+    { key: 'SITE_URL', value: process.env.SITE_URL ?? '' },
+    { key: 'AUTH_SITE_URL', value: process.env.AUTH_SITE_URL ?? '' },
+  ]
+}
+
+export function assertInviteDomainHealth(): InviteDomainHealth {
+  const canonicalOrigin = resolveCanonicalOrigin()
+  const canonicalHost = new URL(canonicalOrigin).hostname
+  const resolvedAppHost = new URL(normalizeAppUrl()).hostname
+
+  if (!isLocalHostname(resolvedAppHost) && resolvedAppHost !== canonicalHost && resolvedAppHost !== `www.${canonicalHost}`) {
+    return {
+      ok: false,
+      code: 'non_canonical_host',
+      message: `Invite links are blocked: app host must be ${canonicalHost}, got ${resolvedAppHost}.`,
+      details: [{ key: 'resolvedAppHost', value: resolvedAppHost }],
+    }
+  }
+
+  const allowedHosts = allowedInviteHosts(canonicalHost)
+  const details: Array<{ key: string; value: string }> = []
+
+  for (const entry of readInviteUrlEnvValues()) {
+    const raw = entry.value.trim()
+    if (!raw) continue
+
+    const parsed = toOrigin(raw)
+    if (!parsed) {
+      return {
+        ok: false,
+        code: 'invalid_url',
+        message: `Invite links are blocked: ${entry.key} is not a valid URL/domain.`,
+        details: [{ key: entry.key, value: raw }],
+      }
+    }
+
+    const host = new URL(parsed).hostname
+    details.push({ key: entry.key, value: host })
+
+    if (isBlockedHostname(host)) {
+      return {
+        ok: false,
+        code: 'blocked_host',
+        message: `Invite links are blocked: ${entry.key} cannot point to ${host}. Use ${canonicalHost}.`,
+        details,
+      }
+    }
+
+    if (!allowedHosts.has(host)) {
+      return {
+        ok: false,
+        code: 'non_canonical_host',
+        message: `Invite links are blocked: ${entry.key} host must be ${canonicalHost} (or localhost in dev).`,
+        details,
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    code: 'ok',
+    message: 'Invite domain health check passed.',
+    details,
+  }
+}
+
 export function resolvePublicAppUrl(preferred?: string) {
   const canonicalOrigin = resolveCanonicalOrigin()
   if (shouldForceCanonicalOrigin()) return canonicalOrigin
@@ -115,6 +206,17 @@ function sanitizeConfirmNextPath(value: string) {
   if (!value.startsWith('/')) return '/ecd/welcome?onboarding=1'
   if (value.startsWith('//')) return '/ecd/welcome?onboarding=1'
   return value
+}
+
+function resolveConfirmNextPathFromRedirect(redirectTo: string) {
+  try {
+    const parsed = new URL(redirectTo, normalizeAppUrl())
+    const nextParam = parsed.searchParams.get('next')
+    if (!nextParam) return '/ecd/welcome?onboarding=1'
+    return sanitizeConfirmNextPath(nextParam)
+  } catch {
+    return '/ecd/welcome?onboarding=1'
+  }
 }
 
 export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
@@ -282,6 +384,7 @@ export async function generateMagicFirstAccessLink(input: {
 }) {
   const { adminClient, email, redirectTo, preferMagicLink = false } = input
   const errors: string[] = []
+  const confirmNextPath = resolveConfirmNextPathFromRedirect(redirectTo)
 
   const magicResult = await adminClient.auth.admin.generateLink({
     type: 'magiclink',
@@ -290,8 +393,17 @@ export async function generateMagicFirstAccessLink(input: {
   })
   const magicLink = magicResult.data?.properties?.action_link?.trim() ?? ''
   if (!magicResult.error && magicLink) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: magicResult.data?.properties?.hashed_token ?? null,
+      verificationType: magicResult.data?.properties?.verification_type ?? 'magiclink',
+      nextPath: confirmNextPath,
+    })
+    const safeMagicLink = sanitizeGeneratedAccessLink({
+      actionLink: magicLink,
+      fallbackRedirectTo: redirectTo,
+    })
     return {
-      link: magicLink,
+      link: firstPartyConfirmLink ?? safeMagicLink,
       authUserId: magicResult.data?.user?.id ?? null,
       mode: 'magiclink' as const,
       warning: preferMagicLink ? null : null,
@@ -308,8 +420,17 @@ export async function generateMagicFirstAccessLink(input: {
   })
   const inviteLink = inviteResult.data?.properties?.action_link?.trim() ?? ''
   if (!inviteResult.error && inviteLink) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: inviteResult.data?.properties?.hashed_token ?? null,
+      verificationType: inviteResult.data?.properties?.verification_type ?? 'invite',
+      nextPath: confirmNextPath,
+    })
+    const safeInviteLink = sanitizeGeneratedAccessLink({
+      actionLink: inviteLink,
+      fallbackRedirectTo: redirectTo,
+    })
     return {
-      link: inviteLink,
+      link: firstPartyConfirmLink ?? safeInviteLink,
       authUserId: inviteResult.data?.user?.id ?? null,
       mode: 'invite' as const,
       warning: preferMagicLink ? 'Sent invite link as fallback.' : null,

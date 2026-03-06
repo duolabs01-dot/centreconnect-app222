@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { splitFullName } from '@/lib/utils/name'
+import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 
 export const dynamic = 'force-dynamic'
 
@@ -216,6 +217,19 @@ export default async function AdminTenantsPage() {
     createdAt: log.created_at,
     eventKey: log.event_key ?? null,
   })) as AdminTenantInviteLog[]
+  const inviteDomainHealth = assertInviteDomainHealth()
+  const latestOwnerEmailInvite = inviteLogs.find((log) => log.eventType === 'owner_invite' && log.channel === 'email')
+  const latestFailedOwnerInvite = inviteLogs.find(
+    (log) => log.eventType === 'owner_invite' && log.channel === 'email' && log.status === 'failed'
+  )
+  const inviteFailuresLast24Hours = inviteLogs.filter((log) => {
+    const created = new Date(log.createdAt).getTime()
+    if (!Number.isFinite(created)) return false
+    const ageMs = Date.now() - created
+    return ageMs <= 24 * 60 * 60 * 1000 && log.status === 'failed'
+  }).length
+  const ownerAcceptedCount = invitationRows.filter((row) => Boolean(row.accepted_at)).length
+  const ownerPendingCount = Math.max(invitationRows.length - ownerAcceptedCount, 0)
 
   return (
     <main className="space-y-12 px-4 py-10 lg:px-8">
@@ -241,7 +255,63 @@ export default async function AdminTenantsPage() {
           </Button>
         </Link>
       </div>
-    </section>
+      </section>
+
+      <section className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Onboarding Health</p>
+          <h2 className="text-3xl font-black text-white">Invite Reliability</h2>
+          <p className="max-w-3xl text-sm text-slate-400">
+            Live checks for domain safety, invite delivery, and owner acceptance so you can catch onboarding failures
+            before they hit centre owners.
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Domain Guard</p>
+            <p className={`mt-2 text-lg font-bold ${inviteDomainHealth.ok ? 'text-emerald-300' : 'text-rose-300'}`}>
+              {inviteDomainHealth.ok ? 'Healthy' : 'Action Required'}
+            </p>
+            <p className="mt-1 text-xs text-slate-300">{inviteDomainHealth.message}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Email Delivery</p>
+            <p className="mt-2 text-lg font-bold text-white">
+              {latestOwnerEmailInvite ? latestOwnerEmailInvite.status.toUpperCase() : 'NO INVITES'}
+            </p>
+            <p className="mt-1 text-xs text-slate-300">
+              Latest owner invite: {latestOwnerEmailInvite ? new Date(latestOwnerEmailInvite.createdAt).toLocaleString('en-ZA') : '—'}
+            </p>
+            <p className="mt-1 text-xs text-slate-400">Failures in last 24h: {inviteFailuresLast24Hours}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
+            <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Owner Acceptance</p>
+            <p className="mt-2 text-lg font-bold text-white">
+              {ownerAcceptedCount} claimed / {ownerPendingCount} pending
+            </p>
+            <p className="mt-1 text-xs text-slate-300">
+              Tracks ECD owner invite acceptance from the `ecd_admin_invitations` log.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/invites">
+            <Button variant="outline" className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800">
+              Open invite tracking
+            </Button>
+          </Link>
+          {latestFailedOwnerInvite?.centreId ? (
+            <Link href={`/admin/tenants/${latestFailedOwnerInvite.centreId}#invite`}>
+              <Button
+                variant="outline"
+                className="border-rose-700 bg-rose-950/40 text-rose-100 hover:bg-rose-900/60"
+              >
+                Fix latest failed owner invite
+              </Button>
+            </Link>
+          ) : null}
+        </div>
+      </section>
 
       <section className="space-y-4">
         <div className="space-y-1">
