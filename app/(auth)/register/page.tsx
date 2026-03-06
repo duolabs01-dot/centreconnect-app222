@@ -97,38 +97,33 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const emailRedirectTo = getAuthRedirectUrl()
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password: normalizedPassword,
-        options: {
-          emailRedirectTo,
-          data: {
-            role: 'parent_user',
-            first_name: normalizedFirstName,
-            surname: normalizedSurname || null,
-            full_name: normalizedFullName || normalizedFirstName,
-            phone: formData.phone,
-            accepted_terms_at: new Date().toISOString(),
-            terms_version: TERMS_VERSION,
-          },
+      const response = await fetch('/api/auth/register-parent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          password: normalizedPassword,
+          firstName: normalizedFirstName,
+          surname: normalizedSurname || null,
+          fullName: normalizedFullName || normalizedFirstName,
+          phone: formData.phone.trim(),
+          nextPath: authDestinationPath(),
+          termsVersion: TERMS_VERSION,
+        }),
       })
-      
-      if (authError) throw authError
-      if (!authData.user) throw new Error('Failed to create user')
 
-      if (!authData.session) {
-        toast.success('Confirmation email sent. Check inbox/spam, then confirm and sign in.')
-        router.push(loginHref())
-        return
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string
       }
 
-      // Sync profile immediately
-      await fetch('/api/auth/ensure-profile', { method: 'POST' })
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to create account')
+      }
 
-      toast.success('Account created successfully!')
-      router.push(authDestinationPath())
+      toast.success('Confirmation email sent. Check inbox/spam, then confirm and sign in.')
+      router.push(loginHref())
     } catch (error: any) {
       const message = getErrorMessage(error, 'Failed to create account')
       toast.error(message)
