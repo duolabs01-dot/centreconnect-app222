@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { AlertTriangle, ArrowUpRight, BarChart3, Route, Users } from 'lucide-react'
+import { AlertTriangle, ArrowUpRight, BarChart3, Route } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: 'Monitor parent submit failures by route and failure type.',
 }
 
+type SearchParams = Record<string, string | string[] | undefined>
+type ReliabilityWindow = '24h' | '7d'
+
 type FailureRow = {
   id: string
   parent_id: string
@@ -27,21 +30,39 @@ type FailureRow = {
   created_at: string
 }
 
+function first(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0]?.trim() ?? ''
+  return value?.trim() ?? ''
+}
+
+function toWindow(value: string): ReliabilityWindow {
+  return value.toLowerCase() === '7d' ? '7d' : '24h'
+}
+
+function buildReliabilityHref(window: ReliabilityWindow, routeFilter: string) {
+  const params = new URLSearchParams()
+  if (window !== '24h') params.set('window', window)
+  if (routeFilter) params.set('route', routeFilter)
+  const query = params.toString()
+  return query ? `/admin/parent-reliability?${query}` : '/admin/parent-reliability'
+}
+
 function formatDateTime(value: string) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function formatHourLabel(offset: number) {
-  const date = new Date(Date.now() - offset * 60 * 60 * 1000)
-  return date.toLocaleTimeString('en-ZA', { hour: '2-digit' })
+function formatTrendLabel(timestampMs: number, window: ReliabilityWindow) {
+  const date = new Date(timestampMs)
+  if (window === '24h') return date.toLocaleTimeString('en-ZA', { hour: '2-digit' })
+  return date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })
 }
 
 function truncate(value: string, max = 120) {
   if (value.length <= max) return value
-  return `${value.slice(0, max - 1)}…`
+  return `${value.slice(0, max - 1)}...`
 }
 
-export default async function AdminParentReliabilityPage() {
+export default async function AdminParentReliabilityPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createClient()
   const admin = createAdminClient()
   const {
@@ -52,29 +73,23 @@ export default async function AdminParentReliabilityPage() {
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
+  const selectedWindow = toWindow(first(searchParams?.window))
+  const routeFilter = first(searchParams?.route)
+  const windowMs = selectedWindow === '24h' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
   const nowMs = Date.now()
-  const dayAgoIso = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString()
-  const weekAgoIso = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const windowStartMs = nowMs - windowMs
+  const windowStartIso = new Date(windowStartMs).toISOString()
 
-  const [rowsResult, failures24hCountResult, failures7dCountResult] = await Promise.all([
-    admin
-      .from('parent_form_submit_failures')
-      .select('id,parent_id,route_path,form_name,failure_type,source,error_code,error_message,created_at')
-      .gte('created_at', weekAgoIso)
-      .order('created_at', { ascending: false })
-      .limit(500),
-    admin
-      .from('parent_form_submit_failures')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', dayAgoIso),
-    admin
-      .from('parent_form_submit_failures')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', weekAgoIso),
-  ])
+  let rowsQuery = admin
+    .from('parent_form_submit_failures')
+    .select('id,parent_id,route_path,form_name,failure_type,source,error_code,error_message,created_at')
+    .gte('created_at', windowStartIso)
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (routeFilter) rowsQuery = rowsQuery.ilike('route_path', `%${routeFilter}%`)
 
+  const rowsResult = await rowsQuery
   const rows = ((rowsResult.data ?? []) as FailureRow[]).filter((row) => row.created_at)
-  const failures24h = rows.filter((row) => Date.parse(row.created_at) >= nowMs - 24 * 60 * 60 * 1000)
 
   const parentIds = Array.from(new Set(rows.map((row) => row.parent_id).filter(Boolean)))
   const parentProfilesResult = parentIds.length
@@ -90,10 +105,11 @@ export default async function AdminParentReliabilityPage() {
   const routeCounts = new Map<string, number>()
   const failureTypeCounts = new Map<string, number>()
   const routeFailureCounts = new Map<string, { route: string; failureType: string; count: number }>()
-  const hourBuckets = Array.from({ length: 24 }, () => 0)
-  const windowStart = nowMs - 24 * 60 * 60 * 1000
+  const bucketCount = selectedWindow === '24h' ? 24 : 7
+  const bucketMs = selectedWindow === '24h' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+  const trendBuckets = Array.from({ length: bucketCount }, () => 0)
 
-  for (const row of failures24h) {
+  for (const row of rows) {
     const routeKey = row.route_path || 'unknown_route'
     const typeKey = row.failure_type || 'unknown_failure'
     routeCounts.set(routeKey, (routeCounts.get(routeKey) ?? 0) + 1)
@@ -109,9 +125,9 @@ export default async function AdminParentReliabilityPage() {
     }
 
     const createdMs = Date.parse(row.created_at)
-    if (Number.isNaN(createdMs) || createdMs < windowStart || createdMs > nowMs) continue
-    const bucket = Math.min(23, Math.floor((createdMs - windowStart) / (60 * 60 * 1000)))
-    hourBuckets[bucket] += 1
+    if (Number.isNaN(createdMs) || createdMs < windowStartMs || createdMs > nowMs) continue
+    const bucket = Math.min(bucketCount - 1, Math.floor((createdMs - windowStartMs) / bucketMs))
+    trendBuckets[bucket] += 1
   }
 
   const routeHotspots = Array.from(routeCounts.entries())
@@ -128,10 +144,18 @@ export default async function AdminParentReliabilityPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
-  const maxBucket = Math.max(...hourBuckets, 1)
-  const uniqueParents24h = new Set(failures24h.map((row) => row.parent_id)).size
-  const uniqueRoutes24h = new Set(failures24h.map((row) => row.route_path)).size
+  const maxBucket = Math.max(...trendBuckets, 1)
+  const uniqueParents = new Set(rows.map((row) => row.parent_id).filter(Boolean)).size
+  const uniqueRoutes = new Set(rows.map((row) => row.route_path).filter(Boolean)).size
+  const uniqueFailureTypes = new Set(rows.map((row) => row.failure_type).filter(Boolean)).size
   const latestFailure = rows[0]
+  const windowLabel = selectedWindow === '24h' ? '24h' : '7d'
+  const trendDetailLabel = selectedWindow === '24h' ? 'Hourly' : 'Daily'
+  const activeFilterSummary = routeFilter ? `Window: ${windowLabel} | Route filter: ${routeFilter}` : `Window: ${windowLabel}`
+  const window24hHref = buildReliabilityHref('24h', routeFilter)
+  const window7dHref = buildReliabilityHref('7d', routeFilter)
+  const clearFiltersHref = '/admin/parent-reliability'
+  const midLabelIndex = Math.floor(bucketCount / 2)
 
   return (
     <AdminPageLayout
@@ -158,38 +182,93 @@ export default async function AdminParentReliabilityPage() {
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <CyberCard accent="cyan" glow className="p-5">
-          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failures (24h)</p>
-          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{(failures24hCountResult.count ?? 0).toLocaleString()}</h2>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-cyan-300">Parent submit failures</p>
+          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failures ({windowLabel})</p>
+          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{rows.length.toLocaleString()}</h2>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-cyan-300">Submit failures in selected window</p>
         </CyberCard>
         <CyberCard accent="violet" glow className="p-5">
-          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failures (7d)</p>
-          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{(failures7dCountResult.count ?? 0).toLocaleString()}</h2>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-violet-300">Rolling weekly volume</p>
+          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Affected Parents ({windowLabel})</p>
+          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{uniqueParents.toLocaleString()}</h2>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-violet-300">Unique parent accounts</p>
         </CyberCard>
         <CyberCard accent="rose" glow className="p-5">
-          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Affected Parents (24h)</p>
-          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{uniqueParents24h.toLocaleString()}</h2>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-rose-300">Unique parent accounts</p>
+          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failing Routes ({windowLabel})</p>
+          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{uniqueRoutes.toLocaleString()}</h2>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-rose-300">Route hotspots detected</p>
         </CyberCard>
         <CyberCard accent="green" glow className="p-5">
-          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failing Routes (24h)</p>
-          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{uniqueRoutes24h.toLocaleString()}</h2>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-emerald-300">Route hotspots detected</p>
+          <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Failure Types ({windowLabel})</p>
+          <h2 className="mt-2 font-orbitron text-3xl font-bold text-white">{uniqueFailureTypes.toLocaleString()}</h2>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-emerald-300">Distinct failure categories</p>
         </CyberCard>
       </section>
+
+      <CyberCard className="p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">Triage Filters</h2>
+            <p className="mt-2 text-xs text-slate-400">{activeFilterSummary}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={window24hHref}
+              className={`inline-flex h-9 items-center rounded-xl border px-3 text-[11px] font-semibold uppercase tracking-wider ${
+                selectedWindow === '24h'
+                  ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-200'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-900'
+              }`}
+            >
+              24h
+            </Link>
+            <Link
+              href={window7dHref}
+              className={`inline-flex h-9 items-center rounded-xl border px-3 text-[11px] font-semibold uppercase tracking-wider ${
+                selectedWindow === '7d'
+                  ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-200'
+                  : 'border-slate-700 text-slate-300 hover:bg-slate-900'
+              }`}
+            >
+              7d
+            </Link>
+          </div>
+        </div>
+        <form method="get" action="/admin/parent-reliability" className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+          <input type="hidden" name="window" value={selectedWindow} />
+          <label className="flex-1 space-y-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span>Route filter</span>
+            <input
+              name="route"
+              defaultValue={routeFilter}
+              placeholder="/parent/children/new"
+              className="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+            />
+          </label>
+          <button
+            type="submit"
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 text-xs font-semibold uppercase tracking-wider text-cyan-200 hover:bg-cyan-500/20"
+          >
+            Apply
+          </button>
+          <Link
+            href={clearFiltersHref}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-700 px-4 text-xs font-semibold uppercase tracking-wider text-slate-300 hover:bg-slate-900"
+          >
+            Clear filters
+          </Link>
+        </form>
+      </CyberCard>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <CyberCard className="xl:col-span-2 p-6">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-cyan-300" />
-            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">24h Failure Trend</h2>
+            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">{windowLabel} Failure Trend</h2>
           </div>
           <p className="mt-2 text-xs text-slate-400">
-            Hourly count of `parent_form_submit_failures` over the last 24 hours.
+            {trendDetailLabel} count of `parent_form_submit_failures` in the selected filter window.
           </p>
           <div className="mt-4 flex h-28 items-end gap-1 rounded-2xl border border-white/5 bg-black/30 px-3 py-3">
-            {hourBuckets.map((value, index) => (
+            {trendBuckets.map((value, index) => (
               <div key={`${index}-${value}`} className="flex flex-1 flex-col items-center gap-1">
                 <span
                   className="w-full rounded-full bg-gradient-to-t from-cyan-600/90 to-cyan-300/90"
@@ -199,9 +278,9 @@ export default async function AdminParentReliabilityPage() {
             ))}
           </div>
           <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wider text-slate-500">
-            <span>{formatHourLabel(23)}h</span>
-            <span>{formatHourLabel(12)}h</span>
-            <span>{formatHourLabel(0)}h</span>
+            <span>{formatTrendLabel(windowStartMs, selectedWindow)}</span>
+            <span>{formatTrendLabel(windowStartMs + midLabelIndex * bucketMs, selectedWindow)}</span>
+            <span>{formatTrendLabel(nowMs, selectedWindow)}</span>
           </div>
         </CyberCard>
 
@@ -218,7 +297,7 @@ export default async function AdminParentReliabilityPage() {
               <p className="text-[11px] text-slate-500">{formatDateTime(latestFailure.created_at)}</p>
             </div>
           ) : (
-            <p className="mt-4 text-sm text-slate-500">No recent submit failures in the selected lookback.</p>
+            <p className="mt-4 text-sm text-slate-500">No submit failures found for the selected filters.</p>
           )}
         </CyberCard>
       </div>
@@ -226,11 +305,11 @@ export default async function AdminParentReliabilityPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <CyberCard className="p-0 overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 bg-white/2">
-            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyan-300">Route Hotspots (24h)</h2>
+            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyan-300">Route Hotspots ({windowLabel})</h2>
           </div>
           <div className="px-6 py-4 space-y-3">
             {routeHotspots.length === 0 ? (
-              <p className="text-sm text-slate-500">No route hotspots in the last 24 hours.</p>
+              <p className="text-sm text-slate-500">No route hotspots in the selected filter window.</p>
             ) : (
               routeHotspots.map((row) => (
                 <div key={row.route} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
@@ -246,11 +325,11 @@ export default async function AdminParentReliabilityPage() {
 
         <CyberCard className="p-0 overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 bg-white/2">
-            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-violet-300">Failure Types (24h)</h2>
+            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-violet-300">Failure Types ({windowLabel})</h2>
           </div>
           <div className="px-6 py-4 space-y-3">
             {failureTypeHotspots.length === 0 ? (
-              <p className="text-sm text-slate-500">No failure types recorded in the last 24 hours.</p>
+              <p className="text-sm text-slate-500">No failure types recorded in the selected filter window.</p>
             ) : (
               failureTypeHotspots.map((row) => (
                 <div key={row.failureType} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
@@ -271,7 +350,7 @@ export default async function AdminParentReliabilityPage() {
             <Route className="h-4 w-4 text-rose-300" />
             <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">Recent Submit Failures</h2>
           </div>
-          <p className="text-xs text-slate-400">Showing latest {Math.min(50, rows.length)} rows from 7-day lookback</p>
+          <p className="text-xs text-slate-400">Showing latest {Math.min(50, rows.length)} rows from {windowLabel} filtered window</p>
         </div>
         <div className="bg-slate-950/40">
           <Table>
@@ -290,7 +369,7 @@ export default async function AdminParentReliabilityPage() {
               {rows.length === 0 ? (
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableCell colSpan={7} className="px-6 py-10 text-sm text-slate-500">
-                    No submit failures found in the last 7 days.
+                    No submit failures found in the selected filter window.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -326,7 +405,7 @@ export default async function AdminParentReliabilityPage() {
       {routeFailureHotspots.length > 0 ? (
         <CyberCard className="p-6">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">Top Route + Failure Pairs (24h)</h2>
+            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">Top Route + Failure Pairs ({windowLabel})</h2>
             <Link href="/admin/dashboard?audience=parent" className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-300 hover:text-cyan-200">
               Open Parent Audience
               <ArrowUpRight className="h-3.5 w-3.5" />
