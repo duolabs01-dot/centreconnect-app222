@@ -206,6 +206,13 @@ type PlanContent = {
   yearlyVision: string
 }
 
+type PackageCompareCard = {
+  plan: PublicPlan
+  subtitle: string
+  includes: string[]
+  promise: string
+}
+
 const PLAN_ALIAS_TO_PUBLIC: Record<string, PublicPlan> = {
   starter: 'starter',
   basic: 'starter',
@@ -251,6 +258,39 @@ const PLAN_CONTENT: Record<PublicPlan, PlanContent> = {
       'For owners building a long-term, profitable centre business that can grow beyond one location.',
   },
 }
+
+const PACKAGE_COMPARE: PackageCompareCard[] = [
+  {
+    plan: 'starter',
+    subtitle: 'Start strong with the essentials',
+    includes: [
+      'Applications in one clean pipeline',
+      'Centre profile and parent visibility',
+      'Simple communication basics',
+    ],
+    promise: 'Best for centres getting their first digital systems in place.',
+  },
+  {
+    plan: 'growth',
+    subtitle: 'Everything in Starter, plus daily operations',
+    includes: [
+      'Attendance and daily reporting',
+      'Pickup verification workflows',
+      'Stronger family communication rhythm',
+    ],
+    promise: 'Best for owners reducing admin stress while improving day-to-day consistency.',
+  },
+  {
+    plan: 'pro',
+    subtitle: 'Everything in Growth, plus scale support',
+    includes: [
+      'Priority onboarding and support',
+      'Advanced growth and visibility tools',
+      'Operational control for larger centres',
+    ],
+    promise: 'Best for centres building a long-term, scalable business.',
+  },
+]
 
 function toSafeText(value: string | null | undefined, fallback: string) {
   const next = (value ?? '').trim()
@@ -298,7 +338,7 @@ function ScenarioCard({
       type="button"
       onClick={() => onOpen(scenario)}
       variant="outline"
-      className="group !flex !h-full !w-full !flex-col !items-start !justify-start !gap-2 !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className="group !flex !min-h-[188px] !w-full !flex-col !items-start !justify-start !gap-2 !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
@@ -423,6 +463,7 @@ export default function CentreConnectWelcomePack() {
   const [onboardingMode, setOnboardingMode] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
   const [hasSession, setHasSession] = useState(false)
+  const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false)
   const [showPasswordPanel, setShowPasswordPanel] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -444,16 +485,21 @@ export default function CentreConnectWelcomePack() {
 
   const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
   const selectedPlanContent = PLAN_CONTENT[selectedPlan]
+  const onboardingLock =
+    onboardingMode && (checkingSession || !hasSession || requiresPasswordSetup || showPasswordPanel)
   const onboardingSteps = useMemo(() => {
-    const passwordSecured = !onboardingMode || passwordDone || !hasSession || !showPasswordPanel
+    const passwordSecured = !onboardingMode || !hasSession || !requiresPasswordSetup || passwordDone
+    const welcomeOpened = !onboardingLock
+    const firstActionTaken = scenarioOpened || dashboardOpened || websiteOpened || qrPosterOpened
+
     return [
-      { id: 'welcome', label: 'Opened welcome guide', done: true },
-      { id: 'tour', label: 'Started welcome tour', done: step === 1 },
-      { id: 'password', label: 'Secured account', done: passwordSecured },
+      { id: 'password', label: 'Password secured', done: passwordSecured },
+      { id: 'welcome', label: 'Welcome guide opened', done: welcomeOpened },
+      { id: 'scenario', label: 'Scenario explored', done: scenarioOpened },
       {
         id: 'action',
-        label: 'Took first action',
-        done: scenarioOpened || dashboardOpened || websiteOpened || qrPosterOpened,
+        label: 'First tool opened',
+        done: firstActionTaken,
       },
     ]
   }, [
@@ -462,10 +508,10 @@ export default function CentreConnectWelcomePack() {
     onboardingMode,
     passwordDone,
     qrPosterOpened,
+    requiresPasswordSetup,
     scenarioOpened,
-    showPasswordPanel,
-    step,
     websiteOpened,
+    onboardingLock,
   ])
   const onboardingProgressPct = Math.round(
     (onboardingSteps.filter((item) => item.done).length / onboardingSteps.length) * 100
@@ -524,7 +570,32 @@ export default function CentreConnectWelcomePack() {
 
       const signedIn = Boolean(session)
       setHasSession(signedIn)
-      setShowPasswordPanel(onboarding && signedIn)
+
+      let mustSetPassword = false
+      if (onboarding && signedIn && session?.user?.id) {
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('first_password_set_at')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        if (profileError) {
+          console.warn('[welcome-pack] Could not verify password setup status:', profileError.message)
+          mustSetPassword = false
+        } else {
+          mustSetPassword = !profile?.first_password_set_at
+        }
+      }
+
+      if (onboarding && signedIn) {
+        setRequiresPasswordSetup(mustSetPassword)
+        setShowPasswordPanel(mustSetPassword)
+        setPasswordDone(!mustSetPassword)
+      } else {
+        setRequiresPasswordSetup(false)
+        setShowPasswordPanel(false)
+        setPasswordDone(false)
+      }
 
       if (querySlug) {
         const { data: bySlug } = await supabase
@@ -711,6 +782,7 @@ export default function CentreConnectWelcomePack() {
     setPassword('')
     setConfirmPassword('')
     setPasswordDone(true)
+    setRequiresPasswordSetup(false)
     setShowPasswordPanel(false)
     await sendPasswordSetupConfirmationEmail()
   }
@@ -729,7 +801,7 @@ export default function CentreConnectWelcomePack() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(160deg,#fff7ed_0%,#f0fdfa_50%,#eff6ff_100%)] pb-20">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfeff_0%,#f8fafc_44%,#eef2ff_100%)] pb-20">
       <style>{`
         @keyframes welcomeFloat {
           0%, 100% { transform: translateY(0); }
@@ -737,39 +809,41 @@ export default function CentreConnectWelcomePack() {
         }
       `}</style>
 
-      <div className="sticky top-2 z-40 mx-auto w-full max-w-5xl px-4 pt-4">
-        <Card className="border-cyan-100/90 bg-white/95 shadow-[var(--shadow-elevation-2)] backdrop-blur">
-          <CardContent className="space-y-3 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
-                Onboarding progress
-              </p>
-              <p className="text-xs font-bold text-slate-600">{onboardingProgressPct}% complete</p>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
-                style={{ width: `${onboardingProgressPct}%` }}
-              />
-            </div>
-            <div className="grid gap-1 text-xs text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
-              {onboardingSteps.map((item) => (
-                <p key={item.id} className={cn('truncate', item.done ? 'font-semibold text-emerald-700' : '')}>
-                  {item.done ? '✓' : '○'} {item.label}
+      {!onboardingLock ? (
+        <div className="sticky top-2 z-40 mx-auto w-full max-w-5xl px-4 pt-3">
+          <Card className="border-cyan-100/90 bg-white/96 shadow-[var(--shadow-elevation-2)] backdrop-blur">
+            <CardContent className="space-y-2.5 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700">
+                  Onboarding progress
                 </p>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                <p className="text-[11px] font-bold text-slate-600">{onboardingProgressPct}%</p>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
+                  style={{ width: `${onboardingProgressPct}%` }}
+                />
+              </div>
+              <div className="grid gap-1 text-[11px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+                {onboardingSteps.map((item) => (
+                  <p key={item.id} className={cn('truncate', item.done ? 'font-semibold text-emerald-700' : '')}>
+                    {item.done ? '[done]' : '[todo]'} {item.label}
+                  </p>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
-      {onboardingMode ? (
-        <div className="mx-auto w-full max-w-4xl px-4 pt-5">
-          <Card className="border-teal-100 bg-white/90 shadow-lg">
+      {onboardingMode && onboardingLock ? (
+        <section className="mx-auto flex min-h-[78vh] w-full max-w-3xl items-center px-4 pt-8">
+          <Card className="w-full border-teal-100 bg-white/95 shadow-xl">
             <CardHeader className="space-y-2 pb-3">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">Account setup</p>
               <CardTitle className="text-base font-black text-slate-900">
-                Secure your sign-in before you continue
+                Secure your password before the welcome guide opens
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -809,28 +883,21 @@ export default function CentreConnectWelcomePack() {
                     <Button type="submit" className="rounded-xl bg-teal-600 hover:bg-teal-500" disabled={passwordSaving}>
                       {passwordSaving ? 'Saving...' : 'Save password'}
                     </Button>
-                    <Button type="button" variant="outline" className="rounded-xl" onClick={() => setShowPasswordPanel(false)}>
-                      Skip for now
-                    </Button>
                   </div>
                 </form>
               ) : null}
-
-              {passwordDone ? (
-                <p className="text-sm font-semibold text-emerald-700">
-                  Password saved. You can now sign in any time with your email and password.
-                </p>
-              ) : null}
             </CardContent>
           </Card>
-        </div>
+        </section>
       ) : null}
 
-      {step === 0 ? (
+      {!onboardingLock ? (
+        <>
+          {step === 0 ? (
         <section className="mx-auto flex min-h-[90vh] w-full max-w-5xl flex-col items-center justify-center px-4 pb-8 pt-10">
-          <div className="relative w-full overflow-hidden rounded-[32px] border border-white/60 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.15)]">
+          <div className="relative w-full overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
             <img src={coverImageUrl} alt={`${centreName} hero`} className="h-72 w-full object-cover sm:h-80" loading="lazy" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-slate-900/25 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-slate-900/5" />
 
             <div className="absolute left-6 top-6 rounded-xl border border-white/40 bg-white/95 px-3 py-2 shadow-sm">
               <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-8 w-auto" />
@@ -843,11 +910,11 @@ export default function CentreConnectWelcomePack() {
             ) : null}
 
             <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100">CentreConnect Welcome</p>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-sm">CentreConnect Welcome</p>
               <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
                 Sawubona, {firstName}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-100 sm:text-base">
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-50 drop-shadow-sm sm:text-base">
                 {centreName} in {location} is ready. We know WhatsApp can blow up and paper admin can drain the day.
                 This welcome guide keeps setup simple so your team can focus on children.
               </p>
@@ -907,7 +974,7 @@ export default function CentreConnectWelcomePack() {
                 ) : null}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {scenarios.map((scenario) => (
                   <ScenarioCard key={scenario.id} scenario={scenario} onOpen={handleScenarioOpen} />
                 ))}
@@ -926,23 +993,57 @@ export default function CentreConnectWelcomePack() {
                       {selectedPlanStatus}
                     </span>
                   </h3>
-                  <p className="mt-1 text-sm text-slate-600">{selectedPlanContent.shortPitch}</p>
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                {selectedPlanContent.bullets.map((item) => (
-                  <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-                    {item}
-                  </div>
-                ))}
+              <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-4">
+                <p className="text-sm font-semibold text-slate-700">{selectedPlanContent.shortPitch}</p>
+              </div>
+
+              <div className="grid gap-3 lg:grid-cols-3">
+                {PACKAGE_COMPARE.map((tier) => {
+                  const activeTier = tier.plan === selectedPlan
+                  return (
+                    <div
+                      key={tier.plan}
+                      className={cn(
+                        'rounded-2xl border p-4',
+                        activeTier
+                          ? 'border-teal-300 bg-teal-50 shadow-[0_10px_30px_rgba(20,184,166,0.18)]'
+                          : 'border-slate-200 bg-slate-50'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-slate-900">{PLAN_CONTENT[tier.plan].label}</p>
+                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
+                            {tier.subtitle}
+                          </p>
+                        </div>
+                        {activeTier ? (
+                          <span className="rounded-full bg-teal-600 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-white">
+                            Current
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {tier.includes.map((item) => (
+                          <p key={item} className="flex items-start gap-2 text-sm text-slate-700">
+                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+                            <span>{item}</span>
+                          </p>
+                        ))}
+                      </div>
+                      <p className="mt-3 text-xs leading-relaxed text-slate-600">{tier.promise}</p>
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-700">Where this is going</p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                  {selectedPlanContent.yearlyVision} CentreConnect is designed so owners can run stronger centres,
-                  support staff confidently, and grow without daily admin stress.
+                  Growth includes everything in Starter. Pro includes everything in Growth. {selectedPlanContent.yearlyVision} CentreConnect is built to help owners run stronger centres, support staff confidently, and grow with less daily stress.
                 </p>
               </div>
             </CardContent>
@@ -1050,7 +1151,9 @@ export default function CentreConnectWelcomePack() {
             </CardContent>
           </Card>
         </section>
-      )}
+          )}
+        </>
+      ) : null}
 
       <ScenarioModal scenario={activeScenario} onClose={() => setActiveScenario(null)} />
     </div>

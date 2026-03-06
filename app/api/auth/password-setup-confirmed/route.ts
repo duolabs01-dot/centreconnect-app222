@@ -11,6 +11,7 @@ type ProfileRow = {
   role: string | null
   first_name: string | null
   full_name: string | null
+  first_password_set_at?: string | null
 }
 
 type EcdMembershipRow = {
@@ -70,10 +71,21 @@ export async function POST() {
   const admin = createAdminClient()
   const profileResult = await admin
     .from('user_profiles')
-    .select('role,first_name,full_name')
+    .select('role,first_name,full_name,first_password_set_at')
     .eq('id', user.id)
     .maybeSingle()
-  const profile = (profileResult.data as ProfileRow | null) ?? null
+
+  const fallbackProfileResult = profileResult.error
+    ? await admin
+        .from('user_profiles')
+        .select('role,first_name,full_name')
+        .eq('id', user.id)
+        .maybeSingle()
+    : null
+
+  const profile = (
+    profileResult.error ? fallbackProfileResult?.data : profileResult.data
+  ) as ProfileRow | null
 
   const role = profile?.role ?? 'parent_user'
   const loginLink = isEcdRole(role)
@@ -100,6 +112,36 @@ export async function POST() {
     fallback: 'Friend',
   })
 
+  const nowIso = new Date().toISOString()
+  const canPersistFirstPassword = !profileResult.error
+  const shouldMarkFirstPassword = canPersistFirstPassword && !profile?.first_password_set_at
+
+  if (shouldMarkFirstPassword) {
+    const updateResult = await admin
+      .from('user_profiles')
+      .update({ first_password_set_at: nowIso })
+      .eq('id', user.id)
+
+    if (updateResult.error) {
+      const fallbackRole = profile?.role ?? (isEcdRole(role) ? role : 'parent_user')
+      const fallbackName = profile?.full_name ?? firstName
+      const fallbackInsert = await admin.from('user_profiles').insert({
+        id: user.id,
+        role: fallbackRole,
+        first_name: profile?.first_name ?? firstName,
+        full_name: fallbackName,
+        email,
+        first_password_set_at: nowIso,
+      })
+      if (fallbackInsert.error) {
+        console.error(
+          '[password-setup-confirmed] Unable to set first_password_set_at:',
+          fallbackInsert.error.message
+        )
+      }
+    }
+  }
+
   const html = await renderPasswordSetupConfirmedEmail({
     contactName: firstName,
     loginLink,
@@ -120,5 +162,8 @@ export async function POST() {
     )
   }
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({
+    success: true,
+    firstPasswordMarked: shouldMarkFirstPassword,
+  })
 }

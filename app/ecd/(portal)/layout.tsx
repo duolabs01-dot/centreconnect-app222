@@ -21,15 +21,23 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const { data: centreWithOnboarding, error: centreWithOnboardingError } = await admin
     .from('ecd_centres')
-    .select('id, onboarding_complete')
+    .select('id, owner_id, onboarding_complete')
     .eq('id', ecdId)
     .maybeSingle()
 
-  let centre = centreWithOnboarding as { id: string; onboarding_complete?: boolean | null } | null
+  let centre = centreWithOnboarding as {
+    id: string
+    owner_id?: string | null
+    onboarding_complete?: boolean | null
+  } | null
   if (!centre && centreWithOnboardingError) {
     // Backward compatible fallback if onboarding_complete is not yet migrated in the target DB.
     const { data: centreFallback } = await admin.from('ecd_centres').select('id').eq('id', ecdId).maybeSingle()
-    centre = centreFallback as { id: string; onboarding_complete?: boolean | null } | null
+    centre = centreFallback as {
+      id: string
+      owner_id?: string | null
+      onboarding_complete?: boolean | null
+    } | null
   }
 
   if (!centre?.id) {
@@ -38,6 +46,15 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const onboardingComplete =
     typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : true
+  const isOwner = role === 'ecd_admin' && centre.owner_id === user.id
+  const roleLabel =
+    role === 'ecd_staff'
+      ? 'Staff Member'
+      : role === 'ecd_supervisor'
+        ? 'Supervisor'
+        : isOwner
+          ? 'Owner'
+          : 'ECD Admin'
 
   if (!onboardingComplete) {
     redirect('/ecd/onboarding')
@@ -103,6 +120,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     <div className="ecd-premium-shell ecd-light-shell flex h-screen overflow-hidden bg-card text-foreground">
       <EcdPortalSidebar
         userEmail={user.email ?? null}
+        roleLabel={roleLabel}
         userRole={role}
         attentionBadges={attentionBadges}
       />

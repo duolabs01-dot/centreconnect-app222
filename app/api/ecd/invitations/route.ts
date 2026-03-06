@@ -361,7 +361,7 @@ export async function POST(request: Request) {
     supportEmail: SUPPORT_EMAIL,
     passwordSetupLink: passwordSetupResult.link || null,
     accessMode: accessLinkResult.mode,
-    logoUrl: `${baseAppUrl}/icon-192.png`,
+    logoUrl: `${baseAppUrl}/centreconnect-logo-email.png`,
     appBaseUrl: baseAppUrl,
   })
 
