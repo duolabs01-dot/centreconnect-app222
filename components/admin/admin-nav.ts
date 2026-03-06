@@ -5,6 +5,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { label: 'ECD Network', href: '/admin/tenants' },
   { label: 'Directory', href: '/admin/users' },
   { label: 'Revenue Ops', href: '/admin/revenue' },
+  { label: 'Parent Reliability', href: '/admin/parent-reliability' },
   { label: 'Platform Stats', href: '/admin/analytics' },
   { label: 'Command Tower', href: '/admin/command' },
   { label: 'Support', href: '/admin/support' },
