@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
+import { RevenueOperations } from '@/components/admin/revenue-operations'
 import { cn } from '@/lib/utils'
 import { TrendingUp, TrendingDown, CreditCard, Clock } from 'lucide-react'
 
@@ -24,6 +26,11 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
+}
+
 export default async function AdminRevenuePage() {
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -38,18 +45,23 @@ export default async function AdminRevenuePage() {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const [subscriptionsResult, invoicesResult, centresResult] = await Promise.all([
-    admin.from('subscriptions').select('*, ecd_centres(name)').order('created_at', { ascending: false }),
+  const [subscriptionsResult, invoicesResult, webhookEventsResult] = await Promise.all([
+    admin.from('subscriptions').select('*, ecd_centres(name,slug)').order('created_at', { ascending: false }),
     admin
       .from('invoices')
-      .select('*, ecd_centres(name)')
+      .select('*, ecd_centres(name,slug)')
       .gte('issued_at', thirtyDaysAgo.toISOString())
       .order('issued_at', { ascending: false }),
-    admin.from('ecd_centres').select('id, name'),
+    admin
+      .from('payment_webhook_events')
+      .select('id,provider,event_id,event_type,reference,invoice_id,status,error_message,processed_at,created_at,invoices(invoice_number)')
+      .order('created_at', { ascending: false })
+      .limit(40),
   ])
 
   const subscriptions = subscriptionsResult.data ?? []
   const invoices = invoicesResult.data ?? []
+  const webhookEvents = webhookEventsResult.data ?? []
   
   const activeSubs = subscriptions.filter((s) => s.status === 'active')
   const mrr = activeSubs.reduce((sum, s) => sum + Number(s.monthly_price || 0), 0)
@@ -59,11 +71,64 @@ export default async function AdminRevenuePage() {
   )
   const churnedRevenue = churnedThisMonth.reduce((sum, s) => sum + Number(s.monthly_price || 0), 0)
 
-  const pendingInvoices = invoices.filter((i) => i.status === 'pending' || i.status === 'overdue')
+  const pendingInvoices = invoices.filter((i) => i.status === 'draft' || i.status === 'sent' || i.status === 'overdue')
   const pendingRevenue = pendingInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0)
-
-  const failedInvoices = invoices.filter((i) => i.status === 'failed')
+  
+  const failedInvoices = invoices.filter((i) => i.status === 'canceled')
   const failedRevenue = failedInvoices.reduce((sum, i) => sum + Number(i.total || 0), 0)
+
+  const subscriptionRows = subscriptions.map((sub) => {
+    const centre = normalizeOne(sub.ecd_centres as { name?: string; slug?: string } | { name?: string; slug?: string }[] | null)
+    return {
+      id: sub.id as string,
+      ecd_id: sub.ecd_id as string,
+      tier: (sub.tier ?? 'basic') as 'basic' | 'standard' | 'premium',
+      status: (sub.status ?? 'trial') as 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended',
+      monthly_price: Number(sub.monthly_price ?? 0),
+      current_period_end: (sub.current_period_end as string | null) ?? null,
+      centre_name: centre?.name ?? undefined,
+      centre_slug: centre?.slug ?? undefined,
+    }
+  })
+
+  const invoiceRows = invoices.map((inv) => {
+    const centre = normalizeOne(inv.ecd_centres as { name?: string; slug?: string } | { name?: string; slug?: string }[] | null)
+    return {
+      id: inv.id as string,
+      invoice_number: inv.invoice_number as string,
+      ecd_id: inv.ecd_id as string,
+      total: Number(inv.total ?? 0),
+      status: (inv.status ?? 'draft') as 'draft' | 'sent' | 'paid' | 'overdue' | 'canceled',
+      issued_at: (inv.issued_at as string | null) ?? null,
+      due_at: (inv.due_at as string | null) ?? null,
+      paid_at: (inv.paid_at as string | null) ?? null,
+      payment_reference: (inv.payment_reference as string | null) ?? (inv.paystack_reference as string | null) ?? null,
+      payment_url: (inv.payment_url as string | null) ?? null,
+      reminder_last_stage: (inv.reminder_last_stage as string | null) ?? null,
+      dunning_state: (inv.dunning_state as string | null) ?? null,
+      centre_name: centre?.name ?? undefined,
+      centre_slug: centre?.slug ?? undefined,
+    }
+  })
+
+  const webhookRows = webhookEvents.map((eventRow) => {
+    const linkedInvoice = normalizeOne(
+      eventRow.invoices as { invoice_number?: string } | { invoice_number?: string }[] | null
+    )
+    return {
+      id: eventRow.id as string,
+      provider: (eventRow.provider as string) ?? 'paystack',
+      event_id: (eventRow.event_id as string) ?? '-',
+      event_type: (eventRow.event_type as string) ?? '-',
+      reference: (eventRow.reference as string | null) ?? null,
+      invoice_id: (eventRow.invoice_id as string | null) ?? null,
+      invoice_number: linkedInvoice?.invoice_number ?? undefined,
+      status: (eventRow.status as 'received' | 'processed' | 'ignored' | 'failed') ?? 'received',
+      error_message: (eventRow.error_message as string | null) ?? null,
+      processed_at: (eventRow.processed_at as string | null) ?? null,
+      created_at: (eventRow.created_at as string) ?? new Date().toISOString(),
+    }
+  })
 
   return (
     <AdminPageLayout
@@ -118,6 +183,38 @@ export default async function AdminRevenuePage() {
         </CyberCard>
       </section>
 
+      <CyberCard className="mb-8 p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="font-orbitron text-[10px] uppercase tracking-[0.25em] text-slate-500">Incident Quick Access</p>
+            <h2 className="mt-2 text-lg font-black tracking-tight text-white">Revenue Ops Triage Shortcuts</h2>
+            <p className="mt-1 text-sm text-slate-300">
+              Jump directly from KPI review to response workflows and immutable timeline evidence.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/webhook-failures"
+              className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"
+            >
+              Webhook Incident Desk
+            </Link>
+            <Link
+              href="/admin/runbooks/payment-incidents"
+              className="inline-flex h-9 items-center rounded-xl bg-cyan-500 px-3 text-xs font-black uppercase tracking-[0.08em] text-slate-900 hover:bg-cyan-400"
+            >
+              Payment Runbook
+            </Link>
+            <Link
+              href="/admin/audit-trail"
+              className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"
+            >
+              Audit Trail
+            </Link>
+          </div>
+        </div>
+      </CyberCard>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <CyberCard className="p-0 overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 bg-white/2">
@@ -130,6 +227,10 @@ export default async function AdminRevenuePage() {
                   <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Tenant</TableHead>
                   <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Amount</TableHead>
                   <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Status</TableHead>
+                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Payment Ref</TableHead>
+                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Checkout</TableHead>
+                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Reminder</TableHead>
+                  <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Dunning</TableHead>
                   <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Issued</TableHead>
                 </TableRow>
               </TableHeader>
@@ -142,11 +243,34 @@ export default async function AdminRevenuePage() {
                       <span className={cn(
                         "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider",
                         inv.status === 'paid' ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
-                        inv.status === 'failed' ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
+                        inv.status === 'canceled' ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
                         "bg-amber-500/10 text-amber-400 border border-amber-500/20"
                       )}>
                         {inv.status}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-slate-300 p-4 text-xs font-mono">
+                      {(inv as any).payment_reference ?? (inv as any).paystack_reference ?? '-'}
+                    </TableCell>
+                    <TableCell className="text-slate-300 p-4 text-xs">
+                      {(inv as any).payment_url ? (
+                        <a
+                          href={(inv as any).payment_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-cyan-300 underline-offset-2 hover:underline"
+                        >
+                          Link ready
+                        </a>
+                      ) : (
+                        'Missing'
+                      )}
+                    </TableCell>
+                    <TableCell className="text-slate-300 p-4 text-xs uppercase">
+                      {(inv as any).reminder_last_stage ?? '-'}
+                    </TableCell>
+                    <TableCell className="text-slate-300 p-4 text-xs uppercase">
+                      {(inv as any).dunning_state ?? 'none'}
                     </TableCell>
                     <TableCell className="text-slate-400 p-4 text-xs">{formatDateTime(inv.issued_at)}</TableCell>
                   </TableRow>
@@ -184,6 +308,8 @@ export default async function AdminRevenuePage() {
           </div>
         </CyberCard>
       </div>
+
+      <RevenueOperations subscriptions={subscriptionRows} invoices={invoiceRows} webhookEvents={webhookRows} />
     </AdminPageLayout>
   )
 }

@@ -35,6 +35,10 @@ check('admin revenue table shows payment reference and checkout-link state', () 
   assert.match(revenuePage, /Checkout/)
   assert.match(revenuePage, /payment_reference/)
   assert.match(revenuePage, /payment_url/)
+  assert.match(revenuePage, /Revenue Ops Triage Shortcuts/)
+  assert.match(revenuePage, /\/admin\/runbooks\/payment-incidents/)
+  assert.match(revenuePage, /\/admin\/webhook-failures/)
+  assert.match(revenuePage, /\/admin\/audit-trail/)
 })
 
 check('revenue operations keep resend payment link control and event-driven status guidance', () => {

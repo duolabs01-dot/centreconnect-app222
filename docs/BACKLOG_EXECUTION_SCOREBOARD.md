@@ -9,29 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Revenue top-level summary still lacks direct incident runbook deep-links.
+- Current bottleneck: Missing observability counters for activity-log alert suppression vs sent events.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-006` `platform` Add admin runbook deep-links to Revenue Ops summary panel
-  - Why: Guidance panel is in place; top summary still needs one-click incident/runbook access.
+- [ACTIVE] `BL-OBS-001` `platform` Add metric counters for activity-log alert suppression vs sent alerts
+  - Why: Alerting now exists with throttling, but operator visibility into suppression behavior is missing.
   - Definition of done:
-    - Revenue summary panel includes direct links to runbook, webhook incident desk, and audit trail.
-    - Links are visible without scrolling into lower ops tables.
-    - Operator can jump from KPI view to incident actions in one click.
+    - Counter metrics show sent alerts vs suppressed alerts over recent window.
+    - Metrics are queryable from admin reliability surfaces.
+    - Guidance clarifies what suppression means operationally.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-    - Manual path check from `/admin/revenue`
-  - Est: 1-2h
+  - Est: 2-4h
 
 ## Next
 
-- [READY] `BL-OBS-001` `platform` Add metric counters for activity-log alert suppression vs sent alerts
 - [READY] `BL-QA-004` `quality` Add negative-case checks for blocked manual event-owned status transitions in admin APIs
 - [READY] `BL-UX-011` `admin` Add compact glossary for billing states in Revenue Ops
+- [READY] `BL-OPS-007` `platform` Add quick badge indicators for recent incident health on revenue summary
 
 ## Blocked
 
@@ -65,3 +64,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.
 - [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.
+- [DONE] `BL-OPS-006` Added one-click incident/runbook/audit deep-links to the Revenue Ops KPI summary panel.
