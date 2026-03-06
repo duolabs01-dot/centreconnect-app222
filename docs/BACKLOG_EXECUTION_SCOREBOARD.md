@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (reliability incident handoff summary shipped)
+Last updated: 2026-03-06 (reliability handoff share actions shipped)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Handoff summary exists, but sharing still needs manual copy and channel switching.
+- Current bottleneck: Handoff sharing is one-click, but no direct drill-in CTA exists from summary insights to focused route/type review.
 - Active lane: `parent reliability + copy quality`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-019` `parent` Add one-click share actions for reliability handoff summary.
-  - Why: Faster incident response needs direct copy/share actions from the summary block.
+- [ACTIVE] `BL-PARENT-020` `parent` Add summary-driven drill-in CTAs for focused reliability triage.
+  - Why: Admins should jump from summary hotspots directly into filtered review without manual query entry.
   - Definition of done:
-    - Add a one-click copy action for the incident summary snippet with visible success feedback.
-    - Add a prefilled WhatsApp share link from the same summary context.
-    - Preserve existing filter-scoped metrics and guardrails.
+    - Add quick CTA links in summary for top route and top failure type context.
+    - Preserve selected `window` and existing route filter context in generated links.
+    - Keep page stable when no hotspot data exists.
   - Validation:
     - `npm.cmd run -s test:parent-uat`
     - `npm.cmd run -s lint`
@@ -28,7 +28,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-PARENT-020` `parent` Define after `BL-PARENT-019` completion.
+- [READY] `BL-PARENT-021` `parent` Define after `BL-PARENT-020` completion.
 
 ## Blocked
 
@@ -50,6 +50,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-PARENT-016` Added query-parameter triage controls on `/admin/parent-reliability` (`window` + `route`) with scoped cards/trends/hotspots and clear-filters control.
 - [DONE] `BL-PARENT-017` Updated dashboard parent reliability deep-link to carry `window=24h` context into reliability console and added regression assertions.
 - [DONE] `BL-PARENT-018` Added compact incident handoff summary on `/admin/parent-reliability` with active window, failure count, top route/type, and copy-ready snippet.
+- [DONE] `BL-PARENT-019` Added one-click copy action with feedback and prefilled WhatsApp share link for incident handoff summary.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.

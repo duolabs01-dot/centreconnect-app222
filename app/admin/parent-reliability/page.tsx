@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { CyberCard } from '@/components/cc-admin/CyberCard'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
+import { IncidentHandoffActions } from './_components/incident-handoff-actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -168,6 +169,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
     `Top failure type: ${topFailureType ? `${topFailureType.failureType} (${topFailureType.count})` : 'none'}`,
     `Generated: ${generatedAtLabel}`,
   ].join('\n')
+  const whatsappShareHref = `https://wa.me/?text=${encodeURIComponent(incidentSummaryText)}`
 
   return (
     <AdminPageLayout
@@ -245,6 +247,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             value={incidentSummaryText}
             className="cc-native-field mt-2 min-h-28 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200 focus:outline-none"
           />
+          <IncidentHandoffActions summaryText={incidentSummaryText} whatsappHref={whatsappShareHref} />
         </div>
       </CyberCard>
 

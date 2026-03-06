@@ -254,6 +254,16 @@ test('Admin parent reliability monitor is platform-admin guarded with trend and 
   assert.match(pageSource, /Copy-ready snippet/)
   assert.match(pageSource, /Top route/)
   assert.match(pageSource, /Top failure type/)
+  assert.match(pageSource, /IncidentHandoffActions/)
+  assert.match(pageSource, /wa\.me\/\?text=/)
+
+  const handoffActionsPath = 'app/admin/parent-reliability/_components/incident-handoff-actions.tsx'
+  assert.equal(exists(handoffActionsPath), true, 'Missing incident handoff actions component')
+  const handoffActionsSource = read(handoffActionsPath)
+  assert.match(handoffActionsSource, /navigator\.clipboard\.writeText/)
+  assert.match(handoffActionsSource, /Copy summary/)
+  assert.match(handoffActionsSource, /Copied/)
+  assert.match(handoffActionsSource, /Share on WhatsApp/)
 
   const navSource = read('components/admin/admin-nav.ts')
   const sidebarSource = read('components/admin/admin-sidebar.tsx')
@@ -338,7 +348,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-016`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-017`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-018`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-019`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19|20)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
