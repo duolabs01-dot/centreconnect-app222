@@ -46,6 +46,23 @@ check('middleware timeout paths enforce protected-route redirects', () => {
   assert.match(source, /role-timeout-protected-redirect/)
 })
 
+check('admin audit trail route remains immutable and platform-admin protected', () => {
+  const source = read('app/admin/audit-trail/page.tsx')
+  assert.match(source, /profile\?\.role !== 'platform_admin'/)
+  assert.match(source, /from\('platform_admin_activity_log'\)/)
+  assert.doesNotMatch(source, /\.update\(/)
+  assert.doesNotMatch(source, /\.delete\(/)
+})
+
+check('webhook failures dashboard route exposes replay-focused incident surface', () => {
+  const pageSource = read('app/admin/webhook-failures/page.tsx')
+  const dashboardSource = read('components/admin/webhook-failure-dashboard.tsx')
+  assert.match(pageSource, /profile\?\.role !== 'platform_admin'/)
+  assert.match(pageSource, /from\('payment_webhook_events'\)/)
+  assert.match(dashboardSource, /\/api\/internal\/platform-admin\/webhooks\/paystack\/events\/\$\{row\.id\}\/replay/)
+  assert.match(dashboardSource, /Failed Event Queue/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
