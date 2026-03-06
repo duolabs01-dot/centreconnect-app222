@@ -12,8 +12,8 @@ import {
   BarChart3, 
   ShieldCheck, 
   Settings,
-  Zap,
   Activity,
+  ScrollText,
   Cpu,
   LifeBuoy,
   Mail
@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { label: 'ECD Network', href: '/admin/tenants', icon: Building2, id: 'ecd' },
   { label: 'Directory', href: '/admin/users', icon: Users, id: 'users' },
   { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
+  { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit' },
   { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
   { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites' },

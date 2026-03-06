@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Admin visibility + incident workflow hardening before tightening event-driven controls.
+- Current bottleneck: Failed-event operations workflow and recovery runbook readiness.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-UX-009` `admin` Immutable audit trail viewer for all billing/admin actions
-  - Why: Audit is complete; immutable operator visibility is now the fastest risk reducer for admin incidents.
+- [ACTIVE] `BL-OPS-003` `platform` Dashboard for failed webhook events with replay action
+  - Why: Audit identified failed-event triage speed as a remaining operational risk.
   - Definition of done:
-    - New admin route shows immutable activity entries (actor, action, entity, timestamp, details).
-    - Filters for actor/action/date are available for triage use.
-    - Non-admin access is blocked.
+    - Dedicated admin view highlights failed/ignored webhook events with filters.
+    - Replay action is available from the failed-events surface.
+    - Replay outcomes are visible and auditable.
   - Validation:
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-    - Manual role-check on `/admin/audit-trail`
+    - Manual replay flow on failed event
   - Est: 3-5h
 
 ## Next
 
-- [READY] `BL-OPS-003` `platform` Dashboard for failed webhook events with replay action
 - [READY] `BL-OPS-004` `platform` Payment incident + manual recovery runbook completion
 - [READY] `BL-REV-009` `revenue` Replace manual status edits with event-driven transitions from real payment events
+- [READY] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
 
 ## Blocked
 
@@ -53,3 +53,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-QA-002` Added Paystack webhook smoke test coverage for signature + duplicate handling.
 - [DONE] `BL-SEC-001` Added webhook event audit fields for source IP and user-agent.
 - [DONE] `BL-AUDIT-001` CC Admin production-readiness audit report published with severity-ranked findings and evidence.
+- [DONE] `BL-UX-009` Immutable audit trail viewer shipped at `/admin/audit-trail` with actor/action/date filters.
