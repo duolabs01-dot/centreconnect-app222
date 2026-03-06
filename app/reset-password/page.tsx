@@ -86,6 +86,12 @@ export default function ResetPasswordPage() {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
+      await fetch('/api/auth/password-setup-confirmed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch(() => null)
       toast.success('Password updated. Please sign in.')
       router.push('/login')
     } catch (error: any) {

@@ -205,7 +205,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
-  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za'
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
   const supportWhatsappMessage = [
     `Hi CentreConnect team, this is ${ownerFirstName} from ${sanitizeName(centre.name, 'my centre')}.`,
     'Please help me complete setup so we can start receiving applications.',

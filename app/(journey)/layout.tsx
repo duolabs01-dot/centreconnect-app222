@@ -3,8 +3,16 @@ import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { ParentLayoutProvider } from '@/components/layout/parent-layout-provider'
 import { PublicShell } from '@/components/layout/public-shell'
+import { headers } from 'next/headers'
 
 export default async function JourneyLayout({ children }: { children: React.ReactNode }) {
+  const requestHeaders = await headers()
+  const pathname = requestHeaders.get('x-cc-pathname') ?? ''
+  const isEcdWelcomeRoute = pathname === '/ecd/welcome' || pathname.startsWith('/ecd/welcome/')
+  if (isEcdWelcomeRoute) {
+    return <>{children}</>
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

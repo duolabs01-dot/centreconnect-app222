@@ -19,6 +19,8 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 export async function updateSession(request: NextRequest) {
   const timingEnabled = process.env.ENABLE_MW_TIMING === '1'
   const startedAt = timingEnabled ? Date.now() : 0
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-cc-pathname', request.nextUrl.pathname)
   const finish = (response: NextResponse, label: string) => {
     if (!timingEnabled) return response
     const durationMs = Date.now() - startedAt
@@ -34,10 +36,10 @@ export async function updateSession(request: NextRequest) {
   const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    return finish(NextResponse.next({ request: { headers: request.headers } }), 'missing-env')
+    return finish(NextResponse.next({ request: { headers: requestHeaders } }), 'missing-env')
   }
 
-  let response = NextResponse.next({ request: { headers: request.headers } })
+  let response = NextResponse.next({ request: { headers: requestHeaders } })
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
@@ -46,12 +48,12 @@ export async function updateSession(request: NextRequest) {
         get(name: string) { return request.cookies.get(name)?.value },
         set(name: string, value: string, options: CookieOptions) {
           request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
+          response = NextResponse.next({ request: { headers: requestHeaders } })
           response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
           request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
+          response = NextResponse.next({ request: { headers: requestHeaders } })
           response.cookies.set({ name, value: '', ...options })
         },
       },

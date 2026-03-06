@@ -17,7 +17,7 @@ const BRAND = {
   primary: '#0d9488',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo-email.png'
 const CENTRECONNECT_LOGO_MARKUP = `<span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #ccfbf1;overflow:hidden;">
   <img src="${CENTRECONNECT_LOGO_URL}" width="34" height="34" alt="CentreConnect logo" style="display:block;width:34px;height:34px;object-fit:cover;" />
 </span>`

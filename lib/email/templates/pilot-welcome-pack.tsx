@@ -6,6 +6,13 @@ type PasswordSetupEmailInput = {
   loginLink: string
 }
 
+type PasswordSetupConfirmedEmailInput = {
+  contactName: string
+  loginLink: string
+  roleLabel: string
+  centreName?: string | null
+}
+
 type PilotWelcomeChecklistItem = {
   label: string
   href: string
@@ -49,7 +56,7 @@ const BRAND = {
   border: '#E2E8F0',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo-email.png'
 
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (
@@ -246,6 +253,46 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   return renderShell(
     'Your Centre Account Is Ready',
     'One secure step, then you can start onboarding your centre.',
+    body
+  )
+}
+
+export function renderPasswordSetupConfirmedEmail(input: PasswordSetupConfirmedEmailInput) {
+  const firstName = toFirstName(input.contactName)
+  const centreLine = input.centreName?.trim()
+    ? `<p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Centre: <strong>${input.centreName.trim()}</strong></p>`
+    : ''
+
+  const body = `
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${firstName},</p>
+    <p style="margin:0 0 12px;font-size:14px;line-height:1.65;">
+      Your password has been updated successfully.
+    </p>
+    ${centreLine}
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.muted};">Account Access</p>
+          <p style="margin:0;font-size:14px;line-height:1.6;color:${BRAND.heading};">
+            Role: <strong>${input.roleLabel}</strong>
+          </p>
+          <p style="margin:6px 0 0;font-size:13px;line-height:1.6;color:${BRAND.body};">
+            Sign in here:
+            <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;"> ${input.loginLink}</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+    <div style="margin:0 0 10px;">${button('Open login', input.loginLink)}</div>
+    <p style="margin:0;font-size:12px;color:${BRAND.muted};line-height:1.6;">
+      If you did not change your password, contact support immediately at
+      <a href="mailto:admin@centerconnect.co.za" style="color:${BRAND.primary};text-decoration:none;"> admin@centerconnect.co.za</a>.
+    </p>
+  `
+
+  return renderShell(
+    'Password Updated Successfully',
+    'Your account is secure and ready to use.',
     body
   )
 }

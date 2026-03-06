@@ -232,7 +232,7 @@ export async function POST(request: Request) {
     pickupLink: buildUrl(appUrlRoot, '/ecd/pickup'),
     qrPosterLink,
     supportWhatsApp: '+27685356430',
-    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za',
+    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
     welcomeGuideLink: welcomeGuideTracked,
     packageLabel: `${packageLabel} Welcome Pack`,
@@ -314,7 +314,7 @@ export async function POST(request: Request) {
       html,
       text: plainText,
       headers: {
-        'Reply-To': process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za',
+        'Reply-To': process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
       },
     })
 

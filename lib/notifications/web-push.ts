@@ -5,7 +5,7 @@ const privateVapidKey = process.env.VAPID_PRIVATE_KEY || ''
 
 if (publicVapidKey && privateVapidKey) {
   webpush.setVapidDetails(
-    'mailto:support@centreconnect.co.za',
+    'mailto:admin@centerconnect.co.za',
     publicVapidKey,
     privateVapidKey
   )

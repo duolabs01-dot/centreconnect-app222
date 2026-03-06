@@ -51,7 +51,7 @@ const HERO_IMAGE =
 const scenarios: Scenario[] = [
   {
     id: 'applications',
-    emoji: '📋',
+    emoji: '\u{1F4CB}',
     color: '#0D9488',
     bg: '#F0FDFA',
     accent: '#CCFBF1',
@@ -74,7 +74,7 @@ const scenarios: Scenario[] = [
   },
   {
     id: 'children',
-    emoji: '🧒',
+    emoji: '\u{1F9D2}',
     color: '#7C3AED',
     bg: '#FAF5FF',
     accent: '#EDE9FE',
@@ -97,7 +97,7 @@ const scenarios: Scenario[] = [
   },
   {
     id: 'attendance',
-    emoji: '✅',
+    emoji: '\u{2705}',
     color: '#0369A1',
     bg: '#F0F9FF',
     accent: '#BAE6FD',
@@ -120,7 +120,7 @@ const scenarios: Scenario[] = [
   },
   {
     id: 'pickup',
-    emoji: '🔐',
+    emoji: '\u{1F510}',
     color: '#B45309',
     bg: '#FFFBEB',
     accent: '#FDE68A',
@@ -143,7 +143,7 @@ const scenarios: Scenario[] = [
   },
   {
     id: 'parents',
-    emoji: '💬',
+    emoji: '\u{1F4AC}',
     color: '#047857',
     bg: '#F0FDF4',
     accent: '#A7F3D0',
@@ -166,7 +166,7 @@ const scenarios: Scenario[] = [
   },
   {
     id: 'staff',
-    emoji: '👩🏾‍🏫',
+    emoji: '\u{1F469}\u{1F3FE}\u{200D}\u{1F3EB}',
     color: '#9D174D',
     bg: '#FFF1F2',
     accent: '#FECDD3',
@@ -298,14 +298,14 @@ function ScenarioCard({
       type="button"
       onClick={() => onOpen(scenario)}
       variant="outline"
-      className="group !flex !h-full !w-full !flex-col !items-start !justify-start !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className="group !flex !h-full !w-full !flex-col !items-start !justify-start !gap-2 !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
       }}
     >
-      <div className="mb-2 min-h-8 text-2xl">{scenario.emoji}</div>
-      <h3 className="min-h-[3rem] text-base font-black leading-tight" style={{ color: scenario.color }}>
+      <div className="mb-1 text-2xl leading-none">{scenario.emoji}</div>
+      <h3 className="text-base font-black leading-snug break-words" style={{ color: scenario.color }}>
         {scenario.title}
       </h3>
       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -429,6 +429,10 @@ export default function CentreConnectWelcomePack() {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordDone, setPasswordDone] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [scenarioOpened, setScenarioOpened] = useState(false)
+  const [dashboardOpened, setDashboardOpened] = useState(false)
+  const [websiteOpened, setWebsiteOpened] = useState(false)
+  const [qrPosterOpened, setQrPosterOpened] = useState(false)
 
   const firstName = useMemo(() => {
     const clean = contactName.trim()
@@ -440,6 +444,32 @@ export default function CentreConnectWelcomePack() {
 
   const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
   const selectedPlanContent = PLAN_CONTENT[selectedPlan]
+  const onboardingSteps = useMemo(() => {
+    const passwordSecured = !onboardingMode || passwordDone || !hasSession || !showPasswordPanel
+    return [
+      { id: 'welcome', label: 'Opened welcome guide', done: true },
+      { id: 'tour', label: 'Started welcome tour', done: step === 1 },
+      { id: 'password', label: 'Secured account', done: passwordSecured },
+      {
+        id: 'action',
+        label: 'Took first action',
+        done: scenarioOpened || dashboardOpened || websiteOpened || qrPosterOpened,
+      },
+    ]
+  }, [
+    dashboardOpened,
+    hasSession,
+    onboardingMode,
+    passwordDone,
+    qrPosterOpened,
+    scenarioOpened,
+    showPasswordPanel,
+    step,
+    websiteOpened,
+  ])
+  const onboardingProgressPct = Math.round(
+    (onboardingSteps.filter((item) => item.done).length / onboardingSteps.length) * 100
+  )
 
   useEffect(() => {
     let mounted = true
@@ -608,6 +638,7 @@ export default function CentreConnectWelcomePack() {
   }, [ecdId, step])
 
   const handleScenarioOpen = (scenario: Scenario) => {
+    setScenarioOpened(true)
     setActiveScenario(scenario)
     if (!ecdId) return
     void trackAnalyticsEvent({
@@ -646,6 +677,15 @@ export default function CentreConnectWelcomePack() {
     }
   }
 
+  async function sendPasswordSetupConfirmationEmail() {
+    await fetch('/api/auth/password-setup-confirmed', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }).catch(() => null)
+  }
+
   async function handlePasswordSetup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPasswordError(null)
@@ -672,6 +712,7 @@ export default function CentreConnectWelcomePack() {
     setConfirmPassword('')
     setPasswordDone(true)
     setShowPasswordPanel(false)
+    await sendPasswordSetupConfirmationEmail()
   }
 
   async function handleCopyCentreLink() {
@@ -695,6 +736,32 @@ export default function CentreConnectWelcomePack() {
           50% { transform: translateY(-8px); }
         }
       `}</style>
+
+      <div className="sticky top-2 z-40 mx-auto w-full max-w-5xl px-4 pt-4">
+        <Card className="border-cyan-100/90 bg-white/95 shadow-[var(--shadow-elevation-2)] backdrop-blur">
+          <CardContent className="space-y-3 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">
+                Onboarding progress
+              </p>
+              <p className="text-xs font-bold text-slate-600">{onboardingProgressPct}% complete</p>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
+                style={{ width: `${onboardingProgressPct}%` }}
+              />
+            </div>
+            <div className="grid gap-1 text-xs text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+              {onboardingSteps.map((item) => (
+                <p key={item.id} className={cn('truncate', item.done ? 'font-semibold text-emerald-700' : '')}>
+                  {item.done ? '✓' : '○'} {item.label}
+                </p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {onboardingMode ? (
         <div className="mx-auto w-full max-w-4xl px-4 pt-5">
@@ -792,7 +859,7 @@ export default function CentreConnectWelcomePack() {
               className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-md"
               style={{ animation: 'welcomeFloat 4s ease-in-out infinite' }}
             >
-              🏫
+              {'\u{1F3EB}'}
             </p>
             <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
               Parents are already asking for the app. Let us show you the practical steps so your centre feels calm, trusted, and ready from day one.
@@ -897,18 +964,36 @@ export default function CentreConnectWelcomePack() {
 
               <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-4">
                 <Button asChild className="h-11 rounded-2xl bg-teal-600 hover:bg-teal-500">
-                  <Link href="/ecd/dashboard" onClick={() => trackCtaClick('open_dashboard', 'onboarding_completed')}>
+                  <Link
+                    href="/ecd/dashboard"
+                    onClick={() => {
+                      setDashboardOpened(true)
+                      trackCtaClick('open_dashboard', 'onboarding_completed')
+                    }}
+                  >
                     Open Dashboard
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-300 bg-white">
-                  <Link href="/ecd/website" onClick={() => trackCtaClick('website_setup')}>
+                  <Link
+                    href="/ecd/website"
+                    onClick={() => {
+                      setWebsiteOpened(true)
+                      trackCtaClick('website_setup')
+                    }}
+                  >
                     Website Setup
                   </Link>
                 </Button>
                 {posterHref ? (
                   <Button asChild variant="outline" className="h-11 rounded-2xl border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100">
-                    <Link href={posterHref} onClick={() => trackCtaClick('print_parent_qr_poster')}>
+                    <Link
+                      href={posterHref}
+                      onClick={() => {
+                        setQrPosterOpened(true)
+                        trackCtaClick('print_parent_qr_poster')
+                      }}
+                    >
                       <QrCode className="mr-2 h-4 w-4" />
                       Print Parent QR Poster
                     </Link>

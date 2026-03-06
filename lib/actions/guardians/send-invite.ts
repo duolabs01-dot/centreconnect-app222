@@ -19,7 +19,7 @@ const schema = z.object({
 })
 
 function getAppUrl() {
-  const url = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://centreconnect.co.za'
+  const url = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://centerconnect.co.za'
   return url.trim().replace(/\/+$/, '')
 }
 

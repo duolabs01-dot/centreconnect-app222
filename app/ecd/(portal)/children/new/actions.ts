@@ -155,7 +155,7 @@ function getAppUrl() {
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.APP_URL ||
-    'https://centreconnect.co.za'
+    'https://centerconnect.co.za'
   return value.trim().replace(/\/+$/, '')
 }
 
