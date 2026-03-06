@@ -10,6 +10,7 @@ import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/n
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
+import { getPublicPlanLabel, toPublicPlan } from '@/lib/billing/plans'
 
 type Payload = {
   ecdId?: string
@@ -97,7 +98,9 @@ export async function POST(request: Request) {
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('name,slug,primary_contact_name,primary_contact_first_name,primary_contact_surname,city,suburb,logo_url,cover_image_url')
+    .select(
+      'name,slug,primary_contact_name,primary_contact_first_name,primary_contact_surname,city,suburb,logo_url,cover_image_url,subscriptions(tier,status,monthly_price)'
+    )
     .eq('id', ecdId)
     .single()
 
@@ -108,6 +111,11 @@ export async function POST(request: Request) {
 
   const centreName = centre.name?.trim() || 'CentreConnect'
   const centreSlug = centre.slug?.trim() ?? ''
+  const centreSubscription = Array.isArray(centre.subscriptions)
+    ? centre.subscriptions[0] ?? null
+    : centre.subscriptions
+  const packagePlan = toPublicPlan(centreSubscription?.tier ?? 'growth', 'growth')
+  const packageLabel = getPublicPlanLabel(packagePlan)
   const locationParts = [centre.suburb, centre.city].map((part) => part?.trim()).filter(Boolean)
   const location = locationParts.length ? locationParts.join(', ') : 'your area'
 
@@ -169,6 +177,7 @@ export async function POST(request: Request) {
     centre: centreName,
     location,
     slug: centreSlug,
+    package: packagePlan,
     onboarding: '1',
   }).toString()
   const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
@@ -223,10 +232,10 @@ export async function POST(request: Request) {
     pickupLink: buildUrl(appUrlRoot, '/ecd/pickup'),
     qrPosterLink,
     supportWhatsApp: '+27685356430',
-    supportEmail: 'admin@centerconnect.co.za',
+    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za',
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
     welcomeGuideLink: welcomeGuideTracked,
-    packageLabel: 'Welcome Pack',
+    packageLabel: `${packageLabel} Welcome Pack`,
     centreLogoUrl: centre.logo_url ?? null,
     quickSteps: [
       {
@@ -273,6 +282,7 @@ export async function POST(request: Request) {
     `Hi ${ownerFirstNameForComms},`,
     '',
     `Welcome to CentreConnect for ${centreName}.`,
+    `Selected package: ${packageLabel}.`,
     'Parents are already asking for the app.',
     '',
     `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
@@ -304,7 +314,7 @@ export async function POST(request: Request) {
       html,
       text: plainText,
       headers: {
-        'Reply-To': 'admin@centerconnect.co.za',
+        'Reply-To': process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za',
       },
     })
 

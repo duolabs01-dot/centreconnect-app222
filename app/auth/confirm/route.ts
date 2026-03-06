@@ -13,9 +13,9 @@ export const dynamic = 'force-dynamic'
 
 function fallbackName(email?: string | null) {
   const local = (email ?? '').split('@')[0]?.trim()
-  if (!local) return 'New User'
+  if (!local) return 'Friend'
   const clean = local.replace(/[._-]+/g, ' ').trim()
-  return clean || 'New User'
+  return clean || 'Friend'
 }
 
 function sanitizeNextPath(value: string | null | undefined) {

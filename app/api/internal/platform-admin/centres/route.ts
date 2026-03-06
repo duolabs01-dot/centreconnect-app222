@@ -18,6 +18,7 @@ import {
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
+import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
 
 const APP_BASE_URL = normalizeAppUrl()
 
@@ -474,6 +475,13 @@ export async function POST(request: Request) {
   const emailWarnings: string[] = []
   let parentAccessRevoked = false
   let parentAccessRevocationError: string | null = null
+
+  if (reusedExistingUser) {
+    const revokeSessionsResult = await revokeUserSessionsByUserId(adminClient, adminUserId)
+    if (!revokeSessionsResult.ok && revokeSessionsResult.warning) {
+      emailWarnings.push(revokeSessionsResult.warning)
+    }
+  }
 
   if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
     parentAccessRevocationError = await removeParentRecord(adminClient, adminUserId)

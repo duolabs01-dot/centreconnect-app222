@@ -63,17 +63,27 @@ export function CentreCard({
       return;
     }
 
+    if (id.startsWith('centre-')) {
+      router.push('/directory');
+      return;
+    }
+
     const identifier = slug ? encodeURIComponent(slug) : id
     router.push(`/apply/${identifier}`)
   };
 
   const handleViewDetails = () => {
+    if (id.startsWith('centre-')) {
+      router.push(`/directory?search=${encodeURIComponent(name)}`);
+      return;
+    }
+
     if (slug) {
       router.push(`/c/${encodeURIComponent(slug)}`);
       return;
     }
 
-    router.push('/for-centres');
+    router.push('/directory');
   };
 
   return (
@@ -127,7 +137,7 @@ export function CentreCard({
 
         <CardContent className={cn('p-6 space-y-4', logo_url ? 'pt-10' : undefined)}>
           <div>
-            <h3 className="font-orbitron text-2xl text-navy-950 font-bold tracking-tight">{name}</h3>
+            <h3 className="text-2xl font-bold tracking-tight text-navy-950">{name}</h3>
             {tagline && <p className="text-muted-foreground text-sm mt-1">{tagline}</p>}
             {address && (
               <p className="text-muted-foreground text-sm flex items-center gap-1 mt-1">
@@ -156,7 +166,7 @@ export function CentreCard({
             onClick={handleApply}
             className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-6 rounded-2xl text-base shadow-md active:scale-95 transition-all"
           >
-            Apply Now – It’s Free
+            Apply now - it is free
           </Button>
 
           <Button

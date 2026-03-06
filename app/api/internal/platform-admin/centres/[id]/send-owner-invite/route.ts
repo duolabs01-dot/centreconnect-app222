@@ -16,6 +16,8 @@ import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
+import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
+import { getPublicPlanLabel, toPublicPlan } from '@/lib/billing/plans'
 
 type SendOwnerInviteResponse = {
   ok: boolean
@@ -137,7 +139,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
-    .select('id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url,suburb,city')
+    .select(
+      'id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url,suburb,city,subscriptions(tier,status,monthly_price)'
+    )
     .eq('id', centreId)
     .maybeSingle()
 
@@ -163,6 +167,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
   const ownerSurname = (centre.primary_contact_surname ?? splitPrimaryName.surname ?? '').trim()
   const ownerDisplayName = combineName(ownerFirstName, ownerSurname) || ownerFirstName
+  const centreSubscription = Array.isArray(centre.subscriptions)
+    ? centre.subscriptions[0] ?? null
+    : centre.subscriptions
+  const packagePlan = toPublicPlan(centreSubscription?.tier ?? 'growth', 'growth')
+  const packageLabel = getPublicPlanLabel(packagePlan)
   const locationLabel = [centre.suburb, centre.city]
     .map((value) => (value ?? '').trim())
     .filter(Boolean)
@@ -173,6 +182,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     centre: sanitizeName(centre.name, 'your centre'),
     location: locationLabel || 'your area',
     slug: centreSlug,
+    package: packagePlan,
   })
   const onboardingPath = onboardingQuery.toString().length > 0
     ? `/ecd/welcome?${onboardingQuery.toString()}`
@@ -195,7 +205,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
   const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
-  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centreconnect.co.za'
   const supportWhatsappMessage = [
     `Hi CentreConnect team, this is ${ownerFirstName} from ${sanitizeName(centre.name, 'my centre')}.`,
     'Please help me complete setup so we can start receiving applications.',
@@ -241,6 +251,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', emailAppUrlRoot)
   let combinedWarning: string | undefined = accessLink.warning ?? undefined
+  if (resolvedAuthUserId) {
+    const revokeSessionsResult = await revokeUserSessionsByUserId(admin, resolvedAuthUserId)
+    if (!revokeSessionsResult.ok && revokeSessionsResult.warning) {
+      combinedWarning = combinedWarning
+        ? `${combinedWarning} | ${revokeSessionsResult.warning}`
+        : revokeSessionsResult.warning
+    }
+  }
   if (resolvedAuthUserId && previousRole === 'parent_user') {
     const parentAccessRevocationError = await revokeParentAccess(admin, resolvedAuthUserId)
     if (parentAccessRevocationError) {
@@ -257,6 +275,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       centreName: centre.name ?? undefined,
       ownerName: ownerFirstName,
       centreSlug: centreSlug || undefined,
+      packageLabel,
     }
 
     try {

@@ -197,6 +197,61 @@ const tips = [
   'Set one weekly admin slot so setup never feels heavy.',
 ]
 
+type PublicPlan = 'starter' | 'growth' | 'pro'
+
+type PlanContent = {
+  label: string
+  shortPitch: string
+  bullets: string[]
+  yearlyVision: string
+}
+
+const PLAN_ALIAS_TO_PUBLIC: Record<string, PublicPlan> = {
+  starter: 'starter',
+  basic: 'starter',
+  pilot: 'starter',
+  growth: 'growth',
+  standard: 'growth',
+  pro: 'pro',
+  premium: 'pro',
+}
+
+const PLAN_CONTENT: Record<PublicPlan, PlanContent> = {
+  starter: {
+    label: 'Starter',
+    shortPitch: 'Get your centre organised and visible quickly.',
+    bullets: [
+      'Keep parent applications in one clean place.',
+      'Share announcements without WhatsApp confusion.',
+      'Publish a professional centre profile parents can trust.',
+    ],
+    yearlyVision:
+      'Great for centres starting digital systems and building confidence with day-to-day admin.',
+  },
+  growth: {
+    label: 'Growth',
+    shortPitch: 'Run daily operations with more control and less stress.',
+    bullets: [
+      'Track attendance and reports without manual counting.',
+      'Speed up responses to families and reduce delays.',
+      'Operate your centre consistently even on busy days.',
+    ],
+    yearlyVision:
+      'Built for centres that want smoother operations and stronger parent confidence month after month.',
+  },
+  pro: {
+    label: 'Pro',
+    shortPitch: 'Scale your centre with priority support and growth tools.',
+    bullets: [
+      'Get everything in Growth plus advanced setup support.',
+      'Strengthen your public presence for parent trust and demand.',
+      'Run your centre remotely with clearer visibility and control.',
+    ],
+    yearlyVision:
+      'For owners building a long-term, profitable centre business that can grow beyond one location.',
+  },
+}
+
 function toSafeText(value: string | null | undefined, fallback: string) {
   const next = (value ?? '').trim()
   return next.length > 0 ? next : fallback
@@ -226,6 +281,11 @@ function toSlug(value: string) {
     .replace(/^-+|-+$/g, '')
 }
 
+function toPublicPlan(value: string | null | undefined, fallback: PublicPlan = 'growth'): PublicPlan {
+  const normalized = (value ?? '').trim().toLowerCase()
+  return PLAN_ALIAS_TO_PUBLIC[normalized] ?? fallback
+}
+
 function ScenarioCard({
   scenario,
   onOpen,
@@ -238,14 +298,14 @@ function ScenarioCard({
       type="button"
       onClick={() => onOpen(scenario)}
       variant="outline"
-      className="group h-auto w-full rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className="group !flex !h-full !w-full !flex-col !items-start !justify-start !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
       }}
     >
-      <div className="mb-2 text-2xl">{scenario.emoji}</div>
-      <h3 className="text-base font-black leading-snug" style={{ color: scenario.color }}>
+      <div className="mb-2 min-h-8 text-2xl">{scenario.emoji}</div>
+      <h3 className="min-h-[3rem] text-base font-black leading-tight" style={{ color: scenario.color }}>
         {scenario.title}
       </h3>
       <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
@@ -357,6 +417,8 @@ export default function CentreConnectWelcomePack() {
   const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
   const [coverImageUrl, setCoverImageUrl] = useState<string>(HERO_IMAGE)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle')
+  const [selectedPlan, setSelectedPlan] = useState<PublicPlan>('growth')
+  const [selectedPlanStatus, setSelectedPlanStatus] = useState<string>('trial')
 
   const [onboardingMode, setOnboardingMode] = useState(false)
   const [checkingSession, setCheckingSession] = useState(true)
@@ -377,6 +439,7 @@ export default function CentreConnectWelcomePack() {
   const centrePublicPath = centreSlug ? `/centre/${centreSlug}` : ''
 
   const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
+  const selectedPlanContent = PLAN_CONTENT[selectedPlan]
 
   useEffect(() => {
     let mounted = true
@@ -388,20 +451,41 @@ export default function CentreConnectWelcomePack() {
       const queryCentre = toSafeText(params.get('centre'), 'your centre')
       const queryLocation = toSafeText(params.get('location'), 'your area')
       const querySlug = toSafeText(params.get('slug'), '')
+      const queryPackage = toPublicPlan(params.get('package'), 'growth')
 
-      const applyCentreProfile = (profile: CentreProfile) => {
+      const loadSubscriptionPlan = async (centreId: string) => {
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('tier,status')
+          .eq('ecd_id', centreId)
+          .maybeSingle()
+        if (!mounted || !subscription) return
+        setSelectedPlan(toPublicPlan(subscription.tier, queryPackage))
+        setSelectedPlanStatus((subscription.status ?? 'trial').toLowerCase())
+      }
+
+      const applyCentreProfile = async (profile: CentreProfile) => {
         setEcdId(profile.id)
         setCentreSlug(profile.slug)
         setCentreName(toSafeText(profile.name, queryCentre))
         setCentreLogoUrl(isSafeImageUrl(profile.logoUrl) ? profile.logoUrl : null)
         setCoverImageUrl(isSafeImageUrl(profile.coverImageUrl) ? (profile.coverImageUrl as string) : HERO_IMAGE)
         setLocation(toLocation(profile.suburb, profile.city))
+
+        if (!profile.id) return
+        try {
+          await loadSubscriptionPlan(profile.id)
+        } catch {
+          setSelectedPlan(queryPackage)
+        }
       }
 
       setOnboardingMode(onboarding)
       setContactName(queryName)
       setCentreName(queryCentre)
       setLocation(queryLocation)
+      setSelectedPlan(queryPackage)
+      setSelectedPlanStatus('trial')
 
       const {
         data: { session },
@@ -419,7 +503,7 @@ export default function CentreConnectWelcomePack() {
           .eq('slug', querySlug)
           .maybeSingle()
         if (mounted && bySlug) {
-          applyCentreProfile({
+          await applyCentreProfile({
             id: bySlug.id,
             slug: toSafeText(bySlug.slug, querySlug),
             name: toSafeText(bySlug.name, queryCentre),
@@ -441,7 +525,7 @@ export default function CentreConnectWelcomePack() {
           .maybeSingle()
 
         if (mounted && ownerCentre.data) {
-          applyCentreProfile({
+          await applyCentreProfile({
             id: ownerCentre.data.id,
             slug: toSafeText(ownerCentre.data.slug, ''),
             name: toSafeText(ownerCentre.data.name, queryCentre),
@@ -470,7 +554,7 @@ export default function CentreConnectWelcomePack() {
             : null
 
           if (mounted && firstMembership) {
-            applyCentreProfile({
+            await applyCentreProfile({
               id: toSafeText(firstMembership.id, ''),
               slug: toSafeText(firstMembership.slug, ''),
               name: toSafeText(firstMembership.name, queryCentre),
@@ -760,6 +844,39 @@ export default function CentreConnectWelcomePack() {
                 {scenarios.map((scenario) => (
                   <ScenarioCard key={scenario.id} scenario={scenario} onOpen={handleScenarioOpen} />
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-cyan-100 bg-white shadow-lg">
+            <CardContent className="space-y-5 p-6">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Your package right now</p>
+                  <h3 className="mt-1 text-xl font-black text-slate-900">
+                    {selectedPlanContent.label} plan
+                    <span className="ml-2 rounded-full bg-cyan-100 px-2 py-1 text-[11px] font-bold uppercase text-cyan-800">
+                      {selectedPlanStatus}
+                    </span>
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-600">{selectedPlanContent.shortPitch}</p>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {selectedPlanContent.bullets.map((item) => (
+                  <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-700">Where this is going</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                  {selectedPlanContent.yearlyVision} CentreConnect is designed so owners can run stronger centres,
+                  support staff confidently, and grow without daily admin stress.
+                </p>
               </div>
             </CardContent>
           </Card>

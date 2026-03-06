@@ -49,7 +49,7 @@ const BRAND = {
   border: '#E2E8F0',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo-email.png'
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
 
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (

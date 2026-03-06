@@ -19,6 +19,7 @@ import {
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
+import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -281,6 +282,7 @@ export async function POST(request: Request) {
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
   let parentAccessRevoked = false
   let parentAccessRevocationError: string | null = null
+  let sessionRevocationWarning: string | null = null
 
   if (invitedUserId) {
     const { error: profileError } = await adminClient.from('user_profiles').upsert(
@@ -330,6 +332,13 @@ export async function POST(request: Request) {
     if (previousRole === 'parent_user') {
       parentAccessRevocationError = await revokeParentAccess(adminClient, invitedUserId)
       parentAccessRevoked = !parentAccessRevocationError
+    }
+
+    if (linkedExistingUser) {
+      const revokeSessionsResult = await revokeUserSessionsByUserId(adminClient, invitedUserId)
+      if (!revokeSessionsResult.ok) {
+        sessionRevocationWarning = revokeSessionsResult.warning ?? 'Could not revoke existing sessions.'
+      }
     }
   }
 
@@ -494,6 +503,7 @@ export async function POST(request: Request) {
     previousRole,
     parentAccessRevoked,
     parentAccessRevocationError,
+    sessionRevocationWarning,
     inviteLinkMode: accessLinkResult.mode,
     accessLinkWarning: accessLinkResult.warning,
     manualAccessLink: accessLink,
