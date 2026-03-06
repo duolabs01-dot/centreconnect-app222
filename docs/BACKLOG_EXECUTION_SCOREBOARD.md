@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Revenue summary lacks at-a-glance incident health badges.
+- Current bottleneck: Reliability counters need trend context to differentiate spikes vs baseline.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-007` `platform` Add quick badge indicators for recent incident health on revenue summary
-  - Why: Deep-links are present, but incident posture is not visible at a glance.
+- [ACTIVE] `BL-OBS-002` `platform` Add trend deltas for alert sent vs suppressed counters (24h vs previous 24h)
+  - Why: Counters now exist, but operators still lack trend direction for escalation decisions.
   - Definition of done:
-    - Revenue KPI summary shows badges for webhook failures, suppressed alerts, and lag risk.
-    - Badge colors map to healthy/warning/critical thresholds.
-    - Operators can decide whether to drill down before scrolling tables.
+    - Dashboard surfaces current window vs previous window deltas.
+    - Positive/negative trend markers are obvious.
+    - Trend logic is deterministic and test-covered.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-OBS-002` `platform` Add trend deltas for alert sent vs suppressed counters (24h vs previous 24h)
 - [READY] `BL-QA-005` `quality` Add regression checks for revenue summary deep-links and glossary presence
 - [READY] `BL-UX-012` `admin` Add compact incident escalation note beside summary badges
+- [READY] `BL-OPS-008` `platform` Add one-click refresh timestamp and data age label for revenue summary counters
 
 ## Blocked
 
@@ -68,3 +68,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-OBS-001` Added activity-log alert sent vs suppressed counters to the webhook incident reliability surface.
 - [DONE] `BL-QA-004` Added negative-case regression checks for blocked manual event-owned status transitions in admin APIs.
 - [DONE] `BL-UX-011` Added compact billing state glossary in Revenue Ops guidance panel.
+- [DONE] `BL-OPS-007` Added incident health badge indicators to Revenue Ops summary.

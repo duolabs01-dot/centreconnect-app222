@@ -31,6 +31,12 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function incidentBadgeClass(level: 'healthy' | 'warning' | 'critical') {
+  if (level === 'healthy') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+  if (level === 'warning') return 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+  return 'border-rose-500/30 bg-rose-500/10 text-rose-200'
+}
+
 export default async function AdminRevenuePage() {
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -44,8 +50,10 @@ export default async function AdminRevenuePage() {
 
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const lagCutoffIso = new Date(Date.now() - 15 * 60 * 1000).toISOString()
 
-  const [subscriptionsResult, invoicesResult, webhookEventsResult] = await Promise.all([
+  const [subscriptionsResult, invoicesResult, webhookEventsResult, failedWebhookCountResult, laggedWebhookResult, alertActivityRowsResult] = await Promise.all([
     admin.from('subscriptions').select('*, ecd_centres(name,slug)').order('created_at', { ascending: false }),
     admin
       .from('invoices')
@@ -57,11 +65,30 @@ export default async function AdminRevenuePage() {
       .select('id,provider,event_id,event_type,reference,invoice_id,status,error_message,processed_at,created_at,invoices(invoice_number)')
       .order('created_at', { ascending: false })
       .limit(40),
+    admin
+      .from('payment_webhook_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'failed')
+      .gte('created_at', twentyFourHoursAgo),
+    admin
+      .from('payment_webhook_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'received')
+      .lt('created_at', lagCutoffIso),
+    admin
+      .from('platform_admin_activity_log')
+      .select('action')
+      .in('action', ['alert_activity_log_write_failure', 'suppress_activity_log_write_failure'])
+      .gte('created_at', twentyFourHoursAgo),
   ])
 
   const subscriptions = subscriptionsResult.data ?? []
   const invoices = invoicesResult.data ?? []
   const webhookEvents = webhookEventsResult.data ?? []
+  const failedWebhookCount24h = failedWebhookCountResult.count ?? 0
+  const laggedWebhookCount = laggedWebhookResult.count ?? 0
+  const sentAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length
+  const suppressedAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length
   
   const activeSubs = subscriptions.filter((s) => s.status === 'active')
   const mrr = activeSubs.reduce((sum, s) => sum + Number(s.monthly_price || 0), 0)
@@ -191,6 +218,30 @@ export default async function AdminRevenuePage() {
             <p className="mt-1 text-sm text-slate-300">
               Jump directly from KPI review to response workflows and immutable timeline evidence.
             </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className={cn(
+                'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
+                incidentBadgeClass(
+                  failedWebhookCount24h === 0 ? 'healthy' : failedWebhookCount24h <= 3 ? 'warning' : 'critical'
+                )
+              )}>
+                Webhook failures (24h): {failedWebhookCount24h}
+              </span>
+              <span className={cn(
+                'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
+                incidentBadgeClass(
+                  suppressedAlertCount24h === 0 ? 'healthy' : suppressedAlertCount24h <= sentAlertCount24h * 2 ? 'warning' : 'critical'
+                )
+              )}>
+                Alert suppressed (24h): {suppressedAlertCount24h}
+              </span>
+              <span className={cn(
+                'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
+                incidentBadgeClass(laggedWebhookCount === 0 ? 'healthy' : laggedWebhookCount <= 5 ? 'warning' : 'critical')
+              )}>
+                Reconciliation lagged: {laggedWebhookCount}
+              </span>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
