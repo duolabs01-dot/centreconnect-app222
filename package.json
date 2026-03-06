@@ -24,6 +24,7 @@
     "uat:onboarding:dry": "node scripts/run-onboarding-uat-live.mjs --dry-run",
     "uat:token": "node scripts/get-platform-admin-token.mjs",
     "uat:token:write": "node scripts/get-platform-admin-token.mjs --write",
+    "admin:replace": "node scripts/replace-platform-admin-account.mjs",
     "smoke:onboarding-invites": "node tests/qa/onboarding-invite-matrix.test.mjs",
     "smoke:parent": "node scripts/smoke-parent.mjs",
     "test": "node tests/qa/security-hardening.test.mjs",
