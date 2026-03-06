@@ -26,6 +26,15 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
+function formatCounterAgeLabel(ageMinutes: number | null) {
+  if (ageMinutes === null) return 'No recent counter source events'
+  if (ageMinutes <= 1) return 'Under 1 minute old'
+  if (ageMinutes < 60) return `${ageMinutes} minutes old`
+  const hours = Math.floor(ageMinutes / 60)
+  const remainingMinutes = ageMinutes % 60
+  return `${hours}h ${remainingMinutes}m old`
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
@@ -83,7 +92,7 @@ export default async function AdminRevenuePage() {
       .lt('created_at', lagCutoffIso),
     admin
       .from('platform_admin_activity_log')
-      .select('action')
+      .select('action,created_at')
       .in('action', ['alert_activity_log_write_failure', 'suppress_activity_log_write_failure'])
       .gte('created_at', twentyFourHoursAgo),
   ])
@@ -95,6 +104,26 @@ export default async function AdminRevenuePage() {
   const laggedWebhookCount = laggedWebhookResult.count ?? 0
   const sentAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length
   const suppressedAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length
+  const currentRefreshIso = new Date().toISOString()
+  const latestWebhookCounterMs = webhookEvents.reduce<number | null>((max, row) => {
+    const ts = Date.parse(String(row.created_at))
+    if (Number.isNaN(ts)) return max
+    if (max === null || ts > max) return ts
+    return max
+  }, null)
+  const latestAlertCounterMs = (alertActivityRowsResult.data ?? []).reduce<number | null>((max, row) => {
+    const ts = Date.parse(String((row as { created_at?: string }).created_at ?? ''))
+    if (Number.isNaN(ts)) return max
+    if (max === null || ts > max) return ts
+    return max
+  }, null)
+  const latestCounterMs =
+    latestWebhookCounterMs === null
+      ? latestAlertCounterMs
+      : latestAlertCounterMs === null
+      ? latestWebhookCounterMs
+      : Math.max(latestWebhookCounterMs, latestAlertCounterMs)
+  const counterAgeMinutes = latestCounterMs === null ? null : Math.max(0, Math.floor((Date.now() - latestCounterMs) / 60000))
   const failureLevel: 'healthy' | 'warning' | 'critical' =
     failedWebhookCount24h === 0 ? 'healthy' : failedWebhookCount24h <= 3 ? 'warning' : 'critical'
   const suppressionLevel: 'healthy' | 'warning' | 'critical' =
@@ -259,8 +288,17 @@ export default async function AdminRevenuePage() {
                 ? 'warning badge detected — verify failed event queue and runbook checklist before end of session.'
                 : 'all badges healthy — continue monitoring and keep incident shortcuts ready.'}
             </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Last refreshed: {formatDateTime(currentRefreshIso)}. Counter data age: {formatCounterAgeLabel(counterAgeMinutes)}.
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link
+              href={`/admin/revenue?refresh=${Date.now()}`}
+              className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"
+            >
+              Refresh counters
+            </Link>
             <Link
               href="/admin/webhook-failures"
               className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"

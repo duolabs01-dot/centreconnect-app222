@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Revenue summary counters lack explicit freshness indicator for operator confidence.
+- Current bottleneck: Alert observability lacks quick visual trend shape for fast scanning.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-008` `platform` Add one-click refresh timestamp and data age label for revenue summary counters
-  - Why: Operators need immediate confidence in how fresh the displayed counters are.
+- [ACTIVE] `BL-OBS-003` `platform` Add alert trend mini-chart sparkline for sent/suppressed counters
+  - Why: Counters and deltas are present, but visual trend shape is still missing.
   - Definition of done:
-    - Revenue summary displays last-refreshed timestamp and data age label.
-    - Refresh action is visible and does not conflict with existing controls.
-    - Operators can quickly re-check counters before escalation.
+    - Reliability surface shows compact sparkline for sent/suppressed alert trends.
+    - Sparkline updates with current data window and matches reported counters.
+    - Visual remains legible on mobile and desktop.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-OBS-003` `platform` Add alert trend mini-chart sparkline for sent/suppressed counters
 - [READY] `BL-QA-006` `quality` Add regression checks for escalation-note copy and badge thresholds
 - [READY] `BL-OPS-009` `platform` Add explicit stale-data warning when counter age exceeds SLA
+- [READY] `BL-UX-013` `admin` Add legend explaining healthy/warning/critical badge thresholds
 
 ## Blocked
 
@@ -72,3 +72,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-OBS-002` Added 24h vs previous-24h trend deltas for activity-log alert sent/suppressed counters.
 - [DONE] `BL-QA-005` Locked regression checks for revenue summary deep-links and glossary/guidance presence.
 - [DONE] `BL-UX-012` Added compact escalation note beside revenue summary health badges.
+- [DONE] `BL-OPS-008` Added revenue summary refresh timestamp, counter age label, and one-click refresh control.
