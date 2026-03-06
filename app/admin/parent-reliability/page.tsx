@@ -18,6 +18,10 @@ export const metadata: Metadata = {
 
 type SearchParams = Record<string, string | string[] | undefined>
 type ReliabilityWindow = '24h' | '7d'
+type ReliabilityFilters = {
+  routeFilter?: string
+  failureTypeFilter?: string
+}
 
 type FailureRow = {
   id: string
@@ -40,10 +44,13 @@ function toWindow(value: string): ReliabilityWindow {
   return value.toLowerCase() === '7d' ? '7d' : '24h'
 }
 
-function buildReliabilityHref(window: ReliabilityWindow, routeFilter: string) {
+function buildReliabilityHref(window: ReliabilityWindow, filters?: ReliabilityFilters) {
+  const routeFilter = filters?.routeFilter?.trim() ?? ''
+  const failureTypeFilter = filters?.failureTypeFilter?.trim() ?? ''
   const params = new URLSearchParams()
   if (window !== '24h') params.set('window', window)
   if (routeFilter) params.set('route', routeFilter)
+  if (failureTypeFilter) params.set('failureType', failureTypeFilter)
   const query = params.toString()
   return query ? `/admin/parent-reliability?${query}` : '/admin/parent-reliability'
 }
@@ -76,6 +83,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
 
   const selectedWindow = toWindow(first(searchParams?.window))
   const routeFilter = first(searchParams?.route)
+  const failureTypeFilter = first(searchParams?.failureType)
   const windowMs = selectedWindow === '24h' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
   const nowMs = Date.now()
   const windowStartMs = nowMs - windowMs
@@ -88,6 +96,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
     .order('created_at', { ascending: false })
     .limit(500)
   if (routeFilter) rowsQuery = rowsQuery.ilike('route_path', `%${routeFilter}%`)
+  if (failureTypeFilter) rowsQuery = rowsQuery.ilike('failure_type', `%${failureTypeFilter}%`)
 
   const rowsResult = await rowsQuery
   const rows = ((rowsResult.data ?? []) as FailureRow[]).filter((row) => row.created_at)
@@ -152,18 +161,28 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const latestFailure = rows[0]
   const windowLabel = selectedWindow === '24h' ? '24h' : '7d'
   const trendDetailLabel = selectedWindow === '24h' ? 'Hourly' : 'Daily'
-  const activeFilterSummary = routeFilter ? `Window: ${windowLabel} | Route filter: ${routeFilter}` : `Window: ${windowLabel}`
-  const window24hHref = buildReliabilityHref('24h', routeFilter)
-  const window7dHref = buildReliabilityHref('7d', routeFilter)
+  const filterSegments = [`Window: ${windowLabel}`]
+  if (routeFilter) filterSegments.push(`Route filter: ${routeFilter}`)
+  if (failureTypeFilter) filterSegments.push(`Failure type filter: ${failureTypeFilter}`)
+  const activeFilterSummary = filterSegments.join(' | ')
+  const window24hHref = buildReliabilityHref('24h', { routeFilter, failureTypeFilter })
+  const window7dHref = buildReliabilityHref('7d', { routeFilter, failureTypeFilter })
   const clearFiltersHref = '/admin/parent-reliability'
   const midLabelIndex = Math.floor(bucketCount / 2)
   const topRoute = routeHotspots[0] ?? null
   const topFailureType = failureTypeHotspots[0] ?? null
+  const topRouteHref = topRoute
+    ? buildReliabilityHref(selectedWindow, { routeFilter: topRoute.route, failureTypeFilter })
+    : null
+  const topFailureTypeHref = topFailureType
+    ? buildReliabilityHref(selectedWindow, { routeFilter, failureTypeFilter: topFailureType.failureType })
+    : null
   const generatedAtLabel = new Date(nowMs).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
   const incidentSummaryText = [
     'CentreConnect parent reliability handoff',
     `Window: ${windowLabel}`,
     routeFilter ? `Route filter: ${routeFilter}` : 'Route filter: (none)',
+    failureTypeFilter ? `Failure type filter: ${failureTypeFilter}` : 'Failure type filter: (none)',
     `Current failures: ${rows.length}`,
     `Top route: ${topRoute ? `${topRoute.route} (${topRoute.count})` : 'none'}`,
     `Top failure type: ${topFailureType ? `${topFailureType.failureType} (${topFailureType.count})` : 'none'}`,
@@ -239,6 +258,32 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             <p className="text-[10px] uppercase tracking-wider text-slate-500">Top failure type</p>
             <p className="mt-1 truncate text-sm font-semibold text-white">{topFailureType?.failureType || 'none'}</p>
           </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {topRouteHref ? (
+            <Link
+              href={topRouteHref}
+              className="inline-flex h-9 items-center rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 text-[11px] font-semibold uppercase tracking-wider text-cyan-200 hover:bg-cyan-500/20"
+            >
+              Focus Top Route
+            </Link>
+          ) : (
+            <span className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-[11px] uppercase tracking-wider text-slate-500">
+              No route hotspot
+            </span>
+          )}
+          {topFailureTypeHref ? (
+            <Link
+              href={topFailureTypeHref}
+              className="inline-flex h-9 items-center rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 text-[11px] font-semibold uppercase tracking-wider text-violet-200 hover:bg-violet-500/20"
+            >
+              Focus Top Failure Type
+            </Link>
+          ) : (
+            <span className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-[11px] uppercase tracking-wider text-slate-500">
+              No failure type hotspot
+            </span>
+          )}
         </div>
         <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-cyan-200">Copy-ready snippet</p>

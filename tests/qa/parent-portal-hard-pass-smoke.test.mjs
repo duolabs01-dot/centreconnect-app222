@@ -250,10 +250,16 @@ test('Admin parent reliability monitor is platform-admin guarded with trend and 
   assert.match(pageSource, /name=\"route\"/)
   assert.match(pageSource, /Clear filters/)
   assert.match(pageSource, /ilike\('route_path'/)
+  assert.match(pageSource, /searchParams\?\.failureType/)
+  assert.match(pageSource, /ilike\('failure_type'/)
   assert.match(pageSource, /Incident Handoff Summary/)
   assert.match(pageSource, /Copy-ready snippet/)
   assert.match(pageSource, /Top route/)
   assert.match(pageSource, /Top failure type/)
+  assert.match(pageSource, /Focus Top Route/)
+  assert.match(pageSource, /Focus Top Failure Type/)
+  assert.match(pageSource, /topRouteHref/)
+  assert.match(pageSource, /topFailureTypeHref/)
   assert.match(pageSource, /IncidentHandoffActions/)
   assert.match(pageSource, /wa\.me\/\?text=/)
 
@@ -349,7 +355,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-017`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-018`/)
   assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-019`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19|20)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-020`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11|12|13|14|15|16|17|18|19|20|21)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
