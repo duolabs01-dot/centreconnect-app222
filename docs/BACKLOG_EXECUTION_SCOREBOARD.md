@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Hardening activity-log reliability and adding regression coverage for new admin surfaces.
+- Current bottleneck: Regression coverage and operator UX links for new admin reliability surfaces.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-REL-002` `platform` Harden activity-log write failures with explicit alerting and fallback telemetry
-  - Why: Event-driven mutation guards are now enforced; audit log durability is the next reliability risk.
+- [ACTIVE] `BL-TEST-002` `quality` Add regression checks for new admin audit and webhook-incident surfaces
+  - Why: Reliability surfaces are shipped; regression safety net must catch future drift.
   - Definition of done:
-    - Activity write failures trigger explicit alerting path.
-    - Failure telemetry includes actor/action context for follow-up.
-    - Runbook includes remediation for audit-log degradation.
+    - QA checks assert `/admin/audit-trail` route and filtering surface remain present.
+    - QA checks assert `/admin/webhook-failures` route + replay affordance remain present.
+    - Regression checks run in existing CI test lane.
   - Validation:
+    - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-    - Failure simulation path documented
-  - Est: 2-4h
+  - Est: 2-3h
 
 ## Next
 
-- [READY] `BL-TEST-002` `quality` Add regression checks for new admin audit and webhook-incident surfaces
 - [READY] `BL-OPS-005` `platform` Add operator quick-links to incident runbook from revenue/incident screens
 - [READY] `BL-REV-010` `revenue` Remove stale manual status controls from admin revenue UI
+- [READY] `BL-REL-003` `platform` Add persistence-backed throttling for activity-log failure alerts
 
 ## Blocked
 
@@ -57,3 +57,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-OPS-003` Dedicated failed webhook incident dashboard shipped at `/admin/webhook-failures` with replay controls.
 - [DONE] `BL-OPS-004` Payment incident and manual recovery runbook published (`docs/PAYMENT_INCIDENT_MANUAL_RECOVERY_RUNBOOK.md`).
 - [DONE] `BL-REV-009` Manual invoice/subscription mutation endpoints now reject event-owned state transitions.
+- [DONE] `BL-REL-002` Activity-log write failures now emit structured fallback telemetry with throttled operator alerting.

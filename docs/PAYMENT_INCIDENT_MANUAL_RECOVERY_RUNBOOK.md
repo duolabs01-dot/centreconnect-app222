@@ -47,6 +47,34 @@ Use this runbook when payment processing, invoice reconciliation, or webhook han
 4. Reconciliation path
    - Confirm reconcile path still updates `invoices` and `subscriptions` for known good events.
 
+## Audit Log Degradation (BL-REL-002)
+
+If admin actions are succeeding but `/admin/audit-trail` is missing expected entries:
+
+1. Check server logs for:
+   - `platform_activity_log_write_failed`
+   - `platform_activity_log_alert_failed`
+2. Confirm alert email with subject `Activity Log Write Failure` was sent.
+3. Review context fields in logs:
+   - `action`
+   - `entityType`
+   - `entityId`
+   - `actorEmail` / `actorUserId`
+4. Keep operating in reduced-risk mode:
+   - avoid high-volume bulk mutations
+   - capture manual notes for critical actions until logging is restored
+
+### Failure Simulation (non-production only)
+
+Use this to verify alert path works end-to-end:
+
+1. Set `CC_ACTIVITY_LOG_FORCE_FAIL=1` in local/dev environment.
+2. Trigger any admin action that writes platform activity.
+3. Verify:
+   - structured error log emitted (`platform_activity_log_write_forced_failure`)
+   - throttled alert email is sent
+4. Remove `CC_ACTIVITY_LOG_FORCE_FAIL` and re-test normal activity logging.
+
 ## Manual Recovery Workflow
 
 ### A) Replay failed webhook events
@@ -125,4 +153,3 @@ Create or update backlog tasks for:
 - documentation updates
 
 Always record the exact task IDs in `docs/BACKLOG_EXECUTION_SCOREBOARD.md`.
-
