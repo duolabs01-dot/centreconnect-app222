@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -65,6 +66,12 @@ export default function NewChildPage() {
     try {
       const ready = await ensureParentReady(supabase)
       if (!ready.ok) {
+        reportParentSubmitFailure({
+          route: '/parent/children/new',
+          form: 'child_profile_create',
+          failureType: 'bootstrap_failed',
+          message: ready.error,
+        })
         toast.error(ready.error)
         router.push('/login?next=/parent/children/new')
         return
@@ -94,7 +101,14 @@ export default function NewChildPage() {
       triggerFirstTimeConfetti('parent-first-child', 'child')
       router.push('/parent/children')
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to add child'))
+      const message = toFriendlyClientError(error, 'Failed to add child')
+      reportParentSubmitFailure({
+        route: '/parent/children/new',
+        form: 'child_profile_create',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     } finally {
       setSubmitting(false)
     }

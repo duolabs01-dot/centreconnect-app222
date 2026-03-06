@@ -27,6 +27,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -127,7 +128,17 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       toast.success('Profile updated')
       router.refresh()
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to update field'))
+      const message = toFriendlyClientError(error, 'Failed to update field')
+      reportParentSubmitFailure({
+        route: '/parent/profile',
+        form: 'profile_field_update',
+        failureType: 'submit_failed',
+        message,
+        context: {
+          field: activeField,
+        },
+      })
+      toast.error(message)
     } finally {
       setIsSaving(false)
     }

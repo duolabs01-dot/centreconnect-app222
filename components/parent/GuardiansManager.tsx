@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { Button } from '@/components/ui/button'
 import { AddGuardianSheet } from '@/components/parent/guardians/AddGuardianSheet'
 import { sendCoParentInviteAction } from '@/lib/actions/guardians/send-invite'
@@ -101,6 +102,12 @@ function InvitePanel({
         toast.success('Secure invite link created.')
         onDone()
       } else if (res.error) {
+        reportParentSubmitFailure({
+          route: '/parent/profile/guardians',
+          form: 'guardian_invite_create',
+          failureType: 'submit_failed',
+          message: res.error,
+        })
         toast.error(res.error)
       }
     })
@@ -303,6 +310,12 @@ export function GuardiansManager({ childList }: Props) {
 
   function submitDocumentRequest() {
     if (!selectedChildId || !requestedForUserId || requestCodes.length === 0) {
+      reportParentSubmitFailure({
+        route: '/parent/profile/guardians',
+        form: 'guardian_document_request',
+        failureType: 'validation_failed',
+        message: 'Choose a linked parent and at least one document.',
+      })
       toast.error('Choose a linked parent and at least one document.')
       return
     }
@@ -314,6 +327,12 @@ export function GuardiansManager({ childList }: Props) {
         customMessage: requestMessage.trim() || null,
       })
       if (!result.ok) {
+        reportParentSubmitFailure({
+          route: '/parent/profile/guardians',
+          form: 'guardian_document_request',
+          failureType: 'submit_failed',
+          message: result.error || 'Could not send request right now.',
+        })
         toast.error(result.error || 'Could not send request right now.')
         return
       }

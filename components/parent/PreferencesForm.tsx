@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { updateParentPreferencesAction } from '@/lib/actions/parents/update-preferences'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { Calendar, Wallet, Map, Truck, Navigation, Save, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -66,6 +67,12 @@ export function PreferencesForm({ initial }: PreferencesFormProps) {
       })
 
       if (result?.error) {
+        reportParentSubmitFailure({
+          route: '/parent/preferences',
+          form: 'preferences_update',
+          failureType: 'submit_failed',
+          message: result.error,
+        })
         toast.error(result.error)
         return
       }

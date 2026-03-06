@@ -21,6 +21,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 
 const STEPS = [
   { id: 'role', title: 'Your Role', icon: Heart },
@@ -46,6 +47,12 @@ export function SetupWizard() {
     try {
       const ready = await ensureParentReady(supabase)
       if (!ready.ok) {
+        reportParentSubmitFailure({
+          route: '/parent/onboarding',
+          form: 'setup_wizard_complete',
+          failureType: 'bootstrap_failed',
+          message: ready.error,
+        })
         throw new Error(ready.error)
       }
 
@@ -76,7 +83,14 @@ export function SetupWizard() {
       router.push('/parent/dashboard')
       router.refresh()
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Something went wrong'))
+      const message = toFriendlyClientError(error, 'Something went wrong')
+      reportParentSubmitFailure({
+        route: '/parent/onboarding',
+        form: 'setup_wizard_complete',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
       setLoading(false)
     }
   }

@@ -35,9 +35,48 @@ const preferencesSchema = z.object({
 
 type PreferencesPayload = z.infer<typeof preferencesSchema>
 
+type FailureContextValue = string | number | boolean | null
+
+async function logPreferencesSubmitFailure(input: {
+  supabase?: Awaited<ReturnType<typeof createClient>>
+  parentId?: string | null
+  failureType: string
+  message: string
+  context?: Record<string, FailureContextValue>
+}) {
+  try {
+    const supabase = input.supabase ?? (await createClient())
+    const parentId =
+      input.parentId ??
+      (await supabase.auth.getUser()).data.user?.id ??
+      null
+
+    if (!parentId) return
+
+    await supabase.from('parent_form_submit_failures').insert({
+      parent_id: parentId,
+      route_path: '/parent/preferences',
+      form_name: 'preferences_update',
+      failure_type: input.failureType,
+      source: 'server',
+      error_message: input.message,
+      context: input.context ?? {},
+    })
+  } catch {
+    // Telemetry must never block the parent flow.
+  }
+}
+
 export async function updateParentPreferencesAction(input: PreferencesPayload) {
   const parsed = preferencesSchema.safeParse(input)
   if (!parsed.success) {
+    await logPreferencesSubmitFailure({
+      failureType: 'validation_failed',
+      message: 'Invalid preference values',
+      context: {
+        issue_count: parsed.error.issues.length,
+      },
+    })
     return { error: 'Invalid preference values' }
   }
 
@@ -69,6 +108,12 @@ export async function updateParentPreferencesAction(input: PreferencesPayload) {
   )
 
   if (error) {
+    await logPreferencesSubmitFailure({
+      supabase,
+      parentId: user.id,
+      failureType: 'submit_failed',
+      message: error.message || 'Failed to update preferences',
+    })
     return { error: error.message }
   }
 

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,6 +39,12 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
   async function addContact(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!fullName.trim() || !phone.trim()) {
+      reportParentSubmitFailure({
+        route: '/parent/profile/emergency',
+        form: 'emergency_contact_add',
+        failureType: 'validation_failed',
+        message: 'Name and phone are required',
+      })
       toast.error('Name and phone are required')
       return
     }
@@ -73,7 +80,14 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
       setIsPrimary(false)
       toast.success('Emergency contact added')
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to add contact'))
+      const message = toFriendlyClientError(error, 'Failed to add contact')
+      reportParentSubmitFailure({
+        route: '/parent/profile/emergency',
+        form: 'emergency_contact_add',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -94,7 +108,14 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
       setContacts((prev) => prev.filter((c) => c.id !== id))
       toast.success('Removed')
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to remove'))
+      const message = toFriendlyClientError(error, 'Failed to remove')
+      reportParentSubmitFailure({
+        route: '/parent/profile/emergency',
+        form: 'emergency_contact_remove',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     } finally {
       setSaving(false)
     }

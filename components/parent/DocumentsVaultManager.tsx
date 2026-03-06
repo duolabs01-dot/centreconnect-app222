@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
 import { toFriendlyClientError } from '@/lib/supabase/client-errors'
+import { reportParentSubmitFailure } from '@/lib/telemetry/parent-submit-failures.client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -83,10 +84,22 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
   async function uploadDocument(e: React.FormEvent) {
     e.preventDefault()
     if (!file) {
+      reportParentSubmitFailure({
+        route: '/parent/profile/documents',
+        form: 'document_upload',
+        failureType: 'validation_failed',
+        message: 'Select a file',
+      })
       toast.error('Select a file')
       return
     }
     if (file.size > MAX_DOC_SIZE) {
+      reportParentSubmitFailure({
+        route: '/parent/profile/documents',
+        form: 'document_upload',
+        failureType: 'validation_failed',
+        message: 'File must be under 8MB',
+      })
       toast.error('File must be under 8MB')
       return
     }
@@ -124,7 +137,14 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       setExpiryDate('')
       toast.success('Document uploaded')
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to upload'))
+      const message = toFriendlyClientError(error, 'Failed to upload')
+      reportParentSubmitFailure({
+        route: '/parent/profile/documents',
+        form: 'document_upload',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -138,7 +158,14 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       }
       router.push(`/parent/profile/documents/view/${doc.id}`)
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to open document'))
+      const message = toFriendlyClientError(error, 'Failed to open document')
+      reportParentSubmitFailure({
+        route: '/parent/profile/documents',
+        form: 'document_open',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     }
   }
 
@@ -159,7 +186,14 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id))
       toast.success('Document removed')
     } catch (error: unknown) {
-      toast.error(toFriendlyClientError(error, 'Failed to remove'))
+      const message = toFriendlyClientError(error, 'Failed to remove')
+      reportParentSubmitFailure({
+        route: '/parent/profile/documents',
+        form: 'document_remove',
+        failureType: 'submit_failed',
+        message,
+      })
+      toast.error(message)
     } finally {
       setSaving(false)
     }

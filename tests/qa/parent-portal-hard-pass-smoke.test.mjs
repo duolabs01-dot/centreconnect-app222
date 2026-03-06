@@ -106,6 +106,44 @@ test('Parent write flows use friendly error mapping', () => {
   }
 })
 
+test('Parent submit-failure telemetry is wired for key parent forms', () => {
+  assert.equal(exists('app/api/parent/submit-failures/route.ts'), true, 'Missing parent submit-failure telemetry route')
+  assert.equal(
+    exists('lib/telemetry/parent-submit-failures.client.ts'),
+    true,
+    'Missing parent submit-failure telemetry client helper'
+  )
+  assert.equal(
+    exists('supabase/migrations/20260306_005_parent_submit_failure_telemetry.sql'),
+    true,
+    'Missing parent submit-failure telemetry migration'
+  )
+
+  const migration = read('supabase/migrations/20260306_005_parent_submit_failure_telemetry.sql')
+  assert.match(migration, /create table if not exists public\.parent_form_submit_failures/i)
+  assert.match(migration, /route_path/i)
+  assert.match(migration, /failure_type/i)
+
+  const wiredFiles = [
+    'app/(journey)/parent/children/new/page.tsx',
+    'app/(journey)/parent/onboarding/_components/setup-wizard.tsx',
+    'components/parent/EmergencyContactsManager.tsx',
+    'components/parent/DocumentsVaultManager.tsx',
+    'components/parent/ParentProfileEditor.tsx',
+    'components/parent/GuardiansManager.tsx',
+    'components/parent/PreferencesForm.tsx',
+  ]
+
+  for (const file of wiredFiles) {
+    const source = read(file)
+    assert.match(source, /reportParentSubmitFailure/, `reportParentSubmitFailure missing in ${file}`)
+  }
+
+  const preferencesAction = read('lib/actions/parents/update-preferences.ts')
+  assert.match(preferencesAction, /parent_form_submit_failures/)
+  assert.match(preferencesAction, /route_path:\s*'\/parent\/preferences'/)
+})
+
 test('Child create path normalizes list fields for array DB columns', () => {
   const source = read('app/(journey)/parent/children/new/page.tsx')
   assert.match(source, /parseListField\(/)
@@ -164,7 +202,8 @@ test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-007`/)
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-008`/)
   assert.match(scoreboard, /\[(DONE|ACTIVE)\]\s+`BL-PARENT-009`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10)`/)
+  assert.match(scoreboard, /\[(READY|DONE|ACTIVE)\]\s+`BL-PARENT-010`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-0(09|10|11)`/)
 })
 
 test('Parent live smoke command and script are wired', () => {
