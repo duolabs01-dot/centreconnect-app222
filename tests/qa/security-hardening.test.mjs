@@ -79,6 +79,14 @@ check('activity log failure alerts use persistence-backed throttle markers', () 
   assert.match(source, /persistFailureAlertMarker\(/)
 })
 
+check('activity log forced-failure simulation is documented and non-production guarded', () => {
+  const source = read('lib/admin/activity-log.ts')
+  const runbook = read('docs/PAYMENT_INCIDENT_MANUAL_RECOVERY_RUNBOOK.md')
+  assert.match(source, /CC_ACTIVITY_LOG_FORCE_FAIL/)
+  assert.match(source, /process\.env\.NODE_ENV !== 'production'/)
+  assert.match(runbook, /CC_ACTIVITY_LOG_FORCE_FAIL=1/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
