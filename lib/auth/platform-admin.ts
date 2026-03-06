@@ -1,7 +1,5 @@
 import { createClient as createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { readSupabasePublicEnv } from '@/lib/supabase/env'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 export type PlatformAdminIdentity = {
   userId: string
@@ -19,30 +17,48 @@ function getBearerToken(request?: Request): string | null {
   return token
 }
 
-async function getUserFromBearerToken(token: string) {
-  const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return null
-  }
+function getPlatformAdminEmailAllowlist() {
+  const raw = [
+    process.env.PLATFORM_ADMIN_EMAIL,
+    process.env.UAT_PLATFORM_ADMIN_EMAIL,
+    process.env.PLATFORM_ADMIN_EMAILS,
+  ]
+    .filter((value): value is string => Boolean(value && value.trim()))
+    .join(',')
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey)
+  return new Set(
+    raw
+      .split(',')
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  )
+}
+
+async function getUserFromBearerToken(
+  token: string,
+  adminClient: ReturnType<typeof createAdminClient>
+) {
   const {
     data: { user },
-  } = await supabase.auth.getUser(token)
+    error,
+  } = await adminClient.auth.getUser(token)
 
-  return user
+  if (error) return null
+  return user ?? null
 }
 
 export async function requirePlatformAdmin(
   request?: Request
 ): Promise<PlatformAdminIdentity | null> {
   const bearerToken = getBearerToken(request)
+  const adminClient = createAdminClient()
+  const allowlistedEmails = getPlatformAdminEmailAllowlist()
 
   let userId: string | null = null
   let email: string | null = null
 
   if (bearerToken) {
-    const tokenUser = await getUserFromBearerToken(bearerToken)
+    const tokenUser = await getUserFromBearerToken(bearerToken, adminClient)
     userId = tokenUser?.id ?? null
     email = tokenUser?.email ?? null
   } else {
@@ -59,7 +75,6 @@ export async function requirePlatformAdmin(
     return null
   }
 
-  const adminClient = createAdminClient()
   const { data: profile } = await adminClient
     .from('user_profiles')
     .select('role')
@@ -67,7 +82,19 @@ export async function requirePlatformAdmin(
     .maybeSingle()
 
   if (profile?.role !== 'platform_admin') {
-    return null
+    const normalizedEmail = (email ?? '').trim().toLowerCase()
+    const allowlisted = normalizedEmail.length > 0 && allowlistedEmails.has(normalizedEmail)
+    if (!allowlisted) {
+      return null
+    }
+
+    await adminClient.from('user_profiles').upsert(
+      {
+        id: userId,
+        role: 'platform_admin',
+      },
+      { onConflict: 'id' }
+    )
   }
 
   return {
