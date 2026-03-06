@@ -15,6 +15,7 @@ type WritePlatformActivityInput = {
 }
 
 const ACTIVITY_LOG_ALERT_COOLDOWN_MS = 15 * 60 * 1000
+const ACTIVITY_LOG_ALERT_MARKER_ACTION = 'alert_activity_log_write_failure'
 const lastFailureAlertByKey = new Map<string, number>()
 
 type ActivityLogFailureContext = {
@@ -41,7 +42,15 @@ function toFailureContext(input: WritePlatformActivityInput, message: string): A
   }
 }
 
-function logActivityFailure(context: ActivityLogFailureContext, event: 'platform_activity_log_write_failed' | 'platform_activity_log_write_forced_failure' | 'platform_activity_log_alert_failed') {
+function logActivityFailure(
+  context: ActivityLogFailureContext,
+  event:
+    | 'platform_activity_log_write_failed'
+    | 'platform_activity_log_write_forced_failure'
+    | 'platform_activity_log_alert_failed'
+    | 'platform_activity_log_alert_marker_query_failed'
+    | 'platform_activity_log_alert_marker_write_failed'
+) {
   console.error(
     JSON.stringify({
       ts: new Date().toISOString(),
@@ -52,14 +61,88 @@ function logActivityFailure(context: ActivityLogFailureContext, event: 'platform
   )
 }
 
-function shouldSendFailureAlert(alertKey: string, nowMs: number) {
+function isSuppressedInMemory(alertKey: string, nowMs: number) {
   const previous = lastFailureAlertByKey.get(alertKey)
   if (previous && nowMs - previous < ACTIVITY_LOG_ALERT_COOLDOWN_MS) return false
+  return true
+}
+
+function readAlertKey(details: unknown) {
+  if (!details || typeof details !== 'object') return null
+  const value = (details as Record<string, unknown>).alertKey
+  if (typeof value !== 'string') return null
+  return value
+}
+
+async function shouldSendFailureAlert(
+  admin: ReturnType<typeof createAdminClient>,
+  context: ActivityLogFailureContext,
+  alertKey: string,
+  nowMs: number
+) {
+  if (!isSuppressedInMemory(alertKey, nowMs)) return false
+
+  const { data, error } = await admin
+    .from('platform_admin_activity_log')
+    .select('created_at,details')
+    .eq('action', ACTIVITY_LOG_ALERT_MARKER_ACTION)
+    .order('created_at', { ascending: false })
+    .limit(25)
+
+  if (error) {
+    logActivityFailure({ ...context, message: error.message }, 'platform_activity_log_alert_marker_query_failed')
+    lastFailureAlertByKey.set(alertKey, nowMs)
+    return true
+  }
+
+  const hasRecentMarker = (data ?? []).some((row) => {
+    const markerKey = readAlertKey(row.details)
+    if (markerKey !== alertKey) return false
+    const markerTs = Date.parse(String(row.created_at))
+    if (Number.isNaN(markerTs)) return false
+    return nowMs - markerTs < ACTIVITY_LOG_ALERT_COOLDOWN_MS
+  })
+
+  if (hasRecentMarker) {
+    lastFailureAlertByKey.set(alertKey, nowMs)
+    return false
+  }
+
   lastFailureAlertByKey.set(alertKey, nowMs)
   return true
 }
 
-async function sendFailureAlert(context: ActivityLogFailureContext, alertKey: string) {
+async function persistFailureAlertMarker(
+  admin: ReturnType<typeof createAdminClient>,
+  context: ActivityLogFailureContext,
+  alertKey: string
+) {
+  const { error } = await admin.from('platform_admin_activity_log').insert({
+    actor_user_id: null,
+    actor_email: context.actorEmail,
+    entity_type: context.entityType,
+    entity_id: context.entityId,
+    action: ACTIVITY_LOG_ALERT_MARKER_ACTION,
+    summary: `Activity log failure alert sent for ${context.action}`,
+    details: {
+      alertKey,
+      sourceAction: context.action,
+      sourceSummary: context.summary,
+      errorMessage: context.message,
+      detailsKeys: context.detailsKeys,
+    },
+  })
+
+  if (error) {
+    logActivityFailure({ ...context, message: error.message }, 'platform_activity_log_alert_marker_write_failed')
+  }
+}
+
+async function sendFailureAlert(
+  admin: ReturnType<typeof createAdminClient>,
+  context: ActivityLogFailureContext,
+  alertKey: string
+) {
   try {
     await sendPlatformAdminActionNotification({
       subject: 'Activity Log Write Failure',
@@ -77,6 +160,7 @@ async function sendFailureAlert(context: ActivityLogFailureContext, alertKey: st
         cooldownMinutes: ACTIVITY_LOG_ALERT_COOLDOWN_MS / 60000,
       },
     })
+    await persistFailureAlertMarker(admin, context, alertKey)
   } catch (alertError) {
     const message = alertError instanceof Error ? alertError.message : String(alertError)
     logActivityFailure({ ...context, message }, 'platform_activity_log_alert_failed')
@@ -98,8 +182,8 @@ export async function writePlatformActivity(
     )
     logActivityFailure(context, 'platform_activity_log_write_forced_failure')
     const alertKey = `${input.action}:${input.entityType}`
-    if (shouldSendFailureAlert(alertKey, Date.now())) {
-      void sendFailureAlert(context, alertKey)
+    if (await shouldSendFailureAlert(admin, context, alertKey, Date.now())) {
+      void sendFailureAlert(admin, context, alertKey)
     }
     return
   }
@@ -118,8 +202,8 @@ export async function writePlatformActivity(
     const context = toFailureContext(input, error.message)
     logActivityFailure(context, 'platform_activity_log_write_failed')
     const alertKey = `${input.action}:${input.entityType}`
-    if (shouldSendFailureAlert(alertKey, Date.now())) {
-      void sendFailureAlert(context, alertKey)
+    if (await shouldSendFailureAlert(admin, context, alertKey, Date.now())) {
+      void sendFailureAlert(admin, context, alertKey)
     }
   }
 }

@@ -71,6 +71,14 @@ check('revenue operations UI avoids stale manual status mutation controls', () =
   assert.doesNotMatch(source, /Confirm status change/)
 })
 
+check('activity log failure alerts use persistence-backed throttle markers', () => {
+  const source = read('lib/admin/activity-log.ts')
+  assert.match(source, /ACTIVITY_LOG_ALERT_MARKER_ACTION/)
+  assert.match(source, /alert_activity_log_write_failure/)
+  assert.match(source, /shouldSendFailureAlert\(/)
+  assert.match(source, /persistFailureAlertMarker\(/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }

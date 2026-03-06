@@ -9,28 +9,28 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Persisting activity-log alert throttling across server restarts and instances.
+- Current bottleneck: Extending QA coverage for forced-failure alert simulation path.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-REL-003` `platform` Add persistence-backed throttling for activity-log failure alerts
-  - Why: Current cooldown is in-memory and can reset between runtime instances.
+- [ACTIVE] `BL-QA-003` `quality` Extend smoke checks to cover activity-log alerting failure simulation
+  - Why: Persistent throttle is now implemented and needs explicit regression proof.
   - Definition of done:
-    - Alert throttling survives process restart and multi-instance execution.
-    - Repeated identical failures do not spam alerts.
-    - Context-rich failures remain visible in logs.
+    - QA checks verify `CC_ACTIVITY_LOG_FORCE_FAIL=1` simulation path is documented and guarded.
+    - QA checks verify persistent marker action exists in activity log hardening logic.
+    - Test lane remains green with new assertions.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
-  - Est: 3-5h
+  - Est: 1-2h
 
 ## Next
 
-- [READY] `BL-QA-003` `quality` Extend smoke checks to cover activity-log alerting failure simulation
 - [READY] `BL-UX-010` `admin` Add read-only status guidance panel to Revenue Ops for operator clarity
 - [READY] `BL-OPS-006` `platform` Add admin runbook deep-links to Revenue Ops summary panel
+- [READY] `BL-OBS-001` `platform` Add metric counters for activity-log alert suppression vs sent alerts
 
 ## Blocked
 
@@ -61,3 +61,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-TEST-002` Added regression checks for admin audit trail and webhook incident dashboard surfaces.
 - [DONE] `BL-OPS-005` Added one-click operator quick-links to incident runbook and triage surfaces.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
+- [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.

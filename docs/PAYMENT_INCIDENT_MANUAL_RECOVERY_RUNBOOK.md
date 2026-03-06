@@ -55,6 +55,7 @@ If admin actions are succeeding but `/admin/audit-trail` is missing expected ent
    - `platform_activity_log_write_failed`
    - `platform_activity_log_alert_failed`
 2. Confirm alert email with subject `Activity Log Write Failure` was sent.
+   - Persistent throttle marker action: `alert_activity_log_write_failure`
 3. Review context fields in logs:
    - `action`
    - `entityType`
