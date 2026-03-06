@@ -30,7 +30,7 @@ const webhookRoute = read('app/api/webhooks/paystack/route.ts')
 const automationRoute = read('app/api/internal/platform-admin/billing/automation/route.ts')
 const webhookAlerts = read('lib/payments/webhook-alerts.ts')
 
-check('admin revenue table shows payment reference and checkout-link state', () => {
+check('admin revenue summary retains deep-links, badges, and payment reference state', () => {
   assert.match(revenuePage, /Payment Ref/)
   assert.match(revenuePage, /Checkout/)
   assert.match(revenuePage, /payment_reference/)

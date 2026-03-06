@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: QA coverage for new revenue summary UX additions needs explicit checks.
+- Current bottleneck: Revenue summary needs concise escalation guidance beside health badges.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-QA-005` `quality` Add regression checks for revenue summary deep-links and glossary presence
-  - Why: Revenue summary and guidance UI expanded; smoke checks need to lock expected affordances.
+- [ACTIVE] `BL-UX-012` `admin` Add compact incident escalation note beside summary badges
+  - Why: Badge health states now exist, but escalation thresholds are not explicit in-context.
   - Definition of done:
-    - QA asserts deep-link shortcuts remain in revenue summary panel.
-    - QA asserts billing glossary and event-driven guidance remain present.
-    - Test lane catches accidental regression in new UI helper content.
+    - Revenue summary includes one-line escalation guidance for warning/critical badge states.
+    - Guidance maps directly to incident desk and runbook actions.
+    - Copy is concise and visible near the badges.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-UX-012` `admin` Add compact incident escalation note beside summary badges
 - [READY] `BL-OPS-008` `platform` Add one-click refresh timestamp and data age label for revenue summary counters
 - [READY] `BL-OBS-003` `platform` Add alert trend mini-chart sparkline for sent/suppressed counters
+- [READY] `BL-QA-006` `quality` Add regression checks for escalation-note copy and badge thresholds
 
 ## Blocked
 
@@ -70,3 +70,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-UX-011` Added compact billing state glossary in Revenue Ops guidance panel.
 - [DONE] `BL-OPS-007` Added incident health badge indicators to Revenue Ops summary.
 - [DONE] `BL-OBS-002` Added 24h vs previous-24h trend deltas for activity-log alert sent/suppressed counters.
+- [DONE] `BL-QA-005` Locked regression checks for revenue summary deep-links and glossary/guidance presence.
