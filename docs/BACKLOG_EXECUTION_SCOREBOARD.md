@@ -9,28 +9,29 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Operator clarity in Revenue Ops after event-driven UI hardening.
+- Current bottleneck: Revenue top-level summary still lacks direct incident runbook deep-links.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-UX-010` `admin` Add read-only status guidance panel to Revenue Ops for operator clarity
-  - Why: Manual status controls were removed; operators need explicit in-UI guidance on event-driven flow.
+- [ACTIVE] `BL-OPS-006` `platform` Add admin runbook deep-links to Revenue Ops summary panel
+  - Why: Guidance panel is in place; top summary still needs one-click incident/runbook access.
   - Definition of done:
-    - Revenue Ops shows clear helper copy for event-driven status transitions and supported controls.
-    - Guidance links to runbook and webhook incident desk.
-    - No actionable affordance suggests unsupported manual status mutation.
+    - Revenue summary panel includes direct links to runbook, webhook incident desk, and audit trail.
+    - Links are visible without scrolling into lower ops tables.
+    - Operator can jump from KPI view to incident actions in one click.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
     - `npm.cmd run -s lint`
+    - Manual path check from `/admin/revenue`
   - Est: 1-2h
 
 ## Next
 
-- [READY] `BL-OPS-006` `platform` Add admin runbook deep-links to Revenue Ops summary panel
 - [READY] `BL-OBS-001` `platform` Add metric counters for activity-log alert suppression vs sent alerts
 - [READY] `BL-QA-004` `quality` Add negative-case checks for blocked manual event-owned status transitions in admin APIs
+- [READY] `BL-UX-011` `admin` Add compact glossary for billing states in Revenue Ops
 
 ## Blocked
 
@@ -63,3 +64,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.
+- [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.

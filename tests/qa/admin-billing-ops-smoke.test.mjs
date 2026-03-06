@@ -40,7 +40,9 @@ check('admin revenue table shows payment reference and checkout-link state', () 
 check('revenue operations keep resend payment link control and event-driven status guidance', () => {
   assert.match(revenueOps, /Resend Link/)
   assert.match(revenueOps, /resendPaymentLink\(/)
-  assert.match(revenueOps, /Status transitions are event-driven/)
+  assert.match(revenueOps, /Event-Driven Billing Guidance/)
+  assert.match(revenueOps, /Open Webhook Incident Desk/)
+  assert.match(revenueOps, /Open Payment Runbook/)
   assert.doesNotMatch(revenueOps, /Confirm status change/)
 })
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/Card'
@@ -194,6 +195,52 @@ export function RevenueOperations({ subscriptions, invoices, webhookEvents }: Re
 
   return (
     <div className="mt-4 grid gap-4 xl:grid-cols-2">
+      <Card className="xl:col-span-2 border-cyan-500/30 bg-cyan-950/20">
+        <CardHeader>
+          <CardTitle>Event-Driven Billing Guidance</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-slate-200">
+          <p>
+            Invoice and subscription statuses are controlled by billing events, webhook reconciliation, and dunning automations.
+            Manual status mutation is intentionally disabled.
+          </p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Use for collection</p>
+              <p className="mt-1 font-semibold text-slate-100">Collect + Resend Link</p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Use for failures</p>
+              <p className="mt-1 font-semibold text-slate-100">Webhook Replay</p>
+            </div>
+            <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">Use for triage</p>
+              <p className="mt-1 font-semibold text-slate-100">Runbook + Audit Trail</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/webhook-failures"
+              className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"
+            >
+              Open Webhook Incident Desk
+            </Link>
+            <Link
+              href="/admin/runbooks/payment-incidents"
+              className="inline-flex h-9 items-center rounded-xl bg-cyan-500 px-3 text-xs font-black uppercase tracking-[0.08em] text-slate-900 hover:bg-cyan-400"
+            >
+              Open Payment Runbook
+            </Link>
+            <Link
+              href="/admin/audit-trail"
+              className="inline-flex h-9 items-center rounded-xl border border-slate-700 px-3 text-xs font-semibold text-slate-100 hover:bg-slate-900"
+            >
+              Open Audit Trail
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader><CardTitle>Subscription Operations</CardTitle></CardHeader>
         <CardContent>
