@@ -289,6 +289,10 @@ export default async function AdminRevenuePage() {
               </span>
             </div>
             <p className="mt-2 text-xs text-slate-300">
+              Badge legend: healthy = no failures/no lag, warning = failures 1-3 or lag 1-5 or suppression up to 2x sent,
+              critical = failures {'>'}3 or lag {'>'}5 or suppression above 2x sent.
+            </p>
+            <p className="mt-2 text-xs text-slate-300">
               Escalation note:{' '}
               {escalationLevel === 'critical'
                 ? 'critical badge detected — open Webhook Incident Desk now and follow Payment Runbook before continuing manual ops.'
