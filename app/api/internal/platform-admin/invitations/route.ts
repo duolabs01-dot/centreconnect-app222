@@ -6,14 +6,16 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
 import { SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
-import { sendEmail } from '@/lib/email/send'
+import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
 import {
   assertInviteDomainHealth,
+  buildFirstPartyConfirmLink,
   buildDefaultEcdOnboardingRedirect,
   buildLockedResetPasswordRedirect,
   generateMagicFirstAccessLink,
   normalizeAppUrl,
+  sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
@@ -133,14 +135,29 @@ async function generatePasswordSetupLink(input: {
   email: string
 }) {
   const { adminClient, email } = input
+  const resetPath = `/reset-password?locked_email=${encodeURIComponent(email)}`
+  const fallbackRedirect = buildLockedResetPasswordRedirect(email)
   const recoveryResult = await adminClient.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: buildLockedResetPasswordRedirect(email) },
+    options: { redirectTo: fallbackRedirect },
   })
   const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
   if (!recoveryResult.error && recoveryLink) {
-    return { link: recoveryLink, warning: null as string | null }
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: recoveryResult.data?.properties?.hashed_token ?? null,
+      verificationType: recoveryResult.data?.properties?.verification_type ?? 'recovery',
+      nextPath: resetPath,
+    })
+    return {
+      link:
+        firstPartyConfirmLink ??
+        sanitizeGeneratedAccessLink({
+          actionLink: recoveryLink,
+          fallbackRedirectTo: fallbackRedirect,
+        }),
+      warning: null as string | null,
+    }
   }
   return {
     link: '',
@@ -367,8 +384,10 @@ export async function POST(request: Request) {
   let directEmailSent = false
   let directEmailProvider: 'resend' | 'smtp' | null = null
   const directEmailErrors: string[] = []
+  const directEmailNotes: string[] = []
 
-  if (process.env.RESEND_API_KEY?.trim()) {
+  const resendEligibility = shouldAttemptResendForRecipient(normalizedEmail)
+  if (resendEligibility.allowed) {
     const resendResult = await sendEmail({
       to: normalizedEmail,
       subject: inviteEmail.subject,
@@ -380,6 +399,8 @@ export async function POST(request: Request) {
     } else if (resendResult.error) {
       directEmailErrors.push(`Resend: ${resendResult.error}`)
     }
+  } else if (resendEligibility.reason) {
+    directEmailNotes.push(`Resend skipped: ${resendEligibility.reason}`)
   }
 
   if (!directEmailSent) {
@@ -402,11 +423,12 @@ export async function POST(request: Request) {
     : await queueEmail(normalizedEmail, inviteEmail.subject, inviteEmail.html)
 
   const emailDeliveryStatus: 'sent' | 'failed' = directEmailSent ? 'sent' : 'failed'
+  const emailDiagnostics = [...directEmailNotes, ...directEmailErrors].join(' | ')
   const emailDeliveryMessage =
     emailDeliveryStatus === 'sent'
       ? `Invite email sent via ${directEmailProvider ?? 'direct provider'}.`
       : `Invite email was NOT delivered. ${
-          directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : 'No direct email provider succeeded.'
+          emailDiagnostics.length > 0 ? emailDiagnostics : 'No direct email provider succeeded.'
         }${
           emailQueueResult.success
             ? ' A queue fallback was created, but that does not confirm delivery.'
@@ -446,6 +468,7 @@ export async function POST(request: Request) {
     directEmailSent,
     directEmailProvider,
     directEmailError: directEmailErrors.length > 0 ? directEmailErrors.join(' | ') : null,
+    directEmailNotes: directEmailNotes.length > 0 ? directEmailNotes.join(' | ') : null,
     emailDeliveryStatus,
     emailDeliveryMessage,
     emailQueued: emailQueueResult.success,

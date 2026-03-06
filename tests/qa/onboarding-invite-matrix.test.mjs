@@ -20,6 +20,7 @@ function test(name, fn) {
 
 const ownerInviteRoute = read('app/api/internal/platform-admin/centres/[id]/send-owner-invite/route.ts')
 const staffInviteRoute = read('app/api/internal/platform-admin/invitations/route.ts')
+const ecdInviteRoute = read('app/api/ecd/invitations/route.ts')
 const onboardingLinks = read('lib/auth/onboarding-links.ts')
 
 test('owner invite route enforces invite domain guard', () => {
@@ -57,6 +58,18 @@ test('existing parent migration logic remains active for owner and staff invite 
 test('ecd role sync remains active in owner and staff invite paths', () => {
   assert.match(ownerInviteRoute, /syncAuthUserMetadataRole/)
   assert.match(staffInviteRoute, /syncAuthUserMetadataRole/)
+})
+
+test('password setup links use first-party confirm links in invite routes', () => {
+  assert.match(staffInviteRoute, /buildFirstPartyConfirmLink\(/)
+  assert.match(staffInviteRoute, /sanitizeGeneratedAccessLink\(/)
+  assert.match(ecdInviteRoute, /buildFirstPartyConfirmLink\(/)
+  assert.match(ecdInviteRoute, /sanitizeGeneratedAccessLink\(/)
+})
+
+test('invite routes gate Resend attempts via eligibility helper', () => {
+  assert.match(staffInviteRoute, /shouldAttemptResendForRecipient/)
+  assert.match(ecdInviteRoute, /shouldAttemptResendForRecipient/)
 })
 
 console.log('Onboarding invite matrix smoke checks passed.')

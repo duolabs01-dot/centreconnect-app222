@@ -7,13 +7,15 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
 import { SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
-import { sendEmail } from '@/lib/email/send'
+import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
 import {
+  buildFirstPartyConfirmLink,
   buildDefaultEcdOnboardingRedirect,
   buildLockedResetPasswordRedirect,
   generateMagicFirstAccessLink,
   normalizeAppUrl,
+  sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
@@ -120,14 +122,29 @@ async function generatePasswordSetupLink(input: {
   email: string
 }) {
   const { adminClient, email } = input
+  const resetPath = `/reset-password?locked_email=${encodeURIComponent(email)}`
+  const fallbackRedirect = buildLockedResetPasswordRedirect(email)
   const recoveryResult = await adminClient.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: buildLockedResetPasswordRedirect(email) },
+    options: { redirectTo: fallbackRedirect },
   })
   const recoveryLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
   if (!recoveryResult.error && recoveryLink) {
-    return { link: recoveryLink, warning: null as string | null }
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: recoveryResult.data?.properties?.hashed_token ?? null,
+      verificationType: recoveryResult.data?.properties?.verification_type ?? 'recovery',
+      nextPath: resetPath,
+    })
+    return {
+      link:
+        firstPartyConfirmLink ??
+        sanitizeGeneratedAccessLink({
+          actionLink: recoveryLink,
+          fallbackRedirectTo: fallbackRedirect,
+        }),
+      warning: null as string | null,
+    }
   }
   return {
     link: '',
@@ -349,8 +366,10 @@ export async function POST(request: Request) {
   let directEmailSent = false
   let directEmailProvider: 'resend' | 'smtp' | null = null
   const directEmailErrors: string[] = []
+  const directEmailNotes: string[] = []
 
-  if (process.env.RESEND_API_KEY?.trim()) {
+  const resendEligibility = shouldAttemptResendForRecipient(normalizedEmail)
+  if (resendEligibility.allowed) {
     const resendResult = await sendEmail({
       to: normalizedEmail,
       subject: inviteEmail.subject,
@@ -362,6 +381,8 @@ export async function POST(request: Request) {
     } else if (resendResult.error) {
       directEmailErrors.push(`Resend: ${resendResult.error}`)
     }
+  } else if (resendEligibility.reason) {
+    directEmailNotes.push(`Resend skipped: ${resendEligibility.reason}`)
   }
 
   if (!directEmailSent) {
@@ -398,13 +419,15 @@ export async function POST(request: Request) {
   })
 
   if (!directEmailSent) {
+    const emailDiagnostics = [...directEmailNotes, ...directEmailErrors].join(' | ')
     const queueMessage = emailQueueResult.success
       ? 'Invite queued for delivery, but direct SMTP/Resend delivery failed.'
-      : `Invite delivery failed. ${directEmailErrors.join(' | ')}`
+      : `Invite delivery failed. ${emailDiagnostics}`
     return NextResponse.json(
       {
         error: queueMessage,
         directEmailErrors,
+        directEmailNotes,
         emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,
       },
       { status: emailQueueResult.success ? 502 : 500 }

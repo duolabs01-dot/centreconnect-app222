@@ -1,3 +1,39 @@
+export type ResendEligibility = {
+  allowed: boolean
+  reason: string | null
+}
+
+function parseAllowList(value: string | undefined) {
+  return String(value ?? '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean)
+}
+
+export function shouldAttemptResendForRecipient(to: string): ResendEligibility {
+  const apiKey = process.env.RESEND_API_KEY?.trim()
+  if (!apiKey) {
+    return { allowed: false, reason: 'RESEND_API_KEY not set' }
+  }
+
+  const from = (process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev').toLowerCase()
+  if (!from.endsWith('@resend.dev')) {
+    return { allowed: true, reason: null }
+  }
+
+  const recipient = to.trim().toLowerCase()
+  const allowedRecipients = parseAllowList(process.env.RESEND_TEST_RECIPIENTS)
+  if (allowedRecipients.length > 0 && allowedRecipients.includes(recipient)) {
+    return { allowed: true, reason: null }
+  }
+
+  return {
+    allowed: false,
+    reason:
+      'RESEND_FROM uses @resend.dev test mode; set RESEND_TEST_RECIPIENTS or verify your sender domain in Resend.',
+  }
+}
+
 export async function sendEmail({
   to,
   subject,
@@ -7,12 +43,15 @@ export async function sendEmail({
   subject: string
   html: string
 }): Promise<{ success: boolean; error?: string }> {
-  const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) {
-    console.warn('[email] RESEND_API_KEY not set')
-    return { success: false, error: 'RESEND_API_KEY not set' }
+  const eligibility = shouldAttemptResendForRecipient(to)
+  if (!eligibility.allowed) {
+    if (eligibility.reason) {
+      console.warn('[email] Resend skipped:', eligibility.reason)
+    }
+    return { success: false, error: eligibility.reason ?? 'Resend not allowed for this recipient' }
   }
 
+  const apiKey = process.env.RESEND_API_KEY
   const from = process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev'
   const replyTo = process.env.RESEND_REPLY_TO?.trim() || undefined
 
