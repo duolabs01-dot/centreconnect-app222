@@ -70,6 +70,28 @@ function truncate(value: string, max = 120) {
   return `${value.slice(0, max - 1)}...`
 }
 
+function trendDeltaFromSeries(series: number[]) {
+  if (series.length === 0) {
+    return { direction: 'flat' as const, percentChange: 0, firstHalfTotal: 0, secondHalfTotal: 0 }
+  }
+
+  const midpoint = Math.floor(series.length / 2)
+  const firstHalf = series.slice(0, midpoint)
+  const secondHalf = series.slice(midpoint)
+  const firstHalfTotal = firstHalf.reduce((sum, value) => sum + value, 0)
+  const secondHalfTotal = secondHalf.reduce((sum, value) => sum + value, 0)
+
+  let percentChange = 0
+  if (firstHalfTotal === 0) {
+    percentChange = secondHalfTotal > 0 ? 100 : 0
+  } else {
+    percentChange = Number((((secondHalfTotal - firstHalfTotal) / firstHalfTotal) * 100).toFixed(1))
+  }
+
+  const direction = secondHalfTotal > firstHalfTotal ? 'up' : secondHalfTotal < firstHalfTotal ? 'down' : 'flat'
+  return { direction, percentChange, firstHalfTotal, secondHalfTotal }
+}
+
 export default async function AdminParentReliabilityPage({ searchParams }: { searchParams?: SearchParams }) {
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -154,6 +176,17 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
+  const trendDelta = trendDeltaFromSeries(trendBuckets)
+  const trendDeltaPercentLabel =
+    trendDelta.percentChange > 0 ? `+${trendDelta.percentChange}%` : `${trendDelta.percentChange}%`
+  const trendDeltaDirectionLabel = trendDelta.direction === 'up' ? 'UP' : trendDelta.direction === 'down' ? 'DOWN' : 'FLAT'
+  const trendDeltaChipClass =
+    trendDelta.direction === 'up'
+      ? 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+      : trendDelta.direction === 'down'
+        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+        : 'border-slate-500/30 bg-slate-500/10 text-slate-300'
+
   const maxBucket = Math.max(...trendBuckets, 1)
   const uniqueParents = new Set(rows.map((row) => row.parent_id).filter(Boolean)).size
   const uniqueRoutes = new Set(rows.map((row) => row.route_path).filter(Boolean)).size
@@ -167,7 +200,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const activeFilterSummary = filterSegments.join(' | ')
   const window24hHref = buildReliabilityHref('24h', { routeFilter, failureTypeFilter })
   const window7dHref = buildReliabilityHref('7d', { routeFilter, failureTypeFilter })
-  const clearFiltersHref = '/admin/parent-reliability'
+  const clearFiltersHref = buildReliabilityHref(selectedWindow)
   const midLabelIndex = Math.floor(bucketCount / 2)
   const topRoute = routeHotspots[0] ?? null
   const topFailureType = failureTypeHotspots[0] ?? null
@@ -325,7 +358,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             </Link>
           </div>
         </div>
-        <form method="get" action="/admin/parent-reliability" className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
+        <form method="get" action="/admin/parent-reliability" className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-end">
           <input type="hidden" name="window" value={selectedWindow} />
           <label className="flex-1 space-y-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
             <span>Route filter</span>
@@ -333,6 +366,15 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
               name="route"
               defaultValue={routeFilter}
               placeholder="/parent/children/new"
+              className="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+            />
+          </label>
+          <label className="flex-1 space-y-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span>Failure type filter</span>
+            <input
+              name="failureType"
+              defaultValue={failureTypeFilter}
+              placeholder="mutation_error"
               className="h-10 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 text-sm text-slate-200 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
             />
           </label>
@@ -353,12 +395,25 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
 
       <div className="grid gap-6 xl:grid-cols-3">
         <CyberCard className="xl:col-span-2 p-6">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-cyan-300" />
-            <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">{windowLabel} Failure Trend</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-cyan-300" />
+              <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-white">{windowLabel} Failure Trend</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${trendDeltaChipClass}`}>
+                {trendDeltaDirectionLabel}
+              </span>
+              <span className="text-[11px] text-slate-300">
+                Delta vs previous half: {trendDeltaPercentLabel}
+              </span>
+            </div>
           </div>
           <p className="mt-2 text-xs text-slate-400">
             {trendDetailLabel} count of `parent_form_submit_failures` in the selected filter window.
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            First half: {trendDelta.firstHalfTotal.toLocaleString()} | Second half: {trendDelta.secondHalfTotal.toLocaleString()}
           </p>
           <div className="mt-4 flex h-28 items-end gap-1 rounded-2xl border border-white/5 bg-black/30 px-3 py-3">
             {trendBuckets.map((value, index) => (

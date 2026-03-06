@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (reliability summary drill-in CTAs shipped)
+Last updated: 2026-03-06 (failure-type triage input shipped)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Reliability console supports drill-in CTAs, but trend interpretation still lacks explicit delta signals.
+- Current bottleneck: Route + failure-type pair hotspots are visible but not one-click actionable for combined triage.
 - Active lane: `parent reliability + copy quality`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-021` `parent` Add explicit trend delta indicators for 24h/7d reliability windows.
-  - Why: Incident triage needs immediate change direction context without manual pattern reading.
+- [ACTIVE] `BL-PARENT-023` `parent` Add one-click combined filter actions from route+failure hotspot cards.
+  - Why: `Top Route + Failure Pairs` highlights incidents but does not let admins immediately drill into that exact pair.
   - Definition of done:
-    - Add compact delta indicator near trend chart comparing first half vs second half of selected window.
-    - Show direction label (up/down/flat) and percentage change with safe zero-handling.
-    - Keep existing trend buckets and filters unchanged.
+    - Add direct CTA from each route+failure hotspot card to apply both `route` and `failureType`.
+    - Preserve selected `window` while applying pair filters.
+    - Keep existing summary CTAs, filter form, and trend delta behavior intact.
   - Validation:
     - `npm.cmd run -s test:parent-uat`
     - `npm.cmd run -s lint`
@@ -28,7 +28,7 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-PARENT-022` `parent` Define after `BL-PARENT-021` completion.
+- [READY] `BL-PARENT-024` `parent` Define after `BL-PARENT-023` completion.
 
 ## Blocked
 
@@ -52,6 +52,8 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-PARENT-018` Added compact incident handoff summary on `/admin/parent-reliability` with active window, failure count, top route/type, and copy-ready snippet.
 - [DONE] `BL-PARENT-019` Added one-click copy action with feedback and prefilled WhatsApp share link for incident handoff summary.
 - [DONE] `BL-PARENT-020` Added summary-driven drill-in CTAs for top route and top failure type with preserved window/filter context.
+- [DONE] `BL-PARENT-021` Added trend delta indicator (up/down/flat + percentage) comparing first half vs second half of selected reliability window.
+- [DONE] `BL-PARENT-022` Added direct failure-type triage input and preserved `window` context on filter apply/clear flows.
 - [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.
 - [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.
 - [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.
