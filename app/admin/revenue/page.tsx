@@ -37,6 +37,12 @@ function incidentBadgeClass(level: 'healthy' | 'warning' | 'critical') {
   return 'border-rose-500/30 bg-rose-500/10 text-rose-200'
 }
 
+function maxIncidentLevel(levels: Array<'healthy' | 'warning' | 'critical'>): 'healthy' | 'warning' | 'critical' {
+  if (levels.includes('critical')) return 'critical'
+  if (levels.includes('warning')) return 'warning'
+  return 'healthy'
+}
+
 export default async function AdminRevenuePage() {
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -89,6 +95,13 @@ export default async function AdminRevenuePage() {
   const laggedWebhookCount = laggedWebhookResult.count ?? 0
   const sentAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length
   const suppressedAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length
+  const failureLevel: 'healthy' | 'warning' | 'critical' =
+    failedWebhookCount24h === 0 ? 'healthy' : failedWebhookCount24h <= 3 ? 'warning' : 'critical'
+  const suppressionLevel: 'healthy' | 'warning' | 'critical' =
+    suppressedAlertCount24h === 0 ? 'healthy' : suppressedAlertCount24h <= sentAlertCount24h * 2 ? 'warning' : 'critical'
+  const lagLevel: 'healthy' | 'warning' | 'critical' =
+    laggedWebhookCount === 0 ? 'healthy' : laggedWebhookCount <= 5 ? 'warning' : 'critical'
+  const escalationLevel = maxIncidentLevel([failureLevel, suppressionLevel, lagLevel])
   
   const activeSubs = subscriptions.filter((s) => s.status === 'active')
   const mrr = activeSubs.reduce((sum, s) => sum + Number(s.monthly_price || 0), 0)
@@ -221,27 +234,31 @@ export default async function AdminRevenuePage() {
             <div className="mt-3 flex flex-wrap gap-2">
               <span className={cn(
                 'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
-                incidentBadgeClass(
-                  failedWebhookCount24h === 0 ? 'healthy' : failedWebhookCount24h <= 3 ? 'warning' : 'critical'
-                )
+                incidentBadgeClass(failureLevel)
               )}>
                 Webhook failures (24h): {failedWebhookCount24h}
               </span>
               <span className={cn(
                 'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
-                incidentBadgeClass(
-                  suppressedAlertCount24h === 0 ? 'healthy' : suppressedAlertCount24h <= sentAlertCount24h * 2 ? 'warning' : 'critical'
-                )
+                incidentBadgeClass(suppressionLevel)
               )}>
                 Alert suppressed (24h): {suppressedAlertCount24h}
               </span>
               <span className={cn(
                 'inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em]',
-                incidentBadgeClass(laggedWebhookCount === 0 ? 'healthy' : laggedWebhookCount <= 5 ? 'warning' : 'critical')
+                incidentBadgeClass(lagLevel)
               )}>
                 Reconciliation lagged: {laggedWebhookCount}
               </span>
             </div>
+            <p className="mt-2 text-xs text-slate-300">
+              Escalation note:{' '}
+              {escalationLevel === 'critical'
+                ? 'critical badge detected — open Webhook Incident Desk now and follow Payment Runbook before continuing manual ops.'
+                : escalationLevel === 'warning'
+                ? 'warning badge detected — verify failed event queue and runbook checklist before end of session.'
+                : 'all badges healthy — continue monitoring and keep incident shortcuts ready.'}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link

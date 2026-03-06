@@ -39,6 +39,7 @@ check('admin revenue summary retains deep-links, badges, and payment reference s
   assert.match(revenuePage, /Webhook failures \(24h\)/)
   assert.match(revenuePage, /Alert suppressed \(24h\)/)
   assert.match(revenuePage, /Reconciliation lagged/)
+  assert.match(revenuePage, /Escalation note:/)
   assert.match(revenuePage, /\/admin\/runbooks\/payment-incidents/)
   assert.match(revenuePage, /\/admin\/webhook-failures/)
   assert.match(revenuePage, /\/admin\/audit-trail/)
