@@ -104,7 +104,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
-    role: 'ecd_staff' as 'ecd_admin' | 'ecd_staff',
+    role: 'ecd_staff' as 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff',
   })
   const [createForm, setCreateForm] = useState({
     slug: '',
@@ -974,7 +974,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
       >
         <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
           <DialogHeader>
-            <DialogTitle className={adminTheme.cardTitle}>Invite Admin or Staff</DialogTitle>
+            <DialogTitle className={adminTheme.cardTitle}>Invite Team Member</DialogTitle>
             <DialogDescription className="text-slate-300">
               {inviteTenant ? `Send an access invite for ${inviteTenant.name}.` : 'Send an access invite.'}
             </DialogDescription>
@@ -1005,13 +1005,14 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
               <Label htmlFor="invite-role" className={adminTheme.body}>Role</Label>
               <Select
                 value={inviteForm.role}
-                onValueChange={(value) => setInviteForm((prev) => ({ ...prev, role: value as 'ecd_admin' | 'ecd_staff' }))}
+                onValueChange={(value) => setInviteForm((prev) => ({ ...prev, role: value as 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff' }))}
               >
                 <SelectTrigger id="invite-role" className={cn(premiumInputClass, "[&_span]:text-slate-100")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className={cn("border-slate-500/80 bg-slate-900 text-slate-100 shadow-[var(--shadow-elevation-4)] [&_*]:text-slate-100")}>
-                  <SelectItem value="ecd_staff" className="focus:bg-cyan-500/20 focus:text-cyan-100">Teacher / Educator</SelectItem>
+                  <SelectItem value="ecd_staff" className="focus:bg-cyan-500/20 focus:text-cyan-100">Staff member</SelectItem>
+                  <SelectItem value="ecd_supervisor" className="focus:bg-cyan-500/20 focus:text-cyan-100">Supervisor</SelectItem>
                   <SelectItem value="ecd_admin" className="focus:bg-cyan-500/20 focus:text-cyan-100">ECD Admin</SelectItem>
                 </SelectContent>
               </Select>

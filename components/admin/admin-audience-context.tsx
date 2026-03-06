@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export type DashboardAudience = 'parent' | 'ecd'
+const AUDIENCE_STORAGE_KEY = 'cc_admin_audience'
 
 type AdminAudienceContextValue = {
   audience: DashboardAudience
@@ -24,6 +25,21 @@ export function AdminAudienceProvider({ children }: { children: React.ReactNode 
   const [audience, setAudienceState] = useState<DashboardAudience>(queryAudience)
 
   useEffect(() => {
+    if (typeof window === 'undefined') return
+    const stored = normalizeAudience(window.localStorage.getItem(AUDIENCE_STORAGE_KEY))
+    if (!searchParams.get('audience') && stored !== queryAudience) {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('audience', stored)
+      const query = params.toString()
+      const destination = query ? `${pathname}?${query}` : pathname
+      router.replace(destination)
+      return
+    }
+
+    window.localStorage.setItem(AUDIENCE_STORAGE_KEY, queryAudience)
+  }, [pathname, queryAudience, router, searchParams])
+
+  useEffect(() => {
     if (audience !== queryAudience) {
       setAudienceState(queryAudience)
     }
@@ -37,6 +53,9 @@ export function AdminAudienceProvider({ children }: { children: React.ReactNode 
     const destination = query ? `${pathname}?${query}` : pathname
     router.replace(destination)
     setAudienceState(next)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, next)
+    }
   }
 
   return (

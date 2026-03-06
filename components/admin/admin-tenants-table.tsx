@@ -30,7 +30,7 @@ type FeeDisplayMode = 'exact' | 'range' | 'contact'
 type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
 type DsdStatus = 'pending' | 'registered' | 'expired' | 'suspended' | 'not_required'
-type TenantUserPrivilege = 'owner' | 'ecd_admin' | 'ecd_staff'
+type TenantUserPrivilege = 'owner' | 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
 type TenantUserDraftPrivilege = TenantUserPrivilege | 'parent_user'
 
 export type AdminTenantTableRow = {
@@ -80,7 +80,7 @@ type AdminTenantsTableProps = {
 type TenantUserRow = {
   userId: string
   membershipId: string | null
-  role: 'ecd_admin' | 'ecd_staff'
+  role: 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
   effectiveRole: TenantUserPrivilege
   isOwner: boolean
   fullName: string | null
@@ -93,7 +93,7 @@ type TenantUserRow = {
 type TenantPendingInvitation = {
   invitationId: string
   email: string
-  role: 'ecd_admin' | 'ecd_staff'
+  role: 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
   invitedAt: string
   acceptedAt: string | null
 }
@@ -1423,6 +1423,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                         </SelectTrigger>
                         <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
                           <SelectItem value="ecd_staff">Staff</SelectItem>
+                          <SelectItem value="ecd_supervisor">Supervisor</SelectItem>
                           <SelectItem value="ecd_admin">Admin</SelectItem>
                           <SelectItem value="owner">Owner</SelectItem>
                         </SelectContent>
@@ -1481,7 +1482,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                                   onValueChange={(value) =>
                                     setUserRoleDrafts((prev) => ({
                                       ...prev,
-                                      [user.userId]: value as TenantUserPrivilege,
+                                      [user.userId]: value as TenantUserDraftPrivilege,
                                     }))
                                   }
                                 >
@@ -1490,6 +1491,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                                   </SelectTrigger>
                                   <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
                                     <SelectItem value="ecd_staff">Staff</SelectItem>
+                                    <SelectItem value="ecd_supervisor">Supervisor</SelectItem>
                                     <SelectItem value="ecd_admin">Admin</SelectItem>
                                     <SelectItem value="owner">Owner</SelectItem>
                                     <SelectItem value="parent_user">Parent (requires activation)</SelectItem>

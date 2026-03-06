@@ -1,7 +1,7 @@
 type StaffInviteTemplateInput = {
   centreName: string
   recipientName: string
-  role: 'ecd_admin' | 'ecd_staff'
+  role: 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
   accessLink: string
   loginLink: string
   supportEmail: string
@@ -20,14 +20,16 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#39;')
 }
 
-function roleLabel(role: 'ecd_admin' | 'ecd_staff') {
-  return role === 'ecd_admin' ? 'ECD Admin' : 'ECD Staff'
+function roleLabel(role: 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff') {
+  if (role === 'ecd_admin') return 'ECD Admin'
+  if (role === 'ecd_supervisor') return 'ECD Supervisor'
+  return 'ECD Staff'
 }
 
 export function renderStaffInviteEmail(input: StaffInviteTemplateInput) {
   const subject = `You have been invited to ${input.centreName} on CentreConnect`
   const appBaseUrl = (input.appBaseUrl ?? 'https://centerconnect.co.za').replace(/\/$/, '')
-  const logoUrl = input.logoUrl?.trim() || `${appBaseUrl}/centreconnect-logo-email.png`
+  const logoUrl = input.logoUrl?.trim() || `${appBaseUrl}/centreconnect-logo.svg`
   const accessLabel = input.accessMode === 'magiclink' ? 'Sign In Securely' : 'Open Invite Link'
   const passwordSetupHint = input.passwordSetupLink
     ? `<p style="margin:12px 0 0;font-size:13px;line-height:1.6;color:#64748b;">

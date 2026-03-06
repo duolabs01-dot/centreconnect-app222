@@ -15,9 +15,9 @@ export function PublicShell({ children }: PublicShellProps) {
     <div className="min-h-screen bg-slate-50 text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elevation-1)]">
         <Container className="flex items-center justify-between py-3.5 sm:py-4">
-          <Link href="/" className="flex items-center gap-1.5">
-            <span className="font-display text-xl font-bold tracking-tight text-slate-900">CentreConnect</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 mt-1" />
+          <Link href="/" className="inline-flex items-center rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60">
+            <img src="/centreconnect-logo.svg" alt="CentreConnect" className="h-10 w-auto sm:h-11" />
+            <span className="sr-only">CentreConnect Home</span>
           </Link>
           
           <nav className="hidden items-center gap-8 md:flex">

@@ -332,6 +332,15 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 <Link href="/ecd/support">Open Support</Link>
               </Button>
             </div>
+            {centre?.slug ? (
+              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
+                <Link href={`/centre/${centre.slug}`}>Invite Parents (Share Profile)</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" disabled className="border-slate-200 text-slate-400 font-bold h-11 rounded-2xl">
+                Add a centre slug to invite parents
+              </Button>
+            )}
             <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
               <Link href="/ecd/dashboard">Back to Today</Link>
             </Button>
@@ -471,9 +480,9 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <form action={inviteStaff} className="grid gap-4 md:grid-cols-3">
               <input name="name" className="cc-native-field h-12 rounded-2xl" placeholder="Staff full name" required />
               <input name="email" type="email" className="cc-native-field h-12 rounded-2xl" placeholder="Staff email" required />
-              <select name="role" className="cc-native-field h-12 rounded-2xl">
-                <option value="ecd_staff">ECD Staff</option>
-                <option value="ecd_supervisor">ECD Supervisor</option>
+              <select name="role" className="cc-native-field h-12 rounded-2xl border-slate-300 bg-white text-slate-800 font-semibold">
+                <option value="ecd_staff">Staff member</option>
+                <option value="ecd_supervisor">Supervisor</option>
                 <option value="ecd_admin">ECD Admin</option>
               </select>
               <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Invite Staff (Support-assisted)</Button>
@@ -499,10 +508,10 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                         <div className="flex items-center gap-2">
                           <form action={updateStaffRole} className="flex items-center gap-2">
                             <input type="hidden" name="staff_user_id" value={member.user_id} />
-                            <select name="new_role" className="cc-native-field h-10 rounded-2xl w-32 text-xs">
-                              <option value="ecd_staff">Set staff</option>
-                              <option value="ecd_supervisor">Set supervisor</option>
-                              <option value="ecd_admin">Set admin</option>
+                            <select name="new_role" className="cc-native-field h-10 rounded-2xl w-40 text-xs border-slate-300 bg-white text-slate-800 font-semibold">
+                              <option value="ecd_staff">Staff member</option>
+                              <option value="ecd_supervisor">Supervisor</option>
+                              <option value="ecd_admin">ECD admin</option>
                             </select>
                             <Button size="sm" variant="outline" className="h-10 px-4 border-slate-200 text-slate-700 font-bold rounded-2xl shadow-sm hover:bg-slate-50" type="submit">Change Role</Button>
                           </form>

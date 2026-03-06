@@ -79,7 +79,7 @@ export function CentreCard({
     }
 
     if (slug) {
-      router.push(`/c/${encodeURIComponent(slug)}`);
+      router.push(`/centre/${encodeURIComponent(slug)}`);
       return;
     }
 
@@ -163,6 +163,7 @@ export function CentreCard({
 
         <CardFooter className="px-6 pb-6 pt-0 gap-3">
           <Button
+            type="button"
             onClick={handleApply}
             className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-6 rounded-2xl text-base shadow-md active:scale-95 transition-all"
           >
@@ -170,9 +171,10 @@ export function CentreCard({
           </Button>
 
           <Button
+            type="button"
             variant="outline"
             onClick={handleViewDetails}
-            className="flex-1 border-2 border-navy-200 hover:border-navy-400 py-6 rounded-2xl text-base"
+            className="flex-1 border-2 border-slate-300 bg-white hover:border-slate-500 hover:bg-slate-50 py-6 rounded-2xl text-base text-slate-700"
           >
             View Details
           </Button>

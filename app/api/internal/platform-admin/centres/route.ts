@@ -532,17 +532,14 @@ export async function POST(request: Request) {
   const welcomePackPath = `/ecd/welcome?${welcomePackQuery}`
   const welcomePackGuideLink = `${appBaseUrl}${welcomePackPath}`
   const welcomePackAuthRedirect = `${appBaseUrl}/auth/callback?next=${encodeURIComponent(welcomePackPath)}`
-  const trackedSetupLink = setupLinkResult.link
-    ? `${appBaseUrl}/api/invites/open?channel=email&target=${encodeURIComponent(setupLinkResult.link)}`
-    : ''
-  const welcomePackGetStartedLink = trackedSetupLink || welcomePackAuthRedirect
+  const welcomePackGetStartedLink = setupLinkResult.link || welcomePackAuthRedirect
   const qrPosterLink = `${appBaseUrl}/centre/${centre.slug}/poster`
 
   const setupEmailHtml = await renderEcdPasswordSetupEmail({
     centreName: data.name,
     contactName: contactFirstNameForComms,
     lockedEmail: normalizedEmail,
-    setupLink: trackedSetupLink || setupLinkResult.link,
+    setupLink: setupLinkResult.link || welcomePackAuthRedirect,
     loginLink: `${appBaseUrl}/ecd/login`,
   })
   const setupEmailResult = await queueEmail(

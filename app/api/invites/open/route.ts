@@ -3,6 +3,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeAppUrl, sanitizeGeneratedAccessLink } from '@/lib/auth/onboarding-links'
 
 export const dynamic = 'force-dynamic'
+type InviteCta = 'get_started' | 'welcome_pack' | 'qr_poster'
+
+function normalizeCta(value: string | null): InviteCta | null {
+  if (value === 'get_started') return 'get_started'
+  if (value === 'welcome_pack') return 'welcome_pack'
+  if (value === 'qr_poster') return 'qr_poster'
+  return null
+}
 
 function normalizeChannel(value: string | null) {
   return value === 'whatsapp' ? 'whatsapp' : 'email'
@@ -39,14 +47,43 @@ function sanitizeTarget(target: string | null, request: NextRequest) {
   }
 }
 
+function parseTrackedTarget(payload: unknown, cta: InviteCta | null) {
+  if (!cta || !payload || typeof payload !== 'object' || Array.isArray(payload)) return null
+  const payloadRecord = payload as Record<string, unknown>
+  const trackedTargets = payloadRecord.tracked_targets
+  if (!trackedTargets || typeof trackedTargets !== 'object' || Array.isArray(trackedTargets)) return null
+  const candidate = (trackedTargets as Record<string, unknown>)[cta]
+  if (typeof candidate !== 'string') return null
+  const trimmed = candidate.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const eventKey = url.searchParams.get('event_key')?.trim() || ''
   const channel = normalizeChannel(url.searchParams.get('channel'))
-  const target = sanitizeTarget(url.searchParams.get('target'), request)
+  const cta = normalizeCta(url.searchParams.get('cta'))
+  let target = sanitizeTarget(url.searchParams.get('target'), request)
+  let trackedTargetFromPayload: string | null = null
 
   if (eventKey) {
     const admin = createAdminClient()
+    if (!url.searchParams.get('target') && cta) {
+      const { data: logRow } = await admin
+        .from('notification_logs')
+        .select('payload')
+        .eq('event_key', eventKey)
+        .eq('channel', channel)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      trackedTargetFromPayload = parseTrackedTarget(logRow?.payload, cta)
+      if (trackedTargetFromPayload) {
+        target = sanitizeTarget(trackedTargetFromPayload, request)
+      }
+    }
+
     const { error } = await admin
       .from('notification_logs')
       .update({ status: 'clicked', updated_at: new Date().toISOString() })
@@ -75,8 +112,10 @@ export async function GET(request: NextRequest) {
           metadata: {
             channel,
             event_key: eventKey,
+            cta,
             target_host: target.hostname,
             target_path: target.pathname,
+            tracked_target_from_payload: Boolean(trackedTargetFromPayload),
           },
         })
       }

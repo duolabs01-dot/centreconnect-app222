@@ -109,11 +109,17 @@ async function resolveAuthUserId(
   return (await findUserIdByEmail(admin, email)) ?? null
 }
 
-function buildTrackingUrl(eventKey: string, channel: 'email' | 'whatsapp', target: string) {
+function buildTrackingUrl(input: {
+  eventKey: string
+  channel: 'email' | 'whatsapp'
+  cta?: 'get_started' | 'welcome_pack' | 'qr_poster'
+  target?: string | null
+}) {
   const url = new URL('/api/invites/open', emailAppUrlRoot)
-  url.searchParams.set('event_key', eventKey)
-  url.searchParams.set('channel', channel)
-  url.searchParams.set('target', target)
+  url.searchParams.set('event_key', input.eventKey)
+  url.searchParams.set('channel', input.channel)
+  if (input.cta) url.searchParams.set('cta', input.cta)
+  if (input.target) url.searchParams.set('target', input.target)
   return url.toString()
 }
 
@@ -203,7 +209,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         .maybeSingle()
     : { data: null as { role?: string | null } | null }
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
-  const emailTrackingUrl = buildTrackingUrl(eventKey, 'email', accessLink.link)
+  const emailTrackingUrl = buildTrackingUrl({
+    eventKey,
+    channel: 'email',
+    cta: 'get_started',
+  })
   const supportWhatsapp = process.env.SUPPORT_WHATSAPP?.trim() || '+27685356430'
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
   const supportWhatsappMessage = [
@@ -212,7 +222,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   ].join('\n')
   const supportWhatsappLink = createWhatsappClickToChatLink(supportWhatsapp, supportWhatsappMessage)
   const trackedSupportWhatsappLink = supportWhatsappLink
-    ? buildTrackingUrl(eventKey, 'whatsapp', supportWhatsappLink)
+    ? buildTrackingUrl({
+        eventKey,
+        channel: 'whatsapp',
+        target: supportWhatsappLink,
+      })
     : null
 
   const inviteHtml = renderOwnerInviteEmail({
@@ -243,6 +257,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     payload: {
       subject: inviteHtml.subject,
       tracked_open_url: emailTrackingUrl,
+      tracked_targets: {
+        get_started: accessLink.link,
+      },
       centre_slug: centre.slug,
       link_sanitization: accessLink.diagnostics,
     },
@@ -321,7 +338,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   ].join('\n')
   const whatsappLink = createWhatsappClickToChatLink(ownerPhone, whatsappMessage)
   const trackedOwnerWhatsappLink = whatsappLink
-    ? buildTrackingUrl(eventKey, 'whatsapp', whatsappLink)
+    ? buildTrackingUrl({
+        eventKey,
+        channel: 'whatsapp',
+        target: whatsappLink,
+      })
     : null
 
   let whatsappSent = false

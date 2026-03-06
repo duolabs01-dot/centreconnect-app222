@@ -13,7 +13,7 @@ import { resolveFirstName } from '@/lib/utils/name'
 import { renderRoleDowngradeActivationEmail } from '@/lib/email/templates/role-downgrade-activation'
 import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
 
-type TenantMembershipRole = 'ecd_admin' | 'ecd_staff'
+type TenantMembershipRole = 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff'
 type TenantUserEffectiveRole = 'owner' | TenantMembershipRole
 
 type TenantUserResponseRow = {
@@ -41,7 +41,7 @@ const actionSchema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('set_user_privileges'),
     userId: z.string().uuid(),
-    role: z.enum(['owner', 'ecd_admin', 'ecd_staff']),
+    role: z.enum(['owner', 'ecd_admin', 'ecd_supervisor', 'ecd_staff']),
   }),
   z.object({
     action: z.literal('remove_user'),
@@ -59,11 +59,15 @@ const actionSchema = z.discriminatedUnion('action', [
 ])
 
 function normalizeMembershipRole(value: string | null | undefined): TenantMembershipRole {
-  return value === 'ecd_staff' ? 'ecd_staff' : 'ecd_admin'
+  if (value === 'ecd_staff') return 'ecd_staff'
+  if (value === 'ecd_supervisor') return 'ecd_supervisor'
+  return 'ecd_admin'
 }
 
-function normalizeUserRoleForProfile(value: string | null | undefined): 'ecd_admin' | 'ecd_staff' {
-  return value === 'ecd_staff' ? 'ecd_staff' : 'ecd_admin'
+function normalizeUserRoleForProfile(value: string | null | undefined): 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff' {
+  if (value === 'ecd_staff') return 'ecd_staff'
+  if (value === 'ecd_supervisor') return 'ecd_supervisor'
+  return 'ecd_admin'
 }
 
 async function resolveUserEmail(

@@ -32,7 +32,7 @@ export function renderRoleDowngradeActivationEmail(input: RoleDowngradeActivatio
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
                   <tr>
                     <td width="40" valign="middle">
-                      <img src="https://centerconnect.co.za/centreconnect-logo-email.png" width="32" height="32" alt="CentreConnect" style="display:block;border-radius:8px;" />
+                      <img src="https://centerconnect.co.za/centreconnect-logo.svg" width="32" height="32" alt="CentreConnect" style="display:block;border-radius:8px;" />
                     </td>
                     <td valign="middle">
                       <p style="margin:0;font-size:11px;letter-spacing:0.12em;font-weight:800;text-transform:uppercase;color:#0d9488;">CentreConnect</p>

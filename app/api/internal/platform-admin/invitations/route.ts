@@ -24,7 +24,7 @@ import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
   email: z.string().email(),
-  role: z.enum(['ecd_admin', 'ecd_staff']).default('ecd_admin'),
+  role: z.enum(['ecd_admin', 'ecd_supervisor', 'ecd_staff']).default('ecd_admin'),
   fullName: z.string().min(2).max(160).optional(),
   redirectTo: z.string().url().optional(),
 })
@@ -388,7 +388,7 @@ export async function POST(request: Request) {
     supportEmail: SUPPORT_EMAIL,
     passwordSetupLink: passwordSetupResult.link || null,
     accessMode: accessLinkResult.mode,
-    logoUrl: `${baseAppUrl}/centreconnect-logo-email.png`,
+    logoUrl: `${baseAppUrl}/centreconnect-logo.svg`,
     appBaseUrl: baseAppUrl,
   })
 

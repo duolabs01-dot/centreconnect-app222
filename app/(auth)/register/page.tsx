@@ -18,7 +18,8 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    fullName: '',
+    firstName: '',
+    surname: '',
     phone: '',
   })
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -70,9 +71,16 @@ export default function RegisterPage() {
 
     const normalizedEmail = formData.email.trim().toLowerCase()
     const normalizedPassword = formData.password.trim()
+    const normalizedFirstName = formData.firstName.trim()
+    const normalizedSurname = formData.surname.trim()
+    const normalizedFullName = [normalizedFirstName, normalizedSurname].filter(Boolean).join(' ').trim()
     
     if (!normalizedEmail || !normalizedPassword) {
       toast.error('Email and password are required')
+      return
+    }
+    if (!normalizedFirstName) {
+      toast.error('First name is required')
       return
     }
 
@@ -97,7 +105,9 @@ export default function RegisterPage() {
           emailRedirectTo,
           data: {
             role: 'parent_user',
-            full_name: formData.fullName,
+            first_name: normalizedFirstName,
+            surname: normalizedSurname || null,
+            full_name: normalizedFullName || normalizedFirstName,
             phone: formData.phone,
             accepted_terms_at: new Date().toISOString(),
             terms_version: TERMS_VERSION,
@@ -187,16 +197,28 @@ export default function RegisterPage() {
 
             <form onSubmit={handleRegister} className="space-y-4">
 
-              <div className="space-y-1.5">
-                <Label htmlFor="fullName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  placeholder="John Doe"
-                  className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
-                  required
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="firstName" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="John"
+                    className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="surname" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Surname</Label>
+                  <Input
+                    id="surname"
+                    value={formData.surname}
+                    onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+                    placeholder="Doe"
+                    className="h-12 bg-slate-50 border-slate-200 rounded-2xl focus:ring-2 focus:ring-cyan-500/20 outline-none"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email address</Label>

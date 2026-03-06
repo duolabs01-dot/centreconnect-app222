@@ -338,7 +338,7 @@ function ScenarioCard({
       type="button"
       onClick={() => onOpen(scenario)}
       variant="outline"
-      className="group !flex !min-h-[188px] !w-full !flex-col !items-start !justify-start !gap-2 !whitespace-normal rounded-3xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className="group !flex !min-h-[188px] !w-full !flex-col !items-start !justify-start !gap-2 rounded-3xl border p-5 text-left !whitespace-normal transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
@@ -480,6 +480,11 @@ export default function CentreConnectWelcomePack() {
     if (!clean) return 'Friend'
     return clean.split(' ')[0] || clean
   }, [contactName])
+  const centreInitial = useMemo(() => {
+    const clean = centreName.trim()
+    if (!clean) return 'C'
+    return clean.charAt(0).toUpperCase()
+  }, [centreName])
 
   const centrePublicPath = centreSlug ? `/centre/${centreSlug}` : ''
 
@@ -812,20 +817,20 @@ export default function CentreConnectWelcomePack() {
       {!onboardingLock ? (
         <div className="sticky top-2 z-40 mx-auto w-full max-w-5xl px-4 pt-3">
           <Card className="border-cyan-100/90 bg-white/96 shadow-[var(--shadow-elevation-2)] backdrop-blur">
-            <CardContent className="space-y-2.5 p-3">
+            <CardContent className="space-y-2 p-2.5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700">
                   Onboarding progress
                 </p>
                 <p className="text-[11px] font-bold text-slate-600">{onboardingProgressPct}%</p>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
                   style={{ width: `${onboardingProgressPct}%` }}
                 />
               </div>
-              <div className="grid gap-1 text-[11px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
                 {onboardingSteps.map((item) => (
                   <p key={item.id} className={cn('truncate', item.done ? 'font-semibold text-emerald-700' : '')}>
                     {item.done ? '[done]' : '[todo]'} {item.label}
@@ -903,11 +908,20 @@ export default function CentreConnectWelcomePack() {
               <img src="/centreconnect-logo.svg" alt="CentreConnect logo" className="h-8 w-auto" />
             </div>
 
-            {centreLogoUrl ? (
-              <div className="absolute right-6 top-6 h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-xl">
+            <div
+              className={cn(
+                'absolute right-6 top-6 h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-xl',
+                centreLogoUrl ? 'bg-white' : 'border-dashed bg-white/90'
+              )}
+            >
+              {centreLogoUrl ? (
                 <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
-              </div>
-            ) : null}
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
+                  {centreInitial}
+                </div>
+              )}
+            </div>
 
             <div className="absolute inset-x-0 bottom-0 p-6 text-white">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-sm">CentreConnect Welcome</p>
@@ -967,11 +981,20 @@ export default function CentreConnectWelcomePack() {
                   </h2>
                   <p className="mt-1 text-sm text-slate-600">Tap any card for a clear, real-life walkthrough.</p>
                 </div>
-                {centreLogoUrl ? (
-                  <div className="h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-lg">
+                <div
+                  className={cn(
+                    'h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-lg',
+                    centreLogoUrl ? 'bg-white' : 'border-dashed bg-slate-100'
+                  )}
+                >
+                  {centreLogoUrl ? (
                     <img src={centreLogoUrl} alt={`${centreName} logo`} className="h-full w-full object-cover" />
-                  </div>
-                ) : null}
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
+                      {centreInitial}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

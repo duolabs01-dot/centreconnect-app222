@@ -331,6 +331,12 @@ export default async function AdminTenantsPage() {
             marketplace toggles.
           </p>
         </div>
+        <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Role Management</p>
+          <p className="mt-1 text-sm text-cyan-50">
+            Upgrade or downgrade users manually from <strong>Tenant Edit {'>'} Access & Team</strong>. Parent downgrade requires re-activation before login.
+          </p>
+        </div>
         <div className="rounded-3xl border border-slate-800 bg-slate-950/70">
           <AdminTenantsTable tenants={tenants} />
         </div>

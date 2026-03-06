@@ -65,11 +65,11 @@ export async function POST(request: Request) {
 
   const appUrlRoot = normalizeAppUrl()
   const eventKey = createNotificationEventKey('welcome_pack', ecdId)
-  const toTrackedLink = (targetUrl: string) =>
+  const toTrackedCtaLink = (cta: 'get_started' | 'welcome_pack' | 'qr_poster') =>
     buildUrl(appUrlRoot, '/api/invites/open', {
       event_key: eventKey,
       channel: 'email',
-      target: targetUrl,
+      cta,
     })
 
   const smtpHost = process.env.SMTP_HOST
@@ -204,7 +204,7 @@ export async function POST(request: Request) {
       fallbackRedirectTo: callbackRedirectUrl,
     })
     const safeTargetLink = firstPartyConfirmLink ?? sanitizedTarget.link
-    getStartedUrl = toTrackedLink(safeTargetLink)
+    getStartedUrl = safeTargetLink
     if (sanitizedTarget.diagnostics.changed || sanitizedTarget.diagnostics.usedFallback) {
       console.warn('resend-welcome-pack: onboarding link sanitized', sanitizedTarget.diagnostics)
     }
@@ -220,13 +220,14 @@ export async function POST(request: Request) {
   const qrPosterRawLink = centreSlug
     ? buildUrl(appUrlRoot, `/centre/${centreSlug}/poster`)
     : buildUrl(appUrlRoot, '/ecd/website')
-  const welcomeGuideTracked = toTrackedLink(welcomeGuideUrl)
-  const qrPosterLink = toTrackedLink(qrPosterRawLink)
+  const welcomeGuideTracked = toTrackedCtaLink('welcome_pack')
+  const getStartedTracked = toTrackedCtaLink('get_started')
+  const qrPosterLink = toTrackedCtaLink('qr_poster')
 
   const html = await renderPilotWelcomePackEmail({
     centreName,
     contactName: ownerFirstNameForComms,
-    dashboardLink: getStartedUrl,
+    dashboardLink: getStartedTracked,
     websiteBuilderLink: buildUrl(appUrlRoot, '/ecd/website'),
     attendanceLink: buildUrl(appUrlRoot, '/ecd/attendance'),
     pickupLink: buildUrl(appUrlRoot, '/ecd/pickup'),
@@ -287,7 +288,7 @@ export async function POST(request: Request) {
     '',
     `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
     `See your welcome pack: ${welcomeGuideTracked}`,
-    `Get started: ${getStartedUrl}`,
+    `Get started: ${getStartedTracked}`,
     `Print parent QR poster: ${qrPosterLink}`,
     `Public centre page: ${publicCentreLink}`,
     '',
@@ -329,9 +330,14 @@ export async function POST(request: Request) {
       payload: {
         subject,
         tracked_links: {
-          get_started: getStartedUrl,
+          get_started: getStartedTracked,
           welcome_pack: welcomeGuideTracked,
           qr_poster: qrPosterLink,
+        },
+        tracked_targets: {
+          get_started: getStartedUrl,
+          welcome_pack: welcomeGuideUrl,
+          qr_poster: qrPosterRawLink,
         },
       },
     })
