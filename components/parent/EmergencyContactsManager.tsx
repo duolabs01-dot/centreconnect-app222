@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { type FormEvent, useState } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SurfaceCard } from '@/components/ui/surface-card'
-import { UserPlus, Shield, Trash2, CheckCircle2 } from 'lucide-react'
+import { UserPlus, Shield, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const RELATIONSHIP_OPTIONS = ['Parent', 'Grandparent', 'Sibling', 'Aunt/Uncle', 'Family Friend', 'Other']
@@ -33,7 +35,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
   const [relationship, setRelationship] = useState('')
   const [isPrimary, setIsPrimary] = useState(false)
 
-  async function addContact(e: React.FormEvent) {
+  async function addContact(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!fullName.trim() || !phone.trim()) {
       toast.error('Name and phone are required')
@@ -41,19 +43,20 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
     }
     setSaving(true)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) throw new Error('Please sign in again')
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
 
       if (isPrimary) {
-        await supabase.from('parent_emergency_contacts').update({ is_primary: false }).eq('parent_id', user.id)
+        await supabase
+          .from('parent_emergency_contacts')
+          .update({ is_primary: false })
+          .eq('parent_id', ready.userId)
       }
 
       const { data, error } = await supabase
         .from('parent_emergency_contacts')
         .insert({
-          parent_id: user.id,
+          parent_id: ready.userId,
           full_name: fullName.trim(),
           phone: phone.trim(),
           relationship: relationship.trim() || null,
@@ -69,8 +72,8 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
       setRelationship('')
       setIsPrimary(false)
       toast.success('Emergency contact added')
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to add contact')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to add contact'))
     } finally {
       setSaving(false)
     }
@@ -79,12 +82,19 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
   async function removeContact(id: string) {
     setSaving(true)
     try {
-      const { error } = await supabase.from('parent_emergency_contacts').delete().eq('id', id)
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
+
+      const { error } = await supabase
+        .from('parent_emergency_contacts')
+        .delete()
+        .eq('id', id)
+        .eq('parent_id', ready.userId)
       if (error) throw error
       setContacts((prev) => prev.filter((c) => c.id !== id))
       toast.success('Removed')
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to remove')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to remove'))
     } finally {
       setSaving(false)
     }
@@ -125,7 +135,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
                   onChange={(e) => setRelationship(e.target.value)} 
                   className="cc-native-field flex border bg-gradient-to-b from-white to-slate-50/90 py-2 shadow-[var(--shadow-elevation-1)] transition-[border-color,box-shadow,background-color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-1 h-14 rounded-2xl border-slate-100 bg-slate-50 px-4 text-sm font-bold text-slate-900 focus:ring-cyan-500/20 w-full appearance-none"
                 >
-                  <option value="">Select status</option>
+                  <option value="">Select relationship</option>
                   {RELATIONSHIP_OPTIONS.map((option) => (
                     <option key={option} value={option}>
                       {option}
@@ -184,7 +194,7 @@ export function EmergencyContactsManager({ initialContacts }: Props) {
                       )}
                     </div>
                     <p className="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">
-                      {contact.relationship || 'Verified Contact'} · {contact.phone}
+                      {contact.relationship || 'Verified Contact'} • {contact.phone}
                     </p>
                   </div>
                   <button 

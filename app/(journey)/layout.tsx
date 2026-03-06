@@ -39,6 +39,13 @@ export default async function JourneyLayout({ children }: { children: React.Reac
     )
   }
 
+  const { error: parentBootstrapError } = await supabase
+    .from('parents')
+    .upsert({ id: user.id }, { onConflict: 'id' })
+  if (parentBootstrapError) {
+    console.error('[journey/layout] Failed to ensure parent record:', parentBootstrapError)
+  }
+
   // Only proceed with full parent layout data if they are indeed a parent
   const [parentDetails, parentDocs, childrenCount] = await Promise.all([
     supabase

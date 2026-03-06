@@ -8,6 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +29,15 @@ const childSchema = z.object({
 })
 
 type ChildFormValues = z.infer<typeof childSchema>
+
+function parseListField(value: string | undefined) {
+  if (!value) return null
+  const entries = value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+  return entries.length > 0 ? entries : null
+}
 
 export default function NewChildPage() {
   const router = useRouter()
@@ -52,22 +63,18 @@ export default function NewChildPage() {
   const onSubmit = handleSubmit(async (values) => {
     setSubmitting(true)
     try {
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser()
-
-      if (authError || !user) {
-        toast.error('Please sign in again')
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) {
+        toast.error(ready.error)
         router.push('/login?next=/parent/children/new')
         return
       }
 
       const { error: insertError } = await supabase.from('children').insert({
-        parent_id: user.id,
+        parent_id: ready.userId,
         ...values,
-        allergies: values.allergies || null,
-        medical_conditions: values.medical_conditions || null,
+        allergies: parseListField(values.allergies),
+        medical_conditions: parseListField(values.medical_conditions),
         special_needs: values.special_needs || null,
       })
 
@@ -86,8 +93,8 @@ export default function NewChildPage() {
       })
       triggerFirstTimeConfetti('parent-first-child', 'child')
       router.push('/parent/children')
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add child')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to add child'))
     } finally {
       setSubmitting(false)
     }

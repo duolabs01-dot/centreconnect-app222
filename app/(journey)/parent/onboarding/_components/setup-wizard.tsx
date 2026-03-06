@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 
 const STEPS = [
   { id: 'role', title: 'Your Role', icon: Heart },
@@ -42,8 +44,10 @@ export function SetupWizard() {
   async function handleComplete() {
     setLoading(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) {
+        throw new Error(ready.error)
+      }
 
       // 1. Update Parent Profile
       const { error: parentError } = await supabase
@@ -52,7 +56,7 @@ export function SetupWizard() {
           guardian_relationship: role,
           preferred_suburbs: [suburb]
         })
-        .eq('id', user.id)
+        .eq('id', ready.userId)
       
       if (parentError) throw parentError
 
@@ -60,7 +64,7 @@ export function SetupWizard() {
       const { error: childError } = await supabase
         .from('children')
         .insert({
-          parent_id: user.id,
+          parent_id: ready.userId,
           first_name: child.firstName,
           last_name: child.lastName,
           date_of_birth: child.dob || new Date().toISOString().split('T')[0] // Fallback
@@ -71,8 +75,8 @@ export function SetupWizard() {
       toast.success('Setup complete! Welcome to CentreConnect.')
       router.push('/parent/dashboard')
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message || 'Something went wrong')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Something went wrong'))
       setLoading(false)
     }
   }

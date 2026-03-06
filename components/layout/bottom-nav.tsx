@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { type LucideIcon, Heart } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
@@ -43,7 +43,7 @@ const NavButton = memo(({
     <button
       onClick={handleClick}
       className={cn(
-        'mobile-nav-item relative flex min-h-[46px] flex-1 items-center justify-center overflow-hidden rounded-2xl px-2 outline-none transition-colors duration-200',
+        'mobile-nav-item relative flex min-h-[44px] flex-1 items-center justify-center overflow-hidden rounded-2xl px-1.5 outline-none transition-colors duration-200',
         active ? 'text-cyan-900' : 'text-slate-600 hover:text-slate-900'
       )}
       aria-current={active ? 'page' : undefined}
@@ -71,7 +71,7 @@ const NavButton = memo(({
 
           <span
             className={cn(
-              'text-[10px] font-semibold tracking-[0.3em] uppercase',
+              'text-[10px] font-semibold tracking-[0.08em] uppercase',
               active ? 'text-cyan-800' : 'text-slate-500'
             )}
           >
@@ -116,10 +116,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [])
 
   const decoratedItems = useMemo(() => {
-    const hasSaved = items.some((item) => item.href === '/parent/saved')
-    const baseItems = hasSaved ? items : [...items, { href: '/parent/saved', label: 'Saved', icon: Heart }]
-
-    return baseItems.map((item) =>
+    return items.map((item) =>
       item.href === '/parent/saved'
         ? { ...item, badge: savedBadges > 0 ? savedBadges : undefined }
         : item

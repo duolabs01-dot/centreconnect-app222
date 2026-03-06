@@ -176,9 +176,9 @@ export default function DirectoryExplorer({
   }
 
   return (
-    <div className="cc-stack">
+    <div className="cc-stack overflow-x-clip">
       {/* Search & Mode Switcher */}
-      <div className="sticky top-0 z-[60] -mx-4 bg-white/80 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:py-0">
+      <div className="sticky top-0 z-[60] mx-0 bg-white/80 py-3 backdrop-blur-xl sm:static sm:bg-transparent sm:py-0">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { SurfaceCard } from '@/components/ui/surface-card'
-import { FileUp, FileText, Trash2, Eye, History, Shield } from 'lucide-react'
+import { FileUp, FileText, Trash2, History, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const DOCUMENT_BUCKET = 'parent-documents'
@@ -90,12 +92,10 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
     }
     setSaving(true)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) throw new Error('Please sign in again')
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
 
-      const filePath = `${user.id}/${Date.now()}-${sanitizeFileName(file.name)}`
+      const filePath = `${ready.userId}/${Date.now()}-${sanitizeFileName(file.name)}`
       const { error: uploadError } = await supabase.storage.from(DOCUMENT_BUCKET).upload(filePath, file, {
         upsert: false,
         cacheControl: '3600',
@@ -106,7 +106,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       const { data, error } = await supabase
         .from('parent_documents')
         .insert({
-          parent_id: user.id,
+          parent_id: ready.userId,
           doc_type: docType,
           file_name: file.name,
           file_path: filePath,
@@ -119,12 +119,12 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
 
       if (error) throw error
       setDocuments((prev) => [data as ParentDocument, ...prev])
-      await createAuditEntry('upload', user.id, data.id, data.file_name)
+      await createAuditEntry('upload', ready.userId, data.id, data.file_name)
       setFile(null)
       setExpiryDate('')
       toast.success('Document uploaded')
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to upload')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to upload'))
     } finally {
       setSaving(false)
     }
@@ -132,34 +132,34 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
 
   async function openDocument(doc: ParentDocument) {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (user) {
-        await createAuditEntry('view', user.id, doc.id, doc.file_name)
+      const ready = await ensureParentReady(supabase)
+      if (ready.ok) {
+        await createAuditEntry('view', ready.userId, doc.id, doc.file_name)
       }
       router.push(`/parent/profile/documents/view/${doc.id}`)
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to open document')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to open document'))
     }
   }
 
   async function removeDocument(doc: ParentDocument) {
     setSaving(true)
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      const { error: deleteRowError } = await supabase.from('parent_documents').delete().eq('id', doc.id)
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
+
+      const { error: deleteRowError } = await supabase
+        .from('parent_documents')
+        .delete()
+        .eq('id', doc.id)
+        .eq('parent_id', ready.userId)
       if (deleteRowError) throw deleteRowError
       await supabase.storage.from(DOCUMENT_BUCKET).remove([doc.file_path])
-      if (user) {
-        await createAuditEntry('delete', user.id, doc.id, doc.file_name)
-      }
+      await createAuditEntry('delete', ready.userId, doc.id, doc.file_name)
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id))
       toast.success('Document removed')
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to remove')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to remove'))
     } finally {
       setSaving(false)
     }

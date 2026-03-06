@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { Button } from '@/components/ui/button'
 import { AddGuardianSheet } from '@/components/parent/guardians/AddGuardianSheet'
 import { sendCoParentInviteAction } from '@/lib/actions/guardians/send-invite'
@@ -264,8 +266,8 @@ export function GuardiansManager({ childList }: Props) {
 
       if (error) throw error
       setGuardians((data ?? []) as Guardian[])
-    } catch (error: any) {
-      toast.error(error?.message || 'Could not load guardians')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Could not load guardians'))
     } finally {
       setLoading(false)
     }
@@ -278,9 +280,9 @@ export function GuardiansManager({ childList }: Props) {
   useEffect(() => {
     let mounted = true
     const supabase = createClient()
-    void supabase.auth.getUser().then(({ data }) => {
+    void ensureParentReady(supabase).then((result) => {
       if (!mounted) return
-      setCurrentUserId(data.user?.id ?? '')
+      setCurrentUserId(result.ok ? result.userId : '')
     })
     return () => {
       mounted = false
@@ -325,7 +327,7 @@ export function GuardiansManager({ childList }: Props) {
   return (
     <div className="space-y-5 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-[var(--shadow-elevation-1)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-[220px]">
+        <div className="w-full sm:min-w-[220px]">
           <label className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Child</label>
           <select
             value={selectedChildId}

@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     loginLink: `${appBaseUrl}/login`,
     supportEmail: 'admin@centerconnect.co.za',
     appBaseUrl,
-    logoUrl: `${appBaseUrl}/centreconnect-logo.svg`,
+    logoUrl: `${appBaseUrl}/centreconnect-logo-email.png`,
   })
 
   let delivered = false

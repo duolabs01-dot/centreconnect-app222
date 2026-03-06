@@ -25,6 +25,8 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
+import { ensureParentReady } from '@/lib/auth/ensure-parent-ready'
+import { toFriendlyClientError } from '@/lib/supabase/client-errors'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -107,8 +109,8 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     if (!activeField) return
     setIsSaving(true)
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
 
       const isUserProfileField = ['full_name', 'phone'].includes(activeField)
       const table = isUserProfileField ? 'user_profiles' : 'parents'
@@ -116,16 +118,16 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       const { error } = await supabase
         .from(table)
         .update({ [activeField]: editValue })
-        .eq('id', user.id)
+        .eq('id', ready.userId)
 
       if (error) throw error
 
       setProfile(prev => ({ ...prev, [activeField]: editValue }))
       setSheetOpen(false)
-      toast.success('Information updated successfully')
+      toast.success('Profile updated')
       router.refresh()
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update field')
+    } catch (error: unknown) {
+      toast.error(toFriendlyClientError(error, 'Failed to update field'))
     } finally {
       setIsSaving(false)
     }
@@ -133,7 +135,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
 
   const menuGroups = [
     {
-      label: 'Security & Account',
+      label: 'Account',
       items: [
         { 
           label: 'Full Name', 
@@ -148,7 +150,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           onClick: () => openEdit('phone', profile.phone) 
         },
         { 
-          label: 'Email Protocol', 
+          label: 'Email address', 
           value: profile.email, 
           icon: Mail, 
           readonly: true 
@@ -156,10 +158,10 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       ]
     },
     {
-      label: 'Family Architecture',
+      label: 'Family',
       items: [
         { 
-          label: 'Parent Role', 
+          label: 'Relationship to child', 
           value: profile.guardian_relationship || 'Not set', 
           icon: Heart, 
           onClick: () => openEdit('guardian_relationship', profile.guardian_relationship) 
@@ -182,6 +184,12 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           icon: Users, 
           href: '/parent/children' 
         },
+        {
+          label: 'Saved centres',
+          value: 'Your shortlist',
+          icon: Heart,
+          href: '/parent/saved',
+        },
         ...(profile.enrolled_child_count > 0
           ? [
               {
@@ -195,7 +203,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       ]
     },
     {
-      label: 'App Environment',
+      label: 'App settings',
       items: [
         { 
           label: 'Lite Mode', 
@@ -242,7 +250,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         </div>
       </SurfaceCard>
 
-      {/* Completion Pulse */}
+      {/* Profile completion */}
       <SurfaceCard className="p-6 bg-slate-900 text-white border-none shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -259,17 +267,17 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         </div>
         {completionPct < 100 ? (
           <p className="mt-4 text-xs text-slate-400 font-medium leading-relaxed">
-            Your profile is being indexed. Complete missing fields to <span className="text-cyan-400 font-bold">accelerate admissions</span> by up to 300%.
+            Complete the missing fields so centres can review your applications faster.
           </p>
         ) : (
           <p className="mt-4 text-xs text-emerald-400 font-bold leading-relaxed flex items-center gap-2">
             <Sparkles className="h-3 w-3" />
-            Profile protocols fully operational.
+            Your profile is complete and ready.
           </p>
         )}
       </SurfaceCard>
 
-      {/* Menu Architecture */}
+      {/* Menu */}
       <div className="space-y-8 mt-2">
         {menuGroups.map(group => (
           <div key={group.label} className="space-y-3">
@@ -336,7 +344,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           className="w-full h-16 rounded-[2rem] bg-rose-50/50 border border-rose-100 text-rose-600 font-black text-sm hover:bg-rose-50 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
         >
           <LogOut className="h-5 w-5" />
-          {isSigningOut ? 'Terminating Session...' : 'Terminate Session'}
+          {isSigningOut ? 'Signing out...' : 'Sign out'}
         </button>
       </div>
 
@@ -349,10 +357,10 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           <SheetHeader className="mb-8 text-center">
             <div className="h-1.5 w-12 bg-slate-200 rounded-full mx-auto mb-6" />
             <SheetTitle className="text-2xl font-black tracking-tighter text-slate-900">
-              Update {activeField === 'full_name' ? 'Identity' : 
-                    activeField === 'phone' ? 'Telemetry' : 
-                    activeField === 'guardian_relationship' ? 'Architecture' : 
-                    'Security Protocol'}
+              Update {activeField === 'full_name' ? 'name' : 
+                    activeField === 'phone' ? 'phone number' : 
+                    activeField === 'guardian_relationship' ? 'relationship' : 
+                    'details'}
             </SheetTitle>
             <SheetDescription className="sr-only">
               Modify your profile details securely.
@@ -370,7 +378,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                   value={editValue} 
                   onChange={(e) => setEditValue(e.target.value)}
                 >
-                  <option value="">Select status</option>
+                  <option value="">Select relationship</option>
                   {RELATIONSHIP_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               ) : (
@@ -390,7 +398,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 onClick={saveField}
                 disabled={isSaving}
               >
-                {isSaving ? 'Safeguarding...' : 'Verify & Save'}
+                {isSaving ? 'Saving...' : 'Save changes'}
               </Button>
               <button 
                 className="h-12 rounded-xl font-bold text-slate-400 hover:text-slate-600 transition-colors"

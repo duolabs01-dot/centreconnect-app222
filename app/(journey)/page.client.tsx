@@ -99,29 +99,31 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 3 — Parent journey strip */}
-          <section className="py-8">
-            <div className="grid gap-12 md:grid-cols-3">
-              <div className="relative">
-                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">1</span>
-                <div className="absolute top-8 left-2">
-                  <p className="text-xl font-bold text-slate-900">Search your area</p>
-                  <p className="mt-1 text-slate-600">Find trusted crèches in your area.</p>
-                </div>
-              </div>
-              <div className="relative">
-                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">2</span>
-                <div className="absolute top-8 left-2">
-                  <p className="text-xl font-bold text-slate-900">Apply in 5 minutes</p>
-                  <p className="mt-1 text-slate-600">Apply in 5 minutes. One profile. Multiple crèches.</p>
-                </div>
-              </div>
-              <div className="relative">
-                <span className="font-display text-7xl font-black text-cyan-50 opacity-50">3</span>
-                <div className="absolute top-8 left-2">
-                  <p className="text-xl font-bold text-slate-900">Track every update</p>
-                  <p className="mt-1 text-slate-600">Track every update. Know the moment a crèche responds.</p>
-                </div>
-              </div>
+          <section className="py-6">
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  title: 'Search your area',
+                  body: 'Find trusted creches near your home or work.',
+                },
+                {
+                  title: 'Apply in minutes',
+                  body: 'One profile, then apply to multiple centres quickly.',
+                },
+                {
+                  title: 'Track every update',
+                  body: 'See status changes the moment a centre responds.',
+                },
+              ].map((step, index) => (
+                <article
+                  key={step.title}
+                  className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                >
+                  <span className="font-display text-5xl font-black text-cyan-100">{index + 1}</span>
+                  <p className="mt-3 text-xl font-bold text-slate-900">{step.title}</p>
+                  <p className="mt-2 text-sm text-slate-600">{step.body}</p>
+                </article>
+              ))}
             </div>
           </section>
 
