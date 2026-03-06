@@ -3,6 +3,15 @@ import { z } from 'zod'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
+import { queueEmail } from '@/lib/communications/emails'
+import {
+  buildFirstPartyConfirmLink,
+  normalizeAppUrl,
+  sanitizeGeneratedAccessLinkWithDiagnostics,
+} from '@/lib/auth/onboarding-links'
+import { resolveFirstName } from '@/lib/utils/name'
+import { renderRoleDowngradeActivationEmail } from '@/lib/email/templates/role-downgrade-activation'
+import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
 
 type TenantMembershipRole = 'ecd_admin' | 'ecd_staff'
 type TenantUserEffectiveRole = 'owner' | TenantMembershipRole
@@ -39,6 +48,11 @@ const actionSchema = z.discriminatedUnion('action', [
     userId: z.string().uuid(),
   }),
   z.object({
+    action: z.literal('downgrade_to_parent'),
+    userId: z.string().uuid(),
+    reason: z.string().trim().max(220).optional(),
+  }),
+  z.object({
     action: z.literal('remove_invitation'),
     invitationId: z.string().uuid(),
   }),
@@ -50,6 +64,54 @@ function normalizeMembershipRole(value: string | null | undefined): TenantMember
 
 function normalizeUserRoleForProfile(value: string | null | undefined): 'ecd_admin' | 'ecd_staff' {
   return value === 'ecd_staff' ? 'ecd_staff' : 'ecd_admin'
+}
+
+async function resolveUserEmail(
+  admin: ReturnType<typeof createAdminClient>,
+  userId: string,
+  fallback: string | null | undefined = null
+) {
+  const direct = (fallback ?? '').trim().toLowerCase()
+  if (direct) return direct
+  const { data, error } = await admin.auth.admin.getUserById(userId)
+  if (error) return null
+  return data?.user?.email?.trim().toLowerCase() ?? null
+}
+
+async function generateActivationLink(admin: ReturnType<typeof createAdminClient>, email: string) {
+  const appUrlRoot = normalizeAppUrl()
+  const nextPath = '/account/activate'
+  const redirectTo = `${appUrlRoot}/auth/callback?next=${encodeURIComponent(nextPath)}`
+  const magicLinkResult = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo },
+  })
+
+  const actionLink = magicLinkResult.data?.properties?.action_link?.trim() ?? ''
+  if (magicLinkResult.error || !actionLink) {
+    return {
+      link: '',
+      warning: magicLinkResult.error?.message ?? 'Could not generate activation link.',
+    }
+  }
+
+  const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+    hashedToken: magicLinkResult.data?.properties?.hashed_token ?? null,
+    verificationType: magicLinkResult.data?.properties?.verification_type ?? 'magiclink',
+    nextPath,
+  })
+
+  const sanitized = sanitizeGeneratedAccessLinkWithDiagnostics({
+    actionLink,
+    fallbackRedirectTo: redirectTo,
+  })
+
+  return {
+    link: firstPartyConfirmLink ?? sanitized.link,
+    warning: null as string | null,
+    diagnostics: sanitized.diagnostics,
+  }
 }
 
 async function listTenantUsers(admin: ReturnType<typeof createAdminClient>, centreId: string) {
@@ -302,7 +364,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
     const { error: profileUpdateError } = await admin
       .from('user_profiles')
-      .update({ role: normalizeUserRoleForProfile(targetRole) })
+      .update({
+        role: normalizeUserRoleForProfile(targetRole),
+        account_activation_required: false,
+        activation_reason: null,
+        activation_requested_at: null,
+        activation_completed_at: nowIso,
+      })
       .eq('id', payload.userId)
     if (profileUpdateError) return NextResponse.json({ error: profileUpdateError.message }, { status: 400 })
 
@@ -336,6 +404,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         .eq('id', centreId)
       if (ownerError) return NextResponse.json({ error: ownerError.message }, { status: 400 })
     }
+
+    await admin
+      .from('user_role_transitions')
+      .update({
+        status: 'superseded',
+        updated_at: nowIso,
+      })
+      .eq('user_id', payload.userId)
+      .eq('status', 'pending')
 
     await writePlatformActivity(admin, {
       actorUserId: platformAdmin.userId,
@@ -424,6 +501,176 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       users: result.users,
       pendingInvitations: result.pendingInvitations,
       ownerUserId: result.centre?.ownerUserId ?? null,
+    })
+  }
+
+  if (payload.action === 'downgrade_to_parent') {
+    if (centreSnapshot.owner_id === payload.userId) {
+      return NextResponse.json(
+        { error: 'Cannot downgrade the current owner. Transfer ownership first.' },
+        { status: 409 }
+      )
+    }
+
+    const { count: ownedCentresCount, error: ownedCentresError } = await admin
+      .from('ecd_centres')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', payload.userId)
+    if (ownedCentresError) return NextResponse.json({ error: ownedCentresError.message }, { status: 400 })
+    if ((ownedCentresCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: 'User is still an owner of one or more centres. Transfer ownership before downgrade.' },
+        { status: 409 }
+      )
+    }
+
+    const { data: profile, error: profileError } = await admin
+      .from('user_profiles')
+      .select('id,role,first_name,surname,full_name,email')
+      .eq('id', payload.userId)
+      .maybeSingle()
+    if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
+    if (!profile) return NextResponse.json({ error: 'User profile not found.' }, { status: 404 })
+    if (profile.role === 'platform_admin') {
+      return NextResponse.json({ error: 'Platform admin accounts cannot be downgraded here.' }, { status: 409 })
+    }
+
+    const nowIso = new Date().toISOString()
+    const activationReason =
+      payload.reason?.trim() || `Access role changed by CentreConnect admin on ${new Date(nowIso).toLocaleString('en-ZA')}.`
+    const roleBefore = profile.role ?? 'ecd_admin'
+    const userEmail = await resolveUserEmail(admin, payload.userId, profile.email ?? null)
+    if (!userEmail) {
+      return NextResponse.json({ error: 'Could not resolve user email for activation message.' }, { status: 400 })
+    }
+
+    const warnings: string[] = []
+
+    const { error: membershipsDeleteError } = await admin.from('ecd_admins').delete().eq('user_id', payload.userId)
+    if (membershipsDeleteError) {
+      return NextResponse.json({ error: membershipsDeleteError.message }, { status: 400 })
+    }
+
+    const { error: invitationsDeleteByUserError } = await admin
+      .from('ecd_admin_invitations')
+      .delete()
+      .eq('auth_user_id', payload.userId)
+    if (invitationsDeleteByUserError) {
+      return NextResponse.json({ error: invitationsDeleteByUserError.message }, { status: 400 })
+    }
+
+    const { error: invitationsDeleteByEmailError } = await admin
+      .from('ecd_admin_invitations')
+      .delete()
+      .eq('email', userEmail)
+    if (invitationsDeleteByEmailError) {
+      warnings.push(`Could not clear all invitations by email (${invitationsDeleteByEmailError.message}).`)
+    }
+
+    const { error: parentUpsertError } = await admin.from('parents').upsert({ id: payload.userId }, { onConflict: 'id' })
+    if (parentUpsertError) return NextResponse.json({ error: parentUpsertError.message }, { status: 400 })
+
+    const { error: profileUpdateError } = await admin.from('user_profiles').upsert(
+      {
+        id: payload.userId,
+        role: 'parent_user',
+        first_name: profile.first_name ?? null,
+        surname: profile.surname ?? null,
+        full_name: profile.full_name ?? null,
+        email: userEmail,
+        account_activation_required: true,
+        activation_reason: activationReason,
+        activation_requested_at: nowIso,
+        activation_completed_at: null,
+      },
+      { onConflict: 'id' }
+    )
+    if (profileUpdateError) return NextResponse.json({ error: profileUpdateError.message }, { status: 400 })
+
+    const { data: transition, error: transitionError } = await admin
+      .from('user_role_transitions')
+      .insert({
+        user_id: payload.userId,
+        from_role: roleBefore,
+        to_role: 'parent_user',
+        triggered_by: platformAdmin.userId,
+        reason: activationReason,
+        status: 'pending',
+        metadata: {
+          centre_id: centreId,
+          centre_name: centreSnapshot.name,
+          downgraded_by: platformAdmin.email,
+        },
+      })
+      .select('id')
+      .maybeSingle()
+    if (transitionError) {
+      warnings.push(`Transition log failed (${transitionError.message}).`)
+    }
+
+    const revokeResult = await revokeUserSessionsByUserId(admin, payload.userId)
+    if (!revokeResult.ok && revokeResult.warning) {
+      warnings.push(revokeResult.warning)
+    }
+
+    const activationLinkResult = await generateActivationLink(admin, userEmail)
+    if (activationLinkResult.warning || !activationLinkResult.link) {
+      warnings.push(activationLinkResult.warning || 'Activation link generation failed.')
+    } else {
+      const firstName = resolveFirstName({
+        firstName: profile.first_name ?? null,
+        fullName: profile.full_name ?? null,
+        email: userEmail,
+        fallback: 'Friend',
+      })
+      const loginLink = `${normalizeAppUrl()}/login`
+      const template = renderRoleDowngradeActivationEmail({
+        firstName,
+        activationLink: activationLinkResult.link,
+        loginLink,
+        supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
+      })
+      const emailResult = await queueEmail(userEmail, template.subject, template.html)
+      if (!emailResult.success) {
+        warnings.push(`Activation email failed (${emailResult.error || 'queue error'}).`)
+      } else if (transition?.id) {
+        const { error: transitionUpdateError } = await admin
+          .from('user_role_transitions')
+          .update({
+            activation_link_sent_at: nowIso,
+            updated_at: nowIso,
+          })
+          .eq('id', transition.id)
+        if (transitionUpdateError) {
+          warnings.push(`Transition update failed (${transitionUpdateError.message}).`)
+        }
+      }
+    }
+
+    await writePlatformActivity(admin, {
+      actorUserId: platformAdmin.userId,
+      actorEmail: platformAdmin.email,
+      entityType: 'tenant',
+      entityId: centreId,
+      action: 'downgrade_tenant_user_to_parent',
+      summary: 'Downgraded tenant user to parent_user with activation lock',
+      details: {
+        userId: payload.userId,
+        email: userEmail,
+        fromRole: roleBefore,
+        toRole: 'parent_user',
+        warnings: warnings.length > 0 ? warnings : null,
+      },
+    })
+
+    const result = await listTenantUsers(admin, centreId)
+    if (result.error) return NextResponse.json({ error: result.error }, { status: result.status })
+    return NextResponse.json({
+      ok: true,
+      users: result.users,
+      pendingInvitations: result.pendingInvitations,
+      ownerUserId: result.centre?.ownerUserId ?? null,
+      warning: warnings.length > 0 ? warnings.join(' | ') : null,
     })
   }
 

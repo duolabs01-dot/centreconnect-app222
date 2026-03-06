@@ -31,6 +31,7 @@ type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
 type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 'suspended'
 type DsdStatus = 'pending' | 'registered' | 'expired' | 'suspended' | 'not_required'
 type TenantUserPrivilege = 'owner' | 'ecd_admin' | 'ecd_staff'
+type TenantUserDraftPrivilege = TenantUserPrivilege | 'parent_user'
 
 export type AdminTenantTableRow = {
   id: string
@@ -171,7 +172,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [initialForm, setInitialForm] = useState<AdminTenantTableRow | null>(null)
   const [tenantUsers, setTenantUsers] = useState<TenantUserRow[]>([])
   const [pendingInvitations, setPendingInvitations] = useState<TenantPendingInvitation[]>([])
-  const [userRoleDrafts, setUserRoleDrafts] = useState<Record<string, TenantUserPrivilege>>({})
+  const [userRoleDrafts, setUserRoleDrafts] = useState<Record<string, TenantUserDraftPrivilege>>({})
   const [inviteForm, setInviteForm] = useState({
     email: '',
     fullName: '',
@@ -752,24 +753,40 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
     setUsersBusy(true)
     try {
+      const payloadBody =
+        role === 'parent_user'
+          ? {
+              action: 'downgrade_to_parent',
+              userId: user.userId,
+              reason: 'Role changed to parent by CentreConnect admin.',
+            }
+          : {
+              action: 'set_user_privileges',
+              userId: user.userId,
+              role,
+            }
       const response = await fetch(`/api/internal/platform-admin/centres/${editTenantId}/users`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'set_user_privileges',
-          userId: user.userId,
-          role,
-        }),
+        body: JSON.stringify(payloadBody),
       })
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string
+        warning?: string | null
         users?: TenantUserRow[]
         pendingInvitations?: TenantPendingInvitation[]
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to update user privileges')
       applyUsersPayload(payload)
       router.refresh()
-      toast.success('User privileges updated.')
+      if (role === 'parent_user') {
+        toast.success('User downgraded to Parent. Activation email queued.')
+      } else {
+        toast.success('User privileges updated.')
+      }
+      if (payload.warning) {
+        toast.warning(payload.warning)
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to update user privileges')
     } finally {
@@ -1475,6 +1492,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                                     <SelectItem value="ecd_staff">Staff</SelectItem>
                                     <SelectItem value="ecd_admin">Admin</SelectItem>
                                     <SelectItem value="owner">Owner</SelectItem>
+                                    <SelectItem value="parent_user">Parent (requires activation)</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </TableCell>

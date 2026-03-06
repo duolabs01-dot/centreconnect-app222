@@ -26,7 +26,6 @@ export async function updateSession(request: NextRequest) {
     const durationMs = Date.now() - startedAt
     response.headers.set('x-cc-mw-time-ms', String(durationMs))
     response.headers.set('x-cc-mw-path', label)
-    // Only log in development
     if (process.env.NODE_ENV === 'development') {
       console.log(`[mw] ${request.method} ${request.nextUrl.pathname} ${label} ${durationMs}ms`)
     }
@@ -34,57 +33,51 @@ export async function updateSession(request: NextRequest) {
   }
 
   const { supabaseUrl, supabaseAnonKey } = readSupabasePublicEnv()
-
   if (!supabaseUrl || !supabaseAnonKey) {
     return finish(NextResponse.next({ request: { headers: requestHeaders } }), 'missing-env')
   }
 
   let response = NextResponse.next({ request: { headers: requestHeaders } })
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) { return request.cookies.get(name)?.value },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({ request: { headers: requestHeaders } })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({ request: { headers: requestHeaders } })
-          response.cookies.set({ name, value: '', ...options })
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get(name: string) {
+        return request.cookies.get(name)?.value
       },
-    }
-  )
+      set(name: string, value: string, options: CookieOptions) {
+        request.cookies.set({ name, value, ...options })
+        response = NextResponse.next({ request: { headers: requestHeaders } })
+        response.cookies.set({ name, value, ...options })
+      },
+      remove(name: string, options: CookieOptions) {
+        request.cookies.set({ name, value: '', ...options })
+        response = NextResponse.next({ request: { headers: requestHeaders } })
+        response.cookies.set({ name, value: '', ...options })
+      },
+    },
+  })
+
   const pathname = request.nextUrl.pathname
   const protectedArea = getProtectedArea(pathname)
   const isAuthRoute = pathname === '/login' || pathname === '/register' || pathname === '/ecd/login'
-  const hasSupabaseSessionCookie = request.cookies
-    .getAll()
-    .some((cookie) => cookie.name.startsWith('sb-'))
+  const isActivationPage = pathname === '/account/activate'
+  const hasSupabaseSessionCookie = request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-'))
 
-  // Fast paths for anonymous users: avoid remote auth checks when we can infer state from cookies.
   if (!hasSupabaseSessionCookie) {
     clearRoleCache(response, request)
-    if (protectedArea) {
-      const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+    if (protectedArea || isActivationPage) {
+      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
       const nextPath = `${pathname}${request.nextUrl.search}`
       loginUrl.searchParams.set('next', nextPath)
       return finish(NextResponse.redirect(loginUrl), 'anon-protected-redirect')
     }
-
     return finish(response, 'anon-pass')
   }
 
   const userResult = await withTimeout(supabase.auth.getUser(), 4000)
   if (!userResult) {
     clearRoleCache(response, request)
-    if (protectedArea) {
-      // Timeout on auth check for protected path — redirect to login for safety
-      const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+    if (protectedArea || isActivationPage) {
+      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
       loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
       return finish(NextResponse.redirect(loginUrl), 'user-timeout-protected-redirect')
     }
@@ -95,47 +88,74 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = userResult
 
-  if (!user && protectedArea) {
-    clearRoleCache(response, request)
-    const loginUrl = new URL(getLoginPath(protectedArea), request.url)
-    const nextPath = `${pathname}${request.nextUrl.search}`
-    loginUrl.searchParams.set('next', nextPath)
-    return finish(NextResponse.redirect(loginUrl), 'no-user-protected-redirect')
-  }
-
   if (!user) {
     clearRoleCache(response, request)
+    if (protectedArea || isActivationPage) {
+      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
+      const nextPath = `${pathname}${request.nextUrl.search}`
+      loginUrl.searchParams.set('next', nextPath)
+      return finish(NextResponse.redirect(loginUrl), 'no-user-protected-redirect')
+    }
     return finish(response, 'no-user-pass')
   }
 
-  // Public routes don't need role checks; skip DB lookup for responsiveness.
-  if (!isAuthRoute && !protectedArea) {
+  const activationGuardEnabled = Boolean(protectedArea || isAuthRoute || isActivationPage)
+  let authStateFromDb: { role: UserRole | null; activationRequired: boolean } | null = null
+
+  if (activationGuardEnabled) {
+    const authStateLookup = await withTimeout(
+      getUserAuthState(supabase, user.id).then((value) => ({ value })),
+      4000
+    )
+    if (!authStateLookup) {
+      clearRoleCache(response, request)
+      if (protectedArea || isActivationPage) {
+        const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
+        loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
+        return finish(NextResponse.redirect(loginUrl), 'activation-check-timeout-redirect')
+      }
+      return finish(response, 'activation-check-timeout-pass')
+    }
+
+    authStateFromDb = authStateLookup.value
+
+    if (authStateFromDb.activationRequired && !isActivationPage) {
+      return finish(NextResponse.redirect(new URL('/account/activate', request.url)), 'activation-required-redirect')
+    }
+
+    if (!authStateFromDb.activationRequired && isActivationPage && authStateFromDb.role) {
+      return finish(
+        NextResponse.redirect(new URL(getDashboardPath(authStateFromDb.role), request.url)),
+        'activation-complete-redirect'
+      )
+    }
+  }
+
+  if (!isAuthRoute && !protectedArea && !isActivationPage) {
     return finish(response, 'public-authenticated-pass')
   }
 
-  const cachedRole = isAuthRoute ? null : getCachedRole(request, user.id)
-  let role: UserRole | null = cachedRole
+  const cachedRole = isAuthRoute || isActivationPage || activationGuardEnabled ? null : getCachedRole(request, user.id)
+  let role: UserRole | null = authStateFromDb?.role ?? cachedRole
 
   if (cachedRole === 'parent_user' && protectedArea === 'parent') {
     const freshRoleLookup = await withTimeout(
-      getUserRole(supabase, user.id).then((value) => ({ value })),
+      getUserAuthState(supabase, user.id).then((value) => ({ value })),
       4000
     )
-    if (freshRoleLookup?.value && freshRoleLookup.value !== cachedRole) {
-      role = freshRoleLookup.value
+    if (freshRoleLookup?.value?.role && freshRoleLookup.value.role !== cachedRole) {
+      role = freshRoleLookup.value.role
       setRoleCache(response, request, user.id, role)
     }
   }
 
-  if (!cachedRole) {
-    const roleLookup = await withTimeout(
-      getUserRole(supabase, user.id).then((value) => ({ value })),
-      4000
-    )
+  if (!role) {
+    const roleLookup = authStateFromDb
+      ? { value: authStateFromDb.role }
+      : await withTimeout(getUserAuthState(supabase, user.id).then((value) => ({ value: value.role })), 4000)
     if (!roleLookup) {
       clearRoleCache(response, request)
       if (protectedArea) {
-        // Timeout on role check for protected path — redirect to login for safety
         const loginUrl = new URL(getLoginPath(protectedArea), request.url)
         loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
         return finish(NextResponse.redirect(loginUrl), 'role-timeout-protected-redirect')
@@ -143,16 +163,15 @@ export async function updateSession(request: NextRequest) {
       return finish(response, 'role-timeout-pass')
     }
     role = roleLookup.value
-    if (role) {
-      setRoleCache(response, request, user.id, role)
-    }
+  }
+
+  if (role && !cachedRole) {
+    setRoleCache(response, request, user.id, role)
   }
 
   const dashboardPath = role ? getDashboardPath(role) : '/'
 
   if (isAuthRoute && role) {
-    // Prevent /ecd/login <-> /ecd/dashboard redirect loops when the role exists
-    // but the user has no visible ECD membership + centre.
     if (pathname === '/ecd/login' && isEcdRole(role)) {
       const ecdAccessLookup = await withTimeout(
         (async () => {
@@ -232,17 +251,20 @@ function getLoginPath(area: ProtectedArea): string {
   return area === 'ecd' ? '/ecd/login' : '/login'
 }
 
-async function getUserRole(
+async function getUserAuthState(
   supabase: ReturnType<typeof createServerClient>,
   userId: string
-): Promise<UserRole | null> {
+): Promise<{ role: UserRole | null; activationRequired: boolean }> {
   const { data } = await supabase
     .from('user_profiles')
-    .select('role')
+    .select('role,account_activation_required')
     .eq('id', userId)
     .maybeSingle()
 
-  return (data?.role as UserRole | undefined) ?? null
+  return {
+    role: (data?.role as UserRole | undefined) ?? null,
+    activationRequired: Boolean(data?.account_activation_required),
+  }
 }
 
 const ROLE_COOKIE = 'cc_role'
@@ -297,5 +319,12 @@ function clearRoleCache(response: NextResponse, request: NextRequest) {
 }
 
 function isValidRole(value: string): value is UserRole {
-  return value === 'platform_admin' || value === 'ecd_admin' || value === 'ecd_staff' || value === 'ecd_supervisor' || value === 'parent_user'
+  return (
+    value === 'platform_admin' ||
+    value === 'ecd_admin' ||
+    value === 'ecd_staff' ||
+    value === 'ecd_supervisor' ||
+    value === 'parent_user'
+  )
 }
+
