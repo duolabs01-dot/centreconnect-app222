@@ -57,6 +57,7 @@ const BRAND = {
 }
 
 const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+const FOUNDER_PHOTO_URL = 'https://centerconnect.co.za/founder-mandlenkosi.jpeg'
 
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (
@@ -407,11 +408,27 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       </tr>
     </table>
 
-    <p style="margin:0 0 14px;font-size:13px;line-height:1.65;color:${BRAND.body};">
-      Thank you for trusting us with your business. Your growth and our growth move together, and we are here to support your team every step.
-      <br />
-      <span style="font-weight:700;color:${BRAND.heading};">- Mandlenkosi, Founder</span>
-    </p>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFFFFF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="width:58px;vertical-align:top;">
+                <img src="${FOUNDER_PHOTO_URL}" width="48" height="48" alt="Mandlenkosi Ngwenya" style="display:block;border-radius:999px;border:1px solid ${BRAND.border};object-fit:cover;" />
+              </td>
+              <td style="vertical-align:top;">
+                <p style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">A note from the founder</p>
+                <p style="margin:0;font-size:13px;line-height:1.65;color:${BRAND.body};">
+                  Thank you for trusting us with your business. Your growth and our growth move together, and we are here to support your team every step.
+                  <br />
+                  <span style="font-weight:700;color:${BRAND.heading};">- Mandlenkosi</span>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
 
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 12px;">
       <tr>

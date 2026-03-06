@@ -230,9 +230,69 @@ export default async function AdminTenantsPage() {
   }).length
   const ownerAcceptedCount = invitationRows.filter((row) => Boolean(row.accepted_at)).length
   const ownerPendingCount = Math.max(invitationRows.length - ownerAcceptedCount, 0)
+  const pendingClaimCount = tenants.filter((tenant) => tenant.status !== 'Claimed').length
+  const missingBrandingCount = tenants.filter((tenant) => !tenant.logoUrl || !tenant.coverImageUrl).length
+  const failedInviteCount = inviteLogs.filter((log) => log.status === 'failed').length
+  const pilotPriorityCentres = tenants
+    .filter((tenant) => /bajabulile|sakhisizwe/i.test(tenant.name) || tenant.status !== 'Claimed')
+    .slice(0, 5)
 
   return (
     <main className="space-y-12 px-4 py-10 lg:px-8">
+      <section className="rounded-3xl border border-cyan-500/30 bg-cyan-950/20 p-5 shadow-[0_20px_60px_rgba(6,182,212,0.18)]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Today&apos;s Action Queue</p>
+            <h2 className="mt-1 text-2xl font-black text-white">Pilot Onboarding Priority</h2>
+            <p className="mt-1 max-w-3xl text-sm text-cyan-50/90">
+              Visible operational queue for centres that still need onboarding completion. Start here every time.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/admin/invites">
+              <Button className="bg-cyan-500 text-black hover:bg-cyan-400">Open Invite Tracking</Button>
+            </Link>
+            <Link href="/admin/tenants">
+              <Button variant="outline" className="border-cyan-200/50 bg-white/10 text-cyan-50 hover:bg-cyan-900/40">
+                Open Tenant Directory
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Pending owner claim</p>
+            <p className="mt-1 text-2xl font-black text-white">{pendingClaimCount}</p>
+            <p className="mt-1 text-xs text-slate-400">Centres still not fully claimed by owner account.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Missing branding</p>
+            <p className="mt-1 text-2xl font-black text-white">{missingBrandingCount}</p>
+            <p className="mt-1 text-xs text-slate-400">Centres missing logo or hero image in onboarding flow.</p>
+          </div>
+          <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Failed invites</p>
+            <p className="mt-1 text-2xl font-black text-white">{failedInviteCount}</p>
+            <p className="mt-1 text-xs text-slate-400">Any failed owner/admin/welcome-pack delivery records.</p>
+          </div>
+        </div>
+        <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-300">Priority centres</p>
+          {pilotPriorityCentres.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-300">No priority centres pending right now.</p>
+          ) : (
+            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+              {pilotPriorityCentres.map((centre) => (
+                <li key={centre.id} className="rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white">
+                  <span className="font-semibold">{centre.name}</span>
+                  <span className="ml-2 text-xs uppercase tracking-[0.08em] text-cyan-300">{centre.status}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
       <section className="space-y-6">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Create Tenant</p>

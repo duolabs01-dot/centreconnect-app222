@@ -47,6 +47,7 @@ type CentreProfile = {
 
 const HERO_IMAGE =
   'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
+const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
 
 const scenarios: Scenario[] = [
   {
@@ -832,8 +833,16 @@ export default function CentreConnectWelcomePack() {
               </div>
               <div className="grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
                 {onboardingSteps.map((item) => (
-                  <p key={item.id} className={cn('truncate', item.done ? 'font-semibold text-emerald-700' : '')}>
-                    {item.done ? '[done]' : '[todo]'} {item.label}
+                  <p
+                    key={item.id}
+                    className={cn(
+                      'truncate rounded-full border px-2 py-0.5 text-center',
+                      item.done
+                        ? 'border-emerald-200 bg-emerald-50 font-semibold text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-600'
+                    )}
+                  >
+                    {item.done ? 'Done' : 'Next'}: {item.label}
                   </p>
                 ))}
               </div>
@@ -1151,9 +1160,20 @@ export default function CentreConnectWelcomePack() {
 
           <Card className="border-emerald-100 bg-emerald-50/70 shadow-lg">
             <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-2">
-                <HeartHandshake className="h-5 w-5 text-emerald-700" />
-                <p className="text-sm font-black text-emerald-900">A note from Mandlenkosi, founder of CentreConnect</p>
+              <div className="flex items-center gap-3">
+                <img
+                  src={FOUNDER_PHOTO}
+                  alt="Mandlenkosi Ngwenya"
+                  className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-md"
+                  loading="lazy"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <HeartHandshake className="h-5 w-5 text-emerald-700" />
+                    <p className="text-sm font-black text-emerald-900">A note from Mandlenkosi, founder of CentreConnect</p>
+                  </div>
+                  <p className="mt-1 text-xs text-emerald-800">Built in South Africa for ECD owners who do the hard work every day.</p>
+                </div>
               </div>
               <p className="text-sm leading-relaxed text-emerald-900">
                 Thank you for trusting us with your business. Every centre we onboard helps another family feel safer and better informed.
