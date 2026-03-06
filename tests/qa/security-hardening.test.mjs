@@ -115,6 +115,15 @@ check('admin subscription status route blocks manual event-owned transitions wit
   assert.match(source, /\{ status: 409 \}/)
 })
 
+check('revenue summary escalation note and badge thresholds stay intact', () => {
+  const source = read('app/admin/revenue/page.tsx')
+  assert.match(source, /Escalation note:/)
+  assert.match(source, /failedWebhookCount24h <= 3/)
+  assert.match(source, /suppressedAlertCount24h <= sentAlertCount24h \* 2/)
+  assert.match(source, /laggedWebhookCount <= 5/)
+  assert.match(source, /maxIncidentLevel/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
