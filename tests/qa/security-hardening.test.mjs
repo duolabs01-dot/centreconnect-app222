@@ -127,6 +127,14 @@ check('revenue summary escalation note and badge thresholds stay intact', () => 
   assert.match(source, /maxIncidentLevel/)
 })
 
+check('revenue stale-data warning threshold behavior remains configured and explicit', () => {
+  const source = read('app/admin/revenue/page.tsx')
+  assert.match(source, /BILLING_COUNTER_STALE_WARNING_MINUTES/)
+  assert.match(source, /isCounterStale/)
+  assert.match(source, /Counter data stale warning:/)
+  assert.match(source, /Freshness status:/)
+})
+
 if (hasFailure) {
   process.exit(1)
 }
