@@ -159,10 +159,20 @@ test('Parent signup confirmation email template keeps inline-safe styling', () =
   assert.match(templateSource, /What happens next:/)
 })
 
-test('Scoreboard tracks parent UAT matrix as shipped and advances next active task', () => {
+test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active task', () => {
   const scoreboard = read('docs/BACKLOG_EXECUTION_SCOREBOARD.md')
   assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-007`/)
-  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-008`/)
+  assert.match(scoreboard, /\[DONE\]\s+`BL-PARENT-008`/)
+  assert.match(scoreboard, /\[ACTIVE\]\s+`BL-PARENT-009`/)
+})
+
+test('Parent live smoke command and script are wired', () => {
+  const pkgRaw = read('package.json')
+  const pkg = JSON.parse(pkgRaw)
+  assert.ok(pkg.scripts?.['uat:parent:create:live'], 'Missing uat:parent:create:live script')
+  assert.ok(pkg.scripts?.['uat:parent:create:dry'], 'Missing uat:parent:create:dry script')
+  assert.ok(pkg.scripts?.['test:parent-live'], 'Missing test:parent-live script')
+  assert.equal(exists('scripts/run-parent-create-live-smoke.mjs'), true)
 })
 
 console.log('Parent portal hard-pass smoke checks passed.')
