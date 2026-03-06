@@ -9,17 +9,17 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 ## Snapshot
 
 - Objective: Finish whole-product backlog with blocker-first sequencing.
-- Current bottleneck: Revenue summary still needs explicit stale-data warning when counters age past SLA.
+- Current bottleneck: Badge colors still need an explicit legend for rapid interpretation by new operators.
 - Active lane: `revenue + reliability debt`
 
 ## Now
 
-- [ACTIVE] `BL-OPS-009` `platform` Add explicit stale-data warning when counter age exceeds SLA
-  - Why: Freshness label exists, but no hard warning appears when data is too old.
+- [ACTIVE] `BL-UX-013` `admin` Add legend explaining healthy/warning/critical badge thresholds
+  - Why: Incident badges exist but threshold semantics are not yet documented inline.
   - Definition of done:
-    - Revenue summary shows warning state when counter age exceeds SLA threshold.
-    - Warning copy points operators to refresh and incident desk.
-    - Warning style is visually distinct from healthy state.
+    - Revenue summary includes compact legend mapping colors to threshold ranges.
+    - Legend reflects the exact failure/suppression/lag thresholds in code.
+    - Operators can interpret badge states without opening runbook.
   - Validation:
     - `npm.cmd test`
     - `npm.cmd exec tsc --noEmit`
@@ -28,9 +28,9 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Next
 
-- [READY] `BL-UX-013` `admin` Add legend explaining healthy/warning/critical badge thresholds
 - [READY] `BL-OBS-004` `platform` Add trend tooltip metadata (bucket window + max value) on sparkline
 - [READY] `BL-QA-007` `quality` Add regression checks for stale-data warning threshold behavior
+- [READY] `BL-OPS-010` `platform` Add stale-warning acknowledgement action log entry for operator accountability
 
 ## Blocked
 
@@ -75,3 +75,4 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-OPS-008` Added revenue summary refresh timestamp, counter age label, and one-click refresh control.
 - [DONE] `BL-OBS-003` Added sent/suppressed alert trend sparkline to webhook incident observability surface.
 - [DONE] `BL-QA-006` Added regression checks for escalation-note copy and badge threshold logic.
+- [DONE] `BL-OPS-009` Added explicit stale-data warning state when counter age exceeds SLA threshold.

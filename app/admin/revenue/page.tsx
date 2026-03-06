@@ -35,6 +35,12 @@ function formatCounterAgeLabel(ageMinutes: number | null) {
   return `${hours}h ${remainingMinutes}m old`
 }
 
+function parsePositiveInt(value: string | undefined, fallback: number) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return Math.floor(parsed)
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
@@ -124,6 +130,8 @@ export default async function AdminRevenuePage() {
       ? latestWebhookCounterMs
       : Math.max(latestWebhookCounterMs, latestAlertCounterMs)
   const counterAgeMinutes = latestCounterMs === null ? null : Math.max(0, Math.floor((Date.now() - latestCounterMs) / 60000))
+  const counterStaleWarningMinutes = parsePositiveInt(process.env.BILLING_COUNTER_STALE_WARNING_MINUTES, 20)
+  const isCounterStale = counterAgeMinutes !== null && counterAgeMinutes >= counterStaleWarningMinutes
   const failureLevel: 'healthy' | 'warning' | 'critical' =
     failedWebhookCount24h === 0 ? 'healthy' : failedWebhookCount24h <= 3 ? 'warning' : 'critical'
   const suppressionLevel: 'healthy' | 'warning' | 'critical' =
@@ -291,6 +299,16 @@ export default async function AdminRevenuePage() {
             <p className="mt-1 text-xs text-slate-400">
               Last refreshed: {formatDateTime(currentRefreshIso)}. Counter data age: {formatCounterAgeLabel(counterAgeMinutes)}.
             </p>
+            {isCounterStale ? (
+              <p className="mt-1 text-xs font-semibold text-rose-300">
+                Counter data stale warning: age exceeds {counterStaleWarningMinutes} minutes. Refresh counters and verify
+                Webhook Incident Desk before making escalation decisions.
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-emerald-300">
+                Freshness status: within SLA ({counterStaleWarningMinutes} min threshold).
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             <Link

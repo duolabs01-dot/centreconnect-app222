@@ -42,6 +42,8 @@ check('admin revenue summary retains deep-links, badges, and payment reference s
   assert.match(revenuePage, /Escalation note:/)
   assert.match(revenuePage, /Last refreshed:/)
   assert.match(revenuePage, /Counter data age:/)
+  assert.match(revenuePage, /Counter data stale warning:/)
+  assert.match(revenuePage, /Freshness status:/)
   assert.match(revenuePage, /Refresh counters/)
   assert.match(revenuePage, /\/admin\/runbooks\/payment-incidents/)
   assert.match(revenuePage, /\/admin\/webhook-failures/)
