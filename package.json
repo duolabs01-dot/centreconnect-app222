@@ -20,6 +20,8 @@
     "check:onboarding": "node scripts/check-onboarding-links.mjs",
     "check:auth-url": "node scripts/check-auth-url-config.mjs",
     "audit:onboarding-role": "node scripts/audit-onboarding-role-integrity.mjs",
+    "uat:onboarding:live": "node scripts/run-onboarding-uat-live.mjs",
+    "uat:onboarding:dry": "node scripts/run-onboarding-uat-live.mjs --dry-run",
     "smoke:onboarding-invites": "node tests/qa/onboarding-invite-matrix.test.mjs",
     "smoke:parent": "node scripts/smoke-parent.mjs",
     "test": "node tests/qa/security-hardening.test.mjs",

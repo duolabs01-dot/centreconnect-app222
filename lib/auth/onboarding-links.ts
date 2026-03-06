@@ -12,7 +12,7 @@ export type SanitizedAccessLinkDiagnostics = {
 
 export type InviteDomainHealth = {
   ok: boolean
-  code: 'ok' | 'invalid_url' | 'blocked_host' | 'non_canonical_host'
+  code: 'ok' | 'invalid_url' | 'blocked_host' | 'non_canonical_host' | 'missing_env'
   message: string
   details: Array<{ key: string; value: string }>
 }
@@ -103,6 +103,34 @@ export function assertInviteDomainHealth(): InviteDomainHealth {
   const canonicalOrigin = resolveCanonicalOrigin()
   const canonicalHost = new URL(canonicalOrigin).hostname
   const resolvedAppHost = new URL(normalizeAppUrl()).hostname
+  const isProduction = shouldForceCanonicalOrigin()
+
+  if (isProduction) {
+    const requiredEnv = [
+      { key: 'NEXT_PUBLIC_APP_URL', value: process.env.NEXT_PUBLIC_APP_URL?.trim() ?? '' },
+      { key: 'NEXT_PUBLIC_EMAIL_APP_URL', value: process.env.NEXT_PUBLIC_EMAIL_APP_URL?.trim() ?? '' },
+      { key: 'NEXT_PUBLIC_ROOT_DOMAIN', value: process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() ?? '' },
+    ]
+    const missing = requiredEnv.filter((entry) => entry.value.length === 0).map((entry) => entry.key)
+    const hasSupabaseSiteUrl =
+      (process.env.SUPABASE_SITE_URL?.trim() ?? '').length > 0 ||
+      (process.env.GOTRUE_SITE_URL?.trim() ?? '').length > 0 ||
+      (process.env.SITE_URL?.trim() ?? '').length > 0 ||
+      (process.env.AUTH_SITE_URL?.trim() ?? '').length > 0
+
+    if (!hasSupabaseSiteUrl) {
+      missing.push('SUPABASE_SITE_URL|GOTRUE_SITE_URL|SITE_URL|AUTH_SITE_URL')
+    }
+
+    if (missing.length > 0) {
+      return {
+        ok: false,
+        code: 'missing_env',
+        message: 'Invite links are blocked: required production URL env vars are missing.',
+        details: missing.map((key) => ({ key, value: 'missing' })),
+      }
+    }
+  }
 
   if (!isLocalHostname(resolvedAppHost) && resolvedAppHost !== canonicalHost && resolvedAppHost !== `www.${canonicalHost}`) {
     return {

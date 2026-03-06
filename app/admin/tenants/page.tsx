@@ -273,6 +273,15 @@ export default async function AdminTenantsPage() {
               {inviteDomainHealth.ok ? 'Healthy' : 'Action Required'}
             </p>
             <p className="mt-1 text-xs text-slate-300">{inviteDomainHealth.message}</p>
+            {inviteDomainHealth.details.length > 0 ? (
+              <div className="mt-2 space-y-1">
+                {inviteDomainHealth.details.slice(0, 4).map((detail) => (
+                  <p key={`${detail.key}:${detail.value}`} className="text-[11px] text-slate-400">
+                    {detail.key}: {detail.value}
+                  </p>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
             <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Email Delivery</p>
