@@ -66,25 +66,16 @@ export default async function ParentDashboardPage() {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const [profileResult, childrenResult, applicationsResult] =
-      await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('full_name')
-          .eq('id', user?.id ?? '')
-          .maybeSingle(),
-        supabase
-          .from('children')
-          .select('id,first_name,last_name')
-          .eq('parent_id', user?.id ?? '')
-          .limit(1),
-        supabase
-          .from('applications')
-          .select('id,status,updated_at,submitted_at,child_id,ecd_centres(name,slug),children(first_name,last_name)')
-          .eq('parent_id', user?.id ?? '')
-          .order('submitted_at', { ascending: false })
-          .limit(8),
-      ])
+    const [profileResult, childrenResult, applicationsResult] = await Promise.all([
+      supabase.from('user_profiles').select('full_name').eq('id', user?.id ?? '').maybeSingle(),
+      supabase.from('children').select('id,first_name,last_name').eq('parent_id', user?.id ?? '').limit(1),
+      supabase
+        .from('applications')
+        .select('id,status,updated_at,submitted_at,child_id,ecd_centres(name,slug),children(first_name,last_name)')
+        .eq('parent_id', user?.id ?? '')
+        .order('submitted_at', { ascending: false })
+        .limit(8),
+    ])
 
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
     const greeting = getJohannesburgGreeting()
@@ -98,7 +89,7 @@ export default async function ParentDashboardPage() {
         id: String(application.id ?? ''),
         status: String(application.status ?? ''),
         lastUpdatedAt: String(application.updated_at ?? application.submitted_at ?? ''),
-        centreName: centre?.name?.trim() || 'Crèche pending',
+        centreName: centre?.name?.trim() || 'Creche pending',
         centreSlug: centre?.slug ?? null,
         childName,
       } satisfies DashboardApplication
@@ -106,21 +97,20 @@ export default async function ParentDashboardPage() {
 
     const enrolledApplication = applications.find((application) => application.status === 'enrolled')
     const hasApplications = applications.length > 0
-    const screenState: 'empty' | 'pending' | 'enrolled' =
-      !hasApplications ? 'empty' : enrolledApplication ? 'enrolled' : 'pending'
+    const screenState: 'empty' | 'pending' | 'enrolled' = !hasApplications ? 'empty' : enrolledApplication ? 'enrolled' : 'pending'
 
     const firstChildName =
       `${childrenResult.data?.[0]?.first_name ?? ''} ${childrenResult.data?.[0]?.last_name ?? ''}`.trim() ||
       applications[0]?.childName ||
       'your child'
     const enrolledChildName = enrolledApplication?.childName ?? firstChildName
-    const enrolledCentreName = enrolledApplication?.centreName ?? 'their crèche'
+    const enrolledCentreName = enrolledApplication?.centreName ?? 'their creche'
     const centreInfoHref = enrolledApplication?.centreSlug ? `/c/${enrolledApplication.centreSlug}` : '/directory'
 
     const quickActions = [
       {
         label: "Today's Report",
-        description: "See meals, mood, and activities for today.",
+        description: 'See meals, mood, and activities for today.',
         href: '/parent/daily-reports',
         icon: Sparkles,
       },
@@ -132,12 +122,12 @@ export default async function ParentDashboardPage() {
       },
       {
         label: 'Messages',
-        description: 'Open your parent inbox and crèche notifications.',
+        description: 'Open your parent inbox and creche notifications.',
         href: '/parent/notifications',
         icon: MessageSquare,
       },
       {
-        label: 'Crèche Info',
+        label: 'Creche Info',
         description: 'View hours, contacts, and programme details.',
         href: centreInfoHref,
         icon: Building2,
@@ -151,12 +141,11 @@ export default async function ParentDashboardPage() {
     ]
 
     return (
-      <div className="bg-surface-secondary px-4 pt-4 pb-24 min-h-screen">
+      <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
         <div className="cc-stack">
-          {/* Push Notification Nudge */}
           <PushPermissionRequest />
 
-          {/* Header Section â€” Suspended for instant shell */}
+          {/* Header Section - Suspended for instant shell */}
           <Suspense fallback={<DashboardSummarySkeleton />}>
             <DashboardSummary />
           </Suspense>
@@ -173,8 +162,7 @@ export default async function ParentDashboardPage() {
                     <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50">
                       <Heart className="h-7 w-7 text-cyan-600" />
                     </div>
-                    {/* WhatsApp Help Shortcut */}
-                    <a 
+                    <a
                       href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20creche%20in%20Alexandra."
                       target="_blank"
                       rel="noopener noreferrer"
@@ -184,12 +172,16 @@ export default async function ParentDashboardPage() {
                       WhatsApp Help
                     </a>
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">{greeting}, {parentName}</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">
+                    {greeting}, {parentName}
+                  </p>
                   <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
-                    {`Find a creche near you`}<br />in Alexandra.
+                    {`Find a creche near you`}
+                    <br />
+                    in Alexandra.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Browse trusted crèches in Alexandra, compare options, and apply for {firstChildName} â€” all in one place. 
+                    Browse trusted creches in Alexandra, compare options, and apply for {firstChildName} - all in one place.
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -199,7 +191,7 @@ export default async function ParentDashboardPage() {
                         <input
                           name="q"
                           type="search"
-                          placeholder="Search by suburb or crèche name"
+                          placeholder="Search by suburb or creche name"
                           className="cc-native-field h-11 w-full rounded-2xl pl-10"
                         />
                       </label>
@@ -214,97 +206,89 @@ export default async function ParentDashboardPage() {
                 </div>
               </SurfaceCard>
 
-                            {/* Suggestions for new users */}
-                            <Suspense fallback={<div className="h-48 animate-pulse bg-slate-100 rounded-3xl" />}>
-                              <SuggestedCentresSection />
-                            </Suspense>
-              
-                            {/* Tertiary: Jobs for community */}
-                            <Suspense fallback={null}>
-                              <ParentJobsSection />
-                            </Suspense>
-                          </div>
-                        ) : screenState === 'pending' ? (
-                          <div className="cc-stack">
-                            <SurfaceCard className="animate-fade-in p-5 sm:p-6">
-                              <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
-                              <p className="mt-2 text-sm text-slate-600">
-                                Keep an eye on updates from each crèche while decisions are pending.
-                              </p>
-                            </SurfaceCard>
-              
-                            <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
-                              <ActivityFeedSection />
-                            </Suspense>
-              
-                            <div className="animate-fade-in" style={{ animationDelay: '180ms' }}>
-                              <Link href="/directory" className="group block">
-                                <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
-                                  <div className="flex items-center gap-3">
-                                    <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
-                                    <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more crèches</span>
-                                  </div>
-                                  <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
-                                </SurfaceCard>
-                              </Link>
-                            </div>
-              
-                            {/* Tertiary: Jobs for community */}
-                            <Suspense fallback={null}>
-                              <ParentJobsSection />
-                            </Suspense>
-                          </div>
-                        ) : (
-                          <div className="cc-stack">
-                            <SurfaceCard className="animate-fade-in relative overflow-hidden p-5 sm:p-6">
-                              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
-                              <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
-                              <div className="relative">
-                                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
-                                  <Sparkles className="h-5 w-5" />
-                                </div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
-                                <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-                                  {enrolledChildName} is learning at {enrolledCentreName}!
-                                </h1>
-                                <p className="mt-2 text-sm text-slate-600">
-                                  You are all set. Use the shortcuts below to stay connected every day.
-                                </p>
-                              </div>
-                            </SurfaceCard>
-              
-                            <section className="grid grid-cols-2 gap-3 sm:gap-4">
-                              {quickActions.map((action, index) => {
-                                const Icon = action.icon
-                                return (
-                                  <Link
-                                    key={action.label}
-                                    href={action.href}
-                                    className="animate-fade-in group block min-h-[44px]"
-                                    style={{ animationDelay: `${80 + index * 60}ms` }}
-                                  >
-                                    <SurfaceCard className="p-4 transition-all duration-300 hover:border-cyan-300 h-full">
-                                      <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
-                                        <Icon className="h-4 w-4" />
-                                      </div>
-                                      <p className="text-sm font-semibold text-slate-900">{action.label}</p>
-                                      <p className="mt-1 text-xs text-slate-600">{action.description}</p>
-                                    </SurfaceCard>
-                                  </Link>
-                                )
-                              })}
-                            </section>
-              
-                            <Suspense fallback={<div className="h-64 animate-pulse bg-slate-100 rounded-3xl" />}>
-                              <ActivityFeedSection />
-                            </Suspense>
-              
-                            {/* Tertiary: Jobs for community */}
-                            <Suspense fallback={null}>
-                              <ParentJobsSection />
-                            </Suspense>
-                          </div>
-                        ) }
+              <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl bg-slate-100" />}>
+                <SuggestedCentresSection />
+              </Suspense>
+
+              <Suspense fallback={null}>
+                <ParentJobsSection />
+              </Suspense>
+            </div>
+          ) : screenState === 'pending' ? (
+            <div className="cc-stack">
+              <SurfaceCard className="animate-fade-in p-5 sm:p-6">
+                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
+                <p className="mt-2 text-sm text-slate-600">Keep an eye on updates from each creche while decisions are pending.</p>
+              </SurfaceCard>
+
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-slate-100" />}>
+                <ActivityFeedSection />
+              </Suspense>
+
+              <div className="animate-fade-in" style={{ animationDelay: '180ms' }}>
+                <Link href="/directory" className="group block">
+                  <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
+                    <div className="flex items-center gap-3">
+                      <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
+                      <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more creches</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
+                  </SurfaceCard>
+                </Link>
+              </div>
+
+              <Suspense fallback={null}>
+                <ParentJobsSection />
+              </Suspense>
+            </div>
+          ) : (
+            <div className="cc-stack">
+              <SurfaceCard className="animate-fade-in relative overflow-hidden p-5 sm:p-6">
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
+                <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
+                <div className="relative">
+                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
+                    <Sparkles className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
+                  <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                    {enrolledChildName} is learning at {enrolledCentreName}!
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-600">You are all set. Use the shortcuts below to stay connected every day.</p>
+                </div>
+              </SurfaceCard>
+
+              <section className="grid grid-cols-2 gap-3 sm:gap-4">
+                {quickActions.map((action, index) => {
+                  const Icon = action.icon
+                  return (
+                    <Link
+                      key={action.label}
+                      href={action.href}
+                      className="animate-fade-in group block min-h-[44px]"
+                      style={{ animationDelay: `${80 + index * 60}ms` }}
+                    >
+                      <SurfaceCard className="h-full p-4 transition-all duration-300 hover:border-cyan-300">
+                        <div className="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">{action.label}</p>
+                        <p className="mt-1 text-xs text-slate-600">{action.description}</p>
+                      </SurfaceCard>
+                    </Link>
+                  )
+                })}
+              </section>
+
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-slate-100" />}>
+                <ActivityFeedSection />
+              </Suspense>
+
+              <Suspense fallback={null}>
+                <ParentJobsSection />
+              </Suspense>
+            </div>
+          )}
         </div>
       </div>
     )
@@ -312,8 +296,3 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
-
-
-
-
-
