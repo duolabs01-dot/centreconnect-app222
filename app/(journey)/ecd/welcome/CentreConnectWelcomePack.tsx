@@ -19,7 +19,10 @@ import {
   Smartphone,
   ShieldCheck,
   Zap,
-  Printer
+  Printer,
+  Globe,
+  Settings2,
+  Lightbulb
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,9 +34,8 @@ import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-type PageId = 'welcome' | 'scenarios' | 'preview' | 'pricing' | 'support'
-
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1600&auto=format&fit=crop'
+// High-quality imagery: African preschool children with smiling teacher
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1540479859555-17af45c78602?q=80&w=1600&auto=format&fit=crop'
 const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
 
 const scenarios = [
@@ -60,10 +62,16 @@ const scenarios = [
     emoji: '💸',
     title: 'Refer & Earn R100',
     tag: 'EARN R100',
-    desc: 'Get rewarded for helping other ECD Owners.',
-    value: 'R100 for you, 1st month free for them.',
-    detail: 'Share your invite link with another Creche Owner. When they join the pilot, you get R100 off your next bill and they get their first month completely free.'
+    desc: 'Get rewarded for helping other Creche Owners.',
+    value: 'R100 for you, 1st month fee free for them.',
+    detail: 'Share your invite link with another ECD Owner. When they join the pilot, you get R100 off your next bill and they get their first month completely free.'
   }
+]
+
+const principalTips = [
+  { emoji: "📱", tip: "Add CentreConnect to your home screen. It works like an app — no download needed." },
+  { emoji: "💾", tip: "Start by adding just 5 children from your register. You'll see how quick it is." },
+  { emoji: "📸", tip: "Add a photo of your centre. Parents choose with their eyes first." },
 ]
 
 function toSafeText(value: string | null | undefined, fallback: string) {
@@ -100,10 +108,10 @@ export default function CentreConnectWelcomePack() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
-  const [passwordDone, setPasswordDone] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const firstName = useMemo(() => contactName.split(' ')[0] || 'Friend', [contactName])
+  const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
 
   useEffect(() => {
     let mounted = true
@@ -146,7 +154,6 @@ export default function CentreConnectWelcomePack() {
     if (error) { setPasswordError(error.message); setPasswordSaving(false); return }
     
     await fetch('/api/auth/password-setup-confirmed', { method: 'POST' }).catch(() => null)
-    setPasswordDone(true)
     setRequiresPasswordSetup(false)
     setStep(1)
     toast.success('Secure password set! Welcome to your guide.')
@@ -156,36 +163,35 @@ export default function CentreConnectWelcomePack() {
     // PAGE 0: Welcome Hero
     <div key="page0" className="space-y-8">
       <div className="relative w-full overflow-hidden rounded-[2.5rem] border-4 border-white shadow-2xl bg-white aspect-[16/9]">
-        <Image src={coverImageUrl} alt="Happy creche children" fill className="object-cover" unoptimized />
+        <Image src={coverImageUrl} alt="Children in a Johannesburg creche playing with teacher smiling" fill className="object-cover" unoptimized />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
         <div className="absolute bottom-0 p-8 text-white">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-400">Welcome Home</p>
           <h1 className="mt-2 text-4xl font-black tracking-tight lg:text-6xl leading-tight">Sawubona, {firstName} 👋</h1>
-          <p className="mt-4 max-w-xl text-lg font-medium text-slate-200">{centreName} is now digital. No more heavy books, just a simple phone app built for Mamas like you.</p>
+          <p className="mt-4 max-w-xl text-lg font-medium text-slate-200">{centreName} is now digital. Built for the principals and MaGogos who do the hard work every day.</p>
         </div>
       </div>
       <div className="text-center space-y-4">
-        <p className="text-slate-600 font-bold text-lg">Swipe or click to browse your new Digital Office guide.</p>
+        <p className="text-slate-600 font-bold text-lg italic">Swipe or click to peruse your new Digital Office guide.</p>
         <div className="flex justify-center gap-2">
-          <div className="h-2 w-8 rounded-full bg-cyan-600" />
-          <div className="h-2 w-2 rounded-full bg-slate-200" />
-          <div className="h-2 w-2 rounded-full bg-slate-200" />
-          <div className="h-2 w-2 rounded-full bg-slate-200" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className={cn("h-2 rounded-full transition-all duration-300", currentPage === i ? "w-8 bg-cyan-600" : "w-2 bg-slate-200")} />
+          ))}
         </div>
       </div>
     </div>,
 
-    // PAGE 1: The Scenarios (Problem/Solution)
+    // PAGE 1: Value Scenarios
     <div key="page1" className="space-y-8">
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-black text-slate-900 tracking-tight">Simple Tools, Powerful Results</h2>
-        <p className="text-slate-500 font-medium">Click any card to see how it works in real life.</p>
+        <p className="text-slate-500 font-medium">Click any card to see how it saves you time.</p>
       </div>
       <div className="grid gap-4">
         {scenarios.map(s => (
           <button 
             key={s.id}
-            onClick={() => toast.info('This is just a preview. Tap "Open Dashboard" at the end to start for real!', { icon: '💡' })}
+            onClick={() => toast.info('For demo purposes: This is just a preview!', { icon: '💡' })}
             className="flex flex-col items-start p-6 rounded-[2rem] border-2 border-slate-100 bg-white text-left transition-all hover:border-cyan-200 hover:shadow-xl group"
           >
             <div className="flex w-full items-center justify-between mb-3">
@@ -202,11 +208,11 @@ export default function CentreConnectWelcomePack() {
       </div>
     </div>,
 
-    // PAGE 2: Public Preview & Live Launch
+    // PAGE 2: Digital Identity (Mock Snapshot)
     <div key="page2" className="space-y-8">
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Digital Identity</h2>
-        <p className="text-slate-500 font-medium">This is exactly how parents see your creche online.</p>
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Identity Online</h2>
+        <p className="text-slate-500 font-medium">This is how parents see your creche in our directory.</p>
       </div>
       <div className="mx-auto max-w-sm">
         <CentreCard
@@ -223,22 +229,80 @@ export default function CentreConnectWelcomePack() {
         />
       </div>
       <div className="rounded-[2.5rem] bg-emerald-600 p-8 text-white text-center shadow-2xl shadow-emerald-900/30">
-        <h3 className="text-2xl font-black mb-2">Ready to Activation?</h3>
-        <p className="text-emerald-100 mb-6 font-medium">Click below to index your centre so parents can find you instantly.</p>
+        <h3 className="text-2xl font-black mb-2">Activation Step</h3>
+        <p className="text-emerald-100 mb-6 font-medium">Tap below to list your centre and go live instantly.</p>
         <Button 
           className="h-16 w-full rounded-2xl bg-white text-emerald-700 font-black text-lg hover:bg-emerald-50 shadow-xl active:scale-95 transition-all"
-          onClick={() => toast.success('🚀 Activation Done! You are now live in Alexandra.')}
+          onClick={() => toast.success('🚀 Activation Done! Your centre is now indexed and live.')}
         >
           🚀 Launch My Profile & Go Live
         </Button>
       </div>
     </div>,
 
-    // PAGE 3: Founding Member Pricing
+    // PAGE 3: Quick Tools & Actions
     <div key="page3" className="space-y-8">
       <div className="text-center space-y-2">
+        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Quick Actions</h2>
+        <p className="text-slate-500 font-medium">Start using your digital office right now.</p>
+      </div>
+      
+      <div className="grid gap-4">
+        <Card className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 shadow-lg">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-cyan-100 bg-cyan-50/30 font-black text-cyan-800 hover:bg-cyan-50 transition-all">
+              <Link href={posterHref} target="_blank">
+                <Printer className="mr-2 h-5 w-5" /> Print Gate Poster
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50">
+              <Link href="/ecd/website">
+                <Globe className="mr-2 h-5 w-5" /> Website Setup
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50">
+              <Link href="/ecd/profile">
+                <Settings2 className="mr-2 h-5 w-5" /> Centre Settings
+              </Link>
+            </Button>
+            <Button 
+              onClick={() => {
+                const absolute = `${window.location.origin}/centre/${centreSlug}`
+                navigator.clipboard.writeText(absolute)
+                setCopyStatus('done')
+                toast.success('Link copied! Share it on WhatsApp.')
+                setTimeout(() => setCopyStatus('idle'), 2000)
+              }}
+              variant="outline" 
+              className={cn("h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50", copyStatus === 'done' && "border-emerald-500 text-emerald-700 bg-emerald-50")}
+            >
+              <Copy className="mr-2 h-5 w-5" /> {copyStatus === 'done' ? 'Link Copied!' : 'Share My Link'}
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="rounded-[2.5rem] border-2 border-amber-100 bg-amber-50/50 p-6 shadow-md">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="h-5 w-5 text-amber-600" />
+            <p className="text-xs font-black uppercase tracking-widest text-amber-700">Tips from other Principals</p>
+          </div>
+          <div className="space-y-3">
+            {principalTips.map((t, i) => (
+              <div key={i} className="flex items-start gap-3 bg-white/80 p-3 rounded-2xl border border-amber-100/50">
+                <span className="text-xl">{t.emoji}</span>
+                <p className="text-sm font-bold text-slate-700 leading-snug">{t.tip}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>,
+
+    // PAGE 4: Founding Member Pricing
+    <div key="page4" className="space-y-8">
+      <div className="text-center space-y-2">
         <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Founding Package</h2>
-        <p className="text-slate-500 font-medium">You are on the Advanced Pilot tier for the next 4 weeks.</p>
+        <p className="text-slate-500 font-medium">You are on the Platinum Pilot tier for the next 4 weeks.</p>
       </div>
       
       <Card className="rounded-[2.5rem] border-2 border-cyan-100 bg-white p-8 shadow-xl relative overflow-hidden">
@@ -256,28 +320,47 @@ export default function CentreConnectWelcomePack() {
           </div>
         </div>
         
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            { label: 'DSD Attendance', icon: Printer },
-            { label: 'Gate Security', icon: ShieldCheck },
-            { label: 'Digital Office', icon: Smartphone },
-            { label: 'WhatsApp Help', icon: MessageCircle },
-          ].map(f => (
-            <div key={f.label} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <f.icon size={18} className="text-cyan-600" />
-              <span className="text-sm font-black text-slate-700">{f.label}</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-xs font-medium text-slate-400 text-center uppercase tracking-widest">Locked In forever as a pilot member</p>
+        <table className="w-full text-left mb-6">
+          <thead>
+            <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <th className="py-2">Features</th>
+              <th className="text-center py-2">Starter</th>
+              <th className="text-center py-2 text-cyan-600">Platinum</th>
+            </tr>
+          </thead>
+          <tbody className="text-sm font-bold text-slate-700">
+            {[
+              { label: 'DSD Register', s: false, p: true },
+              { label: 'QR Security', s: false, p: true },
+              { label: 'Parent App', s: true, p: true },
+              { label: 'WhatsApp Help', s: false, p: true },
+            ].map((row) => (
+              <tr key={row.label} className="border-t border-slate-50">
+                <td className="py-2.5">{row.label}</td>
+                <td className="text-center py-2.5">{row.s ? '✓' : '—'}</td>
+                <td className="text-center py-2.5 text-cyan-600">✓</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <p className="text-xs font-black text-slate-400 text-center uppercase tracking-widest">Locked In forever as a pilot member</p>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 font-black text-slate-700 hover:bg-slate-50">
-          <Link href="/ecd/dashboard">Open My Office</Link>
-        </Button>
-        <Button asChild className="h-14 rounded-2xl bg-cyan-600 font-black text-white hover:bg-cyan-700 shadow-lg shadow-cyan-900/20">
-          <Link href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20ready%20to%20start!">WhatsApp Mandla</Link>
+      <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-xl">
+        <div className="flex items-center gap-4 mb-4">
+          <Image src={FOUNDER_PHOTO} alt="Mandlenkosi" width={64} height={64} className="h-16 w-16 rounded-full border-2 border-white/20 object-cover shadow-md" />
+          <div>
+            <p className="text-base font-black leading-tight text-white">Direct Support</p>
+            <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mt-1">Founder, CentreConnect</p>
+          </div>
+        </div>
+        <p className="text-base font-medium leading-relaxed mb-6">
+          Need a hand setting up? WhatsApp me directly. I am here to help you move from paper to digital.
+        </p>
+        <Button asChild className="h-14 w-full rounded-2xl bg-[#25D366] text-white font-black text-lg hover:bg-green-600 shadow-xl shadow-green-900/20 active:scale-95 transition-all">
+          <Link href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20ready%20to%20start!">
+            <MessageCircle className="mr-2 h-6 w-6 fill-current" /> WhatsApp Mandla Now
+          </Link>
         </Button>
       </div>
     </div>
@@ -293,19 +376,19 @@ export default function CentreConnectWelcomePack() {
             <div className="h-8 w-8 rounded-xl bg-cyan-600 flex items-center justify-center text-white shadow-lg">
               <BookOpen size={16} />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Onboarding</p>
               <p className="text-xs font-black text-slate-900">Welcome Guide</p>
             </div>
           </div>
-          <div className="flex-1 max-w-xs h-2 rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex-1 max-w-xs h-2 rounded-full bg-slate-100 overflow-hidden mx-2">
             <motion.div 
               className="h-full bg-cyan-600 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${((currentPage + 1) / pages.length) * 100}%` }}
             />
           </div>
-          <p className="text-[10px] font-black text-cyan-700">{currentPage + 1} / {pages.length}</p>
+          <p className="text-[10px] font-black text-cyan-700 whitespace-nowrap">{currentPage + 1} / {pages.length}</p>
         </div>
       </div>
 
@@ -321,20 +404,20 @@ export default function CentreConnectWelcomePack() {
                 <div className="mx-auto h-12 w-12 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-4">
                   <Lock size={24} />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900">Secure Your Office</h2>
-                <p className="text-sm font-medium text-slate-500">Set your password to open your Guide and Dashboard.</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">Secure Your Office</h2>
+                <p className="text-sm font-medium text-slate-500 leading-relaxed">Set your password to open your Guide and Dashboard.</p>
               </div>
               <form onSubmit={handlePasswordSetup} className="space-y-4">
                 <input 
                   type="password" placeholder="New Password" required value={password} onChange={e => setPassword(e.target.value)}
-                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all"
+                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all shadow-inner"
                 />
                 <input 
                   type="password" placeholder="Confirm Password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all"
+                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all shadow-inner"
                 />
                 {passwordError && <p className="text-xs font-bold text-rose-600 px-2">{passwordError}</p>}
-                <Button className="h-14 w-full rounded-2xl bg-cyan-600 font-black shadow-lg shadow-cyan-900/20" disabled={passwordSaving}>
+                <Button className="h-14 w-full rounded-2xl bg-cyan-600 font-black shadow-lg shadow-cyan-900/20 text-lg active:scale-95 transition-all" disabled={passwordSaving}>
                   {passwordSaving ? 'Securing...' : 'Set Password & Open Guide →'}
                 </Button>
               </form>
@@ -346,8 +429,7 @@ export default function CentreConnectWelcomePack() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="mx-auto max-w-5xl px-4 pt-12"
           >
-            {/* Book-style Navigation Container */}
-            <div className="relative min-h-[600px]">
+            <div className="relative min-h-[650px] pb-24">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentPage}
@@ -361,12 +443,12 @@ export default function CentreConnectWelcomePack() {
               </AnimatePresence>
 
               {/* Book Controls */}
-              <div className="fixed bottom-8 inset-x-4 flex justify-between gap-4 max-w-5xl mx-auto">
+              <div className="fixed bottom-8 inset-x-4 flex justify-between gap-4 max-w-5xl mx-auto z-[90]">
                 <Button 
                   variant="outline" 
                   disabled={currentPage === 0}
                   onClick={() => setCurrentPage(p => p - 1)}
-                  className="h-14 w-14 rounded-2xl border-2 bg-white shadow-xl active:scale-90"
+                  className="h-14 w-14 rounded-2xl border-2 bg-white shadow-xl active:scale-90 flex-shrink-0"
                 >
                   <ChevronLeft size={24} />
                 </Button>
@@ -379,7 +461,7 @@ export default function CentreConnectWelcomePack() {
                     Next Page <ChevronRight size={20} className="ml-2" />
                   </Button>
                 ) : (
-                  <Button asChild className="h-14 flex-1 rounded-2xl bg-cyan-600 text-white font-black text-lg shadow-xl shadow-cyan-900/30 active:scale-95 transition-all">
+                  <Button asChild className="h-14 flex-1 rounded-2xl bg-cyan-600 text-white font-black text-lg shadow-xl shadow-cyan-900/30 active:scale-95 transition-all border-none">
                     <Link href="/ecd/dashboard">Go to My Dashboard 🚀</Link>
                   </Button>
                 )}

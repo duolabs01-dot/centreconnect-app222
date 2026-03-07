@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import '../../ecd/ecd-theme.css'
+import '../../../ecd/ecd-theme.css'
 
 export const metadata: Metadata = {
   title: 'Grow Your Creche - CentreConnect',
