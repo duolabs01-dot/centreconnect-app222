@@ -301,6 +301,49 @@ export default async function AdminRevenuePage() {
                 ? 'warning badge detected — verify failed event queue and runbook checklist before end of session.'
                 : 'all badges healthy — continue monitoring and keep incident shortcuts ready.'}
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-slate-200">What to do now:</span>
+              {escalationLevel === 'critical' ? (
+                <>
+                  <Link
+                    href="/admin/webhook-failures"
+                    className="inline-flex h-8 items-center rounded-xl bg-rose-500 px-3 text-[11px] font-black uppercase tracking-[0.08em] text-white hover:bg-rose-400"
+                  >
+                    Open Incident Desk
+                  </Link>
+                  <Link
+                    href="/admin/runbooks/payment-incidents"
+                    className="inline-flex h-8 items-center rounded-xl border border-rose-500/50 px-3 text-[11px] font-semibold text-rose-200 hover:bg-rose-500/10"
+                  >
+                    Runbook Checklist
+                  </Link>
+                </>
+              ) : escalationLevel === 'warning' ? (
+                <>
+                  <Link
+                    href="/admin/webhook-failures"
+                    className="inline-flex h-8 items-center rounded-xl bg-amber-500 px-3 text-[11px] font-black uppercase tracking-[0.08em] text-slate-900 hover:bg-amber-400"
+                  >
+                    Verify Queue
+                  </Link>
+                  <Link
+                    href="/admin/audit-trail"
+                    className="inline-flex h-8 items-center rounded-xl border border-amber-500/40 px-3 text-[11px] font-semibold text-amber-200 hover:bg-amber-500/10"
+                  >
+                    Check Recent Actions
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/admin/webhook-failures"
+                    className="inline-flex h-8 items-center rounded-xl border border-emerald-500/40 px-3 text-[11px] font-semibold text-emerald-200 hover:bg-emerald-500/10"
+                  >
+                    Continue Monitoring
+                  </Link>
+                </>
+              )}
+            </div>
             <p className="mt-1 text-xs text-slate-400">
               Last refreshed: {formatDateTime(currentRefreshIso)}. Counter data age: {formatCounterAgeLabel(counterAgeMinutes)}.
             </p>

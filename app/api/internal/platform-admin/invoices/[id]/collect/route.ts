@@ -3,6 +3,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { initializePaystackInvoicePayment } from '@/lib/payments/paystack'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
+import { logBillingEvent } from '@/lib/payments/structured-logs'
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
@@ -15,6 +16,11 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
 
   const { id: invoiceId } = await context.params
   if (!invoiceId) return NextResponse.json({ error: 'Missing invoice id' }, { status: 400 })
+
+  logBillingEvent('collect_invoice_requested', {
+    invoiceId,
+    actorUserId: platformAdmin.userId,
+  })
 
   const admin = createAdminClient()
   const { data: invoice, error: readError } = await admin
@@ -62,6 +68,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
 
     const { error: updateError } = await admin.from('invoices').update(patch).eq('id', invoice.id)
     if (updateError) {
+      logBillingEvent('collect_invoice_update_failed', { invoiceId: invoice.id, message: updateError.message }, 'error')
       return NextResponse.json({ error: updateError.message }, { status: 400 })
     }
 
@@ -90,6 +97,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to initialize payment'
+    logBillingEvent('collect_invoice_failed', { invoiceId, message }, 'error')
     return NextResponse.json({ error: message }, { status: 502 })
   }
 }

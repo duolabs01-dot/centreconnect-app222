@@ -2,11 +2,11 @@ import { timingSafeEqual } from 'crypto'
 import { NextResponse } from 'next/server'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generateMonthlySubscriptionInvoices, resolveInvoicePeriodStart } from '@/lib/payments/subscription-invoices'
+import { runBillingAutomation } from '@/lib/payments/billing-automation'
+import { checkAndAlertWebhookHealth } from '@/lib/payments/webhook-alerts'
 import { logBillingEvent } from '@/lib/payments/structured-logs'
 
-type GeneratePayload = {
-  period?: unknown
+type AutomationPayload = {
   notify?: unknown
 }
 
@@ -30,16 +30,12 @@ function isCronAuthorized(request: Request) {
   return safeSecretMatch(parseBearerToken(request), process.env.CRON_SECRET)
 }
 
-function isValidPeriod(value: unknown): value is string {
-  return typeof value === 'string' && /^\d{4}-\d{2}$/.test(value)
-}
-
-async function readPayload(request: Request): Promise<GeneratePayload> {
+async function readPayload(request: Request): Promise<AutomationPayload> {
   const contentType = request.headers.get('content-type') ?? ''
   if (!contentType.includes('application/json')) return {}
   const parsed = await request.json().catch(() => null)
   if (!parsed || typeof parsed !== 'object') return {}
-  return parsed as GeneratePayload
+  return parsed as AutomationPayload
 }
 
 export async function POST(request: Request) {
@@ -50,49 +46,46 @@ export async function POST(request: Request) {
   }
 
   const payload = await readPayload(request)
-  const url = new URL(request.url)
-  const periodCandidate = payload.period ?? url.searchParams.get('period') ?? undefined
-  if (periodCandidate !== undefined && !isValidPeriod(periodCandidate)) {
-    return NextResponse.json({ error: 'Invalid period. Use YYYY-MM.' }, { status: 400 })
-  }
-
-  const notifyCandidate = payload.notify
-  if (notifyCandidate !== undefined && typeof notifyCandidate !== 'boolean') {
+  if (payload.notify !== undefined && typeof payload.notify !== 'boolean') {
     return NextResponse.json({ error: 'Invalid notify flag.' }, { status: 400 })
   }
 
   try {
-    logBillingEvent('generate_monthly_invoices_requested', {
-      actor: cronAuthorized ? 'cron' : 'platform-admin',
-      period: periodCandidate ?? 'current',
+    const admin = createAdminClient()
+    const actor = cronAuthorized
+      ? { email: 'system:cron', sourceLabel: 'system:cron' }
+      : { userId: platformAdmin?.userId, email: platformAdmin?.email, sourceLabel: 'platform-admin' }
+
+    const result = await runBillingAutomation({
+      admin,
+      actor,
+      notify: cronAuthorized ? (payload.notify ?? false) : true,
     })
 
-    const result = await generateMonthlySubscriptionInvoices({
-      admin: createAdminClient(),
-      periodStart: resolveInvoicePeriodStart(periodCandidate ?? undefined),
-      actor: cronAuthorized
-        ? { email: 'system:cron', sourceLabel: 'system:cron' }
-        : { userId: platformAdmin?.userId, email: platformAdmin?.email, sourceLabel: 'platform-admin' },
-      notify: cronAuthorized ? (notifyCandidate ?? false) : true,
+    const webhookHealth = await checkAndAlertWebhookHealth({
+      admin,
+      actor,
     })
 
-    logBillingEvent('generate_monthly_invoices_completed', {
+    logBillingEvent('billing_automation_completed', {
       actor: cronAuthorized ? 'cron' : 'platform-admin',
-      periodStart: result.periodStart,
-      generated: result.generated,
-      skippedExisting: result.skippedExisting,
-      skippedInactiveCentre: result.skippedInactiveCentre,
-      skippedNonBillable: result.skippedNonBillable,
+      scannedInvoices: result.scannedInvoices,
+      remindersSent: result.remindersSent,
+      subscriptionsSuspended: result.subscriptionsSuspended,
+      webhookFailed24h: webhookHealth.failedCount24h,
+      webhookLagged: webhookHealth.laggedReceivedCount,
+      webhookAlertSent: webhookHealth.alertSent,
     })
 
     return NextResponse.json({
       ok: true,
       actor: cronAuthorized ? 'cron' : 'platform-admin',
+      webhookHealth,
       ...result,
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to generate invoices'
-    logBillingEvent('generate_monthly_invoices_failed', { message }, 'error')
+    const message = error instanceof Error ? error.message : 'Failed to run billing automation'
+    logBillingEvent('billing_automation_failed', { message }, 'error')
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -1,8 +1,11 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { initializePaystackPaymentMethodUpdate } from '@/lib/payments/paystack'
 
 const cancellationSchema = z.object({
   reason: z.string().max(1500).optional(),
@@ -70,5 +73,44 @@ export async function saveFinancialSnapshotAction(formData: FormData) {
   )
 
   revalidatePath('/ecd/billing')
+}
+
+export async function beginPaymentMethodUpdateAction() {
+  const session = await requireEcdPortalSession({ cached: false })
+  if (session.role !== 'ecd_admin') return
+
+  const { data: centre } = await session.supabase.from('ecd_centres').select('id,email').eq('id', session.ecdId).maybeSingle()
+  const customerEmail = centre?.email?.trim() || session.user.email?.trim() || null
+  if (!customerEmail) return
+
+  const updateAmount = (() => {
+    const parsed = Number(process.env.PAYSTACK_PAYMENT_METHOD_UPDATE_AMOUNT_ZAR)
+    if (!Number.isFinite(parsed) || parsed <= 0) return 5
+    return parsed
+  })()
+
+  const payment = await initializePaystackPaymentMethodUpdate({
+    ecdId: session.ecdId,
+    customerEmail,
+    initiatedByUserId: session.user.id,
+    amountZar: updateAmount,
+    metadata: {
+      source: 'ecd_billing_self_serve',
+    },
+  })
+
+  const admin = createAdminClient()
+  await admin.from('billing_payment_method_updates').insert({
+    ecd_id: session.ecdId,
+    initiated_by: session.user.id,
+    paystack_reference: payment.reference,
+    payment_url: payment.authorizationUrl,
+    amount: updateAmount,
+    currency: payment.currency,
+    status: 'pending',
+  })
+
+  revalidatePath('/ecd/billing')
+  redirect(payment.authorizationUrl)
 }
 

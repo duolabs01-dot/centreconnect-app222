@@ -19,6 +19,14 @@ type InitializeInvoicePaymentInput = {
   metadata?: Record<string, unknown>
 }
 
+type InitializePaymentMethodUpdateInput = {
+  ecdId: string
+  customerEmail: string
+  initiatedByUserId?: string | null
+  amountZar?: number
+  metadata?: Record<string, unknown>
+}
+
 function getPaystackSecretKey() {
   const value = process.env.PAYSTACK_SECRET_KEY?.trim()
   if (!value) {
@@ -38,29 +46,43 @@ function buildCallbackUrl(invoiceId: string) {
   return `${appUrl}/ecd/billing?invoice=${invoiceId}`
 }
 
-function generateReference(invoiceId: string) {
-  const compact = invoiceId.replace(/-/g, '').slice(0, 12)
-  return `cc_inv_${compact}_${Date.now()}`
+function buildPaymentMethodCallbackUrl() {
+  const explicit = process.env.PAYSTACK_PAYMENT_METHOD_CALLBACK_URL?.trim()
+  if (explicit) return explicit
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3010'
+  return `${appUrl}/ecd/billing?payment_method_update=1`
+}
+
+function generateReference(prefix: string, seed: string) {
+  const compact = seed.replace(/-/g, '').slice(0, 12).toLowerCase()
+  return `${prefix}_${compact}_${Date.now()}`
 }
 
 function toKobo(amountZar: number) {
   return Math.max(0, Math.round(amountZar * 100))
 }
 
-export async function initializePaystackInvoicePayment(input: InitializeInvoicePaymentInput) {
+function parseAmountOverride(value: string | undefined, fallback: number) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return parsed
+}
+
+async function initializePaystackTransaction(input: {
+  customerEmail: string
+  amountZar: number
+  reference: string
+  callbackUrl: string
+  metadata: Record<string, unknown>
+}) {
   const secretKey = getPaystackSecretKey()
-  const reference = generateReference(input.invoiceId)
   const payload = {
-    email: input.customerEmail,
+    email: input.customerEmail.trim(),
     amount: toKobo(input.amountZar),
     currency: 'ZAR',
-    reference,
-    callback_url: buildCallbackUrl(input.invoiceId),
-    metadata: {
-      invoice_id: input.invoiceId,
-      invoice_number: input.invoiceNumber,
-      ...input.metadata,
-    },
+    reference: input.reference,
+    callback_url: input.callbackUrl,
+    metadata: input.metadata,
   }
 
   const response = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -80,11 +102,45 @@ export async function initializePaystackInvoicePayment(input: InitializeInvoiceP
 
   return {
     provider: 'paystack' as const,
-    reference: json.data.reference || reference,
+    reference: json.data.reference || input.reference,
     authorizationUrl: json.data.authorization_url,
     accessCode: json.data.access_code,
     currency: 'ZAR' as const,
   }
+}
+
+export async function initializePaystackInvoicePayment(input: InitializeInvoicePaymentInput) {
+  const reference = generateReference('cc_inv', input.invoiceId)
+  return initializePaystackTransaction({
+    customerEmail: input.customerEmail,
+    amountZar: input.amountZar,
+    reference,
+    callbackUrl: buildCallbackUrl(input.invoiceId),
+    metadata: {
+      invoice_id: input.invoiceId,
+      invoice_number: input.invoiceNumber,
+      ...input.metadata,
+    },
+  })
+}
+
+export async function initializePaystackPaymentMethodUpdate(input: InitializePaymentMethodUpdateInput) {
+  const defaultAmount = parseAmountOverride(process.env.PAYSTACK_PAYMENT_METHOD_UPDATE_AMOUNT_ZAR, 5)
+  const amount = Number.isFinite(Number(input.amountZar)) && Number(input.amountZar) > 0 ? Number(input.amountZar) : defaultAmount
+  const reference = generateReference('cc_pm', input.ecdId)
+
+  return initializePaystackTransaction({
+    customerEmail: input.customerEmail,
+    amountZar: amount,
+    reference,
+    callbackUrl: buildPaymentMethodCallbackUrl(),
+    metadata: {
+      payment_method_update: true,
+      ecd_id: input.ecdId,
+      initiated_by_user_id: input.initiatedByUserId ?? null,
+      ...input.metadata,
+    },
+  })
 }
 
 export function verifyPaystackSignature(rawBody: string, signatureHeader: string | null) {

@@ -41,6 +41,8 @@ check('admin revenue summary retains deep-links, badges, and payment reference s
   assert.match(revenuePage, /Reconciliation lagged/)
   assert.match(revenuePage, /Badge legend:/)
   assert.match(revenuePage, /Escalation note:/)
+  assert.match(revenuePage, /What to do now:/)
+  assert.match(revenuePage, /Open Incident Desk|Verify Queue|Continue Monitoring/)
   assert.match(revenuePage, /Last refreshed:/)
   assert.match(revenuePage, /Counter data age:/)
   assert.match(revenuePage, /Counter data stale warning:/)

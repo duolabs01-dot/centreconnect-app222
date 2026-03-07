@@ -11,7 +11,7 @@ import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
-import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
+import { beginPaymentMethodUpdateAction, requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Billing - CentreConnect',
@@ -26,7 +26,7 @@ export default async function EcdBillingPage() {
   const year = now.getFullYear()
   const month = now.getMonth() + 1
 
-  const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }, { data: enrolledApps }] = await Promise.all([
+  const [{ data: subscription }, { data: invoices }, { data: billingTickets }, { data: financialSnapshot }, { data: enrolledApps }, { data: paymentMethod }, { data: latestPaymentMethodUpdate }] = await Promise.all([
     supabase
       .from('subscriptions')
       .select('id,tier,status,monthly_price,setup_fee,current_period_start,current_period_end,trial_ends_at')
@@ -58,7 +58,19 @@ export default async function EcdBillingPage() {
       .select('monthly_fee_cents')
       .eq('ecd_id', ecdId)
       .eq('status', 'enrolled')
-      .gt('monthly_fee_cents', 0)
+      .gt('monthly_fee_cents', 0),
+    supabase
+      .from('ecd_billing_payment_methods')
+      .select('id,card_type,last4,bank,exp_month,exp_year,updated_at')
+      .eq('ecd_id', ecdId)
+      .maybeSingle(),
+    supabase
+      .from('billing_payment_method_updates')
+      .select('status,created_at,completed_at,failed_at,error_message')
+      .eq('ecd_id', ecdId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
   const enrolledWithFeesCount = enrolledApps?.length ?? 0
@@ -166,6 +178,67 @@ export default async function EcdBillingPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Payment Method</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            {paymentMethod ? (
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Saved Method</p>
+                <p className="mt-1 text-sm font-bold text-emerald-900">
+                  {paymentMethod.card_type ?? 'Card'} •••• {paymentMethod.last4 ?? '----'}
+                </p>
+                <p className="mt-1 text-xs text-emerald-800">
+                  {paymentMethod.bank ?? 'Bank'} • Exp {paymentMethod.exp_month ?? '--'}/{paymentMethod.exp_year ?? '--'}
+                </p>
+                <p className="mt-2 text-[11px] text-emerald-700">
+                  Updated {paymentMethod.updated_at ? formatDate(paymentMethod.updated_at) : '--'}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4">
+                <p className="text-sm font-semibold text-amber-900">No saved payment method yet.</p>
+                <p className="mt-1 text-xs text-amber-800">
+                  Add or refresh your card details to reduce failed collections and avoid billing interruptions.
+                </p>
+              </div>
+            )}
+
+            {latestPaymentMethodUpdate ? (
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/60 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Latest Update Request</p>
+                <p className="mt-1 text-sm font-bold text-slate-900 capitalize">{latestPaymentMethodUpdate.status}</p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Started: {latestPaymentMethodUpdate.created_at ? formatDate(latestPaymentMethodUpdate.created_at) : '--'}
+                </p>
+                {latestPaymentMethodUpdate.completed_at ? (
+                  <p className="mt-1 text-xs text-emerald-700">Completed: {formatDate(latestPaymentMethodUpdate.completed_at)}</p>
+                ) : null}
+                {latestPaymentMethodUpdate.failed_at ? (
+                  <p className="mt-1 text-xs text-rose-700">Failed: {formatDate(latestPaymentMethodUpdate.failed_at)}</p>
+                ) : null}
+                {latestPaymentMethodUpdate.error_message ? (
+                  <p className="mt-1 text-xs text-rose-700">{latestPaymentMethodUpdate.error_message}</p>
+                ) : null}
+              </div>
+            ) : null}
+
+            <form action={beginPaymentMethodUpdateAction}>
+              <Button
+                type="submit"
+                className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm"
+                disabled={role !== 'ecd_admin'}
+              >
+                Update Payment Method
+              </Button>
+            </form>
+            <p className="text-xs text-slate-500">
+              This opens a secure Paystack checkout. A small verification charge may apply and helps save your updated card authorization.
+            </p>
+          </CardContent>
+        </Card>
 
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">

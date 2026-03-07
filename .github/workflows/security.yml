@@ -29,5 +29,8 @@ jobs:
       - name: Type check
         run: npm exec tsc --noEmit
 
+      - name: QA smoke tests
+        run: npm test
+
       - name: Dependency audit (high+)
         run: npm run audit:high
