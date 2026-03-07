@@ -4,7 +4,7 @@ import { BrandMark } from '@/components/ecd/BrandMark'
 
 export default function Loading() {
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center gap-6 bg-slate-950 text-white">
+    <div className="fixed inset-0 flex flex-col items-center justify-center gap-6 bg-slate-900 text-white">
       <div className="rounded-2xl bg-white/10 px-6 py-5 shadow-2xl shadow-cyan-900/30 backdrop-blur-3xl">
         <BrandMark href="/" compact hideLabelOnMobile={false} />
       </div>
