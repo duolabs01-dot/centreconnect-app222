@@ -68,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#065A82" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="font-sans overflow-x-hidden overscroll-none">
+      <body className="font-sans overflow-x-hidden overscroll-none overscroll-y-none" style={{ touchAction: 'pan-y' }}>
         <LiteModeProvider>
           <SessionTimeoutProvider>
             <BottomNavProvider>
