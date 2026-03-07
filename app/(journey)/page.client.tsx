@@ -55,7 +55,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
   }, [])
 
   return (
-    <div className="bg-slate-50">
+    <div className="bg-slate-50 overflow-x-hidden">
       <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="space-y-12 sm:space-y-20">
           
