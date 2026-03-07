@@ -296,8 +296,3 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
     </div>
   )
 }
-        </div>
-      </main>
-    </div>
-  )
-}
