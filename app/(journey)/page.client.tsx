@@ -164,7 +164,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           <section className="snap-start rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl shadow-cyan-900/10 backdrop-blur-2xl">
             <div className="space-y-4 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-500">New to CentreConnect?</p>
-              <h3 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Don't wait to secure your child's seat.</h3>
+              <h3 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Don&apos;t wait to secure your child&apos;s seat.</h3>
               <p className="text-sm text-slate-600">
                 Create a parent profile today so every application, message, and update flows into one calm place. No data gets lost, no queues.
               </p>
