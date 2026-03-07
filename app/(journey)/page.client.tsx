@@ -80,11 +80,11 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 </Button>
               </div>
 
-              {/* Stats row */}
+              {/* Hero highlights */}
               <div className="mt-10 grid grid-cols-2 gap-5 border-t border-white/10 pt-6 sm:mt-14 sm:grid-cols-3 sm:gap-8 sm:pt-10">
                 <div>
-                  <p className="font-display text-3xl font-bold text-white">300+</p>
-                  <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">Centres Listed</p>
+                  <p className="font-display text-3xl font-bold text-white">Search</p>
+                  <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">Browse centres near you</p>
                 </div>
                 <div>
                   <p className="font-display text-3xl font-bold text-white">{locationHint}</p>
@@ -167,37 +167,33 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
 
           <PwaInstallCard />
 
-          {/* SECTION 4.5 — Testimonials */}
+          {/* SECTION 4.5 — Family value */}
           <section className="py-12 border-t border-slate-100">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">Trusted by families across Alexandra</h3>
-              <p className="mt-4 text-slate-600">Join hundreds of parents who found the right crèche through CentreConnect.</p>
+              <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">How CentreConnect helps families</h3>
+              <p className="mt-4 text-slate-600">Search, apply, and keep track of centre responses in one place.</p>
             </div>
             
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 {
-                  quote: "I found a crèche just 5 minutes from my house that I didn't even know existed. The pickup codes give me such peace of mind.",
-                  author: "Lerato M.",
-                  sub: "Parent in Alex"
+                  title: 'Find nearby options',
+                  body: 'Browse centres in Alexandra and nearby areas from one place.',
                 },
                 {
-                  quote: "Usually, applying to crèches is a headache of paperwork. With CentreConnect, I did it all from my phone in one afternoon.",
-                  author: "Sipho K.",
-                  sub: "Father of two"
+                  title: 'Apply with one profile',
+                  body: 'Create your details once and reuse them when you apply to centres.',
                 },
                 {
-                  quote: "Seeing the daily reports and photos of my daughter makes my workday so much better. I feel connected to her even when I'm away.",
-                  author: "Nomsa Z.",
-                  sub: "Parent"
+                  title: 'Track every response',
+                  body: 'Follow application updates and next steps from your parent dashboard.',
                 }
               ].map((t, i) => (
-                <div key={i} className="rounded-2xl bg-slate-50 p-8 border border-slate-100 italic text-slate-700 relative">
-                  <span className="absolute -top-4 left-6 text-5xl text-cyan-200 font-serif opacity-50 sm:text-6xl">“</span>
-                  <p className="relative z-10 text-lg leading-relaxed mb-6">{t.quote}</p>
-                  <div className="not-italic">
-                    <p className="font-bold text-slate-900">{t.author}</p>
-                    <p className="text-sm text-slate-500">{t.sub}</p>
+                <div key={i} className="rounded-2xl bg-slate-50 p-8 border border-slate-100 text-slate-700">
+                  <div className="mb-4 h-1 w-12 rounded-full bg-cyan-200" />
+                  <p className="text-lg font-bold text-slate-900">{t.title}</p>
+                  <div className="mt-3">
+                    <p className="text-base leading-relaxed text-slate-600">{t.body}</p>
                   </div>
                 </div>
               ))}
