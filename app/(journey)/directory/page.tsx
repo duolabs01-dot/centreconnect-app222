@@ -98,6 +98,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const selectedAgeGroup = rawAgeGroup.toLowerCase() === 'all' ? '' : rawAgeGroup
   const selectedFee = rawFee.toLowerCase() === 'any' ? '' : rawFee
   const selectedSubsidy = rawSubsidy === 'true'
+  let effectiveSuburb = selectedSuburb
   
   const pageSize = 20 // Slightly smaller for faster initial paint
   const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
@@ -140,8 +141,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       countQuery = countQuery.ilike('name', `%${search}%`)
     }
     
-    // PILOT LOGIC: Default to Alexandra if no suburb is selected and user is unauthenticated
-    const effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
+    // Pilot default: unauthenticated guests start in Alexandra until we have wider suburb coverage.
+    effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
     
     if (effectiveSuburb) {
       centresQuery = centresQuery.eq('suburb', effectiveSuburb)
@@ -261,13 +262,17 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         <header className="px-1">
           <div className="flex items-center gap-2 text-cyan-600 mb-2">
             <MapPin className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">Alexandra Pilot</span>
+            <span className="text-xs font-bold uppercase tracking-widest">
+              {effectiveSuburb ? `${effectiveSuburb} pilot` : 'Centre directory'}
+            </span>
           </div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
             Find the right creche.
           </h1>
           <p className="mt-2 text-slate-500 max-w-lg">
-            Compare trusted centres in Alexandra by price, age group, and government subsidy.
+            {effectiveSuburb
+              ? `Compare trusted centres in ${effectiveSuburb} by price, age group, and government subsidy.`
+              : 'Compare trusted centres by price, age group, and government subsidy.'}
           </p>
         </header>
 
@@ -280,7 +285,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           initialPage={currentPage}
           initialFilters={{
             search,
-            suburb: selectedSuburb, // Don't pass effectiveSuburb here so the UI shows current filter state
+            suburb: effectiveSuburb,
             age: selectedAgeGroup,
             fee: selectedFee,
             subsidy: selectedSubsidy,

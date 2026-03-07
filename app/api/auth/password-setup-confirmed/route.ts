@@ -176,6 +176,7 @@ export async function POST() {
   if (delivered) {
     return NextResponse.json({
       success: true,
+      role,
       firstPasswordMarked: shouldMarkFirstPassword,
     })
   }
@@ -191,6 +192,7 @@ export async function POST() {
 
   return NextResponse.json({
     success: true,
+    role,
     firstPasswordMarked: shouldMarkFirstPassword,
   })
 }

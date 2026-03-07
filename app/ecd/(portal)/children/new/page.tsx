@@ -17,6 +17,12 @@ export default async function EcdAddChildWizardPage() {
     .eq('id', ecdId)
     .maybeSingle()
 
+  const { data: classes } = await supabase
+    .from('ecd_classes')
+    .select('id, name, age_group')
+    .eq('ecd_id', ecdId)
+    .order('name')
+
   const centreName = centre?.name?.trim() || 'Your Centre'
 
   return (
@@ -28,7 +34,7 @@ export default async function EcdAddChildWizardPage() {
       userRole={role}
     >
       <section className="mx-auto w-full max-w-7xl space-y-6 px-1 py-2 sm:py-3">
-        <ChildEnrollmentWizard centreName={centreName} />
+        <ChildEnrollmentWizard centreName={centreName} classes={classes ?? []} />
       </section>
     </EcdOsShell>
   )

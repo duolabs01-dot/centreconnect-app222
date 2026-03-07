@@ -61,6 +61,7 @@ const tempChildProfileSchema = z.object({
   last_name: z.string().min(1),
   enrollment_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   date_of_birth: z.string().optional().nullable(),
+  class_id: z.string().uuid().optional().nullable(),
   gender: z.string().optional().nullable(),
   blood_type: z.string().optional().nullable(),
   doctor_name: z.string().optional().nullable(),
@@ -667,6 +668,7 @@ export async function saveTempChildProfileAndInviteParentAction(
     .insert({
       ecd_id: session.ecdId,
       parent_id: null,
+      class_id: payload.class_id || null,
       first_name: payload.first_name.trim(),
       last_name: payload.last_name.trim(),
       enrollment_start_date: payload.enrollment_start_date,

@@ -101,6 +101,7 @@ export default function DirectoryExplorer({
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
+  const isPilotDefaultArea = selectedSuburb === 'Alexandra' && !debouncedSearch && !selectedAge && !selectedFee && selectedSubsidy !== 'true'
 
   // Quick Filters
   const quickFilters = [
@@ -179,6 +180,14 @@ export default function DirectoryExplorer({
     <div className="cc-stack overflow-x-clip">
       {/* Search & Mode Switcher */}
       <div className="sticky top-0 z-[60] mx-0 bg-white/80 py-3 backdrop-blur-xl sm:static sm:bg-transparent sm:py-0">
+        {isPilotDefaultArea ? (
+          <div className="mb-3 flex items-start gap-2 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+            <p>
+              Showing Alexandra first while CentreConnect expands to more suburbs. Search or open filters to explore other areas.
+            </p>
+          </div>
+        ) : null}
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -455,7 +464,7 @@ export default function DirectoryExplorer({
                   Find the perfect creche, then let us handle the rest.
                 </h3>
                 <p className="text-slate-300 text-lg mb-8 font-medium leading-relaxed">
-                  Join 500+ parents who use CentreConnect to manage documents, get daily reports, and track applications in real-time.
+                  Create a free parent profile to manage documents, get daily reports, and track every application in one place.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Button asChild size="lg" className="h-14 rounded-2xl bg-cyan-500 text-slate-900 font-black hover:bg-cyan-400 shadow-xl shadow-cyan-500/20 px-8">

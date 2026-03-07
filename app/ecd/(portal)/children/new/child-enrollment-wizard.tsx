@@ -21,6 +21,7 @@ import {
 
 type ChildEnrollmentWizardProps = {
   centreName: string
+  classes: Array<{ id: string; name: string; age_group: string | null }>
 }
 
 type WizardStep = 'basic' | 'medical' | 'guardians' | 'documents'
@@ -53,6 +54,7 @@ type WizardState = {
   last_name: string
   enrollment_start_date: string
   date_of_birth: string
+  class_id: string
   gender: string
   blood_type: string
   doctor_name: string
@@ -83,6 +85,7 @@ const DEFAULT_STATE: WizardState = {
   last_name: '',
   enrollment_start_date: '',
   date_of_birth: '',
+  class_id: '',
   gender: '',
   blood_type: '',
   doctor_name: '',
@@ -158,7 +161,7 @@ function getInputAiClass(confidence: number | undefined) {
   return confidence ? 'border-teal-300 ring-2 ring-teal-100' : ''
 }
 
-export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps) {
+export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWizardProps) {
   const [stepIndex, setStepIndex] = useState(0)
   const [form, setForm] = useState<WizardState>(DEFAULT_STATE)
   const [guardianContacts, setGuardianContacts] = useState<GuardianContactDraft[]>([DEFAULT_GUARDIAN_CONTACT])
@@ -367,6 +370,7 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
         last_name: form.last_name.trim(),
         enrollment_start_date: form.enrollment_start_date,
         date_of_birth: form.date_of_birth || null,
+        class_id: form.class_id || null,
         gender: form.gender || null,
         blood_type: form.blood_type.trim() || null,
         doctor_name: form.doctor_name.trim() || null,
@@ -712,6 +716,21 @@ export function ChildEnrollmentWizard({ centreName }: ChildEnrollmentWizardProps
                 <option value="female">Female</option>
                 <option value="male">Male</option>
                 <option value="other">Other / Prefer not to say</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Assigned Class (DSD)</label>
+              <select
+                className="cc-native-field h-12 rounded-3xl"
+                value={form.class_id}
+                onChange={(e) => updateField('class_id', e.target.value)}
+              >
+                <option value="">No class assigned</option>
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name} {cls.age_group ? `(${cls.age_group})` : ''}
+                  </option>
+                ))}
               </select>
             </div>
           </CardContent>

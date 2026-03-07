@@ -56,32 +56,26 @@ const BRAND = {
   border: '#E2E8F0',
 }
 
-const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo.svg'
+const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo-email.png'
 const FOUNDER_PHOTO_URL = 'https://centerconnect.co.za/founder-mandlenkosi.jpeg'
 
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (
-    <span
+    <img
+      src={CENTRECONNECT_LOGO_URL}
+      width={size}
+      height={size}
+      alt="CentreConnect"
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: 'block',
         width: `${size}px`,
         height: `${size}px`,
         borderRadius: '8px',
         backgroundColor: '#ffffff',
         border: '1px solid #ccfbf1',
-        overflow: 'hidden',
+        objectFit: 'contain',
       }}
-    >
-      <img
-        src={CENTRECONNECT_LOGO_URL}
-        width={size}
-        height={size}
-        alt="CentreConnect"
-        style={{ display: 'block', width: `${size}px`, height: `${size}px`, objectFit: 'cover' }}
-      />
-    </span>
+    />
   )
 }
 
@@ -107,7 +101,7 @@ function renderChecklist(items: PilotWelcomeChecklistItem[]) {
   return items
     .map((item) => {
       const done = Boolean(item.done)
-      const marker = done ? '&#9989;' : '&#11036;'
+      const marker = done ? '[X]' : '[ ]'
       const itemLabel = done ? `<s>${item.label}</s>` : item.label
       const where = item.whereItShows
         ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${item.whereItShows}</p>`

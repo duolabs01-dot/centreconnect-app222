@@ -1,0 +1,26 @@
+Suite: parent-portal-hard-pass-smoke
+Status: PASS
+Started: 2026-03-07T04:10:30.382Z
+Finished: 2026-03-07T04:10:30.416Z
+DurationMs: 34
+TotalChecks: 16
+Passed: 16
+Failed: 0
+
+Checks:
+- [PASS] Parent route matrix files exist
+- [PASS] Critical parent actions are still present
+- [PASS] Parent write flows use readiness bootstrap
+- [PASS] Parent write flows use friendly error mapping
+- [PASS] Parent submit-failure telemetry is wired for key parent forms
+- [PASS] Parent dashboard readiness card is wired with completion and CTA links
+- [PASS] Admin parent reliability monitor is platform-admin guarded with trend and recent failure views
+- [PASS] Admin dashboard parent audience surfaces reliability severity card with deep-link
+- [PASS] Child create path normalizes list fields for array DB columns
+- [PASS] Parent layout guardrails ensure parent bootstrap on entry
+- [PASS] Browser Supabase client remains singleton
+- [PASS] Bottom nav parent IA remains de-crowded
+- [PASS] Landing journey strip is non-overlapping and public shell keeps brand header
+- [PASS] Parent signup confirmation email template keeps inline-safe styling
+- [PASS] Scoreboard tracks parent UAT matrix/live-smoke progression and next active task
+- [PASS] Parent live smoke command and script are wired

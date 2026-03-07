@@ -1,0 +1,79 @@
+{
+  "suite": "parent-portal-hard-pass-smoke",
+  "status": "fail",
+  "startedAt": "2026-03-06T17:33:17.918Z",
+  "finishedAt": "2026-03-06T17:33:17.983Z",
+  "durationMs": 65,
+  "summary": {
+    "total": 16,
+    "passed": 15,
+    "failed": 1
+  },
+  "checks": [
+    {
+      "name": "Parent route matrix files exist",
+      "status": "pass"
+    },
+    {
+      "name": "Critical parent actions are still present",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use readiness bootstrap",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use friendly error mapping",
+      "status": "pass"
+    },
+    {
+      "name": "Parent submit-failure telemetry is wired for key parent forms",
+      "status": "pass"
+    },
+    {
+      "name": "Parent dashboard readiness card is wired with completion and CTA links",
+      "status": "pass"
+    },
+    {
+      "name": "Admin parent reliability monitor is platform-admin guarded with trend and recent failure views",
+      "status": "fail",
+      "message": "The input did not match the regular expression /window=24h/. Input:\n\n\"import type { Metadata } from 'next'\\n\" +\n  \"import Link from 'next/link'\\n\" +\n  \"import { redirect } from 'next/navigation'\\n\" +\n  \"import { AlertTriangle, ArrowUpRight, BarChart3, Route } from 'lucide-react'\\n\" +\n  \"import { createClient } from '@/lib/supabase/server'\\n\" +\n  \"import { createAdminClient } from '@/lib/supabase/admin'\\n\" +\n  \"import { AdminPageLayout } from '@/components/admin/admin-page-layout'\\n\" +\n  \"import { CyberCard } from '@/components/cc-admin/CyberCard'\\n\" +\n  \"import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'\\n\" +\n  '\\n' +\n  \"export const dynamic = 'force-dynamic'\\n\" +\n  '\\n' +\n  'export const metadata: Metadata = {\\n' +\n  \"  title: 'Parent Reliability | CC Control Tower',\\n\" +\n  \"  description: 'Monitor parent submit failures by route and failure type.',\\n\" +\n  '}\\n' +\n  '\\n' +\n  'type SearchParams = Record<string, string | string[] | undefined>\\n' +\n  \"type ReliabilityWindow = '24h' | '7d'\\n\" +\n  '\\n' +\n  'type FailureRow = {\\n' +\n  '  id: string\\n' +\n  '  parent_id: string\\n' +\n  '  route_path: string\\n' +\n  '  form_name: string\\n' +\n  '  failure_type: string\\n' +\n  \"  source: 'client' | 'server'\\n\" +\n  '  error_code: string | null\\n' +\n  '  error_message: string\\n' +\n  '  created_at: string\\n' +\n  '}\\n' +\n  '\\n' +\n  'function first(value: string | string[] | undefined) {\\n' +\n  \"  if (Array.isArray(value)) return value[0]?.trim() ?? ''\\n\" +\n  \"  return value?.trim() ?? ''\\n\" +\n  '}\\n' +\n  '\\n' +\n  'function toWindow(value: string): ReliabilityWindow {\\n' +\n  \"  return value.toLowerCase() === '7d' ? '7d' : '24h'\\n\" +\n  '}\\n' +\n  '\\n' +\n  'function buildReliabilityHref(window: ReliabilityWindow, routeFilter: string) {\\n' +\n  '  const params = new URLSearchParams()\\n' +\n  \"  if (window !== '24h') params.set('window', window)\\n\" +\n  \"  if (routeFilter) params.set('route', routeFilter)\\n\" +\n  '  const query = params.toString()\\n' +\n  \"  return query ? `/admin/parent-reliability?${query}` : '/admin/parent-reliability'\\n\" +\n  '}\\n' +\n  '\\n' +\n  'function formatDateTime(value: string) {\\n' +\n  \"  return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })\\n\" +\n  '}\\n' +\n  '\\n' +\n  'function formatTrendLabel(timestampMs: number, window: ReliabilityWindow) {\\n' +\n  '  const date = new Date(timestampMs)\\n' +\n  \"  if (window === '24h') return date.toLocaleTimeString('en-ZA', { hour: '2-digit' })\\n\" +\n  \"  return date.toLocaleDateString('en-ZA', { month: 'short', day: 'numeric' })\\n\" +\n  '}\\n' +\n  '\\n' +\n  'function truncate(value: string, max = 120) {\\n' +\n  '  if (value.length <= max) return value\\n' +\n  '  return `${value.slice(0, max - 1)}...`\\n' +\n  '}\\n' +\n  '\\n' +\n  'export default async function AdminParentReliabilityPage({ searchParams }: { searchParams?: SearchParams }) {\\n' +\n  '  const supabase = await createClient()\\n' +\n  '  const admin = createAdminClient()\\n' +\n  '  const {\\n' +\n  '    data: { user },\\n' +\n  '  } = await supabase.auth.getUser()\\n' +\n  \"  if (!user) redirect('/login')\\n\" +\n  '\\n' +\n  \"  const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()\\n\" +\n  \"  if (profile?.role !== 'platform_admin') redirect('/login')\\n\" +\n  '\\n' +\n  '  const selectedWindow = toWindow(first(searchParams?.window))\\n' +\n  '  const routeFilter = first(searchParams?.route)\\n' +\n  \"  const windowMs = selectedWindow === '24h' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000\\n\" +\n  '  const nowMs = Date.now()\\n' +\n  '  const windowStartMs = nowMs - windowMs\\n' +\n  '  const windowStartIso = new Date(windowStartMs).toISOString()\\n' +\n  '\\n' +\n  '  let rowsQuery = admin\\n' +\n  \"    .from('parent_form_submit_failures')\\n\" +\n  \"    .select('id,parent_id,route_path,form_name,failure_type,source,error_code,error_message,created_at')\\n\" +\n  \"    .gte('created_at', windowStartIso)\\n\" +\n  \"    .order('created_at', { ascending: false })\\n\" +\n  '    .limit(500)\\n' +\n  \"  if (routeFilter) rowsQuery = rowsQuery.ilike('route_path', `%${routeFilter}%`)\\n\" +\n  '\\n' +\n  '  const rowsResult = await rowsQuery\\n' +\n  '  const rows = ((rowsResult.data ?? []) as FailureRow[]).filter((row) => row.created_at)\\n' +\n  '\\n' +\n  '  const parentIds = Array.from(new Set(rows.map((row) => row.parent_id).filter(Boolean)))\\n' +\n  '  const parentProfilesResult = parentIds.length\\n' +\n  \"    ? await admin.from('user_profiles').select('id,full_name,phone').in('id', parentIds)\\n\" +\n  '    : { data: [] as Array<{ id: string; full_name: string | null; phone: string | null }> }\\n' +\n  '  const profileMap = new Map(\\n' +\n  '    ((parentProfilesResult.data ?? []) as Array<{ id: string; full_name: string | null; phone: string | null }>).map((row) => [\\n' +\n  '      row.id,\\n' +\n  '      row,\\n' +\n  '    ])\\n' +\n  '  )\\n' +\n  '\\n' +\n  '  const routeCounts = new Map<string, number>()\\n' +\n  '  const failureTypeCounts = new Map<string, number>()\\n' +\n  '  const routeFailureCounts = new Map<string, { route: string; failureType: string; count: number }>()\\n' +\n  \"  const bucketCount = selectedWindow === '24h' ? 24 : 7\\n\" +\n  \"  const bucketMs = selectedWindow === '24h' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000\\n\" +\n  '  const trendBuckets = Array.from({ length: bucketCount }, () => 0)\\n' +\n  '\\n' +\n  '  for (const row of rows) {\\n' +\n  \"    const routeKey = row.route_path || 'unknown_route'\\n\" +\n  \"    const typeKey = row.failure_type || 'unknown_failure'\\n\" +\n  '    routeCounts.set(routeKey, (routeCounts.get(routeKey) ?? 0) + 1)\\n' +\n  '    failureTypeCounts.set(typeKey, (failureTypeCounts.get(typeKey) ?? 0) + 1)\\n' +\n  '\\n' +\n  '    const comboKey = `${routeKey}__${typeKey}`\\n' +\n  '    const existing = routeFailureCounts.get(comboKey)\\n' +\n  '    if (existing) {\\n' +\n  '      existing.count += 1\\n' +\n  '      routeFailureCounts.set(comboKey, existing)\\n' +\n  '    } else {\\n' +\n  '      routeFailureCounts.set(comboKey, { route: routeKey, failureType: typeKey, count: 1 })\\n' +\n  '    }\\n' +\n  '\\n' +\n  '    const createdMs = Date.parse(row.created_at)\\n' +\n  '    if (Number.isNaN(createdMs) || createdMs < windowStartMs || createdMs > nowMs) continue\\n' +\n  '    const bucket = Math.min(bucketCount - 1, Math.floor((createdMs - windowStartMs) / bucketMs))\\n' +\n  '    trendBuckets[bucket] += 1\\n' +\n  '  }\\n' +\n  '\\n' +\n  '  const routeHotspots = Array.from(routeCounts.entries())\\n' +\n  '    .sort((a, b) => b[1] - a[1])\\n' +\n  '    .slice(0, 8)\\n' +\n  '    .map(([route, count]) => ({ route, count }))\\n' +\n  '\\n' +\n  '  const failureTypeHotspots = Array.from(failureTypeCounts.entries())\\n' +\n  '    .sort((a, b) => b[1] - a[1])\\n' +\n  '    .slice(0, 8)\\n' +\n  '    .map(([failureType, count]) => ({ failureType, count }))\\n' +\n  '\\n' +\n  '  const routeFailureHotspots = Array.from(routeFailureCounts.values())\\n' +\n  '    .sort((a, b) => b.count - a.count)\\n' +\n  '    .slice(0, 10)\\n' +\n  '\\n' +\n  '  const maxBucket = Math.max(...trendBuckets, 1)\\n' +\n  '  const uniqueParents = new Set(rows.map((row) => row.parent_id).filter(Boolean)).size\\n' +\n  '  const uniqueRoutes = new Set(rows.map((row) => row.route_path).filter(Boolean)).size\\n' +\n  '  const uniqueFailureTypes = new Set(rows.map((row) => row.failure_type).filter(Boolean)).size\\n' +\n  '  const latestFailure = rows[0]\\n' +\n  \"  const windowLabel = selectedWindow === '24h' ? '24h' : '7d'\\n\" +\n  \"  const trendDetailLabel = selectedWindow === '24h' ? 'Hourly' : 'Daily'\\n\" +\n  '  const activeFilterSummary = routeFilter ? `Window: ${windowLabel} | Route filter: ${routeFilter}` : `Window: ${windowLabel}`\\n' +\n  \"  const window24hHref = buildReliabilityHref('24h', routeFilter)\\n\" +\n  \"  const window7dHref = buildReliabilityHref('7d', routeFilter)\\n\" +\n  \"  const clearFiltersHref = '/admin/parent-reliability'\\n\" +\n  '  const midLabelIndex = Math.floor(bucketCount / 2)\\n' +\n  '\\n' +\n  '  return (\\n' +\n  '    <AdminPageLayout\\n' +\n  '      title=\"Parent Reliability\"\\n' +\n  '      description=\"Monitor parent form submit failures by route and failure type.\"\\n' +\n  '      roleLabel=\"Reliability Console\"\\n' +\n  '      wide\\n' +\n  '      actions={\\n' +\n  '        <div className=\"flex flex-wrap gap-2\">\\n' +\n  '          <Link\\n' +\n  '            href=\"/admin/dashboard?audience=parent\"\\n' +\n  '            className=\"inline-flex h-10 items-center rounded-xl border border-slate-700 px-4 text-xs font-semibold text-slate-200 hover:bg-slate-900\"\\n' +\n  '          >\\n' +\n  '            Parent Command Center\\n' +\n  '          </Link>\\n' +\n  '          <Link\\n' +\n  '            href=\"/admin/audit-trail\"\\n' +\n  '            className=\"inline-flex h-10 items-center rounded-xl border border-slate-700 px-4 text-xs font-semibold text-slate-200 hover:bg-slate-900\"\\n' +\n  '          >\\n' +\n  '            Audit Trail\\n' +\n  '          </Link>\\n' +\n  '        </div>\\n' +\n  '      }\\n' +\n  '    >\\n' +\n  '      <section className=\"grid gap-4 md:grid-cols-2 xl:grid-cols-4\">\\n' +\n  '        <CyberCard accent=\"cyan\" glow className=\"p-5\">\\n' +\n  '          <p className=\"font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500\">Failures ({windowLabel})</p>\\n' +\n  '          <h2 className=\"mt-2 font-orbitron text-3xl font-bold text-white\">{rows.length.toLocaleString()}</h2>\\n' +\n  '          <p className=\"mt-1 text-[10px] uppercase tracking-[0.16em] text-cyan-300\">Submit failures in selected window</p>\\n' +\n  '        </CyberCard>\\n' +\n  '        <CyberCard accent=\"violet\" glow className=\"p-5\">\\n' +\n  '          <p className=\"font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500\">Affected Parents ({windowLabel})</p>\\n' +\n  '          <h2 className=\"mt-2 font-orbitron text-3xl font-bold text-white\">{uniqueParents.toLocaleString()}</h2>\\n' +\n  '          <p className=\"mt-1 text-[10px] uppercase tracking-[0.16em] text-violet-300\">Unique parent accounts</p>\\n' +\n  '        </CyberCard>\\n' +\n  '        <CyberCard accent=\"rose\" glow className=\"p-5\">\\n' +\n  '          <p className=\"font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500\">Failing Routes ({windowLabel})</p>\\n' +\n  '          <h2 className=\"mt-2 font-orbitron text-3xl font-bold text-white\">{uniqueRoutes.toLocaleString()}</h2>\\n' +\n  '          <p className=\"mt-1 text-[10px] uppercase tracking-[0.16em] text-rose-300\">Route hotspots detected</p>\\n' +\n  '        </CyberCard>\\n' +\n  '        <CyberCard accent=\"green\" glow className=\"p-5\">\\n' +\n  '          <p className=\"font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500\">Failure Types ({windowLabel})</p>\\n' +\n  '          <h2 className=\"mt-2 font-orbitron text-3xl font-bold text-white\">{uniqueFailureTypes.toLocaleString()}</h2>\\n' +\n  '          <p className=\"mt-1 text-[10px] uppercase tracking-[0.16em] text-emerald-300\">Distinct failure categories</p>\\n' +\n  '        </CyberCard>\\n' +\n  '      </section>\\n' +\n  '\\n' +\n  '      <CyberCard className=\"p-5\">\\n' +\n  '        <div className=\"flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between\">\\n' +\n  '          <div>\\n' +\n  '            <h2 className=\"font-orbitron text-xs font-bold uppercase tracking-widest text-white\">Triage Filters</h2>\\n' +\n  '            <p className=\"mt-2 text-xs text-slate-400\">{activeFilterSummary}</p>\\n' +\n  '          </div>\\n' +\n  '          <div className=\"flex flex-wrap gap-2\">\\n' +\n  '            <Link\\n' +\n  '              href={window24hHref}\\n' +\n  '              className={`inline-flex h-9 items-center rounded-xl border px-3 text-[11px] font-semibold uppercase tracking-wider ${\\n' +\n  \"                selectedWindow === '24h'\\n\" +\n  \"                  ? 'border-cyan-500/40 bg-cyan-500/20 text-cyan-200'\\n\" +\n  \"                  : 'border-slate-700 text-slate\"... 11561 more characters\n"
+    },
+    {
+      "name": "Admin dashboard parent audience surfaces reliability severity card with deep-link",
+      "status": "pass"
+    },
+    {
+      "name": "Child create path normalizes list fields for array DB columns",
+      "status": "pass"
+    },
+    {
+      "name": "Parent layout guardrails ensure parent bootstrap on entry",
+      "status": "pass"
+    },
+    {
+      "name": "Browser Supabase client remains singleton",
+      "status": "pass"
+    },
+    {
+      "name": "Bottom nav parent IA remains de-crowded",
+      "status": "pass"
+    },
+    {
+      "name": "Landing journey strip is non-overlapping and public shell keeps brand header",
+      "status": "pass"
+    },
+    {
+      "name": "Parent signup confirmation email template keeps inline-safe styling",
+      "status": "pass"
+    },
+    {
+      "name": "Scoreboard tracks parent UAT matrix/live-smoke progression and next active task",
+      "status": "pass"
+    },
+    {
+      "name": "Parent live smoke command and script are wired",
+      "status": "pass"
+    }
+  ]
+}

@@ -274,6 +274,20 @@ export function EcdPortalSidebar({
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
             <p className="truncate text-sm font-bold text-foreground">{userEmail ?? 'Unknown'}</p>  
           </div>
+          
+          <div className="space-y-2 pt-2">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
+            <Link 
+              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-[#25D366] py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>💬</span>
+              WhatsApp Mandla
+            </Link>
+          </div>
+
           <SignOutButton
             redirectTo="/"
             className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"

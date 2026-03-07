@@ -1,0 +1,18 @@
+{
+  "mode": "live",
+  "startedAt": "2026-03-06T16:01:48.853Z",
+  "checks": {
+    "createParentAuthUser": "failed",
+    "parentCanCreateChild": "failed",
+    "parentCanCreateEmergencyContact": "failed",
+    "cleanup": "skipped(no-user-created)"
+  },
+  "metadata": {
+    "testEmail": "uat-parent-1772812908853-8wg0ij@example.com"
+  },
+  "failures": [
+    "fetch failed"
+  ],
+  "endedAt": "2026-03-06T16:01:49.201Z",
+  "success": false
+}
