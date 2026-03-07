@@ -156,7 +156,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 </div>
               </div>
 
-              <div className="relative mx-auto w-full max-w-[360px] rounded-[3rem] border-[12px] border-slate-800 bg-slate-950 p-6 shadow-[0_50px_100px_rgba(0,0,0,0.5)]">
+              <div className="relative mx-auto w-full max-w-[360px] rounded-[3rem] border-[12px] border-slate-800 bg-slate-900/90 p-6 shadow-[0_50px_100px_rgba(0,0,0,0.4)] backdrop-blur-sm">
                 <div className="mx-auto mb-8 h-1.5 w-16 rounded-full bg-slate-800" />
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-white/5 bg-white/5 p-5 backdrop-blur-xl">
@@ -175,7 +175,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                   <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-center">
                     <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">Identity Verified</p>
                   </div>
-                  <div className="flex h-14 w-full items-center justify-center rounded-2xl bg-emerald-500 text-sm font-black text-slate-950 shadow-xl shadow-emerald-500/20 active:scale-[0.98] transition-transform">
+                  <div className="flex h-14 w-full items-center justify-center rounded-2xl bg-emerald-500 text-sm font-black text-slate-950 shadow-xl shadow-emerald-500/20 active:scale-[0.98] transition-transform cursor-default">
                     Confirm Release
                   </div>
                 </div>
@@ -241,6 +241,41 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 5 - For ECD Owners */}
+          <section className="snap-start rounded-[3.5rem] bg-slate-900 p-8 sm:p-16 lg:p-24 text-white relative overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.3)]">
+            <div className="absolute inset-0 bg-gradient-to-br from-teal-800 to-slate-950 opacity-90" />
+            <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-cyan-500/10 blur-[100px]" />
+            
+            <div className="relative z-10 max-w-4xl">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 mb-6">Professional ECD Management</p>
+              <h3 className="font-display text-4xl font-black tracking-tighter sm:text-6xl lg:text-7xl leading-[1.02]">
+                Built for South African centres.<br/>
+                <span className="text-teal-400">Starting in Alexandra.</span>
+              </h3>
+              <p className="mt-8 text-xl leading-relaxed text-slate-300 font-medium max-w-2xl">
+                Not imported. Built from scratch for how creches actually work here. Manage your entire operation—from admissions to DSD compliance—from one secure screen.
+              </p>
+              
+              <div className="mt-12 grid grid-cols-2 gap-x-12 gap-y-6 sm:grid-cols-3">
+                {[
+                  'Digital Admissions', 
+                  'DSD Subsidy Export', 
+                  'Attendance Roster',
+                  'Secure Transport', 
+                  'Parent Marketplace', 
+                  'Daily Learner Reports'
+                ].map((feat) => (
+                  <div key={feat} className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                    <span className="text-base font-bold text-slate-200">{feat}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <Button size="lg" className="mt-12 h-16 rounded-2xl bg-white px-10 text-base font-black text-slate-950 hover:bg-cyan-50 shadow-2xl transition-transform active:scale-95" asChild>
+                <Link href="/for-centres/intro">Register Your Centre &rarr;</Link>
+              </Button>
+            </div>
+          </section>
         </div>
       </main>
     </div>
