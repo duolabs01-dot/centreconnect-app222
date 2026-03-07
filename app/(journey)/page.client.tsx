@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Sparkles, ShieldCheck, CheckCircle2, MapPin, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PwaInstallCard } from '@/components/pwa/pwa-install-card'
 import { formatDate, getJohannesburgGreeting } from '@/lib/utils'
 
@@ -107,7 +109,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 3 - Parent journey strip */}
-          <section className="snap-start px-2">
+          <section className="snap-start py-16 sm:py-24 px-2">
             <div className="grid gap-6 md:grid-cols-3">
               {[
                 {
@@ -183,6 +185,55 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             </div>
           </section>
 
+          {/* SECTION - Platform Skills */}
+          <section className="snap-start py-16 sm:py-24 px-2">
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+              <Badge variant="success" className="uppercase tracking-widest">Expert Operations</Badge>
+              <h3 className="text-4xl font-black text-slate-900 tracking-tight sm:text-5xl">Built-in expertise for every centre.</h3>
+              <p className="text-lg text-slate-500 font-medium leading-relaxed">
+                We&apos;ve stitched professional ECD management into every screen. Our platform acts as your virtual specialist for growth, compliance, and parents.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  title: 'Compliance Specialist',
+                  desc: 'Stay ahead of POPIA and DSD requirements with automated audit trails and consent-aware workflows.',
+                  skill: 'Legal & Safety',
+                },
+                {
+                  title: 'Revenue Engine',
+                  desc: 'Professional billing and fee collection powered by Paystack. Say goodbye to manual reconciliation.',
+                  skill: 'Finance',
+                },
+                {
+                  title: 'Parent Acquisition',
+                  desc: 'Digital tools to help you find and onboard new families. Manage your pipeline without the paperwork.',
+                  skill: 'Growth',
+                },
+              ].map((item) => (
+                <Card key={item.title} className="rounded-[2.5rem] border border-slate-100 bg-white/50 backdrop-blur-sm hover:bg-white transition-all shadow-[0_10px_40px_rgb(0,0,0,0.03)] group">
+                  <CardHeader className="p-8">
+                    <div className="mb-4">
+                      <Badge variant="outline" className="text-[10px] font-bold border-cyan-200 text-cyan-700 bg-cyan-50">
+                        {item.skill}
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">
+                      {item.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-8 pb-8 pt-0">
+                    <p className="text-base font-medium text-slate-500 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
           <section className="snap-start px-2">
             <PwaInstallCard />
           </section>
@@ -210,7 +261,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 4.5 - Family value */}
-          <section className="snap-start py-12 px-2">
+          <section className="snap-start py-16 sm:py-24 px-2">
             <div className="mx-auto mb-20 max-w-3xl text-center space-y-4">
               <h3 className="font-display text-4xl font-black text-slate-900 sm:text-5xl lg:text-6xl tracking-tight">Parenting is hard enough.</h3>
               <p className="text-xl font-medium text-slate-500 leading-relaxed">CentreConnect keeps your school days feeling human, organized, and ahead of the next big morning.</p>
