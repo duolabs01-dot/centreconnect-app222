@@ -74,9 +74,33 @@ export async function GET(req: Request) {
     countQuery = countQuery.ilike('name', pattern)
   }
 
-  if (query.suburb) {
-    centresQuery = centresQuery.eq('suburb', query.suburb)
-    countQuery = countQuery.eq('suburb', query.suburb)
+  const effectiveSuburb = query.suburb || (!user && !query.search ? 'Alexandra' : '')
+  if (effectiveSuburb) {
+    try {
+      const { data: existing } = await supabase
+        .from('area_search_counts')
+        .select('count')
+        .eq('suburb', effectiveSuburb)
+        .maybeSingle()
+
+      if (existing?.count != null) {
+        await supabase
+          .from('area_search_counts')
+          .update({ count: (existing.count ?? 0) + 1, updated_at: new Date().toISOString() })
+          .eq('suburb', effectiveSuburb)
+      } else {
+        await supabase
+          .from('area_search_counts')
+          .insert({ suburb: effectiveSuburb, count: 1, updated_at: new Date().toISOString() })
+      }
+    } catch (error) {
+      console.error('Area search tracking failed:', error)
+    }
+  }
+
+  if (effectiveSuburb) {
+    centresQuery = centresQuery.eq('suburb', effectiveSuburb)
+    countQuery = countQuery.eq('suburb', effectiveSuburb)
   }
 
   if (query.age) {
