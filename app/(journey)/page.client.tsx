@@ -65,10 +65,10 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             
             <div className="relative z-10 max-w-4xl">
               <h2 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-white leading-[1.03] sm:text-5xl lg:text-6xl">
-                Every child deserves a great start in life.
+                Calm the chaos and get your little one into the right crèche.
               </h2>
-              <p className="mt-6 max-w-xl text-base text-white/60 leading-relaxed sm:text-lg lg:text-xl">
-                Find the right crèche for your child — compare, apply, and track updates. Free for parents.
+              <p className="mt-6 max-w-xl text-base text-white/80 leading-relaxed sm:text-lg lg:text-xl">
+                We help parents find trusted centres, submit every application, and follow every reply — all in one place without the telecom drama.
               </p>
               
               <div className="mt-8 flex flex-wrap gap-4 sm:mt-10">
@@ -103,16 +103,16 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
-                  title: 'Search your area',
-                  body: 'Find trusted creches near your home or work.',
+                  title: 'Search the best near home',
+                  body: 'See only centres with real reviews, WhatsApp defenders, or verified spots nearby.',
                 },
                 {
-                  title: 'Apply in minutes',
-                  body: 'One profile, then apply to multiple centres quickly.',
+                  title: 'Apply once',
+                  body: 'Build a profile, upload docs, and reuse it for every centre without repeating yourself.',
                 },
                 {
-                  title: 'Track every update',
-                  body: 'See status changes the moment a centre responds.',
+                  title: 'Know the next move',
+                  body: 'We ping you the moment a centre replies, so you never miss the call.',
                 },
               ].map((step, index) => (
                 <article
@@ -131,9 +131,9 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           <section className="snap-start overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-4 py-8 text-white sm:px-8 sm:py-12 lg:px-12 lg:py-16">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
-                <h3 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Every child is verified before leaving.</h3>
-                <p className="mt-6 text-base text-teal-100/70 leading-relaxed sm:text-lg lg:text-xl">
-                  Our secure pickup code system means only authorised guardians can collect. Parents get notified instantly on their phones.
+                <h3 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Sleep easier knowing only your approved people arrive.</h3>
+                <p className="mt-6 text-base text-teal-100/80 leading-relaxed sm:text-lg lg:text-xl">
+                  Pickup codes, instant alerts, and live check-ins keep strangers out of the gate and your mind focused on the day ahead.
                 </p>
               </div>
               
@@ -165,30 +165,48 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             </div>
           </section>
 
-          <section className="snap-start">
-            <PwaInstallCard />
-          </section>
+        <section className="snap-start">
+          <PwaInstallCard />
+        </section>
+
+        <section className="snap-start rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl shadow-cyan-900/10 backdrop-blur-2xl">
+          <div className="text-center space-y-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-500">New to CentreConnect?</p>
+            <h3 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Don’t wait to secure your child’s seat.</h3>
+            <p className="text-sm text-slate-600">
+              Create a parent profile today so every application, message, and update flows into one calm place. No data gets lost, no queues.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button size="lg" className="rounded-2xl bg-cyan-500 px-6 py-3 text-base font-bold text-slate-950 hover:bg-cyan-400" asChild>
+                <Link href="/register">Create my parent profile</Link>
+              </Button>
+              <Button size="lg" variant="outline" className="rounded-2xl border-cyan-500 px-6 py-3 text-base font-semibold text-cyan-600" asChild>
+                <Link href="/login">I already have an account</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
 
           {/* SECTION 4.5 — Family value */}
           <section className="snap-start py-12 border-t border-slate-100">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">How CentreConnect helps families</h3>
-              <p className="mt-4 text-slate-600">Search, apply, and keep track of centre responses in one place.</p>
+              <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">CentreConnect keeps your parenting days feeling human.</h3>
+              <p className="mt-4 text-slate-600">Every button, alert, and notification is focused on keeping you calm, informed, and ahead of the next big morning.</p>
             </div>
             
             <div className="grid gap-8 md:grid-cols-3">
               {[
                 {
-                  title: 'Find nearby options',
-                  body: 'Browse centres in Alexandra and nearby areas from one place.',
+                  title: 'Find the right neighbours',
+                  body: 'See only reviewed, verified, and trusted ECD centres within your reach.',
                 },
                 {
-                  title: 'Apply with one profile',
-                  body: 'Create your details once and reuse them when you apply to centres.',
+                  title: 'One profile, every application',
+                  body: 'Upload your documents once and apply to as many centres as it makes sense—no paperwork pile-ups.',
                 },
                 {
-                  title: 'Track every response',
-                  body: 'Follow application updates and next steps from your parent dashboard.',
+                  title: 'Responses in real time',
+                  body: 'We tell you when a centre replies, asks for a meeting, or offers a spot so you can relax.',
                 }
               ].map((t, i) => (
                 <div key={i} className="rounded-2xl bg-slate-50 p-8 border border-slate-100 text-slate-700">
@@ -208,22 +226,22 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
               <h3 className="font-display text-3xl font-bold text-slate-900 mb-10 text-center">Frequently Asked Questions</h3>
               <div className="space-y-6">
                 {[
-                  {
-                    q: "Is CentreConnect free for parents?",
-                    a: "Yes! Searching for centres, submitting applications, and receiving updates is 100% free for parents and guardians."
-                  },
-                  {
-                    q: "How do I know the centres are safe?",
-                    a: "We list centres that are registered or in the process of registration. We also provide safety features like verified pickup codes for added security."
-                  },
-                  {
-                    q: "Can I apply to more than one crèche?",
-                    a: "Absolutely. You create one child profile and can use it to apply to as many centres as you like with just a few taps."
-                  },
-                  {
-                    q: "What if I don't have a smartphone?",
-                    a: "Our platform is designed to work on basic smartphones and uses very little data. You can also access it from a computer or tablet."
-                  }
+                {
+                  q: "Is CentreConnect free for parents?",
+                  a: "Yes — finding, applying, and chasing updates is completely free so you can focus on making mornings calmer."
+                },
+                {
+                  q: "How can I trust these centres?",
+                  a: "Every centre we share is either registered or actively improving; pickup codes, real-time updates, and verified families keep you in control."
+                },
+                {
+                  q: "Can I apply to more than one crèche?",
+                  a: "Absolutely. One parent profile covers every child and every application, so you never duplicate forms."
+                },
+                {
+                  q: "What if I use a basic phone?",
+                  a: "Our site works on low-data phones and on desktop, so you can check admission news wherever you are."
+                }
                 ].map((faq, i) => (
                   <div key={i} className="rounded-2xl border border-slate-200 p-6 hover:border-cyan-400 transition-colors">
                     <h4 className="font-bold text-slate-900 text-lg mb-2">{faq.q}</h4>
@@ -258,9 +276,14 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
 
           {/* SECTION 6 — Jobs strip */}
           <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h3 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">Work in Early Childhood Education</h3>   
-              <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <h3 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">Work in Early Childhood Education</h3>   
+                <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
+              </div>
+              <p className="text-sm text-slate-500">
+                Find paid shifts that respect your time, with centres that know what parents expect — trust, safety, and transparency.
+              </p>
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
             {activeJobs.length === 0 ? (
