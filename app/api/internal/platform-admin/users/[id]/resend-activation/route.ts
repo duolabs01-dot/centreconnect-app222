@@ -66,7 +66,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const admin = createAdminClient()
   const { data: profile, error: profileError } = await admin
     .from('user_profiles')
-    .select('id,role,first_name,full_name,email,account_activation_required')
+    .select('id,role,first_name,full_name,account_activation_required')
     .eq('id', userId)
     .maybeSingle()
 
@@ -76,31 +76,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return NextResponse.json({ error: 'User is already active.' }, { status: 409 })
   }
 
-  const userEmail = await resolveUserEmail(admin, userId, profile.email ?? null)
+  const userEmail = await resolveUserEmail(admin, userId, null)
   if (!userEmail) return NextResponse.json({ error: 'Could not resolve user email.' }, { status: 400 })
 
-  const activationLinkResult = await generateActivationLink(admin, userEmail)
-  if (activationLinkResult.warning || !activationLinkResult.link) {
-    return NextResponse.json({ error: activationLinkResult.warning || 'Could not generate activation link.' }, { status: 500 })
-  }
-
-  const firstName = resolveFirstName({
-    firstName: profile.first_name ?? null,
-    fullName: profile.full_name ?? null,
-    email: userEmail,
-    fallback: 'Friend',
-  })
-  const loginLink = `${normalizeAppUrl()}/login`
-  const template = renderRoleDowngradeActivationEmail({
-    firstName,
-    activationLink: activationLinkResult.link,
-    loginLink,
-    supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
+  // Use inviteUserByEmail for a fresh, formal invitation if requested
+  const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(userEmail, {
+    redirectTo: `${normalizeAppUrl()}/auth/callback?next=/account/activate`
   })
 
-  const emailResult = await queueEmail(userEmail, template.subject, template.html)
-  if (!emailResult.success) {
-    return NextResponse.json({ error: emailResult.error || 'Could not queue activation email.' }, { status: 502 })
+  if (inviteError) {
+    return NextResponse.json({ error: inviteError.message }, { status: 500 })
   }
 
   const nowIso = new Date().toISOString()

@@ -442,11 +442,17 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
 
   if (payload.action === 'remove_user') {
+    const warnings: string[] = []
+
+    // If this user is the owner, clear the owner_id from the centre first to allow ownerless state
     if (centreSnapshot.owner_id === payload.userId) {
-      return NextResponse.json(
-        { error: 'Cannot remove the current owner. Transfer ownership first.' },
-        { status: 409 }
-      )
+      const { error: clearOwnerError } = await admin
+        .from('ecd_centres')
+        .update({ owner_id: null })
+        .eq('id', centreId)
+      if (clearOwnerError) {
+        return NextResponse.json({ error: `Could not clear centre owner association (${clearOwnerError.message})` }, { status: 400 })
+      }
     }
 
     const { count: ownedCentresCount, error: ownedCentresError } = await admin
@@ -458,14 +464,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
     if ((ownedCentresCount ?? 0) > 0) {
       return NextResponse.json(
-        { error: 'Cannot permanently remove a user who still owns one or more centres. Transfer ownership first.' },
+        { error: 'Cannot permanently remove a user who still owns other centres. Transfer ownership first.' },
         { status: 409 }
       )
     }
 
     const { data: profile, error: profileError } = await admin
       .from('user_profiles')
-      .select('role,full_name,email')
+      .select('role,full_name')
       .eq('id', payload.userId)
       .maybeSingle()
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
@@ -473,7 +479,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       return NextResponse.json({ error: 'Platform admin accounts cannot be removed here.' }, { status: 409 })
     }
 
-    const userEmail = await resolveUserEmail(admin, payload.userId, profile?.email ?? null)
+    const userEmail = await resolveUserEmail(admin, payload.userId, null)
     const warnings: string[] = []
 
     const revokeResult = await revokeUserSessionsByUserId(admin, payload.userId)
@@ -568,7 +574,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
     const { data: profile, error: profileError } = await admin
       .from('user_profiles')
-      .select('id,role,first_name,surname,full_name,email')
+      .select('id,role,first_name,surname,full_name')
       .eq('id', payload.userId)
       .maybeSingle()
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
@@ -581,12 +587,23 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     const activationReason =
       payload.reason?.trim() || `Access role changed by CentreConnect admin on ${new Date(nowIso).toLocaleString('en-ZA')}.`
     const roleBefore = profile.role ?? 'ecd_admin'
-    const userEmail = await resolveUserEmail(admin, payload.userId, profile.email ?? null)
+    const userEmail = await resolveUserEmail(admin, payload.userId, null)
     if (!userEmail) {
       return NextResponse.json({ error: 'Could not resolve user email for activation message.' }, { status: 400 })
     }
 
     const warnings: string[] = []
+
+    // If this user was the owner, clear the owner_id from the centre to allow ownerless state
+    if (centreSnapshot.owner_id === payload.userId) {
+      const { error: clearOwnerError } = await admin
+        .from('ecd_centres')
+        .update({ owner_id: null })
+        .eq('id', centreId)
+      if (clearOwnerError) {
+        warnings.push(`Could not clear centre owner association (${clearOwnerError.message}).`)
+      }
+    }
 
     const { error: membershipsDeleteError } = await admin.from('ecd_admins').delete().eq('user_id', payload.userId)
     if (membershipsDeleteError) {
