@@ -35,12 +35,9 @@ export function PublicShell({ children }: PublicShellProps) {
             </Link>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <Button size="sm" variant="ghost" className="px-3 sm:px-4 hidden sm:inline-flex" onClick={() => router.push('/login')}>
+          <div className="flex shrink-0 items-center">
+            <Button size="sm" className="px-3 sm:px-4" onClick={() => router.push('/login')}>
               Sign In
-            </Button>
-            <Button size="sm" className="px-3 sm:px-4" onClick={() => router.push('/register')}>
-              Get Started
             </Button>
           </div>
         </Container>
