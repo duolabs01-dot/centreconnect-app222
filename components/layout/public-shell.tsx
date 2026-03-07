@@ -16,7 +16,7 @@ export function PublicShell({ children }: PublicShellProps) {
   const router = useRouter()
   return (
     <div className="min-h-screen bg-slate-50 text-foreground overflow-x-hidden">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-white/20 backdrop-blur-3xl shadow-[0_8px_30px_rgba(15,23,42,0.35)]">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur-xl shadow-sm">
         <Container className="flex items-center justify-between gap-3 py-2 sm:py-3">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />

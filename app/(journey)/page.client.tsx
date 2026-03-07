@@ -57,50 +57,50 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
     <div className="min-h-screen snap-y snap-mandatory overflow-x-clip bg-slate-50 overscroll-none selection:bg-cyan-100 selection:text-cyan-900">
       <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 pb-[calc(env(safe-area-inset-bottom)+4rem)] sm:px-6 lg:px-8">
         <div className="space-y-16 sm:space-y-24 lg:space-y-32">
-          {/* SECTION 2 - Premium Hero */}
-          <section className="relative snap-start overflow-hidden rounded-[3rem] bg-slate-900 px-4 py-10 sm:px-12 sm:py-20 lg:px-20 lg:py-32 shadow-[0_30px_100px_rgba(0,0,0,0.25)]">
+          {/* SECTION 2 - Hero Section */}
+          <section className="relative px-4 py-10 sm:px-12 sm:py-20 lg:px-20 lg:py-32 border-b border-slate-100 bg-white">
             {/* Ambient Background Elements */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950" />
-            <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
-            <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-teal-500/10 blur-[100px]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-white" />
+            <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-cyan-500/5 blur-[120px]" />
+            <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-teal-500/5 blur-[100px]" />
             <div className="absolute inset-0 opacity-[0.03] [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" 
-                 style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+                 style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
 
             <div className="relative z-10 max-w-4xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400 mb-8 border border-white/10 backdrop-blur-md">
+              <div className="inline-flex items-center gap-2 rounded-full bg-cyan-100/50 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-700 mb-8 border border-cyan-200">
                 <Sparkles className="h-3 w-3" />
                 Launching in Johannesburg
               </div>
               
-              <h2 className="font-display text-4xl font-black leading-[1.02] tracking-tighter text-white sm:text-6xl lg:text-8xl">
+              <h2 className="font-display text-4xl font-black leading-[1.02] tracking-tighter text-slate-900 sm:text-6xl lg:text-8xl">
                 Find the right creche,<br/>
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">minus the chaos.</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-600">minus the chaos.</span>
               </h2>
-              <p className="mt-8 max-w-xl text-lg leading-relaxed text-slate-300 sm:text-xl font-medium">
+              <p className="mt-8 max-w-xl text-lg leading-relaxed text-slate-600 sm:text-xl font-medium">
                 We help parents find trusted local centres, manage every document, and follow applications in one calm place. No more WhatsApp chasing or paper pile-ups.
               </p>
 
               <div className="mt-10 flex flex-wrap gap-4 sm:mt-14">
-                <Button size="lg" className="h-16 rounded-[1.5rem] bg-cyan-500 px-10 text-base font-black text-slate-950 hover:bg-cyan-400 shadow-[0_20px_50px_rgba(6,182,212,0.3)] transition-transform active:scale-95" asChild>
+                <Button size="lg" className="h-16 rounded-[1.5rem] bg-cyan-600 px-10 text-base font-black text-white hover:bg-cyan-700 shadow-[0_20px_50px_rgba(8,145,178,0.2)] transition-transform active:scale-95" asChild>
                   <Link href="/directory">Browse Local Creches</Link>
                 </Button>
-                <Button size="lg" variant="outline" className="h-16 rounded-[1.5rem] border-white/20 bg-white/5 px-8 text-base font-bold text-white hover:bg-white/10 backdrop-blur-sm transition-transform active:scale-95" asChild>
+                <Button size="lg" variant="outline" className="h-16 rounded-[1.5rem] border-slate-200 bg-white px-8 text-base font-bold text-slate-700 hover:bg-slate-50 transition-transform active:scale-95" asChild>
                   <Link href="/for-centres/intro">I Run a Centre &rarr;</Link>
                 </Button>
               </div>
 
-              <div className="mt-12 grid grid-cols-2 gap-8 border-t border-white/10 pt-10 sm:mt-20 sm:grid-cols-3 sm:gap-12">
+              <div className="mt-12 grid grid-cols-2 gap-8 border-t border-slate-100 pt-10 sm:mt-20 sm:grid-cols-3 sm:gap-12">
                 <div className="space-y-1">
-                  <p className="font-display text-4xl font-black text-white tracking-tighter">Verified</p>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Trusted Listings</p>
+                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">Verified</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Trusted Listings</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-display text-4xl font-black text-white tracking-tighter">{locationHint}</p>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Pilot Area</p>
+                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">{locationHint}</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pilot Area</p>
                 </div>
                 <div className="hidden sm:block space-y-1">
-                  <p className="font-display text-4xl font-black text-white tracking-tighter">R0.00</p>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Free for Parents</p>
+                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">R0.00</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Free for Parents</p>
                 </div>
               </div>
             </div>
