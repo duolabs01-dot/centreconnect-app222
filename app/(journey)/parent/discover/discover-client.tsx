@@ -20,6 +20,9 @@ type DiscoverCentre = {
   feesLabel?: string
   age_groups: string[]
   rating?: number
+  latitude?: number | null
+  longitude?: number | null
+  distanceMeters?: number
 }
 
 const FALLBACK_CENTRES: DiscoverCentre[] = [
@@ -71,11 +74,33 @@ function toAgeGroups(ageGroupPricing: unknown) {
   return entries.slice(0, 3)
 }
 
+function haversine(lat1: number, lon1: number, lat2: number | null, lon2: number | null) {
+  if (lat2 == null || lon2 == null) return Number.POSITIVE_INFINITY
+  const toRad = (value: number) => (value * Math.PI) / 180
+  const R = 6371000
+  const dLat = toRad(lat2 - lat1)
+  const dLon = toRad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+function formatDistance(meters: number) {
+  if (!Number.isFinite(meters)) return null
+  if (meters < 1000) {
+    return `${Math.round(meters)} m away`
+  }
+  return `${(meters / 1000).toFixed(1)} km away`
+}
+
 export default function ParentDiscoverClient() {
   const supabase = useMemo(() => createClient(), [])
   const [query, setQuery] = useState('')
   const [centres, setCentres] = useState<DiscoverCentre[]>(FALLBACK_CENTRES)
   const [loading, setLoading] = useState(true)
+  const [location, setLocation] = useState({ lat: -26.1881, lng: 28.0473 })
 
   useEffect(() => {
     let mounted = true
@@ -91,19 +116,21 @@ export default function ParentDiscoverClient() {
       if (!mounted) return
 
       if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map((centre) => ({
-          id: centre.id,
-          slug: centre.slug ?? undefined,
-          name: centre.name ?? 'ECD centre',
-          tagline: centre.tagline ?? undefined,
-          city: centre.city ?? undefined,
-          suburb: centre.suburb ?? undefined,
-          cover_image_url: centre.cover_image_url ?? undefined,
-          logo_url: centre.logo_url ?? undefined,
-          feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
-          age_groups: toAgeGroups(centre.age_group_pricing),
-          rating: 4.8,
-        })) as DiscoverCentre[]
+          const mapped = data.map((centre) => ({
+            id: centre.id,
+            slug: centre.slug ?? undefined,
+            name: centre.name ?? 'ECD centre',
+            tagline: centre.tagline ?? undefined,
+            city: centre.city ?? undefined,
+            suburb: centre.suburb ?? undefined,
+            cover_image_url: centre.cover_image_url ?? undefined,
+            logo_url: centre.logo_url ?? undefined,
+            feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
+            age_groups: toAgeGroups(centre.age_group_pricing),
+            rating: 4.8,
+            latitude: typeof centre.latitude === 'number' ? centre.latitude : centre.latitude ? Number(centre.latitude) : null,
+            longitude: typeof centre.longitude === 'number' ? centre.longitude : centre.longitude ? Number(centre.longitude) : null,
+          })) as DiscoverCentre[]
         setCentres(mapped)
       } else {
         setCentres(FALLBACK_CENTRES)
@@ -118,16 +145,45 @@ export default function ParentDiscoverClient() {
     }
   }, [supabase])
 
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (position) =>
+        setLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        }),
+      () => {
+        // keep default
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 600000 }
+    )
+  }, [])
+
+  const centresWithDistance = useMemo(() => {
+    return centres
+      .map((centre) => {
+        const distanceMeters = haversine(location.lat, location.lng, centre.latitude ?? null, centre.longitude ?? null)
+        return {
+          ...centre,
+          distanceMeters,
+          distanceLabel: formatDistance(distanceMeters) ?? 'Distance unknown',
+        }
+      })
+      .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
+  }, [centres, location])
+
   const filteredCentres = useMemo(() => {
-    if (!query.trim()) return centres
+    const base = centresWithDistance
+    if (!query.trim()) return base
     const needle = query.toLowerCase().trim()
-    return centres.filter(
+    return base.filter(
       (centre) =>
         centre.name.toLowerCase().includes(needle) ||
         (centre.suburb ?? '').toLowerCase().includes(needle) ||
         (centre.city ?? '').toLowerCase().includes(needle)
     )
-  }, [centres, query])
+  }, [centresWithDistance, query])
 
   return (
     <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
@@ -139,7 +195,7 @@ export default function ParentDiscoverClient() {
             Find nearby centres, compare quickly, and open a full profile before you apply.
           </p>
 
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+          <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
             <label className="relative flex-1">
               <Input
                 placeholder="Search by suburb, city, or centre name"
@@ -148,15 +204,29 @@ export default function ParentDiscoverClient() {
                 className="bg-white text-slate-900 placeholder:text-slate-400"
               />
             </label>
-            <Button
-              variant="outline"
-              disabled
-              className="min-h-[48px] rounded-2xl border-slate-300 bg-white text-xs font-semibold uppercase tracking-[0.08em] text-slate-500"
-            >
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
               Filters coming soon
-            </Button>
+            </p>
           </div>
         </header>
+
+        {!loading && filteredCentres.length > 0 && (
+          <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Recommended for your area</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {filteredCentres.slice(0, 2).map((centre) => (
+                <div key={centre.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-sm text-slate-600">
+                    <span>{centre.suburb ?? 'Near you'}</span>
+                    <span>{centre.distanceLabel}</span>
+                  </div>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{centre.name}</p>
+                  <p className="text-xs uppercase tracking-[0.4em] text-slate-500">{centre.tagline ?? 'Trusted daily routine'}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {loading ? (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

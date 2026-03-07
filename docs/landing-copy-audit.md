@@ -18,3 +18,8 @@
 - Language now directly addresses parents who worry about safety, paperwork, or not being heard.
 - The new CTA ensures unauthenticated visitors have a clear path forward before the “How CentreConnect helps families” content.
 - The tone stays consistent with the “app-like” feel you’re building across the landing experience.
+# Discover alignment
+- Pulling the closest centres first and showing a "Recommended for your area" strip keeps the page serviceable for parents who want "something near me" instead of a generic list.
+- The search field now filters city/suburb/centre names immediately, and every card highlights trust + distance so the default view feels tailored.
+- Documented this logic so future copy stays on the "nearby, verified, easy" promise.
+
