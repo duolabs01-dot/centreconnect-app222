@@ -375,7 +375,6 @@ export async function POST(request: Request) {
     first_name: contactFirstName,
     surname: contactSurname || null,
     full_name: contactFullName,
-    email: normalizedEmail,
     phone: data.phone,
     role: 'ecd_admin',
   }, { onConflict: 'id' })

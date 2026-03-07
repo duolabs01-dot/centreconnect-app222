@@ -619,7 +619,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         first_name: profile.first_name ?? null,
         surname: profile.surname ?? null,
         full_name: profile.full_name ?? null,
-        email: userEmail,
         account_activation_required: true,
         activation_reason: activationReason,
         activation_requested_at: nowIso,

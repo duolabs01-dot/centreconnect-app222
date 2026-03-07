@@ -132,7 +132,6 @@ export async function POST() {
         role: fallbackRole,
         first_name: profile?.first_name ?? firstName,
         full_name: fallbackName,
-        email,
         first_password_set_at: nowIso,
       })
       if (fallbackInsert.error) {

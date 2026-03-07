@@ -409,7 +409,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         first_name: ownerFirstName,
         surname: ownerSurname || null,
         full_name: ownerDisplayName,
-        email: ownerEmail,
         phone: ownerPhoneRaw ?? null,
       },
       { onConflict: 'id' }
