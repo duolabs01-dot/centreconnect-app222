@@ -54,7 +54,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
   }, [])
 
   return (
-    <div className="min-h-screen snap-y snap-mandatory overflow-x-hidden bg-slate-50 overscroll-none selection:bg-cyan-100 selection:text-cyan-900">
+    <div className="min-h-screen snap-y snap-mandatory overflow-x-clip bg-slate-50 overscroll-none selection:bg-cyan-100 selection:text-cyan-900">
       <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 pb-[calc(env(safe-area-inset-bottom)+4rem)] sm:px-6 lg:px-8">
         <div className="space-y-16 sm:space-y-24 lg:space-y-32">
           {/* SECTION 2 - Premium Hero */}

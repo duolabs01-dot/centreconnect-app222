@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import '../../ecd/ecd-theme.css'
 
 export const metadata: Metadata = {
   title: 'Grow Your Creche - CentreConnect',
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function CentreIntroPage() {
   return (
-    <main className="min-h-screen bg-slate-50 pb-24">
+    <main className="min-h-screen ecd-premium-shell pb-24">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-slate-900 px-6 py-16 text-white sm:py-24 lg:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950 opacity-90" />
@@ -46,7 +47,7 @@ export default function CentreIntroPage() {
           {/* Content Side */}
           <div className="space-y-8">
             <div className="rounded-[2.5rem] bg-white p-8 shadow-xl border border-slate-50">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Why Mamas choose CentreConnect</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Why principals and MaGogos choose CentreConnect</h2>
               
               <div className="space-y-6">
                 {[
@@ -100,7 +101,7 @@ export default function CentreIntroPage() {
                 </div>
               </div>
               <p className="text-lg font-medium leading-relaxed italic">
-                &quot;We didn&apos;t build this for big fancy schools. We built it for the Mamas and Aunties who show up every day for our children. I will personally help you set up your centre on WhatsApp.&quot;
+                &quot;We didn&apos;t build this for big fancy schools. We built it for the principals and MaGogos who show up every day for our children. I will personally help you set up your centre on WhatsApp.&quot;
               </p>
             </div>
           </div>

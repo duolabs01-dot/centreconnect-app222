@@ -261,7 +261,8 @@ export default function EcdOnboardingPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[var(--shadow-elevation-2)]">
           {currentStep === 1 ? (
             <div className="space-y-4">
-              <h1 className="text-xl font-bold text-slate-900">Welcome - Let&apos;s set up your centre</h1>
+              <h1 className="text-xl font-bold text-slate-900">Sawubona — Let&apos;s set up your centre</h1>
+              <p className="text-sm text-slate-600">Built for the principals and MaGogos who do the hard work for our children every day.</p>
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">Centre Name</label>
                 <input

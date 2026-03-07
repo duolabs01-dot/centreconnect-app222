@@ -113,6 +113,8 @@ function toSegmentLabel(segment: string, previousSegment: string | null) {
   return toTitleCase(key)
 }
 
+const NON_LINKABLE_SEGMENTS = new Set(['c', 'apply', 'for-centres', 'centre'])
+
 export function AppBreadcrumbs({ rootHref, rootLabel, className, tone = 'light' }: AppBreadcrumbsProps) {
   const pathname = usePathname()
   if (!pathname) return null
@@ -133,8 +135,9 @@ export function AppBreadcrumbs({ rootHref, rootLabel, className, tone = 'light' 
   const items = breadcrumbSegments.map((segment) => {
     runningPath = `${runningPath}/${segment}`
     const label = toSegmentLabel(segment, previousSegment)
+    const isLinkable = !NON_LINKABLE_SEGMENTS.has(segment.toLowerCase())
     previousSegment = segment.toLowerCase()
-    return { href: runningPath, label }
+    return { href: runningPath, label, isLinkable }
   })
 
   const colorClasses =
@@ -162,15 +165,18 @@ export function AppBreadcrumbs({ rootHref, rootLabel, className, tone = 'light' 
       </Link>
       {items.map((item, index) => {
         const isLast = index === items.length - 1
+        const shouldLink = item.isLinkable && !isLast
         return (
           <div key={item.href} className="inline-flex items-center gap-1">
             <ChevronRight className={cn('h-3.5 w-3.5', colorClasses.icon)} />
-            {isLast ? (
-              <span className={cn('font-bold', colorClasses.current)}>{item.label}</span>
-            ) : (
+            {shouldLink ? (
               <Link href={item.href} className={cn('transition-colors', colorClasses.link)}>
                 {item.label}
               </Link>
+            ) : (
+              <span className={cn('font-bold', isLast ? colorClasses.current : colorClasses.wrapper)}>
+                {item.label}
+              </span>
             )}
           </div>
         )
