@@ -47,7 +47,7 @@ type CentreProfile = {
 }
 
 const HERO_IMAGE =
-  'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
+  'https://images.pexels.com/photos/8926646/pexels-photo-8926646.jpeg?auto=compress&cs=tinysrgb&w=1600'
 const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
 
 const scenarios: Scenario[] = [
@@ -1078,10 +1078,10 @@ export default function CentreConnectWelcomePack() {
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { title: 'DSD Compliance', desc: 'Auto-counting & official PDF exports.', icon: CheckCircle2 },
+                  { title: 'DSD Compliance', desc: 'Saves 10+ hours of admin/week.', icon: CheckCircle2 },
                   { title: 'Gate Security', desc: 'Secure QR codes for every guardian.', icon: QrCode },
-                  { title: 'Growth Tools', desc: 'Professional public centre profile.', icon: Sparkles },
-                  { title: 'Direct Support', desc: 'Your own priority WhatsApp channel.', icon: MessageCircle },
+                  { title: 'Growth Tools', desc: '1 professional public centre profile.', icon: Sparkles },
+                  { title: 'Direct Support', desc: 'Priority WhatsApp channel 24/7.', icon: MessageCircle },
                 ].map((item) => (
                   <div key={item.title} className="rounded-2xl bg-white/80 p-4 shadow-sm border border-white/50 backdrop-blur-sm">
                     <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
