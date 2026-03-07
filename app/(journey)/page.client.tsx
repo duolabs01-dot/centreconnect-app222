@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Sparkles, ShieldCheck, CheckCircle2, MapPin, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PwaInstallCard } from '@/components/pwa/pwa-install-card'
 import { formatDate, getJohannesburgGreeting } from '@/lib/utils'
