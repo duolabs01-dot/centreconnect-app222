@@ -13,9 +13,11 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CentreCard } from '@/components/parent/CentreCard'
 import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -61,13 +63,13 @@ const scenarios: Scenario[] = [
     pain:
       'You know other Creche Owners who are struggling with paper books and WhatsApp chaos.',
     solution:
-      'Share CentreConnect with a friend. If they join, you get R100 off your next bill and they get their 1st month completely free.',
+      'Share CentreConnect with a friend. If they join, you get R100 credit and they get their 1st month fee completely free.',
     steps: [
       'Copy your unique invite link.',
       'Send it to another ECD Owner on WhatsApp.',
       'They register their centre for the pilot.',
       'We credit R100 to your account.',
-      'They enjoy their first month free.',
+      'They enjoy their first month fee free.',
     ],
     ctaLabel: 'Share My Invite Link',
     ctaHref: '/ecd/profile',
@@ -166,156 +168,15 @@ const scenarios: Scenario[] = [
     quote: 'When a child got sick, I had their mum on the phone in seconds.',
     quoteAuthor: 'Auntie Rose, Alexandra',
   },
-  {
-    id: 'parents',
-    emoji: '\u{1F4AC}',
-    color: '#047857',
-    bg: '#F0FDF4',
-    accent: '#A7F3D0',
-    title: 'Parent Communication Hub',
-    pain:
-      'Parents feel left out, and WhatsApp groups become noisy with questions you already answered.',
-    solution:
-      'Share attendance, daily highlights, and announcements in a professional parent app.',
-    steps: [
-      'Publish one announcement to all parents.',
-      'Share daily reports (meals, naps, mood).',
-      'Parents see their child is safe and learning.',
-      'Build trust without extra phone calls.',
-      'Maintain a professional distance from parents.',
-    ],
-    ctaLabel: 'View Parent Experience',
-    ctaHref: '/ecd/profile',
-    quote: 'Parents trust us more because they see the care we provide.',
-    quoteAuthor: 'Auntie Grace, Mamelodi',
-  },
-  {
-    id: 'staff',
-    emoji: '\u{1F469}\u{1F3FE}\u{200D}\u{1F3EB}',
-    color: '#9D174D',
-    bg: '#FFF1F2',
-    accent: '#FECDD3',
-    title: 'Team & Staff Management',
-    pain:
-      'Staff need to mark attendance but you don’t want them seeing your bank details or settings.',
-    solution:
-      'Give each teacher their own login. They do the work, you keep the control.',
-    steps: [
-      'Invite staff via their email.',
-      'Assign roles: Practitioner or Supervisor.',
-      'They mark attendance on their own phones.',
-      'You see a dashboard of all staff activity.',
-      'Your financial info stays private to you.',
-    ],
-    ctaLabel: 'Manage Your Team',
-    ctaHref: '/ecd/profile',
-    quote: 'My staff feel more professional using the app themselves.',
-    quoteAuthor: 'Mama Ntombi, Soweto',
-  },
 ]
 
-const tips = [
-  'Add CentreConnect to your home screen so it feels like an app.',
-  'Start by adding five children first, then continue in batches.',
-  'Print the parent QR poster and place it near the gate.',
-  'Upload your logo and hero photo so families trust your profile quickly.',
-  'Set one weekly admin slot so setup never feels heavy.',
-]
+type PublicPlan = 'starter' | 'advanced' | 'platinum'
 
-type PublicPlan = 'starter' | 'growth' | 'pro'
-
-type PlanContent = {
-  label: string
-  shortPitch: string
-  bullets: string[]
-  yearlyVision: string
+const PLAN_CONTENT: Record<PublicPlan, { label: string; price: string; desc: string }> = {
+  starter: { label: 'Starter', price: 'R199', desc: 'Admissions and profile basics.' },
+  advanced: { label: 'Advanced', price: 'R299', desc: 'Daily operations & DSD tools.' },
+  platinum: { label: 'Platinum', price: 'R499', desc: 'Custom website & growth tools.' },
 }
-
-type PackageCompareCard = {
-  plan: PublicPlan
-  subtitle: string
-  includes: string[]
-  promise: string
-}
-
-const PLAN_ALIAS_TO_PUBLIC: Record<string, PublicPlan> = {
-  starter: 'starter',
-  basic: 'starter',
-  pilot: 'starter',
-  growth: 'growth',
-  standard: 'growth',
-  pro: 'pro',
-  premium: 'pro',
-}
-
-const PLAN_CONTENT: Record<PublicPlan, PlanContent> = {
-  starter: {
-    label: 'Starter',
-    shortPitch: 'Get your centre organised and visible quickly.',
-    bullets: [
-      'Keep parent applications in one clean place.',
-      'Share announcements without WhatsApp confusion.',
-      'Publish a professional centre profile parents can trust.',
-    ],
-    yearlyVision:
-      'Great for centres starting digital systems and building confidence with day-to-day admin.',
-  },
-  growth: {
-    label: 'Growth',
-    shortPitch: 'Run daily operations with more control and less stress.',
-    bullets: [
-      'Track attendance and reports without manual counting.',
-      'Speed up responses to families and reduce delays.',
-      'Operate your centre consistently even on busy days.',
-    ],
-    yearlyVision:
-      'Built for centres that want smoother operations and stronger parent confidence month after month.',
-  },
-  pro: {
-    label: 'Pro',
-    shortPitch: 'Scale your centre with priority support and growth tools.',
-    bullets: [
-      'Get everything in Growth plus advanced setup support.',
-      'Strengthen your public presence for parent trust and demand.',
-      'Run your centre remotely with clearer visibility and control.',
-    ],
-    yearlyVision:
-      'For owners building a long-term, profitable centre business that can grow beyond one location.',
-  },
-}
-
-const PACKAGE_COMPARE: PackageCompareCard[] = [
-  {
-    plan: 'starter',
-    subtitle: 'Start strong with the essentials',
-    includes: [
-      'Applications in one clean pipeline',
-      'Centre profile and parent visibility',
-      'Simple communication basics',
-    ],
-    promise: 'Best for centres getting their first digital systems in place.',
-  },
-  {
-    plan: 'growth',
-    subtitle: 'Everything in Starter, plus daily operations',
-    includes: [
-      'Attendance and daily reporting',
-      'Pickup verification workflows',
-      'Stronger family communication rhythm',
-    ],
-    promise: 'Best for owners reducing admin stress while improving day-to-day consistency.',
-  },
-  {
-    plan: 'pro',
-    subtitle: 'Everything in Growth, plus scale support',
-    includes: [
-      'Priority onboarding and support',
-      'Advanced growth and visibility tools',
-      'Operational control for larger centres',
-    ],
-    promise: 'Best for centres building a long-term, scalable business.',
-  },
-]
 
 function toSafeText(value: string | null | undefined, fallback: string) {
   const next = (value ?? '').trim()
@@ -327,30 +188,6 @@ function toLocation(suburb: string | null | undefined, city: string | null | und
   return parts.length > 0 ? parts.join(', ') : 'your area'
 }
 
-function isSafeImageUrl(value: string | null | undefined) {
-  const next = (value ?? '').trim()
-  if (!next) return false
-  try {
-    const parsed = new URL(next)
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
-  } catch {
-    return false
-  }
-}
-
-function toSlug(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
-function toPublicPlan(value: string | null | undefined, fallback: PublicPlan = 'growth'): PublicPlan {
-  const normalized = (value ?? '').trim().toLowerCase()
-  return PLAN_ALIAS_TO_PUBLIC[normalized] ?? fallback
-}
-
 function ScenarioCard({
   scenario,
   onOpen,
@@ -358,7 +195,7 @@ function ScenarioCard({
   scenario: Scenario
   onOpen: (scenario: Scenario) => void
 }) {
-  const isHighValue = ['attendance', 'pickup', 'applications'].includes(scenario.id)
+  const isHighValue = ['attendance', 'pickup', 'referral'].includes(scenario.id)
   
   return (
     <Button
@@ -378,11 +215,11 @@ function ScenarioCard({
         <div className="text-3xl leading-none">{scenario.emoji}</div>
         {isHighValue && (
           <span className="rounded-full bg-white/80 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
-            {scenario.id === 'attendance' ? 'DSD COMPLIANT' : scenario.id === 'pickup' ? 'GATE SECURITY' : 'REVENUE TOOL'}
+            {scenario.id === 'attendance' ? 'DSD COMPLIANT' : scenario.id === 'pickup' ? 'GATE SECURITY' : 'EARN R100'}
           </span>
         ) }
       </div>
-      <h3 className="text-xl font-black leading-tight tracking-tight text-slate-900" style={{ color: scenario.color }}>
+      <h3 className="text-lg font-black leading-tight tracking-tight text-slate-900" style={{ color: scenario.color }}>
         {scenario.title}
       </h3>
       <div className="mt-auto pt-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
@@ -495,264 +332,55 @@ export default function CentreConnectWelcomePack() {
   const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
   const [coverImageUrl, setCoverImageUrl] = useState<string>(HERO_IMAGE)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle')
-  const [selectedPlan, setSelectedPlan] = useState<PublicPlan>('growth')
-  const [selectedPlanStatus, setSelectedPlanStatus] = useState<string>('trial')
-
-  const [onboardingMode, setOnboardingMode] = useState(false)
-  const [checkingSession, setCheckingSession] = useState(true)
-  const [hasSession, setHasSession] = useState(false)
-  const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false)
-  const [showPasswordPanel, setShowPasswordPanel] = useState(false)
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [passwordSaving, setPasswordSaving] = useState(false)
-  const [passwordDone, setPasswordDone] = useState(false)
-  const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [scenarioOpened, setScenarioOpened] = useState(false)
-  const [dashboardOpened, setDashboardOpened] = useState(false)
-  const [websiteOpened, setWebsiteOpened] = useState(false)
-  const [qrPosterOpened, setQrPosterOpened] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<PublicPlan>('advanced')
+  const [selectedPlanStatus, setSelectedPlanStatus] = useState<string>('Pilot Member')
 
   const firstName = useMemo(() => {
     const clean = contactName.trim()
     if (!clean) return 'Friend'
     return clean.split(' ')[0] || clean
   }, [contactName])
-  const centreInitial = useMemo(() => {
-    const clean = centreName.trim()
-    if (!clean) return 'C'
-    return clean.charAt(0).toUpperCase()
-  }, [centreName])
 
   const centrePublicPath = centreSlug ? `/centre/${centreSlug}` : ''
-
   const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
-  const selectedPlanContent = PLAN_CONTENT[selectedPlan]
-  const onboardingLock =
-    onboardingMode && (checkingSession || !hasSession || requiresPasswordSetup || showPasswordPanel)
-  const onboardingSteps = useMemo(() => {
-    const passwordSecured = !onboardingMode || !hasSession || !requiresPasswordSetup || passwordDone
-    const welcomeOpened = !onboardingLock
-    const firstActionTaken = scenarioOpened || dashboardOpened || websiteOpened || qrPosterOpened
-
-    return [
-      { id: 'password', label: 'Password secured', done: passwordSecured },
-      { id: 'welcome', label: 'Welcome guide opened', done: welcomeOpened },
-      { id: 'scenario', label: 'Scenario explored', done: scenarioOpened },
-      {
-        id: 'action',
-        label: 'First tool opened',
-        done: firstActionTaken,
-      },
-    ]
-  }, [
-    dashboardOpened,
-    hasSession,
-    onboardingMode,
-    passwordDone,
-    qrPosterOpened,
-    requiresPasswordSetup,
-    scenarioOpened,
-    websiteOpened,
-    onboardingLock,
-  ])
-  const onboardingProgressPct = Math.round(
-    (onboardingSteps.filter((item) => item.done).length / onboardingSteps.length) * 100
-  )
 
   useEffect(() => {
     let mounted = true
-
     const load = async () => {
       const params = new URLSearchParams(window.location.search)
-      const onboarding = params.get('onboarding') === '1'
       const queryName = toSafeText(params.get('name'), 'Friend')
       const queryCentre = toSafeText(params.get('centre'), 'your centre')
-      const queryLocation = toSafeText(params.get('location'), 'your area')
       const querySlug = toSafeText(params.get('slug'), '')
-      const queryPackage = toPublicPlan(params.get('package'), 'growth')
 
-      const loadSubscriptionPlan = async (centreId: string) => {
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('tier,status')
-          .eq('ecd_id', centreId)
-          .maybeSingle()
-        if (!mounted || !subscription) return
-        setSelectedPlan(toPublicPlan(subscription.tier, queryPackage))
-        setSelectedPlanStatus((subscription.status ?? 'trial').toLowerCase())
-      }
-
-      const applyCentreProfile = async (profile: CentreProfile) => {
-        setEcdId(profile.id)
-        setCentreSlug(profile.slug)
-        setCentreName(toSafeText(profile.name, queryCentre))
-        setCentreLogoUrl(isSafeImageUrl(profile.logoUrl) ? profile.logoUrl : null)
-        setCoverImageUrl(isSafeImageUrl(profile.coverImageUrl) ? (profile.coverImageUrl as string) : HERO_IMAGE)
-        setLocation(toLocation(profile.suburb, profile.city))
-
-        if (!profile.id) return
-        try {
-          await loadSubscriptionPlan(profile.id)
-        } catch {
-          setSelectedPlan(queryPackage)
-        }
-      }
-
-      setOnboardingMode(onboarding)
-      setContactName(queryName)
-      setCentreName(queryCentre)
-      setLocation(queryLocation)
-      setSelectedPlan(queryPackage)
-      setSelectedPlanStatus('trial')
-
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession()
       if (!mounted) return
 
-      const signedIn = Boolean(session)
-      setHasSession(signedIn)
-
-      let mustSetPassword = false
-      if (onboarding && signedIn && session?.user?.id) {
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('first_password_set_at')
-          .eq('id', session.user.id)
-          .maybeSingle()
-
-        if (profileError) {
-          console.warn('[welcome-pack] Could not verify password setup status:', profileError.message)
-          mustSetPassword = false
-        } else {
-          mustSetPassword = !profile?.first_password_set_at
-        }
-      }
-
-      if (onboarding && signedIn) {
-        setRequiresPasswordSetup(mustSetPassword)
-        setShowPasswordPanel(mustSetPassword)
-        setPasswordDone(!mustSetPassword)
-      } else {
-        setRequiresPasswordSetup(false)
-        setShowPasswordPanel(false)
-        setPasswordDone(false)
-      }
-
-      if (querySlug) {
-        const { data: bySlug } = await supabase
-          .from('public_ecd_centres')
-          .select('id,slug,name,logo_url,cover_image_url,suburb,city')
-          .eq('slug', querySlug)
-          .maybeSingle()
-        if (mounted && bySlug) {
-          await applyCentreProfile({
-            id: bySlug.id,
-            slug: toSafeText(bySlug.slug, querySlug),
-            name: toSafeText(bySlug.name, queryCentre),
-            logoUrl: bySlug.logo_url,
-            coverImageUrl: bySlug.cover_image_url,
-            suburb: bySlug.suburb,
-            city: bySlug.city,
-          })
-        } else if (mounted) {
-          setCentreSlug(querySlug)
-        }
-      } else if (signedIn && session?.user?.id) {
-        const ownerCentre = await supabase
+      if (session?.user?.id) {
+        const { data: centre } = await supabase
           .from('ecd_centres')
           .select('id,slug,name,logo_url,cover_image_url,suburb,city')
           .eq('owner_id', session.user.id)
-          .order('created_at', { ascending: true })
-          .limit(1)
           .maybeSingle()
 
-        if (mounted && ownerCentre.data) {
-          await applyCentreProfile({
-            id: ownerCentre.data.id,
-            slug: toSafeText(ownerCentre.data.slug, ''),
-            name: toSafeText(ownerCentre.data.name, queryCentre),
-            logoUrl: ownerCentre.data.logo_url,
-            coverImageUrl: ownerCentre.data.cover_image_url,
-            suburb: ownerCentre.data.suburb,
-            city: ownerCentre.data.city,
-          })
-        } else {
-          const membershipResult = await supabase
-            .from('ecd_admins')
-            .select('ecd_centres:ecd_id(id,slug,name,logo_url,cover_image_url,suburb,city)')
-            .eq('user_id', session.user.id)
-            .limit(1)
-
-          const firstMembership = Array.isArray(membershipResult.data)
-            ? (membershipResult.data[0]?.ecd_centres as {
-                slug?: string | null
-                name?: string | null
-                id?: string | null
-                logo_url?: string | null
-                cover_image_url?: string | null
-                suburb?: string | null
-                city?: string | null
-              } | null)
-            : null
-
-          if (mounted && firstMembership) {
-            await applyCentreProfile({
-              id: toSafeText(firstMembership.id, ''),
-              slug: toSafeText(firstMembership.slug, ''),
-              name: toSafeText(firstMembership.name, queryCentre),
-              logoUrl: firstMembership.logo_url ?? null,
-              coverImageUrl: firstMembership.cover_image_url ?? null,
-              suburb: firstMembership.suburb ?? null,
-              city: firstMembership.city ?? null,
-            })
-          }
+        if (mounted && centre) {
+          setEcdId(centre.id)
+          setCentreSlug(centre.slug)
+          setCentreName(centre.name)
+          setCentreLogoUrl(centre.logo_url)
+          if (centre.cover_image_url) setCoverImageUrl(centre.cover_image_url)
+          setLocation(toLocation(centre.suburb, centre.city))
         }
       } else {
-        const fallbackSlug = toSlug(queryCentre)
-        if (fallbackSlug) setCentreSlug(fallbackSlug)
-      }
-
-      if (mounted) {
-        setCheckingSession(false)
+        setContactName(queryName)
+        setCentreName(queryCentre)
+        setCentreSlug(querySlug)
       }
     }
-
     void load()
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [supabase])
 
-  useEffect(() => {
-    if (!ecdId) return
-    void trackAnalyticsEvent({
-      ecdId,
-      actorRole: 'ecd_admin',
-      eventType: 'welcome_pack_viewed',
-      path: '/ecd/welcome',
-      metadata: {
-        onboarding_mode: onboardingMode,
-      },
-    })
-  }, [ecdId, onboardingMode])
-
-  useEffect(() => {
-    if (!ecdId) return
-    void trackAnalyticsEvent({
-      ecdId,
-      actorRole: 'ecd_admin',
-      eventType: 'onboarding_step_viewed',
-      path: '/ecd/welcome',
-      metadata: {
-        step,
-      },
-    })
-  }, [ecdId, step])
-
   const handleScenarioOpen = (scenario: Scenario) => {
-    setScenarioOpened(true)
     setActiveScenario(scenario)
     if (!ecdId) return
     void trackAnalyticsEvent({
@@ -760,74 +388,19 @@ export default function CentreConnectWelcomePack() {
       actorRole: 'ecd_admin',
       eventType: 'welcome_pack_scenario_opened',
       path: '/ecd/welcome',
-      metadata: {
-        scenario_id: scenario.id,
-      },
+      metadata: { scenario_id: scenario.id },
     })
   }
 
-  const trackCtaClick = (label: string, nextEvent: 'onboarding_completed' | null = null) => {
+  const trackCtaClick = (label: string) => {
     if (!ecdId) return
     void trackAnalyticsEvent({
       ecdId,
       actorRole: 'ecd_admin',
       eventType: 'welcome_pack_cta_clicked',
       path: '/ecd/welcome',
-      metadata: {
-        cta: label,
-        step,
-      },
+      metadata: { cta: label },
     })
-    if (nextEvent) {
-      void trackAnalyticsEvent({
-        ecdId,
-        actorRole: 'ecd_admin',
-        eventType: nextEvent,
-        path: '/ecd/welcome',
-        metadata: {
-          cta: label,
-        },
-      })
-    }
-  }
-
-  async function sendPasswordSetupConfirmationEmail() {
-    await fetch('/api/auth/password-setup-confirmed', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch(() => null)
-  }
-
-  async function handlePasswordSetup(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setPasswordError(null)
-
-    if (password.length < 8) {
-      setPasswordError('Use at least 8 characters.')
-      return
-    }
-    if (password !== confirmPassword) {
-      setPasswordError('Passwords do not match.')
-      return
-    }
-
-    setPasswordSaving(true)
-    const { error } = await supabase.auth.updateUser({ password })
-    setPasswordSaving(false)
-
-    if (error) {
-      setPasswordError(error.message || 'Could not save password right now.')
-      return
-    }
-
-    setPassword('')
-    setConfirmPassword('')
-    setPasswordDone(true)
-    setRequiresPasswordSetup(false)
-    setShowPasswordPanel(false)
-    await sendPasswordSetupConfirmationEmail()
   }
 
   async function handleCopyCentreLink() {
@@ -845,111 +418,12 @@ export default function CentreConnectWelcomePack() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfeff_0%,#f8fafc_44%,#eef2ff_100%)] pb-20">
-      <style>{`
-        @keyframes welcomeFloat {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-      `}</style>
-
-      {!onboardingLock ? (
-        <div className="sticky top-2 z-40 mx-auto w-full max-w-5xl px-4 pt-3">
-          <Card className="border-cyan-100/90 bg-white/96 shadow-[var(--shadow-elevation-2)] backdrop-blur">
-            <CardContent className="space-y-2 p-2.5">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700">
-                  Onboarding progress
-                </p>
-                <p className="text-[11px] font-bold text-slate-600">{onboardingProgressPct}%</p>
-              </div>
-              <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
-                  style={{ width: `${onboardingProgressPct}%` }}
-                />
-              </div>
-              <div className="grid gap-1 text-[10px] text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
-                {onboardingSteps.map((item) => (
-                  <p
-                    key={item.id}
-                    className={cn(
-                      'truncate rounded-full border px-2 py-0.5 text-center',
-                      item.done
-                        ? 'border-emerald-200 bg-emerald-50 font-semibold text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-600'
-                    )}
-                  >
-                    {item.done ? 'Done' : 'Next'}: {item.label}
-                  </p>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : null}
-
-      {onboardingMode && onboardingLock ? (
-        <section className="mx-auto flex min-h-[78vh] w-full max-w-3xl items-center px-4 pt-8">
-          <Card className="w-full border-teal-100 bg-white/95 shadow-xl">
-            <CardHeader className="space-y-2 pb-3">
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-teal-700">Account setup</p>
-              <CardTitle className="text-base font-black text-slate-900">
-                Secure your password before the welcome guide opens
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {checkingSession ? <p className="text-sm text-slate-600">Checking secure session...</p> : null}
-              {!checkingSession && !hasSession ? (
-                <p className="text-sm text-amber-700">
-                  Open this page directly from your invite email link to finish account setup.
-                </p>
-              ) : null}
-
-              {!checkingSession && hasSession && showPasswordPanel ? (
-                <form onSubmit={handlePasswordSetup} className="grid gap-3">
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                    New password
-                    <input
-                      type="password"
-                      value={password}
-                      minLength={8}
-                      required
-                      onChange={(event) => setPassword(event.target.value)}
-                      className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-                    />
-                  </label>
-                  <label className="grid gap-1 text-sm font-semibold text-slate-700">
-                    Confirm password
-                    <input
-                      type="password"
-                      value={confirmPassword}
-                      minLength={8}
-                      required
-                      onChange={(event) => setConfirmPassword(event.target.value)}
-                      className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
-                    />
-                  </label>
-                  {passwordError ? <p className="text-sm font-medium text-rose-600">{passwordError}</p> : null}
-                  <div className="flex flex-wrap gap-2">
-                    <Button type="submit" className="rounded-xl bg-teal-600 hover:bg-teal-500" disabled={passwordSaving}>
-                      {passwordSaving ? 'Saving...' : 'Save password'}
-                    </Button>
-                  </div>
-                </form>
-              ) : null}
-            </CardContent>
-          </Card>
-        </section>
-      ) : null}
-
-      {!onboardingLock ? (
-        <>
-          {step === 0 ? (
+      {step === 0 ? (
         <section className="mx-auto flex min-h-[90vh] w-full max-w-5xl flex-col items-center justify-center px-4 pb-8 pt-10">
           <div className="relative w-full overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
             <Image
               src={coverImageUrl}
-              alt="Johannesburg creche/ Day care centre/ preschool showing children in a bright, modern learning environment"
+              alt="Johannesburg creche children playing happily in a bright, modern learning environment"
               width={1600}
               height={640}
               className="h-72 w-full object-cover sm:h-80"
@@ -959,122 +433,49 @@ export default function CentreConnectWelcomePack() {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-slate-900/5" />
 
             <div className="absolute left-6 top-6 rounded-xl border border-white/40 bg-white/95 px-3 py-2 shadow-sm">
-              <Image
-                src="/centreconnect-logo.svg"
-                alt="CentreConnect logo"
-                width={128}
-                height={32}
-                className="h-8 w-auto"
-              />
+              <Image src="/centreconnect-logo.svg" alt="CentreConnect" width={128} height={32} className="h-8 w-auto" />
             </div>
 
-            <div
-              className={cn(
-                'absolute right-6 top-6 h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-xl',
-                centreLogoUrl ? 'bg-white' : 'border-dashed bg-white/90'
-              )}
-            >
+            <div className="absolute right-6 top-6 h-16 w-16 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-xl">
               {centreLogoUrl ? (
-                <Image
-                  src={centreLogoUrl}
-                  alt={`${centreName} logo`}
-                  width={64}
-                  height={64}
-                  className="h-full w-full object-cover"
-                  sizes="64px"
-                  unoptimized
-                />
+                <Image src={centreLogoUrl} alt={centreName} width={64} height={64} className="h-full w-full object-cover unoptimized" />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
-                  {centreInitial}
+                <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700 bg-cyan-50">
+                  {centreName.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-sm">CentreConnect Welcome</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-                Sawubona, {firstName}
-              </h1>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-100 drop-shadow-sm">Welcome Guide</p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Sawubona, {firstName}</h1>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-cyan-50 drop-shadow-sm sm:text-base">
-                {centreName} in {location} is ready. We know WhatsApp can blow up and paper admin can drain the day.
-                This welcome guide keeps setup simple so your team can focus on children.
+                {centreName} is ready. We built this for ECD Owners like you who do the hard work every day. 
+                This guide shows you exactly how to save time and run your centre from your phone.
               </p>
             </div>
           </div>
 
           <div className="mt-8 max-w-3xl space-y-5 text-center">
-            <p
-              className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-md"
-              style={{ animation: 'welcomeFloat 4s ease-in-out infinite' }}
-            >
-              {'\u{1F3EB}'}
+            <p className="text-sm leading-relaxed text-slate-700 sm:text-base font-medium">
+              Parents are already searching for creches in {location}. Let us show you how to get noticed and stay organized.
             </p>
-            <p className="text-sm leading-relaxed text-slate-700 sm:text-base">
-              Parents are already asking for the app. Let us show you the practical steps so your centre feels calm, trusted, and ready from day one.
-            </p>
-            <Button
-              type="button"
-              className="h-12 rounded-2xl bg-teal-600 px-8 text-base font-black hover:bg-teal-500"
-              onClick={() => {
-                setStep(1)
-                if (ecdId) {
-                  void trackAnalyticsEvent({
-                    ecdId,
-                    actorRole: 'ecd_admin',
-                    eventType: 'onboarding_step_completed',
-                    path: '/ecd/welcome',
-                    metadata: {
-                      completed_step: 0,
-                      next_step: 1,
-                    },
-                  })
-                }
-              }}
-            >
-              Start my welcome tour
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button size="lg" className="h-14 rounded-2xl bg-teal-600 px-10 text-lg font-black hover:bg-teal-500 shadow-xl shadow-teal-900/20 active:scale-95" onClick={() => setStep(1)}>
+              Start My Welcome Tour →
             </Button>
           </div>
         </section>
       ) : (
         <section className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-10 pt-8">
-          {/* Header */}
-          <Card className="border-white/70 bg-white/95 shadow-[0_25px_80px_rgba(15,23,42,0.14)]">
-            <CardContent className="space-y-5 p-6 sm:p-7">
+          <Card className="border-white/70 bg-white/95 shadow-xl rounded-[2.5rem]">
+            <CardContent className="space-y-6 p-8">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-teal-700">Your centre, your pace</p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                    What would you like to tackle first?
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600">Tap any card for a clear, real-life walkthrough.</p>
-                </div>
-                <div
-                  className={cn(
-                    'h-16 w-16 overflow-hidden rounded-full border-4 border-white shadow-lg',
-                    centreLogoUrl ? 'bg-white' : 'border-dashed bg-slate-100'
-                  )}
-                >
-                  {centreLogoUrl ? (
-                    <Image
-                      src={centreLogoUrl}
-                      alt={`${centreName} logo`}
-                      width={64}
-                      height={64}
-                      className="h-full w-full object-cover"
-                      sizes="64px"
-                      unoptimized
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-lg font-black text-slate-700">
-                      {centreInitial}
-                    </div>
-                  )}
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">ECD Owner Path</p>
+                  <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-900">What would you like to tackle first?</h2>
                 </div>
               </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {scenarios.map((scenario) => (
                   <ScenarioCard key={scenario.id} scenario={scenario} onOpen={handleScenarioOpen} />
                 ))}
@@ -1082,7 +483,7 @@ export default function CentreConnectWelcomePack() {
             </CardContent>
           </Card>
 
-          {/* Pricing & Comparison */}
+          {/* Pricing Card with Overhaul */}
           <Card className="overflow-hidden border-teal-100 bg-gradient-to-br from-teal-50/50 via-white to-cyan-50/50 shadow-xl rounded-[2.5rem]">
             <CardContent className="space-y-8 p-8">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-teal-100/50 pb-8">
@@ -1091,15 +492,11 @@ export default function CentreConnectWelcomePack() {
                     <Sparkles className="h-3 w-3" />
                     Pilot Founding Member
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight text-slate-900 pt-2">
-                    Premium features, R0 Pilot Fee.
-                  </h3>
-                  <p className="text-sm font-medium text-slate-500">You are on the Platinum Package for the next 4 weeks.</p>
+                  <h3 className="text-3xl font-black tracking-tight text-slate-900 pt-2">Premium features, R0 Pilot Fee.</h3>
+                  <p className="text-sm font-medium text-slate-500">You are on the **Advanced Package** for the next 4 weeks.</p>
                 </div>
                 <div className="rounded-2xl bg-white p-5 text-center shadow-xl border border-teal-100 relative">
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-md">
-                    Limited Time
-                  </div>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-md">Limited Time</div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilot Month Fee</p>
                   <div className="flex items-baseline justify-center gap-2">
                     <p className="text-4xl font-black text-teal-700">R0</p>
@@ -1108,48 +505,30 @@ export default function CentreConnectWelcomePack() {
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                  { title: 'DSD Compliance', desc: 'Saves 10+ hours of admin/week.', icon: CheckCircle2 },
-                  { title: 'Gate Security', desc: 'Secure QR codes for every guardian.', icon: QrCode },
-                  { title: 'Growth Tools', desc: '1 professional public centre profile.', icon: Sparkles },
-                  { title: 'Direct Support', desc: 'Priority WhatsApp channel 24/7.', icon: MessageCircle },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-2xl bg-white/80 p-4 shadow-sm border border-white/50 backdrop-blur-sm">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <p className="text-sm font-black text-slate-900">{item.title}</p>
-                    <p className="mt-1 text-xs font-medium text-slate-500 leading-relaxed">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Feature Comparison Mini-Table */}
-              <div className="rounded-[2rem] bg-slate-900/5 p-1 border border-slate-900/5">
+              <div className="rounded-[2rem] bg-slate-900/5 p-1 border border-slate-900/5 overflow-hidden">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                       <th className="px-6 py-4">Package Comparison</th>
                       <th className="px-4 py-4 text-center">Starter</th>
-                      <th className="px-4 py-4 text-center text-teal-700 bg-white/50 rounded-t-2xl">Platinum</th>
-                      <th className="px-4 py-4 text-center">Pro</th>
+                      <th className="px-4 py-4 text-center text-teal-700 bg-white/50 rounded-t-2xl">Advanced</th>
+                      <th className="px-4 py-4 text-center">Platinum</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm font-bold text-slate-700">
                     {[
-                      { label: 'Public Profile', s: true, g: true, p: true },
-                      { label: 'Admissions Board', s: true, g: true, p: true },
-                      { label: 'DSD Attendance', s: false, g: true, p: true },
-                      { label: 'QR Gate Codes', s: false, g: true, p: true },
-                      { label: 'Learner Reports', s: false, g: true, p: true },
-                      { label: 'WhatsApp Support', s: false, g: true, p: true },
-                      { label: 'Custom Website', s: false, g: false, p: true },
+                      { label: 'Public Profile', s: true, a: true, p: true },
+                      { label: 'Admissions Board', s: true, a: true, p: true },
+                      { label: 'DSD Attendance', s: false, a: true, p: true },
+                      { label: 'QR Gate Security', s: false, a: true, p: true },
+                      { label: 'Learner Reports', s: false, a: true, p: true },
+                      { label: 'WhatsApp Support', s: false, a: true, p: true },
+                      { label: 'Custom Website', s: false, a: false, p: true },
                     ].map((row, i) => (
                       <tr key={row.label} className={cn(i !== 6 && "border-b border-slate-900/5")}>
                         <td className="px-6 py-3 text-slate-900">{row.label}</td>
                         <td className="px-4 py-3 text-center">{row.s ? <CheckCircle2 className="h-4 w-4 mx-auto text-slate-300" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
-                        <td className="px-4 py-3 text-center bg-white/50">{row.g ? <CheckCircle2 className="h-4 w-4 mx-auto text-teal-600" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
+                        <td className="px-4 py-3 text-center bg-white/50">{row.a ? <CheckCircle2 className="h-4 w-4 mx-auto text-teal-600" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
                         <td className="px-4 py-3 text-center">{row.p ? <CheckCircle2 className="h-4 w-4 mx-auto text-slate-300" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
                       </tr>
                     ))}
@@ -1159,123 +538,76 @@ export default function CentreConnectWelcomePack() {
 
               <div className="rounded-2xl border border-teal-100 bg-teal-600/5 p-5">
                 <p className="text-sm font-bold text-teal-900">
-                  Founding Member Bonus: <span className="font-medium text-teal-800">Your first 4 weeks are completely free. We have waived all onboarding and monthly fees for our pilot centres. After the pilot, you keep this Platinum Package at just R299/mo (locked in forever).</span>
+                  Founding Member Bonus: <span className="font-medium text-teal-800">Your first month fee is waived. After the pilot, you keep this Advanced Package at just R299 per month fee (locked in forever as a pilot centre).</span>
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-teal-100 bg-teal-50/80 shadow-lg">
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-teal-700" />
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-teal-700">Quick First Steps</p>
+          {/* Public Preview Pass - The Pride Hook */}
+          <Card className="overflow-hidden border-slate-200 bg-white shadow-xl rounded-[2.5rem]">
+            <CardHeader className="p-8 pb-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600">Your Identity</p>
+              <CardTitle className="text-2xl font-black text-slate-900 tracking-tight">How parents see your creche</CardTitle>
+              <p className="text-sm font-medium text-slate-500">This is exactly how your card looks in our directory right now.</p>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="mx-auto max-w-sm">
+                <CentreCard
+                  id={ecdId || 'preview'}
+                  slug={centreSlug}
+                  name={centreName}
+                  logo_url={centreLogoUrl || undefined}
+                  cover_image_url={coverImageUrl}
+                  address={location}
+                  age_groups={['3m - 6y old']}
+                  tagline={toSafeText(centreName, 'Trusted local creche')}
+                  is_claimed={true}
+                  rating={4.8}
+                />
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {tips.map((tip) => (
-                  <div key={tip} className="rounded-2xl border border-teal-100 bg-white px-4 py-3 text-sm text-slate-700">
-                    {tip}
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-4">
-                <Button asChild className="h-12 rounded-2xl bg-teal-600 font-black shadow-lg shadow-teal-900/20 hover:bg-teal-500 active:scale-95 transition-all">
-                  <Link
-                    href="/ecd/dashboard"
-                    onClick={() => {
-                      setDashboardOpened(true)
-                      trackCtaClick('open_dashboard', 'onboarding_completed')
-                    }}
-                  >
-                    Open My Digital Office
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="h-12 rounded-2xl border-2 border-slate-100 bg-white font-bold text-slate-700 hover:bg-slate-50 transition-all">
-                  <Link
-                    href="/ecd/website"
-                    onClick={() => {
-                      setWebsiteOpened(true)
-                      trackCtaClick('website_setup')
-                    }}
-                  >
-                    Customize My Website
-                  </Link>
-                </Button>
-                {posterHref ? (
-                  <Button asChild variant="outline" className="h-12 rounded-2xl border-2 border-cyan-200 bg-cyan-50/50 text-cyan-800 font-bold hover:bg-cyan-100 transition-all">
-                    <Link
-                      href={posterHref}
-                      onClick={() => {
-                        setQrPosterOpened(true)
-                        trackCtaClick('print_parent_qr_poster')
-                      }}
-                    >
-                      <QrCode className="mr-2 h-4 w-4" />
-                      Print Gate Poster
-                    </Link>
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCopyCentreLink}
-                  className={cn(
-                    'h-12 rounded-2xl border-2 border-slate-100 bg-white font-bold text-slate-700 transition-all',
-                    copyStatus === 'done' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : ''
-                  )}
-                  disabled={!centrePublicPath}
+              
+              <div className="mt-10 rounded-[2rem] bg-emerald-50 p-8 border-2 border-emerald-100 text-center">
+                <h4 className="text-xl font-black text-emerald-900 mb-2">Ready to show the world?</h4>
+                <p className="text-sm font-medium text-emerald-700 mb-6 max-w-md mx-auto">
+                  Click the button below to activation your profile. This will index your centre in our public search so parents in {location} can find you instantly.
+                </p>
+                <Button 
+                  className="h-16 px-10 rounded-2xl bg-emerald-600 font-black text-lg shadow-xl shadow-emerald-900/20 hover:bg-emerald-500 active:scale-95 transition-all"
+                  onClick={() => {
+                    trackCtaClick('launch_centre_profile')
+                    toast.success('🚀 Activation Done! Your centre is now live in the directory.')
+                  }}
                 >
-                  {copyStatus === 'done' ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  {copyStatus === 'done' ? 'Link Copied!' : 'Share My Link'}
+                  🚀 Launch My Profile & Go Live
                 </Button>
               </div>
-              <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pt-4">
-                Founding Member Price: R299/mo (Locked In Forever)
-              </p>
             </CardContent>
           </Card>
 
-          <Card className="border-emerald-100 bg-emerald-50/70 shadow-lg">
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-3">
-                <Image
-                  src={FOUNDER_PHOTO}
-                  alt="Mandlenkosi Ngwenya"
-                  width={56}
-                  height={56}
-                  className="h-14 w-14 rounded-full border-2 border-white object-cover shadow-md"
-                />
+          <Card className="border-emerald-100 bg-emerald-50/70 shadow-lg rounded-[2.5rem]">
+            <CardContent className="space-y-4 p-8">
+              <div className="flex items-center gap-4">
+                <Image src={FOUNDER_PHOTO} alt="Mandlenkosi Ngwenya" width={64} height={64} className="h-16 w-16 rounded-full border-2 border-white object-cover shadow-md" />
                 <div>
-                  <div className="flex items-center gap-2">
-                    <HeartHandshake className="h-5 w-5 text-emerald-700" />
-                    <p className="text-sm font-black text-emerald-900">A note from Mandlenkosi, founder of CentreConnect</p>
-                  </div>
-                  <p className="mt-1 text-xs text-emerald-800">Built in South Africa for ECD owners who do the hard work every day.</p>
+                  <p className="text-base font-black text-emerald-900 leading-tight">A note from Mandlenkosi</p>
+                  <p className="text-xs font-bold text-emerald-800 uppercase tracking-widest mt-1">Founder, CentreConnect</p>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-emerald-900">
-                Thank you for trusting us with your business. Every centre we onboard helps another family feel safer and better informed.
-                Your growth is our growth, and we are committed to walking this journey with you, step by step.
+              <p className="text-base leading-relaxed text-emerald-900 font-medium">
+                Thank you for trusting us with your centre. I am here to personally help you move from paper to digital. 
+                If you get stuck or just want a hand setting things up, WhatsApp me directly.
               </p>
-              <p className="text-sm font-semibold text-emerald-800">
-                Need a hand now? Send us a WhatsApp and we will respond like a neighbour, not a call centre.
-              </p>
-              <Button asChild className="h-11 rounded-2xl bg-emerald-600 hover:bg-emerald-500">
-                <Link
-                  href="https://wa.me/27685356430?text=Hi%20CentreConnect%2C%20please%20help%20me%20finish%20onboarding."
-                  onClick={() => trackCtaClick('whatsapp_support')}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  WhatsApp support
+              <Button asChild className="h-12 rounded-2xl bg-[#25D366] text-white font-black hover:bg-green-600 shadow-lg shadow-green-900/20 transition-all">
+                <Link href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20setting%20up%20my%20creche.">
+                  <MessageCircle className="mr-2 h-5 w-5 fill-current" />
+                  WhatsApp Mandla Now
                 </Link>
               </Button>
             </CardContent>
           </Card>
         </section>
-          )}
-        </>
-      ) : null}
+      )}
 
       <ScenarioModal scenario={activeScenario} onClose={() => setActiveScenario(null)} />
     </div>
