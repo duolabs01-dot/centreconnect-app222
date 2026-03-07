@@ -17,7 +17,7 @@ export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="min-h-screen bg-slate-50 text-foreground overflow-x-hidden">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-white/20 backdrop-blur-3xl shadow-[0_8px_30px_rgba(15,23,42,0.35)]">
-        <Container className="flex items-center justify-between gap-3 py-3.5 sm:py-4">
+        <Container className="flex items-center justify-between gap-3 py-2 sm:py-3">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
             <span className="flex items-center text-sm font-semibold text-slate-900">
@@ -41,11 +41,11 @@ export function PublicShell({ children }: PublicShellProps) {
             </Button>
           </div>
         </Container>
-        <div className="mx-auto mt-2 flex max-w-6xl justify-center">
+        <div className="mx-auto mt-1 flex max-w-6xl justify-center">
           <div className="h-1 w-36 rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-blue-500 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
         </div>
       </header>
-      <div className="h-[72px] sm:h-[80px]" aria-hidden />
+      <div className="h-[56px] sm:h-[64px]" aria-hidden />
 
       <div className="animate-in fade-in duration-500">
         <Container className="pt-4">
