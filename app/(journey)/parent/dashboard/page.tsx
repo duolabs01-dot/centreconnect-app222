@@ -26,7 +26,7 @@ import { ParentJobsSection } from './_sections/parent-jobs-section'
 import { PushPermissionRequest } from '@/components/notifications/PushPermissionRequest'
 
 export const metadata: Metadata = {
-  title: 'Parent Command Crèche | CentreConnect',
+  title: 'Parent Dashboard | CentreConnect',
   description: 'Your parent home for applications, enrolment milestones, and quick actions.',
   openGraph: {
     images: ['/og-image.png'],
