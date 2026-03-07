@@ -257,7 +257,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 6 — Jobs strip */}
-          <section id="active-jobs" className="snap-start rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
+          <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h3 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">Work in Early Childhood Education</h3>   
               <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
