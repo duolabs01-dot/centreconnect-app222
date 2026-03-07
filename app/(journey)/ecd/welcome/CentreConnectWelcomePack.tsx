@@ -52,72 +52,26 @@ const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
 
 const scenarios: Scenario[] = [
   {
-    id: 'applications',
-    emoji: '\u{1F4CB}',
-    color: '#0D9488',
-    bg: '#F0FDFA',
-    accent: '#CCFBF1',
-    title: 'No more chasing parents on WhatsApp',
-    pain:
-      'Documents arrive in many messages and your team keeps scrolling through chats to find what matters.',
-    solution:
-      'Applications arrive in one clean board. You can accept, decline, or waitlist quickly and parents are updated automatically.',
-    steps: [
-      'Parent finds your centre and applies.',
-      'You get one clear notification.',
-      'Review details in one place.',
-      'Accept, decline, or waitlist in one tap.',
-      'Parent receives instant status update.',
-    ],
-    ctaLabel: 'Open Applications',
-    ctaHref: '/ecd/pipeline',
-    quote: 'I used to spend two hours sorting messages. Now it is ten minutes.',
-    quoteAuthor: 'Mama Thandi, Soweto',
-  },
-  {
-    id: 'children',
-    emoji: '\u{1F9D2}',
-    color: '#7C3AED',
-    bg: '#FAF5FF',
-    accent: '#EDE9FE',
-    title: 'Children records are finally organised',
-    pain:
-      'At pickup or emergency time, looking through paper files creates pressure and delays.',
-    solution:
-      'Store child profiles, guardians, pickup contacts, and health notes in one searchable place.',
-    steps: [
-      'Add child name and date of birth.',
-      'Choose age group.',
-      'Add guardian and emergency contacts.',
-      'Add approved pickup people.',
-      'Add medical notes and allergies.',
-    ],
-    ctaLabel: 'Open Children',
-    ctaHref: '/ecd/children/new',
-    quote: 'Now I can find records in seconds on my phone.',
-    quoteAuthor: 'Auntie Rose, Alexandra',
-  },
-  {
     id: 'attendance',
     emoji: '\u{2705}',
     color: '#0369A1',
     bg: '#F0F9FF',
     accent: '#BAE6FD',
-    title: 'Attendance in 30 seconds, not 30 minutes',
+    title: 'DSD-Ready Attendance Register',
     pain:
-      'Roll call and month-end counting can take too long and leave room for mistakes.',
+      'Paper roll calls and month-end counting take too long and inspectors are strict about accuracy.',
     solution:
-      'Tap present or absent once per child. Monthly totals are ready automatically.',
+      'Mark the register in 30 seconds. The system auto-calculates totals and generates a DSD-compliant printout.',
     steps: [
-      'Open Attendance each morning.',
-      'Tap child status quickly.',
-      'Add absence note if needed.',
-      'Everything saves immediately.',
-      'Use monthly totals for invoicing.',
+      'Open your Digital Register each morning.',
+      'Tap status: Present, Absent, or Sick.',
+      'Totals are auto-counted instantly.',
+      'Export a professional DSD PDF at month-end.',
+      'Print, sign, and hand to inspectors.',
     ],
-    ctaLabel: 'Open Attendance',
+    ctaLabel: 'Open Digital Register',
     ctaHref: '/ecd/attendance',
-    quote: 'Month-end is no longer a stressful weekend job.',
+    quote: 'Month-end used to take a whole weekend. Now it is ready in one tap.',
     quoteAuthor: 'Mama Precious, Tembisa',
   },
   {
@@ -126,22 +80,68 @@ const scenarios: Scenario[] = [
     color: '#B45309',
     bg: '#FFFBEB',
     accent: '#FDE68A',
-    title: 'Safe pickup with less gate confusion',
+    title: 'Gate Security & Safe Pickup',
     pain:
-      'Gate-time pressure is real when an unknown person arrives and you need a fast, safe decision.',
+      'Unknown people arriving at the gate creates stress. You need a fast, safe way to verify guardians.',
     solution:
-      'Use QR verification so your staff can confirm authorised pickups in seconds.',
+      'Use Secure QR codes. Only authorized people can scan in, keeping your staff calm and children safe.',
     steps: [
-      'Add pickup people to each child profile.',
-      'Print your centre QR poster for the gate.',
-      'Guardian scans or presents code.',
-      'Staff confirms authorisation quickly.',
-      'Parents get calm, clear pickup flow.',
+      'Add approved guardians to child profiles.',
+      'Print your unique gate QR poster.',
+      'Guardian presents their secure code.',
+      'System confirms identity in 1 second.',
+      'Automated logs keep a record of every pickup.',
     ],
-    ctaLabel: 'Open Safe Pickup',
+    ctaLabel: 'Setup Gate Security',
     ctaHref: '/ecd/pickup',
-    quote: 'The system helps us stay calm and firm at pickup time.',
+    quote: 'We no longer argue at the gate. The system says who is allowed.',
     quoteAuthor: 'Mama Lindiwe, Katlehong',
+  },
+  {
+    id: 'applications',
+    emoji: '\u{1F4CB}',
+    color: '#0D9488',
+    bg: '#F0FDFA',
+    accent: '#CCFBF1',
+    title: 'Digital Admissions Office',
+    pain:
+      'Parents sending photos of IDs on WhatsApp makes a mess. Documents get lost in the chat.',
+    solution:
+      'Review complete applications in one place. Accept or waitlist with one tap, and we notify the parent.',
+    steps: [
+      'Share your link with interested parents.',
+      'They upload all documents digitally.',
+      'Review the full profile on your screen.',
+      'Accept or Decline with one tap.',
+      'Parent is updated automatically by SMS/Email.',
+    ],
+    ctaLabel: 'Open Admissions Board',
+    ctaHref: '/ecd/pipeline',
+    quote: 'No more chasing ID copies. Everything is neat and organized.',
+    quoteAuthor: 'Mama Thandi, Soweto',
+  },
+  {
+    id: 'children',
+    emoji: '\u{1F9D2}',
+    color: '#7C3AED',
+    bg: '#FAF5FF',
+    accent: '#EDE9FE',
+    title: 'Secure Digital Record Vault',
+    pain:
+      'Finding medical notes or emergency numbers in a folder during a crisis is too slow.',
+    solution:
+      'Every child has a digital profile with health notes and contacts, searchable in 2 seconds.',
+    steps: [
+      'Add child details and medical aid info.',
+      'Upload birth certificates once.',
+      'Search child records by name or age.',
+      'Access emergency contacts instantly.',
+      'Staff can view records without seeing fees.',
+    ],
+    ctaLabel: 'Open Digital Records',
+    ctaHref: '/ecd/children/new',
+    quote: 'When a child got sick, I had their mum on the phone in seconds.',
+    quoteAuthor: 'Auntie Rose, Alexandra',
   },
   {
     id: 'parents',
@@ -149,21 +149,21 @@ const scenarios: Scenario[] = [
     color: '#047857',
     bg: '#F0FDF4',
     accent: '#A7F3D0',
-    title: 'Invite parents and keep them involved',
+    title: 'Parent Communication Hub',
     pain:
-      'Parents often feel disconnected during the day and then everything becomes urgent after hours.',
+      'Parents feel left out, and WhatsApp groups become noisy with questions you already answered.',
     solution:
-      'Parents can follow attendance, updates, and key communication in one trusted place.',
+      'Share attendance, daily highlights, and announcements in a professional parent app.',
     steps: [
-      'Share your centre link with families.',
-      'Parents register for free.',
-      'Parents apply through CentreConnect.',
-      'You review and onboard smoothly.',
-      'Families stay informed without WhatsApp noise.',
+      'Publish one announcement to all parents.',
+      'Share daily reports (meals, naps, mood).',
+      'Parents see their child is safe and learning.',
+      'Build trust without extra phone calls.',
+      'Maintain a professional distance from parents.',
     ],
-    ctaLabel: 'Open Centre Profile',
+    ctaLabel: 'View Parent Experience',
     ctaHref: '/ecd/profile',
-    quote: 'Parents thanked us for clear updates and faster responses.',
+    quote: 'Parents trust us more because they see the care we provide.',
     quoteAuthor: 'Auntie Grace, Mamelodi',
   },
   {
@@ -172,21 +172,21 @@ const scenarios: Scenario[] = [
     color: '#9D174D',
     bg: '#FFF1F2',
     accent: '#FECDD3',
-    title: 'Give staff access without giving up control',
+    title: 'Team & Staff Management',
     pain:
-      'You cannot be everywhere, and shared passwords are not safe for daily operations.',
+      'Staff need to mark attendance but you don’t want them seeing your bank details or settings.',
     solution:
-      'Invite each staff member with role-based access and keep sensitive settings protected.',
+      'Give each teacher their own login. They do the work, you keep the control.',
     steps: [
-      'Open centre settings.',
-      'Invite each team member by email.',
-      'Choose their role permissions.',
-      'They activate their own login.',
-      'Your operations stay secure and organised.',
+      'Invite staff via their email.',
+      'Assign roles: Practitioner or Supervisor.',
+      'They mark attendance on their own phones.',
+      'You see a dashboard of all staff activity.',
+      'Your financial info stays private to you.',
     ],
-    ctaLabel: 'Open Staff Setup',
+    ctaLabel: 'Manage Your Team',
     ctaHref: '/ecd/profile',
-    quote: 'My team can support daily tasks while I keep full oversight.',
+    quote: 'My staff feel more professional using the app themselves.',
     quoteAuthor: 'Mama Ntombi, Soweto',
   },
 ]
@@ -335,24 +335,37 @@ function ScenarioCard({
   scenario: Scenario
   onOpen: (scenario: Scenario) => void
 }) {
+  const isHighValue = ['attendance', 'pickup', 'applications'].includes(scenario.id)
+  
   return (
     <Button
       type="button"
       onClick={() => onOpen(scenario)}
       variant="outline"
-      className="group !flex !min-h-[188px] !w-full !flex-col !items-start !justify-start !gap-2 rounded-3xl border p-5 text-left !whitespace-normal transition duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className={cn(
+        "group !flex !min-h-[200px] !w-full !flex-col !items-start !justify-start !gap-3 rounded-[2rem] border-2 p-6 text-left !whitespace-normal transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]",
+        isHighValue ? "shadow-lg" : "shadow-sm"
+      )}
       style={{
         background: scenario.bg,
         borderColor: scenario.accent,
       }}
     >
-      <div className="mb-1 text-2xl leading-none">{scenario.emoji}</div>
-      <h3 className="text-base font-black leading-snug break-words" style={{ color: scenario.color }}>
+      <div className="flex w-full items-start justify-between">
+        <div className="text-3xl leading-none">{scenario.emoji}</div>
+        {isHighValue && (
+          <span className="rounded-full bg-white/80 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-slate-600 shadow-sm border border-slate-100">
+            {scenario.id === 'attendance' ? 'DSD COMPLIANT' : scenario.id === 'pickup' ? 'GATE SECURITY' : 'REVENUE TOOL'}
+          </span>
+        ) }
+      </div>
+      <h3 className="text-xl font-black leading-tight tracking-tight text-slate-900" style={{ color: scenario.color }}>
         {scenario.title}
       </h3>
-      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
-        Tap to learn more
-      </p>
+      <div className="mt-auto pt-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600">
+        Tap for walkthrough
+        <ArrowRight className="h-3 w-3" />
+      </div>
     </Button>
   )
 }
@@ -1045,68 +1058,44 @@ export default function CentreConnectWelcomePack() {
             </CardContent>
           </Card>
 
-          <Card className="border-cyan-100 bg-white shadow-lg">
-            <CardContent className="space-y-5 p-6">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Your package right now</p>
-                  <h3 className="mt-1 text-xl font-black text-slate-900">
-                    {selectedPlanContent.label} plan
-                    <span className="ml-2 rounded-full bg-cyan-100 px-2 py-1 text-[11px] font-bold uppercase text-cyan-800">
-                      {selectedPlanStatus}
-                    </span>
+          <Card className="overflow-hidden border-teal-100 bg-gradient-to-br from-teal-50/50 via-white to-cyan-50/50 shadow-xl rounded-[2.5rem]">
+            <CardContent className="space-y-6 p-8">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-teal-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-teal-900/20">
+                    <Sparkles className="h-3 w-3" />
+                    Founding Member Package
+                  </div>
+                  <h3 className="text-3xl font-black tracking-tight text-slate-900 pt-2">
+                    Everything you need to lead.
                   </h3>
+                </div>
+                <div className="rounded-2xl bg-white p-4 text-center shadow-sm border border-teal-100">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilot Price</p>
+                  <p className="text-2xl font-black text-teal-700">R299<span className="text-sm text-slate-400">/mo</span></p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-cyan-100 bg-cyan-50/80 p-4">
-                <p className="text-sm font-semibold text-slate-700">{selectedPlanContent.shortPitch}</p>
-              </div>
-
-              <div className="grid gap-3 lg:grid-cols-3">
-                {PACKAGE_COMPARE.map((tier) => {
-                  const activeTier = tier.plan === selectedPlan
-                  return (
-                    <div
-                      key={tier.plan}
-                      className={cn(
-                        'rounded-2xl border p-4',
-                        activeTier
-                          ? 'border-teal-300 bg-teal-50 shadow-[0_10px_30px_rgba(20,184,166,0.18)]'
-                          : 'border-slate-200 bg-slate-50'
-                      )}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-black text-slate-900">{PLAN_CONTENT[tier.plan].label}</p>
-                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">
-                            {tier.subtitle}
-                          </p>
-                        </div>
-                        {activeTier ? (
-                          <span className="rounded-full bg-teal-600 px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-white">
-                            Current
-                          </span>
-                        ) : null}
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {tier.includes.map((item) => (
-                          <p key={item} className="flex items-start gap-2 text-sm text-slate-700">
-                            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
-                            <span>{item}</span>
-                          </p>
-                        ))}
-                      </div>
-                      <p className="mt-3 text-xs leading-relaxed text-slate-600">{tier.promise}</p>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { title: 'DSD Compliance', desc: 'Auto-counting & official PDF exports.', icon: CheckCircle2 },
+                  { title: 'Gate Security', desc: 'Secure QR codes for every guardian.', icon: QrCode },
+                  { title: 'Growth Tools', desc: 'Professional public centre profile.', icon: Sparkles },
+                  { title: 'Direct Support', desc: 'Your own priority WhatsApp channel.', icon: MessageCircle },
+                ].map((item) => (
+                  <div key={item.title} className="rounded-2xl bg-white/80 p-4 shadow-sm border border-white/50 backdrop-blur-sm">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
+                      <item.icon className="h-5 w-5" />
                     </div>
-                  )
-                })}
+                    <p className="text-sm font-black text-slate-900">{item.title}</p>
+                    <p className="mt-1 text-xs font-medium text-slate-500 leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
               </div>
 
-              <div className="rounded-2xl border border-cyan-100 bg-cyan-50 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-cyan-700">Where this is going</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-700">
-                  Growth includes everything in Starter. Pro includes everything in Growth. {selectedPlanContent.yearlyVision} CentreConnect is built to help owners run stronger centres, support staff confidently, and grow with less daily stress.
+              <div className="rounded-2xl border border-teal-100 bg-teal-600/5 p-5">
+                <p className="text-sm font-bold text-teal-900">
+                  Founding Member Bonus: <span className="font-medium text-teal-800">You are getting all **Platinum Features** at our introductory pilot rate. This price is locked in for your centre as a thank you for joining us early.</span>
                 </p>
               </div>
             </CardContent>
@@ -1127,7 +1116,7 @@ export default function CentreConnectWelcomePack() {
               </div>
 
               <div className="grid gap-3 pt-1 sm:grid-cols-2 lg:grid-cols-4">
-                <Button asChild className="h-11 rounded-2xl bg-teal-600 hover:bg-teal-500">
+                <Button asChild className="h-12 rounded-2xl bg-teal-600 font-black shadow-lg shadow-teal-900/20 hover:bg-teal-500 active:scale-95 transition-all">
                   <Link
                     href="/ecd/dashboard"
                     onClick={() => {
@@ -1135,10 +1124,10 @@ export default function CentreConnectWelcomePack() {
                       trackCtaClick('open_dashboard', 'onboarding_completed')
                     }}
                   >
-                    Open Dashboard
+                    Open My Digital Office
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-300 bg-white">
+                <Button asChild variant="outline" className="h-12 rounded-2xl border-2 border-slate-100 bg-white font-bold text-slate-700 hover:bg-slate-50 transition-all">
                   <Link
                     href="/ecd/website"
                     onClick={() => {
@@ -1146,11 +1135,11 @@ export default function CentreConnectWelcomePack() {
                       trackCtaClick('website_setup')
                     }}
                   >
-                    Website Setup
+                    Customize My Website
                   </Link>
                 </Button>
                 {posterHref ? (
-                  <Button asChild variant="outline" className="h-11 rounded-2xl border-cyan-300 bg-cyan-50 text-cyan-800 hover:bg-cyan-100">
+                  <Button asChild variant="outline" className="h-12 rounded-2xl border-2 border-cyan-200 bg-cyan-50/50 text-cyan-800 font-bold hover:bg-cyan-100 transition-all">
                     <Link
                       href={posterHref}
                       onClick={() => {
@@ -1159,33 +1148,27 @@ export default function CentreConnectWelcomePack() {
                       }}
                     >
                       <QrCode className="mr-2 h-4 w-4" />
-                      Print Parent QR Poster
+                      Print Gate Poster
                     </Link>
                   </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    disabled
-                    variant="outline"
-                    className="h-11 rounded-2xl border-slate-200 bg-slate-100 text-slate-400"
-                  >
-                    Upload profile to enable QR poster
-                  </Button>
-                )}
+                ) : null}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleCopyCentreLink}
                   className={cn(
-                    'h-11 rounded-2xl border-slate-300 bg-white',
+                    'h-12 rounded-2xl border-2 border-slate-100 bg-white font-bold text-slate-700 transition-all',
                     copyStatus === 'done' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : ''
                   )}
                   disabled={!centrePublicPath}
                 >
                   {copyStatus === 'done' ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                  {copyStatus === 'done' ? 'Copied link' : 'Copy centre link'}
+                  {copyStatus === 'done' ? 'Link Copied!' : 'Share My Link'}
                 </Button>
               </div>
+              <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 pt-4">
+                Founding Member Price: R299/mo (Locked In Forever)
+              </p>
             </CardContent>
           </Card>
 
