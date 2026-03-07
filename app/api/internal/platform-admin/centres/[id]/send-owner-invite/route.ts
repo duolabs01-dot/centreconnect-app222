@@ -25,6 +25,7 @@ type SendOwnerInviteResponse = {
   email: { sent: boolean; error?: string | null }
   whatsapp: { sent: boolean; link?: string | null; error?: string | null }
   warning?: string
+  welcomePackSent?: boolean
 }
 
 function sanitizeName(value: string | null | undefined, fallback: string) {
@@ -329,6 +330,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       ? `${combinedWarning} | ${welcomePackWarning}`
       : welcomePackWarning
   }
+  const welcomePackSent = emailResult.success && !welcomePackWarning
 
   const whatsappMessage = [
     `Hi ${ownerFirstName},`,
@@ -485,6 +487,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
     whatsapp: { sent: whatsappSent, link: trackedOwnerWhatsappLink, error: whatsappError },
     warning: combinedWarning ?? undefined,
+    welcomePackSent,
   }
 
   return NextResponse.json(response, { status: 200 })
