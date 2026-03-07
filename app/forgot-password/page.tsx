@@ -9,15 +9,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { buildLockedResetPasswordRedirect } from '@/lib/auth/onboarding-links'
 
 export default function ForgotPasswordPage() {
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-
-  function getAuthRedirectUrl() {
-    return `${window.location.origin.replace(/\/$/, '')}/reset-password`
-  }
 
   async function checkAccountExists(normalizedEmail: string) {
     const response = await fetch('/api/auth/account-exists', {
@@ -49,7 +46,7 @@ export default function ForgotPasswordPage() {
         return
       }
 
-      const redirectTo = getAuthRedirectUrl()
+      const redirectTo = buildLockedResetPasswordRedirect(normalizedEmail, window.location.origin)
       const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
       if (error) throw error
       toast.success('Password reset link sent. Check your email.')

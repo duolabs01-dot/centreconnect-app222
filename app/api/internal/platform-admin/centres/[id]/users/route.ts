@@ -449,41 +449,74 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       )
     }
 
-    const { error: memberDeleteError } = await admin
-      .from('ecd_admins')
-      .delete()
-      .eq('ecd_id', centreId)
-      .eq('user_id', payload.userId)
-    if (memberDeleteError) return NextResponse.json({ error: memberDeleteError.message }, { status: 400 })
+    const { count: ownedCentresCount, error: ownedCentresError } = await admin
+      .from('ecd_centres')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', payload.userId)
+    if (ownedCentresError) {
+      return NextResponse.json({ error: ownedCentresError.message }, { status: 400 })
+    }
+    if ((ownedCentresCount ?? 0) > 0) {
+      return NextResponse.json(
+        { error: 'Cannot permanently remove a user who still owns one or more centres. Transfer ownership first.' },
+        { status: 409 }
+      )
+    }
 
-    const { error: invitationDeleteError } = await admin
+    const { data: profile, error: profileError } = await admin
+      .from('user_profiles')
+      .select('role,full_name,email')
+      .eq('id', payload.userId)
+      .maybeSingle()
+    if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
+    if (profile?.role === 'platform_admin') {
+      return NextResponse.json({ error: 'Platform admin accounts cannot be removed here.' }, { status: 409 })
+    }
+
+    const userEmail = await resolveUserEmail(admin, payload.userId, profile?.email ?? null)
+    const warnings: string[] = []
+
+    const revokeResult = await revokeUserSessionsByUserId(admin, payload.userId)
+    if (!revokeResult.ok && revokeResult.warning) {
+      warnings.push(revokeResult.warning)
+    }
+
+    const deleteUserResult = await admin.auth.admin.deleteUser(payload.userId)
+    if (deleteUserResult.error) {
+      return NextResponse.json({ error: deleteUserResult.error.message }, { status: 400 })
+    }
+
+    const { error: invitationDeleteByUserError } = await admin
       .from('ecd_admin_invitations')
       .delete()
-      .eq('ecd_id', centreId)
       .eq('auth_user_id', payload.userId)
-    if (invitationDeleteError) return NextResponse.json({ error: invitationDeleteError.message }, { status: 400 })
-
-    const { count: remainingMemberships, error: remainingMembershipsError } = await admin
-      .from('ecd_admins')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', payload.userId)
-    if (remainingMembershipsError) {
-      return NextResponse.json({ error: remainingMembershipsError.message }, { status: 400 })
+    if (invitationDeleteByUserError) {
+      warnings.push(`Could not clear all tenant invitations by user (${invitationDeleteByUserError.message}).`)
     }
-    if ((remainingMemberships ?? 0) === 0) {
-      const { data: profile, error: profileError } = await admin
-        .from('user_profiles')
-        .select('role')
-        .eq('id', payload.userId)
-        .maybeSingle()
-      if (profileError) return NextResponse.json({ error: profileError.message }, { status: 400 })
-      if (profile && (profile.role === 'ecd_admin' || profile.role === 'ecd_staff' || profile.role === 'ecd_supervisor')) {
-        const { error: downgradeError } = await admin
-          .from('user_profiles')
-          .update({ role: 'parent_user' })
-          .eq('id', payload.userId)
-        if (downgradeError) return NextResponse.json({ error: downgradeError.message }, { status: 400 })
+
+    if (userEmail) {
+      const { error: invitationDeleteByEmailError } = await admin
+        .from('ecd_admin_invitations')
+        .delete()
+        .eq('email', userEmail)
+      if (invitationDeleteByEmailError) {
+        warnings.push(`Could not clear all tenant invitations by email (${invitationDeleteByEmailError.message}).`)
       }
+    }
+
+    const { error: parentDeleteError } = await admin.from('parents').delete().eq('id', payload.userId)
+    if (parentDeleteError) {
+      warnings.push(`Could not clear parent record (${parentDeleteError.message}).`)
+    }
+
+    const { error: profileDeleteError } = await admin.from('user_profiles').delete().eq('id', payload.userId)
+    if (profileDeleteError) {
+      warnings.push(`Could not clear user profile (${profileDeleteError.message}).`)
+    }
+
+    const { error: membershipDeleteError } = await admin.from('ecd_admins').delete().eq('user_id', payload.userId)
+    if (membershipDeleteError) {
+      warnings.push(`Could not clear all ECD memberships (${membershipDeleteError.message}).`)
     }
 
     await writePlatformActivity(admin, {
@@ -491,10 +524,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       actorEmail: platformAdmin.email,
       entityType: 'tenant',
       entityId: centreId,
-      action: 'remove_tenant_user',
-      summary: 'Removed tenant user access',
+      action: 'delete_tenant_user_account',
+      summary: 'Permanently deleted tenant user account',
       details: {
         userId: payload.userId,
+        email: userEmail,
+        role: profile?.role ?? 'unknown',
+        fullName: profile?.full_name ?? null,
+        warnings: warnings.length > 0 ? warnings : null,
       },
     })
 
@@ -505,6 +542,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       users: result.users,
       pendingInvitations: result.pendingInvitations,
       ownerUserId: result.centre?.ownerUserId ?? null,
+      warning: warnings.length > 0 ? warnings.join(' | ') : null,
     })
   }
 

@@ -17,6 +17,7 @@ import {
   signInWithPasswordRetry,
   type AuthRole,
 } from '@/lib/auth/client-auth'
+import { buildAuthCallbackRedirect } from '@/lib/auth/onboarding-links'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -49,13 +50,6 @@ export default function LoginPage() {
 
   function authDestinationPath() {
     return sanitizeNextPath(requestedNext) ?? '/'
-  }
-
-  function resolveAuthCallbackUrl() {
-    const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
-    const fallbackOrigin = window.location.origin.replace(/\/$/, '')
-    const baseOrigin = configuredOrigin || fallbackOrigin
-    return `${baseOrigin}/auth/callback`
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -104,7 +98,7 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${resolveAuthCallbackUrl()}?next=${encodeURIComponent(authDestinationPath())}`,
+          redirectTo: buildAuthCallbackRedirect(authDestinationPath(), window.location.origin),
           queryParams: {
             prompt: 'select_account',
           },

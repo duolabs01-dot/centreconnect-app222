@@ -15,19 +15,19 @@ export function PublicShell({ children }: PublicShellProps) {
   return (
     <div className="min-h-screen bg-slate-50 text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elevation-1)]">
-        <Container className="flex items-center justify-between py-3.5 sm:py-4">
-          <BrandMark href="/" />
+        <Container className="flex items-center justify-between gap-3 py-3.5 sm:py-4">
+          <BrandMark href="/" compact hideLabelOnMobile className="shrink-0" />
           
           <nav className="hidden items-center gap-8 md:flex">
             <Link href="/directory" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">Find a Centre</Link>
             <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">For ECDs</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <Button variant="ghost" size="sm" className="px-2.5 sm:px-4" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
-            <Button asChild>
+            <Button size="sm" className="px-3 sm:px-4" asChild>
               <Link href="/register">Get Started</Link>
             </Button>
           </div>

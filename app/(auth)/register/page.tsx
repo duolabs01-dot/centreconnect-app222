@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { buildAuthCallbackRedirect } from '@/lib/auth/onboarding-links'
 
 const TERMS_VERSION = '2026-02-19'
 
@@ -56,14 +57,6 @@ export default function RegisterPage() {
     const destination = sanitizeNextPath(requestedNext)
     if (!destination) return '/login'
     return `/login?next=${encodeURIComponent(destination)}`
-  }
-
-  function getAuthRedirectUrl() {
-    const destination = encodeURIComponent(authDestinationPath())
-    const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, '')
-    const fallbackOrigin = window.location.origin.replace(/\/$/, '')
-    const baseOrigin = configuredOrigin || fallbackOrigin
-    return `${baseOrigin}/auth/callback?next=${destination}`
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -143,7 +136,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: getAuthRedirectUrl(),
+          redirectTo: buildAuthCallbackRedirect(authDestinationPath(), window.location.origin),
           queryParams: {
             prompt: 'select_account',
           },

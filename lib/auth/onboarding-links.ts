@@ -263,9 +263,9 @@ export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
   return query.length > 0 ? `/ecd/welcome?${query}` : '/ecd/welcome'
 }
 
-export function buildAuthCallbackRedirect(nextPath: string) {
+export function buildAuthCallbackRedirect(nextPath: string, preferredOrigin?: string) {
   const safeNext = sanitizeNextPath(nextPath)
-  return `${normalizeAppUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`
+  return `${resolvePublicAppUrl(preferredOrigin).replace(/\/$/, '')}/auth/callback?next=${encodeURIComponent(safeNext)}`
 }
 
 export function buildFirstPartyConfirmLink(input: {
@@ -287,8 +287,8 @@ export function buildDefaultEcdOnboardingRedirect() {
   return buildAuthCallbackRedirect(buildEcdWelcomePath({ onboarding: true }))
 }
 
-export function buildLockedResetPasswordRedirect(email: string) {
-  return `${normalizeAppUrl()}/reset-password?locked_email=${encodeURIComponent(email)}`
+export function buildLockedResetPasswordRedirect(email: string, preferredOrigin?: string) {
+  return `${resolvePublicAppUrl(preferredOrigin).replace(/\/$/, '')}/reset-password?locked_email=${encodeURIComponent(email)}`
 }
 
 function isAllowedAppHost(hostname: string) {

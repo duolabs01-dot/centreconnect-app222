@@ -796,6 +796,11 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
 
   async function removeTenantUser(user: TenantUserRow) {
     if (!editTenantId) return
+    const userLabel = user.fullName?.trim() || user.email?.trim() || user.userId
+    const confirmed = window.confirm(
+      `This will permanently delete the CentreConnect account for ${userLabel}, remove all centre access, and cancel any pending staff invites. This action is irreversible. Continue?`
+    )
+    if (!confirmed) return
 
     setUsersBusy(true)
     try {
@@ -809,13 +814,17 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       })
       const payload = (await response.json().catch(() => ({}))) as {
         error?: string
+        warning?: string | null
         users?: TenantUserRow[]
         pendingInvitations?: TenantPendingInvitation[]
       }
       if (!response.ok) throw new Error(payload.error || 'Failed to remove user')
       applyUsersPayload(payload)
       router.refresh()
-      toast.success('Tenant user removed.')
+      toast.success('Tenant user permanently deleted.')
+      if (payload.warning) {
+        toast.warning(payload.warning)
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to remove user')
     } finally {
