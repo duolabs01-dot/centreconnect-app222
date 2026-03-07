@@ -372,6 +372,30 @@ export function CentreClient({ slug }: { slug: string }) {
     ? centre.age_groups.join(', ').replace(/(\d+)([my])/g, '$1$2 old')
     : 'All ages welcome'
 
+  const visibleSectionSet = new Set(websiteContent.visibleSections)
+  const showAbout = visibleSectionSet.has('about')
+  const showPrograms = visibleSectionSet.has('programs')
+  const safeGalleryUrls = websiteContent.galleryUrls.filter((url) => isSafeImageUrl(url))
+  const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0
+  const showContact = visibleSectionSet.has('contact')
+  const aboutCopy =
+    websiteContent.aboutText.trim() ||
+    centre.description ||
+    'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'
+  const fallbackPrograms: ProgramCard[] = [
+    {
+      title: 'Holistic Curriculum',
+      description:
+        'Our play-based learning approach focuses on social, emotional, and cognitive development for all ages.',
+    },
+    {
+      title: 'Age-Appropriate Groups',
+      description:
+        'Children are grouped by developmental stage to ensure they receive the right level of care and stimulation.',
+    },
+  ]
+  const programCards = websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms
+
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-32">
       {/* Premium Hero Section */}
