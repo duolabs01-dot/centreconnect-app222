@@ -89,17 +89,17 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 </Button>
               </div>
 
-              <div className="mt-12 grid grid-cols-2 gap-8 border-t border-slate-100 pt-10 sm:mt-20 sm:grid-cols-3 sm:gap-12">
+              <div className="mt-12 grid grid-cols-3 gap-4 border-t border-slate-100 pt-10 sm:mt-20 sm:gap-12">
                 <div className="space-y-1">
-                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">Verified</p>
+                  <p className="font-display text-2xl font-black text-slate-900 tracking-tighter sm:text-4xl">Verified</p>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Trusted Listings</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">{locationHint}</p>
+                  <p className="font-display text-2xl font-black text-slate-900 tracking-tighter sm:text-4xl">{locationHint}</p>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pilot Area</p>
                 </div>
-                <div className="hidden sm:block space-y-1">
-                  <p className="font-display text-4xl font-black text-slate-900 tracking-tighter">R0.00</p>
+                <div className="space-y-1">
+                  <p className="font-display text-2xl font-black text-slate-900 tracking-tighter sm:text-4xl">R0.00</p>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Free for Parents</p>
                 </div>
               </div>
