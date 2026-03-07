@@ -16,7 +16,7 @@ export function PublicShell({ children }: PublicShellProps) {
   const router = useRouter()
   return (
     <div className="min-h-screen bg-slate-50 text-foreground overflow-x-hidden">
-      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-xl shadow-[0_2px_14px_rgba(15,23,42,0.2)]">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-card/95 backdrop-blur-xl shadow-[0_2px_14px_rgba(15,23,42,0.2)]">
         <Container className="flex items-center justify-between gap-3 py-3.5 sm:py-4">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
@@ -42,6 +42,7 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
         </Container>
       </header>
+      <div className="h-[72px] sm:h-[80px]" aria-hidden />
 
       <div className="animate-in fade-in duration-500">
         <Container className="pt-4">
