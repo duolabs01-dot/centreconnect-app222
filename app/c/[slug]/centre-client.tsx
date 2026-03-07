@@ -463,7 +463,7 @@ export function CentreClient({ slug }: { slug: string }) {
               <p className="text-sm font-bold leading-relaxed">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
             </div>
             <Link
-              href={claimHref}
+              href="/for-centres/intro"
               className="inline-flex h-11 items-center justify-center rounded-2xl border border-amber-300 bg-white px-6 text-sm font-black text-amber-700 shadow-sm transition-transform active:scale-95"
             >
               Own this centre? Claim & Update →

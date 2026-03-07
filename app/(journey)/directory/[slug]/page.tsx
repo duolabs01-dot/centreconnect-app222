@@ -117,7 +117,7 @@ export default async function DirectorySlugPage({ params }: DirectorySlugPagePro
 
         <div className="text-sm text-slate-500">
           <Link
-            href={`/ecd/claim?slug=${encodeURIComponent(normalizedSlug)}`}
+            href="/for-centres/intro"
             className="font-semibold text-cyan-600 underline-offset-4 transition hover:underline"
           >
             Own this centre? Claim your free listing →

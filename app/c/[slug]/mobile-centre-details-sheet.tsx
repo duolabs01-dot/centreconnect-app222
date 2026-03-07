@@ -181,10 +181,10 @@ export function MobileCentreDetailsSheet({
               {!isClaimed ? (
                 <div className="space-y-3">
                   <Link
-                    href={claimHref}
+                    href="/for-centres/intro"
                     className="flex h-12 items-center justify-center rounded-2xl border-2 border-teal-600 bg-white px-4 text-sm font-black text-teal-700 shadow-md"
                   >
-                    Own this centre? Start here →
+                    Own this centre? Claim it here →
                   </Link>
                   {whatsappHref ? (
                     <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">

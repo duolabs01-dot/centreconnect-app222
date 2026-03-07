@@ -193,18 +193,18 @@ export function CentreCard({
               </Button>
             ) : (
               <Button
-                type="button"
-                onClick={handleViewDetails}
-                className="flex-1 rounded-2xl bg-slate-900 py-6 text-sm font-black text-white shadow-lg transition-all hover:bg-slate-800 active:scale-95"
+                asChild
+                variant="outline"
+                className="flex-1 rounded-2xl border-2 border-slate-100 bg-white py-6 text-sm font-black text-slate-700 transition-all hover:border-slate-200 hover:bg-slate-50 active:scale-95"
               >
-                Learn More
+                <Link href="/for-centres/intro">Learn More</Link>
               </Button>
             )}
           </div>
           
           {!is_claimed && (
             <p className="text-center text-[10px] font-medium leading-tight text-slate-400">
-              Not yet taking digital applications via CentreConnect.
+              Own this centre? <Link href="/for-centres/intro" className="text-cyan-600 font-black hover:underline">Claim it here →</Link>
             </p>
           )}
         </CardFooter>
