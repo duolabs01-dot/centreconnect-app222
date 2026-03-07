@@ -108,7 +108,7 @@ export default function ParentDiscoverClient() {
     const loadCentres = async () => {
       const { data } = await supabase
         .from('public_ecd_centres')
-        .select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing')
+        .select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude')
         .order('is_registered', { ascending: false })
         .order('name', { ascending: true })
         .limit(24)
@@ -205,7 +205,7 @@ export default function ParentDiscoverClient() {
               />
             </label>
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-              Filters coming soon
+              Search by suburb or centre name
             </p>
           </div>
         </header>
