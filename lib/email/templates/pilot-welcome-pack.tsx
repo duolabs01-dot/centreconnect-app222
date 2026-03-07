@@ -101,7 +101,7 @@ function renderChecklist(items: PilotWelcomeChecklistItem[]) {
   return items
     .map((item) => {
       const done = Boolean(item.done)
-      const marker = done ? '[X]' : '[ ]'
+      const marker = done ? '&#9989;' : '&#11036;'
       const itemLabel = done ? `<s>${item.label}</s>` : item.label
       const where = item.whereItShows
         ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${item.whereItShows}</p>`
