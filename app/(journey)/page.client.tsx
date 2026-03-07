@@ -263,56 +263,53 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
               <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              {activeJobs.length === 0 ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:col-span-2">
-                  <p className="text-base font-bold text-slate-900">No active jobs yet</p>
-                  <p className="mt-1 text-sm leading-relaxed text-slate-600">Check back soon for new centre opportunities.</p>
-                </div>
-              ) : (
-                activeJobs.map((job) => {
-                  const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`
-                  const location = [job.suburb, job.city].filter(Boolean).join(', ')
+            {activeJobs.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:col-span-2">
+                <p className="text-base font-bold text-slate-900">No active jobs yet</p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Check back soon for new centre opportunities.</p>
+              </div>
+            ) : (
+              activeJobs.map((job) => {
+                const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`
+                const location = [job.suburb, job.city].filter(Boolean).join(', ')
 
-                  return (
-                    <Link
-                      key={job.id}
-                      href={jobHref}
-                      className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 transition-all hover:border-cyan-400 hover:shadow-xl hover:shadow-cyan-900/5 min-h-[160px]"
-                    >
-                      <div className="min-w-0">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-lg font-bold text-slate-900">{job.title}</p>      
-                            <p className="mt-1 text-sm text-slate-500 font-medium">{job.centreName}</p>
-                          </div>
-                          <span className="shrink-0 rounded-lg bg-slate-100 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 group-hover:bg-cyan-500 group-hover:text-white transition-colors">
-                            View
-                          </span>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <span className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                            {job.roleType.replace(/_/g, ' ')}
-                          </span>
-                          {location ? (
-                            <span className="rounded-lg border border-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-400">
-                              {location}
-                            </span>
-                          ) : null}
-                        </div>
+                return (
+                  <Link
+                    key={job.id}
+                    href={jobHref}
+                    className="group flex flex-col justify-between rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg shadow-cyan-900/10 transition-all hover:translate-y-0.5 hover:border-cyan-300"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div>
+                        <p className="text-lg font-bold text-slate-900">{job.title}</p>
+                        <p className="mt-1 text-sm font-semibold text-slate-500">{job.centreName}</p>
                       </div>
+                      <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-white">
+                        Sponsored
+                      </span>
+                    </div>
 
-                      {job.closesAt ? (
-                        <div className="mt-4 pt-4 border-t border-slate-50">
-                          <span className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-                            Closes {formatDate(job.closesAt)}
-                          </span>
-                        </div>
-                      ) : null}
-                    </Link>
-                  )
-                })
-              )}
+                    <p className="mt-3 text-sm text-slate-500">
+                      {job.roleType.replace(/_/g, ' ')} · {location || 'Johannesburg'}
+                    </p>
+
+                    <div className="mt-5 flex items-center justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-500">
+                          Featured
+                        </span>
+                        {job.closesAt ? (
+                          <p className="text-sm text-slate-400">Closes {formatDate(job.closesAt)}</p>
+                        ) : null}
+                      </div>
+                      <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800" asChild>
+                        <span className="px-4 py-2 text-sm font-bold uppercase tracking-widest">Apply now</span>
+                      </Button>
+                    </div>
+                  </Link>
+                )
+              })
+            )}
             </div>
           </section>
         </div>
