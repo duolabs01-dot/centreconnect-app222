@@ -16,7 +16,7 @@ export function PublicShell({ children }: PublicShellProps) {
   const router = useRouter()
   return (
     <div className="min-h-screen bg-slate-50 text-foreground overflow-x-hidden">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-card/95 backdrop-blur-xl shadow-[0_2px_14px_rgba(15,23,42,0.2)]">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-white/20 backdrop-blur-3xl shadow-[0_8px_30px_rgba(15,23,42,0.35)]">
         <Container className="flex items-center justify-between gap-3 py-3.5 sm:py-4">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
@@ -41,17 +41,8 @@ export function PublicShell({ children }: PublicShellProps) {
             </Button>
           </div>
         </Container>
-        <div className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-4 border-t border-white/20 pt-3 text-[11px] uppercase tracking-[0.4em] text-slate-500 sm:pt-4">
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-24 rounded-full bg-white/60 blur-sm" />
-            <span className="text-xs text-slate-400">Live install signal</span>
-          </div>
-          <div className="flex-1">
-            <div className="relative h-1 rounded-full bg-white/10">
-              <div className="absolute inset-y-0 left-0 h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 shadow-[0_0_10px_rgba(8,145,178,0.8)]" />
-            </div>
-          </div>
-          <span className="text-xs font-semibold text-slate-900">Step 3 • Secure</span>
+        <div className="mx-auto mt-2 flex max-w-6xl justify-center">
+          <div className="h-1 w-36 rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-blue-500 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
         </div>
       </header>
       <div className="h-[72px] sm:h-[80px]" aria-hidden />
