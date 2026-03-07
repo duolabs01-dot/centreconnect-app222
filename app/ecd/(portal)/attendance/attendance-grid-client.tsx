@@ -36,7 +36,7 @@ type AttendanceGridClientProps = {
   centreName: string
   registrationNumber: string
   classes: EcdClass[]
-  children: Child[]
+  enrolledChildren: Child[]
   initialAttendance: AttendanceRecord[]
   selectedClassId: string | null
   selectedMonth: number
@@ -62,7 +62,7 @@ export function AttendanceGridClient({
   centreName,
   registrationNumber,
   classes,
-  children,
+  enrolledChildren,
   initialAttendance,
   selectedClassId,
   selectedMonth,
@@ -159,7 +159,7 @@ export function AttendanceGridClient({
 
   const totalsByChild = useMemo(() => {
     const totals: Record<string, number> = {}
-    children.forEach(child => {
+    enrolledChildren.forEach(child => {
       let count = 0
       for (let d = 1; d <= daysInMonth; d++) {
         if (localAttendance[child.id]?.[d] === 'present') count++
@@ -167,19 +167,19 @@ export function AttendanceGridClient({
       totals[child.id] = count
     })
     return totals
-  }, [children, localAttendance, daysInMonth])
+  }, [enrolledChildren, localAttendance, daysInMonth])
 
   const totalsByDay = useMemo(() => {
     const totals: Record<number, number> = {}
     for (let d = 1; d <= daysInMonth; d++) {
       let count = 0
-      children.forEach(child => {
+      enrolledChildren.forEach(child => {
         if (localAttendance[child.id]?.[d] === 'present') count++
       })
       totals[d] = count
     }
     return totals
-  }, [children, localAttendance, daysInMonth])
+  }, [enrolledChildren, localAttendance, daysInMonth])
 
   return (
     <div className="space-y-6">
@@ -281,7 +281,7 @@ export function AttendanceGridClient({
               </tr>
             </thead>
             <tbody>
-              {children.map(child => (
+              {enrolledChildren.map(child => (
                 <tr key={child.id} className="hover:bg-slate-50/50">
                   <td className="border border-slate-200 p-2 font-bold text-slate-900 sticky left-0 bg-white z-10">
                     {child.first_name} {child.last_name}

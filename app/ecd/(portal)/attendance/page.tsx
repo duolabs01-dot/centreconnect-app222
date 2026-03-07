@@ -73,7 +73,7 @@ export default async function EcdAttendancePage({
         centreName={centre?.name ?? ''}
         registrationNumber={centre?.registration_number ?? ''}
         classes={classes ?? []}
-        children={children ?? []}
+        enrolledChildren={children ?? []}
         initialAttendance={attendance ?? []}
         selectedClassId={selectedClassId}
         selectedMonth={selectedMonth}

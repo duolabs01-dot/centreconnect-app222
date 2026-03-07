@@ -67,7 +67,7 @@ export default async function DirectorySlugPage({ params }: DirectorySlugPagePro
         <div className="rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm font-semibold text-amber-900">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            <span>This centre hasn't joined CentreConnect yet. Details may be outdated.</span>
+            <span>This centre hasn&apos;t joined CentreConnect yet. Details may be outdated.</span>
           </div>
         </div>
 
