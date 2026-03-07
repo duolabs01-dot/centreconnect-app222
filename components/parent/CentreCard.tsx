@@ -94,32 +94,27 @@ export function CentreCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="group"
+      className="group h-full"
     >
-      <Card className="overflow-hidden border-0 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
-        <div className="relative h-56 overflow-hidden">
+      <Card className="flex h-full flex-col overflow-hidden border-0 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2rem]">
+        <div className="relative h-52 overflow-hidden">
           <Image
             src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
             alt={name}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-          <div className="absolute top-4 right-4 flex flex-col gap-2">
+          <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
             {!is_claimed && (
-              <Badge variant="secondary" className="bg-slate-900/85 text-xs font-medium text-white">
-                Listed only
-              </Badge>
-            )}
-            {distanceLabel && (
-              <Badge variant="secondary" className="bg-white/90 text-xs font-medium">
-                <MapPin className="w-3 h-3 mr-1" /> {distanceLabel}
+              <Badge className="bg-slate-900/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+                Public Listing
               </Badge>
             )}
             {feesLabel && (
-              <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">
+              <Badge className="bg-cyan-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
                 {feesLabel}
               </Badge>
             )}
@@ -129,81 +124,90 @@ export function CentreCard({
             variant="ghost"
             size="icon"
             onClick={handleSave}
-            className="absolute top-4 left-4 bg-white/90 hover:bg-white rounded-full shadow"
+            className="absolute left-4 top-4 h-10 w-10 rounded-2xl bg-white/90 shadow-xl backdrop-blur-md transition-transform active:scale-90 hover:bg-white"
           >
-            <Heart className={cn('w-5 h-5 transition-colors', saved ? 'fill-red-500 text-red-500' : 'text-gray-600')} />
+            <Heart className={cn('h-5 w-5 transition-colors', saved ? 'fill-rose-500 text-rose-500' : 'text-slate-400')} />
           </Button>
 
           {logo_url ? (
-            <div className="absolute -bottom-7 left-4 z-10 h-14 w-14 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
+            <div className="absolute -bottom-6 left-6 z-10 h-16 w-16 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-2xl">
               <Image
                 src={logo_url}
                 alt={`${name} logo`}
-                width={56}
-                height={56}
+                width={64}
+                height={64}
                 className="h-full w-full object-cover"
-                sizes="56px"
+                sizes="64px"
                 unoptimized
               />
             </div>
-          ) : null}
+          ) : (
+            <div className="absolute -bottom-6 left-6 z-10 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-white bg-cyan-50 shadow-2xl">
+              <span className="text-xl font-black text-cyan-700">{name.charAt(0)}</span>
+            </div>
+          )}
         </div>
 
-        <CardContent className={cn('p-6 space-y-4', logo_url ? 'pt-10' : undefined)}>
+        <CardContent className="flex-1 space-y-4 p-6 pt-10">
           <div>
-            <h3 className="text-2xl font-bold tracking-tight text-navy-950">{name}</h3>
-            {tagline && <p className="text-muted-foreground text-sm mt-1">{tagline}</p>}
-            {address && (
-              <p className="text-muted-foreground text-sm flex items-center gap-1 mt-1">
-                <MapPin className="w-4 h-4" /> {address}
-              </p>
-            )}
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-1 text-xl font-black tracking-tight text-slate-900">{name}</h3>
+              <div className="flex items-center gap-1 shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+                <Star className="h-3 w-3 fill-current" />
+                <span className="text-xs font-black">{rating}</span>
+              </div>
+            </div>
+            {tagline && <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-500">{tagline}</p>}
+            <p className="mt-2 flex items-center gap-1 text-xs font-bold text-slate-400 uppercase tracking-wide">
+              <MapPin className="h-3 w-3" />
+              {address || 'Johannesburg'}
+            </p>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 text-amber-500">
-              <Star className="w-5 h-5 fill-current" />
-              <span className="font-semibold text-lg">{rating}</span>
-            </div>
-            <div className="flex gap-1">
-              {age_groups.slice(0, 2).map((age) => (
-                <Badge key={age} variant="outline" className="text-xs border-teal-200 text-teal-700">
-                  {age}
-                </Badge>
-              ))}
-            </div>
+          <div className="flex flex-wrap gap-1.5">
+            {age_groups.slice(0, 3).map((age) => (
+              <Badge key={age} variant="secondary" className="bg-slate-50 text-[10px] font-bold text-slate-600 border-none px-2 py-0.5">
+                {age.replace(/(\d+)([my])/g, '$1$2 old')}
+              </Badge>
+            ))}
           </div>
         </CardContent>
 
-        <CardFooter className="px-6 pb-6 pt-0 gap-3">
-          <Button
-            type="button"
-            onClick={is_claimed ? handleApply : undefined}
-            disabled={!is_claimed}
-            className={cn(
-              'flex-1 py-6 rounded-2xl text-base font-semibold shadow-md transition-all',
-              is_claimed
-                ? 'bg-teal-600 text-white hover:bg-teal-700 active:scale-95'
-                : 'cursor-not-allowed bg-slate-200 text-slate-500 shadow-none'
+        <CardFooter className="flex flex-col gap-3 p-6 pt-0">
+          <div className="flex w-full gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleViewDetails}
+              className="flex-1 rounded-2xl border-2 border-slate-100 bg-white py-6 text-sm font-black text-slate-700 transition-all hover:border-slate-200 hover:bg-slate-50"
+            >
+              View Centre
+            </Button>
+            {is_claimed ? (
+              <Button
+                type="button"
+                onClick={handleApply}
+                className="flex-1 rounded-2xl bg-cyan-600 py-6 text-sm font-black text-white shadow-lg shadow-cyan-900/20 transition-all hover:bg-cyan-700 active:scale-95"
+              >
+                Enroll Now
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleViewDetails}
+                className="flex-1 rounded-2xl bg-slate-900 py-6 text-sm font-black text-white shadow-lg transition-all hover:bg-slate-800 active:scale-95"
+              >
+                Learn More
+              </Button>
             )}
-          >
-            {is_claimed ? 'Apply now - it is free' : 'Online applications not available'}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleViewDetails}
-            className="flex-1 border-2 border-slate-300 bg-white hover:border-slate-500 hover:bg-slate-50 py-6 rounded-2xl text-base text-slate-700"
-          >
-            View Details
-          </Button>
-        </CardFooter>
-        {!is_claimed ? (
-          <div className="px-6 pb-6 text-xs font-medium text-slate-500">
-            This centre is listed in the directory, but it is not on CentreConnect yet.
           </div>
-        ) : null}
+          
+          {!is_claimed && (
+            <p className="text-center text-[10px] font-medium leading-tight text-slate-400">
+              Not yet taking digital applications via CentreConnect.
+            </p>
+          )}
+        </CardFooter>
       </Card>
     </motion.div>
   );
