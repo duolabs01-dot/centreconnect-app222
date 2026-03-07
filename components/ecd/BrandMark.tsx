@@ -8,6 +8,7 @@ type BrandMarkProps = {
   className?: string
   compact?: boolean
   hideLabelOnMobile?: boolean
+  hideLabel?: boolean
 }
 
 export function BrandMark({
@@ -16,11 +17,13 @@ export function BrandMark({
   className,
   compact = false,
   hideLabelOnMobile = false,
+  hideLabel = false,
 }: BrandMarkProps) {
   return (
     <Link
       href={href}
       className={cn('inline-flex items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary', className)}
+      aria-label={hideLabel ? label : undefined}
     >
       <LiteImage // Changed to LiteImage
         src="/centreconnect-logo.svg"
@@ -31,7 +34,13 @@ export function BrandMark({
         priority
         sizes="(max-width: 768px) 56px, (max-width: 1200px) 72px, 72px"
       />
-      <span className={cn('font-semibold text-foreground', compact ? 'text-lg' : 'text-2xl', hideLabelOnMobile && 'hidden sm:inline')}>
+      <span
+        className={cn(
+          'font-semibold text-foreground',
+          compact ? 'text-lg' : 'text-2xl',
+          hideLabel ? 'sr-only' : hideLabelOnMobile ? 'hidden sm:inline' : ''
+        )}
+      >
         {label}
       </span>
     </Link>

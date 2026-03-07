@@ -16,19 +16,26 @@ export function PublicShell({ children }: PublicShellProps) {
     <div className="min-h-screen bg-slate-50 text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elevation-1)]">
         <Container className="flex items-center justify-between gap-3 py-3.5 sm:py-4">
-          <BrandMark href="/" compact hideLabelOnMobile className="shrink-0" />
-          
+          <div className="flex items-center gap-3">
+            <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
+            <span className="flex items-center text-sm font-semibold text-slate-900">
+              <span>CentreConnect</span>
+              <span className="ml-2 h-2 w-2 rounded-full bg-cyan-500" aria-hidden />
+            </span>
+          </div>
+
           <nav className="hidden items-center gap-8 md:flex">
-            <Link href="/directory" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">Find a Centre</Link>
-            <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">For ECDs</Link>
+            <Link href="/directory" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">
+              Find a Centre
+            </Link>
+            <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">
+              For ECDs
+            </Link>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center">
             <Button variant="ghost" size="sm" className="px-2.5 sm:px-4" asChild>
               <Link href="/login">Sign In</Link>
-            </Button>
-            <Button size="sm" className="px-3 sm:px-4" asChild>
-              <Link href="/register">Get Started</Link>
             </Button>
           </div>
         </Container>
