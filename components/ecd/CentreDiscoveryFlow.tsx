@@ -11,7 +11,9 @@ import {
   ArrowRight, 
   CheckCircle2,
   Phone,
-  Smartphone
+  Smartphone,
+  X,
+  Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -306,7 +308,7 @@ export function CentreDiscoveryFlow() {
             <div className="text-center space-y-2">
               <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700 shadow-sm border border-emerald-200 mb-2">
                 <Sparkles className="h-3 w-3" />
-                We found your perfect match
+                Founding Member Match
               </div>
               <h2 className="text-3xl font-black text-slate-900">The {recommendation.name}</h2>
               <p className="text-slate-600 font-medium">{recommendation.reason}</p>
@@ -319,8 +321,11 @@ export function CentreDiscoveryFlow() {
               
               <div className="flex items-center justify-between mb-8">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Price</p>
-                  <p className="text-4xl font-black text-slate-900">{recommendation.price}<span className="text-sm text-slate-400">/mo</span></p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilot Month Fee</p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-4xl font-black text-teal-700">R0</p>
+                    <p className="text-lg font-bold text-slate-300 line-through">{recommendation.price}</p>
+                  </div>
                 </div>
                 <div className="h-14 w-14 rounded-2xl bg-cyan-50 flex items-center justify-center">
                   <CheckCircle2 className="h-8 w-8 text-cyan-600" />
@@ -339,6 +344,12 @@ export function CentreDiscoveryFlow() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-4 mb-8 border border-slate-100">
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                  <strong>Note</strong>: Your first 4 weeks are free. After the pilot, you keep this package at just {recommendation.price}/mo (locked in forever).
+                </p>
               </div>
 
               <div className="grid gap-3">

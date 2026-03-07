@@ -926,7 +926,7 @@ export default function CentreConnectWelcomePack() {
           <div className="relative w-full overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.22)]">
             <Image
               src={coverImageUrl}
-              alt={`${centreName} hero`}
+              alt="Johannesburg creche/ Day care centre/ preschool showing children in a bright, modern learning environment"
               width={1600}
               height={640}
               className="h-72 w-full object-cover sm:h-80"
@@ -1016,6 +1016,7 @@ export default function CentreConnectWelcomePack() {
         </section>
       ) : (
         <section className="mx-auto w-full max-w-5xl space-y-8 px-4 pb-10 pt-8">
+          {/* Header */}
           <Card className="border-white/70 bg-white/95 shadow-[0_25px_80px_rgba(15,23,42,0.14)]">
             <CardContent className="space-y-5 p-6 sm:p-7">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1058,21 +1059,29 @@ export default function CentreConnectWelcomePack() {
             </CardContent>
           </Card>
 
+          {/* Pricing & Comparison */}
           <Card className="overflow-hidden border-teal-100 bg-gradient-to-br from-teal-50/50 via-white to-cyan-50/50 shadow-xl rounded-[2.5rem]">
-            <CardContent className="space-y-6 p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4">
+            <CardContent className="space-y-8 p-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-teal-100/50 pb-8">
                 <div className="space-y-1">
                   <div className="inline-flex items-center gap-2 rounded-full bg-teal-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg shadow-teal-900/20">
                     <Sparkles className="h-3 w-3" />
-                    Founding Member Package
+                    Pilot Founding Member
                   </div>
                   <h3 className="text-3xl font-black tracking-tight text-slate-900 pt-2">
-                    Everything you need to lead.
+                    Premium features, R0 Pilot Fee.
                   </h3>
+                  <p className="text-sm font-medium text-slate-500">You are on the Platinum Package for the next 4 weeks.</p>
                 </div>
-                <div className="rounded-2xl bg-white p-4 text-center shadow-sm border border-teal-100">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilot Price</p>
-                  <p className="text-2xl font-black text-teal-700">R299<span className="text-sm text-slate-400">/mo</span></p>
+                <div className="rounded-2xl bg-white p-5 text-center shadow-xl border border-teal-100 relative">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-md">
+                    Limited Time
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pilot Month Fee</p>
+                  <div className="flex items-baseline justify-center gap-2">
+                    <p className="text-4xl font-black text-teal-700">R0</p>
+                    <p className="text-lg font-bold text-slate-300 line-through">R299</p>
+                  </div>
                 </div>
               </div>
 
@@ -1093,9 +1102,41 @@ export default function CentreConnectWelcomePack() {
                 ))}
               </div>
 
+              {/* Feature Comparison Mini-Table */}
+              <div className="rounded-[2rem] bg-slate-900/5 p-1 border border-slate-900/5">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                      <th className="px-6 py-4">Package Comparison</th>
+                      <th className="px-4 py-4 text-center">Starter</th>
+                      <th className="px-4 py-4 text-center text-teal-700 bg-white/50 rounded-t-2xl">Platinum</th>
+                      <th className="px-4 py-4 text-center">Pro</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-sm font-bold text-slate-700">
+                    {[
+                      { label: 'Public Profile', s: true, g: true, p: true },
+                      { label: 'Admissions Board', s: true, g: true, p: true },
+                      { label: 'DSD Attendance', s: false, g: true, p: true },
+                      { label: 'QR Gate Codes', s: false, g: true, p: true },
+                      { label: 'Learner Reports', s: false, g: true, p: true },
+                      { label: 'WhatsApp Support', s: false, g: true, p: true },
+                      { label: 'Custom Website', s: false, g: false, p: true },
+                    ].map((row, i) => (
+                      <tr key={row.label} className={cn(i !== 6 && "border-b border-slate-900/5")}>
+                        <td className="px-6 py-3 text-slate-900">{row.label}</td>
+                        <td className="px-4 py-3 text-center">{row.s ? <CheckCircle2 className="h-4 w-4 mx-auto text-slate-300" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
+                        <td className="px-4 py-3 text-center bg-white/50">{row.g ? <CheckCircle2 className="h-4 w-4 mx-auto text-teal-600" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
+                        <td className="px-4 py-3 text-center">{row.p ? <CheckCircle2 className="h-4 w-4 mx-auto text-slate-300" /> : <X className="h-4 w-4 mx-auto text-slate-200" />}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
               <div className="rounded-2xl border border-teal-100 bg-teal-600/5 p-5">
                 <p className="text-sm font-bold text-teal-900">
-                  Founding Member Bonus: <span className="font-medium text-teal-800">You are getting all **Platinum Features** at our introductory pilot rate. This price is locked in for your centre as a thank you for joining us early.</span>
+                  Founding Member Bonus: <span className="font-medium text-teal-800">Your first 4 weeks are completely free. We have waived all onboarding and monthly fees for our pilot centres. After the pilot, you keep this Platinum Package at just R299/mo (locked in forever).</span>
                 </p>
               </div>
             </CardContent>
