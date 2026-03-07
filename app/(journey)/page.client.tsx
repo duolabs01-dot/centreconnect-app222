@@ -60,18 +60,18 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
         <div className="space-y-12 sm:space-y-20">
           
           {/* SECTION 2 — New Hero */}
-          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-teal-900 px-8 py-16 sm:px-12 sm:py-24">
+          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-teal-900 px-4 py-10 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(6,182,212,0.15),transparent_60%)]" />
             
             <div className="relative z-10 max-w-4xl">
-              <h2 className="font-display text-5xl font-extrabold tracking-[-0.04em] text-white leading-[1.03] sm:text-6xl lg:text-7xl">
+              <h2 className="font-display text-3xl font-extrabold tracking-[-0.04em] text-white leading-[1.03] sm:text-5xl lg:text-6xl">
                 Every child deserves a great start in life.
               </h2>
-              <p className="mt-6 max-w-xl text-lg text-white/60 leading-relaxed sm:text-xl">
+              <p className="mt-6 max-w-xl text-base text-white/60 leading-relaxed sm:text-lg lg:text-xl">
                 Find the right crèche for your child — compare, apply, and track updates. Free for parents.
               </p>
               
-              <div className="mt-10 flex flex-wrap gap-4">
+              <div className="mt-8 flex flex-wrap gap-4 sm:mt-10">
                 <Button size="lg" className="h-14 rounded-2xl bg-cyan-500 px-8 text-base font-bold text-slate-950 hover:bg-cyan-400" asChild>
                   <Link href="/directory">Find a Crèche Near You</Link>
                 </Button>
@@ -81,7 +81,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
               </div>
 
               {/* Stats row */}
-              <div className="mt-16 grid grid-cols-2 gap-8 border-t border-white/10 pt-10 sm:grid-cols-3">
+              <div className="mt-10 grid grid-cols-2 gap-5 border-t border-white/10 pt-6 sm:mt-14 sm:grid-cols-3 sm:gap-8 sm:pt-10">
                 <div>
                   <p className="font-display text-3xl font-bold text-white">300+</p>
                   <p className="mt-1 text-sm font-medium text-white/40 uppercase tracking-wider">Centres Listed</p>
@@ -119,7 +119,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                   key={step.title}
                   className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
                 >
-                  <span className="font-display text-5xl font-black text-cyan-100">{index + 1}</span>
+                  <span className="font-display text-4xl font-black text-cyan-100 sm:text-5xl">{index + 1}</span>
                   <p className="mt-3 text-xl font-bold text-slate-900">{step.title}</p>
                   <p className="mt-2 text-sm text-slate-600">{step.body}</p>
                 </article>
@@ -128,11 +128,11 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 4 — Safety feature callout */}
-          <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-8 py-12 text-white sm:px-12 sm:py-16">
+          <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-4 py-8 text-white sm:px-8 sm:py-12 lg:px-12 lg:py-16">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
-                <h3 className="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Every child is verified before leaving.</h3>
-                <p className="mt-6 text-lg text-teal-100/70 leading-relaxed sm:text-xl">
+                <h3 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Every child is verified before leaving.</h3>
+                <p className="mt-6 text-base text-teal-100/70 leading-relaxed sm:text-lg lg:text-xl">
                   Our secure pickup code system means only authorised guardians can collect. Parents get notified instantly on their phones.
                 </p>
               </div>
@@ -193,7 +193,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                 }
               ].map((t, i) => (
                 <div key={i} className="rounded-2xl bg-slate-50 p-8 border border-slate-100 italic text-slate-700 relative">
-                  <span className="absolute -top-4 left-6 text-6xl text-cyan-200 font-serif opacity-50">“</span>
+                  <span className="absolute -top-4 left-6 text-5xl text-cyan-200 font-serif opacity-50 sm:text-6xl">“</span>
                   <p className="relative z-10 text-lg leading-relaxed mb-6">{t.quote}</p>
                   <div className="not-italic">
                     <p className="font-bold text-slate-900">{t.author}</p>
@@ -237,11 +237,11 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 5 — For ECD Owners */}
-          <section className="rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-8 text-white sm:p-16">
+          <section className="rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-5 text-white sm:p-8 lg:p-12">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Professional ECD Management</p>  
-              <h3 className="mt-4 font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Built for South African ECD centres. Starting in Alexandra.</h3>
-              <p className="mt-6 text-lg text-white/60 leading-relaxed sm:text-xl">
+              <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Built for South African ECD centres. Starting in Alexandra.</h3>
+              <p className="mt-6 text-base text-white/60 leading-relaxed sm:text-lg lg:text-xl">
                 Not imported. Not adapted. Built from scratch for how ECDs actually work here. Manage your entire operation from one screen.
               </p>
               <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-3">
@@ -252,16 +252,16 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
                   </div>
                 ))}
               </div>
-              <Button size="lg" className="mt-12 h-14 rounded-2xl bg-white px-8 text-base font-bold text-slate-950 hover:bg-cyan-50" asChild>
+              <Button size="lg" className="mt-8 h-14 rounded-2xl bg-white px-8 text-base font-bold text-slate-950 hover:bg-cyan-50 sm:mt-10" asChild>
                 <Link href="/for-centres">Register Your Centre &rarr;</Link>
               </Button>
             </div>
           </section>
 
           {/* SECTION 6 — Jobs strip */}
-          <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-8 sm:p-12">
+          <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h3 className="font-display text-3xl font-bold text-slate-900">Work in Early Childhood Education</h3>   
+              <h3 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">Work in Early Childhood Education</h3>   
               <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2">

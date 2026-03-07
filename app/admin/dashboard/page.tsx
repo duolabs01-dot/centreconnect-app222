@@ -489,10 +489,10 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             </div>
           </div>
           <div className="space-y-2">
-            <h1 className="text-5xl font-black leading-[0.9] tracking-tighter text-white sm:text-7xl">
+            <h1 className="text-3xl font-black leading-[0.9] tracking-tighter text-white sm:text-5xl lg:text-6xl">
               Command <span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">Center</span>
             </h1>
-            <p className="max-w-3xl text-base font-medium text-slate-400 sm:text-lg">
+            <p className="max-w-3xl text-sm font-medium text-slate-400 sm:text-base lg:text-lg">
               {hero}. {heroDescription}
             </p>
           </div>
@@ -555,7 +555,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
         <section className="relative lg:col-span-2">
           <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5" />
-          <div className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-[#080B13] p-8 shadow-2xl sm:p-10">
+          <div className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-[#080B13] p-5 shadow-2xl sm:p-8 lg:p-10">
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-3xl font-black tracking-tighter text-white">Central Analytics</h2>

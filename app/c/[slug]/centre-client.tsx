@@ -295,9 +295,9 @@ export function CentreClient({ slug }: { slug: string }) {
 
   if (!centre) {
     return (
-      <main className="min-h-screen bg-[#F8F9FA] py-16">
+      <main className="min-h-screen bg-[#F8F9FA] py-10 sm:py-16">
         <Container className="max-w-2xl">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-sm sm:p-8">
             <h1 className="text-2xl font-black tracking-tight text-slate-900">Centre profile unavailable</h1>
             <p className="mt-3 text-sm font-medium text-slate-600">
               We could not load this centre right now. Please return to Discover and try again.
@@ -411,7 +411,7 @@ export function CentreClient({ slug }: { slug: string }) {
               </div>
             </div>
             
-            <h1 className="text-5xl font-black tracking-tighter text-white sm:text-7xl lg:text-8xl leading-[0.9]">
+            <h1 className="text-3xl font-black tracking-tighter text-white sm:text-5xl lg:text-7xl leading-[0.9]">
               {centre.name}
             </h1>
             
