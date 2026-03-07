@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Container } from '@/components/layout/container'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 import { BrandMark } from '@/components/ecd/BrandMark'
+import { useRouter } from 'next/navigation'
 
 type PublicShellProps = {
   children: React.ReactNode
 }
 
 export function PublicShell({ children }: PublicShellProps) {
+  const router = useRouter()
   return (
     <div className="min-h-screen bg-slate-50 text-foreground">
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elevation-1)]">
@@ -34,8 +36,8 @@ export function PublicShell({ children }: PublicShellProps) {
           </nav>
 
           <div className="flex shrink-0 items-center">
-            <Button variant="ghost" size="sm" className="px-2.5 sm:px-4" asChild>
-              <Link href="/login">Sign In</Link>
+            <Button size="sm" className="px-3 sm:px-4" onClick={() => router.push('/login')}>
+              Sign In
             </Button>
           </div>
         </Container>
