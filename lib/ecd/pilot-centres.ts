@@ -1,7 +1,7 @@
 const PILOT_CENTRE_KEYWORDS = ['sakhisizwe', 'bajhabulile', 'bajabulile'] as const
 
 export const UNCLAIMED_CENTRE_DISCLAIMER =
-  'This is what is shown online. The centre has not submitted updated details yet. Please use the contact details below to reach them directly.'
+  'This centre is not yet using our online portal. Some details might be outdated, so we recommend reaching out directly using the WhatsApp or call buttons below.'
 
 function normalizeIdentifier(value?: string | null) {
   return (value ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')

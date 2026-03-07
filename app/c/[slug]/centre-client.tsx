@@ -367,29 +367,10 @@ export function CentreClient({ slug }: { slug: string }) {
     : centre.fees_display_mode === 'range' 
       ? `R${centre.monthly_fee_min} - R${centre.monthly_fee_max}` 
       : 'Contact Us'
-  const visibleSectionSet = new Set(websiteContent.visibleSections)
-  const showAbout = visibleSectionSet.has('about')
-  const showPrograms = visibleSectionSet.has('programs')
-  const safeGalleryUrls = websiteContent.galleryUrls.filter((url) => isSafeImageUrl(url))
-  const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0
-  const showContact = visibleSectionSet.has('contact')
-  const aboutCopy =
-    websiteContent.aboutText.trim() ||
-    centre.description ||
-    'Welcome to our centre. We provide a safe, nurturing environment for your children to learn and grow.'
-  const fallbackPrograms: ProgramCard[] = [
-    {
-      title: 'Holistic Curriculum',
-      description:
-        'Our play-based learning approach focuses on social, emotional, and cognitive development for all ages.',
-    },
-    {
-      title: 'Age-Appropriate Groups',
-      description:
-        'Children are grouped by developmental stage to ensure they receive the right level of care and stimulation.',
-    },
-  ]
-  const programCards = websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms
+
+  const ageGroupsLabel = centre.age_groups?.length 
+    ? centre.age_groups.join(', ').replace(/(\d+)([my])/g, '$1$2 old')
+    : 'All ages welcome'
 
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-32">
@@ -401,17 +382,17 @@ export function CentreClient({ slug }: { slug: string }) {
         <Container className="relative h-full">
           <div className="flex h-full flex-col justify-end pb-16">
             <div className="mb-6 flex flex-wrap items-end gap-4">
-              <div className="h-20 w-20 overflow-hidden rounded-full border-4 border-white/90 bg-white shadow-2xl">
+              <div className="h-24 w-24 overflow-hidden rounded-3xl border-4 border-white/90 bg-white shadow-2xl">
                 {centreLogo ? (
                   <Image
                     src={centreLogo}
                     alt={`${centre.name} logo`}
-                    width={80}
-                    height={80}
+                    width={96}
+                    height={96}
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-cyan-50 text-2xl font-black text-cyan-700">
+                  <div className="flex h-full w-full items-center justify-center bg-cyan-50 text-3xl font-black text-cyan-700">
                     {centreInitial}
                   </div>
                 )}
@@ -419,7 +400,7 @@ export function CentreClient({ slug }: { slug: string }) {
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  4.8 Premium ECD
+                  Family Favorite
                 </div>
                 <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
                   <MapPin className="h-3.5 w-3.5" />
@@ -428,12 +409,12 @@ export function CentreClient({ slug }: { slug: string }) {
               </div>
             </div>
             
-            <h1 className="text-3xl font-black tracking-tighter text-white sm:text-5xl lg:text-7xl leading-[0.9]">
+            <h1 className="text-4xl font-black tracking-tighter text-white sm:text-6xl lg:text-8xl leading-[0.85]">
               {centre.name}
             </h1>
             
             {centre.tagline && (
-              <p className="mt-6 max-w-2xl text-xl font-medium text-white/90 sm:text-2xl leading-relaxed">
+              <p className="mt-6 max-w-2xl text-xl font-bold text-white/90 sm:text-2xl leading-relaxed">
                 {centre.tagline}
               </p>
             )}
@@ -445,30 +426,33 @@ export function CentreClient({ slug }: { slug: string }) {
         {/* Facts Row */}
         <div className="flex flex-wrap gap-3 overflow-x-auto pb-4 scrollbar-none">
           {heroFacts.map((fact) => (
-            <HeroPill key={fact} className="whitespace-nowrap bg-white text-slate-900 border-none shadow-xl px-6 py-3 text-sm">
+            <HeroPill key={fact} className="whitespace-nowrap bg-white text-slate-900 border-none shadow-xl px-6 py-3 text-sm font-black">
               {fact}
             </HeroPill>
           ))}
         </div>
 
         {showUnclaimedDisclaimer ? (
-          <ModernCard className="space-y-3 border-amber-200 bg-amber-50 text-amber-900">
-            <p className="text-sm font-bold leading-relaxed">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+          <ModernCard className="space-y-3 border-amber-200 bg-amber-50 text-amber-900 shadow-xl">
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-5 w-5 text-amber-600" />
+              <p className="text-sm font-bold leading-relaxed">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+            </div>
             <Link
               href={claimHref}
-              className="inline-flex h-11 items-center justify-center rounded-2xl border border-amber-300 bg-white px-4 text-sm font-black text-amber-700"
+              className="inline-flex h-11 items-center justify-center rounded-2xl border border-amber-300 bg-white px-6 text-sm font-black text-amber-700 shadow-sm transition-transform active:scale-95"
             >
-              Claim & Update
+              Own this centre? Claim & Update →
             </Link>
           </ModernCard>
         ) : null}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatChip label="Age Groups" value={centre.age_groups?.join(', ') || '3m - 6y'} icon={<Users className="h-6 w-6" />} accent="teal" />
-          <StatChip label="Monthly Fee" value={feesLabel} icon={<Wallet className="h-6 w-6" />} accent="teal" />
-          <StatChip label="Capacity" value={centre.capacity || 'Varies'} icon={<GraduationCap className="h-6 w-6" />} accent="teal" />
-          <StatChip label="Hours" value="07:00 - 17:30" icon={<Clock className="h-6 w-6" />} accent="teal" />
+          <StatChip label="Growing with us" value={ageGroupsLabel} icon={<Users className="h-6 w-6" />} accent="teal" className="shadow-lg border-none" />
+          <StatChip label="Monthly contribution" value={feesLabel} icon={<Wallet className="h-6 w-6" />} accent="teal" className="shadow-lg border-none" />
+          <StatChip label="Space for" value={centre.capacity ? `${centre.capacity} children` : 'Varies'} icon={<GraduationCap className="h-6 w-6" />} accent="teal" className="shadow-lg border-none" />
+          <StatChip label="Daily schedule" value="07:00 AM - 17:30 PM" icon={<Clock className="h-6 w-6" />} accent="teal" className="shadow-lg border-none" />
         </div>
 
         {/* Content Layout */}
@@ -476,7 +460,7 @@ export function CentreClient({ slug }: { slug: string }) {
           <div className="lg:col-span-2 space-y-16">
             
             {showAbout ? (
-              <Section id="about" title="About Our Centre">
+              <Section id="about" title="Our Story">
                 <div className="space-y-6">
                   <p className="whitespace-pre-line text-xl leading-relaxed font-medium text-slate-700">{aboutCopy}</p>
 
@@ -484,8 +468,8 @@ export function CentreClient({ slug }: { slug: string }) {
                     <div className="pt-4">
                       <ProgressBar
                         value={82}
-                        label="Available Capacity"
-                        subLabel="Applying early is recommended to secure your preferred intake date."
+                        label="Enrollment Progress"
+                        subLabel="We are almost at full capacity. Applying early is recommended to secure your child's space."
                       />
                     </div>
                   ) : null}
@@ -494,24 +478,24 @@ export function CentreClient({ slug }: { slug: string }) {
             ) : null}
 
             {showPrograms ? (
-              <Section id="programs" title="Programmes & Learning">
+              <Section id="programs" title="How We Help Children Learn">
                 <div className={`grid gap-6 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => (
                     <ModernCard
                       key={`${program.title}-${index}`}
-                      className={`flex flex-col gap-4 border-l-4 ${
-                        index % 2 === 0 ? 'border-l-[#065A82]' : 'border-l-cyan-500'
+                      className={`flex flex-col gap-4 border-l-8 shadow-xl ${
+                        index % 2 === 0 ? 'border-l-cyan-600' : 'border-l-emerald-500'
                       }`}
                     >
                       <div
-                        className={`h-12 w-12 rounded-2xl flex items-center justify-center ${
-                          index % 2 === 0 ? 'bg-[#065A82]/10 text-[#065A82]' : 'bg-cyan-50 text-cyan-600'
+                        className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
+                          index % 2 === 0 ? 'bg-cyan-50 text-cyan-600' : 'bg-emerald-50 text-emerald-600'
                         }`}
                       >
-                        {index % 2 === 0 ? <Sparkles className="h-6 w-6" /> : <CheckCircle2 className="h-6 w-6" />}
+                        {index % 2 === 0 ? <Sparkles className="h-7 w-7" /> : <BadgeCheck className="h-7 w-7" />}
                       </div>
-                      <h3 className="text-lg font-black text-slate-900">{program.title}</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed">{program.description}</p>
+                      <h3 className="text-xl font-black text-slate-900">{program.title}</h3>
+                      <p className="text-base text-slate-600 leading-relaxed font-medium">{program.description}</p>
                     </ModernCard>
                   ))}
                 </div>
@@ -519,16 +503,16 @@ export function CentreClient({ slug }: { slug: string }) {
             ) : null}
 
             {showGallery ? (
-              <Section id="gallery" title="Gallery">
+              <Section id="gallery" title="A Peek Inside Our Centre">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                   {safeGalleryUrls.slice(0, 12).map((url, index) => (
-                    <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.4rem] border border-slate-200 bg-white">
+                    <div key={`${url}-${index}`} className="group relative overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-xl">
                       <Image
                         src={url}
                         alt={`${centre.name} gallery image ${index + 1}`}
                         width={420}
                         height={320}
-                        className="h-40 w-full object-cover"
+                        className="h-48 w-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     </div>
                   ))}
@@ -537,32 +521,33 @@ export function CentreClient({ slug }: { slug: string }) {
             ) : null}
 
             {showContact ? (
-              <Section id="location" title="Location & Contact">
+              <Section id="location" title="Visit Us or Say Hello">
                 <div className="grid gap-6 sm:grid-cols-2">
-                  <ModernCard className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                        <MapPin className="h-5 w-5" />
+                  <ModernCard className="space-y-6 shadow-xl border-none">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600">
+                        <MapPin className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase text-slate-400">Address</p>
-                        <p className="text-sm font-bold text-slate-900">{centre.address || fallbackAddressLabel}</p>
+                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Where we are</p>
+                        <p className="text-base font-bold text-slate-900">{centre.address || fallbackAddressLabel}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400">
-                        <Phone className="h-5 w-5" />
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <Phone className="h-6 w-6" />
                       </div>
                       <div>
-                        <p className="text-[10px] font-black uppercase text-slate-400">Phone</p>
-                        <p className="text-sm font-bold text-slate-900">{centre.contact_phone || 'Available on request'}</p>
+                        <p className="text-xs font-black uppercase tracking-wider text-slate-400">Call us</p>
+                        <p className="text-base font-bold text-slate-900">{centre.contact_phone || 'Available on request'}</p>
                       </div>
                     </div>
                   </ModernCard>
-                  <div className="h-[240px] rounded-[2rem] bg-slate-100 overflow-hidden relative group">
+                  <div className="h-[280px] rounded-[2.5rem] bg-slate-100 overflow-hidden relative group shadow-inner border-4 border-white">
                     <div className="absolute inset-0 bg-slate-200 animate-pulse" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Map View Coming Soon</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                      <MapPin className="h-10 w-10 text-slate-300 mb-2" />
+                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-tight">Secure Map View<br/>For Parents Only</p>
                     </div>
                   </div>
                 </div>
@@ -573,92 +558,72 @@ export function CentreClient({ slug }: { slug: string }) {
 
           {/* Sidebar */}
           <aside className="hidden space-y-6 lg:block">
-            <ModernCard className="sticky top-24 space-y-8 border-t-8 border-t-[#065A82] shadow-2xl">
+            <ModernCard className="sticky top-24 space-y-8 border-t-[12px] border-t-cyan-600 shadow-2xl">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admissions</p>
-                  <ShieldCheck className="h-6 w-6 text-[#065A82]" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Admissions 2026</p>
+                  <ShieldCheck className="h-6 w-6 text-cyan-600" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900">Apply for a Spot</h3>
+                <h3 className="text-3xl font-black text-slate-900 tracking-tight">Save Your Spot</h3>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                    <CheckCircle2 className="h-3 w-3" />
+                  <div className="mt-1 h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Secure and transparent application process managed through CentreConnect.
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                    <strong>Simple & Secure</strong>: Apply in minutes through CentreConnect.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-                    <CheckCircle2 className="h-3 w-3" />
+                  <div className="mt-1 h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 className="h-4 w-4" />
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    No application fees. Only pay once your child is accepted.
+                  <p className="text-sm font-medium text-slate-600 leading-relaxed">
+                    <strong>No Upfront Fees</strong>: We don&apos;t charge parents to apply.
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className={`flex items-center gap-2 text-sm font-bold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-4">
+                <p className={`flex items-center gap-2 text-sm font-black ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
                   <Circle className="h-3 w-3" fill="currentColor" strokeWidth={0} />
-                  {operationalStatus.isOnline ? 'Online' : 'Offline'}
+                  {operationalStatus.isOnline ? 'Open Now' : 'Closed for the Day'}
                 </p>
-                <p className="mt-1 text-xs text-slate-600">{operationalStatus.schedule}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{operationalStatus.schedule}</p>
               </div>
 
               {showPilotTrustInfo ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                  <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
-                    <li className="flex items-center gap-2 font-semibold">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-700" />
-                      {centre.is_registered ? 'DSD registered' : 'DSD registration in progress'}
+                <div className="rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Safety & Compliance</p>
+                  <ul className="mt-3 space-y-2.5 text-xs text-emerald-900">
+                    <li className="flex items-center gap-2 font-black">
+                      <BadgeCheck className="h-4 w-4 text-emerald-600" />
+                      {centre.is_registered ? 'Government Approved' : 'Approval in Progress'}
                     </li>
-                    <li className="flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                      Safety and compliance oversight expected.
+                    <li className="flex items-center gap-2 font-bold">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                      Verified Health & Safety Standards.
                     </li>
-                    <li className="flex items-center gap-2">
-                      <BadgeCheck className="h-4 w-4 text-emerald-700" />
-                      Subsidy readiness supports quality operations.
+                    <li className="flex items-center gap-2 font-bold">
+                      <Users className="h-4 w-4 text-emerald-600" />
+                      Qualified & Vetted Practitioners.
                     </li>
                   </ul>
-                  <p className="mt-2 text-xs text-emerald-900/90">
-                    Government subsidy = higher quality & safety oversight.
-                  </p>
-                </div>
-              ) : null}
-
-              {pilotBadges.length > 0 ? (
-                <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-700">Pilot advantages</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {pilotBadges.map((badge) => (
-                      <span
-                        key={badge}
-                        className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-xs font-bold text-teal-700"
-                      >
-                        <BadgeCheck className="h-3 w-3" />
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
                 </div>
               ) : null}
 
               {!isClaimed ? (
                 <Link
                   href={claimHref}
-                  className="flex h-11 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
+                  className="flex h-12 items-center justify-center rounded-2xl border-2 border-cyan-600 bg-white px-4 text-sm font-black text-cyan-700 transition-colors hover:bg-cyan-50 shadow-md"
                 >
-                  Claim & Update
+                  Own this centre? Start here →
                 </Link>
               ) : null}
 
-              <div className="space-y-3 pt-4">
+              <div className="space-y-4 pt-4">
                 <ApplyCTA
                   variant="hero"
                   centreSlug={centre.slug}
@@ -666,21 +631,23 @@ export function CentreClient({ slug }: { slug: string }) {
                   existingApplicationId={existingApplication?.id ?? null}
                   existingApplicationStatus={existingApplication?.status ?? null}
                   isAvailable={isClaimed}
-                  unavailableLabel="Online applications not available yet"
+                  unavailableLabel="Online applications coming soon"
                   helperText={
                     isClaimed
                       ? null
-                      : 'This centre has not joined CentreConnect yet. You can still contact them directly below.'
+                      : 'This centre is not yet accepting digital applications. You can contact them directly via WhatsApp below.'
                   }
                   fallbackHref={!isClaimed ? whatsappHref : null}
-                  fallbackLabel={!isClaimed && whatsappHref ? 'Contact on WhatsApp' : null}
+                  fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                 />
                 {!isClaimed && whatsappHref ? (
-                  <p className="text-xs font-medium text-amber-700">
-                    WhatsApp contact is shared by the centre and has not been verified by CentreConnect.
-                  </p>
+                  <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">
+                    <p className="text-[10px] font-bold text-amber-800 leading-tight">
+                      Note: This WhatsApp number is shared by the centre but not yet verified by our team.
+                    </p>
+                  </div>
                 ) : null}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3">
                   <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
                   <SaveCentreButton centreId={centre.id} initialSaved={false} />
                 </div>

@@ -134,44 +134,41 @@ export function MobileCentreDetailsSheet({
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className={`flex items-center gap-2 text-sm font-bold ${isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
+                <p className={`flex items-center gap-2 text-sm font-black ${isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
                   <Circle size={10} fill="currentColor" strokeWidth={0} />
-                  {isOnline ? 'Online' : 'Offline'}
+                  {isOnline ? 'Open Now' : 'Closed for the Day'}
                 </p>
-                <p className="mt-1 text-xs text-slate-600">{schedule}</p>
+                <p className="mt-1 text-xs font-bold text-slate-500">{schedule}</p>
               </div>
 
               {showPilotTrustInfo ? (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">DSD checklist</p>
-                  <ul className="mt-2 space-y-1.5 text-xs text-emerald-900">
-                    <li className="flex items-center gap-2 font-semibold">
-                      <CheckCircle2 size={14} className="text-emerald-700" />
-                      {isRegistered ? 'DSD registered' : 'DSD registration in progress'}
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">Safety & Compliance</p>
+                  <ul className="mt-2 space-y-2 text-xs text-emerald-900">
+                    <li className="flex items-center gap-2 font-black">
+                      <BadgeCheck size={14} className="text-emerald-600" />
+                      {isRegistered ? 'Government Approved' : 'Approval in Progress'}
                     </li>
-                    <li className="flex items-center gap-2">
-                      <ShieldCheck size={14} className="text-emerald-700" />
-                      Safety and compliance oversight expected.
+                    <li className="flex items-center gap-2 font-bold">
+                      <ShieldCheck size={14} className="text-emerald-600" />
+                      Verified Health & Safety Standards.
                     </li>
-                    <li className="flex items-center gap-2">
-                      <BadgeCheck size={14} className="text-emerald-700" />
-                      Subsidy readiness supports quality operations.
+                    <li className="flex items-center gap-2 font-bold">
+                      <ShieldCheck size={14} className="text-emerald-600" />
+                      Qualified & Vetted Practitioners.
                     </li>
                   </ul>
-                  <p className="mt-2 text-xs text-emerald-900/90">
-                    Government subsidy = higher quality & safety oversight.
-                  </p>
                 </div>
               ) : null}
 
               {pilotBadges.length > 0 ? (
-                <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3">
+                <div className="rounded-2xl border border-teal-100 bg-teal-50/50 p-3">
                   <p className="text-[11px] font-black uppercase tracking-widest text-teal-700">Pilot advantages</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {pilotBadges.map((badge) => (
                       <span
                         key={badge}
-                        className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-2.5 py-1 text-xs font-bold text-teal-700"
+                        className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-black text-teal-700 shadow-sm"
                       >
                         <BadgeCheck size={12} />
                         {badge}
@@ -182,29 +179,31 @@ export function MobileCentreDetailsSheet({
               ) : null}
 
               {!isClaimed ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Link
                     href={claimHref}
-                    className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
+                    className="flex h-12 items-center justify-center rounded-2xl border-2 border-teal-600 bg-white px-4 text-sm font-black text-teal-700 shadow-md"
                   >
-                    Claim & Update
+                    Own this centre? Start here →
                   </Link>
                   {whatsappHref ? (
-                    <p className="text-xs font-medium text-amber-700">
-                      WhatsApp contact is shared by the centre and has not been verified by CentreConnect.
-                    </p>
+                    <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">
+                      <p className="text-[10px] font-bold text-amber-800 leading-tight">
+                        Note: This WhatsApp number is shared by the centre but not yet verified by our team.
+                      </p>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <ContactCentreSheet centreId={centreId} centreName={centreName} />
                 <SaveCentreButton centreId={centreId} initialSaved={false} />
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">Fees from</p>
-                <p className="text-lg font-black text-slate-900">{feesLabel}</p>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Contribution</p>
+                <p className="text-xl font-black text-slate-900 mt-1">{feesLabel}</p>
               </div>
 
               <Button
