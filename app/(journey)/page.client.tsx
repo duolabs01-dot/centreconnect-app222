@@ -55,12 +55,12 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
   }, [])
 
   return (
-    <div className="bg-slate-50 overflow-x-hidden">
-      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <div className="bg-slate-50 overflow-x-hidden overscroll-none snap-y snap-mandatory min-h-screen">
+      <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 min-h-screen pb-[calc(env(safe-area-inset-bottom)+3rem)]">
         <div className="space-y-12 sm:space-y-20">
           
           {/* SECTION 2 — New Hero */}
-          <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-teal-900 px-4 py-10 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
+          <section className="snap-start relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800 to-teal-900 px-4 py-10 sm:px-8 sm:py-16 lg:px-12 lg:py-20">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(6,182,212,0.15),transparent_60%)]" />
             
             <div className="relative z-10 max-w-4xl">
@@ -99,7 +99,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 3 — Parent journey strip */}
-          <section className="py-6">
+          <section className="snap-start py-6">
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 {
@@ -128,7 +128,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 4 — Safety feature callout */}
-          <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-4 py-8 text-white sm:px-8 sm:py-12 lg:px-12 lg:py-16">
+          <section className="snap-start overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 to-teal-900 px-4 py-8 text-white sm:px-8 sm:py-12 lg:px-12 lg:py-16">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <div>
                 <h3 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Every child is verified before leaving.</h3>
@@ -165,10 +165,12 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             </div>
           </section>
 
-          <PwaInstallCard />
+          <section className="snap-start">
+            <PwaInstallCard />
+          </section>
 
           {/* SECTION 4.5 — Family value */}
-          <section className="py-12 border-t border-slate-100">
+          <section className="snap-start py-12 border-t border-slate-100">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <h3 className="font-display text-3xl font-bold text-slate-900 sm:text-4xl">How CentreConnect helps families</h3>
               <p className="mt-4 text-slate-600">Search, apply, and keep track of centre responses in one place.</p>
@@ -201,7 +203,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 4.6 — FAQ */}
-          <section className="py-12 border-t border-slate-100">
+          <section className="snap-start py-12 border-t border-slate-100">
             <div className="max-w-3xl mx-auto">
               <h3 className="font-display text-3xl font-bold text-slate-900 mb-10 text-center">Frequently Asked Questions</h3>
               <div className="space-y-6">
@@ -233,7 +235,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 5 — For ECD Owners */}
-          <section className="rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-5 text-white sm:p-8 lg:p-12">
+          <section className="snap-start rounded-3xl bg-gradient-to-br from-teal-700 to-emerald-800 p-5 text-white sm:p-8 lg:p-12">
             <div className="max-w-3xl">
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Professional ECD Management</p>  
               <h3 className="mt-4 font-display text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Built for South African ECD centres. Starting in Alexandra.</h3>
@@ -255,7 +257,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
           </section>
 
           {/* SECTION 6 — Jobs strip */}
-          <section id="active-jobs" className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
+          <section id="active-jobs" className="snap-start rounded-3xl border border-slate-100 bg-slate-50/50 p-5 sm:p-8 lg:p-10">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <h3 className="font-display text-2xl font-bold text-slate-900 sm:text-3xl">Work in Early Childhood Education</h3>   
               <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-xs font-bold text-cyan-800">{activeJobs.length} roles open</span>
