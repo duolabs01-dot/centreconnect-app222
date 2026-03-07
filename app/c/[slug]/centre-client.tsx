@@ -35,6 +35,7 @@ import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
+import { createWhatsappClickToChatLink } from '@/lib/communications/whatsapp'
 
 type Centre = {
   id: string
@@ -336,6 +337,10 @@ export function CentreClient({ slug }: { slug: string }) {
   const fallbackAddressLabel = locationLabel || 'Address shared on request'
   const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
+  const whatsappHref = createWhatsappClickToChatLink(
+    centre.contact_whatsapp || centre.contact_phone || centre.phone,
+    `Hi ${centre.name}, I found your centre on CentreConnect and would like to ask about enrolment.`
+  )
   const heroFacts = showPilotTrustInfo
     ? [
         centre.is_registered ? 'DSD Registered' : null,
@@ -648,7 +653,21 @@ export function CentreClient({ slug }: { slug: string }) {
                   userRole={userRole}
                   existingApplicationId={existingApplication?.id ?? null}
                   existingApplicationStatus={existingApplication?.status ?? null}
+                  isAvailable={isClaimed}
+                  unavailableLabel="Online applications not available yet"
+                  helperText={
+                    isClaimed
+                      ? null
+                      : 'This centre has not joined CentreConnect yet. You can still contact them directly below.'
+                  }
+                  fallbackHref={!isClaimed ? whatsappHref : null}
+                  fallbackLabel={!isClaimed && whatsappHref ? 'Contact on WhatsApp' : null}
                 />
+                {!isClaimed && whatsappHref ? (
+                  <p className="text-xs font-medium text-amber-700">
+                    WhatsApp contact is shared by the centre and has not been verified by CentreConnect.
+                  </p>
+                ) : null}
                 <div className="grid grid-cols-2 gap-2">
                   <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
                   <SaveCentreButton centreId={centre.id} initialSaved={false} />
@@ -676,6 +695,7 @@ export function CentreClient({ slug }: { slug: string }) {
         pilotBadges={pilotBadges}
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
+        whatsappHref={whatsappHref}
       />
     </main>
   )

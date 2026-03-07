@@ -9,6 +9,11 @@ interface ApplyCTAProps {
   userRole?: string | null
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+  isAvailable?: boolean
+  unavailableLabel?: string
+  helperText?: string | null
+  fallbackHref?: string | null
+  fallbackLabel?: string | null
 }
 
 function formatStatusLabel(status?: string | null) {
@@ -26,6 +31,11 @@ export function ApplyCTA({
   userRole,
   existingApplicationId,
   existingApplicationStatus,
+  isAvailable = true,
+  unavailableLabel = 'Online applications not available yet',
+  helperText = null,
+  fallbackHref = null,
+  fallbackLabel = null,
 }: ApplyCTAProps) {
   if (userRole?.startsWith('ecd_')) return null
 
@@ -33,6 +43,50 @@ export function ApplyCTA({
   const existingHref = existingApplicationId ? `/parent/applications/${existingApplicationId}` : null
   const hasExistingApplication = Boolean(existingHref)
   const statusLabel = formatStatusLabel(existingApplicationStatus)
+
+  if (!isAvailable) {
+    if (variant === 'hero') {
+      return (
+        <div className="space-y-2.5">
+          <span
+            className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-2xl border border-slate-300 bg-slate-100 px-5 py-3 text-center text-sm font-bold text-slate-500"
+            aria-disabled
+          >
+            {unavailableLabel}
+          </span>
+          {helperText ? <p className="text-sm text-slate-600">{helperText}</p> : null}
+          {fallbackHref && fallbackLabel ? (
+            <Link
+              href={fallbackHref}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center rounded-full border border-teal-300 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-teal-700 transition-colors hover:border-teal-400 hover:text-teal-900"
+            >
+              {fallbackLabel} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Link>
+          ) : null}
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-1">
+        <span className="inline-flex cursor-not-allowed items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+          {unavailableLabel}
+        </span>
+        {fallbackHref && fallbackLabel ? (
+          <Link
+            href={fallbackHref}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-teal-700 hover:text-teal-900 font-semibold text-sm transition-colors"
+          >
+            {fallbackLabel} <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        ) : null}
+      </div>
+    )
+  }
 
   if (hasExistingApplication && existingHref) {
     if (variant === 'hero') {

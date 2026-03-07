@@ -27,6 +27,7 @@ interface CentreCardProps {
   tagline?: string;
   capacity?: number;
   existingApplicationStatus?: string | null;
+  is_claimed?: boolean;
   isSaved?: boolean;
   onApply?: () => void;
   onSave?: () => void;
@@ -44,6 +45,7 @@ export function CentreCard({
   age_groups,
   rating = 4.8,
   tagline,
+  is_claimed = true,
   isSaved = false,
   onApply,
   onSave,
@@ -106,6 +108,11 @@ export function CentreCard({
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
 
           <div className="absolute top-4 right-4 flex flex-col gap-2">
+            {!is_claimed && (
+              <Badge variant="secondary" className="bg-slate-900/85 text-xs font-medium text-white">
+                Listed only
+              </Badge>
+            )}
             {distanceLabel && (
               <Badge variant="secondary" className="bg-white/90 text-xs font-medium">
                 <MapPin className="w-3 h-3 mr-1" /> {distanceLabel}
@@ -171,10 +178,16 @@ export function CentreCard({
         <CardFooter className="px-6 pb-6 pt-0 gap-3">
           <Button
             type="button"
-            onClick={handleApply}
-            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-semibold py-6 rounded-2xl text-base shadow-md active:scale-95 transition-all"
+            onClick={is_claimed ? handleApply : undefined}
+            disabled={!is_claimed}
+            className={cn(
+              'flex-1 py-6 rounded-2xl text-base font-semibold shadow-md transition-all',
+              is_claimed
+                ? 'bg-teal-600 text-white hover:bg-teal-700 active:scale-95'
+                : 'cursor-not-allowed bg-slate-200 text-slate-500 shadow-none'
+            )}
           >
-            Apply now - it is free
+            {is_claimed ? 'Apply now - it is free' : 'Online applications not available'}
           </Button>
 
           <Button
@@ -186,6 +199,11 @@ export function CentreCard({
             View Details
           </Button>
         </CardFooter>
+        {!is_claimed ? (
+          <div className="px-6 pb-6 text-xs font-medium text-slate-500">
+            This centre is listed in the directory, but it is not on CentreConnect yet.
+          </div>
+        ) : null}
       </Card>
     </motion.div>
   );

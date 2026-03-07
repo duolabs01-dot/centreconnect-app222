@@ -24,6 +24,7 @@ type MobileCentreDetailsSheetProps = {
   pilotBadges: string[]
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+  whatsappHref?: string | null
 }
 
 export function MobileCentreDetailsSheet({
@@ -41,6 +42,7 @@ export function MobileCentreDetailsSheet({
   pilotBadges,
   existingApplicationId,
   existingApplicationStatus,
+  whatsappHref = null,
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
   const [dragY, setDragY] = useState(0)
@@ -88,6 +90,15 @@ export function MobileCentreDetailsSheet({
                 userRole={userRole}
                 existingApplicationId={existingApplicationId ?? null}
                 existingApplicationStatus={existingApplicationStatus ?? null}
+                isAvailable={isClaimed}
+                unavailableLabel="Online applications not available yet"
+                helperText={
+                  isClaimed
+                    ? null
+                    : 'This centre has not joined CentreConnect yet. You can still contact them directly below.'
+                }
+                fallbackHref={!isClaimed ? whatsappHref : null}
+                fallbackLabel={!isClaimed && whatsappHref ? 'Contact on WhatsApp' : null}
               />
             </div>
           </div>
@@ -171,12 +182,19 @@ export function MobileCentreDetailsSheet({
               ) : null}
 
               {!isClaimed ? (
-                <Link
-                  href={claimHref}
-                  className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
-                >
-                  Claim & Update
-                </Link>
+                <div className="space-y-2">
+                  <Link
+                    href={claimHref}
+                    className="flex h-12 items-center justify-center rounded-2xl border border-teal-600 bg-white px-4 text-sm font-black text-teal-700"
+                  >
+                    Claim & Update
+                  </Link>
+                  {whatsappHref ? (
+                    <p className="text-xs font-medium text-amber-700">
+                      WhatsApp contact is shared by the centre and has not been verified by CentreConnect.
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
 
               <div className="grid grid-cols-2 gap-2">
