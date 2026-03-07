@@ -101,6 +101,8 @@ export default function ParentDiscoverClient() {
   const [centres, setCentres] = useState<DiscoverCentre[]>(FALLBACK_CENTRES)
   const [loading, setLoading] = useState(true)
   const [location, setLocation] = useState({ lat: -26.1881, lng: 28.0473 })
+  const [selectedSuburb, setSelectedSuburb] = useState('')
+  const [locationMode, setLocationMode] = useState<'device' | 'fallback'>('fallback')
 
   useEffect(() => {
     let mounted = true
@@ -148,13 +150,15 @@ export default function ParentDiscoverClient() {
   useEffect(() => {
     if (!navigator.geolocation) return
     navigator.geolocation.getCurrentPosition(
-      (position) =>
+      (position) => {
+        setLocationMode('device')
         setLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        }),
+        })
+      },
       () => {
-        // keep default
+        setLocationMode('fallback')
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 600000 }
     )
@@ -173,8 +177,21 @@ export default function ParentDiscoverClient() {
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
   }, [centres, location])
 
+  const suburbOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        centresWithDistance
+          .map((centre) => centre.suburb?.trim())
+          .filter((value): value is string => Boolean(value))
+      )
+    ).sort((a, b) => a.localeCompare(b))
+  }, [centresWithDistance])
+
   const filteredCentres = useMemo(() => {
-    const base = centresWithDistance
+    const base = selectedSuburb
+      ? centresWithDistance.filter((centre) => (centre.suburb ?? '').toLowerCase() === selectedSuburb.toLowerCase())
+      : centresWithDistance
+
     if (!query.trim()) return base
     const needle = query.toLowerCase().trim()
     return base.filter(
@@ -183,7 +200,7 @@ export default function ParentDiscoverClient() {
         (centre.suburb ?? '').toLowerCase().includes(needle) ||
         (centre.city ?? '').toLowerCase().includes(needle)
     )
-  }, [centresWithDistance, query])
+  }, [centresWithDistance, query, selectedSuburb])
 
   return (
     <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
@@ -194,6 +211,12 @@ export default function ParentDiscoverClient() {
           <p className="max-w-2xl text-sm text-slate-600">
             Find nearby centres, compare quickly, and open a full profile before you apply.
           </p>
+
+          <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            {locationMode === 'device'
+              ? 'Showing centres closest to your current location.'
+              : 'Showing Alexandra first because device location is not available yet.'}
+          </div>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
             <label className="relative flex-1">
@@ -207,6 +230,27 @@ export default function ParentDiscoverClient() {
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
               Search by suburb or centre name
             </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <select
+              value={selectedSuburb}
+              onChange={(event) => setSelectedSuburb(event.target.value)}
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-cyan-500"
+            >
+              <option value="">All nearby suburbs</option>
+              {suburbOptions.map((suburb) => (
+                <option key={suburb} value={suburb}>
+                  {suburb}
+                </option>
+              ))}
+            </select>
+
+            {selectedSuburb ? (
+              <Button variant="outline" className="rounded-2xl px-4 text-sm font-semibold" onClick={() => setSelectedSuburb('')}>
+                Clear suburb
+              </Button>
+            ) : null}
           </div>
         </header>
 
