@@ -130,7 +130,7 @@ export default function ParentDiscoverClient() {
   }, [centres, query])
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-slate-50 px-4 pb-24 pt-8 md:px-6 md:pb-8">
+    <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Parent discovery</p>
