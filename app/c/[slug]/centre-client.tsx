@@ -35,7 +35,6 @@ import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
-import { createWhatsappClickToChatLink } from '@/lib/communications/whatsapp'
 
 type Centre = {
   id: string
@@ -150,6 +149,19 @@ function isSafeImageUrl(url: string | null | undefined) {
 function getSafeImageUrl(candidate: string | null | undefined, fallback: string) {
   if (candidate && isSafeImageUrl(candidate)) return candidate
   return fallback
+}
+
+function createWhatsappClickToChatLink(rawPhone: string | null | undefined, message: string) {
+  const raw = String(rawPhone ?? '').trim()
+  const digits = raw.replace(/[^\d]/g, '')
+  if (!digits || !message.trim()) return null
+
+  let normalized = digits
+  if (digits.startsWith('0')) normalized = `27${digits.slice(1)}`
+  else if (digits.startsWith('27')) normalized = digits
+  else if (raw.startsWith('+')) normalized = raw.replace(/[^\d]/g, '')
+
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(message.trim())}`
 }
 
 export function CentreClient({ slug }: { slug: string }) {
