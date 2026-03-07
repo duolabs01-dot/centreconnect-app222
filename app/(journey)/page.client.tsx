@@ -58,7 +58,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
       <main className="mx-auto min-h-screen w-full max-w-7xl px-4 py-8 pb-[calc(env(safe-area-inset-bottom)+4rem)] sm:px-6 lg:px-8">
         <div className="space-y-16 sm:space-y-24 lg:space-y-32">
           {/* SECTION 2 - Premium Hero */}
-          <section className="relative snap-start overflow-hidden rounded-[3rem] bg-slate-900 px-6 py-12 sm:px-12 sm:py-20 lg:px-20 lg:py-32 shadow-[0_30px_100px_rgba(0,0,0,0.25)]">
+          <section className="relative snap-start overflow-hidden rounded-[3rem] bg-slate-900 px-4 py-10 sm:px-12 sm:py-20 lg:px-20 lg:py-32 shadow-[0_30px_100px_rgba(0,0,0,0.25)]">
             {/* Ambient Background Elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-teal-950" />
             <div className="absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-cyan-500/10 blur-[120px]" />
@@ -240,139 +240,7 @@ export default function HomeClientPage({ userEmail, jobOpportunities, shortlistC
             </div>
           </section>
 
-          {/* SECTION 4.6 - FAQ */}
-          <section className="snap-start py-12 px-2">
-            <div className="mx-auto max-w-4xl">
-              <div className="mb-16 text-center space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Common Questions</p>
-                <h3 className="font-display text-4xl font-black text-slate-900">Everything you need to know.</h3>
-              </div>
-              <div className="grid gap-4">
-                {[
-                  {
-                    q: 'Is CentreConnect really free for parents?',
-                    a: 'Yes. Searching, applying, and tracking updates is 100% free for all families. Our goal is to make quality education more accessible.',
-                  },
-                  {
-                    q: 'How do you verify these centres?',
-                    a: 'Every centre on our platform is either government-registered or actively working with us to improve their safety and educational standards.',
-                  },
-                  {
-                    q: 'Can I apply to more than one creche?',
-                    a: 'Absolutely. Your parent profile works for every child and every application, so you never have to fill in the same form twice.',
-                  },
-                  {
-                    q: 'Will it work on my phone?',
-                    a: 'Yes. We designed CentreConnect specifically for budget Android devices and limited data connections. It is fast, light, and reliable.',
-                  },
-                ].map((faq, i) => (
-                  <div key={i} className="rounded-[2rem] border-2 border-slate-100 bg-white p-8 transition-all hover:border-cyan-200 hover:shadow-lg group">
-                    <h4 className="mb-3 text-xl font-black text-slate-900 group-hover:text-cyan-700 transition-colors tracking-tight">{faq.q}</h4>
-                    <p className="text-base font-medium text-slate-500 leading-relaxed">{faq.a}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
           {/* SECTION 5 - For ECD Owners */}
-          <section className="snap-start rounded-[3.5rem] bg-slate-900 p-8 sm:p-16 lg:p-24 text-white relative overflow-hidden shadow-[0_40px_120px_rgba(0,0,0,0.3)]">
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-800 to-slate-950 opacity-90" />
-            <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-cyan-500/10 blur-[100px]" />
-            
-            <div className="relative z-10 max-w-4xl">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400 mb-6">Professional ECD Management</p>
-              <h3 className="font-display text-4xl font-black tracking-tighter sm:text-6xl lg:text-7xl leading-[1.02]">
-                Built for South African centres.<br/>
-                <span className="text-teal-400">Starting in Alexandra.</span>
-              </h3>
-              <p className="mt-8 text-xl leading-relaxed text-slate-300 font-medium max-w-2xl">
-                Not imported. Built from scratch for how creches actually work here. Manage your entire operation—from admissions to DSD compliance—from one secure screen.
-              </p>
-              
-              <div className="mt-12 grid grid-cols-2 gap-x-12 gap-y-6 sm:grid-cols-3">
-                {[
-                  'Digital Admissions', 
-                  'DSD Subsidy Export', 
-                  'Attendance Roster',
-                  'Secure Transport', 
-                  'Parent Marketplace', 
-                  'Daily Learner Reports'
-                ].map((feat) => (
-                  <div key={feat} className="flex items-center gap-3">
-                    <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
-                    <span className="text-base font-bold text-slate-200">{feat}</span>
-                  </div>
-                ))}
-              </div>
-              
-              <Button size="lg" className="mt-12 h-16 rounded-2xl bg-white px-10 text-base font-black text-slate-950 hover:bg-cyan-50 shadow-2xl transition-transform active:scale-95" asChild>
-                <Link href="/for-centres/intro">Register Your Centre &rarr;</Link>
-              </Button>
-            </div>
-          </section>
-
-          {/* SECTION 6 - Jobs strip */}
-          <section id="active-jobs" className="rounded-[3rem] border border-slate-100 bg-white p-8 sm:p-12 lg:p-16 shadow-[0_15px_50px_rgba(0,0,0,0.02)]">
-            <div className="space-y-6 max-w-3xl mb-12">
-              <div className="flex flex-wrap items-center gap-4">
-                <h3 className="font-display text-3xl font-black text-slate-900 sm:text-4xl tracking-tight">Work in Education</h3>
-                <span className="rounded-full bg-cyan-100 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-cyan-800 border border-cyan-200">
-                  {activeJobs.length} Roles Open
-                </span>
-              </div>
-              <p className="text-lg font-medium text-slate-500 leading-relaxed">
-                Find paid shifts at centres that respect your time and value child safety. Join a team where trust and transparency come first.
-              </p>
-            </div>
-            
-            <div className="grid gap-6 sm:grid-cols-2">
-              {activeJobs.length === 0 ? (
-                <div className="rounded-[2rem] border-2 border-dashed border-slate-100 bg-slate-50/50 p-12 sm:col-span-2 text-center">
-                  <p className="text-lg font-bold text-slate-400">New opportunities are coming soon.</p>
-                  <p className="mt-1 text-sm font-medium text-slate-400 uppercase tracking-widest">Check back next week.</p>
-                </div>
-              ) : (
-                activeJobs.map((job) => {
-                  const jobHref = job.centreSlug ? `/c/${job.centreSlug}/jobs/${job.id}` : `/c/centre/jobs/${job.id}`
-                  const location = [job.suburb, job.city].filter(Boolean).join(', ')
-
-                  return (
-                    <Link
-                      key={job.id}
-                      href={jobHref}
-                      className="group flex flex-col justify-between rounded-[2.5rem] border-2 border-slate-50 bg-white p-8 shadow-sm transition-all hover:border-cyan-200 hover:shadow-xl hover:translate-y-[-2px]"
-                    >
-                      <div className="flex items-start justify-between gap-4 mb-6">
-                        <div>
-                          <p className="text-2xl font-black text-slate-900 tracking-tight leading-tight group-hover:text-cyan-700 transition-colors">{job.title}</p>
-                          <p className="mt-2 text-base font-bold text-slate-400">{job.centreName}</p>
-                        </div>
-                        <div className="rounded-xl bg-slate-900 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.25em] text-white shadow-lg shadow-slate-900/20">
-                          Sponsored
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-sm font-black text-slate-500 uppercase tracking-wide">
-                        <MapPin className="h-4 w-4 text-cyan-500" />
-                        {location || 'Johannesburg'}
-                      </div>
-
-                      <div className="mt-8 flex items-center justify-between border-t border-slate-50 pt-6">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500">Closing Date</p>
-                          <p className="text-sm font-bold text-slate-900">{job.closesAt ? formatDate(job.closesAt) : 'Rolling'}</p>
-                        </div>
-                        <div className="h-12 w-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white transition-transform group-hover:scale-110 shadow-lg">
-                          <ArrowRight className="h-5 w-5" />
-                        </div>
-                      </div>
-                    </Link>
-                  )
-                })
-              )}
-            </div>
-          </section>
         </div>
       </main>
     </div>

@@ -480,7 +480,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
 
     const userEmail = await resolveUserEmail(admin, payload.userId, null)
-    const warnings: string[] = []
 
     const revokeResult = await revokeUserSessionsByUserId(admin, payload.userId)
     if (!revokeResult.ok && revokeResult.warning) {
