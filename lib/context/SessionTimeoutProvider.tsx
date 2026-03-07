@@ -19,7 +19,8 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
   const supabase = useMemo(() => createClient(), [])
 
   const isProtectedRoute = (path: string) => {
-    return path.startsWith('/admin') || path.startsWith('/ecd') || path.startsWith('/parent')
+    // Only CC Admin workspace should auto-logout; parents and ECD users keep their sessions
+    return path.startsWith('/admin')
   }
 
   const getSession = useCallback(() => supabase.auth.getSession(), [supabase])
