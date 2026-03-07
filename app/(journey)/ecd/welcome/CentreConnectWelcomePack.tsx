@@ -47,10 +47,33 @@ type CentreProfile = {
 }
 
 const HERO_IMAGE =
-  'https://images.pexels.com/photos/8926646/pexels-photo-8926646.jpeg?auto=compress&cs=tinysrgb&w=1600'
+  'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=1600&auto=format&fit=crop'
 const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
 
 const scenarios: Scenario[] = [
+  {
+    id: 'referral',
+    emoji: '\u{1F4B8}',
+    color: '#16A34A',
+    bg: '#F0FDF4',
+    accent: '#BBF7D0',
+    title: 'Refer & Earn R100',
+    pain:
+      'You know other Creche Owners who are struggling with paper books and WhatsApp chaos.',
+    solution:
+      'Share CentreConnect with a friend. If they join, you get R100 off your next bill and they get their 1st month completely free.',
+    steps: [
+      'Copy your unique invite link.',
+      'Send it to another ECD Owner on WhatsApp.',
+      'They register their centre for the pilot.',
+      'We credit R100 to your account.',
+      'They enjoy their first month free.',
+    ],
+    ctaLabel: 'Share My Invite Link',
+    ctaHref: '/ecd/profile',
+    quote: 'I helped my friend get organized and saved money on my own bill!',
+    quoteAuthor: 'Mama Gladys, Alexandra',
+  },
   {
     id: 'attendance',
     emoji: '\u{2705}',
