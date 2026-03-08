@@ -62,6 +62,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         fontFamily: 'var(--font-dm-sans)',
         ['--teal' as string]: '#0D9488',
         ['--amber' as string]: '#D4935A',
+        ['--amber-light' as string]: '#FDF0E6',
         ['--forest' as string]: '#1A2E1F',
         ['--cream' as string]: '#FAF8F4',
         ['--warm-white' as string]: '#FFFDF9',
@@ -71,12 +72,18 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         <section className="relative overflow-hidden border-b border-[#E9DED1] bg-[var(--warm-white)]">
           <div className="absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top_left,rgba(212,147,90,0.18),transparent_48%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.12),transparent_34%)]" />
           <div className="absolute -left-20 top-16 h-40 w-40 rounded-full bg-[rgba(212,147,90,0.10)] blur-3xl" />
-          <div className="absolute right-0 top-24 h-44 w-44 rounded-full bg-[rgba(13,148,136,0.08)] blur-3xl" />
 
           <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
             <div className="grid gap-6 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:gap-12">
               <div className="min-w-0 max-w-3xl">
-                <div className="inline-flex items-center rounded-full border border-[rgba(212,147,90,0.28)] bg-[rgba(212,147,90,0.14)] px-4 py-2 text-[13px] font-semibold text-[#9A6234] sm:text-sm">
+                <div
+                  className="inline-flex items-center rounded-full border px-4 py-2 text-[13px] font-semibold sm:text-sm"
+                  style={{
+                    backgroundColor: 'var(--amber-light)',
+                    borderColor: 'rgba(212,147,90,0.28)',
+                    color: 'var(--amber)',
+                  }}
+                >
                   Now live in Alexandra, Johannesburg
                 </div>
 
@@ -102,7 +109,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <Link
                         key={suburb}
                         href={suburbHref(suburb)}
-                        className="inline-flex items-center whitespace-nowrap rounded-full border border-[#E6D9CA] bg-white px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)]/30 hover:text-[var(--teal)]"
+                        className="inline-flex items-center whitespace-nowrap rounded-full border border-[#D9D8CF] bg-[var(--cream)] px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
                       >
                         {suburb}
                       </Link>
@@ -138,7 +145,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
               <div className="min-w-0 lg:pl-4">
                 <div className="rounded-[1.75rem] border border-[#E8DDD0] bg-white p-4 shadow-[0_24px_60px_rgba(27,40,36,0.08)] sm:rounded-[2rem] sm:p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#A86C3A] sm:text-xs">One real centre near you</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--teal)] sm:text-xs">One real centre near you</p>
 
                   {featuredCentre ? (
                     <Link
@@ -158,7 +165,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           </h2>
                         </div>
                         {featuredCentre.isRegistered ? (
-                          <span className="rounded-full bg-[rgba(212,147,90,0.14)] px-3 py-1 text-[11px] font-semibold text-[#9A6234]">
+                          <span
+                            className="rounded-full px-3 py-1 text-[11px] font-semibold"
+                            style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
+                          >
                             Verified
                           </span>
                         ) : null}
@@ -168,7 +178,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         <span className="rounded-full bg-[rgba(13,148,136,0.10)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
                           {featuredCentre.primaryAgeGroup ?? 'Mixed age groups'}
                         </span>
-                        <span className="rounded-full bg-[#F6EEE4] px-3 py-1 text-xs font-semibold text-[#8C603B]">
+                        <span className="rounded-full bg-[#EEF6F5] px-3 py-1 text-xs font-semibold text-[#4C6762]">
                           Centre profile live
                         </span>
                       </div>
@@ -176,7 +186,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
                           <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6E8D7] text-[#A86C3A]">
+                            <span
+                              className="flex h-8 w-8 items-center justify-center rounded-full"
+                              style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
+                            >
                               <FileCheck2 className="h-4 w-4" />
                             </span>
                             Documents ready once
@@ -184,7 +197,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         </div>
                         <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
                           <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6E8D7] text-[#A86C3A]">
+                            <span
+                              className="flex h-8 w-8 items-center justify-center rounded-full"
+                              style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
+                            >
                               <Clock3 className="h-4 w-4" />
                             </span>
                             Faster follow-up on your phone
@@ -205,19 +221,54 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
+        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">How it works</p>
+              <h2
+                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem] sm:leading-[1]"
+                style={{ fontFamily: 'var(--font-serif)' }}
+              >
+                One calm flow from search to application.
+              </h2>
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              {steps.map((step) => (
+                <article
+                  key={step.title}
+                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)] sm:rounded-[1.7rem] sm:p-6"
+                >
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                    style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
+                  >
+                    <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-serif)' }}>
+                      {step.number}
+                    </span>
+                  </div>
+                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-serif)' }}>
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{step.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {showProofBand ? (
           <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
             <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#E9DDD0] bg-[var(--warm-white)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:rounded-[2rem] sm:p-8">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#A86C3A]">Near you now</p>
                 <h2
-                  className="mt-3 text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
+                  className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
                   style={{ fontFamily: 'var(--font-serif)' }}
                 >
                   Real crèches. Real spaces.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  Every centre is registered and verified before parents can apply.
+                  Every centre on CentreConnect is registered and verified before parents can apply.
                 </p>
               </div>
 
@@ -244,39 +295,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </section>
         ) : null}
 
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#A86C3A]">How it works</p>
-              <h2
-                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-serif)' }}
-              >
-                One calm flow from search to application.
-              </h2>
-            </div>
-
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {steps.map((step) => (
-                <article
-                  key={step.title}
-                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)] sm:rounded-[1.7rem] sm:p-6"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(212,147,90,0.14)] text-[#A86C3A]">
-                    <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-serif)' }}>
-                      {step.number}
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-serif)' }}>
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{step.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
         <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[var(--forest)] px-5 py-10 text-white shadow-[0_30px_80px_rgba(26,46,31,0.24)] sm:rounded-[2.4rem] sm:px-10 sm:py-16 lg:px-16">
             <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-10">
@@ -295,7 +313,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 <div className="mt-7 space-y-3">
                   {safetyPoints.map((item) => (
                     <div key={item} className="flex items-start gap-3 text-sm text-[#E4EEE3] sm:text-[15px]">
-                      <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[#E3B37F]">
+                      <span
+                        className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10"
+                        style={{ color: 'var(--amber)' }}
+                      >
                         <ShieldCheck className="h-4 w-4" />
                       </span>
                       <span>{item}</span>
@@ -308,7 +329,9 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 <div className="mx-auto mb-8 h-1.5 w-16 rounded-full bg-[#2A352C]" />
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em] text-[#E3B37F]">Pickup code</p>
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.24em]" style={{ color: 'var(--amber)' }}>
+                      Pickup code
+                    </p>
                     <p className="text-base font-bold text-white">Safe child pickup</p>
                   </div>
                   <div className="flex justify-center py-8">

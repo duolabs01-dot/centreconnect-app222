@@ -46,11 +46,7 @@ export default async function HomePage({
 
   if (user && supabase) {
     try {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
+      const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
 
       role = (profile?.role as UserRole | undefined) ?? null
     } catch (error) {
@@ -77,8 +73,7 @@ export default async function HomePage({
         .from('ecd_centres')
         .select('id,name,slug,suburb,age_groups,is_registered')
         .eq('is_active', true)
-        .order('is_registered', { ascending: false })
-        .order('name', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(4)
 
       activeCentres = (centreRows ?? []).map((centre: any) => ({
