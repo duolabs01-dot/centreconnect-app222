@@ -1,39 +1,39 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge';
-import { Heart, MapPin, Star } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { Heart, MapPin, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import Image from 'next/image'
+import Link from 'next/link'
 
 interface CentreCardProps {
-  id: string;
-  slug?: string;
-  name: string;
-  image?: string;
-  cover_image_url?: string;
-  logo_url?: string;
-  address?: string;
-  distance?: string;
-  distanceLabel?: string;
-  rating?: number;
-  fees?: string;
-  feesLabel?: string;
-  age_groups: string[];
-  tagline?: string;
-  capacity?: number;
-  existingApplicationStatus?: string | null;
-  is_claimed?: boolean;
-  is_registered?: boolean | null;
-  isSaved?: boolean;
-  onApply?: () => void;
-  onSave?: () => void;
+  id: string
+  slug?: string
+  name: string
+  image?: string
+  cover_image_url?: string
+  logo_url?: string
+  address?: string
+  distance?: string
+  distanceLabel?: string
+  rating?: number
+  fees?: string
+  feesLabel?: string
+  age_groups: string[]
+  tagline?: string
+  capacity?: number
+  existingApplicationStatus?: string | null
+  is_claimed?: boolean
+  is_registered?: boolean | null
+  isSaved?: boolean
+  onApply?: () => void
+  onSave?: () => void
 }
 
 export function CentreCard({
@@ -53,42 +53,42 @@ export function CentreCard({
   onApply,
   onSave,
 }: CentreCardProps) {
-  const [saved, setSaved] = useState(isSaved);
-  const router = useRouter();
+  const [saved, setSaved] = useState(isSaved)
+  const router = useRouter()
 
   const handleSave = () => {
-    setSaved(!saved);
-    onSave?.();
-  };
+    setSaved(!saved)
+    onSave?.()
+  }
 
   const handleApply = () => {
     if (onApply) {
-      onApply();
-      return;
+      onApply()
+      return
     }
 
     if (id.startsWith('centre-')) {
-      router.push('/directory');
-      return;
+      router.push('/directory')
+      return
     }
 
-    const identifier = slug ? encodeURIComponent(slug) : id;
-    router.push(`/apply/${identifier}`);
-  };
+    const identifier = slug ? encodeURIComponent(slug) : id
+    router.push(`/apply/${identifier}`)
+  }
 
   const handleViewDetails = () => {
     if (id.startsWith('centre-')) {
-      router.push(`/directory?search=${encodeURIComponent(name)}`);
-      return;
+      router.push(`/directory?search=${encodeURIComponent(name)}`)
+      return
     }
 
     if (slug) {
-      router.push(`/centre/${encodeURIComponent(slug)}`);
-      return;
+      router.push(`/centre/${encodeURIComponent(slug)}`)
+      return
     }
 
-    router.push('/directory');
-  };
+    router.push('/directory')
+  }
 
   return (
     <motion.div
@@ -98,7 +98,7 @@ export function CentreCard({
       transition={{ duration: 0.3 }}
       className="group h-full"
     >
-      <Card className="flex h-full flex-col overflow-hidden rounded-[2rem] border-0 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
+      <Card className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]">
         <div className="relative h-52 overflow-hidden">
           <Image
             src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
@@ -107,15 +107,11 @@ export function CentreCard({
             className="object-cover transition-transform duration-700 group-hover:scale-110"
             sizes="(max-width: 768px) 100vw, 50vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
           <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
             {Boolean(is_registered) && (
-              <PremiumVerifiedBadge
-                compact
-                label="Verified ECD"
-                className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]"
-              />
+              <PremiumVerifiedBadge compact label="Verified ECD" className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]" />
             )}
             {!is_claimed && (
               <Badge className="bg-slate-900/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-none">
@@ -123,7 +119,7 @@ export function CentreCard({
               </Badge>
             )}
             {feesLabel && (
-              <Badge className="bg-cyan-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">
+              <Badge className="border border-[#E3D2BC] bg-[#FDF0E6] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#B47642] shadow-none">
                 {feesLabel}
               </Badge>
             )}
@@ -151,8 +147,8 @@ export function CentreCard({
               />
             </div>
           ) : (
-            <div className="absolute -bottom-6 left-6 z-10 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-white bg-cyan-50 shadow-2xl">
-              <span className="text-xl font-black text-cyan-700">{name.charAt(0)}</span>
+            <div className="absolute -bottom-6 left-6 z-10 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-white bg-[#F5EFE6] shadow-2xl">
+              <span className="text-xl font-black text-[#0D9488]">{name.charAt(0)}</span>
             </div>
           )}
         </div>
@@ -161,17 +157,22 @@ export function CentreCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="line-clamp-1 text-xl font-black tracking-tight text-slate-900">{name}</h3>
-                {tagline && <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-500">{tagline}</p>}
+                <h3
+                  className="line-clamp-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-[#1F2D29]"
+                  style={{ fontFamily: 'var(--font-serif)' }}
+                >
+                  {name}
+                </h3>
+                {tagline && <p className="mt-1 line-clamp-2 text-sm font-medium text-[#66736F]">{tagline}</p>}
               </div>
-              <div className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+              <div className="shrink-0 rounded-full bg-[#FDF0E6] px-2 py-0.5 text-[#B47642]">
                 <div className="flex items-center gap-1">
                   <Star className="h-3 w-3 fill-current" />
-                  <span className="text-xs font-black">{rating}</span>
+                  <span className="text-xs font-semibold">{rating}</span>
                 </div>
               </div>
             </div>
-            <p className="mt-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-400">
+            <p className="mt-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#7B827E]">
               <MapPin className="h-3 w-3" />
               {address || 'Johannesburg'}
             </p>
@@ -179,7 +180,7 @@ export function CentreCard({
 
           <div className="flex flex-wrap gap-1.5">
             {age_groups.slice(0, 3).map((age) => (
-              <Badge key={age} variant="secondary" className="border-none bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600 shadow-none">
+              <Badge key={age} variant="secondary" className="border border-[#E7DDD1] bg-white px-2.5 py-1 text-[10px] font-medium text-[#5F6C68] shadow-none">
                 {age.replace(/(\d+)([my])/g, '$1$2 old')}
               </Badge>
             ))}
@@ -192,23 +193,23 @@ export function CentreCard({
               type="button"
               variant="outline"
               onClick={handleViewDetails}
-              className="flex-1 rounded-2xl border-2 border-slate-100 bg-white py-6 text-sm font-black text-slate-700 transition-all hover:border-slate-200 hover:bg-slate-50"
+              className="flex-1 rounded-2xl border-[#DDD5C8] bg-white py-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
             >
-              View Centre
+              View details
             </Button>
             {is_claimed ? (
               <Button
                 type="button"
                 onClick={handleApply}
-                className="flex-1 rounded-2xl bg-cyan-600 py-6 text-sm font-black text-white shadow-lg shadow-cyan-900/20 transition-all hover:bg-cyan-700 active:scale-95"
+                className="flex-1 rounded-2xl bg-[#0D9488] py-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
               >
-                Enroll Now
+                Apply now
               </Button>
             ) : (
               <Button
                 asChild
                 variant="outline"
-                className="flex-1 rounded-2xl border-2 border-slate-100 bg-white py-6 text-sm font-black text-slate-700 transition-all hover:border-slate-200 hover:bg-slate-50 active:scale-95"
+                className="flex-1 rounded-2xl border-[#DDD5C8] bg-white py-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4] active:scale-95"
               >
                 <Link href="/for-centres/intro">Learn More</Link>
               </Button>
@@ -216,9 +217,9 @@ export function CentreCard({
           </div>
 
           {!is_claimed && (
-            <p className="text-center text-[10px] font-medium leading-tight text-slate-400">
+            <p className="text-center text-[10px] font-medium leading-tight text-[#7B827E]">
               Own this centre?{' '}
-              <Link href="/for-centres/intro" className="font-black text-cyan-600 hover:underline">
+              <Link href="/for-centres/intro" className="font-semibold text-[#0D9488] hover:underline">
                 Claim it here →
               </Link>
             </p>
@@ -226,8 +227,7 @@ export function CentreCard({
         </CardFooter>
       </Card>
     </motion.div>
-  );
+  )
 }
 
-export default CentreCard;
-
+export default CentreCard

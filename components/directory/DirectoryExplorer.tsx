@@ -1,10 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check, X, MapPin, Sparkles } from 'lucide-react'
+import { Search, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
@@ -21,22 +21,16 @@ import {
   SheetTrigger,
   SheetFooter,
   SheetClose,
-} from "@/components/ui/sheet"
+} from '@/components/ui/sheet'
 
-const DirectoryMap = dynamic(
-  () => import('./DirectoryMap'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-96 rounded-[2.5rem] bg-slate-100 animate-pulse-slow
-                      flex items-center justify-center border-2 border-dashed border-slate-200">
-        <p className="text-slate-400 text-sm font-medium">
-          Loading map...
-        </p>
-      </div>
-    ),
-  }
-)
+const DirectoryMap = dynamic(() => import('./DirectoryMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-96 animate-pulse-slow items-center justify-center rounded-[2rem] border border-[#E6DDD1] bg-[#FFFDF9]">
+      <p className="text-sm font-medium text-[#7C8682]">Loading map...</p>
+    </div>
+  ),
+})
 
 type DirectoryFilters = {
   search?: string
@@ -90,7 +84,7 @@ export default function DirectoryExplorer({
   const [isPending, startTransition] = useTransition()
   const { setVisible } = useBottomNav()
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
-  
+
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'idle' | 'pending' | 'granted' | 'denied'>('idle')
 
@@ -101,23 +95,40 @@ export default function DirectoryExplorer({
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
-  const isPilotDefaultArea = selectedSuburb === 'Alexandra' && !debouncedSearch && !selectedAge && !selectedFee && selectedSubsidy !== 'true'
 
-  // Quick Filters
   const quickFilters = [
     { label: 'Near Me', active: geoStatus === 'granted', onClick: () => activateMapView() },
-    { label: 'Alexandra', active: selectedSuburb === 'Alexandra', onClick: () => { setSelectedSuburb('Alexandra'); setCurrentPage(1); } },
-    { label: 'Subsidy', active: selectedSubsidy === 'true', onClick: () => { setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true'); setCurrentPage(1); } },
-    { label: 'Infants', active: selectedAge === 'Infants (0-1 year)', onClick: () => { setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)'); setCurrentPage(1); } },
+    {
+      label: 'Alexandra',
+      active: selectedSuburb === 'Alexandra',
+      onClick: () => {
+        setSelectedSuburb(selectedSuburb === 'Alexandra' ? '' : 'Alexandra')
+        setCurrentPage(1)
+      },
+    },
+    {
+      label: 'Subsidy',
+      active: selectedSubsidy === 'true',
+      onClick: () => {
+        setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true')
+        setCurrentPage(1)
+      },
+    },
+    {
+      label: 'Infants',
+      active: selectedAge === 'Infants (0-1 year)',
+      onClick: () => {
+        setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)')
+        setCurrentPage(1)
+      },
+    },
   ]
 
-  // Debounce search
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300)
     return () => clearTimeout(timeout)
   }, [search])
 
-  // Sync URL
   useEffect(() => {
     const params = new URLSearchParams()
     if (debouncedSearch) params.set('search', debouncedSearch)
@@ -131,7 +142,6 @@ export default function DirectoryExplorer({
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false })
   }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage, pathname, router])
 
-  // Fetch Data
   useEffect(() => {
     const controller = new AbortController()
     startTransition(async () => {
@@ -156,8 +166,8 @@ export default function DirectoryExplorer({
 
   const activateMapView = () => {
     if (geoStatus === 'granted') {
-        setViewMode('map')
-        return
+      setViewMode('map')
+      return
     }
     setGeoStatus('pending')
     navigator.geolocation.getCurrentPosition(
@@ -172,101 +182,104 @@ export default function DirectoryExplorer({
   }
 
   const resetFilters = () => {
-    setSearch(''); setDebouncedSearch(''); setSelectedSuburb(''); setSelectedAge(''); 
-    setSelectedFee(''); setSelectedSubsidy(''); setCurrentPage(1);
+    setSearch('')
+    setDebouncedSearch('')
+    setSelectedSuburb('')
+    setSelectedAge('')
+    setSelectedFee('')
+    setSelectedSubsidy('')
+    setCurrentPage(1)
   }
 
   return (
-    <div className="cc-stack overflow-x-clip">
-      {/* Search & Mode Switcher */}
-      <div className="sticky top-0 z-[60] mx-0 bg-white/80 py-3 backdrop-blur-xl sm:static sm:bg-transparent sm:py-0">
-        {isPilotDefaultArea ? (
-          <div className="mb-4 flex items-start gap-3 rounded-[1.5rem] border border-cyan-100 bg-cyan-50/50 p-4 text-sm text-cyan-900 shadow-sm">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-100">
-              <MapPin className="h-3.5 w-3.5 text-cyan-600" />
-            </div>
-            <p className="font-medium leading-relaxed">
-              <strong>Pilot Suburb</strong>: Showing Alexandra first while we expand. You can use the search bar or filters to explore other areas.
-            </p>
-          </div>
-        ) : null}
+    <div className="cc-stack overflow-x-clip text-[#22312E]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+      <div className="sticky top-[84px] z-[60] mx-0 rounded-[1.7rem] border border-[#E8DDD0] bg-[#FFFDF9]/95 p-3 shadow-[0_12px_32px_rgba(31,44,39,0.06)] backdrop-blur-xl sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8682]" />
             <Input
               type="text"
               placeholder="Search by centre name or suburb..."
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="h-14 rounded-2xl border-slate-200 bg-white pl-11 pr-4 text-base font-bold shadow-[0_8px_30px_rgb(0,0,0,0.04)] focus-visible:ring-2 focus-visible:ring-cyan-500/20"
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setCurrentPage(1)
+              }}
+              className="h-14 rounded-2xl border-[#DDD5C8] bg-white pl-11 pr-4 text-base font-medium text-[#22312E] shadow-none focus-visible:border-[#0D9488] focus-visible:ring-2 focus-visible:ring-[#0D9488]/10"
             />
           </div>
-          
+
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-14 w-14 rounded-2xl border-slate-200 bg-white text-slate-600 shadow-sm transition-all hover:border-cyan-400 active:scale-90"
+                className="h-14 w-14 rounded-2xl border-[#DDD5C8] bg-white text-[#5B6966] shadow-none transition-all hover:border-[#0D9488] hover:text-[#0D9488] active:scale-90"
               >
                 <SlidersHorizontal className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-[3rem] px-6 pb-12 pt-8 border-t-0 shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
+            <SheetContent side="bottom" className="rounded-t-[2.5rem] border-t-0 bg-[#FFFDF9] px-6 pb-12 pt-8 shadow-[0_-20px_50px_rgba(0,0,0,0.08)]">
               <SheetHeader className="mb-8">
-                <SheetTitle className="text-3xl font-black text-slate-900 tracking-tight">Refine Results</SheetTitle>
+                <SheetTitle className="text-[2rem] tracking-[-0.03em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-serif)' }}>
+                  Refine results
+                </SheetTitle>
               </SheetHeader>
-              
+
               <div className="grid gap-8 sm:grid-cols-2">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Location</label>
-                  <select 
-                    value={selectedSuburb} 
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Location</label>
+                  <select
+                    value={selectedSuburb}
                     onChange={(e) => setSelectedSuburb(e.target.value)}
-                    className="cc-native-field h-14 w-full rounded-2xl border-slate-200 bg-slate-50 px-4 text-base font-bold outline-none focus:border-cyan-500 shadow-inner"
+                    className="cc-native-field h-14 w-full rounded-2xl border border-[#DDD5C8] bg-white px-4 text-base font-medium text-[#22312E] outline-none focus:border-[#0D9488]"
                   >
                     <option value="">All Johannesburg Areas</option>
-                    {suburbs.map(s => <option key={s} value={s}>{s}</option>)}
+                    {suburbs.map((suburb) => (
+                      <option key={suburb} value={suburb}>
+                        {suburb}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Monthly Budget</label>
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Monthly Budget</label>
                   <div className="grid grid-cols-2 gap-2">
-                    {FEE_OPTIONS.map(opt => (
+                    {FEE_OPTIONS.map((option) => (
                       <Button
                         type="button"
-                        key={opt.value}
-                        onClick={() => setSelectedFee(opt.value)}
-                        variant={selectedFee === opt.value ? 'default' : 'outline'}
+                        key={option.value}
+                        onClick={() => setSelectedFee(option.value)}
+                        variant={selectedFee === option.value ? 'default' : 'outline'}
                         className={cn(
-                          'h-12 rounded-2xl px-4 text-sm font-bold transition-all',
-                          selectedFee === opt.value
-                            ? 'border-cyan-600 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 shadow-sm'
-                            : 'border-slate-100 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                          'h-12 rounded-2xl px-4 text-sm font-semibold transition-all',
+                          selectedFee === option.value
+                            ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
+                            : 'border-[#E6DDD1] bg-white text-[#5B6966] hover:bg-[#FAF8F4]'
                         )}
                       >
-                        {opt.label}
+                        {option.label}
                       </Button>
                     ))}
                   </div>
                 </div>
 
                 <div className="space-y-3 sm:col-span-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">Child&apos;s Age Group</label>
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Child&apos;s Age Group</label>
                   <div className="flex flex-wrap gap-2">
-                    {['All', ...ageGroups].map(age => (
+                    {['All', ...ageGroups].map((age) => (
                       <Button
                         type="button"
                         key={age}
                         onClick={() => setSelectedAge(age === 'All' ? '' : age)}
                         variant={(age === 'All' ? !selectedAge : selectedAge === age) ? 'default' : 'outline'}
                         className={cn(
-                          'h-11 rounded-2xl px-5 text-sm font-bold transition-all',
+                          'h-11 rounded-2xl px-5 text-sm font-semibold transition-all',
                           (age === 'All' ? !selectedAge : selectedAge === age)
-                            ? 'border-cyan-600 bg-cyan-600 text-white hover:bg-cyan-700 shadow-lg shadow-cyan-900/20'
-                            : 'border-slate-100 bg-slate-50 text-slate-600 hover:bg-slate-100'
+                            ? 'border-[#0D9488] bg-[#0D9488] text-white hover:bg-[#0B857A] shadow-[0_12px_24px_rgba(13,148,136,0.18)]'
+                            : 'border-[#E6DDD1] bg-white text-[#5B6966] hover:bg-[#FAF8F4]'
                         )}
                       >
                         {age.replace(/(\d+)([my])/g, '$1$2 old')}
@@ -276,85 +289,90 @@ export default function DirectoryExplorer({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="flex items-center justify-between h-16 w-full rounded-2xl border border-slate-100 bg-slate-50 px-5 cursor-pointer shadow-inner transition-colors hover:bg-slate-100">
+                  <label className="flex h-16 w-full cursor-pointer items-center justify-between rounded-2xl border border-[#E6DDD1] bg-white px-5 transition-colors hover:bg-[#FAF8F4]">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-xl bg-emerald-100 flex items-center justify-center">
-                        <Check className="h-4 w-4 text-emerald-600 stroke-[3]" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDF0E6]">
+                        <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
                       </div>
-                      <span className="text-sm font-bold text-slate-700">Accepts Government Subsidy</span>
+                      <span className="text-sm font-semibold text-[#22312E]">Accepts government subsidy</span>
                     </div>
                     <input
                       type="checkbox"
                       checked={selectedSubsidy === 'true'}
                       onChange={(e) => setSelectedSubsidy(e.target.checked ? 'true' : '')}
-                      className="h-6 w-6 rounded-lg border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                      className="h-6 w-6 rounded-lg border-[#DDD5C8] text-[#0D9488] focus:ring-[#0D9488]"
                     />
                   </label>
                 </div>
               </div>
 
               <SheetFooter className="mt-10 gap-3">
-                <Button variant="outline" onClick={resetFilters} className="h-14 rounded-2xl font-black flex-1 border-2">Reset All</Button>
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="h-14 flex-1 rounded-2xl border-[#DDD5C8] bg-white font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                >
+                  Reset all
+                </Button>
                 <SheetClose asChild>
-                  <Button className="h-14 rounded-2xl bg-slate-900 font-black flex-1 shadow-xl">Apply Filters</Button>
+                  <Button className="h-14 flex-1 rounded-2xl bg-[#0D9488] font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[#0B857A]">
+                    Apply filters
+                  </Button>
                 </SheetClose>
               </SheetFooter>
             </SheetContent>
           </Sheet>
         </div>
 
-        {/* Quick Filter Horizontal Scroll */}
         <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-2">
           <Button
             type="button"
             onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
             variant={viewMode === 'map' ? 'default' : 'outline'}
             className={cn(
-              'h-10 shrink-0 rounded-full px-5 text-xs font-black uppercase tracking-widest transition-all shadow-sm',
+              'h-10 shrink-0 rounded-full px-5 text-xs font-semibold uppercase tracking-[0.16em] transition-all',
               viewMode === 'map'
-                ? 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800'
-                : 'border-slate-200 bg-white text-slate-600 hover:border-cyan-200'
+                ? 'border-[#0D9488] bg-[#0D9488] text-white hover:bg-[#0B857A]'
+                : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
             )}
           >
             {viewMode === 'list' ? <MapIcon className="h-3.5 w-3.5" /> : <LayoutGrid className="h-3.5 w-3.5" />}
             {viewMode === 'list' ? 'Map View' : 'List View'}
           </Button>
-          
-          <div className="h-8 w-px bg-slate-200 shrink-0 mx-1 self-center" />
 
-          {quickFilters.map((q, i) => (
+          <div className="mx-1 h-8 w-px shrink-0 self-center bg-[#E6DDD1]" />
+
+          {quickFilters.map((filter) => (
             <Button
               type="button"
-              key={i}
-              onClick={q.onClick}
-              variant={q.active ? 'default' : 'outline'}
+              key={filter.label}
+              onClick={filter.onClick}
+              variant={filter.active ? 'default' : 'outline'}
               className={cn(
-                'h-10 shrink-0 whitespace-nowrap rounded-full px-5 text-xs font-bold transition-all shadow-sm',
-                q.active
-                  ? 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 shadow-sm'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-cyan-200'
+                'h-10 shrink-0 whitespace-nowrap rounded-full px-5 text-xs font-medium transition-all',
+                filter.active
+                  ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
+                  : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
               )}
             >
-              {q.label}
+              {filter.label}
             </Button>
           ))}
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="relative min-h-[500px] mt-2">
-        {/* Loading Overlay */}
+      <div className="relative mt-2 min-h-[500px]">
         <AnimatePresence>
           {isPending && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-x-0 top-0 z-10 flex h-full justify-center rounded-3xl bg-white/40 py-12 backdrop-blur-[2px]"
+              className="absolute inset-x-0 top-0 z-10 flex h-full justify-center rounded-3xl bg-[#FAF8F4]/60 py-12 backdrop-blur-[2px]"
             >
-              <div className="flex h-12 items-center gap-3 rounded-full bg-slate-900 px-6 text-sm font-black text-white shadow-2xl">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Finding Results...
+              <div className="flex h-12 items-center gap-3 rounded-full bg-[#FFFDF9] px-6 text-sm font-semibold text-[#22312E] shadow-[0_12px_24px_rgba(31,44,39,0.08)]">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0D9488] border-t-transparent" />
+                Finding results...
               </div>
             </motion.div>
           )}
@@ -363,20 +381,20 @@ export default function DirectoryExplorer({
         {viewMode === 'map' ? (
           <div className="animate-in fade-in zoom-in-95 duration-500">
             <div className="mb-4 flex items-center justify-between px-1">
-              <p className="text-xs font-bold text-slate-400">
+              <p className="text-xs font-medium text-[#7B827E]">
                 {geoStatus === 'granted' ? 'Showing centres near your location' : 'Mappable centres in this area'}
               </p>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={activateMapView}
-                className="h-8 rounded-2xl px-3 text-[10px] font-black uppercase tracking-widest text-cyan-600 hover:bg-cyan-50 hover:text-cyan-800"
+                className="h-8 rounded-2xl px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0D9488] hover:bg-[#EAF6F2] hover:text-[#0B857A]"
               >
-                Update My Location
+                Update my location
               </Button>
             </div>
             <DirectoryMap
-              centresWithLocation={centres.filter(c => c.latitude && c.longitude)}
+              centresWithLocation={centres.filter((centre) => centre.latitude && centre.longitude)}
               userLocation={userLocation}
               locationHint={geoStatus === 'granted' ? '' : 'Allow location for better results'}
               showMap={true}
@@ -385,27 +403,37 @@ export default function DirectoryExplorer({
         ) : (
           <div className="cc-stack">
             {centres.length === 0 ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-24 text-center px-6"
+                className="flex flex-col items-center justify-center px-6 py-24 text-center"
               >
-                <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mb-6 shadow-inner">
-                  <Search className="h-10 w-10 text-slate-300" />
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#FFFDF9] shadow-[0_10px_24px_rgba(31,44,39,0.05)]">
+                  <Search className="h-10 w-10 text-[#B1BAB6]" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 tracking-tight">No centres found here.</h3>
-                <p className="mt-2 text-base font-medium text-slate-500 max-w-xs">Try adjusting your filters or searching for a different suburb.</p>
-                <Button variant="outline" onClick={resetFilters} className="mt-8 rounded-2xl h-14 px-8 font-black border-2 border-slate-100 hover:bg-slate-50 transition-all">Clear All Filters</Button>
+                <h3 className="text-[1.8rem] leading-tight text-[#1F2D29]" style={{ fontFamily: 'var(--font-serif)' }}>
+                  No crèches matched that search.
+                </h3>
+                <p className="mt-2 max-w-xs text-base font-medium text-[#66736F]">
+                  Try another suburb, remove a filter, or search by centre name.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={resetFilters}
+                  className="mt-8 h-14 rounded-2xl border-[#DDD5C8] bg-white px-8 font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                >
+                  Clear all filters
+                </Button>
               </motion.div>
             ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {centres.map((centre, i) => (
+                {centres.map((centre, index) => (
                   <motion.div
                     key={centre.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: index * 0.03 }}
                   >
                     <CentreCard
                       {...centre}
@@ -420,29 +448,28 @@ export default function DirectoryExplorer({
               </div>
             )}
 
-            {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="mt-16 flex items-center justify-between border-t border-slate-100 pt-8">
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">
-                  Page <span className="text-slate-900">{currentPage}</span> of {totalPages}
+              <div className="mt-16 flex items-center justify-between border-t border-[#E6DDD1] pt-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7B827E]">
+                  Page <span className="text-[#22312E]">{currentPage}</span> of {totalPages}
                 </p>
                 <div className="flex gap-3">
                   <Button
                     type="button"
                     variant="outline"
                     disabled={currentPage === 1}
-                    onClick={() => setCurrentPage(p => p - 1)}
-                    className="h-12 rounded-2xl border-2 border-slate-100 px-6 text-sm font-black text-slate-700 transition-all active:scale-95 disabled:opacity-30 hover:bg-slate-50"
+                    onClick={() => setCurrentPage((page) => page - 1)}
+                    className="h-12 rounded-2xl border-[#DDD5C8] bg-white px-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4] active:scale-95 disabled:opacity-30"
                   >
                     Previous
                   </Button>
                   <Button
                     type="button"
                     disabled={currentPage === totalPages}
-                    onClick={() => setCurrentPage(p => p + 1)}
-                    className="h-12 rounded-2xl bg-slate-900 px-8 text-sm font-black text-white shadow-xl shadow-slate-900/20 transition-all active:scale-95 hover:bg-slate-800 disabled:opacity-30"
+                    onClick={() => setCurrentPage((page) => page + 1)}
+                    className="h-12 rounded-2xl bg-[#0D9488] px-8 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95 disabled:opacity-30"
                   >
-                    Next Page
+                    Next page
                   </Button>
                 </div>
               </div>
@@ -451,61 +478,68 @@ export default function DirectoryExplorer({
         )}
       </div>
 
-      {/* Auth nudge for guest users, shown when they have directory results */}
       {!initialFilters.search && !hasActiveFilters && centres.length > 0 && (
-         <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-20 rounded-[3rem] bg-gradient-to-br from-slate-900 via-slate-800 to-cyan-950 p-10 text-white relative overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.25)]"
-         >
-            <div className="absolute -top-12 -right-12 p-8 opacity-10 rotate-12">
-              <Sparkles className="h-64 w-64 text-cyan-400" />
-            </div>
-            
-            <div className="relative z-10 grid gap-12 md:grid-cols-2 md:items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full bg-cyan-500/20 px-5 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400 mb-6 border border-cyan-500/30 backdrop-blur-md">
-                  <Sparkles className="h-3 w-3" />
-                  Premium Parent Experience
-                </div>
-                <h3 className="text-4xl font-black tracking-tight leading-[1.05] mb-6">
-                  Ready to enroll your child? Let us handle the rest.
-                </h3>
-                <p className="text-slate-300 text-lg mb-10 font-medium leading-relaxed max-w-md">
-                  Create your secure parent profile to manage documents, track responses, and get daily school reports in one place.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <Button asChild size="lg" className="h-16 rounded-[1.5rem] bg-cyan-500 text-slate-950 font-black hover:bg-cyan-400 shadow-2xl shadow-cyan-500/30 px-10 text-base">
-                    <Link href="/register?next=%2Fdirectory">Join Now — It&apos;s Free</Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="h-16 rounded-[1.5rem] border-white/20 text-white bg-white/5 font-bold hover:bg-white/10 px-8 backdrop-blur-sm">
-                    <Link href="/login?next=%2Fdirectory">Sign in</Link>
-                  </Button>
-                </div>
-              </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative mt-16 overflow-hidden rounded-[2.2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.06)] sm:mt-20 sm:p-10"
+        >
+          <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_right,rgba(212,147,90,0.16),transparent_32%),radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_40%)]" />
 
-              <div className="grid gap-4">
-                {[
-                  { icon: Check, label: "Digital Enrollment Journey", desc: "No more paper forms or WhatsApp chasing." },
-                  { icon: Check, label: "Safe & Secure Document Vault", desc: "Upload once, apply to any centre securely." },
-                  { icon: Check, label: "Real-time Daily Roster Reports", desc: "See your child's attendance and highlights." }
-                ].map((f, i) => (
-                  <div key={i} className="flex items-start gap-4 bg-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm transition-transform hover:translate-x-1">
-                    <div className="h-8 w-8 rounded-full bg-cyan-500 flex items-center justify-center shrink-0 shadow-lg">
-                      <f.icon className="h-4 w-4 text-slate-900 stroke-[3]" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-base font-black text-white leading-tight">{f.label}</p>
-                      <p className="text-sm font-medium text-slate-400 leading-relaxed">{f.desc}</p>
-                    </div>
-                  </div>
-                ))}
+          <div className="relative z-10 grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
+            <div>
+              <div className="inline-flex items-center rounded-full border border-[#E2D4C1] bg-[#FDF0E6] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B47642]">
+                Parent profile
+              </div>
+              <h3
+                className="mb-4 mt-5 text-[2rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.7rem]"
+                style={{ fontFamily: 'var(--font-serif)' }}
+              >
+                Found a few you like? Keep your next steps simple.
+              </h3>
+              <p className="mb-8 max-w-md text-[15px] font-medium leading-7 text-[#5F6C68] sm:text-[17px]">
+                Save your documents once, apply from your phone, and track each reply without going back to WhatsApp chats and paper forms.
+              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Button
+                  asChild
+                  size="lg"
+                  className="h-14 rounded-[1.1rem] bg-[#0D9488] px-7 text-base font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[#0B857A]"
+                >
+                  <Link href="/register?next=%2Fdirectory">Create Parent Profile</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="h-14 rounded-[1.1rem] border-[#DDD5C8] bg-white px-7 text-base font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                >
+                  <Link href="/login?next=%2Fdirectory">Sign in</Link>
+                </Button>
               </div>
             </div>
-         </motion.div>
+
+            <div className="grid gap-4">
+              {[
+                { label: 'Apply faster', desc: 'Keep documents ready once, then use them again when another centre asks.' },
+                { label: 'Stay in control', desc: 'See who replied, what is still missing, and what to do next.' },
+                { label: 'Feel safer', desc: 'Pickup verification and live updates keep the day clearer for you.' },
+              ].map((feature) => (
+                <div key={feature.label} className="flex items-start gap-4 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 transition-transform hover:-translate-y-0.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDF0E6]">
+                    <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold leading-tight text-[#22312E]">{feature.label}</p>
+                    <p className="text-sm font-medium leading-relaxed text-[#66736F]">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
       )}
     </div>
   )
 }
-

@@ -1,20 +1,20 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Container } from '@/components/layout/container'
-import { Sparkles, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
 import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-centre'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 
 export const metadata: Metadata = {
-  title: 'Find a Creche - CentreConnect',
-  description: 'Search and compare trusted ECD centres in Alexandra and surrounding areas.',
+  title: 'Find a Crèche - CentreConnect',
+  description: 'Search and compare trusted crèches near you across Alexandra and Johannesburg.',
   openGraph: {
     images: ['/og-image.png'],
   },
 }
 
-export const revalidate = 60 // Faster revalidation for a "live" feel
+export const revalidate = 60
 
 type DirectoryPageProps = {
   searchParams?: {
@@ -99,8 +99,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const selectedFee = rawFee.toLowerCase() === 'any' ? '' : rawFee
   const selectedSubsidy = rawSubsidy === 'true'
   let effectiveSuburb = selectedSuburb
-  
-  const pageSize = 20 // Slightly smaller for faster initial paint
+
+  const pageSize = 20
   const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
   const currentPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
   const pageFrom = (currentPage - 1) * pageSize
@@ -109,51 +109,43 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let centres: DirectoryCentre[] = []
   let allActiveCentres: DirectoryFacetSource[] = []
   let totalResults = 0
-  
+
   try {
     const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-    // 1. Get user profile if it exists to help with default logic
-    const { data: { user } } = await supabase.auth.getUser()
-
-    // 2. Fetch facets and centres in parallel
-    const facetsQuery = supabase
-      .from('public_ecd_centres')
-      .select('suburb,age_groups')
-      .order('suburb', { ascending: true })
+    const facetsQuery = supabase.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
 
     let centresQuery = supabase
       .from('public_ecd_centres')
       .select(
         'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted'
       )
-      .order('is_registered', { ascending: false }) // Prioritize registered centres
+      .order('is_registered', { ascending: false })
       .order('name', { ascending: true })
       .range(pageFrom, pageTo)
 
-    let countQuery = supabase
-      .from('public_ecd_centres')
-      .select('id', { count: 'exact', head: true })
+    let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
 
-    // Apply filters
     if (search) {
       centresQuery = centresQuery.ilike('name', `%${search}%`)
       countQuery = countQuery.ilike('name', `%${search}%`)
     }
-    
-    // Pilot default: unauthenticated guests start in Alexandra until we have wider suburb coverage.
+
     effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
-    
+
     if (effectiveSuburb) {
       centresQuery = centresQuery.eq('suburb', effectiveSuburb)
       countQuery = countQuery.eq('suburb', effectiveSuburb)
     }
-    
+
     if (selectedAgeGroup) {
       centresQuery = centresQuery.contains('age_groups', [selectedAgeGroup])
       countQuery = countQuery.contains('age_groups', [selectedAgeGroup])
     }
-    
+
     if (selectedFee) {
       const feeCap = Number(selectedFee)
       if (!Number.isNaN(feeCap)) {
@@ -161,7 +153,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         countQuery = countQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
       }
     }
-    
+
     if (selectedSubsidy) {
       centresQuery = centresQuery.eq('subsidy_accepted', true)
       countQuery = countQuery.eq('subsidy_accepted', true)
@@ -238,13 +230,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     console.error('DirectoryPage error:', err)
   }
 
-  // Facet processing
   const suburbs = Array.from(
-    new Set(
-      allActiveCentres
-        .map((centre) => centre.suburb?.trim())
-        .filter((value): value is string => Boolean(value))
-    )
+    new Set(allActiveCentres.map((centre) => centre.suburb?.trim()).filter((value): value is string => Boolean(value)))
   ).sort((a, b) => a.localeCompare(b))
 
   const ageGroups = Array.from(
@@ -257,22 +244,42 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
 
   return (
     <Container>
-      <div className="space-y-6 pb-20">
-        {/* Simplified, Premium Header */}
-        <header className="px-1">
-          <div className="flex items-center gap-2 text-cyan-600 mb-2">
-            <MapPin className="h-4 w-4" />
-            <span className="text-xs font-bold uppercase tracking-widest">
-              {effectiveSuburb ? `${effectiveSuburb} pilot` : 'Centre directory'}
-            </span>
+      <div
+        className="space-y-6 pb-20 text-[#22312E]"
+        style={{
+          fontFamily: 'var(--font-dm-sans)',
+          ['--teal' as string]: '#0D9488',
+          ['--amber' as string]: '#D4935A',
+          ['--amber-light' as string]: '#FDF0E6',
+          ['--cream' as string]: '#FAF8F4',
+          ['--warm-white' as string]: '#FFFDF9',
+        }}
+      >
+        <header className="rounded-[2rem] border border-[#E8DDD0] bg-[var(--warm-white)] px-5 py-6 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:px-8 sm:py-8">
+          <div
+            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] sm:text-[13px]"
+            style={{
+              backgroundColor: 'var(--amber-light)',
+              borderColor: 'rgba(212,147,90,0.28)',
+              color: 'var(--amber)',
+            }}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{effectiveSuburb ? `${effectiveSuburb} now live` : 'Johannesburg crèche directory'}</span>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-            Find the right creche.
+          <h1
+            className="mt-4 max-w-[12ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
+            style={{ fontFamily: 'var(--font-serif)' }}
+          >
+            Find a crèche near you.
           </h1>
-          <p className="mt-2 text-slate-500 max-w-lg">
+          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-8">
             {effectiveSuburb
-              ? `Compare trusted centres in ${effectiveSuburb} by price, age group, and government subsidy.`
-              : 'Compare trusted centres by price, age group, and government subsidy.'}
+              ? `Start with ${effectiveSuburb}. Compare trusted centres, check age groups and fees, and see which crèches are ready for parents online.`
+              : 'Compare trusted crèches by suburb, age group, fees, and government subsidy in one calm place.'}
+          </p>
+          <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
+            Search first. Decide with less guesswork.
           </p>
         </header>
 
@@ -295,4 +302,3 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
-
