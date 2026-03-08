@@ -358,13 +358,6 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         toast.warning(error?.message || 'Brand media was not saved. Continue from profile editor.')
       }
 
-      let eventKey: string | null = null
-      try {
-        eventKey = await triggerOwnerInvite(centre.id)
-      } catch (error: any) {
-        toast.warning(error?.message || 'Created centre, but owner invite was not sent.')
-      }
-
       let teamSent = 0
       let teamFailed = 0
       if (mode === 'team' && teamParsed.valid.length > 0) {
@@ -376,9 +369,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         }
       }
 
-      const trackingLink = eventKey
-        ? `/admin/invites?event_key=${encodeURIComponent(eventKey)}&centre_id=${centre.id}`
-        : `/admin/invites?centre_id=${centre.id}`
+      const trackingLink = `/admin/invites?centre_id=${centre.id}`
 
       setSuccess({
         centreId: centre.id,
@@ -389,7 +380,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         teamRequested: mode === 'team' ? teamParsed.valid.length : 0,
         teamSent,
         teamFailed,
-        eventKey,
+        eventKey: null,
         trackingLink,
       })
 
@@ -397,9 +388,9 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
       setExistingUserConflict(null)
       router.refresh()
       if (options?.allowExistingEmailMigration) {
-        toast.success('Access upgraded: account changed to ECD Admin, parent access revoked, and linked to the new tenant.')
+        toast.success('Centre created. Setup email sent. Existing account upgraded to ECD Admin.')
       } else {
-        toast.success('Centre created and onboarding started.')
+        toast.success('Centre created. Setup email sent.')
       }
     } catch (error: any) {
       toast.error(error?.message || 'Failed to create centre.')
@@ -436,9 +427,9 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         ? `/admin/invites?event_key=${encodeURIComponent(eventKey)}&centre_id=${success.centreId}`
         : success.trackingLink
       setSuccess((prev) => (prev ? { ...prev, eventKey, trackingLink } : prev))
-      toast.success('Owner invite sent.')
+      toast.success('Access email sent.')
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send invite.')
+      toast.error(error?.message || 'Failed to send access email.')
     } finally {
       setInviteBusy(false)
     }
@@ -455,9 +446,9 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
       })
       const payload = (await response.json().catch(() => ({}))) as { success?: boolean; error?: string }
       if (!response.ok || payload.success === false) {
-        throw new Error(payload.error || 'Failed to send welcome pack.')
+        throw new Error(payload.error || 'Failed to send welcome guide.')
       }
-      toast.success('Welcome pack sent successfully!')
+      toast.success('Welcome guide sent successfully!')
     } catch (error: any) {
       toast.error(error?.message || 'Failed to send welcome pack.')
     } finally {
@@ -548,12 +539,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         <div className="space-y-8">
           <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#050b1a] via-[#071326] to-[#04111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.16)]">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-200">Onboarding Ready</Badge>
+              <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-200">Setup Email Sent</Badge>
               <Badge className="border-emerald-400/30 bg-emerald-500/15 text-emerald-200">Success</Badge>
             </div>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Tenant Created Successfully</h1>
+            <h1 className="mt-4 text-4xl font-black tracking-tight text-white">Centre Created Successfully</h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-300">
-              {success.centreName} is ready. Invite dispatch and onboarding tracking are available immediately.
+              {success.centreName} is ready. The owner now has one clear first step: set a password and open the workspace.
             </p>
           </header>
 
@@ -564,7 +555,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                   Launch Summary
                 </CardTitle>
-                <CardDescription className="text-slate-400">Single centre + team onboarding status</CardDescription>
+                <CardDescription className="text-slate-400">Setup email first. Welcome guide after password setup.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -601,8 +592,8 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                       <TableCell className="text-amber-300">{success.teamFailed}</TableCell>
                     </TableRow>
                     <TableRow className="border-slate-800">
-                      <TableCell className="text-slate-300">Invite event key</TableCell>
-                      <TableCell className="text-xs text-cyan-300">{success.eventKey ?? 'Pending'}</TableCell>
+                      <TableCell className="text-slate-300">Latest access event</TableCell>
+                      <TableCell className="text-xs text-cyan-300">{success.eventKey ?? 'Not sent yet'}</TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -614,7 +605,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   className="bg-cyan-500 text-black hover:bg-cyan-400"
                 >
                   <Send className="h-4 w-4" />
-                  Send Invite
+                  Resend Access Email
                 </Button>
                 <Button
                   onClick={() => void handleResendWelcomePack()}
@@ -623,7 +614,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   className="border-cyan-500/30 bg-slate-900/80 text-cyan-200 hover:bg-slate-800"
                 >
                   <Sparkles className="h-4 w-4" />
-                  Resend Welcome Pack
+                  Resend Welcome Guide
                 </Button>
                 <Button
                   variant="outline"
@@ -631,14 +622,14 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                   className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
                 >
                   <Copy className="h-4 w-4" />
-                  Copy Tracking Link
+                  Copy Invite Tracking
                 </Button>
                 <Button
                   asChild
                   variant="outline"
                   className="border-cyan-500/30 bg-slate-900 text-cyan-200 hover:bg-slate-800"
                 >
-                  <Link href={success.trackingLink}>Open Tracking</Link>
+                  <Link href={success.trackingLink}>Open Invite Tracking</Link>
                 </Button>
                 <Button
                   variant="outline"
@@ -658,9 +649,9 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-slate-300">
-                <p>1. Owner receives onboarding invite and welcome pack flow.</p>
-                <p>2. Team members receive role-based invite links.</p>
-                <p>3. Use tracking to monitor sent/opened/claimed states.</p>
+                <p>1. The owner receives the setup email first.</p>
+                <p>2. After password setup, CentreConnect sends the welcome guide email automatically.</p>
+                <p>3. Team invites still go out immediately, and you can resend access later if needed.</p>
               </CardContent>
             </Card>
           </div>
@@ -938,7 +929,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
             </CardContent>
             <CardFooter className="flex flex-wrap justify-between gap-3">
               <p className="text-xs text-slate-500">
-                Welcome pack and invite flow trigger automatically after successful creation.
+                Creating a centre sends the setup email first. The welcome guide is sent after the owner creates a password.
               </p>
               <Button
                 onClick={() => void runValidatedCreate()}
@@ -947,7 +938,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
                 className="bg-cyan-500 text-black hover:bg-cyan-400"
               >
                 <UploadCloud className="h-4 w-4" />
-                Create & Start Onboarding
+                Create Centre & Send Setup Email
               </Button>
             </CardFooter>
           </Card>
@@ -970,12 +961,12 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <MailPlus className="h-4 w-4 text-cyan-300" />
-                  Invite Preview
+                  Email Flow
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-slate-300">
-                <p>Owner invite is triggered automatically on successful creation.</p>
-                <p>Team mode sends bulk invites immediately for all valid emails.</p>
+                <p>Creating a centre sends the password setup email first.</p>
+                <p>The welcome guide email is sent after the owner creates a password. Team mode still sends staff invites immediately.</p>
                 <Button
                   asChild
                   variant="outline"
@@ -992,3 +983,4 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     </>
   )
 }
+

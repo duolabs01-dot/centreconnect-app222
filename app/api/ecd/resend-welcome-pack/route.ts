@@ -139,6 +139,7 @@ export async function POST(request: Request) {
     slug: centreSlug,
     package: packagePlan,
     onboarding: '1',
+    email: ownerEmail.toLowerCase(),
   }).toString()
   const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
   const callbackRedirectUrl = buildAuthCallbackRedirect(welcomeNextPath)
@@ -177,6 +178,7 @@ export async function POST(request: Request) {
     centre: centreName,
     location,
     slug: centreSlug,
+    email: ownerEmail.toLowerCase(),
   })
   const qrPosterRawLink = centreSlug
     ? buildUrl(appUrlRoot, `/centre/${centreSlug}/poster`)
@@ -239,7 +241,7 @@ export async function POST(request: Request) {
     ],
   })
 
-  const subject = `Welcome to CentreConnect Pilot - ${centreName}`
+  const subject = `Welcome to CentreConnect - ${centreName}`
   const notificationPayload = {
     subject,
     tracked_links: {
@@ -308,3 +310,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ success: false, error: 'Unable to send welcome pack email' }, { status: 502 })
 }
+
+
+
+

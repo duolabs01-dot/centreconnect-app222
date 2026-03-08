@@ -9,6 +9,7 @@ import {
 import { queueEmail } from '@/lib/communications/emails'
 import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
 import { sendSmtpMail } from '@/lib/email/smtp'
+import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { renderParentSignupConfirmationEmail } from '@/lib/email/templates/parent-signup-confirmation'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -162,8 +163,29 @@ export async function POST(request: Request) {
     }
   }
 
+  void sendPlatformAdminActionNotification({
+    subject: 'Parent signup started',
+    heading: `${firstName} started parent signup.`,
+    lines: [
+      `Email: ${normalizedEmail}`,
+      `Next path: ${safeNextPath}`,
+      `Delivery: ${delivered ? 'direct email sent' : 'email queued'}`,
+    ],
+    details: {
+      fullName,
+      phone: data.phone.trim(),
+      confirmationType: signupResult.data?.properties?.verification_type ?? 'signup',
+      deliveryError: deliveryError ?? '-',
+    },
+  }).catch((error) => {
+    console.error('[register-parent] founder notification failed:', error)
+  })
+
   return NextResponse.json({
     success: true,
     requiresEmailConfirmation: true,
   })
 }
+
+
+

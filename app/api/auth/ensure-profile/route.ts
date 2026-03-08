@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
 import { enqueueParentWelcomeSequence } from '@/lib/notifications/parent-welcome-sequence'
+import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { resolveProvisionRole, syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
 function fallbackName(email?: string | null) {
@@ -68,6 +69,10 @@ export async function POST(request: NextRequest) {
     })
     const roleToPersist = resolvedRole.role
     const usernameToPersist = existingProfile?.username ?? username
+    const { data: existingParent } = roleToPersist === 'parent_user'
+      ? await admin.from('parents').select('id').eq('id', user.id).maybeSingle()
+      : { data: null as { id: string } | null }
+    const isFirstParentJoin = roleToPersist === 'parent_user' && !existingParent?.id
 
     // 2. Upsert user profile
     const { error: profileError } = await admin.from('user_profiles').upsert(
@@ -113,6 +118,25 @@ export async function POST(request: NextRequest) {
       })
       if (!welcomeResult.ok) {
         console.error('[ensure-profile] Parent welcome sequence failed:', welcomeResult.error)
+      }
+
+      if (isFirstParentJoin) {
+        void sendPlatformAdminActionNotification({
+          subject: 'Parent joined CentreConnect',
+          heading: `${fullName} finished joining as a parent.`,
+          lines: [
+            `Email: ${user.email ?? '-'}`,
+            `Role source: ${resolvedRole.source}`,
+            `Username: ${usernameToPersist}`,
+          ],
+          details: {
+            userId: user.id,
+            phone: phone ?? '-',
+            sessionRegistered: Boolean(session?.access_token),
+          },
+        }).catch((error) => {
+          console.error('[ensure-profile] founder notification failed:', error)
+        })
       }
     } else {
       const { error: parentDeleteError } = await admin.from('parents').delete().eq('id', user.id)
@@ -210,3 +234,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
+
+
+

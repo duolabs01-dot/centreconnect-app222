@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-06 (five reliability triage shortcuts shipped; mobile-first sizing pass shipped)
+Last updated: 2026-03-08 (ECD onboarding clarity + founder visibility shipped; parent reliability export still active)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -67,3 +67,6 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 - [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.
 - [DONE] `BL-UX-011` Applied mobile-first spacing and heading scale reductions on key landing, centre profile, and admin dashboard surfaces for Android-sized screens.
 - [DONE] `BL-OPS-006` Added one-click incident/runbook/audit deep-links to the Revenue Ops KPI summary panel.
+
+- [DONE] BL-ECD-012 Simplified ECD owner first-run flow: setup email first, welcome guide after password setup, clearer logged-out guide gate, and dashboard-oriented first-value messaging.
+- [DONE] BL-OPS-007 Added branded founder visibility alerts for key onboarding and growth milestones (ECD setup sent, owner invite resent, owner first password set, parent signup started, parent joined).

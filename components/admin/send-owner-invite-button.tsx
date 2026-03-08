@@ -26,13 +26,11 @@ type InviteSendResponse = {
   email?: { sent: boolean; error?: string | null }
   whatsapp?: { sent: boolean; link?: string | null; error?: string | null }
   warning?: string
-  welcomePackSent?: boolean
 }
 
 type InvitationEventSummary = {
   email: string
   whatsapp: string
-  welcomePack: string
 }
 
 export function SendOwnerInviteButton({
@@ -59,7 +57,7 @@ export function SendOwnerInviteButton({
 
   async function handleSendInvite() {
     if (!ownerEmail?.trim()) {
-      toast.error('Owner email is required before sending an invite.')
+      toast.error('Owner email is required before sending an access email.')
       return
     }
 
@@ -71,16 +69,15 @@ export function SendOwnerInviteButton({
       })
       const payload = (await response.json().catch(() => ({}))) as InviteSendResponse & { error?: string }
       if (!response.ok) {
-        throw new Error(payload.error || 'Failed to send owner invite.')
+        throw new Error(payload.error || 'Failed to send owner access email.')
       }
 
       const emailState = payload.email?.sent
-        ? 'Magic-link email sent'
-        : `Magic-link email failed: ${payload.email?.error ?? 'Unknown error'}`
+        ? 'Access email sent'
+        : `Access email failed: ${payload.email?.error ?? 'Unknown error'}`
       const whatsappState = payload.whatsapp?.sent
         ? 'WhatsApp link ready'
         : `WhatsApp link not ready: ${payload.whatsapp?.error ?? 'Unknown error'}`
-      const welcomePackState = payload.welcomePackSent ? 'Welcome pack queued' : 'Welcome pack not sent yet'
 
       toast.success(`${centreName}: ${emailState}. ${whatsappState}.`)
       if (payload.whatsapp?.link) {
@@ -91,10 +88,9 @@ export function SendOwnerInviteButton({
       setEventSummary({
         email: emailState,
         whatsapp: whatsappState,
-        welcomePack: welcomePackState,
       })
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to send invite.')
+      toast.error(error?.message || 'Failed to send access email.')
     } finally {
       setBusy(false)
     }
@@ -103,18 +99,18 @@ export function SendOwnerInviteButton({
   return (
     <div className="mt-4 space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/40 p-3">
       <p className="text-xs text-slate-400">
-        Resends the owner login link (email + WhatsApp) and logs delivery events for this centre.
+        Resends the main access email and prepares a WhatsApp follow-up link for this centre owner.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <Button
           onClick={() => startTransition(() => void handleSendInvite())}
           loading={busy}
-          loadingText="Sending login link..."
+          loadingText="Sending access email..."
           disabled={!ownerEmail?.trim()}
           className="bg-cyan-500 text-black hover:bg-cyan-400"
         >
           <MailPlus className="h-4 w-4" />
-          Resend login link
+          Resend access email
         </Button>
         <Button
           asChild
@@ -126,11 +122,10 @@ export function SendOwnerInviteButton({
       </div>
       {eventSummary && (
         <div className="space-y-1 rounded-2xl border border-slate-800 bg-slate-900/50 px-3 py-2 text-[11px] text-slate-300">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-300">Last invite events</p>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-300">Last access events</p>
           <div className="grid gap-0.5">
-            <p>• {eventSummary.email}</p>
-            <p>• {eventSummary.whatsapp}</p>
-            <p>• {eventSummary.welcomePack}</p>
+            <p>- {eventSummary.email}</p>
+            <p>- {eventSummary.whatsapp}</p>
           </div>
         </div>
       )}

@@ -93,12 +93,26 @@ export default function ResetPasswordPage() {
         },
       }).catch(() => null)
 
-      const payload = await response?.json().catch(() => ({}))
-      const isEcd = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'].includes(payload?.role)
+      const payload = (await response?.json().catch(() => ({}))) as {
+        role?: string
+        followUpEmail?: 'welcome_pack' | 'password_confirmation' | 'none'
+        emailWarning?: string | null
+      }
+      const isEcd = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'].includes(payload?.role ?? '')
+      const welcomeGuideEmailed = payload?.followUpEmail === 'welcome_pack'
 
-      toast.success('Password updated successfully.')
+      toast.success(
+        isEcd
+          ? welcomeGuideEmailed
+            ? 'Password saved. Opening your guide now. We also sent it to your email.'
+            : 'Password saved. Opening your workspace now.'
+          : 'Password updated successfully.'
+      )
+      if (payload?.emailWarning) {
+        toast.warning(payload.emailWarning)
+      }
       if (isEcd) {
-        router.push('/ecd/welcome')
+        router.push('/ecd/welcome?from=password-setup')
       } else {
         router.push('/login')
       }
@@ -202,5 +216,3 @@ export default function ResetPasswordPage() {
     </div>
   )
 }
-
-

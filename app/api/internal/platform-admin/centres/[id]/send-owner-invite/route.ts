@@ -5,20 +5,20 @@ import {
   assertInviteDomainHealth,
   buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
+  buildLockedResetPasswordRedirect,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
   type SanitizedAccessLinkDiagnostics,
 } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
+import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
-import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
-import { getPublicPlanLabel, toPublicPlan } from '@/lib/billing/plans'
 
 type SendOwnerInviteResponse = {
   ok: boolean
@@ -26,12 +26,22 @@ type SendOwnerInviteResponse = {
   email: { sent: boolean; error?: string | null }
   whatsapp: { sent: boolean; link?: string | null; error?: string | null }
   warning?: string
-  welcomePackSent?: boolean
+}
+
+type ExistingProfileRow = {
+  role?: string | null
+  first_password_set_at?: string | null
 }
 
 function sanitizeName(value: string | null | undefined, fallback: string) {
   const trimmed = (value ?? '').trim()
   return trimmed || fallback
+}
+
+function appendWarning(existing: string | undefined, next: string | null | undefined) {
+  const value = next?.trim()
+  if (!value) return existing
+  return existing ? `${existing} | ${value}` : value
 }
 
 const emailAppUrlRoot = normalizeAppUrl()
@@ -79,6 +89,7 @@ async function generateOwnerAccessLink(
       actionLink: magicLink,
       fallbackRedirectTo: redirectTo,
     })
+
     return {
       link: firstPartyConfirmLink ?? sanitized.link,
       authUserId: magicLinkResult.data?.user?.id ?? null,
@@ -90,7 +101,54 @@ async function generateOwnerAccessLink(
   return {
     link: '',
     authUserId: null,
-    warning: magicLinkResult.error?.message ?? 'Failed to generate owner login link.',
+    warning: magicLinkResult.error?.message ?? 'Failed to generate owner access link.',
+    diagnostics: {
+      originalHost: null,
+      originalPath: null,
+      sanitizedHost: null,
+      sanitizedPath: null,
+      usedFallback: false,
+      changed: false,
+    } as SanitizedAccessLinkDiagnostics,
+  }
+}
+
+async function generateOwnerPasswordSetupLink(
+  admin: ReturnType<typeof createAdminClient>,
+  email: string
+) {
+  const resetPath = `/reset-password?locked_email=${encodeURIComponent(email)}`
+  const fallbackRedirectTo = buildLockedResetPasswordRedirect(email)
+  const recoveryResult = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: fallbackRedirectTo },
+  })
+
+  const actionLink = recoveryResult.data?.properties?.action_link?.trim() ?? ''
+  if (!recoveryResult.error && actionLink) {
+    const firstPartyConfirmLink = buildFirstPartyConfirmLink({
+      hashedToken: recoveryResult.data?.properties?.hashed_token ?? null,
+      verificationType: recoveryResult.data?.properties?.verification_type ?? 'recovery',
+      nextPath: resetPath,
+    })
+    const sanitized = sanitizeGeneratedAccessLinkWithDiagnostics({
+      actionLink,
+      fallbackRedirectTo,
+    })
+
+    return {
+      link: firstPartyConfirmLink ?? sanitized.link,
+      authUserId: recoveryResult.data?.user?.id ?? null,
+      warning: null as string | null,
+      diagnostics: sanitized.diagnostics,
+    }
+  }
+
+  return {
+    link: '',
+    authUserId: null,
+    warning: recoveryResult.error?.message ?? 'Failed to generate password setup link.',
     diagnostics: {
       originalHost: null,
       originalPath: null,
@@ -148,7 +206,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
     .select(
-      'id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url,suburb,city,subscriptions(tier,status,monthly_price)'
+      'id,name,slug,email,phone,contact_phone,primary_contact_name,primary_contact_first_name,primary_contact_surname,logo_url,suburb,city'
     )
     .eq('id', centreId)
     .maybeSingle()
@@ -175,42 +233,61 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
   const ownerSurname = (centre.primary_contact_surname ?? splitPrimaryName.surname ?? '').trim()
   const ownerDisplayName = combineName(ownerFirstName, ownerSurname) || ownerFirstName
-  const centreSubscription = Array.isArray(centre.subscriptions)
-    ? centre.subscriptions[0] ?? null
-    : centre.subscriptions
-  const packagePlan = toPublicPlan(centreSubscription?.tier ?? 'growth', 'growth')
-  const packageLabel = getPublicPlanLabel(packagePlan)
   const locationLabel = [centre.suburb, centre.city]
     .map((value) => (value ?? '').trim())
     .filter(Boolean)
     .join(', ')
+
   const onboardingQuery = new URLSearchParams({
     onboarding: '1',
     name: ownerFirstName,
     centre: sanitizeName(centre.name, 'your centre'),
     location: locationLabel || 'your area',
-    slug: centreSlug,
-    package: packagePlan,
   })
+  if (centreSlug) {
+    onboardingQuery.set('slug', centreSlug)
+  }
+
   const onboardingPath = onboardingQuery.toString().length > 0
     ? `/ecd/welcome?${onboardingQuery.toString()}`
     : DEFAULT_ONBOARDING_PATH
-  const accessLink = await generateOwnerAccessLink(admin, ownerEmail, onboardingPath)
+
+  let resolvedAuthUserId = await findUserIdByEmail(admin, ownerEmail)
+  const { data: existingProfile } = resolvedAuthUserId
+    ? await admin
+        .from('user_profiles')
+        .select('role,first_password_set_at')
+        .eq('id', resolvedAuthUserId)
+        .maybeSingle()
+    : { data: null as ExistingProfileRow | null }
+
+  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
+  const needsPasswordSetup = !existingProfile?.first_password_set_at
+
+  let accessLink = needsPasswordSetup
+    ? await generateOwnerPasswordSetupLink(admin, ownerEmail)
+    : await generateOwnerAccessLink(admin, ownerEmail, onboardingPath)
+  let primaryActionLabel = needsPasswordSetup ? 'Set password and open workspace' : 'Open my workspace'
+  resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId ?? resolvedAuthUserId, ownerEmail)
+
+  if (!accessLink.link && needsPasswordSetup) {
+    const fallbackAccessLink = await generateOwnerAccessLink(admin, ownerEmail, onboardingPath)
+    if (fallbackAccessLink.link) {
+      accessLink = fallbackAccessLink
+      primaryActionLabel = 'Open my workspace'
+      resolvedAuthUserId = await resolveAuthUserId(admin, fallbackAccessLink.authUserId ?? resolvedAuthUserId, ownerEmail)
+    } else {
+      accessLink.warning = appendWarning(accessLink.warning ?? undefined, fallbackAccessLink.warning) ?? null
+    }
+  }
+
   if (!accessLink.link) {
     return NextResponse.json({ error: accessLink.warning ?? 'Could not generate owner access link.' }, { status: 500 })
   }
   if (accessLink.diagnostics.changed || accessLink.diagnostics.usedFallback) {
     console.warn('send-owner-invite: onboarding link sanitized', accessLink.diagnostics)
   }
-  const resolvedAuthUserId = await resolveAuthUserId(admin, accessLink.authUserId, ownerEmail)
-  const { data: existingProfile } = resolvedAuthUserId
-    ? await admin
-        .from('user_profiles')
-        .select('role')
-        .eq('id', resolvedAuthUserId)
-        .maybeSingle()
-    : { data: null as { role?: string | null } | null }
-  const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
+
   const emailTrackingUrl = buildTrackingUrl({
     eventKey,
     channel: 'email',
@@ -220,7 +297,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const supportEmail = process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za'
   const supportWhatsappMessage = [
     `Hi CentreConnect team, this is ${ownerFirstName} from ${sanitizeName(centre.name, 'my centre')}.`,
-    'Please help me complete setup so we can start receiving applications.',
+    'Please help me finish setup so we can start using CentreConnect properly.',
   ].join('\n')
   const supportWhatsappLink = createWhatsappClickToChatLink(supportWhatsapp, supportWhatsappMessage)
   const trackedSupportWhatsappLink = supportWhatsappLink
@@ -235,7 +312,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     centreName: sanitizeName(centre.name, 'your centre'),
     ownerName: ownerFirstName,
     claimUrl: emailTrackingUrl,
-    dashboardUrl: `${emailAppUrlRoot}/ecd/dashboard`,
+    dashboardUrl: `${emailAppUrlRoot}/ecd/login`,
+    primaryActionLabel,
     whatsappChatLink: trackedSupportWhatsappLink,
     supportWhatsApp: supportWhatsapp,
     supportEmail,
@@ -264,80 +342,34 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       },
       centre_slug: centre.slug,
       link_sanitization: accessLink.diagnostics,
+      primary_action_label: primaryActionLabel,
     },
     createdAt: nowIso,
   })
 
-  const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', emailAppUrlRoot)
   let combinedWarning: string | undefined = accessLink.warning ?? undefined
   if (resolvedAuthUserId) {
     const revokeSessionsResult = await revokeUserSessionsByUserId(admin, resolvedAuthUserId)
     if (!revokeSessionsResult.ok && revokeSessionsResult.warning) {
-      combinedWarning = combinedWarning
-        ? `${combinedWarning} | ${revokeSessionsResult.warning}`
-        : revokeSessionsResult.warning
+      combinedWarning = appendWarning(combinedWarning, revokeSessionsResult.warning)
     }
   }
+
   if (resolvedAuthUserId && previousRole === 'parent_user') {
     const parentAccessRevocationError = await revokeParentAccess(admin, resolvedAuthUserId)
     if (parentAccessRevocationError) {
-      combinedWarning = combinedWarning
-        ? `${combinedWarning} | Failed to revoke parent access: ${parentAccessRevocationError}`
-        : `Failed to revoke parent access: ${parentAccessRevocationError}`
+      combinedWarning = appendWarning(
+        combinedWarning,
+        `Failed to revoke parent access: ${parentAccessRevocationError}`
+      )
     }
   }
-  let welcomePackWarning: string | undefined
-  if (emailResult.success) {
-    const welcomePackPayload = {
-      ecdId: centre.id,
-      ownerEmail,
-      centreName: centre.name ?? undefined,
-      ownerName: ownerFirstName,
-      centreSlug: centreSlug || undefined,
-      packageLabel,
-    }
-
-    try {
-      const welcomeResponse = await fetch(welcomePackEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(welcomePackPayload),
-      })
-
-      if (!welcomeResponse.ok) {
-        const errorText = (await welcomeResponse.text().catch(() => '')).trim()
-        welcomePackWarning =
-          errorText.length > 0
-            ? `Welcome pack send failed (${welcomeResponse.status}): ${errorText}`
-            : `Welcome pack send failed (${welcomeResponse.status})`
-        console.error('resend-welcome-pack:', welcomePackWarning)
-      } else {
-        await writeInviteLog(admin, {
-          centreId: centre.id,
-          ownerEmail,
-          ownerPhone: ownerPhoneRaw ?? null,
-          inviteType: 'welcome_pack',
-          status: 'sent',
-          notes: 'Pilot welcome pack sent with owner invite.',
-        })
-      }
-    } catch (error) {
-      welcomePackWarning = 'Failed to send welcome pack email.'
-      console.error('resend-welcome-pack: error while sending', error)
-    }
-  }
-  if (welcomePackWarning) {
-    combinedWarning = combinedWarning
-      ? `${combinedWarning} | ${welcomePackWarning}`
-      : welcomePackWarning
-  }
-  const welcomePackSent = emailResult.success && !welcomePackWarning
 
   const whatsappMessage = [
     `Hi ${ownerFirstName},`,
-    `${sanitizeName(centre.name, 'Your centre')} is live on CentreConnect.`,
-    `Start now and claim your workspace: ${emailTrackingUrl}`,
-    'Parents can already discover your profile, so keep details updated to receive applications quickly.',
+    `I sent your CentreConnect access email for ${sanitizeName(centre.name, 'your centre')}.`,
+    `Start here: ${emailTrackingUrl}`,
+    'After you are in, CentreConnect will guide you step by step.',
   ].join('\n')
   const whatsappLink = createWhatsappClickToChatLink(ownerPhone, whatsappMessage)
   const trackedOwnerWhatsappLink = whatsappLink
@@ -350,7 +382,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   let whatsappSent = false
   let whatsappError: string | null = null
-  if (trackedOwnerWhatsappLink || trackedSupportWhatsappLink) {
+  if (trackedOwnerWhatsappLink) {
     whatsappSent = true
     await upsertNotificationLog(admin, {
       centreId: centre.id,
@@ -361,9 +393,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       status: 'sent',
       provider: 'wa_me_link',
       payload: {
-        tracked_open_url: trackedSupportWhatsappLink,
-        click_to_chat_url: trackedSupportWhatsappLink,
-        owner_click_to_chat_url: trackedOwnerWhatsappLink,
+        tracked_open_url: trackedOwnerWhatsappLink,
+        click_to_chat_url: trackedOwnerWhatsappLink,
         preview: whatsappMessage,
       },
       createdAt: nowIso,
@@ -429,9 +460,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       role: 'ecd_admin',
     })
     if (!metadataSync.ok) {
-      combinedWarning = combinedWarning
-        ? `${combinedWarning} | Failed to sync auth metadata role: ${metadataSync.error}`
-        : `Failed to sync auth metadata role: ${metadataSync.error}`
+      combinedWarning = appendWarning(
+        combinedWarning,
+        `Failed to sync auth metadata role: ${metadataSync.error}`
+      )
     }
 
     const { error: membershipUpsertError } = await admin.from('ecd_admins').upsert(
@@ -470,7 +502,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     entityType: 'tenant',
     entityId: centre.id,
     action: 'send_owner_invite',
-    summary: `Sent owner invite for ${centre.name ?? centre.id}`,
+    summary: `Sent owner access email for ${centre.name ?? centre.id}`,
     details: {
       ownerEmail,
       ownerPhone,
@@ -479,7 +511,32 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       whatsappLink: trackedOwnerWhatsappLink,
       warning: combinedWarning,
       linkSanitization: accessLink.diagnostics,
+      primaryActionLabel,
+      needsPasswordSetup,
     },
+  })
+
+  void sendPlatformAdminActionNotification({
+    subject: emailResult.success ? 'ECD owner invite resent' : 'ECD owner invite resend failed',
+    heading: emailResult.success
+      ? `Owner access email resent for ${centre.name ?? centre.id}.`
+      : `Owner access email failed for ${centre.name ?? centre.id}.`,
+    lines: [
+      `Centre: ${centre.name ?? centre.id}`,
+      `Owner email: ${ownerEmail}`,
+      `Password setup needed: ${needsPasswordSetup ? 'Yes' : 'No'}`,
+    ],
+    details: {
+      centreId: centre.id,
+      eventKey,
+      whatsappReady: whatsappSent,
+      primaryActionLabel,
+      emailStatus: emailResult.success ? 'sent' : 'failed',
+      emailError: emailResult.error ?? '-',
+      warning: combinedWarning ?? '-',
+    },
+  }).catch((error) => {
+    console.error('[send-owner-invite] founder notification failed:', error)
   })
 
   const response: SendOwnerInviteResponse = {
@@ -488,8 +545,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
     whatsapp: { sent: whatsappSent, link: trackedOwnerWhatsappLink, error: whatsappError },
     warning: combinedWarning ?? undefined,
-    welcomePackSent,
   }
 
   return NextResponse.json(response, { status: 200 })
 }
+
+

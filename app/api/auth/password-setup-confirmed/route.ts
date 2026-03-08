@@ -3,7 +3,10 @@ import { NextResponse } from 'next/server'
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
 import { sendEmail } from '@/lib/email/send'
-import { renderPasswordSetupConfirmedEmail } from '@/lib/email/templates/pilot-welcome-pack'
+import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
+import {
+  renderPasswordSetupConfirmedEmail,
+} from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { resolveFirstName } from '@/lib/utils/name'
@@ -16,6 +19,7 @@ type ProfileRow = {
 }
 
 type EcdMembershipRow = {
+  ecd_id: string
   ecd_centres:
     | {
         name: string | null
@@ -54,6 +58,79 @@ function extractCentreName(value: EcdMembershipRow['ecd_centres']) {
   return value.name?.trim() || null
 }
 
+async function sendPasswordConfirmationEmail(input: {
+  email: string
+  firstName: string
+  role: string | null
+  centreName: string | null
+}) {
+  const loginLink = isEcdRole(input.role)
+    ? `${normalizeAppUrl()}/ecd/login`
+    : `${normalizeAppUrl()}/login`
+
+  const html = await renderPasswordSetupConfirmedEmail({
+    contactName: input.firstName,
+    loginLink,
+    roleLabel: toRoleLabel(input.role),
+    centreName: input.centreName,
+  })
+
+  const subject = 'Your CentreConnect password was changed'
+  const resendResult = await sendEmail({
+    to: input.email,
+    subject,
+    html,
+  })
+
+  if (resendResult.success) {
+    return { sent: true as const, kind: 'password_confirmation' as const, warning: null as string | null }
+  }
+
+  const queueResult = await queueEmail(input.email, subject, html)
+  if (queueResult.success) {
+    return { sent: true as const, kind: 'password_confirmation' as const, warning: resendResult.error ?? null }
+  }
+
+  return {
+    sent: false as const,
+    kind: 'password_confirmation' as const,
+    warning: queueResult.error ?? resendResult.error ?? 'Failed to send password confirmation email.',
+  }
+}
+
+async function sendEcdWelcomePackEmail(input: {
+  ecdId: string
+  email: string
+}) {
+  try {
+    const response = await fetch(`${normalizeAppUrl()}/api/ecd/resend-welcome-pack`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ecdId: input.ecdId,
+        ownerEmail: input.email,
+      }),
+    })
+
+    if (!response.ok) {
+      const text = (await response.text().catch(() => '')).trim()
+      return {
+        sent: false as const,
+        kind: 'welcome_pack' as const,
+        warning: text || `Welcome guide email failed with status ${response.status}.`,
+      }
+    }
+
+    return { sent: true as const, kind: 'welcome_pack' as const, warning: null as string | null }
+  } catch (error) {
+    return {
+      sent: false as const,
+      kind: 'welcome_pack' as const,
+      warning: error instanceof Error ? error.message : 'Failed to send welcome guide email.',
+    }
+  }
+}
+
 export async function POST() {
   const supabase = await createClient()
   const {
@@ -89,29 +166,28 @@ export async function POST() {
   ) as ProfileRow | null
 
   const role = profile?.role ?? 'parent_user'
-  const loginLink = isEcdRole(role)
-    ? `${normalizeAppUrl()}/ecd/login`
-    : `${normalizeAppUrl()}/login`
-
-  let centreName: string | null = null
-  if (isEcdRole(role)) {
-    const membershipResult = await admin
-      .from('ecd_admins')
-      .select('ecd_centres:ecd_id(name)')
-      .eq('user_id', user.id)
-      .limit(1)
-    const membership = (membershipResult.data as EcdMembershipRow[] | null) ?? null
-
-    const firstMembership = Array.isArray(membership) ? membership[0] : null
-    centreName = extractCentreName(firstMembership?.ecd_centres ?? null)
-  }
-
   const firstName = resolveFirstName({
     firstName: profile?.first_name ?? null,
     fullName: profile?.full_name ?? null,
     email,
     fallback: 'Friend',
   })
+
+  let centreName: string | null = null
+  let ecdId: string | null = null
+
+  if (isEcdRole(role)) {
+    const membershipResult = await admin
+      .from('ecd_admins')
+      .select('ecd_id, ecd_centres:ecd_id(name)')
+      .eq('user_id', user.id)
+      .limit(1)
+
+    const membership = (membershipResult.data as EcdMembershipRow[] | null) ?? null
+    const firstMembership = Array.isArray(membership) ? membership[0] : null
+    ecdId = firstMembership?.ecd_id ?? null
+    centreName = extractCentreName(firstMembership?.ecd_centres ?? null)
+  }
 
   const nowIso = new Date().toISOString()
   const canPersistFirstPassword = !profileResult.error
@@ -142,40 +218,86 @@ export async function POST() {
     }
   }
 
-  const html = await renderPasswordSetupConfirmedEmail({
-    contactName: firstName,
-    loginLink,
-    roleLabel: toRoleLabel(role),
-    centreName,
-  })
+  let followUpEmail: 'welcome_pack' | 'password_confirmation' | 'none' = 'none'
+  let emailWarning: string | null = null
 
-  const subject = 'Your CentreConnect password was changed'
-  const resendResult = await sendEmail({
-    to: email,
-    subject,
-    html,
-  })
-
-  if (resendResult.success) {
-    return NextResponse.json({
-      success: true,
-      role,
-      firstPasswordMarked: shouldMarkFirstPassword,
+  if (isEcdRole(role) && shouldMarkFirstPassword && ecdId) {
+    const welcomePackResult = await sendEcdWelcomePackEmail({
+      ecdId,
+      email,
     })
+
+    if (welcomePackResult.sent) {
+      followUpEmail = 'welcome_pack'
+    } else {
+      emailWarning = welcomePackResult.warning
+      const fallbackResult = await sendPasswordConfirmationEmail({
+        email,
+        firstName,
+        role,
+        centreName,
+      })
+      if (fallbackResult.sent) {
+        followUpEmail = 'password_confirmation'
+        emailWarning = emailWarning
+          ? `${emailWarning} | Sent password confirmation instead.`
+          : fallbackResult.warning
+      } else if (fallbackResult.warning) {
+        emailWarning = emailWarning
+          ? `${emailWarning} | ${fallbackResult.warning}`
+          : fallbackResult.warning
+      }
+    }
+  } else {
+    const confirmationResult = await sendPasswordConfirmationEmail({
+      email,
+      firstName,
+      role,
+      centreName,
+    })
+    if (confirmationResult.sent) {
+      followUpEmail = 'password_confirmation'
+      emailWarning = confirmationResult.warning
+    } else if (confirmationResult.warning) {
+      emailWarning = confirmationResult.warning
+    }
   }
 
-  const queueResult = await queueEmail(email, subject, html)
-
-  if (!queueResult.success) {
-    return NextResponse.json(
-      { success: false, error: queueResult.error ?? resendResult.error ?? 'Failed to queue confirmation email' },
-      { status: 502 }
-    )
+  if (isEcdRole(role) && shouldMarkFirstPassword) {
+    void sendPlatformAdminActionNotification({
+      subject: 'ECD owner set first password',
+      heading: `${firstName} set a password for ${centreName ?? 'their centre'}.`,
+      lines: [
+        `Centre: ${centreName ?? 'Unknown centre'}`,
+        `Email: ${email}`,
+        `Follow-up: ${
+          followUpEmail === 'welcome_pack'
+            ? 'Welcome guide emailed'
+            : followUpEmail === 'password_confirmation'
+              ? 'Password confirmation emailed'
+              : 'No follow-up email sent'
+        }`,
+      ],
+      details: {
+        role,
+        userId: user.id,
+        centreId: ecdId,
+        followUpEmail,
+        emailWarning: emailWarning ?? '-',
+      },
+    }).catch((error) => {
+      console.error('[password-setup-confirmed] founder notification failed:', error)
+    })
   }
 
   return NextResponse.json({
     success: true,
     role,
     firstPasswordMarked: shouldMarkFirstPassword,
+    followUpEmail,
+    emailWarning,
   })
 }
+
+
+

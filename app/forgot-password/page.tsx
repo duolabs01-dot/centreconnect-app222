@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Section } from '@/components/layout/Section'
@@ -13,7 +14,8 @@ import { buildLockedResetPasswordRedirect } from '@/lib/auth/onboarding-links'
 
 export default function ForgotPasswordPage() {
   const supabase = createClient()
-  const [email, setEmail] = useState('')
+  const searchParams = useSearchParams()
+  const [email, setEmail] = useState(() => searchParams.get('email')?.trim() ?? '')
   const [loading, setLoading] = useState(false)
 
   async function checkAccountExists(normalizedEmail: string) {
@@ -105,5 +107,6 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
+
 
 

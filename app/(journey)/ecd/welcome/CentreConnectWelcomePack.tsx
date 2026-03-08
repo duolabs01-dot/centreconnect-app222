@@ -95,6 +95,7 @@ export default function CentreConnectWelcomePack() {
       location: toSafeText(searchParams.get('location'), 'Johannesburg'),
       centreSlug: toSafeText(searchParams.get('slug'), ''),
       packageLabel: toPackageLabel(searchParams.get('package')),
+      inviteEmail: toSafeText(searchParams.get('email'), ''),
     }),
     [searchParams]
   )
@@ -104,6 +105,10 @@ export default function CentreConnectWelcomePack() {
   const [location, setLocation] = useState(queryDefaults.location)
   const [centreSlug, setCentreSlug] = useState(queryDefaults.centreSlug)
   const [packageLabel, setPackageLabel] = useState(queryDefaults.packageLabel)
+
+  const inviteEmail = queryDefaults.inviteEmail
+  const cameFromPasswordSetup = searchParams.get('from') === 'password-setup'
+  const passwordHelpHref = inviteEmail ? `/forgot-password?email=${encodeURIComponent(inviteEmail)}` : '/forgot-password'
 
   const [childrenCount, setChildrenCount] = useState(0)
   const [attendanceCount, setAttendanceCount] = useState(0)
@@ -283,7 +288,7 @@ export default function CentreConnectWelcomePack() {
     await fetch('/api/auth/password-setup-confirmed', { method: 'POST' }).catch(() => null)
     setRequiresPasswordSetup(false)
     setPasswordSaving(false)
-    toast.success('Password saved. Your centre guide is ready.')
+    toast.success('Password saved. Opening your guide now. We also sent it to your email.')
   }
 
   function handleCopyCentreLink() {
@@ -339,14 +344,23 @@ export default function CentreConnectWelcomePack() {
               </div>
               <div className="space-y-2">
                 <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Secure access needed</p>
-                <h1 className="text-2xl font-black tracking-tight text-slate-900">Open your CentreConnect invite again</h1>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900">Sign in to open your guide</h1>
                 <p className="text-sm font-medium leading-6 text-slate-500">
-                  This guide opens from a secure sign-in link. Use the latest invite email, or sign in to continue with your setup.
+                  If you already created your password, sign in and this guide will open. If you have not created it yet,
+                  request a new password link first.
                 </p>
+              </div>
+              <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">Guide requested</p>
+                <p className="mt-2 text-lg font-black text-slate-900">{centreName}</p>
+                <p className="mt-1 text-sm font-medium text-slate-500">{location}</p>
               </div>
               <div className="space-y-3">
                 <Button asChild className="h-12 w-full rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
-                  <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>Open secure sign in</Link>
+                  <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>Sign in to open guide</Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-slate-200 text-sm font-black">
+                  <Link href={passwordHelpHref}>Create or reset password</Link>
                 </Button>
                 <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-slate-200 text-sm font-black">
                   <Link href={supportWhatsappHref}>
@@ -376,7 +390,7 @@ export default function CentreConnectWelcomePack() {
                   <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Secure your centre account</p>
                   <h1 className="text-2xl font-black tracking-tight text-slate-900">Set your password</h1>
                   <p className="text-sm font-medium leading-6 text-slate-500">
-                    One password, then your welcome guide and dashboard open on the same account.
+                    One password, then your welcome guide opens here and we also send the same guide to your email.
                   </p>
                 </div>
               </div>
@@ -444,6 +458,11 @@ export default function CentreConnectWelcomePack() {
                     This guide shows the exact first moves that make CentreConnect click for your team. Start with one child,
                     then everything else gets easier.
                   </p>
+                  {cameFromPasswordSetup ? (
+                    <div className="rounded-[1.25rem] border border-white/15 bg-white/10 px-4 py-3 text-sm font-medium text-white/90">
+                      Your guide is opening now, and the same guide was sent to your email so you can come back to it later.
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-4">
@@ -694,3 +713,10 @@ export default function CentreConnectWelcomePack() {
     </div>
   )
 }
+
+
+
+
+
+
+

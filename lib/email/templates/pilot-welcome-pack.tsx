@@ -220,24 +220,32 @@ function button(label: string, href: string, tone: 'primary' | 'secondary' = 'pr
 export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   const firstName = toFirstName(input.contactName)
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
-      Your CentreConnect workspace for <strong>${input.centreName}</strong> is ready.
-      Use this secure link to set your password and open your ECD account.
+      Your CentreConnect account for <strong>${input.centreName}</strong> is ready.
+      Start with this one simple step and you will be inside your workspace.
     </p>
-    <div style="margin:0 0 16px;">${button('Set password and open account', input.setupLink)}</div>
+    <div style="margin:0 0 16px;">${button('Set password and open workspace', input.setupLink)}</div>
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 14px;">
       <tr>
         <td style="padding:12px 14px;">
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.muted};">Locked Email</p>
           <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">${input.lockedEmail}</p>
-          <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:${BRAND.muted};">This setup link is tied to this email and is time-limited.</p>
+          <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:${BRAND.muted};">This setup link is tied to this email and will expire for your safety.</p>
         </td>
       </tr>
     </table>
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">
-      After setup, sign in at:
-      <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${input.loginLink}</a>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
+            After this step, CentreConnect will open your welcome guide and show you what to do next.
+          </p>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 10px;font-size:13px;line-height:1.65;color:${BRAND.muted};">
+      Your sign-in page for later: <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${input.loginLink}</a>
     </p>
     <p style="margin:0;font-size:12px;color:${BRAND.muted};line-height:1.6;">
       If the button does not open, copy this secure link into your browser:<br/>
@@ -246,12 +254,11 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   `
 
   return renderShell(
-    'Your Centre Account Is Ready',
-    'One secure step, then you can start onboarding your centre.',
+    'Your CentreConnect account is ready',
+    'One simple step, then you are inside your workspace.',
     body
   )
 }
-
 export function renderPasswordSetupConfirmedEmail(input: PasswordSetupConfirmedEmailInput) {
   const firstName = toFirstName(input.contactName)
   const centreLine = input.centreName?.trim()
@@ -300,19 +307,31 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   const supportWhatsappLaunchLink = `https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(
     `Hi CentreConnect team, this is ${input.contactName} from ${input.centreName}. Please help us finish onboarding.`
   )}`
-  const welcomeGuideUrl = input.welcomeGuideLink?.trim() || input.websiteBuilderLink
-  const packageLabel = input.packageLabel ?? 'welcome pack'
+  const welcomeGuideUrl = input.welcomeGuideLink?.trim() || input.dashboardLink
   const firstName = toFirstName(input.contactName)
 
   const checklistItems =
     input.quickSteps && input.quickSteps.length > 0
       ? input.quickSteps
       : [
-          { label: 'Upload your centre logo', href: input.websiteBuilderLink, done: false, whereItShows: 'Welcome pack + centre cards' },
-          { label: 'Add your hero cover photo', href: input.websiteBuilderLink, done: false, whereItShows: 'Welcome pack header' },
-          { label: 'Add your first five children', href: `${input.websiteBuilderLink.replace('/website', '/children/new')}`, done: false, whereItShows: 'Attendance + reports' },
-          { label: 'Take attendance once', href: input.attendanceLink, done: false, whereItShows: 'Parent daily updates' },
-          { label: 'Turn on safe pickup', href: input.pickupLink, done: false, whereItShows: 'Gate-time verification' },
+          {
+            label: 'Add your first child',
+            href: `${input.websiteBuilderLink.replace('/website', '/children/new')}`,
+            done: false,
+            whereItShows: 'Children list + attendance',
+          },
+          {
+            label: 'Take attendance once',
+            href: input.attendanceLink,
+            done: false,
+            whereItShows: 'Daily register',
+          },
+          {
+            label: 'Turn on safe pickup',
+            href: input.pickupLink,
+            done: false,
+            whereItShows: 'Collection time',
+          },
         ]
 
   const centreLogoBlock = isSafeHttpImage(input.centreLogoUrl)
@@ -326,8 +345,8 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
                   <img src="${input.centreLogoUrl}" width="48" height="48" alt="${input.centreName} logo" style="display:block;border-radius:999px;border:1px solid ${BRAND.border};background:#fff;" />
                 </td>
                 <td style="vertical-align:middle;">
-                  <p style="margin:0;font-size:12px;font-weight:700;color:${BRAND.heading};">${input.centreName} branding is live</p>
-                  <p style="margin:2px 0 0;font-size:11px;color:${BRAND.muted};">This logo appears in your welcome pack and parent-facing centre cards.</p>
+                  <p style="margin:0;font-size:12px;font-weight:700;color:${BRAND.heading};">${input.centreName} is set up on CentreConnect</p>
+                  <p style="margin:2px 0 0;font-size:11px;color:${BRAND.muted};">Your branding is already showing in the workspace.</p>
                 </td>
               </tr>
             </table>
@@ -337,17 +356,17 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     : ''
 
   const body = `
-    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
+    <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
-      Welcome to CentreConnect for <strong>${input.centreName}</strong>.
-      We know WhatsApp admin can feel heavy, so this email keeps your next steps clear.
+      Your CentreConnect guide for <strong>${input.centreName}</strong> is ready.
+      Open it now, or come back to it later from this email. If you are signed out, use the same email and password to open it again.
     </p>
 
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 14px;">
       <tr>
         <td style="padding:12px 14px;">
           <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">
-            Parents are already asking for the app. You are in the right place to launch with confidence.
+            Start small. Add one child, take attendance once, and the rest will feel much easier.
           </p>
         </td>
       </tr>
@@ -356,45 +375,34 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     ${centreLogoBlock}
 
     <div style="margin:0 0 16px;">
-      ${button(`See your ${packageLabel}`, welcomeGuideUrl)}
+      ${button('Open my welcome guide', welcomeGuideUrl)}
     </div>
 
     <table role="presentation" width="100%" style="border-collapse:separate;border-spacing:0 8px;margin:0 0 14px;">
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Daily attendance and reports</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Tap once per child. Monthly totals are ready automatically.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Add your first child</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Start with one child only. You can add the rest later.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Safe pickup time</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Use QR checks at the gate so staff stay calm and children stay safe.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Take attendance once</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Use your phone and see how simple the register feels.</p>
         </td>
       </tr>
       <tr>
         <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Parent applications</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Review everything in one place with no WhatsApp chasing.</p>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:10px 12px;border:1px solid ${BRAND.border};border-radius:10px;background:#FFFFFF;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">What parents are saying</p>
-          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Families want this experience. You can deliver it from day one.</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:${BRAND.heading};">Turn on safe pickup</p>
+          <p style="margin:0;font-size:12px;line-height:1.55;color:${BRAND.body};">Keep collection clear, calm, and more secure for everyone.</p>
         </td>
       </tr>
     </table>
 
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
-      ${button('Get started now', input.dashboardLink)}
-      ${button('Print parent QR poster', input.qrPosterLink, 'secondary')}
-    </div>
-
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 16px;">
       <tr>
         <td style="padding:12px 14px;">
-          <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Quick first steps</p>
+          <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Your quick checklist</p>
           <table role="presentation" width="100%" style="border-collapse:collapse;">
             ${renderChecklist(checklistItems)}
           </table>
@@ -413,7 +421,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
               <td style="vertical-align:top;">
                 <p style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">A note from the founder</p>
                 <p style="margin:0;font-size:13px;line-height:1.65;color:${BRAND.body};">
-                  Thank you for trusting us with your business. Your growth and our growth move together, and we are here to support your team every step.
+                  Thank you for trusting us with your centre. We built CentreConnect to make daily work feel lighter, clearer, and more professional.
                   <br />
                   <span style="font-weight:700;color:${BRAND.heading};">- Mandlenkosi</span>
                 </p>
@@ -442,12 +450,11 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   `
 
   return renderShell(
-    'Your CentreConnect Welcome Pack Is Ready',
-    'Simple steps, clear actions, and real support for your centre.',
+    'Welcome to CentreConnect',
+    'You are in. Here is your quick guide.',
     body
   )
 }
-
 export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigrationEmailInput) {
   const firstName = toFirstName(input.contactName)
   const body = `
@@ -486,3 +493,5 @@ export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigr
     body
   )
 }
+
+

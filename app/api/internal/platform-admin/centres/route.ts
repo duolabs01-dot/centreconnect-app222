@@ -5,15 +5,14 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
+import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import {
   renderEcdPasswordSetupEmail,
   renderParentToEcdAdminMigrationEmail,
-  renderPilotWelcomePackEmail,
 } from '@/lib/email/templates/pilot-welcome-pack'
 import { randomBytes } from 'crypto'
 import { combineName, resolveFirstName } from '@/lib/utils/name'
 import {
-  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
   buildLockedResetPasswordRedirect,
   normalizeAppUrl,
@@ -516,30 +515,18 @@ export async function POST(request: Request) {
     emailWarnings.push(setupLinkResult.error)
   }
   const appBaseUrl = APP_BASE_URL
-  const onboardingLocation = [data.suburb, data.city].filter(Boolean).join(', ')
-  const welcomePackQuery = new URLSearchParams({
-    onboarding: '1',
-    name: contactFirstNameForComms,
-    centre: data.name,
-    location: onboardingLocation || 'your area',
-    slug: centre.slug,
-  }).toString()
-  const welcomePackPath = `/ecd/welcome?${welcomePackQuery}`
-  const welcomePackGuideLink = `${appBaseUrl}${welcomePackPath}`
-  const welcomePackAuthRedirect = buildAuthCallbackRedirect(welcomePackPath)
-  const welcomePackGetStartedLink = setupLinkResult.link || welcomePackAuthRedirect
-  const qrPosterLink = `${appBaseUrl}/centre/${centre.slug}/poster`
+  const setupLink = setupLinkResult.link
 
   const setupEmailHtml = await renderEcdPasswordSetupEmail({
     centreName: data.name,
     contactName: contactFirstNameForComms,
     lockedEmail: normalizedEmail,
-    setupLink: setupLinkResult.link || welcomePackAuthRedirect,
+    setupLink,
     loginLink: `${appBaseUrl}/ecd/login`,
   })
   const setupEmailResult = await queueEmail(
     normalizedEmail,
-    `Set your CentreConnect password for ${data.name}`,
+    `Your CentreConnect account is ready - ${data.name}`,
     setupEmailHtml
   )
   if (!setupEmailResult.success) {
@@ -551,9 +538,32 @@ export async function POST(request: Request) {
       ownerPhone: data.phone,
       inviteType: 'email',
       status: 'sent',
-      notes: 'ECD admin password setup invite.',
+      notes: 'ECD admin setup email sent.',
     })
   }
+
+  void sendPlatformAdminActionNotification({
+    subject: setupEmailResult.success ? 'ECD setup email sent' : 'ECD setup email failed',
+    heading: setupEmailResult.success
+      ? `Setup email sent for ${data.name}.`
+      : `Setup email failed for ${data.name}.`,
+    lines: [
+      `Centre: ${data.name}`,
+      `Owner email: ${normalizedEmail}`,
+      `Plan: ${isPilotPlan ? 'pilot' : normalizedTier}`,
+    ],
+    details: {
+      centreId: centre.id,
+      createdNewCentre,
+      linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,
+      migratedExistingUser: reusedExistingUser,
+      previousRole: resolvedExistingRole ?? '-',
+      delivery: setupEmailResult.success ? 'queued' : 'failed',
+      warning: setupEmailResult.error ?? '-',
+    },
+  }).catch((error) => {
+    console.error('[admin/centres] founder notification failed:', error)
+  })
 
   if (reusedExistingUser && resolvedExistingRole === 'parent_user') {
     const migrationEmailHtml = await renderParentToEcdAdminMigrationEmail({
@@ -582,46 +592,6 @@ export async function POST(request: Request) {
     }
   }
 
-  if (isPilotPlan) {
-    const welcomePackHtml = await renderPilotWelcomePackEmail({
-      centreName: data.name,
-      contactName: contactFirstNameForComms,
-      dashboardLink: welcomePackGetStartedLink,
-      websiteBuilderLink: `${appBaseUrl}/ecd/website`,
-      attendanceLink: `${appBaseUrl}/ecd/attendance`,
-      pickupLink: `${appBaseUrl}/ecd/pickup`,
-      qrPosterLink,
-      supportWhatsApp: '+27685356430',
-      supportEmail: 'admin@centerconnect.co.za',
-      supportLink: `${appBaseUrl}/ecd/support`,
-      welcomeGuideLink: welcomePackGuideLink,
-      quickSteps: [
-        { label: 'Upload your centre logo', href: `${appBaseUrl}/ecd/website`, done: false, whereItShows: 'Welcome pack + centre cards' },
-        { label: 'Add your hero cover photo', href: `${appBaseUrl}/ecd/website`, done: false, whereItShows: 'Welcome pack header' },
-        { label: 'Add your first five children', href: `${appBaseUrl}/ecd/children/new`, done: false, whereItShows: 'Attendance + reports' },
-        { label: 'Take attendance once', href: `${appBaseUrl}/ecd/attendance`, done: false, whereItShows: 'Parent daily updates' },
-        { label: 'Turn on safe pickup', href: `${appBaseUrl}/ecd/pickup`, done: false, whereItShows: 'Gate-time verification' },
-        { label: 'Print parent QR poster for your gate', href: qrPosterLink, done: false, whereItShows: 'Parent onboarding and gate pickup' },
-      ],
-    })
-    const welcomePackResult = await queueEmail(
-      normalizedEmail,
-      `Pilot Welcome Pack | ${data.name}`,
-      welcomePackHtml
-    )
-    if (!welcomePackResult.success) {
-      emailWarnings.push(welcomePackResult.error ?? 'Failed to queue pilot welcome pack email.')
-    } else {
-      await writeInviteLog(adminClient, {
-        centreId: centre.id,
-        ownerEmail: normalizedEmail,
-        ownerPhone: data.phone,
-        inviteType: 'welcome_pack',
-        status: 'sent',
-        notes: 'Pilot welcome pack on tenant creation.',
-      })
-    }
-  }
 
   const { error: taskError } = await adminClient.from('admin_tasks').insert({
     type: 'activate_tenant',
@@ -651,3 +621,7 @@ export async function POST(request: Request) {
     { status: createdNewCentre ? 201 : 200 }
   )
 }
+
+
+
+
