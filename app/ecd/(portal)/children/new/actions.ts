@@ -128,6 +128,29 @@ const bulkExistingChildrenCreateSchema = z.object({
     .min(1)
     .max(200),
 })
+const quickAddChildrenCreateSchema = z.object({
+  children: z
+    .array(
+      z.object({
+        first_name: z.string().min(1).max(80),
+        last_name: z.string().min(1).max(120),
+        enrollment_start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        class_id: z.string().uuid().optional().or(z.literal('')).nullable(),
+        parent_name: z.string().max(140).optional().or(z.literal('')).nullable(),
+        parent_phone: z.string().max(40).optional().or(z.literal('')).nullable(),
+        parent_email: z.string().email().optional().or(z.literal('')).nullable(),
+      })
+    )
+    .min(1)
+    .max(20),
+})
+
+const sendParentLinkForExistingChildSchema = z.object({
+  child_id: z.string().uuid(),
+  parent_name: z.string().max(140).optional().or(z.literal('')).nullable(),
+  parent_phone: z.string().min(7).max(40),
+  parent_email: z.string().email().optional().or(z.literal('')).nullable(),
+})
 
 export type ExistingChildBulkDraft = {
   full_name: string
@@ -149,6 +172,31 @@ export type BulkCreateExistingChildrenResult = {
   message: string
   createdCount?: number
   createdIds?: string[]
+}
+export type QuickAddChildResult = {
+  id: string
+  firstName: string
+  lastName: string
+  enrollmentStartDate: string
+  parentName?: string | null
+  parentPhone?: string | null
+  parentEmail?: string | null
+  whatsappHref?: string | null
+  parentOnboardingUrl?: string | null
+}
+
+export type QuickAddChildrenResult = {
+  success: boolean
+  message: string
+  created?: QuickAddChildResult[]
+}
+
+export type SendParentLinkForExistingChildResult = {
+  success: boolean
+  message: string
+  childId?: string
+  whatsappHref?: string
+  parentOnboardingUrl?: string
 }
 
 function getAppUrl() {
@@ -184,6 +232,78 @@ function normalizePhoneForWhatsapp(rawPhone: string) {
   if (withoutPlus.startsWith('0')) return `27${withoutPlus.slice(1)}`
   if (withoutPlus.startsWith('27')) return withoutPlus
   return withoutPlus
+}
+function buildParentInviteLinks(args: {
+  childId: string
+  centreName: string
+  childName: string
+  parentName?: string | null
+  parentPhone: string
+}) {
+  const normalizedPhone = normalizePhoneForWhatsapp(args.parentPhone)
+  const parentOnboardingUrl = `${getAppUrl()}/register?next=${encodeURIComponent('/parent/children/new')}&manualChildId=${args.childId}`
+  if (!normalizedPhone) {
+    return {
+      normalizedPhone: null,
+      parentOnboardingUrl,
+      whatsappHref: null,
+    }
+  }
+
+  const greetingName = args.parentName?.trim() || 'Parent'
+  const whatsappMessage = [
+    `Hi ${greetingName},`,
+    `${args.centreName} started a child profile for ${args.childName}.`,
+    'Please complete the details and documents here:',
+    parentOnboardingUrl,
+    'Thank you! We are ready to help if you get stuck.',
+  ].join('\n')
+
+  return {
+    normalizedPhone,
+    parentOnboardingUrl,
+    whatsappHref: `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(whatsappMessage)}`,
+  }
+}
+
+function normalizeGuardianContacts(raw: unknown) {
+  if (!Array.isArray(raw)) return []
+
+  const contacts = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null
+      const record = entry as Record<string, unknown>
+      return {
+        full_name: typeof record.full_name === 'string' ? record.full_name.trim() || null : null,
+        relationship: typeof record.relationship === 'string' ? record.relationship.trim() || null : null,
+        phone: typeof record.phone === 'string' ? record.phone.trim() || null : null,
+        email: typeof record.email === 'string' ? record.email.trim() || null : null,
+        can_pickup: typeof record.can_pickup === 'boolean' ? record.can_pickup : true,
+        role: typeof record.role === 'string' ? record.role.trim() || null : null,
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  return contacts.filter((entry) => Boolean(entry.full_name || entry.phone || entry.email))
+}
+
+function normalizeEmergencyContacts(raw: unknown) {
+  if (!Array.isArray(raw)) return []
+
+  const contacts = raw
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null
+      const record = entry as Record<string, unknown>
+      return {
+        full_name: typeof record.full_name === 'string' ? record.full_name.trim() || null : null,
+        relationship: typeof record.relationship === 'string' ? record.relationship.trim() || null : null,
+        phone: typeof record.phone === 'string' ? record.phone.trim() || null : null,
+        notes: typeof record.notes === 'string' ? record.notes.trim() || null : null,
+      }
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+
+  return contacts.filter((entry) => Boolean(entry.full_name || entry.phone || entry.notes))
 }
 
 async function syncBirthdayEventsForChild(args: {
@@ -541,6 +661,272 @@ export async function bulkCreateExistingChildrenAction(
   }
 }
 
+export async function quickCreateChildrenAction(
+  input: unknown
+): Promise<QuickAddChildrenResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+  if (!session.ecdId) {
+    return { success: false, message: 'ECD session not found.' }
+  }
+
+  const parsed = quickAddChildrenCreateSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, message: 'Please review the child names before saving.' }
+  }
+
+  const normalizedChildren = parsed.data.children
+    .map((child) => ({
+      first_name: child.first_name.trim(),
+      last_name: child.last_name.trim(),
+      enrollment_start_date: child.enrollment_start_date,
+      class_id: child.class_id?.trim() || null,
+      parent_name: child.parent_name?.trim() || null,
+      parent_phone: child.parent_phone?.trim() || null,
+      parent_email: child.parent_email?.trim() || null,
+    }))
+    .filter((child) => child.first_name && child.last_name)
+
+  if (normalizedChildren.length === 0) {
+    return { success: false, message: 'Add at least one child name before saving.' }
+  }
+
+  const { data: centre } = await session.supabase
+    .from('ecd_centres')
+    .select('name')
+    .eq('id', session.ecdId)
+    .maybeSingle()
+
+  const onboardingSentAt = new Date().toISOString()
+  const payload = normalizedChildren.map((child) => {
+    const guardianContacts = child.parent_phone || child.parent_email || child.parent_name
+      ? [
+          {
+            full_name: child.parent_name || null,
+            relationship: 'parent',
+            phone: child.parent_phone || null,
+            email: child.parent_email || null,
+            can_pickup: true,
+            role: 'primary_guardian',
+          },
+        ]
+      : []
+
+    const emergencyContacts = child.parent_phone
+      ? [
+          {
+            full_name: child.parent_name || null,
+            relationship: 'primary_guardian',
+            phone: child.parent_phone,
+            notes: 'Added during quick child setup',
+          },
+        ]
+      : []
+
+    return {
+      ecd_id: session.ecdId,
+      parent_id: null,
+      class_id: child.class_id,
+      first_name: child.first_name,
+      last_name: child.last_name,
+      enrollment_start_date: child.enrollment_start_date,
+      enrollment_source: 'ecd_manual',
+      enrollment_status: 'pending_parent',
+      guardian_contacts: guardianContacts,
+      emergency_contacts: emergencyContacts,
+      emergency_contact_name: child.parent_name || null,
+      emergency_contact_phone: child.parent_phone || null,
+      onboarding_link_sent_at: child.parent_phone ? onboardingSentAt : null,
+    }
+  })
+
+  const { data: inserted, error } = await session.supabase
+    .from('children')
+    .insert(payload)
+    .select('id,first_name,last_name,enrollment_start_date')
+
+  if (error || !inserted) {
+    return { success: false, message: error?.message || 'Failed to create child profiles.' }
+  }
+
+  const centreName = centre?.name?.trim() || 'your ECD centre'
+  const auditLogs: Array<Record<string, unknown>> = []
+  const created = inserted.map((row, index) => {
+    const child = normalizedChildren[index]
+    const childName = `${row.first_name} ${row.last_name}`.trim()
+    const links = child.parent_phone
+      ? buildParentInviteLinks({
+          childId: String(row.id),
+          centreName,
+          childName,
+          parentName: child.parent_name,
+          parentPhone: child.parent_phone,
+        })
+      : { normalizedPhone: null, parentOnboardingUrl: null, whatsappHref: null }
+
+    if (links.whatsappHref) {
+      auditLogs.push({
+        user_id: session.user.id,
+        ecd_id: session.ecdId,
+        action: 'quick_child_profile_whatsapp_link_generated',
+        resource_type: 'children',
+        resource_id: String(row.id),
+        changes: {
+          parent_phone: child.parent_phone,
+          whatsapp_href: links.whatsappHref,
+          parent_onboarding_url: links.parentOnboardingUrl,
+        },
+      })
+    }
+
+    return {
+      id: String(row.id),
+      firstName: row.first_name,
+      lastName: row.last_name,
+      enrollmentStartDate: row.enrollment_start_date,
+      parentName: child.parent_name,
+      parentPhone: child.parent_phone,
+      parentEmail: child.parent_email,
+      whatsappHref: links.whatsappHref,
+      parentOnboardingUrl: links.parentOnboardingUrl,
+    }
+  })
+
+  if (auditLogs.length > 0) {
+    await session.supabase.from('audit_logs').insert(auditLogs)
+  }
+
+  const readyLinks = created.filter((child) => Boolean(child.whatsappHref)).length
+  return {
+    success: true,
+    message:
+      readyLinks > 0
+        ? `Created ${created.length} children. ${readyLinks} parent WhatsApp link${readyLinks === 1 ? '' : 's'} ${readyLinks === 1 ? 'is' : 'are'} ready.`
+        : `Created ${created.length} children. You can add parent links later.`,
+    created,
+  }
+}
+
+export async function sendParentLinkForExistingChildAction(
+  input: unknown
+): Promise<SendParentLinkForExistingChildResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+  if (!session.ecdId) {
+    return { success: false, message: 'ECD session not found.' }
+  }
+
+  const parsed = sendParentLinkForExistingChildSchema.safeParse(input)
+  if (!parsed.success) {
+    return { success: false, message: 'Add a parent WhatsApp number before sending the link.' }
+  }
+
+  const { data: child, error } = await session.supabase
+    .from('children')
+    .select('id,first_name,last_name,parent_id,guardian_contacts,emergency_contacts')
+    .eq('ecd_id', session.ecdId)
+    .eq('id', parsed.data.child_id)
+    .maybeSingle()
+
+  if (error || !child) {
+    return { success: false, message: error?.message || 'Child profile not found.' }
+  }
+
+  if (child.parent_id) {
+    return { success: false, message: 'This child is already linked to a parent account.' }
+  }
+
+  const { data: centre } = await session.supabase
+    .from('ecd_centres')
+    .select('name')
+    .eq('id', session.ecdId)
+    .maybeSingle()
+
+  const parentName = parsed.data.parent_name?.trim() || null
+  const parentPhone = parsed.data.parent_phone.trim()
+  const parentEmail = parsed.data.parent_email?.trim() || null
+  const childName = `${child.first_name} ${child.last_name}`.trim()
+  const centreName = centre?.name?.trim() || 'your ECD centre'
+  const links = buildParentInviteLinks({
+    childId: String(child.id),
+    centreName,
+    childName,
+    parentName,
+    parentPhone,
+  })
+
+  if (!links.whatsappHref) {
+    return { success: false, message: 'Parent phone number is invalid for WhatsApp.' }
+  }
+
+  const guardianContacts = normalizeGuardianContacts(child.guardian_contacts)
+  const emergencyContacts = normalizeEmergencyContacts(child.emergency_contacts)
+  const primaryGuardianIndex = guardianContacts.findIndex(
+    (entry) => entry.role === 'primary_guardian' || entry.relationship === 'parent' || entry.phone || entry.email
+  )
+
+  const primaryGuardian = {
+    full_name: parentName ?? guardianContacts[primaryGuardianIndex]?.full_name ?? null,
+    relationship: guardianContacts[primaryGuardianIndex]?.relationship ?? 'parent',
+    phone: parentPhone,
+    email: parentEmail ?? guardianContacts[primaryGuardianIndex]?.email ?? null,
+    can_pickup: guardianContacts[primaryGuardianIndex]?.can_pickup ?? true,
+    role: guardianContacts[primaryGuardianIndex]?.role ?? 'primary_guardian',
+  }
+
+  if (primaryGuardianIndex >= 0) {
+    guardianContacts[primaryGuardianIndex] = primaryGuardian
+  } else {
+    guardianContacts.unshift(primaryGuardian)
+  }
+
+  const nextEmergencyContacts = emergencyContacts.length > 0
+    ? emergencyContacts
+    : [
+        {
+          full_name: parentName,
+          relationship: 'primary_guardian',
+          phone: parentPhone,
+          notes: 'Added from CentreConnect child setup',
+        },
+      ]
+
+  const { error: updateError } = await session.supabase
+    .from('children')
+    .update({
+      guardian_contacts: guardianContacts,
+      emergency_contacts: nextEmergencyContacts,
+      emergency_contact_name: parentName,
+      emergency_contact_phone: parentPhone,
+      onboarding_link_sent_at: new Date().toISOString(),
+      enrollment_status: 'pending_parent',
+    })
+    .eq('ecd_id', session.ecdId)
+    .eq('id', child.id)
+
+  if (updateError) {
+    return { success: false, message: updateError.message || 'Failed to prepare the parent link.' }
+  }
+
+  await session.supabase.from('audit_logs').insert({
+    user_id: session.user.id,
+    ecd_id: session.ecdId,
+    action: 'existing_child_parent_link_generated',
+    resource_type: 'children',
+    resource_id: String(child.id),
+    changes: {
+      parent_phone: parentPhone,
+      whatsapp_href: links.whatsappHref,
+      parent_onboarding_url: links.parentOnboardingUrl,
+    },
+  })
+
+  return {
+    success: true,
+    message: 'Parent link ready. Open WhatsApp to send it.',
+    childId: String(child.id),
+    whatsappHref: links.whatsappHref,
+    parentOnboardingUrl: links.parentOnboardingUrl,
+  }
+}
 export async function saveTempChildProfileAndInviteParentAction(
   input: unknown
 ): Promise<SaveTempChildProfileResult> {
@@ -806,3 +1192,5 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
+
+

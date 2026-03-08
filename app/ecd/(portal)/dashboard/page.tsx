@@ -147,7 +147,7 @@ export default async function EcdDashboardPage() {
   const profileDone = profileItems.filter((item) => item.done).length
   const profilePct = pct(profileDone, profileItems.length)
   const onboardingChecklistItems = [
-    { id: 'quick-child', label: 'Add your first child', done: childrenCount > 0, href: '/ecd/children/new' },
+    { id: 'quick-child', label: 'Add your first 5 children', done: childrenCount > 0, href: '/ecd/children/new' },
     { id: 'quick-logo', label: 'Upload centre logo', done: !!centre?.logo_url, href: '/ecd/website#brand-media' },
     { id: 'quick-hero', label: 'Add hero cover image', done: !!centre?.cover_image_url, href: '/ecd/website#brand-media' },
     {
@@ -272,15 +272,15 @@ export default async function EcdDashboardPage() {
                 <div className="space-y-2">
                   <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-700">Start here</p>
                   <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                    Bring your first child onto CentreConnect.
+                    Bring your first 5 children onto CentreConnect.
                   </h2>
                   <p className="max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
-                    You only need one child to make the whole system click. Add one child now, then come back and mark attendance once.
+                    You only need your first 5 children to make the whole system click. Add them from the paper register now, then come back and mark attendance once.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <Button asChild size="lg" className="rounded-2xl bg-teal-600 text-white font-black shadow-lg shadow-teal-900/10 hover:bg-teal-700">
-                    <Link href="/ecd/children/new">Add First Child</Link>
+                    <Link href="/ecd/children/new">Add First 5 Children</Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="rounded-2xl border-slate-200 bg-white font-black text-slate-700 hover:bg-slate-50">
                     <Link href="/ecd/welcome?onboarding=1">Open Welcome Guide</Link>
@@ -289,7 +289,7 @@ export default async function EcdDashboardPage() {
               </div>
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                 {[
-                  'Add one child from your paper register.',
+                  'Add your first 5 children from the paper register.',
                   'Mark attendance once on your phone.',
                   'Turn on safe pickup before the next collection.',
                 ].map((item, index) => (
@@ -478,6 +478,7 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
+
 
 
 
