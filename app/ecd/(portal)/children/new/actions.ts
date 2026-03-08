@@ -1,6 +1,7 @@
 'use server'
 
 import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
   extractStructuredDocumentWithGemini,
@@ -795,6 +796,10 @@ export async function quickCreateChildrenAction(
     await session.supabase.from('audit_logs').insert(auditLogs)
   }
 
+  revalidatePath('/ecd/children')
+  revalidatePath('/ecd/children/new')
+  revalidatePath('/ecd/dashboard')
+
   const readyLinks = created.filter((child) => Boolean(child.whatsappHref)).length
   return {
     success: true,
@@ -918,6 +923,9 @@ export async function sendParentLinkForExistingChildAction(
       parent_onboarding_url: links.parentOnboardingUrl,
     },
   })
+
+  revalidatePath('/ecd/children')
+  revalidatePath('/ecd/children/new')
 
   return {
     success: true,
@@ -1184,6 +1192,10 @@ export async function saveTempChildProfileAndInviteParentAction(
     },
   })
 
+  revalidatePath('/ecd/children')
+  revalidatePath('/ecd/children/new')
+  revalidatePath('/ecd/dashboard')
+
   return {
     success: true,
     message: 'Child profile saved. Open WhatsApp to send the parent completion link.',
@@ -1192,5 +1204,6 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
+
 
 
