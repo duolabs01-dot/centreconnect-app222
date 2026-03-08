@@ -18,17 +18,17 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   starter: {
     label: 'Starter',
     monthlyPrice: 199,
-    description: 'For centres starting fresh and wanting a professional parent experience.',
+    description: 'A simple, professional starting point for centres that want parents to find them and apply properly.',
     includes: [
+      'Professional centre listing',
       'Parent applications in one dashboard',
       'Announcements and direct parent messages',
-      'Professional centre listing',
       'Structured child profile intake',
     ],
     outcomes: [
-      'Capture parent interest faster from your listing',
+      'Help parents trust your centre faster online',
       'Reduce manual admission follow-up',
-      'Standardize parent communication from day one',
+      'Keep parent communication clear from day one',
     ],
     website: {
       includes: ['Centre profile page', 'Contact details + map', 'Hero, About and Programs sections'],
@@ -38,40 +38,40 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   growth: {
     label: 'Growth',
     monthlyPrice: 299,
-    description: 'For centres ready to manage daily operations with less stress.',
+    description: 'The everyday package for centres ready to handle admissions and daily operations in one flow.',
     includes: [
-      'Starter tools for applications and communication',
-      'Attendance and calendar workflows',
+      'Attendance register',
+      'Calendar and routine planning',
       'Faster admissions follow-up and reminders',
       'Daily operational tracking',
     ],
     outcomes: [
-      'Improve daily operations consistency',
-      'Increase conversion from application to enrollment',
-      'Keep teams aligned on child updates and attendance',
+      'Make daily admin feel calmer and more consistent',
+      'Improve conversion from application to enrollment',
+      'Keep the team aligned on attendance and child updates',
     ],
     website: {
-      includes: ['Starter tools for applications and communication', 'Gallery + events + jobs sections', 'Richer public presentation'],
+      includes: ['Attendance and daily operations layer', 'Gallery + events + jobs sections', 'Richer public presentation'],
       suggestedAddOns: ['Domain setup help', 'Premium design pass'],
     },
   },
   pro: {
     label: 'Pro',
     monthlyPrice: 499,
-    description: 'For centres that want the full CentreConnect setup and priority support.',
+    description: 'The full CentreConnect setup with website tools, premium support, and a faster rollout.',
     includes: [
-      'Starter + Growth tools in one place',
       'Website and growth tools',
       'Priority onboarding and support',
       'Advanced configuration support',
+      'Highest visibility and rollout support',
     ],
     outcomes: [
-      'Operate admissions and centre visibility in one place',
-      'Present a stronger public profile to parents',
-      'Move faster with high-touch rollout support',
+      'Operate admissions and visibility from one system',
+      'Present a stronger public brand to parents',
+      'Move faster with high-touch support when you launch',
     ],
     website: {
-      includes: ['Starter + Growth tools in one place', 'Highest website support priority', 'Full growth stack compatibility'],
+      includes: ['Full public + operations stack support', 'Highest website support priority', 'Full growth stack compatibility'],
       suggestedAddOns: ['Seasonal campaign design', 'Advanced integrations'],
     },
   },
@@ -171,4 +171,3 @@ export function normalizeSubscriptionStatus(
   }
   return fallback
 }
-

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -93,10 +93,10 @@ const REGISTER_DRAFT_STORAGE_KEY = 'cc-ecd-register-draft-v1'
 const REGISTER_FAST_TRACK_KEY = 'cc-ecd-register-fast-track'
 
 const STEP_TITLES: Record<WizardStep, string> = {
-  1: 'Contact and Centre',
-  2: 'Operations Profile',
-  3: 'Package and Needs',
-  4: 'Review and Submit',
+  1: 'You and your centre',
+  2: 'How your centre runs',
+  3: 'Pick your package',
+  4: 'One last check',
 }
 
 const AGE_GROUP_OPTIONS = ['0-2 years', '2-4 years', '4-6 years', 'Aftercare (6+)']
@@ -377,22 +377,22 @@ export default function EcdRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#effcff_0%,#f8fbfd_28%,#ffffff_100%)]">
       <Section className="py-8 sm:py-10 lg:py-12" containerClassName="cc-section">
         <div className="mb-6">
           <Link href="/for-centres" className="text-xs font-semibold text-teal-700 hover:underline">
-            Back to For ECD Centres
+            Back to plans
           </Link>
           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">CentreConnect</p>
-          <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Register Your ECD</h1>
+          <h1 className="mt-2 text-3xl font-bold text-foreground sm:text-4xl">Let&apos;s set up your centre 😊</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted-foreground sm:text-base">
-            Fill your creche faster and get paid on time. {isConfirmFlow
-              ? 'Your selected plan is ready for confirmation and payment.'
-              : 'Complete this setup in minutes and choose the plan that matches your centre.'}
+            Fill your crèche faster, look professional to parents, and start with a package that fits your centre. {isConfirmFlow
+              ? 'Your selected package is ready for one simple confirmation.'
+              : 'This takes a few minutes, and we will guide you step by step.'}
           </p>
           {hasPresetPlan ? (
             <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-800">
-              Plan selected: {presetPlanLabel} (R{TIER_PRICES[initialSelectedTier]}/month)
+              Ready to go: {presetPlanLabel} (R{TIER_PRICES[initialSelectedTier]}/month)
             </div>
           ) : null}
           {form.claimSlug ? (
@@ -405,8 +405,8 @@ export default function EcdRegisterPage() {
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)]">
           <Card className="h-fit rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)] xl:sticky xl:top-24">
             <CardHeader>
-              <CardTitle className="text-xl text-foreground">Selected Plan</CardTitle>
-              <CardDescription>Clear pricing before you confirm.</CardDescription>
+              <CardTitle className="text-xl text-foreground">Your package</CardTitle>
+              <CardDescription>Clear pricing. No surprises.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="rounded-2xl border border-teal-200 bg-teal-50 p-4">
@@ -447,7 +447,7 @@ export default function EcdRegisterPage() {
               )}
               {!isConfirmFlow ? (
                 <Button asChild variant="outline" className="h-10 w-full rounded-2xl border-border bg-card px-4 text-xs font-semibold">
-                  <Link href="/for-centres#pricing">Compare plans</Link>
+                  <Link href="/for-centres#plans">Compare plans</Link>
                 </Button>
               ) : null}
             </CardContent>
@@ -593,13 +593,13 @@ export default function EcdRegisterPage() {
 
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
                     <p className="text-sm font-semibold text-emerald-900">
-                      Recommended package: {recommendedTier === 'starter' ? 'Starter' : recommendedTier === 'growth' ? 'Growth' : 'Pro'} (R{TIER_PRICES[recommendedTier]}/month)
+                      Best fit for what you shared: {recommendedTier === 'starter' ? 'Starter' : recommendedTier === 'growth' ? 'Growth' : 'Pro'} (R{TIER_PRICES[recommendedTier]}/month)
                     </p>
                     <p className="mt-1 text-xs text-emerald-800">{TIER_DESCRIPTIONS[recommendedTier]}</p>
                   </div>
 
                   <div className="rounded-2xl border border-teal-200 bg-teal-50 p-3 text-xs text-teal-900">
-                    All plans include onboarding guidance so your team can launch smoothly.
+                    All packages include friendly onboarding help so your team is not left guessing. 😊
                   </div>
 
                   {hasPresetPlan ? (
@@ -614,7 +614,7 @@ export default function EcdRegisterPage() {
                       {!isConfirmFlow ? (
                         <div className="mt-2">
                           <Button asChild variant="outline" className="h-9 rounded-2xl border-border bg-card px-3 text-xs font-semibold">
-                            <Link href="/for-centres#pricing">Need a different plan?</Link>
+                            <Link href="/for-centres#plans">Need a different plan?</Link>
                           </Button>
                         </div>
                       ) : null}
@@ -679,7 +679,7 @@ export default function EcdRegisterPage() {
 
               {step === 4 ? (
                 <div className="space-y-3 rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-                  <p className="font-semibold text-foreground">Review your application</p>
+                  <p className="font-semibold text-foreground">Quick review before we help you launch</p>
                   <p className="text-muted-foreground">Contact: {form.fullName} ({form.email})</p>
                   <p className="text-muted-foreground">Centre: {form.centreName}</p>
                   <p className="text-muted-foreground">
@@ -722,7 +722,7 @@ export default function EcdRegisterPage() {
                   ) : null}
 
                   <p className="text-xs text-muted-foreground">
-                    No parent-style auth is required here. We review your application first, then activate your ECD admin access.
+                    We review this with you first, then activate the right CentreConnect access for your team.
                   </p>
                 </div>
               ) : null}
@@ -745,7 +745,7 @@ export default function EcdRegisterPage() {
                   </Button>
                 ) : (
                   <Button onClick={submitApplication} disabled={loading} className="h-11 rounded-2xl px-5 bg-teal-600 hover:bg-teal-700 text-white font-semibold">
-                    {loading ? 'Submitting...' : hasPresetPlan ? 'Confirm & Pay' : 'Submit Service Application'}
+                    {loading ? 'Submitting...' : hasPresetPlan ? 'Confirm & continue' : 'Send my application'}
                   </Button>
                 )}
               </div>
@@ -756,6 +756,10 @@ export default function EcdRegisterPage() {
     </div>
   )
 }
+
+
+
+
 
 
 
