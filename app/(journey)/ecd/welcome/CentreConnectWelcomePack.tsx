@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -64,6 +65,9 @@ type SubscriptionRow = {
   tier: string | null
   status: string | null
 }
+
+const DEFAULT_CENTRE_HERO =
+  'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
 
 type Scenario = {
   id: string
@@ -476,6 +480,151 @@ function PackageSection({
     </Card>
   )
 }
+function ListingPreviewSection({
+  centreName,
+  location,
+  logoUrl,
+  coverImageUrl,
+  description,
+  hasLogo,
+  hasCoverImage,
+  planLabel,
+  previewMode = false,
+  actionHref = '/ecd/website#brand-media',
+}: {
+  centreName: string
+  location: string
+  logoUrl: string | null
+  coverImageUrl: string | null
+  description: string
+  hasLogo: boolean
+  hasCoverImage: boolean
+  planLabel: string
+  previewMode?: boolean
+  actionHref?: string
+}) {
+  const heroImage = coverImageUrl?.trim() || DEFAULT_CENTRE_HERO
+  const summary = description.trim() || 'Parents will first see your hero image, logo, and centre details here.'
+
+  return (
+    <Card id="listing-preview" className="rounded-[1.75rem] border-slate-200 bg-white shadow-none">
+      <CardContent className="space-y-5 p-5 sm:p-6">
+        <div className="space-y-2">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">How parents see your centre</p>
+          <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            This is the first impression families get.
+          </h2>
+          <p className="max-w-3xl text-sm leading-7 text-slate-600">
+            Your logo appears on the listing card and your hero image becomes the public cover photo. This is the part that helps parents trust you before they call.
+          </p>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[1fr_0.95fr] lg:items-start">
+          <div className="overflow-hidden rounded-[1.8rem] border border-slate-200 bg-white shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+            <div className="relative h-56 overflow-hidden">
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url("${heroImage}")` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+              <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
+                <span className="rounded-full bg-slate-950/85 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                  Parent listing
+                </span>
+                {!hasCoverImage ? (
+                  <span className="rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">
+                    Hero image missing
+                  </span>
+                ) : null}
+              </div>
+
+              {logoUrl ? (
+                <div className="absolute -bottom-6 left-6 z-10 h-16 w-16 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-2xl">
+                  <Image
+                    src={logoUrl}
+                    alt={`${centreName} logo`}
+                    fill
+                    sizes="64px"
+                    unoptimized
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="absolute -bottom-6 left-6 z-10 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-white bg-teal-50 shadow-2xl">
+                  <span className="text-xl font-black text-teal-700">{centreName.charAt(0)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4 p-5 pt-10">
+              <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xl font-black tracking-tight text-slate-900">{centreName}</p>
+                    <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-slate-500">{location}</p>
+                  </div>
+                  <span className="rounded-full bg-teal-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">
+                    {planLabel}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{summary}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Public profile</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Trusted listing</span>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Apply flow</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-black text-slate-700">
+                  View centre
+                </div>
+                <div className="rounded-2xl bg-teal-600 px-4 py-3 text-center text-sm font-black text-white">
+                  Enrol now
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Logo</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                {hasLogo
+                  ? 'Your logo is ready. Parents will see it on your listing card and public profile.'
+                  : 'Upload a logo so your centre looks recognisable and trustworthy in the directory.'}
+              </p>
+            </div>
+            <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Hero image</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                {hasCoverImage
+                  ? 'Your hero image is ready. It becomes the main cover photo parents notice first.'
+                  : 'Add a strong hero image so your centre feels alive and welcoming the moment parents see it.'}
+              </p>
+            </div>
+            <div className="rounded-[1.4rem] border border-teal-100 bg-teal-50/70 p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-700">Best next move</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                {previewMode
+                  ? 'Create your password or sign in first. Then you can upload a logo and hero image so parents see a stronger first impression immediately.'
+                  : 'Update your logo and hero image first. That one change improves your parent-facing first impression immediately.'}
+              </p>
+              <Button asChild className="mt-4 h-11 rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
+                <Link href={actionHref}>
+                  {previewMode ? 'Open workspace first' : 'Update brand media'}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 export default function CentreConnectWelcomePack() {
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
@@ -500,6 +649,9 @@ export default function CentreConnectWelcomePack() {
   const [centreSlug, setCentreSlug] = useState(queryDefaults.centreSlug)
   const [selectedPlan, setSelectedPlan] = useState<PublicPlan>(queryDefaults.packagePlan)
   const [selectedPlanStatus, setSelectedPlanStatus] = useState<SubscriptionStatus>('trial')
+  const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
+  const [centreCoverImageUrl, setCentreCoverImageUrl] = useState<string | null>(null)
+  const [centreDescription, setCentreDescription] = useState('')
 
   const inviteEmail = queryDefaults.inviteEmail
   const cameFromPasswordSetup = searchParams.get('from') === 'password-setup'
@@ -531,6 +683,7 @@ export default function CentreConnectWelcomePack() {
   const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : '/ecd/website'
   const publicCentreHref = centreSlug ? `/centre/${centreSlug}` : '/ecd/website'
   const supportWhatsappHref = buildWhatsappHref(firstName, centreName)
+  const listingPreviewDescription = centreDescription.trim() || 'Parents will first see your hero image, logo, and centre details here.'
 
   useEffect(() => {
     let mounted = true
@@ -545,6 +698,9 @@ export default function CentreConnectWelcomePack() {
       if (!session?.user?.id) {
         setSelectedPlan(queryDefaults.packagePlan)
         setSelectedPlanStatus('trial')
+        setCentreLogoUrl(null)
+        setCentreCoverImageUrl(null)
+        setCentreDescription('')
         setHasSession(false)
         setCheckingSession(false)
         return
@@ -578,6 +734,9 @@ export default function CentreConnectWelcomePack() {
         setCentreName(toSafeText(centre.name, queryDefaults.centreName))
         setLocation(toLocation(centre.suburb, centre.city))
         setCentreSlug(toSafeText(centre.slug, queryDefaults.centreSlug))
+        setCentreLogoUrl(centre.logo_url?.trim() || null)
+        setCentreCoverImageUrl(centre.cover_image_url?.trim() || null)
+        setCentreDescription(centre.description?.trim() || '')
         setHasLogo(Boolean(centre.logo_url?.trim()))
         setHasCoverImage(Boolean(centre.cover_image_url?.trim()))
         setHasDescription(Boolean(centre.description?.trim()))
@@ -831,7 +990,20 @@ export default function CentreConnectWelcomePack() {
 
               <PackageSection selectedPlan={selectedPlan} selectedPlanStatus={selectedPlanStatus} />
 
-              <section className="space-y-4">
+              <ListingPreviewSection
+                centreName={centreName}
+                location={location}
+                logoUrl={centreLogoUrl}
+                coverImageUrl={centreCoverImageUrl}
+                description={listingPreviewDescription}
+                hasLogo={hasLogo}
+                hasCoverImage={hasCoverImage}
+                planLabel={getPublicPlanLabel(selectedPlan)}
+                previewMode
+                actionHref={passwordHelpHref}
+              />
+
+              <section id="how-it-helps" className="space-y-4">
                 <div className="space-y-2">
                   <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Your first steps</p>
                   <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
@@ -1052,7 +1224,7 @@ export default function CentreConnectWelcomePack() {
           </div>
 
           <div className="space-y-6 p-4 sm:p-6">
-            <section className="space-y-4">
+            <section id="how-it-helps" className="space-y-4">
               <div className="space-y-2">
                 <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">What the product helps with</p>
                 <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
@@ -1071,6 +1243,17 @@ export default function CentreConnectWelcomePack() {
             </section>
 
             <PackageSection selectedPlan={selectedPlan} selectedPlanStatus={selectedPlanStatus} />
+
+            <ListingPreviewSection
+              centreName={centreName}
+              location={location}
+              logoUrl={centreLogoUrl}
+              coverImageUrl={centreCoverImageUrl}
+              description={listingPreviewDescription}
+              hasLogo={hasLogo}
+              hasCoverImage={hasCoverImage}
+              planLabel={getPublicPlanLabel(selectedPlan)}
+            />
 
             <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
               <Card className="rounded-[1.75rem] border-teal-100 bg-teal-50/60 shadow-none">
@@ -1169,7 +1352,7 @@ export default function CentreConnectWelcomePack() {
           </div>
         </section>
 
-        <section className="mt-6 space-y-4">
+        <section id="first-steps" className="mt-6 space-y-4">
           <div className="space-y-2">
             <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Your first steps</p>
             <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
@@ -1273,4 +1456,15 @@ export default function CentreConnectWelcomePack() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
 
