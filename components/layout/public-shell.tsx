@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Container } from '@/components/layout/container'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 import { BrandMark } from '@/components/ecd/BrandMark'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 type PublicShellProps = {
   children: React.ReactNode
@@ -14,15 +14,18 @@ type PublicShellProps = {
 
 export function PublicShell({ children }: PublicShellProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const isHome = pathname === '/'
+
   return (
-    <div className="min-h-screen bg-slate-50 text-foreground overflow-x-hidden">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/30 bg-white/20 backdrop-blur-3xl shadow-sm">
-        <Container className="flex items-center justify-between gap-3 py-2 sm:py-3">
+    <div className="min-h-screen overflow-x-hidden bg-[#FAF8F4] text-foreground">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#EADFD2] bg-[#FFFDF9]/92 shadow-[0_6px_20px_rgba(34,49,46,0.06)] backdrop-blur-2xl">
+        <Container className="flex min-h-[68px] items-center justify-between gap-3 py-2 sm:min-h-[72px] sm:py-3">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
             <span className="flex items-center text-sm font-semibold text-slate-900">
               <span>CentreConnect</span>
-              <span className="ml-2 h-2 w-2 rounded-full bg-cyan-500" aria-hidden />
+              <span className="ml-2 hidden h-2 w-2 rounded-full bg-teal-500 sm:inline-block" aria-hidden />
             </span>
           </div>
 
@@ -36,21 +39,23 @@ export function PublicShell({ children }: PublicShellProps) {
           </nav>
 
           <div className="flex shrink-0 items-center">
-            <Button size="sm" className="px-3 sm:px-4" onClick={() => router.push('/login')}>
+            <Button size="sm" className="rounded-full px-3 sm:px-4" onClick={() => router.push('/login')}>
               Sign In
             </Button>
           </div>
         </Container>
-        <div className="mx-auto mt-1 flex max-w-6xl justify-center">
-          <div className="h-1 w-36 rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-blue-500 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
+        <div className="mx-auto mt-1 hidden max-w-6xl justify-center sm:flex">
+          <div className="h-1 w-36 rounded-full bg-gradient-to-r from-[#D4935A] via-teal-400 to-teal-600 shadow-[0_0_12px_rgba(13,148,136,0.18)]" />
         </div>
       </header>
-      <div className="h-[56px] sm:h-[64px]" aria-hidden />
+      <div className="h-[84px] sm:h-[88px]" aria-hidden />
 
       <div className="animate-in fade-in duration-500">
-        <Container className="pt-4">
-          <AppBreadcrumbs rootHref="/" rootLabel="Home" />
-        </Container>
+        {!isHome ? (
+          <Container className="pt-4">
+            <AppBreadcrumbs rootHref="/" rootLabel="Home" />
+          </Container>
+        ) : null}
         {children}
       </div>
     </div>

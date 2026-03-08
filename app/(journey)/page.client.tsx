@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Check, Clock3, FileCheck2, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Clock3, FileCheck2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export type HomeActiveCentre = {
@@ -67,42 +67,42 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         ['--warm-white' as string]: '#FFFDF9',
       }}
     >
-      <main className="pb-[calc(env(safe-area-inset-bottom)+4rem)]">
+      <main className="pb-[calc(env(safe-area-inset-bottom)+5rem)]">
         <section className="relative overflow-hidden border-b border-[#E9DED1] bg-[var(--warm-white)]">
-          <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top_left,rgba(212,147,90,0.18),transparent_48%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.12),transparent_34%)]" />
+          <div className="absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top_left,rgba(212,147,90,0.18),transparent_48%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.12),transparent_34%)]" />
           <div className="absolute -left-20 top-16 h-40 w-40 rounded-full bg-[rgba(212,147,90,0.10)] blur-3xl" />
-          <div className="absolute right-0 top-24 h-48 w-48 rounded-full bg-[rgba(13,148,136,0.08)] blur-3xl" />
+          <div className="absolute right-0 top-24 h-44 w-44 rounded-full bg-[rgba(13,148,136,0.08)] blur-3xl" />
 
-          <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
-            <div className="grid gap-8 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:gap-12">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center rounded-full border border-[rgba(212,147,90,0.28)] bg-[rgba(212,147,90,0.14)] px-4 py-2 text-sm font-semibold text-[#9A6234]">
+          <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
+            <div className="grid gap-6 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:gap-12">
+              <div className="min-w-0 max-w-3xl">
+                <div className="inline-flex items-center rounded-full border border-[rgba(212,147,90,0.28)] bg-[rgba(212,147,90,0.14)] px-4 py-2 text-[13px] font-semibold text-[#9A6234] sm:text-sm">
                   Now live in Alexandra, Johannesburg
                 </div>
 
                 <h1
-                  className="mt-5 text-[3rem] leading-[0.95] tracking-[-0.045em] text-[#1E2C28] sm:text-[4rem] lg:text-[5rem]"
+                  className="mt-5 text-[2.45rem] leading-[1.04] tracking-[-0.04em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[4rem] sm:leading-[0.98] lg:max-w-none lg:text-[5rem]"
                   style={{ fontFamily: 'var(--font-serif)' }}
                 >
                   Finding the right crèche near you just got simpler.
                 </h1>
 
-                <p className="mt-5 max-w-2xl text-[17px] leading-8 text-[#5D6966] sm:text-[18px]">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
                   Search registered crèches across Johannesburg, compare the details that matter, and apply without
                   starting from scratch each time.
                 </p>
 
-                <p className="mt-4 text-sm italic leading-7 text-[#7B827E] sm:text-[15px]">
+                <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[15px] sm:leading-7">
                   Finally, no more asking the same questions on three WhatsApp chats.
                 </p>
 
-                <div className="mt-6 -mx-4 overflow-x-auto px-4 scrollbar-none sm:mx-0 sm:px-0">
-                  <div className="flex min-w-max gap-2.5 pb-1">
+                <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
+                  <div className="flex min-w-max gap-2 pb-1">
                     {suburbPills.map((suburb) => (
                       <Link
                         key={suburb}
                         href={suburbHref(suburb)}
-                        className="inline-flex items-center rounded-full border border-[#E6D9CA] bg-white px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)]/30 hover:text-[var(--teal)]"
+                        className="inline-flex items-center whitespace-nowrap rounded-full border border-[#E6D9CA] bg-white px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)]/30 hover:text-[var(--teal)]"
                       >
                         {suburb}
                       </Link>
@@ -110,10 +110,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   </div>
                 </div>
 
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <Button
                     size="lg"
-                    className="h-14 rounded-[1.05rem] bg-[var(--teal)] px-7 text-base font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A]"
+                    className="h-14 w-full justify-center rounded-[1.05rem] bg-[var(--teal)] px-7 text-base font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A] sm:w-auto"
                     asChild
                   >
                     <Link href="/directory">Search Crèches Near Me</Link>
@@ -121,7 +121,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="h-14 rounded-[1.05rem] border-[#DED2C5] bg-white px-7 text-base font-semibold text-[#22312E] shadow-[0_10px_26px_rgba(34,49,46,0.05)] hover:bg-[#F8F3EC]"
+                    className="h-14 w-full rounded-[1.05rem] border-[#DED2C5] bg-white px-7 text-base font-semibold text-[#22312E] shadow-[0_10px_26px_rgba(34,49,46,0.05)] hover:bg-[#F8F3EC] sm:w-auto"
                     asChild
                   >
                     <Link href="/register">
@@ -131,34 +131,34 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   </Button>
                 </div>
 
-                <p className="mt-4 text-[12px] font-medium tracking-[0.01em] text-[#7B817C]">
+                <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
                   Starting in Alexandra. Growing across Johannesburg.
                 </p>
               </div>
 
-              <div className="lg:pl-4">
-                <div className="rounded-[2rem] border border-[#E8DDD0] bg-white p-4 shadow-[0_24px_60px_rgba(27,40,36,0.08)] sm:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#A86C3A]">One real centre near you</p>
+              <div className="min-w-0 lg:pl-4">
+                <div className="rounded-[1.75rem] border border-[#E8DDD0] bg-white p-4 shadow-[0_24px_60px_rgba(27,40,36,0.08)] sm:rounded-[2rem] sm:p-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#A86C3A] sm:text-xs">One real centre near you</p>
 
                   {featuredCentre ? (
                     <Link
                       href={centreHref(featuredCentre)}
-                      className="mt-4 block rounded-[1.6rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-5 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20"
+                      className="mt-4 block rounded-[1.4rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-4 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20 sm:rounded-[1.6rem] sm:p-5"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D847F]">
                             {featuredCentre.suburb ?? 'Johannesburg'}
                           </p>
                           <h2
-                            className="mt-2 text-[1.9rem] leading-tight text-[#21302C]"
+                            className="mt-2 text-[1.5rem] leading-[1.08] text-[#21302C] sm:text-[1.9rem]"
                             style={{ fontFamily: 'var(--font-serif)' }}
                           >
                             {featuredCentre.name}
                           </h2>
                         </div>
                         {featuredCentre.isRegistered ? (
-                          <span className="rounded-full bg-[rgba(212,147,90,0.14)] px-3 py-1 text-xs font-semibold text-[#9A6234]">
+                          <span className="rounded-full bg-[rgba(212,147,90,0.14)] px-3 py-1 text-[11px] font-semibold text-[#9A6234]">
                             Verified
                           </span>
                         ) : null}
@@ -174,7 +174,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </div>
 
                       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-[1.2rem] border border-[#E8DDD0] bg-white px-4 py-3">
+                        <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
                           <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6E8D7] text-[#A86C3A]">
                               <FileCheck2 className="h-4 w-4" />
@@ -182,7 +182,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                             Documents ready once
                           </div>
                         </div>
-                        <div className="rounded-[1.2rem] border border-[#E8DDD0] bg-white px-4 py-3">
+                        <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
                           <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F6E8D7] text-[#A86C3A]">
                               <Clock3 className="h-4 w-4" />
@@ -193,7 +193,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </div>
                     </Link>
                   ) : (
-                    <div className="mt-4 rounded-[1.6rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-5">
+                    <div className="mt-4 rounded-[1.4rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-4 sm:rounded-[1.6rem] sm:p-5">
                       <p className="text-sm font-medium text-[#53615D]">
                         Active crèches are appearing here as the Alexandra launch grows.
                       </p>
@@ -206,12 +206,12 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         </section>
 
         {showProofBand ? (
-          <section className="px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-            <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E9DDD0] bg-[var(--warm-white)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:p-8">
+          <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+            <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#E9DDD0] bg-[var(--warm-white)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:rounded-[2rem] sm:p-8">
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#A86C3A]">Near you now</p>
                 <h2
-                  className="mt-3 text-[2.2rem] leading-[1] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem]"
+                  className="mt-3 text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
                   style={{ fontFamily: 'var(--font-serif)' }}
                 >
                   Real crèches. Real spaces.
@@ -226,7 +226,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <Link
                     key={centre.id}
                     href={centreHref(centre)}
-                    className="rounded-[1.5rem] border border-[#E9DED1] bg-white p-4 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20"
+                    className="rounded-[1.35rem] border border-[#E9DED1] bg-white p-4 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20 sm:rounded-[1.5rem]"
                   >
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D837F]">
                       {centre.suburb ?? 'Johannesburg'}
@@ -249,7 +249,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#A86C3A]">How it works</p>
               <h2
-                className="mt-3 text-[2.25rem] leading-[1] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem]"
+                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem] sm:leading-[1]"
                 style={{ fontFamily: 'var(--font-serif)' }}
               >
                 One calm flow from search to application.
@@ -260,14 +260,14 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               {steps.map((step) => (
                 <article
                   key={step.title}
-                  className="rounded-[1.7rem] border border-[#E8DDD0] bg-white p-6 shadow-[0_12px_28px_rgba(31,44,39,0.05)]"
+                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)] sm:rounded-[1.7rem] sm:p-6"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(212,147,90,0.14)] text-[#A86C3A]">
                     <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-serif)' }}>
                       {step.number}
                     </span>
                   </div>
-                  <h3 className="mt-5 text-[1.45rem] leading-tight text-[#21302D]" style={{ fontFamily: 'var(--font-serif)' }}>
+                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-serif)' }}>
                     {step.title}
                   </h3>
                   <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{step.body}</p>
@@ -277,22 +277,22 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
-        <section className="px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.4rem] bg-[var(--forest)] px-6 py-12 text-white shadow-[0_30px_80px_rgba(26,46,31,0.24)] sm:px-10 sm:py-16 lg:px-16">
-            <div className="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] bg-[var(--forest)] px-5 py-10 text-white shadow-[0_30px_80px_rgba(26,46,31,0.24)] sm:rounded-[2.4rem] sm:px-10 sm:py-16 lg:px-16">
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-10">
               <div className="max-w-xl">
                 <h2
-                  className="text-[2.35rem] leading-[1.02] tracking-[-0.035em] text-white sm:text-[3.1rem]"
+                  className="text-[2rem] leading-[1.04] tracking-[-0.035em] text-white sm:text-[3.1rem] sm:leading-[1.02]"
                   style={{ fontFamily: 'var(--font-serif)' }}
                 >
                   Your child only leaves with someone you approved.
                 </h2>
-                <p className="mt-5 text-[16px] leading-8 text-[#D8E5D7] sm:text-[17px]">
+                <p className="mt-5 text-[15px] leading-7 text-[#D8E5D7] sm:text-[17px] sm:leading-8">
                   Pickup stays simple for the crèche and clear for the parent. The secure code is checked, authorised
                   adults are visible, and you hear about collection straight away.
                 </p>
 
-                <div className="mt-8 space-y-3">
+                <div className="mt-7 space-y-3">
                   {safetyPoints.map((item) => (
                     <div key={item} className="flex items-start gap-3 text-sm text-[#E4EEE3] sm:text-[15px]">
                       <span className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[#E3B37F]">
@@ -304,7 +304,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 </div>
               </div>
 
-              <div className="relative mx-auto w-full max-w-[360px] rounded-[3rem] border-[12px] border-[#111A12] bg-[#111714] p-6 shadow-[0_32px_72px_rgba(0,0,0,0.34)]">
+              <div className="relative mx-auto w-full max-w-[320px] rounded-[2.5rem] border-[12px] border-[#111A12] bg-[#111714] p-5 shadow-[0_32px_72px_rgba(0,0,0,0.34)] sm:max-w-[360px] sm:rounded-[3rem] sm:p-6">
                 <div className="mx-auto mb-8 h-1.5 w-16 rounded-full bg-[#2A352C]" />
                 <div className="space-y-6">
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
@@ -316,7 +316,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       {[1, 2, 3, 4].map((item) => (
                         <div
                           key={item}
-                          className="flex h-14 w-12 items-center justify-center rounded-2xl border border-[#3A4C3D] bg-[#1D2720] text-2xl font-bold text-[#F2D6B2]"
+                          className="flex h-12 w-11 items-center justify-center rounded-2xl border border-[#3A4C3D] bg-[#1D2720] text-2xl font-bold text-[#F2D6B2] sm:h-14 sm:w-12"
                         >
                           {item === 1 ? '8' : item === 2 ? '4' : '•'}
                         </div>
@@ -343,16 +343,16 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
-        <section className="px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl rounded-[2.2rem] bg-[linear-gradient(135deg,#0D9488_0%,#107F78_100%)] px-6 py-10 text-white shadow-[0_24px_60px_rgba(13,148,136,0.24)] sm:px-10 sm:py-12 lg:px-14">
+        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="mx-auto max-w-6xl rounded-[1.9rem] bg-[linear-gradient(135deg,#0D9488_0%,#107F78_100%)] px-5 py-9 text-white shadow-[0_24px_60px_rgba(13,148,136,0.24)] sm:rounded-[2.2rem] sm:px-10 sm:py-12 lg:px-14">
             <div className="max-w-3xl">
               <h2
-                className="text-[2.3rem] leading-[1] tracking-[-0.03em] text-white sm:text-[3rem]"
+                className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-white sm:text-[3rem] sm:leading-[1]"
                 style={{ fontFamily: 'var(--font-serif)' }}
               >
                 Start with your area. Save your profile when you’re ready.
               </h2>
-              <p className="mt-4 max-w-2xl text-[16px] leading-8 text-teal-50 sm:text-[17px]">
+              <p className="mt-4 max-w-2xl text-[15px] leading-7 text-teal-50 sm:text-[17px] sm:leading-8">
                 Browse what is near you first, then keep one parent profile ready for every application that follows.
               </p>
             </div>
@@ -360,7 +360,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Button
                 size="lg"
-                className="h-14 rounded-[1.05rem] bg-white px-7 text-base font-semibold text-[var(--teal)] shadow-none hover:bg-[#F3FBF9]"
+                className="h-14 w-full justify-center rounded-[1.05rem] bg-white px-7 text-base font-semibold text-[var(--teal)] shadow-none hover:bg-[#F3FBF9] sm:w-auto"
                 asChild
               >
                 <Link href="/directory">
@@ -371,7 +371,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               <Button
                 size="lg"
                 variant="ghost"
-                className="h-14 rounded-[1.05rem] border border-white/30 px-7 text-base font-semibold text-white hover:bg-white/10 hover:text-white"
+                className="h-14 w-full rounded-[1.05rem] border border-white/30 px-7 text-base font-semibold text-white hover:bg-white/10 hover:text-white sm:w-auto"
                 asChild
               >
                 <Link href="/register">Create My Parent Profile</Link>
