@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import HomeClientPage from './page.client'
+import HomeClientPage, { type HomeActiveCentre } from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -13,6 +13,13 @@ export const metadata: Metadata = {
   openGraph: {
     images: ['/og-image.png'],
   },
+}
+
+function pickPrimaryAgeGroup(value: unknown) {
+  if (!Array.isArray(value)) return null
+
+  const first = value.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
+  return first?.trim() ?? null
 }
 
 export default async function HomePage({
@@ -62,5 +69,30 @@ export default async function HomePage({
     }
   }
 
-  return <HomeClientPage />
+  let activeCentres: HomeActiveCentre[] = []
+
+  if (supabase) {
+    try {
+      const { data: centreRows } = await supabase
+        .from('ecd_centres')
+        .select('id,name,slug,suburb,age_groups,is_registered')
+        .eq('is_active', true)
+        .order('is_registered', { ascending: false })
+        .order('name', { ascending: true })
+        .limit(4)
+
+      activeCentres = (centreRows ?? []).map((centre: any) => ({
+        id: String(centre.id),
+        name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'ECD Crèche',
+        slug: typeof centre.slug === 'string' && centre.slug.trim().length > 0 ? centre.slug.trim() : null,
+        suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
+        primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
+        isRegistered: Boolean(centre.is_registered),
+      }))
+    } catch (error) {
+      console.error('[home] Failed to load active centres for landing page:', error)
+    }
+  }
+
+  return <HomeClientPage activeCentres={activeCentres} />
 }
