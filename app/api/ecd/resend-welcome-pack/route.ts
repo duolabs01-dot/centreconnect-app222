@@ -198,7 +198,8 @@ export async function POST(request: Request) {
     supportEmail: process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
     supportLink: buildUrl(appUrlRoot, '/ecd/support'),
     welcomeGuideLink: welcomeGuideTracked,
-    packageLabel: `${packageLabel} Welcome Pack`,
+    packageLabel,
+    packagePlan,
     centreLogoUrl: centre.logo_url ?? null,
     quickSteps: [
       {
@@ -293,6 +294,7 @@ export async function POST(request: Request) {
     { status: 502 }
   )
 }
+
 
 
 
