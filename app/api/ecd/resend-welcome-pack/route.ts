@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
 
 import {
   buildAuthCallbackRedirect,
@@ -8,19 +7,16 @@ import {
   sanitizeGeneratedAccessLinkWithDiagnostics,
 } from '@/lib/auth/onboarding-links'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
+import { queueEmail } from '@/lib/communications/emails'
+import { sendEmail } from '@/lib/email/send'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { combineName, resolveFirstName, splitFullName } from '@/lib/utils/name'
+import { resolveFirstName, splitFullName } from '@/lib/utils/name'
 import { getPublicPlanLabel, toPublicPlan } from '@/lib/billing/plans'
 
 type Payload = {
   ecdId?: string
   ownerEmail?: string
-}
-
-function sanitizeText(value: string | null | undefined, fallback: string) {
-  const trimmed = (value ?? '').trim()
-  return trimmed || fallback
 }
 
 function friendlyNameFromEmail(email: string, fallback: string) {
@@ -41,12 +37,6 @@ function buildUrl(root: string, pathname: string, query?: Record<string, string>
   return url.toString()
 }
 
-function firstName(value: string | null | undefined, fallback: string) {
-  const clean = (value ?? '').trim()
-  if (!clean) return fallback
-  return clean.split(' ')[0] || fallback
-}
-
 export async function POST(request: Request) {
   let payload: Payload
   try {
@@ -65,6 +55,7 @@ export async function POST(request: Request) {
   }
 
   const appUrlRoot = normalizeAppUrl()
+  const admin = createAdminClient()
   const eventKey = createNotificationEventKey('welcome_pack', ecdId)
   const toTrackedCtaLink = (cta: 'get_started' | 'welcome_pack' | 'qr_poster') =>
     buildUrl(appUrlRoot, '/api/invites/open', {
@@ -73,34 +64,10 @@ export async function POST(request: Request) {
       cta,
     })
 
-  const smtpHost = process.env.SMTP_HOST
-  const smtpPortRaw = process.env.SMTP_PORT
-  const smtpUser = process.env.SMTP_USER
-  const smtpPass = process.env.SMTP_PASS
-  const smtpFrom = process.env.SMTP_FROM
-
-  if (!smtpHost || !smtpPortRaw || !smtpUser || !smtpPass || !smtpFrom) {
-    console.error('resend-welcome-pack: SMTP configuration missing', {
-      smtpHost: Boolean(smtpHost),
-      smtpPort: Boolean(smtpPortRaw),
-      smtpUser: Boolean(smtpUser),
-      smtpPass: Boolean(smtpPass),
-      smtpFrom: Boolean(smtpFrom),
-    })
-    return NextResponse.json({ success: false, error: 'Email provider is not configured' }, { status: 500 })
-  }
-
-  const smtpPort = Number(smtpPortRaw)
-  if (!Number.isFinite(smtpPort) || smtpPort <= 0) {
-    console.error('resend-welcome-pack: invalid SMTP_PORT', smtpPortRaw)
-    return NextResponse.json({ success: false, error: 'Invalid SMTP port configured' }, { status: 500 })
-  }
-
-  const admin = createAdminClient()
   const { data: centre, error: centreError } = await admin
     .from('ecd_centres')
     .select(
-      'name,slug,primary_contact_name,primary_contact_first_name,primary_contact_surname,city,suburb,logo_url,cover_image_url,subscriptions(tier,status,monthly_price)'
+      'name,slug,primary_contact_name,primary_contact_first_name,city,suburb,logo_url,cover_image_url,subscriptions(tier,status,monthly_price)'
     )
     .eq('id', ecdId)
     .single()
@@ -121,9 +88,8 @@ export async function POST(request: Request) {
   const location = locationParts.length ? locationParts.join(', ') : 'your area'
 
   const ownerNameFallback = friendlyNameFromEmail(ownerEmail, 'Centre Owner')
-  let ownerFullName: string | null = null
   let ownerFirstName: string | null = null
-  let ownerSurname: string | null = null
+  let ownerFullName: string | null = null
 
   const { data: ownerUser, error: ownerUserError } = await admin
     .schema('auth')
@@ -135,31 +101,24 @@ export async function POST(request: Request) {
   if (!ownerUserError && ownerUser?.id) {
     const { data: profile, error: profileError } = await admin
       .from('user_profiles')
-      .select('first_name,surname,full_name')
+      .select('first_name,full_name')
       .eq('id', ownerUser.id)
       .maybeSingle()
+
     if (!profileError && profile) {
-      if (profile.full_name) ownerFullName = profile.full_name
       ownerFirstName = profile.first_name ?? null
-      ownerSurname = profile.surname ?? null
+      ownerFullName = profile.full_name ?? null
     }
   }
 
   const centreFallbackNames = splitFullName(centre.primary_contact_name)
   const fallbackFirstName = centre.primary_contact_first_name?.trim() || centreFallbackNames.firstName
-  const fallbackSurname = centre.primary_contact_surname?.trim() || centreFallbackNames.surname
-
-  const ownerName = resolveFirstName({
+  const ownerFirstNameForComms = resolveFirstName({
     firstName: ownerFirstName ?? fallbackFirstName,
     fullName: ownerFullName ?? centre.primary_contact_name,
     email: ownerEmail,
     fallback: ownerNameFallback,
   })
-  const ownerFirstNameForComms = firstName(ownerName, ownerNameFallback)
-  const ownerDisplayName = combineName(
-    ownerFirstNameForComms,
-    ownerSurname ?? fallbackSurname
-  ) || ownerFirstNameForComms
 
   const [childrenCountResult, attendanceCountResult, pickupCountResult] = await Promise.all([
     admin.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
@@ -212,6 +171,7 @@ export async function POST(request: Request) {
   } else if (magicLinkResult.error) {
     console.error('resend-welcome-pack: magic link generation failed', magicLinkResult.error)
   }
+
   const welcomeGuideUrl = buildUrl(appUrlRoot, '/ecd/welcome', {
     name: ownerFirstNameForComms,
     centre: centreName,
@@ -279,47 +239,28 @@ export async function POST(request: Request) {
     ],
   })
 
-  const publicCentreLink = buildUrl(appUrlRoot, `/centre/${centreSlug || 'profile'}`)
-  const plainText = [
-    `Hi ${ownerFirstNameForComms},`,
-    '',
-    `Welcome to CentreConnect for ${centreName}.`,
-    `Selected package: ${packageLabel}.`,
-    'Parents are already asking for the app.',
-    '',
-    `Owner profile: ${sanitizeText(ownerDisplayName, ownerName)}`,
-    `See your welcome pack: ${welcomeGuideTracked}`,
-    `Get started: ${getStartedTracked}`,
-    `Print parent QR poster: ${qrPosterLink}`,
-    `Public centre page: ${publicCentreLink}`,
-    '',
-    'Need help? WhatsApp +27 68 535 6430.',
-  ].join('\n')
-
   const subject = `Welcome to CentreConnect Pilot - ${centreName}`
+  const notificationPayload = {
+    subject,
+    tracked_links: {
+      get_started: getStartedTracked,
+      welcome_pack: welcomeGuideTracked,
+      qr_poster: qrPosterLink,
+    },
+    tracked_targets: {
+      get_started: getStartedUrl,
+      welcome_pack: welcomeGuideUrl,
+      qr_poster: qrPosterRawLink,
+    },
+  }
 
-  try {
-    const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: true,
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-    })
+  const resendResult = await sendEmail({
+    to: ownerEmail,
+    subject,
+    html,
+  })
 
-    await transporter.sendMail({
-      from: smtpFrom,
-      to: ownerEmail,
-      subject,
-      html,
-      text: plainText,
-      headers: {
-        'Reply-To': process.env.SUPPORT_EMAIL?.trim() || 'admin@centerconnect.co.za',
-      },
-    })
-
+  if (resendResult.success) {
     await upsertNotificationLog(admin, {
       centreId: ecdId,
       eventKey,
@@ -327,25 +268,43 @@ export async function POST(request: Request) {
       channel: 'email',
       recipient: ownerEmail.toLowerCase(),
       status: 'sent',
-      provider: 'smtp_nodemailer',
-      payload: {
-        subject,
-        tracked_links: {
-          get_started: getStartedTracked,
-          welcome_pack: welcomeGuideTracked,
-          qr_poster: qrPosterLink,
-        },
-        tracked_targets: {
-          get_started: getStartedUrl,
-          welcome_pack: welcomeGuideUrl,
-          qr_poster: qrPosterRawLink,
-        },
-      },
+      provider: 'resend',
+      providerMessageId: resendResult.messageId ?? null,
+      payload: notificationPayload,
     })
-  } catch (error) {
-    console.error('resend-welcome-pack: SMTP send failed', error)
-    return NextResponse.json({ success: false, error: 'Unable to send welcome pack email' }, { status: 502 })
+
+    return NextResponse.json({ success: true })
   }
 
-  return NextResponse.json({ success: true })
+  const queueResult = await queueEmail(ownerEmail, subject, html)
+
+  if (queueResult.success) {
+    await upsertNotificationLog(admin, {
+      centreId: ecdId,
+      eventKey,
+      eventType: 'welcome_pack',
+      channel: 'email',
+      recipient: ownerEmail.toLowerCase(),
+      status: 'queued',
+      provider: 'email_queue',
+      payload: notificationPayload,
+      errorMessage: resendResult.error ?? null,
+    })
+
+    return NextResponse.json({ success: true, queued: true })
+  }
+
+  await upsertNotificationLog(admin, {
+    centreId: ecdId,
+    eventKey,
+    eventType: 'welcome_pack',
+    channel: 'email',
+    recipient: ownerEmail.toLowerCase(),
+    status: 'failed',
+    provider: 'resend',
+    payload: notificationPayload,
+    errorMessage: queueResult.error ?? resendResult.error ?? 'Unable to send welcome pack email',
+  })
+
+  return NextResponse.json({ success: false, error: 'Unable to send welcome pack email' }, { status: 502 })
 }

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
@@ -62,6 +62,7 @@ export default async function EcdDashboardPage() {
     enrolledResult,
     revenueResult,
     staffResult,
+    childrenResult,
     subscriptionResult,
     previousRevenueResult,
   ] = await Promise.all([
@@ -70,6 +71,7 @@ export default async function EcdDashboardPage() {
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId).eq('status', 'enrolled'),
     supabase.from('invoices').select('total').eq('ecd_id', ecdId).eq('status', 'paid').gte('paid_at', monthStartIso),
     supabase.from('ecd_admins').select('user_id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
+    supabase.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
     supabase
       .from('subscriptions')
       .select('tier,status,monthly_price,trial_ends_at')
@@ -102,6 +104,7 @@ export default async function EcdDashboardPage() {
   const revenueThisMonth = (revenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
   const revenuePreviousMonth = (previousRevenueResult.data ?? []).reduce((sum, inv) => sum + Number(inv.total), 0)
   const staffCount = staffResult.count ?? 0
+  const childrenCount = childrenResult.count ?? 0
   const subscription = subscriptionResult.data
 
   const applications = (pendingApplicationsResult.data ?? []) as PendingApplicationRow[]
@@ -144,6 +147,7 @@ export default async function EcdDashboardPage() {
   const profileDone = profileItems.filter((item) => item.done).length
   const profilePct = pct(profileDone, profileItems.length)
   const onboardingChecklistItems = [
+    { id: 'quick-child', label: 'Add your first child', done: childrenCount > 0, href: '/ecd/children/new' },
     { id: 'quick-logo', label: 'Upload centre logo', done: !!centre?.logo_url, href: '/ecd/website#brand-media' },
     { id: 'quick-hero', label: 'Add hero cover image', done: !!centre?.cover_image_url, href: '/ecd/website#brand-media' },
     {
@@ -260,6 +264,48 @@ export default async function EcdDashboardPage() {
           }}
         />
 
+
+        {childrenCount === 0 ? (
+          <section className="rounded-[2.5rem] border border-teal-100 bg-[linear-gradient(135deg,rgba(240,253,250,1)_0%,rgba(255,255,255,1)_70%,rgba(255,247,237,0.9)_100%)] p-6 shadow-sm sm:p-7">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.28em] text-teal-700">Start here</p>
+                  <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                    Bring your first child onto CentreConnect.
+                  </h2>
+                  <p className="max-w-2xl text-sm font-medium leading-7 text-slate-600 sm:text-base">
+                    You only need one child to make the whole system click. Add one child now, then come back and mark attendance once.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg" className="rounded-2xl bg-teal-600 text-white font-black shadow-lg shadow-teal-900/10 hover:bg-teal-700">
+                    <Link href="/ecd/children/new">Add First Child</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="rounded-2xl border-slate-200 bg-white font-black text-slate-700 hover:bg-slate-50">
+                    <Link href="/ecd/welcome?onboarding=1">Open Welcome Guide</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                {[
+                  'Add one child from your paper register.',
+                  'Mark attendance once on your phone.',
+                  'Turn on safe pickup before the next collection.',
+                ].map((item, index) => (
+                  <div key={item} className="rounded-[1.6rem] border border-white bg-white/90 p-4 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-sm font-black text-teal-700">
+                        {index + 1}
+                      </span>
+                      <p className="text-sm font-semibold leading-6 text-slate-700">{item}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        ) : null}
         {/* Primary Action Hub */}
         <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {[
@@ -432,6 +478,8 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
+
+
 
 
 

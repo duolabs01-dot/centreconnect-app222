@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
-import { sendSmtpMail } from '@/lib/email/smtp'
+import { sendEmail } from '@/lib/email/send'
 import { renderPasswordSetupConfirmedEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
@@ -151,29 +150,13 @@ export async function POST() {
   })
 
   const subject = 'Your CentreConnect password was changed'
-  let delivered = false
+  const resendResult = await sendEmail({
+    to: email,
+    subject,
+    html,
+  })
 
-  const resendEligibility = shouldAttemptResendForRecipient(email)
-  if (resendEligibility.allowed) {
-    const resendResult = await sendEmail({
-      to: email,
-      subject,
-      html,
-    })
-    delivered = resendResult.success
-  }
-
-  if (!delivered) {
-    const smtpResult = await sendSmtpMail({
-      to: [email],
-      subject,
-      text: `Hi ${firstName}, your CentreConnect password was changed. Sign in here: ${loginLink}`,
-      html,
-    })
-    delivered = smtpResult.ok
-  }
-
-  if (delivered) {
+  if (resendResult.success) {
     return NextResponse.json({
       success: true,
       role,
@@ -185,7 +168,7 @@ export async function POST() {
 
   if (!queueResult.success) {
     return NextResponse.json(
-      { success: false, error: queueResult.error ?? 'Failed to queue confirmation email' },
+      { success: false, error: queueResult.error ?? resendResult.error ?? 'Failed to queue confirmation email' },
       { status: 502 }
     )
   }

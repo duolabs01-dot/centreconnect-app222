@@ -1,78 +1,55 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   ArrowRight,
+  BadgeCheck,
+  BookOpen,
   CheckCircle2,
   Copy,
-  HeartHandshake,
-  MessageCircle,
-  QrCode,
-  Sparkles,
-  X,
-  BookOpen,
-  ChevronLeft,
-  ChevronRight,
-  Lock,
-  Smartphone,
-  ShieldCheck,
-  Zap,
-  Printer,
+  ExternalLink,
+  FileCheck2,
   Globe,
-  Settings2,
-  Lightbulb
+  Lock,
+  MessageCircle,
+  Printer,
+  QrCode,
+  ShieldCheck,
+  Sparkles,
+  Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { CentreCard } from '@/components/parent/CentreCard'
-import { trackAnalyticsEvent } from '@/lib/analytics/client-events'
+import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-// High-quality imagery: African preschool children with smiling teacher
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1540479859555-17af45c78602?q=80&w=1600&auto=format&fit=crop'
-const FOUNDER_PHOTO = '/founder-mandlenkosi.jpeg'
+type ProfileRow = {
+  first_name: string | null
+  full_name: string | null
+  first_password_set_at: string | null
+}
 
-const scenarios = [
-  {
-    id: 'attendance',
-    emoji: '✅',
-    title: 'DSD-Ready Attendance',
-    tag: 'DSD COMPLIANT',
-    desc: 'Paper registers take hours. This takes 30 seconds.',
-    value: 'Saves 10+ hours of admin every week.',
-    detail: 'Tap Present, Absent, or Sick on your phone. At month-end, click "Export PDF" and your official DSD register is ready to print and sign for inspectors.'
-  },
-  {
-    id: 'pickup',
-    emoji: '🔐',
-    title: 'Safe Gate Security',
-    tag: 'GATE SECURITY',
-    desc: 'Stop arguing at the gate with unknown people.',
-    value: 'Keeps staff calm and children 100% safe.',
-    detail: 'Approved guardians show a secure QR code on their phone. You scan it, the system says "Verified," and the gate opens. Simple, firm, and safe.'
-  },
-  {
-    id: 'referral',
-    emoji: '💸',
-    title: 'Refer & Earn R100',
-    tag: 'EARN R100',
-    desc: 'Get rewarded for helping other Creche Owners.',
-    value: 'R100 for you, 1st month fee free for them.',
-    detail: 'Share your invite link with another ECD Owner. When they join the pilot, you get R100 off your next bill and they get their first month completely free.'
-  }
-]
+type CentreMembership = {
+  id: string
+  slug: string | null
+  name: string | null
+  suburb: string | null
+  city: string | null
+  logo_url: string | null
+  cover_image_url: string | null
+  description: string | null
+  phone: string | null
+  address: string | null
+}
 
-const principalTips = [
-  { emoji: "📱", tip: "Add CentreConnect to your home screen. It works like an app — no download needed." },
-  { emoji: "💾", tip: "Start by adding just 5 children from your register. You'll see how quick it is." },
-  { emoji: "📸", tip: "Add a photo of your centre. Parents choose with their eyes first." },
-]
+type MembershipRow = {
+  ecd_centres: CentreMembership | CentreMembership[] | null
+}
 
 function toSafeText(value: string | null | undefined, fallback: string) {
   const next = (value ?? '').trim()
@@ -81,27 +58,63 @@ function toSafeText(value: string | null | undefined, fallback: string) {
 
 function toLocation(suburb: string | null | undefined, city: string | null | undefined) {
   const parts = [suburb, city].map((part) => (part ?? '').trim()).filter(Boolean)
-  return parts.length > 0 ? parts.join(', ') : 'your area'
+  return parts.length > 0 ? parts.join(', ') : 'Johannesburg'
+}
+
+function extractCentre(value: MembershipRow['ecd_centres']) {
+  if (!value) return null
+  if (Array.isArray(value)) return value[0] ?? null
+  return value
+}
+
+function toPackageLabel(value: string | null | undefined) {
+  const raw = (value ?? '').trim()
+  if (!raw) return 'Pilot'
+  return raw
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function buildWhatsappHref(firstName: string, centreName: string) {
+  const text = `Hi Mandla, this is ${firstName} from ${centreName}. Please help me finish my CentreConnect setup.`
+  return `https://wa.me/27685356430?text=${encodeURIComponent(text)}`
 }
 
 export default function CentreConnectWelcomePack() {
+  const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
+  const queryString = searchParams.toString()
+  const safeNextPath = queryString ? `/ecd/welcome?${queryString}` : '/ecd/welcome'
 
-  // Navigation State
-  const [currentPage, setCurrentPage] = useState<number>(0)
-  const [step, setStep] = useState<0 | 1>(0) // 0 = Password Setup, 1 = The Guide
-  
-  // Centre Data
-  const [contactName, setContactName] = useState('Friend')
-  const [centreName, setCentreName] = useState('your creche')
-  const [location, setLocation] = useState('your area')
-  const [centreSlug, setCentreSlug] = useState('')
-  const [ecdId, setEcdId] = useState<string | null>(null)
-  const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
-  const [coverImageUrl, setCoverImageUrl] = useState<string>(HERO_IMAGE)
+  const queryDefaults = useMemo(
+    () => ({
+      contactName: toSafeText(searchParams.get('name'), 'Friend'),
+      centreName: toSafeText(searchParams.get('centre'), 'your creche'),
+      location: toSafeText(searchParams.get('location'), 'Johannesburg'),
+      centreSlug: toSafeText(searchParams.get('slug'), ''),
+      packageLabel: toPackageLabel(searchParams.get('package')),
+    }),
+    [searchParams]
+  )
+
+  const [contactName, setContactName] = useState(queryDefaults.contactName)
+  const [centreName, setCentreName] = useState(queryDefaults.centreName)
+  const [location, setLocation] = useState(queryDefaults.location)
+  const [centreSlug, setCentreSlug] = useState(queryDefaults.centreSlug)
+  const [packageLabel, setPackageLabel] = useState(queryDefaults.packageLabel)
+
+  const [childrenCount, setChildrenCount] = useState(0)
+  const [attendanceCount, setAttendanceCount] = useState(0)
+  const [pickupCount, setPickupCount] = useState(0)
+  const [hasLogo, setHasLogo] = useState(false)
+  const [hasCoverImage, setHasCoverImage] = useState(false)
+  const [hasDescription, setHasDescription] = useState(false)
+  const [hasPhone, setHasPhone] = useState(false)
+  const [hasAddress, setHasAddress] = useState(false)
   const [copyStatus, setCopyStatus] = useState<'idle' | 'done'>('idle')
 
-  // Password Setup State
   const [checkingSession, setCheckingSession] = useState(true)
   const [hasSession, setHasSession] = useState(false)
   const [requiresPasswordSetup, setRequiresPasswordSetup] = useState(false)
@@ -111,365 +124,573 @@ export default function CentreConnectWelcomePack() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const firstName = useMemo(() => contactName.split(' ')[0] || 'Friend', [contactName])
-  const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : ''
+  const profileComplete = hasLogo && hasCoverImage && hasDescription && hasPhone && hasAddress
+  const posterHref = centreSlug ? `/centre/${centreSlug}/poster` : '/ecd/website'
+  const publicCentreHref = centreSlug ? `/centre/${centreSlug}` : '/ecd/website'
+  const supportWhatsappHref = buildWhatsappHref(firstName, centreName)
 
   useEffect(() => {
     let mounted = true
-    const load = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+
+    async function loadWelcomeContext() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
       if (!mounted) return
-      
-      const signedIn = Boolean(session)
-      setHasSession(signedIn)
 
-      if (signedIn && session?.user?.id) {
-        const { data: profile } = await supabase.from('user_profiles').select('first_password_set_at').eq('id', session.user.id).maybeSingle()
-        const mustSetPassword = !profile?.first_password_set_at
-        setRequiresPasswordSetup(mustSetPassword)
-        if (!mustSetPassword) setStep(1)
-
-        const { data: centre } = await supabase.from('ecd_centres').select('id,slug,name,logo_url,cover_image_url,suburb,city').eq('owner_id', session.user.id).maybeSingle()
-        if (centre && mounted) {
-          setEcdId(centre.id)
-          setCentreSlug(centre.slug)
-          setCentreName(centre.name)
-          setCentreLogoUrl(centre.logo_url)
-          if (centre.cover_image_url) setCoverImageUrl(centre.cover_image_url)
-          setLocation(toLocation(centre.suburb, centre.city))
-        }
+      if (!session?.user?.id) {
+        setHasSession(false)
+        setCheckingSession(false)
+        return
       }
+
+      setHasSession(true)
+
+      const [profileResult, membershipResult] = await Promise.all([
+        supabase
+          .from('user_profiles')
+          .select('first_name,full_name,first_password_set_at')
+          .eq('id', session.user.id)
+          .maybeSingle(),
+        supabase
+          .from('ecd_admins')
+          .select('ecd_centres:ecd_id(id,slug,name,suburb,city,logo_url,cover_image_url,description,phone,address)')
+          .eq('user_id', session.user.id)
+          .limit(1)
+          .maybeSingle(),
+      ])
+
+      if (!mounted) return
+
+      const profile = profileResult.data as ProfileRow | null
+      const centre = extractCentre((membershipResult.data as MembershipRow | null)?.ecd_centres ?? null)
+
+      setRequiresPasswordSetup(!profile?.first_password_set_at)
+      setContactName(toSafeText(profile?.first_name ?? profile?.full_name, queryDefaults.contactName))
+
+      if (centre) {
+        setCentreName(toSafeText(centre.name, queryDefaults.centreName))
+        setLocation(toLocation(centre.suburb, centre.city))
+        setCentreSlug(toSafeText(centre.slug, queryDefaults.centreSlug))
+        setPackageLabel(queryDefaults.packageLabel)
+        setHasLogo(Boolean(centre.logo_url?.trim()))
+        setHasCoverImage(Boolean(centre.cover_image_url?.trim()))
+        setHasDescription(Boolean(centre.description?.trim()))
+        setHasPhone(Boolean(centre.phone?.trim()))
+        setHasAddress(Boolean(centre.address?.trim() && centre.suburb?.trim()))
+
+        const [childrenResult, attendanceResult, pickupResult] = await Promise.all([
+          supabase.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', centre.id),
+          supabase.from('attendance').select('id', { count: 'exact', head: true }).eq('ecd_id', centre.id),
+          supabase.from('pickup_codes').select('id', { count: 'exact', head: true }).eq('ecd_id', centre.id),
+        ])
+
+        if (!mounted) return
+
+        setChildrenCount(childrenResult.count ?? 0)
+        setAttendanceCount(attendanceResult.count ?? 0)
+        setPickupCount(pickupResult.count ?? 0)
+      }
+
       setCheckingSession(false)
     }
-    void load()
-    return () => { mounted = false }
-  }, [supabase])
 
-  const handlePasswordSetup = async (e: FormEvent) => {
-    e.preventDefault()
-    if (password.length < 8) { setPasswordError('Use at least 8 characters.'); return }
-    if (password !== confirmPassword) { setPasswordError('Passwords do not match.'); return }
-    
+    void loadWelcomeContext()
+
+    return () => {
+      mounted = false
+    }
+  }, [queryDefaults.centreName, queryDefaults.centreSlug, queryDefaults.contactName, queryDefaults.packageLabel, supabase])
+
+  const activationSteps = useMemo(
+    () => [
+      {
+        id: 'child',
+        step: '01',
+        title: 'Add your first child',
+        description:
+          'Start with one child only. Once that child is in, attendance, daily reports, and the parent experience make sense immediately.',
+        href: '/ecd/children/new',
+        ctaLabel: childrenCount > 0 ? 'Children added' : 'Add first child',
+        done: childrenCount > 0,
+        icon: Users,
+      },
+      {
+        id: 'attendance',
+        step: '02',
+        title: 'Mark attendance once',
+        description:
+          'Take one register on your phone so the daily rhythm is live and your team sees how fast the new flow is.',
+        href: '/ecd/attendance',
+        ctaLabel: attendanceCount > 0 ? 'Attendance live' : 'Open attendance',
+        done: attendanceCount > 0,
+        icon: FileCheck2,
+      },
+      {
+        id: 'pickup',
+        step: '03',
+        title: 'Turn on safe pickup',
+        description:
+          'Approve the adults who can collect and use secure codes at the gate. This is where parents start to feel the difference.',
+        href: '/ecd/pickup',
+        ctaLabel: pickupCount > 0 ? 'Pickup ready' : 'Set up pickup',
+        done: pickupCount > 0,
+        icon: ShieldCheck,
+      },
+      {
+        id: 'profile',
+        step: '04',
+        title: 'Finish your centre profile',
+        description:
+          'Logo, cover photo, phone number, and address help parents trust what they see before they ever contact you.',
+        href: hasLogo || hasCoverImage ? '/ecd/website' : '/ecd/profile',
+        ctaLabel: profileComplete ? 'Profile ready' : 'Finish profile',
+        done: profileComplete,
+        icon: Globe,
+      },
+    ],
+    [attendanceCount, childrenCount, hasCoverImage, hasLogo, pickupCount, profileComplete]
+  )
+
+  const completedSteps = activationSteps.filter((step) => step.done).length
+  const progressPct = Math.round((completedSteps / activationSteps.length) * 100)
+  const nextStep = activationSteps.find((step) => !step.done)
+
+  async function handlePasswordSetup(event: FormEvent) {
+    event.preventDefault()
+    setPasswordError(null)
+
+    if (password.length < 8) {
+      setPasswordError('Use at least 8 characters.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError('Passwords do not match.')
+      return
+    }
+
     setPasswordSaving(true)
+
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) { setPasswordError(error.message); setPasswordSaving(false); return }
-    
+    if (error) {
+      setPasswordError(error.message)
+      setPasswordSaving(false)
+      return
+    }
+
     await fetch('/api/auth/password-setup-confirmed', { method: 'POST' }).catch(() => null)
     setRequiresPasswordSetup(false)
-    setStep(1)
-    toast.success('Secure password set! Welcome to your guide.')
+    setPasswordSaving(false)
+    toast.success('Password saved. Your centre guide is ready.')
   }
 
-  const pages = [
-    // PAGE 0: Welcome Hero
-    <div key="page0" className="space-y-8">
-      <div className="relative w-full overflow-hidden rounded-[2.5rem] border-4 border-white shadow-2xl bg-white aspect-[16/9]">
-        <Image src={coverImageUrl} alt="Children in a Johannesburg creche playing with teacher smiling" fill className="object-cover" unoptimized />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
-        <div className="absolute bottom-0 p-8 text-white">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-400">Welcome Home</p>
-          <h1 className="mt-2 text-4xl font-black tracking-tight lg:text-6xl leading-tight">Sawubona, {firstName} 👋</h1>
-          <p className="mt-4 max-w-xl text-lg font-medium text-slate-200">{centreName} is now digital. Built for the principals and MaGogos who do the hard work every day.</p>
-        </div>
-      </div>
-      <div className="text-center space-y-4">
-        <p className="text-slate-600 font-bold text-lg italic">Swipe or click to peruse your new Digital Office guide.</p>
-        <div className="flex justify-center gap-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className={cn("h-2 rounded-full transition-all duration-300", currentPage === i ? "w-8 bg-cyan-600" : "w-2 bg-slate-200")} />
-          ))}
-        </div>
-      </div>
-    </div>,
+  function handleCopyCentreLink() {
+    if (!centreSlug) {
+      toast.info('Finish your centre profile first, then your public link will be ready to share.')
+      return
+    }
 
-    // PAGE 1: Value Scenarios
-    <div key="page1" className="space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Simple Tools, Powerful Results</h2>
-        <p className="text-slate-500 font-medium">Click any card to see how it saves you time.</p>
-      </div>
-      <div className="grid gap-4">
-        {scenarios.map(s => (
-          <button 
-            key={s.id}
-            onClick={() => toast.info('For demo purposes: This is just a preview!', { icon: '💡' })}
-            className="flex flex-col items-start p-6 rounded-[2rem] border-2 border-slate-100 bg-white text-left transition-all hover:border-cyan-200 hover:shadow-xl group"
-          >
-            <div className="flex w-full items-center justify-between mb-3">
-              <span className="text-3xl">{s.emoji}</span>
-              <span className="rounded-full bg-cyan-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-cyan-700">{s.tag}</span>
-            </div>
-            <h3 className="text-xl font-black text-slate-900 group-hover:text-cyan-700">{s.title}</h3>
-            <p className="text-sm font-medium text-slate-500 mt-1">{s.desc}</p>
-            <div className="mt-4 pt-4 border-t border-slate-50 w-full">
-              <p className="text-xs font-black text-emerald-600 uppercase tracking-widest">The Win: {s.value}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </div>,
+    const absoluteUrl = `${window.location.origin}/centre/${centreSlug}`
+    navigator.clipboard.writeText(absoluteUrl).then(
+      () => {
+        setCopyStatus('done')
+        toast.success('Centre link copied. Share it with parents on WhatsApp.')
+        window.setTimeout(() => setCopyStatus('idle'), 2000)
+      },
+      () => {
+        toast.error('We could not copy the link. Please try again.')
+      }
+    )
+  }
 
-    // PAGE 2: Digital Identity (Mock Snapshot)
-    <div key="page2" className="space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Identity Online</h2>
-        <p className="text-slate-500 font-medium">This is how parents see your creche in our directory.</p>
-      </div>
-      <div className="mx-auto max-w-sm">
-        <CentreCard
-          id={ecdId || 'preview'}
-          slug={centreSlug}
-          name={centreName}
-          logo_url={centreLogoUrl || undefined}
-          cover_image_url={coverImageUrl}
-          address={location}
-          age_groups={['3m - 6y old']}
-          tagline={toSafeText(centreName, 'Trusted local creche')}
-          is_claimed={true}
-          rating={4.8}
-        />
-      </div>
-      <div className="rounded-[2.5rem] bg-emerald-600 p-8 text-white text-center shadow-2xl shadow-emerald-900/30">
-        <h3 className="text-2xl font-black mb-2">Activation Step</h3>
-        <p className="text-emerald-100 mb-6 font-medium">Tap below to list your centre and go live instantly.</p>
-        <Button 
-          className="h-16 w-full rounded-2xl bg-white text-emerald-700 font-black text-lg hover:bg-emerald-50 shadow-xl active:scale-95 transition-all"
-          onClick={() => toast.success('🚀 Activation Done! Your centre is now indexed and live.')}
-        >
-          🚀 Launch My Profile & Go Live
-        </Button>
-      </div>
-    </div>,
-
-    // PAGE 3: Quick Tools & Actions
-    <div key="page3" className="space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Quick Actions</h2>
-        <p className="text-slate-500 font-medium">Start using your digital office right now.</p>
-      </div>
-      
-      <div className="grid gap-4">
-        <Card className="rounded-[2.5rem] border-2 border-slate-100 bg-white p-6 shadow-lg">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-cyan-100 bg-cyan-50/30 font-black text-cyan-800 hover:bg-cyan-50 transition-all">
-              <Link href={posterHref} target="_blank">
-                <Printer className="mr-2 h-5 w-5" /> Print Gate Poster
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50">
-              <Link href="/ecd/website">
-                <Globe className="mr-2 h-5 w-5" /> Website Setup
-              </Link>
-            </Button>
-            <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50">
-              <Link href="/ecd/profile">
-                <Settings2 className="mr-2 h-5 w-5" /> Centre Settings
-              </Link>
-            </Button>
-            <Button 
-              onClick={() => {
-                const absolute = `${window.location.origin}/centre/${centreSlug}`
-                navigator.clipboard.writeText(absolute)
-                setCopyStatus('done')
-                toast.success('Link copied! Share it on WhatsApp.')
-                setTimeout(() => setCopyStatus('idle'), 2000)
-              }}
-              variant="outline" 
-              className={cn("h-14 rounded-2xl border-2 border-slate-100 bg-white font-black text-slate-700 hover:bg-slate-50", copyStatus === 'done' && "border-emerald-500 text-emerald-700 bg-emerald-50")}
-            >
-              <Copy className="mr-2 h-5 w-5" /> {copyStatus === 'done' ? 'Link Copied!' : 'Share My Link'}
-            </Button>
-          </div>
-        </Card>
-
-        <Card className="rounded-[2.5rem] border-2 border-amber-100 bg-amber-50/50 p-6 shadow-md">
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="h-5 w-5 text-amber-600" />
-            <p className="text-xs font-black uppercase tracking-widest text-amber-700">Tips from other Principals</p>
-          </div>
-          <div className="space-y-3">
-            {principalTips.map((t, i) => (
-              <div key={i} className="flex items-start gap-3 bg-white/80 p-3 rounded-2xl border border-amber-100/50">
-                <span className="text-xl">{t.emoji}</span>
-                <p className="text-sm font-bold text-slate-700 leading-snug">{t.tip}</p>
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-10 selection:bg-cyan-100 selection:text-cyan-900">
+        <div className="mx-auto max-w-md">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+            <CardContent className="space-y-4 p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+                <BookOpen className="h-5 w-5 animate-pulse" />
               </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>,
-
-    // PAGE 4: Founding Member Pricing
-    <div key="page4" className="space-y-8">
-      <div className="text-center space-y-2">
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Your Founding Package</h2>
-        <p className="text-slate-500 font-medium">You are on the Platinum Pilot tier for the next 4 weeks.</p>
-      </div>
-      
-      <Card className="rounded-[2.5rem] border-2 border-cyan-100 bg-white p-8 shadow-xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12"><Sparkles size={120} /></div>
-        <div className="flex items-center justify-between border-b pb-6 border-slate-100 mb-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600">Pilot Month Fee</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-slate-900">R0</span>
-              <span className="text-xl text-slate-300 line-through font-bold">R299</span>
-            </div>
-          </div>
-          <div className="h-16 w-16 rounded-[1.5rem] bg-emerald-50 flex items-center justify-center text-emerald-600">
-            <CheckCircle2 size={32} />
-          </div>
-        </div>
-        
-        <table className="w-full text-left mb-6">
-          <thead>
-            <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              <th className="py-2">Features</th>
-              <th className="text-center py-2">Starter</th>
-              <th className="text-center py-2 text-cyan-600">Platinum</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm font-bold text-slate-700">
-            {[
-              { label: 'DSD Register', s: false, p: true },
-              { label: 'QR Security', s: false, p: true },
-              { label: 'Parent App', s: true, p: true },
-              { label: 'WhatsApp Help', s: false, p: true },
-            ].map((row) => (
-              <tr key={row.label} className="border-t border-slate-50">
-                <td className="py-2.5">{row.label}</td>
-                <td className="text-center py-2.5">{row.s ? '✓' : '—'}</td>
-                <td className="text-center py-2.5 text-cyan-600">✓</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <p className="text-xs font-black text-slate-400 text-center uppercase tracking-widest">Locked In forever as a pilot member</p>
-      </Card>
-
-      <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-xl">
-        <div className="flex items-center gap-4 mb-4">
-          <Image src={FOUNDER_PHOTO} alt="Mandlenkosi" width={64} height={64} className="h-16 w-16 rounded-full border-2 border-white/20 object-cover shadow-md" />
-          <div>
-            <p className="text-base font-black leading-tight text-white">Direct Support</p>
-            <p className="text-xs font-bold text-cyan-400 uppercase tracking-widest mt-1">Founder, CentreConnect</p>
-          </div>
-        </div>
-        <p className="text-base font-medium leading-relaxed mb-6">
-          Need a hand setting up? WhatsApp me directly. I am here to help you move from paper to digital.
-        </p>
-        <Button asChild className="h-14 w-full rounded-2xl bg-[#25D366] text-white font-black text-lg hover:bg-green-600 shadow-xl shadow-green-900/20 active:scale-95 transition-all">
-          <Link href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20ready%20to%20start!">
-            <MessageCircle className="mr-2 h-6 w-6 fill-current" /> WhatsApp Mandla Now
-          </Link>
-        </Button>
-      </div>
-    </div>
-  ]
-
-  return (
-    <div className="min-h-screen bg-slate-50 pb-20 selection:bg-cyan-100 selection:text-cyan-900">
-      
-      {/* Sticky Progress Bar */}
-      <div className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-xl border-b border-slate-100 px-4 py-3 shadow-sm">
-        <div className="mx-auto max-w-5xl flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-cyan-600 flex items-center justify-center text-white shadow-lg">
-              <BookOpen size={16} />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Onboarding</p>
-              <p className="text-xs font-black text-slate-900">Welcome Guide</p>
-            </div>
-          </div>
-          <div className="flex-1 max-w-xs h-2 rounded-full bg-slate-100 overflow-hidden mx-2">
-            <motion.div 
-              className="h-full bg-cyan-600 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${((currentPage + 1) / pages.length) * 100}%` }}
-            />
-          </div>
-          <p className="text-[10px] font-black text-cyan-700 whitespace-nowrap">{currentPage + 1} / {pages.length}</p>
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Checking your secure link</p>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900">Opening your centre guide</h1>
+                <p className="text-sm font-medium leading-6 text-slate-500">
+                  We are making sure you land in the right workspace.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+    )
+  }
 
-      <AnimatePresence mode="wait">
-        {step === 0 ? (
-          <motion.section 
-            key="auth"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col items-center justify-center px-4"
-          >
-            <Card className="w-full rounded-[2.5rem] border-slate-200 bg-white shadow-2xl p-8">
-              <div className="text-center space-y-2 mb-8">
-                <div className="mx-auto h-12 w-12 rounded-2xl bg-cyan-50 flex items-center justify-center text-cyan-600 mb-4">
-                  <Lock size={24} />
+  if (!hasSession) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-10 selection:bg-cyan-100 selection:text-cyan-900">
+        <div className="mx-auto max-w-md">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+            <CardContent className="space-y-5 p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Secure access needed</p>
+                <h1 className="text-2xl font-black tracking-tight text-slate-900">Open your CentreConnect invite again</h1>
+                <p className="text-sm font-medium leading-6 text-slate-500">
+                  This guide opens from a secure sign-in link. Use the latest invite email, or sign in to continue with your setup.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <Button asChild className="h-12 w-full rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
+                  <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>Open secure sign in</Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-slate-200 text-sm font-black">
+                  <Link href={supportWhatsappHref}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    WhatsApp Mandla for help
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  if (requiresPasswordSetup) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-10 selection:bg-cyan-100 selection:text-cyan-900">
+        <div className="mx-auto max-w-md">
+          <Card className="rounded-[2rem] border border-slate-200 bg-white shadow-xl">
+            <CardContent className="space-y-6 p-6">
+              <div className="space-y-3 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-700">
+                  <Lock className="h-5 w-5" />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight leading-tight">Secure Your Office</h2>
-                <p className="text-sm font-medium text-slate-500 leading-relaxed">Set your password to open your Guide and Dashboard.</p>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Secure your centre account</p>
+                  <h1 className="text-2xl font-black tracking-tight text-slate-900">Set your password</h1>
+                  <p className="text-sm font-medium leading-6 text-slate-500">
+                    One password, then your welcome guide and dashboard open on the same account.
+                  </p>
+                </div>
               </div>
+
+              <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">Centre ready</p>
+                <p className="mt-2 text-lg font-black text-slate-900">{centreName}</p>
+                <p className="mt-1 text-sm font-medium text-slate-500">{location}</p>
+              </div>
+
               <form onSubmit={handlePasswordSetup} className="space-y-4">
-                <input 
-                  type="password" placeholder="New Password" required value={password} onChange={e => setPassword(e.target.value)}
-                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all shadow-inner"
+                <Input
+                  type="password"
+                  placeholder="New password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="h-14 rounded-2xl px-4 text-base font-semibold"
                 />
-                <input 
-                  type="password" placeholder="Confirm Password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                  className="h-14 w-full rounded-2xl border-2 border-slate-50 bg-slate-50 px-4 font-bold outline-none focus:border-cyan-500 transition-all shadow-inner"
+                <Input
+                  type="password"
+                  placeholder="Confirm password"
+                  required
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  className="h-14 rounded-2xl px-4 text-base font-semibold"
                 />
-                {passwordError && <p className="text-xs font-bold text-rose-600 px-2">{passwordError}</p>}
-                <Button className="h-14 w-full rounded-2xl bg-cyan-600 font-black shadow-lg shadow-cyan-900/20 text-lg active:scale-95 transition-all" disabled={passwordSaving}>
-                  {passwordSaving ? 'Securing...' : 'Set Password & Open Guide →'}
+                {passwordError ? <p className="px-1 text-xs font-bold text-rose-600">{passwordError}</p> : null}
+                <Button
+                  type="submit"
+                  className="h-14 w-full rounded-2xl bg-teal-600 text-base font-black hover:bg-teal-700"
+                  disabled={passwordSaving}
+                >
+                  {passwordSaving ? 'Saving password...' : 'Set password and continue'}
                 </Button>
               </form>
-            </Card>
-          </motion.section>
-        ) : (
-          <motion.main 
-            key="guide"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="mx-auto max-w-5xl px-4 pt-12"
-          >
-            <div className="relative min-h-[650px] pb-24">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentPage}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {pages[currentPage]}
-                </motion.div>
-              </AnimatePresence>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
-              {/* Book Controls */}
-              <div className="fixed bottom-8 inset-x-4 flex justify-between gap-4 max-w-5xl mx-auto z-[90]">
-                <Button 
-                  variant="outline" 
-                  disabled={currentPage === 0}
-                  onClick={() => setCurrentPage(p => p - 1)}
-                  className="h-14 w-14 rounded-2xl border-2 bg-white shadow-xl active:scale-90 flex-shrink-0"
-                >
-                  <ChevronLeft size={24} />
-                </Button>
-                
-                {currentPage < pages.length - 1 ? (
-                  <Button 
-                    onClick={() => setCurrentPage(p => p + 1)}
-                    className="h-14 flex-1 rounded-2xl bg-slate-900 text-white font-black text-lg shadow-xl active:scale-95 transition-all"
-                  >
-                    Next Page <ChevronRight size={20} className="ml-2" />
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f3f8f8_100%)] pb-16 selection:bg-cyan-100 selection:text-cyan-900">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+        <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#0f766e_0%,#14b8a6_100%)] p-5 text-white sm:p-7">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em]">
+                Welcome pack live
+              </span>
+              <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em]">
+                {packageLabel}
+              </span>
+            </div>
+            <div className="mt-4 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm font-bold text-teal-50">{location}</p>
+                  <h1 className="text-[2rem] font-black leading-tight tracking-tight sm:text-[2.5rem]">
+                    Sawubona, {firstName}. Your centre is ready.
+                  </h1>
+                  <p className="max-w-2xl text-sm font-medium leading-7 text-teal-50 sm:text-base">
+                    This guide shows the exact first moves that make CentreConnect click for your team. Start with one child,
+                    then everything else gets easier.
+                  </p>
+                </div>
+
+                <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/70">Setup progress</p>
+                      <p className="mt-1 text-sm font-bold text-white">
+                        {completedSteps} of {activationSteps.length} first steps done
+                      </p>
+                    </div>
+                    <p className="text-sm font-black text-white">{progressPct}%</p>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
+                    <div className="h-full rounded-full bg-white" style={{ width: `${progressPct}%` }} />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button asChild className="h-12 rounded-2xl bg-slate-950 text-sm font-black text-white hover:bg-slate-900">
+                    <Link href={nextStep?.href ?? '/ecd/dashboard'}>
+                      {nextStep?.ctaLabel ?? 'Open dashboard'}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
                   </Button>
-                ) : (
-                  <Button asChild className="h-14 flex-1 rounded-2xl bg-cyan-600 text-white font-black text-lg shadow-xl shadow-cyan-900/30 active:scale-95 transition-all border-none">
-                    <Link href="/ecd/dashboard">Go to My Dashboard 🚀</Link>
+                  <Button asChild variant="outline" className="h-12 rounded-2xl border-white/20 bg-white/10 text-sm font-black text-white hover:bg-white/15 hover:text-white">
+                    <Link href="/ecd/dashboard">Go to dashboard</Link>
                   </Button>
-                )}
+                </div>
+              </div>
+
+              <div className="rounded-[1.75rem] bg-slate-950/90 p-5 text-white shadow-2xl">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-200">What to do next</p>
+                <h2 className="mt-2 text-xl font-black leading-tight">
+                  {nextStep ? nextStep.title : 'Your first setup is complete.'}
+                </h2>
+                <p className="mt-2 text-sm font-medium leading-6 text-slate-300">
+                  {nextStep
+                    ? nextStep.description
+                    : 'You already have the basics in place. From here, keep using the dashboard and invite your team into the daily flow.'}
+                </p>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Children</p>
+                    <p className="mt-2 text-2xl font-black text-white">{childrenCount}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Attendance</p>
+                    <p className="mt-2 text-2xl font-black text-white">{attendanceCount}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Pickup</p>
+                    <p className="mt-2 text-2xl font-black text-white">{pickupCount}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </motion.main>
-        )}
-      </AnimatePresence>
+          </div>
+
+          <div className="grid gap-4 p-4 sm:p-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <Card className="rounded-[1.75rem] border-teal-100 bg-teal-50/60 shadow-none">
+              <CardHeader className="space-y-3 pb-2">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-teal-700 shadow-sm">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-700">Start here</p>
+                  <CardTitle className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                    You only need one child to feel the system work.
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm font-medium leading-7 text-slate-600">
+                  Add one child now. After that, mark attendance once. Those two steps are enough for your team to understand the new daily flow.
+                </p>
+                <div className="space-y-3">
+                  {[
+                    'Add one child profile from your paper register.',
+                    'Take attendance once so the daily register is live.',
+                    'Turn on secure pickup before the next busy collection time.',
+                  ].map((item, index) => (
+                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white px-4 py-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-sm font-black text-teal-700">
+                        {index + 1}
+                      </span>
+                      <p className="flex-1 text-sm font-semibold leading-6 text-slate-700">{item}</p>
+                    </div>
+                  ))}
+                </div>
+                <Button asChild className="h-12 w-full rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
+                  <Link href={nextStep?.href ?? '/ecd/dashboard'}>
+                    {nextStep?.ctaLabel ?? 'Open dashboard'}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[1.75rem] border-slate-200 shadow-none">
+              <CardHeader className="pb-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Quick tools</p>
+                <CardTitle className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                  Useful links you will keep coming back to
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-2">
+                <Button asChild variant="outline" className="h-12 rounded-2xl justify-start border-slate-200 text-sm font-black">
+                  <Link href={posterHref} target="_blank">
+                    <Printer className="mr-2 h-4 w-4" />
+                    Print gate poster
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 rounded-2xl justify-start border-slate-200 text-sm font-black">
+                  <Link href="/ecd/website">
+                    <Globe className="mr-2 h-4 w-4" />
+                    Website setup
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="h-12 rounded-2xl justify-start border-slate-200 text-sm font-black">
+                  <Link href="/ecd/profile">
+                    <BadgeCheck className="mr-2 h-4 w-4" />
+                    Centre settings
+                  </Link>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyCentreLink}
+                  className={cn(
+                    'h-12 rounded-2xl justify-start border-slate-200 text-sm font-black',
+                    copyStatus === 'done' && 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                  )}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  {copyStatus === 'done' ? 'Centre link copied' : 'Copy centre link'}
+                </Button>
+
+                <div className="sm:col-span-2 rounded-[1.4rem] border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Need a hand?</p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
+                    Reply on WhatsApp if you want help with setup, staff training, or explaining CentreConnect to your team.
+                  </p>
+                  <Button asChild className="mt-4 h-11 rounded-2xl bg-[#25D366] text-sm font-black text-white hover:bg-[#1faa52]">
+                    <Link href={supportWhatsappHref}>
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      WhatsApp Mandla
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        <section className="mt-6 space-y-4">
+          <div className="space-y-2">
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Your first steps</p>
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+              Keep it simple. Finish these in order.
+            </h2>
+          </div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {activationSteps.map((step) => {
+              const Icon = step.icon
+              return (
+                <Card
+                  key={step.id}
+                  className={cn(
+                    'rounded-[1.75rem] border shadow-none transition-colors',
+                    step.done ? 'border-emerald-200 bg-emerald-50/40' : 'border-slate-200 bg-white'
+                  )}
+                >
+                  <CardContent className="space-y-4 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'flex h-11 w-11 items-center justify-center rounded-2xl',
+                            step.done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'
+                          )}
+                        >
+                          {step.done ? <CheckCircle2 className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Step {step.step}</p>
+                          <h3 className="mt-1 text-xl font-black tracking-tight text-slate-900">{step.title}</h3>
+                        </div>
+                      </div>
+                      <span
+                        className={cn(
+                          'rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em]',
+                          step.done ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                        )}
+                      >
+                        {step.done ? 'Done' : 'Next'}
+                      </span>
+                    </div>
+                    <p className="text-sm font-medium leading-7 text-slate-600">{step.description}</p>
+                    <Button
+                      asChild
+                      variant={step.done ? 'outline' : 'default'}
+                      className={cn(
+                        'h-11 rounded-2xl text-sm font-black',
+                        step.done
+                          ? 'border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50'
+                          : 'bg-slate-950 text-white hover:bg-slate-900'
+                      )}
+                    >
+                      <Link href={step.href}>
+                        {step.ctaLabel}
+                        {!step.done ? <ArrowRight className="ml-2 h-4 w-4" /> : <ExternalLink className="ml-2 h-4 w-4" />}
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
+        </section>
+
+        <section className="mt-6 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <Card className="rounded-[1.75rem] border-slate-200 bg-white shadow-none">
+            <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Public page</p>
+                <div>
+                  <p className="text-lg font-black text-slate-900">{centreName}</p>
+                  <p className="text-sm font-medium text-slate-500">
+                    {location} {centreSlug ? '• ready to share with parents' : '• finish your profile to get your share link'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-200 text-sm font-black">
+                  <Link href={publicCentreHref} target={centreSlug ? '_blank' : undefined}>
+                    <QrCode className="mr-2 h-4 w-4" />
+                    View public page
+                  </Link>
+                </Button>
+                <Button asChild className="h-11 rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
+                  <Link href="/ecd/dashboard">Open dashboard</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
     </div>
   )
 }
