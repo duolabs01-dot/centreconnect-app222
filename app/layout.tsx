@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Plus_Jakarta_Sans, Inter } from 'next/font/google'
+import { Plus_Jakarta_Sans, Inter, Instrument_Serif, DM_Sans } from 'next/font/google'
 import "./globals.css"
 import { Toaster as SonnerToaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme/theme-provider'
@@ -57,10 +57,27 @@ const inter = Inter({
   weight: ['300', '400', '500', '600', '700'],
 })
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+const instrumentSerif = Instrument_Serif({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+  weight: ['400'],
+})
 
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${plusJakartaSans.variable} ${inter.variable} ${instrumentSerif.variable} ${dmSans.variable}`}
+      suppressHydrationWarning
+    >
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href={`/favicon.ico?v=${iconVersion}`} sizes="any" />
@@ -74,9 +91,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <BottomNavProvider>
               <ThemeProvider>
                 <ThemeRouteSync />
-                  <FooterConditionalRenderer>
-                    {children}
-                  </FooterConditionalRenderer>
+                <FooterConditionalRenderer>
+                  {children}
+                </FooterConditionalRenderer>
                 <SonnerToaster position="top-right" richColors />
                 <Analytics />
                 <ServiceWorkerRegister />
