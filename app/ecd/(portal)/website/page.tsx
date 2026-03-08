@@ -53,12 +53,12 @@ const tierGuide: Record<
   },
   standard: {
     label: 'Growth',
-    includes: ['Everything in Starter', 'Richer section controls', 'Better public presentation'],
+    includes: ['Starter website setup already included', 'Richer section controls', 'Better public presentation'],
     suggestedAddOns: ['Domain connection help', 'Premium design pass'],
   },
   premium: {
     label: 'Pro',
-    includes: ['Everything in Growth', 'Highest website support priority', 'Full growth stack compatibility'],
+    includes: ['Growth website setup already included', 'Highest website support priority', 'Full growth stack compatibility'],
     suggestedAddOns: ['Extra seasonal campaign design', 'Advanced integrations'],
   },
 }
@@ -898,8 +898,4 @@ export default async function EcdWebsitePage({
     </EcdOsShell>
   )
 }
-
-
-
-
 

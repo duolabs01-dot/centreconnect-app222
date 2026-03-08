@@ -3,11 +3,13 @@
 import type { TouchEvent } from 'react'
 import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { BadgeCheck, CheckCircle2, Circle, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, Circle, ShieldCheck } from 'lucide-react'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { ContactCentreSheet } from './contact-centre-sheet'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 
 type MobileCentreDetailsSheetProps = {
   centreId: string
@@ -142,22 +144,34 @@ export function MobileCentreDetailsSheet({
               </div>
 
               {showPilotTrustInfo ? (
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">Safety & Compliance</p>
-                  <ul className="mt-2 space-y-2 text-xs text-emerald-900">
-                    <li className="flex items-center gap-2 font-black">
-                      <BadgeCheck size={14} className="text-emerald-600" />
-                      {isRegistered ? 'Government Approved' : 'Approval in Progress'}
-                    </li>
-                    <li className="flex items-center gap-2 font-bold">
-                      <ShieldCheck size={14} className="text-emerald-600" />
-                      Verified Health & Safety Standards.
-                    </li>
-                    <li className="flex items-center gap-2 font-bold">
-                      <ShieldCheck size={14} className="text-emerald-600" />
-                      Qualified & Vetted Practitioners.
-                    </li>
-                  </ul>
+                <div className="rounded-2xl border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-widest text-[#8F6200]">Trust & verification</p>
+                      <p className="mt-1 text-sm font-semibold leading-6 text-slate-800">
+                        {isRegistered
+                          ? 'This centre has a verified listing on CentreConnect.'
+                          : 'This centre profile is live while verification is being completed.'}
+                      </p>
+                    </div>
+                    {isRegistered ? (
+                      <PremiumVerifiedBadge compact label="Verified ECD" className="shrink-0" />
+                    ) : (
+                      <Badge className="rounded-full border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 shadow-none">
+                        Verification in progress
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-3 space-y-2 text-xs text-slate-700">
+                    <div className="flex items-start gap-2">
+                      <ShieldCheck size={14} className="mt-0.5 text-[#8F6200]" />
+                      <span>Parents see a stronger, more trusted profile before they apply.</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 size={14} className="mt-0.5 text-[#8F6200]" />
+                      <span>Centre details are checked before the premium badge appears.</span>
+                    </div>
+                  </div>
                 </div>
               ) : null}
 
@@ -170,7 +184,7 @@ export function MobileCentreDetailsSheet({
                         key={badge}
                         className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-black text-teal-700 shadow-sm"
                       >
-                        <BadgeCheck size={12} />
+                        <CheckCircle2 size={12} />
                         {badge}
                       </span>
                     ))}
@@ -181,14 +195,14 @@ export function MobileCentreDetailsSheet({
               {!isClaimed ? (
                 <div className="space-y-3">
                   <Link
-                    href="/for-centres/intro"
+                    href={claimHref}
                     className="flex h-12 items-center justify-center rounded-2xl border-2 border-teal-600 bg-white px-4 text-sm font-black text-teal-700 shadow-md"
                   >
                     Own this centre? Claim it here →
                   </Link>
                   {whatsappHref ? (
-                    <div className="rounded-xl bg-amber-50 p-3 border border-amber-100">
-                      <p className="text-[10px] font-bold text-amber-800 leading-tight">
+                    <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
+                      <p className="text-[10px] font-bold leading-tight text-amber-800">
                         Note: This WhatsApp number is shared by the centre but not yet verified by our team.
                       </p>
                     </div>
@@ -203,7 +217,7 @@ export function MobileCentreDetailsSheet({
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Contribution</p>
-                <p className="text-xl font-black text-slate-900 mt-1">{feesLabel}</p>
+                <p className="mt-1 text-xl font-black text-slate-900">{feesLabel}</p>
               </div>
 
               <Button
@@ -221,3 +235,4 @@ export function MobileCentreDetailsSheet({
     </>
   )
 }
+

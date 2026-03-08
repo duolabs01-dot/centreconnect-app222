@@ -159,6 +159,50 @@ function describePlan(plan: PublicPlan) {
   }
 }
 
+function renderPlanComparisonTable(selectedPlan: PublicPlan) {
+  const plans: Array<{ plan: PublicPlan; subtitle: string }> = [
+    { plan: 'starter', subtitle: 'Alone' },
+    { plan: 'growth', subtitle: 'With Starter' },
+    { plan: 'pro', subtitle: 'With Starter + Growth' },
+  ]
+
+  return `
+    <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ${BRAND.border};border-radius:14px;overflow:hidden;margin:0 0 16px;background:#FFFFFF;">
+      <tr style="background:#F8FAFC;">
+        <td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};"></td>
+        ${plans
+          .map(({ plan, subtitle }) => {
+            const isActive = plan === selectedPlan
+            return `
+              <td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};vertical-align:top;background:${isActive ? '#ECFEFF' : '#F8FAFC'};">
+                <p style="margin:0 0 4px;font-size:14px;font-weight:800;color:${BRAND.heading};">${getPublicPlanLabel(plan)}</p>
+                <p style="margin:0;font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${BRAND.muted};">${subtitle}</p>
+              </td>`
+          })
+          .join('')}
+      </tr>
+      <tr>
+        <td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};font-size:12px;font-weight:800;color:${BRAND.heading};vertical-align:top;">Best for</td>
+        ${plans
+          .map(({ plan }) => `<td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};font-size:13px;line-height:1.6;color:${BRAND.body};vertical-align:top;">${describePlan(plan).description}</td>`)
+          .join('')}
+      </tr>
+      <tr>
+        <td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};font-size:12px;font-weight:800;color:${BRAND.heading};vertical-align:top;">Main tools</td>
+        ${plans
+          .map(({ plan }) => `<td style="padding:12px 10px;border-bottom:1px solid ${BRAND.border};font-size:13px;line-height:1.6;color:${BRAND.body};vertical-align:top;">${describePlan(plan).includes.slice(0, 2).join('<br/>')}</td>`)
+          .join('')}
+      </tr>
+      <tr>
+        <td style="padding:12px 10px;font-size:12px;font-weight:800;color:${BRAND.heading};vertical-align:top;">Feels like</td>
+        ${plans
+          .map(({ plan }) => `<td style="padding:12px 10px;font-size:13px;line-height:1.6;color:${BRAND.body};vertical-align:top;">${describePlan(plan).outcomes[0] ?? ''}</td>`)
+          .join('')}
+      </tr>
+    </table>
+  `
+}
+
 async function renderShell(title: string, subtitle: string, contentHtml: string) {
   const { renderToStaticMarkup } = await import('react-dom/server')
 
@@ -415,6 +459,12 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
             done: false,
             whereItShows: 'Collection time',
           },
+          {
+            label: 'Print your QR posters',
+            href: input.qrPosterLink,
+            done: false,
+            whereItShows: 'Office desk + outside poster',
+          },
         ]
 
   const centreLogoBlock = isSafeHttpImage(input.centreLogoUrl)
@@ -440,22 +490,22 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 
   const productScenarios = renderFeatureScenarioCards([
     {
-      title: 'Parent applications',
-      body: 'Parents apply in one clean flow, and you stop chasing documents across many WhatsApp chats.',
+      title: 'Applications, but calm! 📋',
+      body: 'Parents apply in one clean flow, and your team stops chasing the same details across many WhatsApp chats.',
       accent: BRAND.primary,
     },
     {
-      title: 'Child records',
+      title: 'One child record. One calm place! 🧒',
       body: 'Keep child details, guardians, pickup people, and health notes together on your phone.',
       accent: '#7C3AED',
     },
     {
-      title: 'Attendance',
+      title: 'Attendance in under a minute! ✅',
       body: 'Mark the morning register in seconds and let CentreConnect keep the totals organised for you.',
       accent: '#0369A1',
     },
     {
-      title: 'Safe pickup',
+      title: 'Pickup that feels safe! 🔐',
       body: 'Turn busy collection time into a calmer, safer process with authorised pickup checks.',
       accent: '#B45309',
     },
@@ -488,19 +538,20 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:14px;background:#F8FAFC;margin:0 0 16px;">
       <tr>
         <td style="padding:14px 16px;">
-          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Your package right now</p>
+          <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.accent};">Your setup right now</p>
           <p style="margin:0 0 6px;font-size:18px;font-weight:800;color:${BRAND.heading};">${packageInfo.label}</p>
           <p style="margin:0 0 10px;font-size:13px;line-height:1.65;color:${BRAND.body};">${packageInfo.description}</p>
-          ${packageInfo.includes
+          ${packageInfo.outcomes
             .map(
               (item) =>
                 `<p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:${BRAND.body};">&#10003; ${item}</p>`
             )
             .join('')}
-          <p style="margin:10px 0 0;font-size:12px;line-height:1.6;color:${BRAND.muted};">${packageInfo.outcomes.join(' ')} </p>
         </td>
       </tr>
     </table>
+    <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">Compare the plans</p>
+    ${renderPlanComparisonTable(plan)}
 
     <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">What CentreConnect helps you do</p>
     ${productScenarios}
@@ -557,7 +608,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 
   return renderShell(
     'Welcome to CentreConnect',
-    'You are in. Here is your guide, your package, and what the product will help you do.',
+    'You are in! Here is your guide, your plan, and the simple next steps to start strong.',
     body
   )
 }
@@ -600,3 +651,4 @@ export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigr
     body
   )
 }
+

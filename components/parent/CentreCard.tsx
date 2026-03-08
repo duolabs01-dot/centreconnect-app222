@@ -3,6 +3,7 @@
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge';
 import { Heart, MapPin, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
@@ -29,6 +30,7 @@ interface CentreCardProps {
   capacity?: number;
   existingApplicationStatus?: string | null;
   is_claimed?: boolean;
+  is_registered?: boolean | null;
   isSaved?: boolean;
   onApply?: () => void;
   onSave?: () => void;
@@ -41,24 +43,23 @@ export function CentreCard({
   cover_image_url,
   logo_url,
   address,
-  distanceLabel,
   feesLabel,
   age_groups,
   rating = 4.8,
   tagline,
   is_claimed = true,
+  is_registered = false,
   isSaved = false,
   onApply,
   onSave,
 }: CentreCardProps) {
   const [saved, setSaved] = useState(isSaved);
+  const router = useRouter();
 
   const handleSave = () => {
     setSaved(!saved);
     onSave?.();
   };
-
-  const router = useRouter();
 
   const handleApply = () => {
     if (onApply) {
@@ -71,8 +72,8 @@ export function CentreCard({
       return;
     }
 
-    const identifier = slug ? encodeURIComponent(slug) : id
-    router.push(`/apply/${identifier}`)
+    const identifier = slug ? encodeURIComponent(slug) : id;
+    router.push(`/apply/${identifier}`);
   };
 
   const handleViewDetails = () => {
@@ -97,7 +98,7 @@ export function CentreCard({
       transition={{ duration: 0.3 }}
       className="group h-full"
     >
-      <Card className="flex h-full flex-col overflow-hidden border-0 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-[2rem]">
+      <Card className="flex h-full flex-col overflow-hidden rounded-[2rem] border-0 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
         <div className="relative h-52 overflow-hidden">
           <Image
             src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
@@ -109,8 +110,15 @@ export function CentreCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
           <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
+            {Boolean(is_registered) && (
+              <PremiumVerifiedBadge
+                compact
+                label="Verified ECD"
+                className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]"
+              />
+            )}
             {!is_claimed && (
-              <Badge className="bg-slate-900/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md">
+              <Badge className="bg-slate-900/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-none">
                 Public Listing
               </Badge>
             )}
@@ -152,14 +160,18 @@ export function CentreCard({
         <CardContent className="flex-1 space-y-4 p-6 pt-10">
           <div>
             <div className="flex items-start justify-between gap-2">
-              <h3 className="line-clamp-1 text-xl font-black tracking-tight text-slate-900">{name}</h3>
-              <div className="flex items-center gap-1 shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
-                <Star className="h-3 w-3 fill-current" />
-                <span className="text-xs font-black">{rating}</span>
+              <div className="min-w-0">
+                <h3 className="line-clamp-1 text-xl font-black tracking-tight text-slate-900">{name}</h3>
+                {tagline && <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-500">{tagline}</p>}
+              </div>
+              <div className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+                <div className="flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  <span className="text-xs font-black">{rating}</span>
+                </div>
               </div>
             </div>
-            {tagline && <p className="mt-1 line-clamp-1 text-sm font-medium text-slate-500">{tagline}</p>}
-            <p className="mt-2 flex items-center gap-1 text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <p className="mt-2 flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-slate-400">
               <MapPin className="h-3 w-3" />
               {address || 'Johannesburg'}
             </p>
@@ -167,7 +179,7 @@ export function CentreCard({
 
           <div className="flex flex-wrap gap-1.5">
             {age_groups.slice(0, 3).map((age) => (
-              <Badge key={age} variant="secondary" className="bg-slate-50 text-[10px] font-bold text-slate-600 border-none px-2 py-0.5">
+              <Badge key={age} variant="secondary" className="border-none bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600 shadow-none">
                 {age.replace(/(\d+)([my])/g, '$1$2 old')}
               </Badge>
             ))}
@@ -202,10 +214,13 @@ export function CentreCard({
               </Button>
             )}
           </div>
-          
+
           {!is_claimed && (
             <p className="text-center text-[10px] font-medium leading-tight text-slate-400">
-              Own this centre? <Link href="/for-centres/intro" className="text-cyan-600 font-black hover:underline">Claim it here →</Link>
+              Own this centre?{' '}
+              <Link href="/for-centres/intro" className="font-black text-cyan-600 hover:underline">
+                Claim it here →
+              </Link>
             </p>
           )}
         </CardFooter>
@@ -215,3 +230,4 @@ export function CentreCard({
 }
 
 export default CentreCard;
+

@@ -25,8 +25,18 @@ import {
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import {
   getPublicPlanDefinition,
   getPublicPlanLabel,
@@ -43,7 +53,6 @@ type ProfileRow = {
   full_name: string | null
   first_password_set_at: string | null
 }
-
 type CentreMembership = {
   id: string
   slug: string | null
@@ -55,6 +64,7 @@ type CentreMembership = {
   description: string | null
   phone: string | null
   address: string | null
+  is_registered: boolean | null
 }
 
 type MembershipRow = {
@@ -90,24 +100,23 @@ type PackageCompareCard = {
   subtitle: string
   promise: string
 }
-
 const SCENARIOS: Scenario[] = [
   {
     id: 'applications',
     emoji: '📋',
-    title: 'Applications without WhatsApp chaos',
-    summary: 'Parents apply in one clean place instead of sending the same details in many chats.',
+    title: 'Applications, but calm!',
+    summary: 'No more scattered WhatsApps. Parents apply once, and your team replies from one clean list.',
     pain:
-      'Right now, one parent sends a birth certificate, another sends voice notes, and another asks the same question at 9pm. Important details get buried.',
+      'One parent sends a PDF. Another sends a voice note. Another asks the same question at 9pm. Important details disappear fast.',
     solution:
-      'CentreConnect puts every application in one clear pipeline so your team can review, respond, and follow up without scrolling through old messages.',
+      'CentreConnect keeps every application in one clear queue, so your team can reply quickly, follow up properly, and stay organised.',
     outcome:
-      'You look more professional to parents, and your team saves real time every week.',
+      'Parents feel your centre is professional. Your team saves time straight away.',
     steps: [
       'A parent finds your centre and applies online.',
-      'You see one clean application card with the important details together.',
-      'You accept, waitlist, or follow up from one place.',
-      'The parent gets a clear next step without extra back and forth.',
+      'You open one clean application card.',
+      'You accept, waitlist, or reply from one place.',
+      'The parent gets a clear next step immediately.',
     ],
     ctaLabel: 'Open applications',
     ctaHref: '/ecd/pipeline',
@@ -118,19 +127,19 @@ const SCENARIOS: Scenario[] = [
   {
     id: 'children',
     emoji: '🧒',
-    title: 'Child records stay in one place',
-    summary: 'Keep child details, guardians, pickup people, and notes together on your phone.',
+    title: 'One child record. One calm place!',
+    summary: 'Keep guardians, pickup adults, notes, and basics together. No more hunting through files.',
     pain:
-      'When a parent arrives early, a child gets sick, or someone new comes for pickup, paper files make simple moments feel stressful.',
+      'A parent arrives early. A child feels sick. Someone new comes for pickup. Paper files turn small moments into stress.',
     solution:
-      'Each child has one record for contacts, medical notes, authorised pickup adults, and the basics your team needs every day.',
+      'CentreConnect gives each child one clear record, so staff can find the right details fast and stay calm.',
     outcome:
-      'Your centre feels calmer because staff can find the right information fast.',
+      'Your team feels more confident, and parents feel the difference.',
     steps: [
       'Add the child once from your paper register.',
       'Save guardians and emergency contacts.',
-      'Add approved pickup people.',
-      'Use the same record during attendance, reporting, and pickup.',
+      'Add approved pickup adults.',
+      'Use the same record every day.',
     ],
     ctaLabel: 'Open child records',
     ctaHref: '/ecd/children/new',
@@ -141,19 +150,19 @@ const SCENARIOS: Scenario[] = [
   {
     id: 'attendance',
     emoji: '✅',
-    title: 'Attendance in under a minute',
-    summary: 'Tap present or absent once and the day starts flowing immediately.',
+    title: 'Attendance in under a minute!',
+    summary: 'Tap present. Tap absent. The day starts moving.',
     pain:
-      'Morning register time steals attention from the children, and month-end counting becomes another admin job.',
+      'Morning register time pulls attention away from the children. Then month-end counting becomes another admin job.',
     solution:
-      'Use the live attendance screen each morning and let CentreConnect keep the daily pattern organised for you.',
+      'CentreConnect keeps your daily register simple, live, and easy to return to later.',
     outcome:
-      'You reduce admin stress and build better habits without needing a big training session.',
+      'You spend less time on admin and more time running the centre well.',
     steps: [
       'Open attendance in the morning.',
       'Tap each child as present or absent.',
-      'Save notes only when needed.',
-      'Come back later with a cleaner record already in place.',
+      'Save a note only when needed.',
+      'Come back later to a cleaner record.',
     ],
     ctaLabel: 'Open attendance',
     ctaHref: '/ecd/attendance',
@@ -164,14 +173,14 @@ const SCENARIOS: Scenario[] = [
   {
     id: 'pickup',
     emoji: '🔐',
-    title: 'Safe pickup at the gate',
-    summary: 'Collection time becomes calmer, clearer, and safer for staff and parents.',
+    title: 'Pickup that feels safe!',
+    summary: 'When someone arrives at the gate, your team knows exactly what to check.',
     pain:
       'Gate time gets tense when an unknown adult arrives and staff must decide quickly under pressure.',
     solution:
-      'CentreConnect helps you store approved pickup people and verify collection with a secure code flow.',
+      'CentreConnect helps you save approved pickup adults and verify collection with a secure code flow.',
     outcome:
-      'Parents feel the difference immediately because the centre looks organised and protective.',
+      'Parents feel protected. Staff feel clear. The handoff feels more professional.',
     steps: [
       'Add approved pickup adults to the child record.',
       'Open the pickup tool when collection starts.',
@@ -187,18 +196,18 @@ const SCENARIOS: Scenario[] = [
   {
     id: 'profile',
     emoji: '🌍',
-    title: 'A centre profile parents can trust',
-    summary: 'Show families a clean, professional page instead of a half-complete social profile.',
+    title: 'A profile parents can trust!',
+    summary: 'Your centre looks real, clear, and ready. That matters before the first call.',
     pain:
-      'Parents decide quickly. If your information looks old, unclear, or incomplete, they move on or ask basic questions again.',
+      'Parents decide quickly. If your information looks old or incomplete, they move on or ask basic questions again.',
     solution:
-      'Your public profile brings together your centre name, location, contact details, and story in a way that feels more trustworthy.',
+      'CentreConnect brings your name, story, phone, location, logo, and hero image into one clean public profile.',
     outcome:
-      'You get discovered more easily and the first conversation with parents starts from trust, not confusion.',
+      'You get discovered more easily, and parents arrive already trusting you.',
     steps: [
-      'Add your logo, cover photo, phone, and address.',
+      'Add your logo, hero image, phone, and address.',
       'Check your public centre page.',
-      'Share the link with parents or on WhatsApp.',
+      'Share the link on WhatsApp.',
       'Let parents arrive better informed.',
     ],
     ctaLabel: 'Open centre profile',
@@ -212,18 +221,18 @@ const SCENARIOS: Scenario[] = [
 const PACKAGE_COMPARE: PackageCompareCard[] = [
   {
     plan: 'starter',
-    subtitle: 'Start strong with the essentials',
-    promise: 'Best when you want to get organised, look professional, and start receiving applications properly.',
+    subtitle: 'Alone, and already strong',
+    promise: 'Great for a centre that wants better applications, cleaner parent messages, and a more professional public profile.',
   },
   {
     plan: 'growth',
-    subtitle: 'Daily operations with less stress',
-    promise: 'Best for busy centres that want attendance, pickup, and stronger day-to-day consistency.',
+    subtitle: 'With Starter, plus daily ops',
+    promise: 'Best when you want Starter benefits and a calmer daily rhythm for attendance, follow-up, and team consistency.',
   },
   {
     plan: 'pro',
-    subtitle: 'More support and more control',
-    promise: 'Best for larger centres that want priority support, stronger visibility, and room to scale.',
+    subtitle: 'With Starter + Growth, plus priority help',
+    promise: 'Best when you want the full CentreConnect setup, stronger visibility, and faster hands-on support.',
   },
 ]
 
@@ -269,19 +278,28 @@ function ScenarioCard({ scenario, onOpen }: { scenario: Scenario; onOpen: (scena
       type="button"
       variant="outline"
       onClick={() => onOpen(scenario)}
-      className="h-auto w-full rounded-[1.6rem] border p-5 text-left whitespace-normal transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl"
+      className="h-auto w-full rounded-[1.75rem] border p-0 text-left whitespace-normal transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-xl"
       style={{ backgroundColor: scenario.bg, borderColor: scenario.border }}
     >
-      <div className="flex w-full items-start justify-between gap-3">
-        <div>
-          <div className="text-2xl leading-none">{scenario.emoji}</div>
-          <h3 className="mt-3 text-xl font-black leading-tight text-slate-900">{scenario.title}</h3>
+      <div className="w-full space-y-4 p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/85 text-2xl shadow-sm">
+                {scenario.emoji}
+              </span>
+              <Badge
+                variant="outline"
+                className="rounded-full border-white/80 bg-white/85 px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600 shadow-none"
+              >
+                Tap to open
+              </Badge>
+            </div>
+            <h3 className="text-xl font-black leading-tight text-slate-900 sm:text-[1.35rem]">{scenario.title}</h3>
+          </div>
         </div>
-        <span className="rounded-full bg-white/80 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">
-          Explore
-        </span>
+        <p className="text-sm font-medium leading-7 text-slate-700 sm:text-[15px]">{scenario.summary}</p>
       </div>
-      <p className="mt-4 text-sm font-medium leading-7 text-slate-600">{scenario.summary}</p>
     </Button>
   )
 }
@@ -320,7 +338,7 @@ function ScenarioModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pb-5 pt-6 text-white" style={{ backgroundColor: scenario.color }}>
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/75">Scenario</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/75">Real-life scenario</p>
             <h3 className="mt-2 text-2xl font-black leading-tight">{scenario.title}</h3>
           </div>
           <Button
@@ -337,19 +355,19 @@ function ScenarioModal({
 
         <div className="space-y-5 p-6">
           <div className="rounded-[1.4rem] border border-amber-200 bg-amber-50 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-700">The real pain</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-amber-700">What feels messy now 😓</p>
             <p className="mt-2 text-sm leading-7 text-slate-700">{scenario.pain}</p>
           </div>
 
           <div className="rounded-[1.4rem] border p-4" style={{ backgroundColor: scenario.bg, borderColor: scenario.border }}>
             <p className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: scenario.color }}>
-              What CentreConnect changes
+              What changes with CentreConnect ✅
             </p>
             <p className="mt-2 text-sm leading-7 text-slate-700">{scenario.solution}</p>
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-500">How it works</p>
+            <p className="text-sm font-black uppercase tracking-[0.16em] text-slate-500">How it works 👇</p>
             {scenario.steps.map((step, index) => (
               <div key={step} className="flex gap-3">
                 <span
@@ -364,14 +382,14 @@ function ScenarioModal({
           </div>
 
           <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">Why this matters</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">What people notice next ✨</p>
             <p className="mt-2 text-sm leading-7 text-slate-700">{scenario.outcome}</p>
           </div>
 
           {previewMode ? (
             <div className="space-y-3">
               <div className="rounded-[1.25rem] border border-teal-100 bg-teal-50 p-4 text-sm leading-7 text-slate-700">
-                Create your password first, then the live version of this tool opens inside your CentreConnect workspace.
+                Create your password first! Then this opens as a real tool inside your CentreConnect workspace.
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button asChild className="h-11 rounded-2xl bg-slate-950 text-sm font-black text-white hover:bg-slate-900">
@@ -401,36 +419,50 @@ function PackageSection({
   selectedPlanStatus: SubscriptionStatus
 }) {
   const selectedPlanDefinition = getPublicPlanDefinition(selectedPlan)
+  const comparisonRows = [
+    {
+      label: 'Best for',
+      values: PACKAGE_COMPARE.map((tier) => tier.promise),
+    },
+    {
+      label: 'Main tools',
+      values: PACKAGE_COMPARE.map((tier) => getPublicPlanDefinition(tier.plan).includes.slice(0, 2).join(' • ')),
+    },
+    {
+      label: 'What it feels like',
+      values: PACKAGE_COMPARE.map((tier) => getPublicPlanDefinition(tier.plan).outcomes[0] ?? ''),
+    },
+  ]
 
   return (
     <Card className="rounded-[1.75rem] border-slate-200 bg-white shadow-none">
       <CardContent className="space-y-5 p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Your package right now</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Packages, made simple!</p>
             <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-900">
-              {getPublicPlanLabel(selectedPlan)}
-              <span className="ml-2 rounded-full bg-teal-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">
-                {toSubscriptionStatusLabel(selectedPlanStatus)}
-              </span>
+              Your centre is on {getPublicPlanLabel(selectedPlan)} right now.
             </h3>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">{selectedPlanDefinition.description}</p>
           </div>
+          <Badge className="rounded-full bg-teal-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-teal-700 shadow-none">
+            {toSubscriptionStatusLabel(selectedPlanStatus)}
+          </Badge>
         </div>
 
-        <div className="rounded-[1.5rem] border border-teal-100 bg-teal-50/70 p-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-700">What this gives you</p>
+        <div className="rounded-[1.5rem] border border-amber-100 bg-amber-50/80 p-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">What this gives you right now ✨</p>
           <div className="mt-3 space-y-2">
             {selectedPlanDefinition.outcomes.map((item) => (
               <div key={item} className="flex items-start gap-2 text-sm text-slate-700">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <span>{item}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-3 md:hidden">
           {PACKAGE_COMPARE.map((tier) => {
             const definition = getPublicPlanDefinition(tier.plan)
             const activeTier = tier.plan === selectedPlan
@@ -440,9 +472,7 @@ function PackageSection({
                 key={tier.plan}
                 className={cn(
                   'rounded-[1.5rem] border p-4',
-                  activeTier
-                    ? 'border-teal-300 bg-teal-50 shadow-[0_10px_30px_rgba(20,184,166,0.14)]'
-                    : 'border-slate-200 bg-slate-50'
+                  activeTier ? 'border-teal-300 bg-teal-50 shadow-[0_10px_30px_rgba(20,184,166,0.14)]' : 'border-slate-200 bg-slate-50'
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -451,29 +481,66 @@ function PackageSection({
                     <p className="mt-1 text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{tier.subtitle}</p>
                   </div>
                   {activeTier ? (
-                    <span className="rounded-full bg-teal-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white">
-                      Current
-                    </span>
+                    <Badge className="rounded-full bg-teal-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-none">
+                      Active now
+                    </Badge>
                   ) : null}
                 </div>
+                <p className="mt-3 text-sm leading-6 text-slate-700">{tier.promise}</p>
                 <div className="mt-4 space-y-2">
-                  {definition.includes.slice(0, 3).map((item) => (
+                  {definition.includes.slice(0, 2).map((item) => (
                     <div key={item} className="flex items-start gap-2 text-sm text-slate-700">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
                       <span>{item}</span>
                     </div>
                   ))}
                 </div>
-                <p className="mt-4 text-sm leading-6 text-slate-600">{tier.promise}</p>
               </div>
             )
           })}
         </div>
 
+        <div className="hidden overflow-hidden rounded-[1.5rem] border border-slate-200 md:block">
+          <Table className="text-sm">
+            <TableHeader className="bg-slate-50">
+              <TableRow className="hover:bg-slate-50">
+                <TableHead className="px-4 py-3 text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Compare</TableHead>
+                {PACKAGE_COMPARE.map((tier) => (
+                  <TableHead key={tier.plan} className="px-4 py-3 align-top">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black text-slate-900">{getPublicPlanLabel(tier.plan)}</span>
+                        {tier.plan === selectedPlan ? (
+                          <Badge className="rounded-full bg-teal-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-none">
+                            Active
+                          </Badge>
+                        ) : null}
+                      </div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{tier.subtitle}</p>
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {comparisonRows.map((row) => (
+                <TableRow key={row.label} className="align-top hover:bg-white">
+                  <TableCell className="px-4 py-4 font-black text-slate-900">{row.label}</TableCell>
+                  {row.values.map((value, index) => (
+                    <TableCell key={`${row.label}-${PACKAGE_COMPARE[index]?.plan}`} className="px-4 py-4 text-sm leading-6 text-slate-700">
+                      {value}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
         <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">How the tiers grow</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">How the plans grow</p>
           <p className="mt-2 text-sm leading-7 text-slate-700">
-            Growth includes everything in Starter. Pro includes everything in Growth. You do not need everything on day one. The goal is to start with the tools that remove stress fastest, then grow into the rest with confidence.
+            Starter stands strong on its own. Growth adds calmer daily operations. Pro brings the full CentreConnect setup and faster hands-on help when you want everything working together.
           </p>
         </div>
       </CardContent>
@@ -489,6 +556,7 @@ function ListingPreviewSection({
   hasLogo,
   hasCoverImage,
   planLabel,
+  isRegistered,
   previewMode = false,
   actionHref = '/ecd/website#brand-media',
 }: {
@@ -500,6 +568,7 @@ function ListingPreviewSection({
   hasLogo: boolean
   hasCoverImage: boolean
   planLabel: string
+  isRegistered: boolean
   previewMode?: boolean
   actionHref?: string
 }) {
@@ -510,12 +579,12 @@ function ListingPreviewSection({
     <Card id="listing-preview" className="rounded-[1.75rem] border-slate-200 bg-white shadow-none">
       <CardContent className="space-y-5 p-5 sm:p-6">
         <div className="space-y-2">
-          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">How parents see your centre</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">How parents see your centre ✨</p>
           <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
             This is the first impression families get.
           </h2>
           <p className="max-w-3xl text-sm leading-7 text-slate-600">
-            Your logo appears on the listing card and your hero image becomes the public cover photo. This is the part that helps parents trust you before they call.
+            Your logo, hero image, and verification all help a parent trust your centre before they even call.
           </p>
         </div>
 
@@ -529,13 +598,13 @@ function ListingPreviewSection({
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
               <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
-                <span className="rounded-full bg-slate-950/85 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                <Badge className="rounded-full bg-slate-950/85 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-none">
                   Parent listing
-                </span>
+                </Badge>
                 {!hasCoverImage ? (
-                  <span className="rounded-full bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-800">
+                  <Badge className="rounded-full border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-800 shadow-none">
                     Hero image missing
-                  </span>
+                  </Badge>
                 ) : null}
               </div>
 
@@ -559,22 +628,31 @@ function ListingPreviewSection({
 
             <div className="space-y-4 p-5 pt-10">
               <div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xl font-black tracking-tight text-slate-900">{centreName}</p>
                     <p className="mt-1 text-xs font-black uppercase tracking-[0.16em] text-slate-500">{location}</p>
                   </div>
-                  <span className="rounded-full bg-teal-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-teal-700">
-                    {planLabel}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {isRegistered ? (
+                      <PremiumVerifiedBadge compact label="Verified ECD" />
+                    ) : (
+                      <Badge className="rounded-full border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 shadow-none">
+                        Verification in progress
+                      </Badge>
+                    )}
+                    <Badge className="rounded-full bg-teal-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-teal-700 shadow-none">
+                      {planLabel}
+                    </Badge>
+                  </div>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{summary}</p>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Public profile</span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Trusted listing</span>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">Apply flow</span>
+                <Badge variant="secondary" className="bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-none">Public profile</Badge>
+                <Badge variant="secondary" className="bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-none">Premium trust badge</Badge>
+                <Badge variant="secondary" className="bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600 shadow-none">Apply flow</Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -593,24 +671,32 @@ function ListingPreviewSection({
               <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Logo</p>
               <p className="mt-2 text-sm leading-7 text-slate-700">
                 {hasLogo
-                  ? 'Your logo is ready. Parents will see it on your listing card and public profile.'
-                  : 'Upload a logo so your centre looks recognisable and trustworthy in the directory.'}
+                  ? 'Your logo is ready! Parents will recognise your centre much faster in the directory.'
+                  : 'Upload a logo so your centre feels familiar, trustworthy, and easy to remember.'}
               </p>
             </div>
             <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
               <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Hero image</p>
               <p className="mt-2 text-sm leading-7 text-slate-700">
                 {hasCoverImage
-                  ? 'Your hero image is ready. It becomes the main cover photo parents notice first.'
-                  : 'Add a strong hero image so your centre feels alive and welcoming the moment parents see it.'}
+                  ? 'Your hero image is ready! It becomes the main cover photo parents notice first.'
+                  : 'Add a strong hero image so your centre feels warm, alive, and welcoming right away.'}
+              </p>
+            </div>
+            <div className="rounded-[1.4rem] border border-amber-100 bg-amber-50/80 p-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">Verification badge</p>
+              <p className="mt-2 text-sm leading-7 text-slate-700">
+                {isRegistered
+                  ? 'Your gold verification badge is live. It gives parents extra confidence that this centre has been checked before they apply.'
+                  : 'Once verification is complete, your premium badge shows here and makes your listing feel stronger to parents immediately.'}
               </p>
             </div>
             <div className="rounded-[1.4rem] border border-teal-100 bg-teal-50/70 p-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-700">Best next move</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-700">Best next move!</p>
               <p className="mt-2 text-sm leading-7 text-slate-700">
                 {previewMode
-                  ? 'Create your password or sign in first. Then you can upload a logo and hero image so parents see a stronger first impression immediately.'
-                  : 'Update your logo and hero image first. That one change improves your parent-facing first impression immediately.'}
+                  ? 'Create your password or sign in first. Then you can upload your logo and hero image so parents see a stronger first impression immediately.'
+                  : 'Update your logo and hero image first. That one change makes your centre look more trusted and more premium immediately.'}
               </p>
               <Button asChild className="mt-4 h-11 rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
                 <Link href={actionHref}>
@@ -652,6 +738,7 @@ export default function CentreConnectWelcomePack() {
   const [centreLogoUrl, setCentreLogoUrl] = useState<string | null>(null)
   const [centreCoverImageUrl, setCentreCoverImageUrl] = useState<string | null>(null)
   const [centreDescription, setCentreDescription] = useState('')
+  const [isRegistered, setIsRegistered] = useState(false)
 
   const inviteEmail = queryDefaults.inviteEmail
   const cameFromPasswordSetup = searchParams.get('from') === 'password-setup'
@@ -701,6 +788,7 @@ export default function CentreConnectWelcomePack() {
         setCentreLogoUrl(null)
         setCentreCoverImageUrl(null)
         setCentreDescription('')
+        setIsRegistered(false)
         setHasSession(false)
         setCheckingSession(false)
         return
@@ -716,7 +804,7 @@ export default function CentreConnectWelcomePack() {
           .maybeSingle(),
         supabase
           .from('ecd_admins')
-          .select('ecd_centres:ecd_id(id,slug,name,suburb,city,logo_url,cover_image_url,description,phone,address)')
+          .select('ecd_centres:ecd_id(id,slug,name,suburb,city,logo_url,cover_image_url,description,phone,address,is_registered)')
           .eq('user_id', session.user.id)
           .limit(1)
           .maybeSingle(),
@@ -737,6 +825,7 @@ export default function CentreConnectWelcomePack() {
         setCentreLogoUrl(centre.logo_url?.trim() || null)
         setCentreCoverImageUrl(centre.cover_image_url?.trim() || null)
         setCentreDescription(centre.description?.trim() || '')
+        setIsRegistered(Boolean(centre.is_registered))
         setHasLogo(Boolean(centre.logo_url?.trim()))
         setHasCoverImage(Boolean(centre.cover_image_url?.trim()))
         setHasDescription(Boolean(centre.description?.trim()))
@@ -973,12 +1062,12 @@ export default function CentreConnectWelcomePack() {
 
             <div className="space-y-6 p-4 sm:p-6">
               <div className="space-y-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">What the product helps with</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">See what CentreConnect helps with</p>
                 <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                  Explore the parts of CentreConnect that will change your day.
+                  See what this will change in your centre.
                 </h2>
                 <p className="text-sm leading-7 text-slate-600">
-                  Tap any card for a simple explanation. The live tools open after you create your password or sign in.
+                  Tap any card. We explain the real-life before, after, and why it matters. The live tools open after you create your password or sign in.
                 </p>
               </div>
 
@@ -999,6 +1088,7 @@ export default function CentreConnectWelcomePack() {
                 hasLogo={hasLogo}
                 hasCoverImage={hasCoverImage}
                 planLabel={getPublicPlanLabel(selectedPlan)}
+                isRegistered={isRegistered}
                 previewMode
                 actionHref={passwordHelpHref}
               />
@@ -1226,12 +1316,12 @@ export default function CentreConnectWelcomePack() {
           <div className="space-y-6 p-4 sm:p-6">
             <section id="how-it-helps" className="space-y-4">
               <div className="space-y-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">What the product helps with</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">See what CentreConnect helps with</p>
                 <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                  Explore the parts of CentreConnect that will change your day.
+                  See what this will change in your centre.
                 </h2>
                 <p className="text-sm leading-7 text-slate-600">
-                  Tap a scenario card and you will see the simple version of how that part works in real life.
+                  Tap a scenario card and you will see the simple version of what changes for your staff and for parents.
                 </p>
               </div>
 
@@ -1253,6 +1343,7 @@ export default function CentreConnectWelcomePack() {
               hasLogo={hasLogo}
               hasCoverImage={hasCoverImage}
               planLabel={getPublicPlanLabel(selectedPlan)}
+              isRegistered={isRegistered}
             />
 
             <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -1306,7 +1397,7 @@ export default function CentreConnectWelcomePack() {
                   <Button asChild variant="outline" className="h-12 justify-start rounded-2xl border-slate-200 text-sm font-black">
                     <Link href={posterHref} target="_blank">
                       <Printer className="mr-2 h-4 w-4" />
-                      Print gate poster
+                      Print QR posters
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="h-12 justify-start rounded-2xl border-slate-200 text-sm font-black">
@@ -1456,15 +1547,4 @@ export default function CentreConnectWelcomePack() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
 

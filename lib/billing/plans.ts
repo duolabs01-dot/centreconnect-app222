@@ -18,7 +18,7 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   starter: {
     label: 'Starter',
     monthlyPrice: 199,
-    description: 'Best for centres that want to fill open spaces and start quickly.',
+    description: 'For centres starting fresh and wanting a professional parent experience.',
     includes: [
       'Parent applications in one dashboard',
       'Announcements and direct parent messages',
@@ -38,9 +38,9 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   growth: {
     label: 'Growth',
     monthlyPrice: 299,
-    description: 'For busy centres that need stronger daily operations and follow-up.',
+    description: 'For centres ready to manage daily operations with less stress.',
     includes: [
-      'Everything in Starter',
+      'Starter tools for applications and communication',
       'Attendance and calendar workflows',
       'Faster admissions follow-up and reminders',
       'Daily operational tracking',
@@ -51,16 +51,16 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
       'Keep teams aligned on child updates and attendance',
     ],
     website: {
-      includes: ['Everything in Starter', 'Gallery + events + jobs sections', 'Richer public presentation'],
+      includes: ['Starter tools for applications and communication', 'Gallery + events + jobs sections', 'Richer public presentation'],
       suggestedAddOns: ['Domain setup help', 'Premium design pass'],
     },
   },
   pro: {
     label: 'Pro',
     monthlyPrice: 499,
-    description: 'For high-volume centres that want full control and priority support.',
+    description: 'For centres that want the full CentreConnect setup and priority support.',
     includes: [
-      'Everything in Growth',
+      'Starter + Growth tools in one place',
       'Website and growth tools',
       'Priority onboarding and support',
       'Advanced configuration support',
@@ -71,7 +71,7 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
       'Move faster with high-touch rollout support',
     ],
     website: {
-      includes: ['Everything in Growth', 'Highest website support priority', 'Full growth stack compatibility'],
+      includes: ['Starter + Growth tools in one place', 'Highest website support priority', 'Full growth stack compatibility'],
       suggestedAddOns: ['Seasonal campaign design', 'Advanced integrations'],
     },
   },
@@ -171,3 +171,4 @@ export function normalizeSubscriptionStatus(
   }
   return fallback
 }
+

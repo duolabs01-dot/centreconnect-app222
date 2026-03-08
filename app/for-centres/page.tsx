@@ -69,7 +69,7 @@ const plans: Plan[] = [
     description: 'For busy centres that need strong daily operations.',
     bestFor: 'Growing centres managing multiple classrooms and higher volume.',
     features: [
-      'Everything in Starter',
+      'Starter benefits already included',
       'Attendance and calendar in one workflow',
       'Faster follow-up on pending applications',
     ],
@@ -79,7 +79,7 @@ const plans: Plan[] = [
       'Keep parent updates predictable with operational workflows',
     ],
     packageIncludes: [
-      'Everything in Starter',
+      'Starter benefits already included',
       'Attendance register and classroom routines',
       'Daily reports and pickup workflow foundations',
       'Expanded workflow automations for applications and reminders',
@@ -95,7 +95,7 @@ const plans: Plan[] = [
     description: 'For centres that want full control and premium support.',
     bestFor: 'Established centres scaling operations and visibility.',
     features: [
-      'Everything in Growth',
+      'Growth benefits already included',
       'Website and growth tools',
       'Priority support and onboarding help',
     ],
@@ -105,7 +105,7 @@ const plans: Plan[] = [
       'Launch faster with priority onboarding guidance',
     ],
     packageIncludes: [
-      'Everything in Growth',
+      'Growth benefits already included',
       'Website builder with managed sections and media',
       'Advanced operational configuration and support priority',
       'Growth-focused setup guidance for admissions performance',
@@ -309,3 +309,4 @@ export default async function ForCentresPage() {
     </main>
   )
 }
+

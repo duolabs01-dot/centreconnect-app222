@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 
 // Import premium UI components
+import { Badge } from '@/components/ui/badge'
 import { HeroPill } from '@/components/ui/hero-pill'
 import { StatChip } from '@/components/ui/stat-chip'
 import { Section } from '@/components/ui/section'
@@ -33,6 +34,7 @@ import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 
@@ -341,8 +343,8 @@ export function CentreClient({ slug }: { slug: string }) {
   const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
     ? [
-    centre.is_registered ? 'Verified' : null,
-    centre.is_registered ? 'Priority Listing' : null,
+        centre.is_registered ? 'Verified ECD' : null,
+        centre.is_registered ? 'Priority listing' : null,
       ].filter(Boolean) as string[]
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
@@ -355,7 +357,7 @@ export function CentreClient({ slug }: { slug: string }) {
   )
   const heroFacts = showPilotTrustInfo
     ? [
-        centre.is_registered ? 'DSD Registered' : null,
+        centre.is_registered ? 'Verified ECD' : null,
         centre.subsidy_accepted ? 'Subsidy Friendly' : null,
         'Verified Profile',
         'Open for 2026',
@@ -422,11 +424,12 @@ export function CentreClient({ slug }: { slug: string }) {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                {Boolean(centre.is_registered) ? <PremiumVerifiedBadge label="Verified ECD" /> : null}
+                <div className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-black text-white shadow-2xl backdrop-blur-xl">
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                   Family Favorite
                 </div>
-                <div className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-1.5 text-xs font-black text-white backdrop-blur-xl border border-white/30 shadow-2xl">
+                <div className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/20 px-4 py-1.5 text-xs font-black text-white shadow-2xl backdrop-blur-xl">
                   <MapPin className="h-3.5 w-3.5" />
                   {centre.suburb}, {centre.city}
                 </div>
@@ -619,22 +622,34 @@ export function CentreClient({ slug }: { slug: string }) {
               </div>
 
               {showPilotTrustInfo ? (
-                <div className="rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Safety & Compliance</p>
-                  <ul className="mt-3 space-y-2.5 text-xs text-emerald-900">
-                    <li className="flex items-center gap-2 font-black">
-                      <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                      {centre.is_registered ? 'Government Approved' : 'Approval in Progress'}
-                    </li>
-                    <li className="flex items-center gap-2 font-bold">
-                      <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                      Verified Health & Safety Standards.
-                    </li>
-                    <li className="flex items-center gap-2 font-bold">
-                      <Users className="h-4 w-4 text-emerald-600" />
-                      Qualified & Vetted Practitioners.
-                    </li>
-                  </ul>
+                <div className="rounded-3xl border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#8F6200]">Trust & verification</p>
+                      <p className="text-sm font-semibold leading-6 text-slate-800">
+                        {centre.is_registered
+                          ? 'This centre has a premium verified listing on CentreConnect.'
+                          : 'This centre profile is live while verification is still being completed.'}
+                      </p>
+                    </div>
+                    {centre.is_registered ? (
+                      <PremiumVerifiedBadge label="Verified ECD" />
+                    ) : (
+                      <Badge className="rounded-full border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 shadow-none">
+                        Verification in progress
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-4 space-y-2.5 text-xs text-slate-700">
+                    <div className="flex items-start gap-2 font-semibold">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#8F6200]" />
+                      <span>Parents see a stronger, more trusted listing before they enquire.</span>
+                    </div>
+                    <div className="flex items-start gap-2 font-semibold">
+                      <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#8F6200]" />
+                      <span>Centre details are checked before the premium badge appears.</span>
+                    </div>
+                  </div>
                 </div>
               ) : null}
 
@@ -703,3 +718,4 @@ export function CentreClient({ slug }: { slug: string }) {
     </main>
   )
 }
+
