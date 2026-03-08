@@ -363,15 +363,18 @@ test('Landing journey strip is non-overlapping and public shell keeps brand head
   const shellSource = read('components/layout/public-shell.tsx')
   assert.doesNotMatch(landingSource, /absolute top-8 left-2/)
   assert.match(shellSource, /BrandMark/)
-  assert.match(shellSource, /<BrandMark href="\/" \/>/)
+  assert.match(shellSource, /<BrandMark[^>]*href="\/"/)
+  assert.match(shellSource, /Sign In/)
 })
 
 test('Parent signup confirmation email template keeps inline-safe styling', () => {
   const templateSource = read('lib/email/templates/parent-signup-confirmation.ts')
-  assert.match(templateSource, /centreconnect-logo-email\.png/)
-  assert.match(templateSource, /Confirm email/)
-  assert.match(templateSource, /table role="presentation"/)
+  assert.match(templateSource, /renderBaseEmailLayout/)
+  assert.match(templateSource, /Confirm Email & Activate/)
   assert.match(templateSource, /What happens next:/)
+  const layoutSource = read('lib/email/email-layout.ts')
+  assert.match(layoutSource, /centreconnect-logo-email\.png/)
+  assert.match(layoutSource, /table role="presentation"/)
 })
 
 test('Scoreboard tracks parent UAT matrix/live-smoke progression and next active task', () => {
@@ -420,3 +423,4 @@ if (report.summary.failed > 0) {
 }
 
 console.log('Parent portal hard-pass smoke checks passed.')
+

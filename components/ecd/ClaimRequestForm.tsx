@@ -80,7 +80,7 @@ export function ClaimRequestForm({ slug, centreName }: ClaimRequestFormProps) {
           <select
             value={role}
             onChange={(event) => setRole(event.target.value)}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus-visible:ring-2 focus-visible:ring-cyan-500"
+            className="cc-native-field w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus-visible:ring-2 focus-visible:ring-cyan-500"
           >
             <option>Owner</option>
             <option>Manager</option>
@@ -128,3 +128,5 @@ export function ClaimRequestForm({ slug, centreName }: ClaimRequestFormProps) {
     </form>
   )
 }
+
+

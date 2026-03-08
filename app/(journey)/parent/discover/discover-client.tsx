@@ -236,7 +236,7 @@ export default function ParentDiscoverClient() {
             <select
               value={selectedSuburb}
               onChange={(event) => setSelectedSuburb(event.target.value)}
-              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-cyan-500"
+              className="cc-native-field h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-cyan-500"
             >
               <option value="">All nearby suburbs</option>
               {suburbOptions.map((suburb) => (
@@ -297,3 +297,5 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
+
+
