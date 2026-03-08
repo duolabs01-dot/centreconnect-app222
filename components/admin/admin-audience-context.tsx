@@ -1,10 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 export type DashboardAudience = 'parent' | 'ecd'
-const AUDIENCE_STORAGE_KEY = 'cc_admin_audience'
 
 type AdminAudienceContextValue = {
   audience: DashboardAudience
@@ -21,48 +20,19 @@ export function AdminAudienceProvider({ children }: { children: React.ReactNode 
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const queryAudience = useMemo(() => normalizeAudience(searchParams.get('audience')), [searchParams])
-  const [audience, setAudienceState] = useState<DashboardAudience>(queryAudience)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const stored = normalizeAudience(window.localStorage.getItem(AUDIENCE_STORAGE_KEY))
-    if (!searchParams.get('audience') && stored !== queryAudience) {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set('audience', stored)
-      const query = params.toString()
-      const destination = query ? `${pathname}?${query}` : pathname
-      router.replace(destination)
-      return
-    }
-
-    window.localStorage.setItem(AUDIENCE_STORAGE_KEY, queryAudience)
-  }, [pathname, queryAudience, router, searchParams])
-
-  useEffect(() => {
-    if (audience !== queryAudience) {
-      setAudienceState(queryAudience)
-    }
-  }, [audience, queryAudience])
+  const audience = useMemo(() => normalizeAudience(searchParams.get('audience')), [searchParams])
 
   const setAudience = (next: DashboardAudience) => {
-    if (next === queryAudience) return
+    if (next === audience) return
+
     const params = new URLSearchParams(searchParams.toString())
     params.set('audience', next)
     const query = params.toString()
     const destination = query ? `${pathname}?${query}` : pathname
-    router.replace(destination)
-    setAudienceState(next)
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(AUDIENCE_STORAGE_KEY, next)
-    }
+    router.push(destination)
   }
 
-  return (
-    <AdminAudienceContext.Provider value={{ audience, setAudience }}>
-      {children}
-    </AdminAudienceContext.Provider>
-  )
+  return <AdminAudienceContext.Provider value={{ audience, setAudience }}>{children}</AdminAudienceContext.Provider>
 }
 
 export function useAdminAudience() {
@@ -72,3 +42,4 @@ export function useAdminAudience() {
   }
   return context
 }
+

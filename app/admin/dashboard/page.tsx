@@ -17,8 +17,8 @@ import {
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Platform OS | Command Console',
-  description: 'Audience-filtered command dashboard for Parent and ECD user segments.',
+  title: 'Dashboard',
+  description: 'Audience-filtered dashboard for parent and ECD user segments.',
 }
 
 const ECD_ROLES = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'] as const
@@ -181,10 +181,8 @@ type AdminDashboardPageProps = {
 export default async function AdminDashboardPage({ searchParams }: AdminDashboardPageProps) {
   const audience = audienceFrom(q(searchParams?.audience))
   const admin = createAdminClient()
-
-  let hero = 'ECD User Control Plane'
-  let heroDescription = 'Operational visibility across centres, invite delivery, and onboarding health.'
-  let cards: Array<{ label: string; value: string | number; trend: number; sparklineData: number[] }> = []
+  let heroDescription = 'See centre activity, invite delivery, and onboarding progress in one place.'
+  let cards: Array<{ label: string; value: string | number; trend?: number; sparklineData: number[] }> = []
   let highlights: Array<{ label: string; value: string }> = []
   let users: Array<{ id: string; fullName: string; roleLabel: string; phone: string; createdAt: string }> = []
   let centres: Array<{ id: string; name: string; city: string; meta: string }> = []
@@ -214,7 +212,6 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
   let tertiarySeries: number[] = []
 
   if (audience === 'parent') {
-    hero = 'Parent User Control Plane'
     heroDescription = 'Onboarding, legal/security welcome visibility, and family account engagement signals.'
     primaryLabel = 'Welcome Notifications (14 Days)'
     secondaryLabel = 'Parent Signups'
@@ -368,6 +365,8 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       newUsersResult,
       totalCentresResult,
       activeCentresResult,
+      centresInOnboardingResult,
+      pendingClaimRequestsResult,
       pendingInviteResult,
       totalInviteResult,
       recentUsersResult,
@@ -386,6 +385,8 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }),
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', false).eq('onboarding_complete', false),
+      admin.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
       admin
         .from('notification_logs')
         .select('id', { count: 'exact', head: true })
@@ -413,6 +414,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       (sum, row) => sum + (Number(row.total) || 0),
       0
     ) / 100
+    const centresInOnboardingCount = centresInOnboardingResult.count ?? 0
+    const centresLiveCount = activeCentresResult.count ?? 0
+    const pendingClaimRequestsCount = pendingClaimRequestsResult.count ?? 0
 
     cards = [
       { label: 'ECD Team Users', value: totalUsersResult.count ?? 0, trend: trend(secondarySeries), sparklineData: secondarySeries },
@@ -424,8 +428,22 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         sparklineData: tertiarySeries,
       },
       { label: 'Paid Revenue', value: `R${Math.round(paidRevenue).toLocaleString()}`, trend: trend(primarySeries), sparklineData: primarySeries },
+      {
+        label: 'Centres in onboarding',
+        value: centresInOnboardingCount,
+        sparklineData: Array.from({ length: 7 }, () => centresInOnboardingCount),
+      },
+      {
+        label: 'Centres live',
+        value: centresLiveCount,
+        sparklineData: Array.from({ length: 7 }, () => centresLiveCount),
+      },
+      {
+        label: 'Pending claim requests',
+        value: pendingClaimRequestsCount,
+        sparklineData: Array.from({ length: 7 }, () => pendingClaimRequestsCount),
+      },
     ]
-
     const rawInviteRows = (inviteRowsResult.data ?? []) as Array<any>
     const claimed = rawInviteRows.filter((row) => row.status === 'claimed').length
     const failed = rawInviteRows.filter((row) => row.status === 'failed').length
@@ -479,10 +497,6 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
       <header className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-              <span className="h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,1)]" />
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">Admin Telemetry</p>
-            </div>
             <div className="flex items-center gap-2 rounded-full border border-white/5 bg-slate-500/5 px-3 py-1">
               <Signal className="h-3 w-3 text-slate-500" />
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Audience: {audience.toUpperCase()}</p>
@@ -490,11 +504,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
           </div>
           <div className="space-y-2">
             <h1 className="text-3xl font-black leading-[0.9] tracking-tighter text-white sm:text-5xl lg:text-6xl">
-              Command <span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">Center</span>
+              Dash<span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">board</span>
             </h1>
-            <p className="max-w-3xl text-sm font-medium text-slate-400 sm:text-base lg:text-lg">
-              {hero}. {heroDescription}
-            </p>
+            <p className="max-w-3xl text-sm font-medium text-slate-400 sm:text-base lg:text-lg">{heroDescription}</p>
           </div>
         </div>
         <div className="flex flex-col items-start gap-4 lg:items-end">
@@ -502,7 +514,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             href="/admin/invites"
             className="inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-5 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
           >
-            Open Invite Ledger
+            Open Invite Log
             <ArrowUpRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -558,7 +570,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
           <div className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-[#080B13] p-5 shadow-2xl sm:p-8 lg:p-10">
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-3xl font-black tracking-tighter text-white">Central Analytics</h2>
+                <h2 className="text-3xl font-black tracking-tighter text-white">Overview</h2>
                 <p className="mt-1 text-sm text-slate-500">Filtered to the selected audience segment.</p>
               </div>
               <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-4 py-2">
@@ -709,3 +721,4 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
     </div>
   )
 }
+
