@@ -125,7 +125,7 @@ async function reserveReminderEvent(
     channel: 'email',
     recipient: input.recipient,
     status: 'queued',
-    provider: 'resend',
+    provider: 'smtp',
     payload: {
       invoiceId: input.invoiceId,
       invoiceNumber: input.invoiceNumber,
@@ -396,3 +396,4 @@ export async function runBillingAutomation(input: RunBillingAutomationInput): Pr
 
   return result
 }
+

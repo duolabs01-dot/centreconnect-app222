@@ -7,8 +7,7 @@ import {
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
-import { sendSmtpMail } from '@/lib/email/smtp'
+import { sendEmail, shouldAttemptDirectEmailForRecipient } from '@/lib/email/send'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { renderParentSignupConfirmationEmail } from '@/lib/email/templates/parent-signup-confirmation'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -118,33 +117,20 @@ export async function POST(request: Request) {
   let delivered = false
   let deliveryError: string | null = null
 
-  const resendEligibility = shouldAttemptResendForRecipient(normalizedEmail)
-  if (resendEligibility.allowed) {
-    const resendResult = await sendEmail({
+  const directEligibility = shouldAttemptDirectEmailForRecipient(normalizedEmail)
+  if (directEligibility.allowed) {
+    const directResult = await sendEmail({
       to: normalizedEmail,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
-    })
-    delivered = resendResult.success
-    if (!resendResult.success) {
-      deliveryError = resendResult.error ?? 'Resend delivery failed.'
-    }
-  } else if (resendEligibility.reason) {
-    deliveryError = resendEligibility.reason
-  }
-
-  if (!delivered) {
-    const smtpResult = await sendSmtpMail({
-      to: [normalizedEmail],
-      subject: emailTemplate.subject,
       text: emailTemplate.text,
-      html: emailTemplate.html,
     })
-    delivered = smtpResult.ok
-    if (!smtpResult.ok) {
-      const smtpError = smtpResult.error ?? 'SMTP delivery failed.'
-      deliveryError = deliveryError ? `${deliveryError} | ${smtpError}` : smtpError
+    delivered = directResult.success
+    if (!directResult.success) {
+      deliveryError = directResult.error ?? 'SMTP delivery failed.'
     }
+  } else if (directEligibility.reason) {
+    deliveryError = directEligibility.reason
   }
 
   if (!delivered) {
@@ -186,6 +172,8 @@ export async function POST(request: Request) {
     requiresEmailConfirmation: true,
   })
 }
+
+
 
 
 

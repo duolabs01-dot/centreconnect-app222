@@ -335,47 +335,137 @@ export default function CentreConnectWelcomePack() {
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-10 selection:bg-cyan-100 selection:text-cyan-900">
-        <div className="mx-auto max-w-md">
-          <Card className="rounded-[2rem] border border-slate-200 bg-white shadow-xl">
-            <CardContent className="space-y-5 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
-                <Lock className="h-5 w-5" />
+      <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f3f8f8_100%)] pb-16 selection:bg-cyan-100 selection:text-cyan-900">
+        <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+          <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+            <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#0f766e_0%,#14b8a6_100%)] p-5 text-white sm:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em]">
+                  Welcome pack preview
+                </span>
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em]">
+                  Sign in for live tools
+                </span>
               </div>
+              <div className="mt-4 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-sm font-bold text-teal-50">{location}</p>
+                    <h1 className="text-[2rem] font-black leading-tight tracking-tight sm:text-[2.5rem]">
+                      Sawubona, {firstName}. Your guide is ready.
+                    </h1>
+                    <p className="max-w-2xl text-sm font-medium leading-7 text-teal-50 sm:text-base">
+                      You can read the guide now. When you are ready to start, sign in or set your password and CentreConnect
+                      will open the live version for {centreName}.
+                    </p>
+                  </div>
+
+                  <div className="rounded-[1.5rem] border border-white/10 bg-white/10 p-4">
+                    <p className="text-[11px] font-black uppercase tracking-[0.24em] text-white/70">Your account</p>
+                    <p className="mt-2 text-lg font-black text-white">{centreName}</p>
+                    <p className="mt-1 text-sm font-medium text-teal-50">{inviteEmail || 'Use the email you enrolled with'}</p>
+                    <p className="mt-2 text-sm font-medium text-white/85">
+                      Start with a password if you still need one. If you already created it, sign in and CentreConnect will
+                      open this guide with your live data.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button asChild className="h-12 rounded-2xl bg-slate-950 text-sm font-black text-white hover:bg-slate-900">
+                      <Link href={passwordHelpHref}>Create or reset password</Link>
+                    </Button>
+                    <Button asChild variant="outline" className="h-12 rounded-2xl border-white/20 bg-white/10 text-sm font-black text-white hover:bg-white/15 hover:text-white">
+                      <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>Sign in to open guide</Link>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.75rem] bg-slate-950/90 p-5 text-white shadow-2xl">
+                  <p className="text-[11px] font-black uppercase tracking-[0.24em] text-teal-200">What happens after sign-in</p>
+                  <h2 className="mt-2 text-xl font-black leading-tight">Three quick moves and your centre is live.</h2>
+                  <div className="mt-5 space-y-3">
+                    {[
+                      'Add your first child from the paper register.',
+                      'Mark attendance once so the day starts flowing in the app.',
+                      'Turn on secure pickup so parents feel the difference immediately.',
+                    ].map((item, index) => (
+                      <div key={item} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-200">Step {index + 1}</p>
+                        <p className="mt-1 text-sm font-medium leading-6 text-slate-200">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-6">
               <div className="space-y-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Secure access needed</p>
-                <h1 className="text-2xl font-black tracking-tight text-slate-900">Sign in to open your guide</h1>
-                <p className="text-sm font-medium leading-6 text-slate-500">
-                  If you already created your password, sign in and this guide will open. If you have not created it yet,
-                  request a new password link first.
-                </p>
+                <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Your first steps</p>
+                <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                  You can read the guide now. The live tools open after sign-in.
+                </h2>
               </div>
-              <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50 p-4">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-teal-700">Guide requested</p>
-                <p className="mt-2 text-lg font-black text-slate-900">{centreName}</p>
-                <p className="mt-1 text-sm font-medium text-slate-500">{location}</p>
+              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                {activationSteps.map((step) => {
+                  const Icon = step.icon
+                  return (
+                    <Card key={step.id} className="rounded-[1.75rem] border border-slate-200 bg-white shadow-none">
+                      <CardContent className="space-y-4 p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
+                              <Icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Step {step.step}</p>
+                              <h3 className="mt-1 text-xl font-black tracking-tight text-slate-900">{step.title}</h3>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-amber-50 px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-amber-700">
+                            Preview
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium leading-7 text-slate-600">{step.description}</p>
+                        <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-200 text-sm font-black">
+                          <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>
+                            Sign in to open this
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
               </div>
-              <div className="space-y-3">
-                <Button asChild className="h-12 w-full rounded-2xl bg-teal-600 text-sm font-black hover:bg-teal-700">
-                  <Link href={`/ecd/login?next=${encodeURIComponent(safeNextPath)}`}>Sign in to open guide</Link>
-                </Button>
-                <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-slate-200 text-sm font-black">
-                  <Link href={passwordHelpHref}>Create or reset password</Link>
-                </Button>
-                <Button asChild variant="outline" className="h-12 w-full rounded-2xl border-slate-200 text-sm font-black">
-                  <Link href={supportWhatsappHref}>
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    WhatsApp Mandla for help
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
+              <Card className="mt-4 rounded-[1.75rem] border-slate-200 bg-slate-50 shadow-none">
+                <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-500">Need a hand?</p>
+                    <p className="text-sm font-medium leading-6 text-slate-600">
+                      If anything feels confusing, reply on WhatsApp and we will walk you through it step by step.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button asChild className="h-11 rounded-2xl bg-[#25D366] text-sm font-black text-white hover:bg-[#1faa52]">
+                      <Link href={supportWhatsappHref}>
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        WhatsApp Mandla
+                      </Link>
+                    </Button>
+                    <Button asChild variant="outline" className="h-11 rounded-2xl border-slate-200 text-sm font-black">
+                      <Link href={passwordHelpHref}>Create password first</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+        </main>
       </div>
     )
   }
-
   if (requiresPasswordSetup) {
     return (
       <div className="min-h-screen bg-slate-50 px-4 py-10 selection:bg-cyan-100 selection:text-cyan-900">
@@ -713,6 +803,8 @@ export default function CentreConnectWelcomePack() {
     </div>
   )
 }
+
+
 
 
 

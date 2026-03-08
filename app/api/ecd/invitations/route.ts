@@ -7,8 +7,7 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 import { queueEmail } from '@/lib/communications/emails'
 import { SUPPORT_EMAIL } from '@/lib/config'
 import { renderStaffInviteEmail } from '@/lib/email/templates/staff-invite'
-import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
-import { sendSmtpMail } from '@/lib/email/smtp'
+import { sendEmail, shouldAttemptDirectEmailForRecipient } from '@/lib/email/send'
 import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 import {
   buildFirstPartyConfirmLink,
@@ -366,42 +365,28 @@ export async function POST(request: Request) {
   })
 
   let directEmailSent = false
-  let directEmailProvider: 'resend' | 'smtp' | null = null
+  let directEmailProvider: 'smtp' | null = null
   let directEmailMessageId: string | null = null
   const directEmailErrors: string[] = []
   const directEmailNotes: string[] = []
 
-  const resendEligibility = shouldAttemptResendForRecipient(normalizedEmail)
-  if (resendEligibility.allowed) {
-    const resendResult = await sendEmail({
+  const directEligibility = shouldAttemptDirectEmailForRecipient(normalizedEmail)
+  if (directEligibility.allowed) {
+    const directResult = await sendEmail({
       to: normalizedEmail,
       subject: inviteEmail.subject,
       html: inviteEmail.html,
-    })
-    if (resendResult.success) {
-      directEmailSent = true
-      directEmailProvider = 'resend'
-      directEmailMessageId = resendResult.messageId ?? null
-    } else if (resendResult.error) {
-      directEmailErrors.push(`Resend: ${resendResult.error}`)
-    }
-  } else if (resendEligibility.reason) {
-    directEmailNotes.push(`Resend skipped: ${resendEligibility.reason}`)
-  }
-
-  if (!directEmailSent) {
-    const smtpResult = await sendSmtpMail({
-      to: [normalizedEmail],
-      subject: inviteEmail.subject,
       text: toPlainTextEmail(inviteEmail.html),
-      html: inviteEmail.html,
     })
-    if (smtpResult.ok) {
+    if (directResult.success) {
       directEmailSent = true
-      directEmailProvider = 'smtp'
-    } else if (smtpResult.error) {
-      directEmailErrors.push(`SMTP: ${smtpResult.error}`)
+      directEmailProvider = directResult.provider ?? 'smtp'
+      directEmailMessageId = directResult.messageId ?? null
+    } else if (directResult.error) {
+      directEmailErrors.push(`SMTP: ${directResult.error}`)
     }
+  } else if (directEligibility.reason) {
+    directEmailNotes.push(`Direct email skipped: ${directEligibility.reason}`)
   }
 
   const emailQueueResult = directEmailSent
@@ -437,9 +422,7 @@ export async function POST(request: Request) {
     notificationEventKey,
     notificationStatus: emailDeliveryStatus,
     notificationProvider: directEmailSent
-      ? directEmailProvider === 'resend'
-        ? 'resend'
-        : 'smtp'
+      ? directEmailProvider ?? 'smtp'
       : 'email_queue',
     notificationProviderMessageId: directEmailSent ? directEmailMessageId : queuedMessageId,
     notificationPayload: {
@@ -457,7 +440,7 @@ export async function POST(request: Request) {
   if (!directEmailSent) {
     const emailDiagnostics = [...directEmailNotes, ...directEmailErrors].join(' | ')
     const queueMessage = emailQueueResult.success
-      ? 'Invite queued for delivery, but direct SMTP/Resend delivery failed.'
+      ? 'Invite queued for delivery, but direct SMTP delivery failed.'
       : `Invite delivery failed. ${emailDiagnostics}`
     return NextResponse.json(
       {
@@ -489,3 +472,6 @@ export async function POST(request: Request) {
     emailQueued: emailQueueResult.success,
   })
 }
+
+
+

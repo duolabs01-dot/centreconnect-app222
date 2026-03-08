@@ -269,10 +269,10 @@ export async function POST(request: Request) {
     recipient: ownerEmail.toLowerCase(),
     status: deliveryResult.status,
     provider: deliveryResult.directSent
-      ? 'resend'
+      ? deliveryResult.directProvider ?? 'smtp'
       : deliveryResult.queueSuccess
         ? 'email_queue'
-        : 'resend',
+        : 'smtp',
     providerMessageId: deliveryResult.directSent
       ? deliveryResult.directMessageId
       : deliveryResult.queueMessageId,
@@ -293,6 +293,8 @@ export async function POST(request: Request) {
     { status: 502 }
   )
 }
+
+
 
 
 

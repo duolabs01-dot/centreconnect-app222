@@ -1,10 +1,10 @@
 import 'server-only'
 
 import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail, shouldAttemptResendForRecipient } from '@/lib/email/send'
+import { sendEmail, shouldAttemptDirectEmailForRecipient } from '@/lib/email/send'
 
 export type EmailDeliveryStatus = 'sent' | 'queued' | 'failed'
-export type EmailDirectProvider = 'resend' | null
+export type EmailDirectProvider = 'smtp' | null
 
 export type DeliverTransactionalEmailInput = {
   to: string
@@ -57,24 +57,24 @@ export async function deliverTransactionalEmail(
   const directErrors: string[] = []
   const directNotes: string[] = []
 
-  const resendEligibility = shouldAttemptResendForRecipient(recipient)
-  if (resendEligibility.allowed) {
-    const resendResult = await sendEmail({
+  const directEligibility = shouldAttemptDirectEmailForRecipient(recipient)
+  if (directEligibility.allowed) {
+    const directResult = await sendEmail({
       to: recipient,
       subject,
       html,
+      text: input.text ?? toPlainTextEmail(html),
     })
-    if (resendResult.success) {
+    if (directResult.success) {
       directSent = true
-      directProvider = 'resend'
-      directMessageId = resendResult.messageId ?? null
-    } else if (resendResult.error) {
-      directErrors.push(`Resend: ${resendResult.error}`)
+      directProvider = directResult.provider ?? 'smtp'
+      directMessageId = directResult.messageId ?? null
+    } else if (directResult.error) {
+      directErrors.push(`SMTP: ${directResult.error}`)
     }
-  } else if (resendEligibility.reason) {
-    directNotes.push(`Resend skipped: ${resendEligibility.reason}`)
+  } else if (directEligibility.reason) {
+    directNotes.push(`Direct email skipped: ${directEligibility.reason}`)
   }
-
 
   const queueResult = directSent
     ? { success: true, skipped: true }

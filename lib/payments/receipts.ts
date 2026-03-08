@@ -134,7 +134,7 @@ export async function deliverInvoiceReceipt(input: DeliverInvoiceReceiptInput): 
       channel: 'email',
       recipient,
       status: 'failed',
-      provider: 'resend',
+      provider: result.provider ?? 'smtp',
       errorMessage: result.error ?? 'Receipt delivery failed',
       payload: {
         invoiceId: row.id,
@@ -163,7 +163,7 @@ export async function deliverInvoiceReceipt(input: DeliverInvoiceReceiptInput): 
     channel: 'email',
     recipient,
     status: 'sent',
-    provider: 'resend',
+    provider: result.provider ?? 'smtp',
     providerMessageId: result.messageId ?? null,
     payload: {
       invoiceId: row.id,
@@ -177,3 +177,4 @@ export async function deliverInvoiceReceipt(input: DeliverInvoiceReceiptInput): 
 
   return { sent: true, skipped: false }
 }
+

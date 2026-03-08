@@ -545,10 +545,10 @@ export async function POST(request: Request) {
         : setupEmailResult.deliveryMessage,
     notificationStatus: setupEmailResult.status,
     notificationProvider: setupEmailResult.directSent
-      ? 'resend'
+      ? setupEmailResult.directProvider ?? 'smtp'
       : setupEmailResult.queueSuccess
         ? 'email_queue'
-        : 'resend',
+        : 'smtp',
     notificationProviderMessageId: setupEmailResult.directSent
       ? setupEmailResult.directMessageId
       : setupEmailResult.queueMessageId,
@@ -632,6 +632,8 @@ export async function POST(request: Request) {
     { status: createdNewCentre ? 201 : 200 }
   )
 }
+
+
 
 
 

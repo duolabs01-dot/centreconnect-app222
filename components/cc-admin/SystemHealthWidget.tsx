@@ -21,7 +21,7 @@ export async function SystemHealthWidget() {
     { label: 'Supabase DB', status: dbStatus, detail: dbStatus === 'ok' ? `${latencyMs}ms` : 'Unreachable' },
     { label: 'Auth Service', status: 'ok', detail: 'Session-based' },
     { label: 'Storage', status: 'ok', detail: 'Supabase Storage' },
-    { label: 'Email Queue', status: 'ok', detail: 'Resend via queue' },
+    { label: 'Email Delivery', status: 'ok', detail: 'SMTP direct + queue fallback' },
   ]
 
   return (
@@ -38,3 +38,4 @@ export async function SystemHealthWidget() {
     </div>
   )
 }
+

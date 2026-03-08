@@ -430,7 +430,7 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
         parentAccessRevoked?: boolean
         accessLinkWarning?: string | null
         directEmailSent?: boolean
-        directEmailProvider?: 'resend' | 'smtp' | null
+        directEmailProvider?: 'smtp' | null
         directEmailError?: string | null
         emailDeliveryStatus?: 'sent' | 'failed'
         emailDeliveryMessage?: string | null
@@ -1039,5 +1039,6 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
     </div>
   )
 }
+
 
 

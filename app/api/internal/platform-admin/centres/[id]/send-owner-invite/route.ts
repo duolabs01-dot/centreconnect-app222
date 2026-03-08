@@ -333,10 +333,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     recipient: ownerEmail,
     status: emailResult.status,
     provider: emailResult.directSent
-      ? 'resend'
+      ? emailResult.directProvider ?? 'smtp'
       : emailResult.queueSuccess
         ? 'email_queue'
-        : 'resend',
+        : 'smtp',
     providerMessageId: emailResult.directSent
       ? emailResult.directMessageId
       : emailResult.queueMessageId,
@@ -559,5 +559,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   return NextResponse.json(response, { status: emailResult.status === 'sent' ? 200 : 502 })
 }
+
+
 
 

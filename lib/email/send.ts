@@ -1,85 +1,97 @@
-export type ResendEligibility = {
+import { sendSmtpMail } from '@/lib/email/smtp'
+
+export type DirectEmailProvider = 'smtp'
+export type DirectEmailEligibility = {
   allowed: boolean
   reason: string | null
 }
 
-function parseAllowList(value: string | undefined) {
-  return String(value ?? '')
-    .split(',')
-    .map((entry) => entry.trim().toLowerCase())
-    .filter(Boolean)
+function toPlainTextEmail(html: string) {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<a[^>]*href=['"]([^'"]+)['"][^>]*>(.*?)<\/a>/gi, '$2 ($1)')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/tr>/gi, '\n')
+    .replace(/<\/h[1-6]>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
-export function shouldAttemptResendForRecipient(to: string): ResendEligibility {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
-  if (!apiKey) {
-    return { allowed: false, reason: 'RESEND_API_KEY not set' }
-  }
-
-  const from = (process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev').toLowerCase()
-  if (!from.endsWith('@resend.dev')) {
-    return { allowed: true, reason: null }
-  }
-
+export function shouldAttemptDirectEmailForRecipient(to: string): DirectEmailEligibility {
   const recipient = to.trim().toLowerCase()
-  const allowedRecipients = parseAllowList(process.env.RESEND_TEST_RECIPIENTS)
-  if (allowedRecipients.length > 0 && allowedRecipients.includes(recipient)) {
-    return { allowed: true, reason: null }
+  if (!recipient) {
+    return { allowed: false, reason: 'Recipient email missing' }
   }
 
-  return {
-    allowed: false,
-    reason:
-      'RESEND_FROM uses @resend.dev test mode; set RESEND_TEST_RECIPIENTS or verify your sender domain in Resend.',
+  const hasSmtpConfig = Boolean(
+    process.env.SMTP_HOST?.trim() &&
+      process.env.SMTP_USER?.trim() &&
+      process.env.SMTP_PASS &&
+      process.env.SMTP_FROM?.trim()
+  )
+
+  if (!hasSmtpConfig) {
+    return {
+      allowed: false,
+      reason: 'SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM.',
+    }
   }
+
+  return { allowed: true, reason: null }
 }
 
 export async function sendEmail({
   to,
   subject,
   html,
+  text,
 }: {
   to: string
   subject: string
   html: string
-}): Promise<{ success: boolean; error?: string; messageId?: string | null }> {
-  const eligibility = shouldAttemptResendForRecipient(to)
+  text?: string
+}): Promise<{ success: boolean; error?: string; messageId?: string | null; provider?: DirectEmailProvider | null }> {
+  const eligibility = shouldAttemptDirectEmailForRecipient(to)
   if (!eligibility.allowed) {
     if (eligibility.reason) {
-      console.warn('[email] Resend skipped:', eligibility.reason)
+      console.warn('[email] SMTP skipped:', eligibility.reason)
     }
     return {
       success: false,
-      error: eligibility.reason ?? 'Resend not allowed for this recipient',
+      error: eligibility.reason ?? 'SMTP not allowed for this recipient',
       messageId: null,
+      provider: null,
     }
   }
 
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.RESEND_FROM?.trim() || 'onboarding@resend.dev'
-  const replyTo = process.env.RESEND_REPLY_TO?.trim() || undefined
-
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      html,
-      ...(replyTo ? { reply_to: replyTo } : {}),
-    }),
+  const recipient = to.trim().toLowerCase()
+  const result = await sendSmtpMail({
+    to: [recipient],
+    subject,
+    text: text?.trim() || toPlainTextEmail(html),
+    html,
   })
 
-  if (!response.ok) {
-    const error = await response.text()
-    console.error('[email] Resend error:', error)
-    return { success: false, error, messageId: null }
+  if (!result.ok) {
+    console.error('[email] SMTP error:', result.error)
+    return {
+      success: false,
+      error: result.error ?? 'SMTP delivery failed',
+      messageId: null,
+      provider: null,
+    }
   }
 
-  const payload = (await response.json().catch(() => ({}))) as { id?: string }
-  return { success: true, messageId: payload.id ?? null }
+  return {
+    success: true,
+    messageId: null,
+    provider: 'smtp',
+  }
 }

@@ -108,7 +108,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     channel: 'email',
     recipient: customerEmail,
     status: emailResult.success ? 'sent' : 'failed',
-    provider: 'resend',
+    provider: emailResult.provider ?? 'smtp',
     providerMessageId: emailResult.messageId ?? null,
     errorMessage: emailResult.error ?? null,
     payload: {
@@ -165,3 +165,4 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     recipient: customerEmail,
   })
 }
+

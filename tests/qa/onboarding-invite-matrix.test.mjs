@@ -67,9 +67,10 @@ test('password setup links use first-party confirm links in invite routes', () =
   assert.match(ecdInviteRoute, /sanitizeGeneratedAccessLink\(/)
 })
 
-test('invite routes gate Resend attempts via eligibility helper', () => {
-  assert.match(staffInviteRoute, /shouldAttemptResendForRecipient/)
-  assert.match(ecdInviteRoute, /shouldAttemptResendForRecipient/)
+test('invite routes gate direct email attempts via SMTP eligibility helper', () => {
+  assert.match(staffInviteRoute, /shouldAttemptDirectEmailForRecipient/)
+  assert.match(ecdInviteRoute, /shouldAttemptDirectEmailForRecipient/)
 })
 
 console.log('Onboarding invite matrix smoke checks passed.')
+
