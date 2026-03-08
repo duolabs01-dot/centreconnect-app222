@@ -5,6 +5,11 @@ type RevokeUserSessionsResult = {
   warning?: string
 }
 
+function isIgnorableAuthSchemaError(message: string | null | undefined) {
+  const value = (message ?? '').toLowerCase()
+  return value.includes('invalid schema: auth') || value.includes('relation "auth.')
+}
+
 export async function revokeUserSessionsByUserId(
   admin: SupabaseClient,
   userId: string
@@ -18,12 +23,12 @@ export async function revokeUserSessionsByUserId(
     .from('refresh_tokens')
     .delete()
     .eq('user_id', userId)
-  if (refreshTokensResult.error) {
+  if (refreshTokensResult.error && !isIgnorableAuthSchemaError(refreshTokensResult.error.message)) {
     errors.push(`refresh_tokens: ${refreshTokensResult.error.message}`)
   }
 
   const sessionsResult = await admin.schema('auth').from('sessions').delete().eq('user_id', userId)
-  if (sessionsResult.error) {
+  if (sessionsResult.error && !isIgnorableAuthSchemaError(sessionsResult.error.message)) {
     errors.push(`sessions: ${sessionsResult.error.message}`)
   }
 
@@ -41,4 +46,3 @@ export async function revokeUserSessionsByUserId(
 
   return { ok: true }
 }
-
