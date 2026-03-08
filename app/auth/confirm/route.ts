@@ -28,6 +28,17 @@ function sanitizeNextPath(value: string | null | undefined) {
   return value
 }
 
+function destinationForRole(role: AllowedRole) {
+  if (role === 'platform_admin') return '/admin/command'
+  if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
+  return '/parent/dashboard'
+}
+
+function resolvePostAuthDestination(next: string, role: AllowedRole) {
+  if (next === '/') return destinationForRole(role)
+  return next
+}
+
 function getSafeRedirectBase(request: NextRequest) {
   const base = new URL(request.url)
   if (base.hostname === '0.0.0.0') {
@@ -266,9 +277,13 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    return NextResponse.redirect(buildRedirectUrl(next, request))
+    const destination = resolvePostAuthDestination(next, desiredRole)
+    return NextResponse.redirect(buildRedirectUrl(destination, request))
   } catch (error) {
     console.error('[auth/confirm] Unexpected confirmation error:', error)
     return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-failed', request))
   }
 }
+
+
+
