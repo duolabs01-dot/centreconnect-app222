@@ -4,7 +4,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
-import { queueEmail } from '@/lib/communications/emails'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import {
   renderEcdPasswordSetupEmail,
@@ -524,29 +524,49 @@ export async function POST(request: Request) {
     setupLink,
     loginLink: `${appBaseUrl}/ecd/login`,
   })
-  const setupEmailResult = await queueEmail(
-    normalizedEmail,
-    `Your CentreConnect account is ready - ${data.name}`,
-    setupEmailHtml
-  )
-  if (!setupEmailResult.success) {
-    emailWarnings.push(setupEmailResult.error ?? 'Failed to queue password setup email.')
-  } else {
-    await writeInviteLog(adminClient, {
-      centreId: centre.id,
-      ownerEmail: normalizedEmail,
-      ownerPhone: data.phone,
-      inviteType: 'email',
-      status: 'sent',
-      notes: 'ECD admin setup email sent.',
-    })
+  const setupEmailResult = await deliverTransactionalEmail({
+    to: normalizedEmail,
+    subject: `Your CentreConnect account is ready - ${data.name}`,
+    html: setupEmailHtml,
+  })
+  if (setupEmailResult.status !== 'sent') {
+    emailWarnings.push(setupEmailResult.deliveryMessage)
   }
 
+  await writeInviteLog(adminClient, {
+    centreId: centre.id,
+    ownerEmail: normalizedEmail,
+    ownerPhone: data.phone,
+    inviteType: 'email',
+    status: 'sent',
+    notes:
+      setupEmailResult.status === 'sent'
+        ? `ECD admin setup email sent via ${setupEmailResult.directProvider ?? 'direct provider'}.`
+        : setupEmailResult.deliveryMessage,
+    notificationStatus: setupEmailResult.status,
+    notificationProvider: setupEmailResult.directSent
+      ? 'resend'
+      : setupEmailResult.queueSuccess
+        ? 'email_queue'
+        : 'resend',
+    notificationProviderMessageId: setupEmailResult.directSent
+      ? setupEmailResult.directMessageId
+      : setupEmailResult.queueMessageId,
+    notificationPayload: {
+      email_type: 'ecd_setup',
+      direct_email_sent: setupEmailResult.directSent,
+      queued_fallback: !setupEmailResult.directSent && setupEmailResult.queueSuccess,
+    },
+    notificationErrorMessage:
+      setupEmailResult.status === 'sent' ? null : setupEmailResult.deliveryMessage,
+  })
+
   void sendPlatformAdminActionNotification({
-    subject: setupEmailResult.success ? 'ECD setup email sent' : 'ECD setup email failed',
-    heading: setupEmailResult.success
-      ? `Setup email sent for ${data.name}.`
-      : `Setup email failed for ${data.name}.`,
+    subject: setupEmailResult.status === 'sent' ? 'ECD setup email sent' : 'ECD setup email failed',
+    heading:
+      setupEmailResult.status === 'sent'
+        ? `Setup email sent for ${data.name}.`
+        : `Setup email did not deliver for ${data.name}.`,
     lines: [
       `Centre: ${data.name}`,
       `Owner email: ${normalizedEmail}`,
@@ -558,8 +578,8 @@ export async function POST(request: Request) {
       linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,
       migratedExistingUser: reusedExistingUser,
       previousRole: resolvedExistingRole ?? '-',
-      delivery: setupEmailResult.success ? 'queued' : 'failed',
-      warning: setupEmailResult.error ?? '-',
+      delivery: setupEmailResult.status,
+      warning: setupEmailResult.deliveryMessage,
     },
   }).catch((error) => {
     console.error('[admin/centres] founder notification failed:', error)
@@ -573,22 +593,13 @@ export async function POST(request: Request) {
       websiteBuilderLink: `${appBaseUrl}/ecd/website`,
       applicationsLink: `${appBaseUrl}/ecd/applications`,
     })
-    const migrationEmailResult = await queueEmail(
-      normalizedEmail,
-      `Access updated: You are now ECD Admin for ${data.name}`,
-      migrationEmailHtml
-    )
-    if (!migrationEmailResult.success) {
-      emailWarnings.push(migrationEmailResult.error ?? 'Failed to queue ECD admin migration email.')
-    } else {
-      await writeInviteLog(adminClient, {
-        centreId: centre.id,
-        ownerEmail: normalizedEmail,
-        ownerPhone: data.phone,
-        inviteType: 'email',
-        status: 'sent',
-        notes: 'Parent access revoked and migrated to ECD Admin.',
-      })
+    const migrationEmailResult = await deliverTransactionalEmail({
+      to: normalizedEmail,
+      subject: `Access updated: You are now ECD Admin for ${data.name}`,
+      html: migrationEmailHtml,
+    })
+    if (migrationEmailResult.status !== 'sent') {
+      emailWarnings.push(migrationEmailResult.deliveryMessage)
     }
   }
 

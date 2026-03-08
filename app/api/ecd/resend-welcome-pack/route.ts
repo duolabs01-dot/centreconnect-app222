@@ -7,8 +7,7 @@ import {
   sanitizeGeneratedAccessLinkWithDiagnostics,
 } from '@/lib/auth/onboarding-links'
 import { createNotificationEventKey, upsertNotificationLog } from '@/lib/admin/notification-logs'
-import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail } from '@/lib/email/send'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { renderPilotWelcomePackEmail } from '@/lib/email/templates/pilot-welcome-pack'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveFirstName, splitFullName } from '@/lib/utils/name'
@@ -256,45 +255,11 @@ export async function POST(request: Request) {
     },
   }
 
-  const resendResult = await sendEmail({
+  const deliveryResult = await deliverTransactionalEmail({
     to: ownerEmail,
     subject,
     html,
   })
-
-  if (resendResult.success) {
-    await upsertNotificationLog(admin, {
-      centreId: ecdId,
-      eventKey,
-      eventType: 'welcome_pack',
-      channel: 'email',
-      recipient: ownerEmail.toLowerCase(),
-      status: 'sent',
-      provider: 'resend',
-      providerMessageId: resendResult.messageId ?? null,
-      payload: notificationPayload,
-    })
-
-    return NextResponse.json({ success: true })
-  }
-
-  const queueResult = await queueEmail(ownerEmail, subject, html)
-
-  if (queueResult.success) {
-    await upsertNotificationLog(admin, {
-      centreId: ecdId,
-      eventKey,
-      eventType: 'welcome_pack',
-      channel: 'email',
-      recipient: ownerEmail.toLowerCase(),
-      status: 'queued',
-      provider: 'email_queue',
-      payload: notificationPayload,
-      errorMessage: resendResult.error ?? null,
-    })
-
-    return NextResponse.json({ success: true, queued: true })
-  }
 
   await upsertNotificationLog(admin, {
     centreId: ecdId,
@@ -302,13 +267,31 @@ export async function POST(request: Request) {
     eventType: 'welcome_pack',
     channel: 'email',
     recipient: ownerEmail.toLowerCase(),
-    status: 'failed',
-    provider: 'resend',
+    status: deliveryResult.status,
+    provider: deliveryResult.directSent
+      ? 'resend'
+      : deliveryResult.queueSuccess
+        ? 'email_queue'
+        : 'resend',
+    providerMessageId: deliveryResult.directSent
+      ? deliveryResult.directMessageId
+      : deliveryResult.queueMessageId,
     payload: notificationPayload,
-    errorMessage: queueResult.error ?? resendResult.error ?? 'Unable to send welcome pack email',
+    errorMessage: deliveryResult.status === 'sent' ? null : deliveryResult.deliveryMessage,
   })
 
-  return NextResponse.json({ success: false, error: 'Unable to send welcome pack email' }, { status: 502 })
+  if (deliveryResult.status === 'sent') {
+    return NextResponse.json({ success: true })
+  }
+
+  return NextResponse.json(
+    {
+      success: false,
+      queued: deliveryResult.status === 'queued',
+      error: deliveryResult.deliveryMessage,
+    },
+    { status: 502 }
+  )
 }
 
 

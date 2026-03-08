@@ -10,7 +10,7 @@ import {
   sanitizeGeneratedAccessLinkWithDiagnostics,
   type SanitizedAccessLinkDiagnostics,
 } from '@/lib/auth/onboarding-links'
-import { queueEmail } from '@/lib/communications/emails'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { createWhatsappClickToChatLink, normalizeWhatsappPhone } from '@/lib/communications/whatsapp'
 import { renderOwnerInviteEmail } from '@/lib/email/templates/owner-invite'
@@ -320,20 +320,27 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     centreLogoUrl: centre.logo_url ?? null,
   })
 
-  const emailResult = await queueEmail(ownerEmail, inviteHtml.subject, inviteHtml.html)
+  const emailResult = await deliverTransactionalEmail({
+    to: ownerEmail,
+    subject: inviteHtml.subject,
+    html: inviteHtml.html,
+  })
   await upsertNotificationLog(admin, {
     centreId: centre.id,
     eventKey,
     eventType: 'owner_invite',
     channel: 'email',
     recipient: ownerEmail,
-    status: emailResult.success ? 'sent' : 'failed',
-    provider: 'email_queue',
-    providerMessageId:
-      emailResult.success && Array.isArray(emailResult.data)
-        ? String(emailResult.data[0]?.id ?? '')
-        : null,
-    errorMessage: emailResult.success ? null : emailResult.error,
+    status: emailResult.status,
+    provider: emailResult.directSent
+      ? 'resend'
+      : emailResult.queueSuccess
+        ? 'email_queue'
+        : 'resend',
+    providerMessageId: emailResult.directSent
+      ? emailResult.directMessageId
+      : emailResult.queueMessageId,
+    errorMessage: emailResult.status === 'sent' ? null : emailResult.deliveryMessage,
     payload: {
       subject: inviteHtml.subject,
       tracked_open_url: emailTrackingUrl,
@@ -367,9 +374,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const whatsappMessage = [
     `Hi ${ownerFirstName},`,
-    `I sent your CentreConnect access email for ${sanitizeName(centre.name, 'your centre')}.`,
+    `Your CentreConnect access is ready for ${sanitizeName(centre.name, 'your centre')}.`,
     `Start here: ${emailTrackingUrl}`,
-    'After you are in, CentreConnect will guide you step by step.',
+    'If you have not set a password yet, this link will help you do that first.',
   ].join('\n')
   const whatsappLink = createWhatsappClickToChatLink(ownerPhone, whatsappMessage)
   const trackedOwnerWhatsappLink = whatsappLink
@@ -506,7 +513,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     details: {
       ownerEmail,
       ownerPhone,
-      emailSent: emailResult.success,
+      emailSent: emailResult.status === 'sent',
       whatsappSent,
       whatsappLink: trackedOwnerWhatsappLink,
       warning: combinedWarning,
@@ -517,10 +524,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
 
   void sendPlatformAdminActionNotification({
-    subject: emailResult.success ? 'ECD owner invite resent' : 'ECD owner invite resend failed',
-    heading: emailResult.success
+    subject: emailResult.status === 'sent' ? 'ECD owner invite resent' : 'ECD owner invite resend failed',
+    heading: emailResult.status === 'sent'
       ? `Owner access email resent for ${centre.name ?? centre.id}.`
-      : `Owner access email failed for ${centre.name ?? centre.id}.`,
+      : `Owner access email did not deliver for ${centre.name ?? centre.id}.`,
     lines: [
       `Centre: ${centre.name ?? centre.id}`,
       `Owner email: ${ownerEmail}`,
@@ -531,8 +538,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       eventKey,
       whatsappReady: whatsappSent,
       primaryActionLabel,
-      emailStatus: emailResult.success ? 'sent' : 'failed',
-      emailError: emailResult.error ?? '-',
+      emailStatus: emailResult.status,
+      emailError: emailResult.status === 'sent' ? '-' : emailResult.deliveryMessage,
       warning: combinedWarning ?? '-',
     },
   }).catch((error) => {
@@ -540,14 +547,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   })
 
   const response: SendOwnerInviteResponse = {
-    ok: true,
+    ok: emailResult.status === 'sent',
     eventKey,
-    email: { sent: emailResult.success, error: emailResult.success ? null : emailResult.error },
+    email: {
+      sent: emailResult.status === 'sent',
+      error: emailResult.status === 'sent' ? null : emailResult.deliveryMessage,
+    },
     whatsapp: { sent: whatsappSent, link: trackedOwnerWhatsappLink, error: whatsappError },
     warning: combinedWarning ?? undefined,
   }
 
-  return NextResponse.json(response, { status: 200 })
+  return NextResponse.json(response, { status: emailResult.status === 'sent' ? 200 : 502 })
 }
 
 

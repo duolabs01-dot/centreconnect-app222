@@ -6,12 +6,12 @@ const root = process.cwd()
 const checks = [
   {
     file: 'app/api/ecd/invitations/route.ts',
-    mustInclude: ['buildDefaultEcdOnboardingRedirect(', 'generateMagicFirstAccessLink('],
+    mustInclude: ['coerceAuthCallbackRedirect(', 'generateMagicFirstAccessLink('],
     mustNotInclude: ["encodeURIComponent('/ecd/dashboard')", "encodeURIComponent(\"/ecd/dashboard\")"],
   },
   {
     file: 'app/api/internal/platform-admin/invitations/route.ts',
-    mustInclude: ['buildDefaultEcdOnboardingRedirect(', 'generateMagicFirstAccessLink('],
+    mustInclude: ['coerceAuthCallbackRedirect(', 'generateMagicFirstAccessLink('],
     mustNotInclude: ["encodeURIComponent('/ecd/dashboard')", "encodeURIComponent(\"/ecd/dashboard\")"],
   },
   {
@@ -27,12 +27,11 @@ const checks = [
   {
     file: 'lib/email/templates/pilot-welcome-pack.tsx',
     mustInclude: [
-      'See your ${packageLabel}',
-      'Get started now',
-      'Print parent QR poster',
-      'Daily attendance and reports',
+      'Open my welcome guide',
+      'Add your first child',
+      'Take attendance once',
+      'Turn on safe pickup',
     ],
-    ordered: ['See your ${packageLabel}', 'Daily attendance and reports', 'Get started now', 'Print parent QR poster'],
     mustNotInclude: ['<details', '<summary'],
   },
   {

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
-import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail } from '@/lib/email/send'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import {
   renderPasswordSetupConfirmedEmail,
@@ -76,25 +75,20 @@ async function sendPasswordConfirmationEmail(input: {
   })
 
   const subject = 'Your CentreConnect password was changed'
-  const resendResult = await sendEmail({
+  const deliveryResult = await deliverTransactionalEmail({
     to: input.email,
     subject,
     html,
   })
 
-  if (resendResult.success) {
+  if (deliveryResult.status === 'sent') {
     return { sent: true as const, kind: 'password_confirmation' as const, warning: null as string | null }
-  }
-
-  const queueResult = await queueEmail(input.email, subject, html)
-  if (queueResult.success) {
-    return { sent: true as const, kind: 'password_confirmation' as const, warning: resendResult.error ?? null }
   }
 
   return {
     sent: false as const,
     kind: 'password_confirmation' as const,
-    warning: queueResult.error ?? resendResult.error ?? 'Failed to send password confirmation email.',
+    warning: deliveryResult.deliveryMessage,
   }
 }
 

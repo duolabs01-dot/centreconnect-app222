@@ -1,9 +1,8 @@
 import 'server-only'
 
-import { queueEmail } from '@/lib/communications/emails'
 import { ROOT_DOMAIN } from '@/lib/config'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { renderBaseEmailLayout } from '@/lib/email/email-layout'
-import { sendEmail } from '@/lib/email/send'
 
 const PRIMARY_RECIPIENT = `admin@${ROOT_DOMAIN}`
 const CC_RECIPIENT = 'mandlakevin@gmail.com'
@@ -89,29 +88,24 @@ function buildHtml(input: PlatformAdminActionNotificationInput) {
 }
 
 async function deliverNotification(recipient: string, subject: string, html: string) {
-  const directResult = await sendEmail({
+  const result = await deliverTransactionalEmail({
     to: recipient,
     subject,
     html,
   })
 
-  if (directResult.success) {
-    return { ok: true as const, channel: 'resend' as const, error: null as string | null }
-  }
-
-  const queuedResult = await queueEmail(recipient, subject, html)
-  if (queuedResult.success) {
+  if (result.directSent) {
     return {
       ok: true as const,
-      channel: 'email_queue' as const,
-      error: directResult.error ?? null,
+      channel: result.directProvider ?? 'direct',
+      error: null as string | null,
     }
   }
 
   return {
     ok: false as const,
-    channel: 'failed' as const,
-    error: queuedResult.error ?? directResult.error ?? 'Unable to send admin notification email.',
+    channel: result.status === 'queued' ? 'queued' : 'failed',
+    error: result.deliveryMessage,
   }
 }
 
