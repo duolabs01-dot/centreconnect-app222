@@ -13,7 +13,9 @@ import {
 import { randomBytes } from 'crypto'
 import { combineName, resolveFirstName } from '@/lib/utils/name'
 import {
+  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
+  buildLockedResetPasswordRedirect,
   normalizeAppUrl,
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
@@ -45,13 +47,7 @@ const createCentreSchema = z.object({
 })
 
 function toLockedResetUrl(email: string) {
-  try {
-    const url = new URL('/reset-password', APP_BASE_URL)
-    url.searchParams.set('locked_email', email)
-    return url.toString()
-  } catch {
-    return `${APP_BASE_URL}/reset-password?locked_email=${encodeURIComponent(email)}`
-  }
+  return buildLockedResetPasswordRedirect(email)
 }
 
 async function createPasswordSetupLink(adminClient: ReturnType<typeof createAdminClient>, email: string) {
@@ -530,7 +526,7 @@ export async function POST(request: Request) {
   }).toString()
   const welcomePackPath = `/ecd/welcome?${welcomePackQuery}`
   const welcomePackGuideLink = `${appBaseUrl}${welcomePackPath}`
-  const welcomePackAuthRedirect = `${appBaseUrl}/auth/callback?next=${encodeURIComponent(welcomePackPath)}`
+  const welcomePackAuthRedirect = buildAuthCallbackRedirect(welcomePackPath)
   const welcomePackGetStartedLink = setupLinkResult.link || welcomePackAuthRedirect
   const qrPosterLink = `${appBaseUrl}/centre/${centre.slug}/poster`
 

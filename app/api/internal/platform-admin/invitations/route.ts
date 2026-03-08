@@ -12,8 +12,8 @@ import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 import {
   assertInviteDomainHealth,
   buildFirstPartyConfirmLink,
-  buildDefaultEcdOnboardingRedirect,
   buildLockedResetPasswordRedirect,
+  coerceAuthCallbackRedirect,
   generateMagicFirstAccessLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLink,
@@ -215,7 +215,7 @@ export async function POST(request: Request) {
 
   const nowIso = new Date().toISOString()
   const notificationEventKey = createNotificationEventKey('admin_access_invite', data.ecdId)
-  const redirectTo = data.redirectTo ?? buildDefaultEcdOnboardingRedirect()
+  const redirectTo = coerceAuthCallbackRedirect(data.redirectTo, '/ecd/welcome?onboarding=1')
   const inviteResult = await adminClient.auth.admin.inviteUserByEmail(
     normalizedEmail,
     {

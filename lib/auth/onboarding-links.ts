@@ -1,4 +1,4 @@
-import { APP_URL, EMAIL_APP_URL, ROOT_DOMAIN } from '@/lib/config'
+import { ROOT_DOMAIN, requireConfiguredAppUrl } from '@/lib/config'
 
 export type AccessLinkMode = 'magiclink' | 'invite'
 export type SanitizedAccessLinkDiagnostics = {
@@ -91,7 +91,6 @@ function allowedInviteHosts(canonicalHost: string) {
 function readInviteUrlEnvValues() {
   return [
     { key: 'NEXT_PUBLIC_APP_URL', value: process.env.NEXT_PUBLIC_APP_URL ?? '' },
-    { key: 'NEXT_PUBLIC_EMAIL_APP_URL', value: process.env.NEXT_PUBLIC_EMAIL_APP_URL ?? '' },
     { key: 'SUPABASE_SITE_URL', value: process.env.SUPABASE_SITE_URL ?? '' },
     { key: 'GOTRUE_SITE_URL', value: process.env.GOTRUE_SITE_URL ?? '' },
     { key: 'SITE_URL', value: process.env.SITE_URL ?? '' },
@@ -108,7 +107,6 @@ export function assertInviteDomainHealth(): InviteDomainHealth {
   if (isProduction) {
     const requiredEnv = [
       { key: 'NEXT_PUBLIC_APP_URL', value: process.env.NEXT_PUBLIC_APP_URL?.trim() ?? '' },
-      { key: 'NEXT_PUBLIC_EMAIL_APP_URL', value: process.env.NEXT_PUBLIC_EMAIL_APP_URL?.trim() ?? '' },
       { key: 'NEXT_PUBLIC_ROOT_DOMAIN', value: process.env.NEXT_PUBLIC_ROOT_DOMAIN?.trim() ?? '' },
     ]
     const missing = requiredEnv.filter((entry) => entry.value.length === 0).map((entry) => entry.key)
@@ -189,23 +187,13 @@ export function assertInviteDomainHealth(): InviteDomainHealth {
 }
 
 export function resolvePublicAppUrl(preferred?: string) {
-  const canonicalOrigin = resolveCanonicalOrigin()
-  if (shouldForceCanonicalOrigin()) return canonicalOrigin
-
-  const preferredOrigin = toOrigin(preferred)
-  if (preferredOrigin) return preferredOrigin
-
-  const emailOrigin = toOrigin(EMAIL_APP_URL)
-  if (emailOrigin) return emailOrigin
-
-  const appOrigin = toOrigin(APP_URL)
-  if (appOrigin) return appOrigin
-
-  return canonicalOrigin
+  void preferred
+  return requireConfiguredAppUrl()
 }
 
 export function normalizeAppUrl(value?: string) {
-  return resolvePublicAppUrl(value).replace(/\/$/, '')
+  void value
+  return requireConfiguredAppUrl()
 }
 
 function sanitizeNextPath(nextPath: string) {
@@ -247,6 +235,37 @@ function resolveConfirmNextPathFromRedirect(redirectTo: string) {
   }
 }
 
+export function coerceAuthCallbackRedirect(
+  redirectTo: string | null | undefined,
+  fallbackNextPath = '/ecd/welcome?onboarding=1'
+) {
+  const safeFallback = sanitizeConfirmNextPath(fallbackNextPath)
+  const candidate = (redirectTo ?? '').trim()
+  if (!candidate) return buildAuthCallbackRedirect(safeFallback)
+
+  try {
+    const appUrl = normalizeAppUrl()
+    const parsed = new URL(candidate, appUrl)
+    const nextParam = parsed.searchParams.get('next')
+    if (nextParam) return buildAuthCallbackRedirect(nextParam)
+
+    const isFirstPartyPath = candidate.startsWith('/') || parsed.origin === appUrl
+    if (
+      isFirstPartyPath &&
+      parsed.pathname.startsWith('/') &&
+      parsed.pathname !== '/auth/callback' &&
+      parsed.pathname !== '/auth/confirm'
+    ) {
+      const directPath = `${parsed.pathname}${parsed.search}`
+      return buildAuthCallbackRedirect(directPath)
+    }
+  } catch {
+    // Fall back to the default onboarding destination below.
+  }
+
+  return buildAuthCallbackRedirect(safeFallback)
+}
+
 export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
   const params = new URLSearchParams()
 
@@ -264,8 +283,9 @@ export function buildEcdWelcomePath(input: WelcomePathInput = {}) {
 }
 
 export function buildAuthCallbackRedirect(nextPath: string, preferredOrigin?: string) {
+  void preferredOrigin
   const safeNext = sanitizeNextPath(nextPath)
-  return `${resolvePublicAppUrl(preferredOrigin).replace(/\/$/, '')}/auth/callback?next=${encodeURIComponent(safeNext)}`
+  return `${normalizeAppUrl()}/auth/callback?next=${encodeURIComponent(safeNext)}`
 }
 
 export function buildFirstPartyConfirmLink(input: {
@@ -288,7 +308,9 @@ export function buildDefaultEcdOnboardingRedirect() {
 }
 
 export function buildLockedResetPasswordRedirect(email: string, preferredOrigin?: string) {
-  return `${resolvePublicAppUrl(preferredOrigin).replace(/\/$/, '')}/reset-password?locked_email=${encodeURIComponent(email)}`
+  void preferredOrigin
+  const resetPath = `/reset-password?locked_email=${encodeURIComponent(email)}`
+  return buildAuthCallbackRedirect(resetPath)
 }
 
 function isAllowedAppHost(hostname: string) {

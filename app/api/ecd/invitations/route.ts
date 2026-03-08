@@ -12,8 +12,8 @@ import { sendSmtpMail } from '@/lib/email/smtp'
 import { createNotificationEventKey } from '@/lib/admin/notification-logs'
 import {
   buildFirstPartyConfirmLink,
-  buildDefaultEcdOnboardingRedirect,
   buildLockedResetPasswordRedirect,
+  coerceAuthCallbackRedirect,
   generateMagicFirstAccessLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLink,
@@ -206,7 +206,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'ECD centre not found' }, { status: 404 })
   }
 
-  const redirectTo = data.redirectTo ?? buildDefaultEcdOnboardingRedirect()
+  const redirectTo = coerceAuthCallbackRedirect(data.redirectTo, '/ecd/welcome?onboarding=1')
   const inviteResult = await adminClient.auth.admin.inviteUserByEmail(normalizedEmail, {
     redirectTo: redirectTo || undefined,
     data: {

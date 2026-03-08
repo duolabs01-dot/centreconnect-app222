@@ -5,8 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { queueEmail } from '@/lib/communications/emails'
 import { renderRoleDowngradeActivationEmail } from '@/lib/email/templates/role-downgrade-activation'
 import {
+  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
-  normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
 } from '@/lib/auth/onboarding-links'
 import { resolveFirstName } from '@/lib/utils/name'
@@ -21,9 +21,8 @@ async function resolveUserEmail(admin: ReturnType<typeof createAdminClient>, use
 }
 
 async function generateActivationLink(admin: ReturnType<typeof createAdminClient>, email: string) {
-  const appUrlRoot = normalizeAppUrl()
   const nextPath = '/account/activate'
-  const redirectTo = `${appUrlRoot}/auth/callback?next=${encodeURIComponent(nextPath)}`
+  const redirectTo = buildAuthCallbackRedirect(nextPath)
   const magicLinkResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
@@ -81,7 +80,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   // Use inviteUserByEmail for a fresh, formal invitation if requested
   const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(userEmail, {
-    redirectTo: `${normalizeAppUrl()}/auth/callback?next=/account/activate`
+    redirectTo: buildAuthCallbackRedirect('/account/activate')
   })
 
   if (inviteError) {

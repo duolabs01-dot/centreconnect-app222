@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { queueEmail } from '@/lib/communications/emails'
 import {
+  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
@@ -83,9 +84,8 @@ async function resolveUserEmail(
 }
 
 async function generateActivationLink(admin: ReturnType<typeof createAdminClient>, email: string) {
-  const appUrlRoot = normalizeAppUrl()
   const nextPath = '/account/activate'
-  const redirectTo = `${appUrlRoot}/auth/callback?next=${encodeURIComponent(nextPath)}`
+  const redirectTo = buildAuthCallbackRedirect(nextPath)
   const magicLinkResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,

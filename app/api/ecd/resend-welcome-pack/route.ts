@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
 import {
+  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
@@ -181,7 +182,7 @@ export async function POST(request: Request) {
     onboarding: '1',
   }).toString()
   const welcomeNextPath = `/ecd/welcome?${welcomeQuery}`
-  const callbackRedirectUrl = buildUrl(appUrlRoot, '/auth/callback', { next: welcomeNextPath })
+  const callbackRedirectUrl = buildAuthCallbackRedirect(welcomeNextPath)
   let getStartedUrl = callbackRedirectUrl
 
   const magicLinkResult = await admin.auth.admin.generateLink({

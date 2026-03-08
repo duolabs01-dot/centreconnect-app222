@@ -1,8 +1,11 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requireConfiguredAppUrl } from '@/lib/config'
 import { requireSupabasePublicEnv } from './env'
 
 export async function createClient() {
+  requireConfiguredAppUrl()
+
   const cookieStore = cookies()
   const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('server-client')
 

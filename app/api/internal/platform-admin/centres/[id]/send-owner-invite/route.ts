@@ -3,6 +3,7 @@ import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   assertInviteDomainHealth,
+  buildAuthCallbackRedirect,
   buildFirstPartyConfirmLink,
   normalizeAppUrl,
   sanitizeGeneratedAccessLinkWithDiagnostics,
@@ -60,7 +61,7 @@ async function generateOwnerAccessLink(
   email: string,
   onboardingPath: string
 ) {
-  const redirectTo = `${emailAppUrlRoot}/auth/callback?next=${encodeURIComponent(onboardingPath)}`
+  const redirectTo = buildAuthCallbackRedirect(onboardingPath)
   const magicLinkResult = await admin.auth.admin.generateLink({
     type: 'magiclink',
     email,
