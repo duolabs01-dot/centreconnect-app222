@@ -113,6 +113,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
     invited_at: string
     accepted_at: string | null
   }>
+  const lastInviteAt = invitationRows[0]?.invited_at ?? null
 
   const applications = (appsResult.data ?? []) as Array<{ status: string; submitted_at: string }>
   const analyticsEvents = (analyticsResult.data ?? []) as Array<{ event_type: string; created_at: string }>
@@ -276,12 +277,14 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
                 centreName={centre.name}
                 ownerEmail={centre.email}
                 ownerPhone={centre.contact_phone ?? centre.phone}
+                lastInviteAt={lastInviteAt}
               />
               <WhatsAppOwnerInviteButton
                 centreId={tenantId}
                 centreName={centre.name}
                 ownerEmail={centre.email}
                 ownerPhone={centre.contact_phone ?? centre.phone}
+                lastInviteAt={lastInviteAt}
               />
             </CardContent>
           </Card>

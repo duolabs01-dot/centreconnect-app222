@@ -19,6 +19,7 @@ type SendOwnerInviteButtonProps = {
   centreName: string
   ownerEmail: string | null
   ownerPhone: string | null
+  lastInviteAt?: string | null
 }
 
 type InviteSendResponse = {
@@ -33,11 +34,21 @@ type InvitationEventSummary = {
   whatsapp: string
 }
 
+function formatInviteTimestamp(value?: string | null) {
+  if (!value) return 'not sent yet'
+  try {
+    return new Date(value).toLocaleString('en-ZA', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return value
+  }
+}
+
 export function SendOwnerInviteButton({
   centreId,
   centreName,
   ownerEmail,
   ownerPhone,
+  lastInviteAt,
 }: SendOwnerInviteButtonProps) {
   const [busy, setBusy] = useState(false)
   const [, startTransition] = useTransition()
@@ -120,6 +131,9 @@ export function SendOwnerInviteButton({
           <Link href="/admin/invites">View Invite Tracking</Link>
         </Button>
       </div>
+      <p className="text-[10px] text-slate-400">
+        Last invite sent: {formatInviteTimestamp(lastInviteAt)}
+      </p>
       {eventSummary && (
         <div className="space-y-1 rounded-2xl border border-slate-800 bg-slate-900/50 px-3 py-2 text-[11px] text-slate-300">
           <p className="text-[10px] uppercase tracking-[0.3em] text-cyan-300">Last access events</p>

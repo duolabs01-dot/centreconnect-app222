@@ -22,14 +22,24 @@ type OwnerWhatsAppPayload = {
   ownerFirstName: string
 }
 
+function formatTimestamp(value?: string | null) {
+  if (!value) return 'not sent yet'
+  try {
+    return new Date(value).toLocaleString('en-ZA', { dateStyle: 'short', timeStyle: 'short' })
+  } catch {
+    return value
+  }
+}
+
 type WhatsAppOwnerInviteButtonProps = {
   centreId: string
   centreName: string
   ownerEmail: string | null
   ownerPhone: string | null
+  lastInviteAt?: string | null
 }
 
-export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ownerPhone }: WhatsAppOwnerInviteButtonProps) {
+export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ownerPhone, lastInviteAt }: WhatsAppOwnerInviteButtonProps) {
   const [, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -74,6 +84,7 @@ export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ow
       <div className="mt-2 space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/40 p-3 text-sm text-slate-300">
         <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">WhatsApp owner</p>
         <p>Copies the login/password + welcome pack links you just emailed so you can send them on WhatsApp too.</p>
+        <p className="text-[10px] text-slate-500">Login/password email sent: {formatTimestamp(lastInviteAt)}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Button
             onClick={() => startTransition(() => void handleShare())}
@@ -104,11 +115,15 @@ export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ow
               </div>
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <Button variant="outline" onClick={copyMessageToClipboard}>Copy message</Button>
-                {payload.whatsappLink && (
+                {payload.whatsappLink ? (
                   <Button asChild className="justify-center">
                     <a href={payload.whatsappLink} target="_blank" rel="noreferrer">
                       Open WhatsApp link
                     </a>
+                  </Button>
+                ) : (
+                  <Button variant="outline" disabled className="justify-center">
+                    WhatsApp link unavailable
                   </Button>
                 )}
               </div>
@@ -134,6 +149,7 @@ export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ow
                 ) : (
                   <p className="text-[10px] text-amber-400">Owner phone is missing. Copy the message and paste it into your WhatsApp chat.</p>
                 )}
+                <p className="mt-1 text-[10px] text-slate-500">Last invite: {formatTimestamp(lastInviteAt)}</p>
               </div>
             </>
           )}
