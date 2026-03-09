@@ -439,6 +439,7 @@ export default function DirectoryExplorer({
                   >
                     <CentreCard
                       {...centre}
+                      isPilot={centre.is_pilot}
                       capacity={centre.capacity ?? undefined}
                       age_groups={centre.age_groups ?? []}
                       tagline={centre.tagline ?? undefined}

@@ -503,7 +503,14 @@ export function CentreClient({ slug }: { slug: string }) {
                     </div>
                   )}
                   <div className="min-w-0 text-white">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">Parent listing view</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">Parent listing view</p>
+                      {isPilotCentre ? (
+                        <Badge className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-3 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
+                          Pilot Partner
+                        </Badge>
+                      ) : null}
+                    </div>
                     <h1 className="mt-1 text-[2rem] leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.7rem]" style={{ fontFamily: 'var(--font-serif)' }}>
                       {centre.name}
                     </h1>

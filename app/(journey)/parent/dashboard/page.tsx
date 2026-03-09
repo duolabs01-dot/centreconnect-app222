@@ -66,8 +66,9 @@ export default async function ParentDashboardPage() {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const [profileResult, childrenResult, applicationsResult] = await Promise.all([
+    const [profileResult, parentResult, childrenResult, applicationsResult] = await Promise.all([
       supabase.from('user_profiles').select('full_name').eq('id', user?.id ?? '').maybeSingle(),
+      supabase.from('parents').select('suburb').eq('id', user?.id ?? '').maybeSingle(),
       supabase.from('children').select('id,first_name,last_name').eq('parent_id', user?.id ?? '').limit(1),
       supabase
         .from('applications')
@@ -78,6 +79,7 @@ export default async function ParentDashboardPage() {
     ])
 
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
+    const parentSuburb = parentResult.data?.suburb?.trim() || 'Alexandra'
     const greeting = getJohannesburgGreeting()
 
     const applications = ((applicationsResult.data ?? []) as unknown as RawApplicationRow[]).map((application) => {
@@ -163,7 +165,7 @@ export default async function ParentDashboardPage() {
                       <Heart className="h-7 w-7 text-cyan-600" />
                     </div>
                     <a
-                      href="https://wa.me/27123456789?text=Hello%20CentreConnect%2C%20I%20need%20help%20finding%20a%20creche%20in%20Alexandra."
+                      href={`https://wa.me/27123456789?text=${encodeURIComponent(`Hello CentreConnect, I need help finding a crèche in ${parentSuburb}.`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
@@ -179,7 +181,7 @@ export default async function ParentDashboardPage() {
                     CentreConnect keeps {firstChildName}&rsquo;s centre updates ready for you.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Check attendance, daily notes, documents, and safe pickup every time {firstChildName} leaves the centre â€” your CentreConnect workspace now brings those updates straight to your phone.
+                    Check attendance, daily notes, documents, and safe pickup every time {firstChildName} leaves the centre — your CentreConnect workspace now brings those updates straight to your phone.
                   </p>
                   <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
                     Your centre shared this link, so everything you read here highlights the benefits you already get. This space is better for you now because it keeps attendance, documents, and safe pickup notes flowing straight to your phone.
@@ -192,7 +194,7 @@ export default async function ParentDashboardPage() {
                         <input
                           name="search"
                           type="search"
-                          placeholder="Search by suburb or creche name"
+                          placeholder="Search by suburb or crèche name"
                           className="cc-native-field h-11 w-full rounded-2xl pl-10"
                         />
                       </label>

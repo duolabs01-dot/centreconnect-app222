@@ -5,6 +5,7 @@ import { MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
 import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-centre'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
+import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 
 export const metadata: Metadata = {
   title: 'CentreConnect directory',
@@ -80,6 +81,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     monthly_fee_max: centre.monthly_fee_max,
     subsidy_accepted: Boolean(centre.subsidy_accepted),
     is_claimed: Boolean(centre.is_claimed),
+    is_pilot: isPilotCentreIdentity({ name: centre.name, slug: safeSlug }),
     latitude,
     longitude,
     contact_whatsapp: centre.contact_whatsapp ?? null,
@@ -234,6 +236,11 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         } as RawDirectoryCentre)
       })
       .filter((centre): centre is DirectoryCentre => Boolean(centre))
+      .sort((a, b) => {
+        if (a.is_pilot && !b.is_pilot) return -1
+        if (!a.is_pilot && b.is_pilot) return 1
+        return 0
+      })
   } catch (err) {
     console.error('DirectoryPage error:', err)
   }

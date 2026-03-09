@@ -154,8 +154,8 @@ async function main() {
     last_name: LAST_NAMES[idx % LAST_NAMES.length],
     date_of_birth: dateYearsAgo(3 + (idx % 3), idx),
     gender: idx % 2 === 0 ? 'female' : 'male',
-    allergies: idx % 5 === 0 ? 'None' : null,
-    medical_conditions: null,
+    allergies: idx % 5 === 0 ? ['None'] : [],
+    medical_conditions: [],
     special_needs: idx % 6 === 0 ? 'Speech support' : null,
     full_name: `${FIRST_NAMES[idx % FIRST_NAMES.length]} ${LAST_NAMES[idx % LAST_NAMES.length]}`,
   }))
@@ -209,6 +209,8 @@ async function main() {
                   : 'Application declined after interview',
       parent_message: idx % 3 === 0 ? 'Looking forward to your feedback.' : null,
       share_multiple_flag: idx % 2 === 0,
+      rejection_reason_code: status === 'rejected' ? 'at_capacity' : null,
+      rejection_reason_note: status === 'rejected' ? 'Currently at capacity for this age group.' : null,
     }
   })
 

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import HomeClientPage, { type HomeActiveCentre } from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 
 export const revalidate = 3600
 
@@ -76,14 +77,21 @@ export default async function HomePage({
         .order('created_at', { ascending: false })
         .limit(4)
 
-      activeCentres = (centreRows ?? []).map((centre: any) => ({
-        id: String(centre.id),
-        name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'ECD Crèche',
-        slug: typeof centre.slug === 'string' && centre.slug.trim().length > 0 ? centre.slug.trim() : null,
-        suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
-        primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
-        isRegistered: Boolean(centre.is_registered),
-      }))
+      activeCentres = (centreRows ?? [])
+        .map((centre: any) => ({
+          id: String(centre.id),
+          name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'ECD Crèche',
+          slug: typeof centre.slug === 'string' && centre.slug.trim().length > 0 ? centre.slug.trim() : null,
+          suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
+          primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
+          isRegistered: Boolean(centre.is_registered),
+          isPilot: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
+        }))
+        .sort((a, b) => {
+          if (a.isPilot && !b.isPilot) return -1
+          if (!a.isPilot && b.isPilot) return 1
+          return 0
+        })
     } catch (error) {
       console.error('[home] Failed to load active centres for landing page:', error)
     }

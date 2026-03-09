@@ -21,25 +21,17 @@ type EcdPortalSidebarProps = {
 type EcdNavGroup = NonNullable<EcdNavItem['group']>
 
 const MAIN_GROUP_ORDER: EcdNavGroup[] = [
-  'daily_operations',
-  'admissions',
-  'finance',
-  'communication',
-  'compliance_team',
-  'growth_tools',
+  'daily_ops',
+  'admin',
+  'grow',
 ]
 
-// === GROUP LABELS (updated for all nav groups including 'admin' from Financials) ===
+// === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_operations: 'Daily Operations',
-  admissions: 'Admissions',
-  finance: 'Finance',                    // ← from your new Financials page
-  communication: 'Communication',
-  compliance_team: 'Compliance',
-  growth_tools: 'Growth & Visibility',
-  coming_soon: 'Coming Soon',
+  daily_ops: 'Daily Ops',
+  admin: 'Admin',
+  grow: 'Grow',
   settings: 'Settings',
-  admin: 'Admin',                        // ← MISSING KEY (this was the error)
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -211,17 +203,17 @@ export function EcdPortalSidebar({
       {/* Mobile Top Header - Unified with Parent view */}
       <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
         <div className="flex items-center gap-3">
-          <MobileNavMenu 
-            items={visibleNav} 
-            userEmail={userEmail} 
-            roleLabel={roleLabel} 
-            userRole={userRole} 
+          <MobileNavMenu
+            items={visibleNav}
+            userEmail={userEmail}
+            roleLabel={roleLabel}
+            userRole={userRole}
             attentionBadges={attentionBadges}
           />
           <BrandMark compact className="brightness-100" />
         </div>
         <div className="flex items-center gap-2">
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
         </div>
       </div>
 
@@ -272,12 +264,12 @@ export function EcdPortalSidebar({
         <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
           <div className="flex flex-col gap-1">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{userEmail ?? 'Unknown'}</p>  
+            <p className="truncate text-sm font-bold text-foreground">{userEmail ?? 'Unknown'}</p>
           </div>
-          
+
           <div className="space-y-2 pt-2">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
-            <Link 
+            <Link
               href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
               target="_blank"
               rel="noreferrer"

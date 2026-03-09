@@ -9,6 +9,7 @@ export type HomeActiveCentre = {
   suburb: string | null
   primaryAgeGroup: string | null
   isRegistered: boolean
+  isPilot?: boolean
 }
 
 type HomeClientPageProps = {
@@ -164,6 +165,14 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                             {featuredCentre.name}
                           </h2>
                         </div>
+                        {featuredCentre.isPilot ? (
+                          <span
+                            className="rounded-full px-3 py-1 text-[11px] font-semibold"
+                            style={{ backgroundColor: 'rgba(13,148,136,0.12)', color: 'var(--teal)' }}
+                          >
+                            Pilot Partner
+                          </span>
+                        ) : null}
                         {featuredCentre.isRegistered ? (
                           <span
                             className="rounded-full px-3 py-1 text-[11px] font-semibold"
@@ -215,6 +224,62 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </p>
                     </div>
                   )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-[#E8DDD0] bg-white shadow-[0_32px_80px_rgba(27,40,36,0.06)]">
+            <div className="grid lg:grid-cols-2 lg:items-stretch">
+              <div className="relative min-h-[320px] bg-[#EEF6F5] lg:min-h-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(13,148,136,0.15),transparent_70%)]" />
+                <div className="relative flex h-full flex-col items-center justify-center p-8 text-center sm:p-12">
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-white shadow-xl">
+                    <span className="text-3xl font-black text-[var(--teal)]">B</span>
+                  </div>
+                  <h3
+                    className="text-[2rem] leading-tight text-[#1F2D29] sm:text-[2.6rem]"
+                    style={{ fontFamily: 'var(--font-serif)' }}
+                  >
+                    Bajabulile ECD
+                  </h3>
+                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#7B827E]">Alexandra Pilot Partner</p>
+                  
+                  <div className="mt-8 grid w-full grid-cols-2 gap-3 sm:max-w-md">
+                    <div className="rounded-2xl border border-[#D1E2E0] bg-white/50 p-4 backdrop-blur-sm">
+                      <p className="text-2xl font-bold text-[var(--teal)]">35+</p>
+                      <p className="mt-1 text-xs font-medium text-[#5F6C68]">Children enrolled</p>
+                    </div>
+                    <div className="rounded-2xl border border-[#D1E2E0] bg-white/50 p-4 backdrop-blur-sm">
+                      <p className="text-2xl font-bold text-[var(--teal)]">100%</p>
+                      <p className="mt-1 text-xs font-medium text-[#5F6C68]">Digital records</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Pilot Success Story</p>
+                <h2
+                  className="mt-4 text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:text-[2.8rem]"
+                  style={{ fontFamily: 'var(--font-serif)' }}
+                >
+                  &quot;Now I spend my time with children, not with paper.&quot;
+                </h2>
+                <blockquote className="mt-6 border-l-2 border-[#D4935A] pl-6 text-[17px] italic leading-8 text-[#5F6C68] sm:text-[19px]">
+                  Before CentreConnect, Mama Bajabulile managed attendance and parent updates on paper. Today, Bajabulile Day Care is the first fully digital pilot centre in Alexandra — proving that technology can work for every local crèche.
+                </blockquote>
+                
+                <div className="mt-10 flex flex-wrap gap-4">
+                  <Button
+                    size="lg"
+                    className="h-14 rounded-2xl bg-[var(--teal)] px-8 font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A]"
+                    asChild
+                  >
+                    <Link href="/c/bajabulile">View Bajabulile Profile</Link>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -284,6 +349,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     </p>
                     <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
                     <div className="mt-4 flex flex-wrap gap-2">
+                      {centre.isPilot ? (
+                        <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                          Pilot Partner
+                        </span>
+                      ) : null}
                       <span className="rounded-full bg-[rgba(13,148,136,0.10)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
                         {centre.primaryAgeGroup ?? 'Mixed age groups'}
                       </span>

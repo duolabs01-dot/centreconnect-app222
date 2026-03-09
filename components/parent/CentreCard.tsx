@@ -41,6 +41,7 @@ interface CentreCardProps {
   existingApplicationStatusLabel?: string | null
   is_claimed?: boolean
   is_registered?: boolean | null
+  isPilot?: boolean
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null
@@ -175,6 +176,7 @@ export function CentreCard({
   existingApplicationStatus,
   is_claimed = true,
   is_registered = false,
+  isPilot = false,
   viewerRole = null,
   isSaved = false,
   name,
@@ -278,6 +280,11 @@ export function CentreCard({
                 <div className="min-w-0 flex-1 text-white">
                   <div className="flex flex-wrap items-center gap-2">
                     {Boolean(is_registered) ? <PremiumVerifiedBadge compact label="Verified ECD" className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]" /> : null}
+                    {isPilot ? (
+                      <Badge className="border border-cyan-400/50 bg-cyan-900/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
+                        Pilot Partner
+                      </Badge>
+                    ) : null}
                     {!is_claimed ? (
                       <Badge className="border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
                         Public listing

@@ -153,6 +153,11 @@ export function MobileCentreDetailsSheet({
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {isRegistered ? <PremiumVerifiedBadge compact label="Verified ECD" /> : null}
+                  {showPilotTrustInfo ? (
+                    <Badge className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-3 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
+                      Pilot Partner
+                    </Badge>
+                  ) : null}
                   {!isClaimed ? (
                     <Badge className="rounded-full border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
                       Public listing

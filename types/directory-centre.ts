@@ -15,6 +15,7 @@ export type DirectoryCentre = {
   monthly_fee_max: number | null
   subsidy_accepted: boolean
   is_claimed: boolean
+  is_pilot?: boolean
   latitude: number | null
   longitude: number | null
   contact_whatsapp?: string | null
