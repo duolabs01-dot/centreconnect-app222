@@ -41,11 +41,10 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
 
   // GROW
   { href: '/ecd/website', label: 'Website Builder', icon: Globe, group: 'grow', adminOnly: true },
-  { href: '/ecd/applications', label: 'Applications Pipeline', icon: ClipboardList, group: 'grow', supervisorAllowed: true },
+  { href: '/ecd/applications', label: 'Admissions', icon: ClipboardList, group: 'grow', supervisorAllowed: true },
   { href: '/ecd/communications', label: 'Parent Comms', icon: MessagesSquare, group: 'grow', supervisorAllowed: true },
   { href: '/ecd/whatsapp-alerts', label: 'WhatsApp Alerts', icon: Zap, group: 'grow', adminOnly: true },
 
   // SETTINGS
   { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'settings' },
 ]
-

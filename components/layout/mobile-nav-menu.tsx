@@ -38,6 +38,10 @@ type MobileNavMenuProps = {
 }
 
 const GROUP_LABELS: Record<string, string> = {
+  daily_ops: 'Daily Ops',
+  admin: 'Admin',
+  grow: 'Grow',
+  settings: 'Settings',
   daily_operations: 'Daily Operations',
   admissions: 'Admissions',
   finance: 'Finance',
@@ -45,7 +49,6 @@ const GROUP_LABELS: Record<string, string> = {
   compliance_team: 'Compliance & Team',
   growth_tools: 'Growth Tools',
   coming_soon: 'Coming Soon',
-  settings: 'Settings',
 }
 
 export function MobileNavMenu({

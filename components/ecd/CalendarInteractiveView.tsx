@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { cn, formatDate } from '@/lib/utils'
 
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'timetable'

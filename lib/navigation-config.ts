@@ -27,7 +27,7 @@ export const ECD_MOBILE_NAV_ITEMS: NavItem[] = [
 ]
 
 export const ADMIN_MOBILE_NAV_ITEMS: NavItem[] = [
-  { href: '/admin/dashboard', label: 'Home', icon: LayoutDashboard },
+  { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/tenants', label: 'Centres', icon: Building2 },
   { href: '/admin/revenue', label: 'Revenue', icon: CreditCard },
   { href: '/admin/support', label: 'Support', icon: LifeBuoy },

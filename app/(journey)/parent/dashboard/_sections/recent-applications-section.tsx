@@ -1,8 +1,8 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
 
 type BadgeStatus = 'paid' | 'pending' | 'overdue' | 'draft'

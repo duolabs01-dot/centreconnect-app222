@@ -67,7 +67,7 @@ export function CommandPalette() {
 
           <Command.Group heading="Navigation" className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
             <Item onSelect={() => runCommand(() => router.push('/admin/command'))}>
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Command
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Command Tower
             </Item>
             <Item onSelect={() => runCommand(() => router.push('/admin/tenants'))}>
               <ShieldCheck className="mr-2 h-4 w-4" /> Centres
@@ -76,7 +76,7 @@ export function CommandPalette() {
               <CreditCard className="mr-2 h-4 w-4" /> Revenue
             </Item>
             <Item onSelect={() => runCommand(() => router.push('/admin/users'))}>
-              <Users className="mr-2 h-4 w-4" /> Operatives
+              <Users className="mr-2 h-4 w-4" /> Users
             </Item>
           </Command.Group>
 
@@ -84,10 +84,10 @@ export function CommandPalette() {
 
           <Command.Group heading="Protocols" className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
             <Item onSelect={() => runCommand(() => router.push('/admin/analytics'))}>
-              <BarChart3 className="mr-2 h-4 w-4" /> Neural Map
+              <BarChart3 className="mr-2 h-4 w-4" /> Analytics
             </Item>
             <Item onSelect={() => runCommand(() => router.push('/admin/support'))}>
-              <LifeBuoy className="mr-2 h-4 w-4" /> Relay Support
+              <LifeBuoy className="mr-2 h-4 w-4" /> Support
             </Item>
           </Command.Group>
         </Command.List>

@@ -12,7 +12,7 @@ import { Users, UserCheck, Shield, Zap } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Operatives | CC Control Tower',
+  title: 'Users | CC Control Tower',
   description: 'Global user visibility, role management, and access telemetry.',
 }
 
@@ -68,7 +68,7 @@ export default async function AdminUsersPage() {
 
   return (
     <AdminPageLayout
-      title="Operatives"
+      title="Users"
       description="System-wide identity protocols and access management."
       roleLabel="Architect Console"
       wide
@@ -128,7 +128,7 @@ export default async function AdminUsersPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-white/5 hover:bg-transparent">
-                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Operative</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">User</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Contact</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Assigned Node</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Protocol</TableHead>

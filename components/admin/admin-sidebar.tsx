@@ -26,17 +26,17 @@ import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
   { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash' },
-  { label: 'ECD Network', href: '/admin/tenants', icon: Building2, id: 'ecd' },
-  { label: 'Directory', href: '/admin/users', icon: Users, id: 'users' },
-  { label: 'Revenue Ops', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
+  { label: 'Centres', href: '/admin/tenants', icon: Building2, id: 'ecd' },
+  { label: 'Users', href: '/admin/users', icon: Users, id: 'users' },
+  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
   { label: 'Parent Reliability', href: '/admin/parent-reliability', icon: Users, id: 'pr' },
   { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf' },
   { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit' },
   { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook' },
-  { label: 'Platform Stats', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
+  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
   { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
   { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites' },
-  { label: 'Support Relay', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
+  { label: 'Support', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
 ]
 
 export function AdminSidebar() {

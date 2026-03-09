@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { FileText, LogIn, ArrowRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { Button } from '@/components/ui/button'
 
 type ApplicationPreview = {
