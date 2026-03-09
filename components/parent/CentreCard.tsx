@@ -42,6 +42,7 @@ interface CentreCardProps {
   is_claimed?: boolean
   is_registered?: boolean | null
   isPilot?: boolean
+  isFeatured?: boolean
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null
@@ -177,6 +178,7 @@ export function CentreCard({
   is_claimed = true,
   is_registered = false,
   isPilot = false,
+  isFeatured = false,
   viewerRole = null,
   isSaved = false,
   name,
@@ -242,7 +244,10 @@ export function CentreCard({
       transition={{ duration: 0.28 }}
       className="group h-full"
     >
-      <Card className="relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]">
+      <Card className={cn(
+        "relative flex h-full flex-col overflow-hidden rounded-[2rem] border bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]",
+        isFeatured ? "border-amber-400 ring-1 ring-amber-400/20" : "border-[#E8DDD0]"
+      )}>
         <div className="absolute left-4 top-4 z-20">
           <SaveCentreButton centreId={id} initialSaved={isSaved} />
         </div>
@@ -280,7 +285,12 @@ export function CentreCard({
                 <div className="min-w-0 flex-1 text-white">
                   <div className="flex flex-wrap items-center gap-2">
                     {Boolean(is_registered) ? <PremiumVerifiedBadge compact label="Verified ECD" className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]" /> : null}
-                    {isPilot ? (
+                    {isFeatured ? (
+                      <Badge className="flex items-center gap-1 border-amber-300/50 bg-amber-500/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-lg backdrop-blur-sm">
+                        <ShieldCheck className="h-3 w-3" />
+                        Recommended Partner
+                      </Badge>
+                    ) : isPilot ? (
                       <Badge className="border border-cyan-400/50 bg-cyan-900/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
                         Pilot Partner
                       </Badge>

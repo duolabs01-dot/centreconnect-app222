@@ -16,6 +16,7 @@ export type DirectoryCentre = {
   subsidy_accepted: boolean
   is_claimed: boolean
   is_pilot?: boolean
+  is_featured?: boolean
   latitude: number | null
   longitude: number | null
   contact_whatsapp?: string | null

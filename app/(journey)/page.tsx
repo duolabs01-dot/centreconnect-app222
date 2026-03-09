@@ -86,8 +86,11 @@ export default async function HomePage({
           primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
           isRegistered: Boolean(centre.is_registered),
           isPilot: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
+          isFeatured: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
         }))
         .sort((a, b) => {
+          if (a.isFeatured && !b.isFeatured) return -1
+          if (!a.isFeatured && b.isFeatured) return 1
           if (a.isPilot && !b.isPilot) return -1
           if (!a.isPilot && b.isPilot) return 1
           return 0

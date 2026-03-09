@@ -82,6 +82,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     subsidy_accepted: Boolean(centre.subsidy_accepted),
     is_claimed: Boolean(centre.is_claimed),
     is_pilot: isPilotCentreIdentity({ name: centre.name, slug: safeSlug }),
+    is_featured: isPilotCentreIdentity({ name: centre.name, slug: safeSlug }),
     latitude,
     longitude,
     contact_whatsapp: centre.contact_whatsapp ?? null,
@@ -237,6 +238,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       })
       .filter((centre): centre is DirectoryCentre => Boolean(centre))
       .sort((a, b) => {
+        if (a.is_featured && !b.is_featured) return -1
+        if (!a.is_featured && b.is_featured) return 1
         if (a.is_pilot && !b.is_pilot) return -1
         if (!a.is_pilot && b.is_pilot) return 1
         return 0

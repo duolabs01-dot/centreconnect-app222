@@ -10,6 +10,7 @@ export type HomeActiveCentre = {
   primaryAgeGroup: string | null
   isRegistered: boolean
   isPilot?: boolean
+  isFeatured?: boolean
 }
 
 type HomeClientPageProps = {
@@ -165,7 +166,15 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                             {featuredCentre.name}
                           </h2>
                         </div>
-                        {featuredCentre.isPilot ? (
+                        {featuredCentre.isFeatured ? (
+                          <span
+                            className="flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold text-white shadow-md"
+                            style={{ backgroundColor: '#f59e0b' }}
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Recommended Partner
+                          </span>
+                        ) : featuredCentre.isPilot ? (
                           <span
                             className="rounded-full px-3 py-1 text-[11px] font-semibold"
                             style={{ backgroundColor: 'rgba(13,148,136,0.12)', color: 'var(--teal)' }}
@@ -349,7 +358,12 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     </p>
                     <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      {centre.isPilot ? (
+                      {centre.isFeatured ? (
+                        <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
+                          <ShieldCheck className="h-3 w-3" />
+                          Recommended Partner
+                        </span>
+                      ) : centre.isPilot ? (
                         <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
                           Pilot Partner
                         </span>
