@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowRight, Clock3, FileCheck2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
