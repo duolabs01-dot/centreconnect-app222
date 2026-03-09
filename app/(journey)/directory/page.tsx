@@ -276,18 +276,18 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             <span>{effectiveSuburb ? `${effectiveSuburb} now live` : 'Johannesburg cr√®che directory'}</span>
           </div>
           <h1
-            className="mt-4 max-w-[12ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
+            className="mt-4 max-w-[14ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
             style={{ fontFamily: 'var(--font-serif)' }}
           >
-            Find a cr√®che near you.
+            CentreConnect keeps your childís centre organised.
           </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-8">
+          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-[0.98]">
             {effectiveSuburb
-              ? `Start with ${effectiveSuburb}. Compare trusted centres, check age groups and fees, and see which cr√®ches are ready for parents online.`
-              : 'Compare trusted cr√®ches by suburb, age group, fees, and government subsidy in one calm place.'}
+              ? `${effectiveSuburb} centres use CentreConnect to share attendance, documents, and pickup safety notes with you. Keep the same centre already supporting your family and see those updates right here.`
+              : 'CentreConnect brings attendance, documents, pickup tools, and parent updates into one calm place ó perfect for parents whose children already attend a participating centre.'}
           </p>
           <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-            Search first. Decide with less guesswork.
+            Need a new centre? Use the filters below to compare trusted crËches and find one that keeps you informed.
           </p>
         </header>
 

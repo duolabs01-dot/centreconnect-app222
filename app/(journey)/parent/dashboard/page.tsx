@@ -176,10 +176,13 @@ export default async function ParentDashboardPage() {
                     {greeting}, {parentName}
                   </p>
                   <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-                    {`Find a crèche near you.`}
+                    CentreConnect keeps {firstChildName}'s centre updates ready for you.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Browse trusted crèches, compare options, and apply for {firstChildName} — all in one place.
+                    Check attendance, daily notes, documents, and safe pickup every time {firstChildName} leaves the centre � your CentreConnect workspace now brings those updates straight to your phone.
+                  </p>
+                  <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
+                    Your centre shared this link, so everything you read here highlights the benefits you already get.
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
