@@ -176,12 +176,10 @@ export default async function ParentDashboardPage() {
                     {greeting}, {parentName}
                   </p>
                   <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-                    {`Find a creche near you`}
-                    <br />
-                    in Alexandra.
+                    {`Find a crèche near you.`}
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Browse trusted creches in Alexandra, compare options, and apply for {firstChildName} - all in one place.
+                    Browse trusted crèches, compare options, and apply for {firstChildName} — all in one place.
                   </p>
 
                   <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -189,7 +187,7 @@ export default async function ParentDashboardPage() {
                       <label className="relative flex-1">
                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input
-                          name="q"
+                          name="search"
                           type="search"
                           placeholder="Search by suburb or creche name"
                           className="cc-native-field h-11 w-full rounded-2xl pl-10"
