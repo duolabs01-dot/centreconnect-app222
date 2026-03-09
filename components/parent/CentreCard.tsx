@@ -1,16 +1,16 @@
 'use client'
 
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
-import { Baby, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Baby, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact' | null | undefined
 
@@ -41,6 +41,10 @@ interface CentreCardProps {
   existingApplicationStatusLabel?: string | null
   is_claimed?: boolean
   is_registered?: boolean | null
+  contact_whatsapp?: string | null
+  contact_phone?: string | null
+  phone?: string | null
+  viewerRole?: string | null
   isSaved?: boolean
   onApply?: () => void
 }
@@ -95,6 +99,36 @@ function formatExistingStatus(status?: string | null) {
     .join(' ')
 }
 
+function buildCentreWhatsappHref({
+  centreName,
+  centrePath,
+  contactWhatsapp,
+  contactPhone,
+  phone,
+}: {
+  centreName: string
+  centrePath: string
+  contactWhatsapp?: string | null
+  contactPhone?: string | null
+  phone?: string | null
+}) {
+  const rawPhone = [contactWhatsapp, contactPhone, phone].find((value) => typeof value === 'string' && value.trim().length > 0)
+  if (!rawPhone) return null
+
+  const digits = rawPhone.replace(/[^\d]/g, '')
+  if (!digits) return null
+
+  let normalized = digits
+  if (digits.startsWith('0')) normalized = `27${digits.slice(1)}`
+  else if (!digits.startsWith('27') && rawPhone.startsWith('+')) normalized = digits
+
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://centreconnect.co.za').replace(/\/$/, '')
+  const centreUrl = centrePath.startsWith('http') ? centrePath : `${baseUrl}${centrePath}`
+  const message = `Hi ${centreName}! I found your crèche on CentreConnect. Your details are listed there, but your profile says you are not on CentreConnect yet. I would like to ask about fees and space. Here is the page I saw: ${centreUrl}`
+
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`
+}
+
 function CentreFact({
   icon: Icon,
   label,
@@ -127,6 +161,9 @@ export function CentreCard({
   suburb,
   city,
   address,
+  contact_whatsapp,
+  contact_phone,
+  phone,
   feesLabel,
   fees_display_mode,
   monthly_fee_min,
@@ -138,6 +175,7 @@ export function CentreCard({
   existingApplicationStatus,
   is_claimed = true,
   is_registered = false,
+  viewerRole = null,
   isSaved = false,
   name,
   onApply,
@@ -149,6 +187,17 @@ export function CentreCard({
     : slug
       ? `/c/${encodeURIComponent(slug)}`
       : '/directory'
+  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug ?? id)}`
+  const showClaimLink = !is_claimed && viewerRole !== 'parent_user'
+  const whatsappHref = !is_claimed
+    ? buildCentreWhatsappHref({
+        centreName: name,
+        centrePath: detailHref,
+        contactWhatsapp: contact_whatsapp,
+        contactPhone: contact_phone,
+        phone,
+      })
+    : null
 
   const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
   const ageSummary = formatAgeSummary(age_groups)
@@ -159,7 +208,7 @@ export function CentreCard({
       : 'Verified by CentreConnect'
     : is_claimed
       ? 'Profile live'
-      : 'Claim pending'
+      : 'Public listing only'
   const hoursSummary = 'Weekdays, Sat mornings'
   const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply now'
 
@@ -276,12 +325,37 @@ export function CentreCard({
           ) : null}
 
           {!is_claimed ? (
-            <p className="text-center text-xs font-medium leading-5 text-[#6A7672]">
-              Own this crèche?{' '}
-              <Link href="/for-centres/intro" className="font-semibold text-[#0D9488] hover:underline">
-                Claim it here →
-              </Link>
-            </p>
+            <>
+              {whatsappHref ? (
+                <Button
+                  asChild
+                  type="button"
+                  className="h-12 rounded-2xl bg-[#25D366] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,211,102,0.18)] transition-all hover:bg-[#1EB85A] active:scale-95"
+                >
+                  <a href={whatsappHref} target="_blank" rel="noreferrer">
+                    WhatsApp this crèche
+                  </a>
+                </Button>
+              ) : (
+                <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
+                  <p className="text-sm font-semibold text-[#22312E]">This crèche is not on CentreConnect yet.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see their details and ask about space directly.</p>
+                </div>
+              )}
+
+              {showClaimLink ? (
+                <p className="text-center text-xs font-medium leading-5 text-[#6A7672]">
+                  Own this crèche?{' '}
+                  <Link href={claimHref} className="font-semibold text-[#0D9488] hover:underline">
+                    Claim it here →
+                  </Link>
+                </p>
+              ) : (
+                <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
+                  Listed on CentreConnect so parents can find trusted local options faster.
+                </p>
+              )}
+            </>
           ) : (
             <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
               Tap the card to see photos, contact details, and what parents need to know.
@@ -294,9 +368,3 @@ export function CentreCard({
 }
 
 export default CentreCard
-
-
-
-
-
-

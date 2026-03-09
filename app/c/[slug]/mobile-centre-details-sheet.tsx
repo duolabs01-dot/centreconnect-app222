@@ -86,6 +86,7 @@ export function MobileCentreDetailsSheet({
   const startYRef = useRef<number | null>(null)
 
   const claimHref = useMemo(() => `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centreSlug)}`, [centreSlug])
+  const showClaimLink = !isClaimed && userRole !== 'parent_user'
 
   function onTouchStart(event: TouchEvent<HTMLDivElement>) {
     startYRef.current = event.touches[0]?.clientY ?? null
@@ -205,9 +206,11 @@ export function MobileCentreDetailsSheet({
                   <p className="text-sm font-medium leading-6 text-[#5F6C68]">
                     This centre has not joined CentreConnect yet, so parents still need to contact them directly.
                   </p>
+                {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
                     Own this crèche? Claim it here →
                   </Link>
+                ) : null}
                 </div>
               ) : null}
 
@@ -251,3 +254,7 @@ export function MobileCentreDetailsSheet({
     </>
   )
 }
+
+
+
+

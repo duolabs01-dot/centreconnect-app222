@@ -22,6 +22,9 @@ type DiscoverCentre = {
   rating?: number
   latitude?: number | null
   longitude?: number | null
+  contact_whatsapp?: string | null
+  contact_phone?: string | null
+  phone?: string | null
   distanceMeters?: number
 }
 
@@ -110,7 +113,7 @@ export default function ParentDiscoverClient() {
     const loadCentres = async () => {
       const { data } = await supabase
         .from('public_ecd_centres')
-        .select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude')
+.select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone')
         .order('is_registered', { ascending: false })
         .order('name', { ascending: true })
         .limit(24)
@@ -132,6 +135,9 @@ export default function ParentDiscoverClient() {
             rating: 4.8,
             latitude: typeof centre.latitude === 'number' ? centre.latitude : centre.latitude ? Number(centre.latitude) : null,
             longitude: typeof centre.longitude === 'number' ? centre.longitude : centre.longitude ? Number(centre.longitude) : null,
+            contact_whatsapp: centre.contact_whatsapp ?? null,
+            contact_phone: centre.contact_phone ?? null,
+            phone: centre.phone ?? null,
           })) as DiscoverCentre[]
         setCentres(mapped)
       } else {
@@ -289,7 +295,7 @@ export default function ParentDiscoverClient() {
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCentres.map((centre) => (
-              <CentreCard key={centre.id} {...centre} />
+              <CentreCard key={centre.id} {...centre} viewerRole={"parent_user"} />
             ))}
           </section>
         )}
@@ -297,5 +303,11 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
+
+
+
+
+
+
 
 

@@ -17,6 +17,9 @@ export type DirectoryCentre = {
   is_claimed: boolean
   latitude: number | null
   longitude: number | null
+  contact_whatsapp?: string | null
+  contact_phone?: string | null
+  phone?: string | null
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
 }

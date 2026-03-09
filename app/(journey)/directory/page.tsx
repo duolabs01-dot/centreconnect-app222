@@ -82,6 +82,9 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     is_claimed: Boolean(centre.is_claimed),
     latitude,
     longitude,
+    contact_whatsapp: centre.contact_whatsapp ?? null,
+    contact_phone: centre.contact_phone ?? null,
+    phone: centre.phone ?? null,
     existingApplicationId: centre.existingApplicationId ?? null,
     existingApplicationStatus: centre.existingApplicationStatus ?? null,
   }
@@ -109,19 +112,24 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let centres: DirectoryCentre[] = []
   let allActiveCentres: DirectoryFacetSource[] = []
   let totalResults = 0
+  let viewerRole: string | null = null
 
   try {
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
+      viewerRole = profile?.role ?? null
+    }
 
     const facetsQuery = supabase.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
 
     let centresQuery = supabase
       .from('public_ecd_centres')
       .select(
-        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted'
+        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone,phone'
       )
       .order('is_registered', { ascending: false })
       .order('name', { ascending: true })
@@ -297,8 +305,15 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             fee: selectedFee,
             subsidy: selectedSubsidy,
           }}
+          viewerRole={viewerRole}
         />
       </div>
     </Container>
   )
 }
+
+
+
+
+
+

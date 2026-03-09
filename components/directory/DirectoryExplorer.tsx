@@ -49,6 +49,7 @@ type DirectoryExplorerProps = {
   initialFilters: DirectoryFilters
   suburbs: string[]
   ageGroups: string[]
+  viewerRole?: string | null
 }
 
 const FEE_OPTIONS = [
@@ -66,6 +67,7 @@ export default function DirectoryExplorer({
   initialFilters,
   suburbs,
   ageGroups,
+  viewerRole = null,
 }: DirectoryExplorerProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -442,6 +444,7 @@ export default function DirectoryExplorer({
                       tagline={centre.tagline ?? undefined}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
+                      viewerRole={viewerRole}
                     />
                   </motion.div>
                 ))}
@@ -543,3 +546,6 @@ export default function DirectoryExplorer({
     </div>
   )
 }
+
+
+

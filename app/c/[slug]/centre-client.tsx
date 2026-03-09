@@ -420,6 +420,7 @@ export function CentreClient({ slug }: { slug: string }) {
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
   const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
+  const showClaimLink = !isClaimed && userRole !== 'parent_user'
   const whatsappHref = createWhatsappClickToChatLink(
     centre.contact_whatsapp || centre.contact_phone || centre.phone,
     `Hi ${centre.name}, I found your centre on CentreConnect and would like to ask about enrolment.`
@@ -541,9 +542,11 @@ export function CentreClient({ slug }: { slug: string }) {
               {showUnclaimedDisclaimer ? (
                 <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
                   <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
-                  <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                    Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  {showClaimLink ? (
+                    <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
+                      Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -690,9 +693,11 @@ export function CentreClient({ slug }: { slug: string }) {
                     <p className="text-sm leading-6 text-[#5F6C68]">
                       This centre is not yet taking digital applications, but parents can still save the listing or message them directly.
                     </p>
+                  {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
                       Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
                     </Link>
+                  ) : null}
                   </div>
                 ) : null}
 
@@ -751,3 +756,7 @@ export function CentreClient({ slug }: { slug: string }) {
     </main>
   )
 }
+
+
+
+
