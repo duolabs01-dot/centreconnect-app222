@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -136,7 +136,7 @@ export default function RegisterPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: buildAuthCallbackRedirect(authDestinationPath(), window.location.origin),
+          redirectTo: buildAuthCallbackRedirect(authDestinationPath()),
           queryParams: {
             prompt: 'select_account',
           },

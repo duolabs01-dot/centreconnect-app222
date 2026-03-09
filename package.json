@@ -42,7 +42,8 @@
     "audit:high": "npm audit --omit=dev --audit-level=high",
     "security:ci": "npm run lint && npm run audit:high",
     "seed": "tsx scripts/seed-centres.ts",
-    "seed:centres": "node scripts/seed-centres.mjs"
+    "seed:centres": "node scripts/seed-centres.mjs",
+    "reinvite:parents": "tsx scripts/reinvite-deleted-parents.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
