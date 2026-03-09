@@ -3,7 +3,8 @@
 import type { TouchEvent } from 'react'
 import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { CheckCircle2, Circle, ShieldCheck } from 'lucide-react'
+import { Baby, CheckCircle2, Circle, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { ContactCentreSheet } from './contact-centre-sheet'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -15,12 +16,17 @@ type MobileCentreDetailsSheetProps = {
   centreId: string
   centreSlug: string
   centreName: string
+  tagline?: string | null
   locationLabel: string
   feesLabel: string
+  ageGroupsLabel: string
+  capacityLabel: string
+  trustLabel: string
   isRegistered: boolean
   isClaimed: boolean
   isOnline: boolean
   schedule: string
+  subsidyAccepted: boolean
   userRole: string | null
   showPilotTrustInfo: boolean
   pilotBadges: string[]
@@ -29,16 +35,45 @@ type MobileCentreDetailsSheetProps = {
   whatsappHref?: string | null
 }
 
+function DetailFact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Wallet
+  label: string
+  value: string
+}) {
+  return (
+    <div className="rounded-[1.2rem] border border-[#E7DDD1] bg-[#FFFCF7] p-3">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">{label}</p>
+          <p className="mt-1 text-sm font-semibold leading-5 text-[#22312E]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function MobileCentreDetailsSheet({
   centreId,
   centreSlug,
   centreName,
+  tagline,
   locationLabel,
   feesLabel,
+  ageGroupsLabel,
+  capacityLabel,
+  trustLabel,
   isRegistered,
   isClaimed,
   isOnline,
   schedule,
+  subsidyAccepted,
   userRole,
   showPilotTrustInfo,
   pilotBadges,
@@ -74,35 +109,20 @@ export function MobileCentreDetailsSheet({
   return (
     <>
       {!open ? (
-        <div className="fixed inset-x-4 bottom-6 z-50 lg:hidden">
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-2 shadow-[var(--shadow-elevation-3)]">
+        <div className="fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-50 lg:hidden">
+          <div className="rounded-[1.9rem] border border-[#E7DDD1] bg-[#FFFDF9]/96 p-2 shadow-[0_18px_40px_rgba(31,44,39,0.12)] backdrop-blur-xl">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setOpen(true)}
-              className="flex h-12 w-full items-center justify-between rounded-2xl bg-slate-50 px-4 text-left text-inherit hover:bg-slate-100"
+              className="flex h-12 w-full items-center justify-between rounded-2xl bg-[#FAF8F4] px-4 text-left text-inherit hover:bg-[#F4EFE6]"
             >
-              <span className="text-sm font-bold text-slate-900">Centre details and trust info</span>
-              <span className="text-xs font-bold text-teal-700">Swipe sheet</span>
+              <div>
+                <span className="block text-sm font-semibold text-[#22312E]">Quick details</span>
+                <span className="block text-[11px] font-medium text-[#7B827E]">Fees, ages, trust, and actions</span>
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0D9488]">Open</span>
             </Button>
-            <div className="mt-2">
-              <ApplyCTA
-                variant="hero"
-                centreSlug={centreSlug}
-                userRole={userRole}
-                existingApplicationId={existingApplicationId ?? null}
-                existingApplicationStatus={existingApplicationStatus ?? null}
-                isAvailable={isClaimed}
-                unavailableLabel="Online applications not available yet"
-                helperText={
-                  isClaimed
-                    ? null
-                    : 'This centre has not joined CentreConnect yet. You can still contact them directly below.'
-                }
-                fallbackHref={!isClaimed ? whatsappHref : null}
-                fallbackLabel={!isClaimed && whatsappHref ? 'Contact on WhatsApp' : null}
-              />
-            </div>
           </div>
         </div>
       ) : null}
@@ -113,11 +133,11 @@ export function MobileCentreDetailsSheet({
             type="button"
             variant="ghost"
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-slate-900/45 backdrop-blur-[1px]"
             aria-label="Close centre details"
           />
           <div
-            className="absolute inset-x-0 bottom-0 rounded-t-[2rem] border-t border-slate-200 bg-white px-5 pb-8 pt-3 shadow-[var(--shadow-elevation-3)]"
+            className="absolute inset-x-0 bottom-0 rounded-t-[2rem] border-t border-[#E7DDD1] bg-[#FFFDF9] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-24px_50px_rgba(0,0,0,0.12)]"
             style={{
               transform: `translateY(${dragY}px)`,
               transition: startYRef.current == null ? 'transform 0.2s ease-out' : 'none',
@@ -129,62 +149,50 @@ export function MobileCentreDetailsSheet({
             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-300" />
 
             <div className="space-y-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-widest text-slate-400">ECD details</p>
-                <h3 className="mt-1 text-xl font-black text-slate-900">{centreName}</h3>
-                <p className="text-sm text-slate-600">{locationLabel}</p>
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <p className={`flex items-center gap-2 text-sm font-black ${isOnline ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  <Circle size={10} fill="currentColor" strokeWidth={0} />
-                  {isOnline ? 'Open Now' : 'Closed for the Day'}
-                </p>
-                <p className="mt-1 text-xs font-bold text-slate-500">{schedule}</p>
-              </div>
-
-              {showPilotTrustInfo ? (
-                <div className="rounded-2xl border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-widest text-[#8F6200]">Trust & verification</p>
-                      <p className="mt-1 text-sm font-semibold leading-6 text-slate-800">
-                        {isRegistered
-                          ? 'This centre has a verified listing on CentreConnect.'
-                          : 'This centre profile is live while verification is being completed.'}
-                      </p>
-                    </div>
-                    {isRegistered ? (
-                      <PremiumVerifiedBadge compact label="Verified ECD" className="shrink-0" />
-                    ) : (
-                      <Badge className="rounded-full border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-800 shadow-none">
-                        Verification in progress
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="mt-3 space-y-2 text-xs text-slate-700">
-                    <div className="flex items-start gap-2">
-                      <ShieldCheck size={14} className="mt-0.5 text-[#8F6200]" />
-                      <span>Parents see a stronger, more trusted profile before they apply.</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle2 size={14} className="mt-0.5 text-[#8F6200]" />
-                      <span>Centre details are checked before the premium badge appears.</span>
-                    </div>
-                  </div>
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {isRegistered ? <PremiumVerifiedBadge compact label="Verified ECD" /> : null}
+                  {!isClaimed ? (
+                    <Badge className="rounded-full border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+                      Public listing
+                    </Badge>
+                  ) : null}
                 </div>
-              ) : null}
+                <div>
+                  <h3 className="text-xl font-black text-[#22312E]">{centreName}</h3>
+                  <p className="text-sm font-medium text-[#5F6C68]">{locationLabel}</p>
+                  {tagline ? <p className="mt-1 text-sm leading-6 text-[#6A7672]">{tagline}</p> : null}
+                </div>
+              </div>
 
-              {pilotBadges.length > 0 ? (
-                <div className="rounded-2xl border border-teal-100 bg-teal-50/50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-teal-700">Pilot advantages</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
+                <DetailFact icon={Wallet} label="Fees" value={feesLabel} />
+                <DetailFact icon={Baby} label="Ages" value={ageGroupsLabel} />
+                <DetailFact icon={ShieldCheck} label="Trust" value={trustLabel} />
+                <DetailFact icon={Clock3} label="Good to know" value={capacityLabel} />
+              </div>
+
+              <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-[#FAF8F4] p-4">
+                <p className={`flex items-center gap-2 text-sm font-semibold ${isOnline ? 'text-emerald-700' : 'text-[#7B827E]'}`}>
+                  <Circle size={10} fill="currentColor" strokeWidth={0} />
+                  {isOnline ? 'Open now' : 'Open during the day'}
+                </p>
+                <p className="mt-1 text-sm font-medium text-[#5F6C68]">{schedule}</p>
+                <p className="mt-3 text-xs font-medium text-[#6A7672]">
+                  {subsidyAccepted ? 'This centre says it accepts government subsidy support.' : 'Subsidy support is not listed yet. Ask the centre directly.'}
+                </p>
+              </div>
+
+              {showPilotTrustInfo && pilotBadges.length > 0 ? (
+                <div className="rounded-[1.4rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200]">Why this profile feels stronger</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {pilotBadges.map((badge) => (
                       <span
                         key={badge}
-                        className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-black text-teal-700 shadow-sm"
+                        className="inline-flex items-center gap-1 rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[11px] font-semibold text-[#6C4700] shadow-sm"
                       >
-                        <CheckCircle2 size={12} />
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                         {badge}
                       </span>
                     ))}
@@ -193,40 +201,48 @@ export function MobileCentreDetailsSheet({
               ) : null}
 
               {!isClaimed ? (
-                <div className="space-y-3">
-                  <Link
-                    href={claimHref}
-                    className="flex h-12 items-center justify-center rounded-2xl border-2 border-teal-600 bg-white px-4 text-sm font-black text-teal-700 shadow-md"
-                  >
-                    Own this centre? Claim it here →
+                <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
+                  <p className="text-sm font-medium leading-6 text-[#5F6C68]">
+                    This centre has not joined CentreConnect yet, so parents still need to contact them directly.
+                  </p>
+                  <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
+                    Own this crèche? Claim it here →
                   </Link>
-                  {whatsappHref ? (
-                    <div className="rounded-xl border border-amber-100 bg-amber-50 p-3">
-                      <p className="text-[10px] font-bold leading-tight text-amber-800">
-                        Note: This WhatsApp number is shared by the centre but not yet verified by our team.
-                      </p>
-                    </div>
-                  ) : null}
                 </div>
               ) : null}
 
-              <div className="grid grid-cols-2 gap-3">
-                <ContactCentreSheet centreId={centreId} centreName={centreName} />
-                <SaveCentreButton centreId={centreId} initialSaved={false} />
-              </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Contribution</p>
-                <p className="mt-1 text-xl font-black text-slate-900">{feesLabel}</p>
+              <div className="space-y-3 pt-1">
+                <ApplyCTA
+                  variant="hero"
+                  centreSlug={centreSlug}
+                  userRole={userRole}
+                  existingApplicationId={existingApplicationId ?? null}
+                  existingApplicationStatus={existingApplicationStatus ?? null}
+                  isAvailable={isClaimed}
+                  unavailableLabel="Online applications not available yet"
+                  helperText={
+                    isClaimed
+                      ? null
+                      : 'You can still save this centre or contact them directly while they finish joining CentreConnect.'
+                  }
+                  fallbackHref={!isClaimed ? whatsappHref : null}
+                  fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <ContactCentreSheet centreId={centreId} centreName={centreName} />
+                  <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white px-2">
+                    <SaveCentreButton centreId={centreId} initialSaved={false} />
+                  </div>
+                </div>
               </div>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setOpen(false)}
-                className="h-11 w-full rounded-2xl border-slate-200 bg-white text-sm font-bold text-slate-700 hover:bg-slate-50"
+                className="h-11 w-full rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
               >
-                Swipe down or tap to close
+                Close details
               </Button>
             </div>
           </div>
@@ -235,4 +251,3 @@ export function MobileCentreDetailsSheet({
     </>
   )
 }
-

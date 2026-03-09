@@ -4,13 +4,15 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
-import { Heart, MapPin, Star } from 'lucide-react'
+import { Baby, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
+
+import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
+
+type FeeDisplayMode = 'exact' | 'range' | 'contact' | null | undefined
 
 interface CentreCardProps {
   id: string
@@ -19,49 +21,154 @@ interface CentreCardProps {
   image?: string
   cover_image_url?: string
   logo_url?: string
+  suburb?: string
+  city?: string
   address?: string
   distance?: string
   distanceLabel?: string
   rating?: number
   fees?: string
   feesLabel?: string
+  fees_display_mode?: FeeDisplayMode
+  monthly_fee_min?: number | null
+  monthly_fee_max?: number | null
   age_groups: string[]
   tagline?: string
   capacity?: number
+  subsidy_accepted?: boolean
+  existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+  existingApplicationStatusLabel?: string | null
   is_claimed?: boolean
   is_registered?: boolean | null
   isSaved?: boolean
   onApply?: () => void
-  onSave?: () => void
+}
+
+function parseAgeValue(age: string) {
+  const match = age.match(/(\d+)(?:\s*)([my])/i)
+  if (!match) return Number.MAX_SAFE_INTEGER
+  const value = Number(match[1])
+  const unit = match[2]?.toLowerCase()
+  return unit === 'y' ? value * 12 : value
+}
+
+function formatAgeSummary(ageGroups: string[]) {
+  const clean = ageGroups.map((age) => age.trim()).filter(Boolean)
+  if (clean.length === 0) return 'All ages'
+
+  const ordered = [...clean].sort((a, b) => parseAgeValue(a) - parseAgeValue(b))
+  const first = ordered[0]
+  const last = ordered[ordered.length - 1]
+  if (first === last) return first.replace(/(\d+)([my])/gi, '$1 $2')
+  return `${first.replace(/(\d+)([my])/gi, '$1 $2')} to ${last.replace(/(\d+)([my])/gi, '$1 $2')}`
+}
+
+function formatFeeSummary({
+  feesLabel,
+  fees_display_mode,
+  monthly_fee_min,
+  monthly_fee_max,
+}: {
+  feesLabel?: string
+  fees_display_mode?: FeeDisplayMode
+  monthly_fee_min?: number | null
+  monthly_fee_max?: number | null
+}) {
+  if (feesLabel?.trim()) return feesLabel.trim()
+  if (fees_display_mode === 'exact' && monthly_fee_min) return `From R${monthly_fee_min}`
+  if (fees_display_mode === 'range' && monthly_fee_min && monthly_fee_max) return `R${monthly_fee_min} - R${monthly_fee_max}`
+  return 'Ask for fees'
+}
+
+function formatLocation({ suburb, city, address }: { suburb?: string; city?: string; address?: string }) {
+  const area = [suburb, city].map((value) => value?.trim()).filter(Boolean).join(', ')
+  return area || address || 'Johannesburg'
+}
+
+function formatExistingStatus(status?: string | null) {
+  if (!status) return 'View application'
+  return status
+    .split('_')
+    .filter(Boolean)
+    .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+    .join(' ')
+}
+
+function CentreFact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Wallet
+  label: string
+  value: string
+}) {
+  return (
+    <div className="rounded-[1.2rem] border border-[#E7DDD1] bg-[#FFFCF7] p-3 shadow-[0_8px_18px_rgba(31,44,39,0.03)]">
+      <div className="flex items-start gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{label}</p>
+          <p className="mt-1 text-sm font-semibold leading-5 text-[#22312E]">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function CentreCard({
   id,
   slug,
-  name,
   cover_image_url,
   logo_url,
+  suburb,
+  city,
   address,
   feesLabel,
+  fees_display_mode,
+  monthly_fee_min,
+  monthly_fee_max,
   age_groups,
-  rating = 4.8,
   tagline,
+  subsidy_accepted = false,
+  existingApplicationId,
+  existingApplicationStatus,
   is_claimed = true,
   is_registered = false,
   isSaved = false,
+  name,
   onApply,
-  onSave,
 }: CentreCardProps) {
-  const [saved, setSaved] = useState(isSaved)
   const router = useRouter()
 
-  const handleSave = () => {
-    setSaved(!saved)
-    onSave?.()
-  }
+  const detailHref = id.startsWith('centre-')
+    ? `/directory?search=${encodeURIComponent(name)}`
+    : slug
+      ? `/c/${encodeURIComponent(slug)}`
+      : '/directory'
+
+  const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
+  const ageSummary = formatAgeSummary(age_groups)
+  const locationSummary = formatLocation({ suburb, city, address })
+  const trustSummary = is_registered
+    ? subsidy_accepted
+      ? 'Verified and subsidy friendly'
+      : 'Verified by CentreConnect'
+    : is_claimed
+      ? 'Profile live'
+      : 'Claim pending'
+  const hoursSummary = 'Weekdays, Sat mornings'
+  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply now'
 
   const handleApply = () => {
+    if (existingApplicationId) {
+      router.push(`/parent/applications/${existingApplicationId}`)
+      return
+    }
+
     if (onApply) {
       onApply()
       return
@@ -76,152 +183,108 @@ export function CentreCard({
     router.push(`/apply/${identifier}`)
   }
 
-  const handleViewDetails = () => {
-    if (id.startsWith('centre-')) {
-      router.push(`/directory?search=${encodeURIComponent(name)}`)
-      return
-    }
-
-    if (slug) {
-      router.push(`/centre/${encodeURIComponent(slug)}`)
-      return
-    }
-
-    router.push('/directory')
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.28 }}
       className="group h-full"
     >
-      <Card className="flex h-full flex-col overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]">
-        <div className="relative h-52 overflow-hidden">
-          <Image
-            src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
-            alt={name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover:scale-110"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-          <div className="absolute right-4 top-4 flex flex-col items-end gap-2">
-            {Boolean(is_registered) && (
-              <PremiumVerifiedBadge compact label="Verified ECD" className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]" />
-            )}
-            {!is_claimed && (
-              <Badge className="bg-slate-900/90 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-md shadow-none">
-                Public Listing
-              </Badge>
-            )}
-            {feesLabel && (
-              <Badge className="border border-[#E3D2BC] bg-[#FDF0E6] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#B47642] shadow-none">
-                {feesLabel}
-              </Badge>
-            )}
-          </div>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSave}
-            className="absolute left-4 top-4 h-10 w-10 rounded-2xl bg-white/90 shadow-xl backdrop-blur-md transition-transform active:scale-90 hover:bg-white"
-          >
-            <Heart className={cn('h-5 w-5 transition-colors', saved ? 'fill-rose-500 text-rose-500' : 'text-slate-400')} />
-          </Button>
-
-          {logo_url ? (
-            <div className="absolute -bottom-6 left-6 z-10 h-16 w-16 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-2xl">
-              <Image
-                src={logo_url}
-                alt={`${name} logo`}
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-                sizes="64px"
-                unoptimized
-              />
-            </div>
-          ) : (
-            <div className="absolute -bottom-6 left-6 z-10 flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-white bg-[#F5EFE6] shadow-2xl">
-              <span className="text-xl font-black text-[#0D9488]">{name.charAt(0)}</span>
-            </div>
-          )}
+      <Card className="relative flex h-full flex-col overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]">
+        <div className="absolute left-4 top-4 z-20">
+          <SaveCentreButton centreId={id} initialSaved={isSaved} />
         </div>
 
-        <CardContent className="flex-1 space-y-4 p-6 pt-10">
-          <div>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3
-                  className="line-clamp-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-[#1F2D29]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
-                >
-                  {name}
-                </h3>
-                {tagline && <p className="mt-1 line-clamp-2 text-sm font-medium text-[#66736F]">{tagline}</p>}
-              </div>
-              <div className="shrink-0 rounded-full bg-[#FDF0E6] px-2 py-0.5 text-[#B47642]">
-                <div className="flex items-center gap-1">
-                  <Star className="h-3 w-3 fill-current" />
-                  <span className="text-xs font-semibold">{rating}</span>
+        <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
+          <div className="relative aspect-[16/11] overflow-hidden">
+            <Image
+              src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
+              alt={name}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#132320]/80 via-[#132320]/24 to-transparent" />
+
+            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+              <div className="flex items-end gap-3">
+                {logo_url ? (
+                  <div className="h-14 w-14 overflow-hidden rounded-2xl border-2 border-white/90 bg-white shadow-xl">
+                    <Image
+                      src={logo_url}
+                      alt={`${name} logo`}
+                      width={56}
+                      height={56}
+                      className="h-full w-full object-cover"
+                      sizes="56px"
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-white/90 bg-[#F5EFE6] text-lg font-black text-[#0D9488] shadow-xl">
+                    {name.charAt(0)}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 text-white">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {Boolean(is_registered) ? <PremiumVerifiedBadge compact label="Verified ECD" className="border-white/60 shadow-[0_12px_28px_rgba(108,71,0,0.26)]" /> : null}
+                    {!is_claimed ? (
+                      <Badge className="border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
+                        Public listing
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <h3 className="mt-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                    {name}
+                  </h3>
+                  <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {locationSummary}
+                  </p>
                 </div>
               </div>
             </div>
-            <p className="mt-2 flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#7B827E]">
-              <MapPin className="h-3 w-3" />
-              {address || 'Johannesburg'}
-            </p>
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {age_groups.slice(0, 3).map((age) => (
-              <Badge key={age} variant="secondary" className="border border-[#E7DDD1] bg-white px-2.5 py-1 text-[10px] font-medium text-[#5F6C68] shadow-none">
-                {age.replace(/(\d+)([my])/g, '$1$2 old')}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
+          <CardContent className="flex flex-1 flex-col space-y-4 p-5">
+            {tagline ? <p className="line-clamp-2 text-sm font-medium leading-6 text-[#5F6C68]">{tagline}</p> : null}
 
-        <CardFooter className="flex flex-col gap-3 p-6 pt-0">
-          <div className="flex w-full gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
+              <CentreFact icon={Wallet} label="Fees" value={feeSummary} />
+              <CentreFact icon={Baby} label="Ages" value={ageSummary} />
+              <CentreFact icon={ShieldCheck} label="Trust" value={trustSummary} />
+              <CentreFact icon={Clock3} label="Hours" value={hoursSummary} />
+            </div>
+
+            <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Before you open</p>
+              <p className="mt-1 text-sm font-semibold text-[#22312E]">Tap for photos, contact details, and application steps.</p>
+            </div>
+          </CardContent>
+        </Link>
+
+        <CardFooter className="flex flex-col items-stretch gap-3 border-t border-[#E8DDD0] p-5 pt-4">
+          {is_claimed ? (
             <Button
               type="button"
-              variant="outline"
-              onClick={handleViewDetails}
-              className="flex-1 rounded-2xl border-[#DDD5C8] bg-white py-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
+              onClick={handleApply}
+              className="h-12 rounded-2xl bg-[#0D9488] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
             >
-              View details
+              {primaryLabel}
             </Button>
-            {is_claimed ? (
-              <Button
-                type="button"
-                onClick={handleApply}
-                className="flex-1 rounded-2xl bg-[#0D9488] py-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
-              >
-                Apply now
-              </Button>
-            ) : (
-              <Button
-                asChild
-                variant="outline"
-                className="flex-1 rounded-2xl border-[#DDD5C8] bg-white py-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4] active:scale-95"
-              >
-                <Link href="/for-centres/intro">Learn More</Link>
-              </Button>
-            )}
-          </div>
+          ) : null}
 
-          {!is_claimed && (
-            <p className="text-center text-[10px] font-medium leading-tight text-[#7B827E]">
-              Own this centre?{' '}
+          {!is_claimed ? (
+            <p className="text-center text-xs font-medium leading-5 text-[#6A7672]">
+              Own this crèche?{' '}
               <Link href="/for-centres/intro" className="font-semibold text-[#0D9488] hover:underline">
                 Claim it here →
               </Link>
+            </p>
+          ) : (
+            <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
+              Tap the card to see photos, contact details, and what parents need to know.
             </p>
           )}
         </CardFooter>
@@ -231,3 +294,9 @@ export function CentreCard({
 }
 
 export default CentreCard
+
+
+
+
+
+
