@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Clock3, FileCheck2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
 export type HomeActiveCentre = {
   id: string
@@ -11,6 +12,7 @@ export type HomeActiveCentre = {
   isRegistered: boolean
   isPilot?: boolean
   isFeatured?: boolean
+  coverImage?: string | null
 }
 
 type HomeClientPageProps = {
@@ -56,6 +58,10 @@ function centreHref(centre: HomeActiveCentre) {
 export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
   const featuredCentre = activeCentres[0] ?? null
   const showProofBand = activeCentres.length > 0
+
+  const featuredHeroImage = featuredCentre
+    ? getCentreHeroImage(featuredCentre.slug, featuredCentre.coverImage)
+    : 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
 
   return (
     <div
@@ -145,94 +151,21 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 </p>
               </div>
 
-              <div className="min-w-0 lg:pl-4">
-                <div className="rounded-[1.75rem] border border-[#E8DDD0] bg-white p-4 shadow-[0_24px_60px_rgba(27,40,36,0.08)] sm:rounded-[2rem] sm:p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--teal)] sm:text-xs">One real centre near you</p>
-
-                  {featuredCentre ? (
-                    <Link
-                      href={centreHref(featuredCentre)}
-                      className="mt-4 block rounded-[1.4rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-4 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20 sm:rounded-[1.6rem] sm:p-5"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D847F]">
-                            {featuredCentre.suburb ?? 'Johannesburg'}
-                          </p>
-                          <h2
-                            className="mt-2 text-[1.5rem] leading-[1.08] text-[#21302C] sm:text-[1.9rem]"
-                            style={{ fontFamily: 'var(--font-serif)' }}
-                          >
-                            {featuredCentre.name}
-                          </h2>
-                        </div>
-                        {featuredCentre.isFeatured ? (
-                          <span
-                            className="flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold text-white shadow-md"
-                            style={{ backgroundColor: '#f59e0b' }}
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            Recommended Partner
-                          </span>
-                        ) : featuredCentre.isPilot ? (
-                          <span
-                            className="rounded-full px-3 py-1 text-[11px] font-semibold"
-                            style={{ backgroundColor: 'rgba(13,148,136,0.12)', color: 'var(--teal)' }}
-                          >
-                            Pilot Partner
-                          </span>
-                        ) : null}
-                        {featuredCentre.isRegistered ? (
-                          <span
-                            className="rounded-full px-3 py-1 text-[11px] font-semibold"
-                            style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
-                          >
-                            Verified
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-[rgba(13,148,136,0.10)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
-                          {featuredCentre.primaryAgeGroup ?? 'Mixed age groups'}
-                        </span>
-                        <span className="rounded-full bg-[#EEF6F5] px-3 py-1 text-xs font-semibold text-[#4C6762]">
-                          Centre profile live
-                        </span>
-                      </div>
-
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
-                          <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
-                            <span
-                              className="flex h-8 w-8 items-center justify-center rounded-full"
-                              style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
-                            >
-                              <FileCheck2 className="h-4 w-4" />
-                            </span>
-                            Documents ready once
-                          </div>
-                        </div>
-                        <div className="rounded-[1.1rem] border border-[#E8DDD0] bg-white px-4 py-3 sm:rounded-[1.2rem]">
-                          <div className="flex items-center gap-2 text-sm font-medium text-[#44524F]">
-                            <span
-                              className="flex h-8 w-8 items-center justify-center rounded-full"
-                              style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
-                            >
-                              <Clock3 className="h-4 w-4" />
-                            </span>
-                            Faster follow-up on your phone
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ) : (
-                    <div className="mt-4 rounded-[1.4rem] border border-[#EBE0D2] bg-[var(--warm-white)] p-4 sm:rounded-[1.6rem] sm:p-5">
-                      <p className="text-sm font-medium text-[#53615D]">
-                        Active crèches are appearing here as the Alexandra launch grows.
-                      </p>
-                    </div>
-                  )}
+              <div className="min-h-[320px] lg:min-h-0">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.75rem] border border-[#E8DDD0] bg-white shadow-xl sm:rounded-[2rem]">
+                  <Image
+                    src={featuredHeroImage}
+                    alt={featuredCentre?.name ?? 'ECD Centre'}
+                    fill
+                    className="object-cover"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#132320]/60 via-transparent to-transparent" />
+                  
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 sm:text-xs">Featured partner</p>
+                    <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">{featuredCentre?.name}</h2>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,26 +284,36 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <Link
                     key={centre.id}
                     href={centreHref(centre)}
-                    className="rounded-[1.35rem] border border-[#E9DED1] bg-white p-4 transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20 sm:rounded-[1.5rem]"
+                    className="overflow-hidden rounded-[1.35rem] border border-[#E9DED1] bg-white transition-transform hover:-translate-y-0.5 hover:border-[var(--teal)]/20 sm:rounded-[1.5rem]"
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D837F]">
-                      {centre.suburb ?? 'Johannesburg'}
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {centre.isFeatured ? (
-                        <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
-                          <ShieldCheck className="h-3 w-3" />
-                          Recommended Partner
+                    <div className="relative aspect-[16/9] w-full">
+                      <Image
+                        src={getCentreHeroImage(centre.slug, centre.coverImage)}
+                        alt={centre.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D837F]">
+                        {centre.suburb ?? 'Johannesburg'}
+                      </p>
+                      <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {centre.isFeatured ? (
+                          <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
+                            <ShieldCheck className="h-3 w-3" />
+                            Recommended Partner
+                          </span>
+                        ) : centre.isPilot ? (
+                          <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                            Pilot Partner
+                          </span>
+                        ) : null}
+                        <span className="rounded-full bg-[rgba(13,148,136,0.10)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
+                          {centre.primaryAgeGroup ?? 'Mixed age groups'}
                         </span>
-                      ) : centre.isPilot ? (
-                        <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
-                          Pilot Partner
-                        </span>
-                      ) : null}
-                      <span className="rounded-full bg-[rgba(13,148,136,0.10)] px-3 py-1 text-xs font-semibold text-[var(--teal)]">
-                        {centre.primaryAgeGroup ?? 'Mixed age groups'}
-                      </span>
+                      </div>
                     </div>
                   </Link>
                 ))}

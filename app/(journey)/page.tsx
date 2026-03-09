@@ -72,7 +72,7 @@ export default async function HomePage({
     try {
       const { data: centreRows } = await supabase
         .from('ecd_centres')
-        .select('id,name,slug,suburb,age_groups,is_registered')
+        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(4)
@@ -87,6 +87,7 @@ export default async function HomePage({
           isRegistered: Boolean(centre.is_registered),
           isPilot: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
           isFeatured: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
+          coverImage: centre.cover_image_url ?? null,
         }))
         .sort((a, b) => {
           if (a.isFeatured && !b.isFeatured) return -1

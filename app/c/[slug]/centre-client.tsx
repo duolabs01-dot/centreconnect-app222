@@ -68,7 +68,7 @@ type WebsiteContentState = {
 
 const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
 const ALLOWED_IMAGE_HOST_SUFFIXES = ['.supabase.co']
-const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com'])
+const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com', 'thumbs.dreamstime.com'])
 
 function fromParagraphBlocks(contentBlocks: unknown): string {
   if (!Array.isArray(contentBlocks)) return ''
