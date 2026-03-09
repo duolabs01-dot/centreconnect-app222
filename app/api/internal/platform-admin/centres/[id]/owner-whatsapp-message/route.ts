@@ -81,11 +81,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const messageParts = [
     `Hi ${ownerFirstName},`,
-    `${sanitizeName(centre.name, 'your centre')} joined CentreConnect so you can manage attendance, documents, and pickup notices from one place.`,
-    `I just emailed ${ownerEmail} with the login link plus password setup - this is the centre you signed up with, so click through to update your child's details and see the daily updates.`,
+    `${sanitizeName(centre.name, 'your centre')} is now enrolled on CentreConnect so the families you care for receive attendance, documents, safe pickup notes, and daily reports in one shared space.`,
+    `I just emailed ${ownerEmail} with the login link and password setup; that same email also includes the welcome pack so you can remind parents the password link was sent to their inbox.`,
     `Login + password setup: ${loginLink}`,
-    `Welcome pack (tips + what to expect): ${welcomePackLink}`,
-    `Reply here if you need a hand, I'm on WhatsApp.`,
+    `Welcome pack (what parents get and how it works): ${welcomePackLink}`,
+    `Share this note with parents so they know their centre already uses CentreConnect and the email has both links they need.`,
+    `Reply here if you need a helping hand.`,
   ]
   const message = messageParts.filter(Boolean).join('\n')
   const whatsappTextLink = ownerPhone ? createWhatsappClickToChatLink(ownerPhone, message) : null

@@ -7,8 +7,8 @@ import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-cent
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 
 export const metadata: Metadata = {
-  title: 'Find a CrÃ¨che - CentreConnect',
-  description: 'Search and compare trusted crÃ¨ches near you across Alexandra and Johannesburg.',
+  title: 'CentreConnect directory',
+  description: 'Search, compare, and stay connected with trusted crèches across Alexandra and Johannesburg.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -273,7 +273,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             }}
           >
             <MapPin className="h-3.5 w-3.5" />
-            <span>{effectiveSuburb ? `${effectiveSuburb} now live` : 'Johannesburg crÃ¨che directory'}</span>
+            <span>{effectiveSuburb ? `${effectiveSuburb} is now live on CentreConnect` : 'Johannesburg CentreConnect hub'}</span>
           </div>
           <h1
             className="mt-4 max-w-[14ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
@@ -283,11 +283,11 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           </h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-[0.98]">
             {effectiveSuburb
-              ? `${effectiveSuburb} centres use CentreConnect to share attendance, documents, and pickup safety notes with you. Keep the same centre already supporting your family and see those updates right here.`
-              : 'CentreConnect brings attendance, documents, pickup tools, and parent updates into one calm place — perfect for parents whose children already attend a participating centre.'}
+              ? `${effectiveSuburb} centres on CentreConnect share attendance, documents, pickup, and safety notes right away so you can keep trusting the same team and see those updates in one calm view.`
+              : `CentreConnect keeps attendance, documents, pickup tools, and parent updates in one calm place for families whose children already attend a participating centre. The filters below are still available if you want to compare other trusted partners.`}
           </p>
           <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-            Need a new centre? Use the filters below to compare trusted crèches and find one that keeps you informed.
+            This is your CentreConnect hub—it is better for you now because it highlights the updates parents already get from their centre. Use the filters below only if you also want to compare other trusted crèches that keep families informed.
           </p>
         </header>
 
@@ -311,7 +311,6 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
-
 
 
 
