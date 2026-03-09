@@ -65,7 +65,7 @@ export async function generateOwnerPasswordSetupLink(
   admin: ReturnType<typeof createAdminClient>,
   email: string
 ): Promise<OwnerAccessLinkResult> {
-  const resetPath = /reset-password?locked_email=
+  const resetPath = '/reset-password?locked_email='
   const fallbackRedirectTo = buildLockedResetPasswordRedirect(email)
   const recoveryResult = await admin.auth.admin.generateLink({
     type: 'recovery',
