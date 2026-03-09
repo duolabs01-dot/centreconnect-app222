@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const centreName = centre?.name ?? "Crèche"
 
   return {
-    title: `${centreName} Command Crèche | CentreConnect`,
+    title: `${centreName} Dashboard | CentreConnect`,
     description: 'Attendance, security protocols, and admissions pipeline management.',
   }
 }
@@ -220,7 +220,7 @@ export default async function EcdDashboardPage() {
 
   return (
     <EcdOsShell
-      title={`${centreName} Command Crèche`}
+      title={`${centreName} Dashboard`}
       description="Operational overview: security, attendance and admissions."
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
@@ -478,9 +478,4 @@ export default async function EcdDashboardPage() {
     </EcdOsShell>
   )
 }
-
-
-
-
-
 

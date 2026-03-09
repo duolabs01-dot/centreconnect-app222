@@ -15,6 +15,10 @@ if ($Clean) {
     Write-Host "Cleaned .next cache" -ForegroundColor Green
 }
 
-# Start Next.js directly (bypasses PowerShell spawn issues)
+# Hand off to the proven health-checked starter so restart works on Windows too
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$ensureScript = Join-Path $PSScriptRoot 'dev-ensure.ps1'
 Write-Host "Starting Next.js on http://localhost:$Port" -ForegroundColor Green
-node_modules/.bin/next dev -H 0.0.0.0 -p $Port
+Set-Location $projectRoot
+powershell -NoProfile -ExecutionPolicy Bypass -File $ensureScript -Port $Port
+

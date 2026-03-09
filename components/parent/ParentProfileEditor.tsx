@@ -199,7 +199,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
           label: 'Saved centres',
           value: 'Your shortlist',
           icon: Heart,
-          href: '/parent/saved',
+          href: '/parent/shortlist',
         },
         ...(profile.enrolled_child_count > 0
           ? [
@@ -424,3 +424,4 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     </div>
   )
 }
+

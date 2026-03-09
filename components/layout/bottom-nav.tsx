@@ -33,7 +33,7 @@ const NavButton = memo(({
   onPress: (href: string) => void
 }) => {
   const Icon = item.icon
-  const isSavedTab = item.href === '/parent/saved'
+  const isSavedTab = item.href === '/parent/shortlist'
   const hasBadge = !active && (item.badge ?? 0) > 0
   const handleClick = useCallback(() => {
     onPress(item.href)
@@ -117,7 +117,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
 
   const decoratedItems = useMemo(() => {
     return items.map((item) =>
-      item.href === '/parent/saved'
+      item.href === '/parent/shortlist'
         ? { ...item, badge: savedBadges > 0 ? savedBadges : undefined }
         : item
     )
@@ -154,3 +154,4 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     </div>
   )
 }
+
