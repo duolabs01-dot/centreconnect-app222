@@ -8,7 +8,7 @@ import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 
 export const metadata: Metadata = {
   title: 'CentreConnect directory',
-  description: 'Search, compare, and stay connected with trusted crèches across Alexandra and Johannesburg.',
+  description: 'Search, compare, and stay connected with trusted crÃ¨ches across Alexandra and Johannesburg.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -279,7 +279,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             className="mt-4 max-w-[14ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
             style={{ fontFamily: 'var(--font-serif)' }}
           >
-            CentreConnect keeps your child’s centre organised.
+            CentreConnect keeps your childâ€™s centre organised.
           </h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-[0.98]">
             {effectiveSuburb
@@ -287,7 +287,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
               : `CentreConnect keeps attendance, documents, pickup tools, and parent updates in one calm place for families whose children already attend a participating centre. The filters below are still available if you want to compare other trusted partners.`}
           </p>
           <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-            This is your CentreConnect hub—it is better for you now because it highlights the updates parents already get from their centre. Use the filters below only if you also want to compare other trusted crèches that keep families informed.
+            This is your CentreConnect hubâ€”it is better for you now because it highlights the updates parents already get from their centre. Use the filters below only if you also want to compare other trusted crÃ¨ches that keep families informed.
           </p>
         </header>
 
