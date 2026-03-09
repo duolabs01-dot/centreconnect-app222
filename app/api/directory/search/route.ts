@@ -55,11 +55,10 @@ export async function GET(req: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-
   let centresQuery = supabase
     .from('public_ecd_centres')
     .select(
-      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone,phone'
+      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone'
     )
     .order('name', { ascending: true })
     .range(0, PAGE_SIZE - 1)
@@ -67,7 +66,6 @@ export async function GET(req: Request) {
   let countQuery = supabase
     .from('public_ecd_centres')
     .select('id', { count: 'exact', head: true })
-
   if (query.search) {
     const pattern = `%${query.search}%`
     centresQuery = centresQuery.ilike('name', pattern)
@@ -147,14 +145,14 @@ export async function GET(req: Request) {
       .select('id,latitude,longitude,onboarding_complete,owner_id')
       .in('id', centreIds)
 
-    ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
-      geoById.set(row.id, {
-        latitude: row.latitude,
-        longitude: row.longitude,
-        onboarding_complete: row.onboarding_complete,
-        owner_id: row.owner_id,
+      ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+        geoById.set(row.id, {
+          latitude: row.latitude,
+          longitude: row.longitude,
+          onboarding_complete: row.onboarding_complete,
+          owner_id: row.owner_id,
+        })
       })
-    })
   }
 
   if (user && centreIds.length > 0) {
@@ -165,14 +163,14 @@ export async function GET(req: Request) {
       .in('ecd_id', centreIds)
       .order('created_at', { ascending: false })
 
-    ;((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
-      if (!applicationByCentre.has(row.ecd_id)) {
-        applicationByCentre.set(row.ecd_id, {
-          id: row.id,
-          status: row.status ?? null,
-        })
-      }
-    })
+      ; ((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
+        if (!applicationByCentre.has(row.ecd_id)) {
+          applicationByCentre.set(row.ecd_id, {
+            id: row.id,
+            status: row.status ?? null,
+          })
+        }
+      })
   }
 
   const centres = (centresData ?? []).flatMap((centre) => {
