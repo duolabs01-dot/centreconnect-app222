@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Baby, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
+import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
