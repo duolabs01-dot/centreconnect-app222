@@ -51,6 +51,7 @@ function displayChildName(child: ChildRow) {
 
 export default async function AiUploadPage() {
   const { supabase, ecdId } = await requireEcdPortalSession()
+  const isConfigured = Boolean(process.env.GEMINI_API_KEY?.trim())
 
   const [{ data: importsData }, { data: childrenData }] = await Promise.all([
     supabase
@@ -126,7 +127,11 @@ export default async function AiUploadPage() {
         </div>
       </header>
 
-      <RegisterImportClient initialImports={imports} childOptions={childOptions} />
+      <RegisterImportClient
+        initialImports={imports}
+        childOptions={childOptions}
+        isConfigured={isConfigured}
+      />
     </div>
   )
 }

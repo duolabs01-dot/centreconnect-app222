@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { AlertTriangle, MessageCircle } from 'lucide-react'
 import { AiSuggestedBadge } from '@/components/ui/ai-suggested-badge'
 import { Button } from '@/components/ui/button'
 import { extractRegisterPhotoAction, importRegisterEntryAction } from './actions'
@@ -39,9 +40,11 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 export function RegisterImportClient({
   initialImports,
   childOptions,
+  isConfigured,
 }: {
   initialImports: RegisterImportItem[]
   childOptions: ChildOption[]
+  isConfigured: boolean
 }) {
   const [imports, setImports] = useState<RegisterImportItem[]>(initialImports)
   const [files, setFiles] = useState<File[]>([])
@@ -58,6 +61,31 @@ export function RegisterImportClient({
       }),
     [imports]
   )
+
+  if (!isConfigured) {
+    return (
+      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-center shadow-[var(--shadow-elevation-1)]">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+          <AlertTriangle className="h-7 w-7" />
+        </div>
+        <h3 className="mt-4 text-xl font-black text-amber-900">AI Extraction Not Active</h3>
+        <p className="mx-auto mt-2 max-w-md text-sm text-amber-800">
+          This pilot feature is not yet configured for your account. Please contact support to enable it.
+        </p>
+        <div className="mt-5">
+          <a
+            href="https://wa.me/27685356430?text=Hi%2C%20I%20need%20help%20activating%20the%20AI%20Register%20Import%20feature."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Contact Support on WhatsApp
+          </a>
+        </div>
+      </div>
+    )
+  }
 
   function getState(item: RegisterImportItem): ImportFormState {
     const existing = formState[item.id]

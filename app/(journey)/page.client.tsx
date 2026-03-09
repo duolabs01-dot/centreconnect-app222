@@ -25,18 +25,55 @@ const suburbPills = ['Alexandra', 'Marlboro', 'Wynberg', 'Tembisa', 'Sandton'] a
 const steps = [
   {
     number: '1',
-    title: 'Search by suburb',
-    body: 'Find registered crèches near you with clear details, so you are not stitching together answers from outdated listings.',
+    title: 'Search by area',
+    body: 'Find trusted crèches near you with the details parents actually need to decide.',
   },
   {
     number: '2',
-    title: 'Upload once',
-    body: 'Keep your child’s documents in one place and reuse them whenever you apply to another centre.',
+    title: 'Save documents once',
+    body: 'Keep your child’s documents in one secure place and reuse them for every application.',
   },
   {
     number: '3',
-    title: 'Track on your phone',
-    body: 'Follow replies, next steps and updates without chasing the same questions across calls and WhatsApp chats.',
+    title: 'Get updates in one place',
+    body: 'See replies, next steps, and reminders without bouncing between calls and WhatsApp chats.',
+  },
+] as const
+
+const parentPromises = [
+  {
+    title: 'Fees and hours upfront',
+    body: 'Know monthly fees, hours, and available age groups before you visit.',
+  },
+  {
+    title: 'Safety you can see',
+    body: 'Pickup verification and authorised adults stay visible in your account.',
+  },
+  {
+    title: 'Your docs stay private',
+    body: 'Only the centres you apply to can view your child’s documents.',
+  },
+] as const
+
+const applyChecklist = [
+  'Child’s birth certificate or clinic card',
+  'Parent/guardian ID or passport',
+  'Proof of address (if required by the centre)',
+  'Immunisation record or clinic card',
+] as const
+
+const faqItems = [
+  {
+    title: 'Is this free for parents?',
+    body: 'Yes. Parents can search and apply without payment details.',
+  },
+  {
+    title: 'How do I know a centre is legitimate?',
+    body: 'We highlight registered centres and verified partners before you apply.',
+  },
+  {
+    title: 'Can I apply to more than one crèche?',
+    body: 'Yes. Save your profile once and apply to multiple centres faster.',
   },
 ] as const
 
@@ -104,8 +141,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-base leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  Search registered crèches across Johannesburg, compare the details that matter, and apply without
-                  starting from scratch each time.
+                  Search trusted crèches across Johannesburg, compare the details that matter, and apply without starting
+                  from scratch each time.
                 </p>
 
                 <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[15px] sm:leading-7">
@@ -141,13 +178,16 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     asChild
                   >
                     <Link href="/register">
-                      <span>Create Parent Profile</span>
+                      <span>Save My Parent Profile</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
 
                 <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
+                  Free for parents. No payment details needed.
+                </p>
+                <p className="mt-2 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
                   Starting in Alexandra. Growing across Johannesburg.
                 </p>
               </div>
@@ -265,6 +305,79 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
+        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E9DED1] bg-[var(--warm-white)] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.05)] sm:rounded-[2.4rem] sm:p-10">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--amber)]">Parent answers</p>
+              <h2
+                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
+                style={{ fontFamily: 'var(--font-serif)' }}
+              >
+                Everything you want to know before you apply.
+              </h2>
+              <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
+                Real details upfront so parents can make a calm, confident choice.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              {parentPromises.map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-[1.4rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_10px_26px_rgba(31,44,39,0.04)]"
+                >
+                  <h3 className="text-lg font-semibold text-[#21302D]">{item.title}</h3>
+                  <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-white shadow-[0_24px_64px_rgba(31,44,39,0.06)]">
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div className="p-6 sm:p-10 lg:p-12">
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Apply prep</p>
+                <h2
+                  className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.6rem]"
+                  style={{ fontFamily: 'var(--font-serif)' }}
+                >
+                  What you need to apply.
+                </h2>
+                <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
+                  Keep these on your phone once, then reuse them for every application.
+                </p>
+                <div className="mt-6 space-y-3">
+                  {applyChecklist.map((item) => (
+                    <div
+                      key={item}
+                      className="flex items-center gap-3 rounded-2xl border border-[#E8DDD0] bg-[var(--warm-white)] px-4 py-3 text-sm font-medium text-[#37433F]"
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--teal)] text-xs font-bold text-white">
+                        ✓
+                      </span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-[#F5EFE7] p-6 sm:p-10 lg:p-12">
+                <div className="rounded-[1.8rem] border border-[#E2D6C9] bg-white p-6 shadow-[0_16px_40px_rgba(31,44,39,0.08)]">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7B827E]">Parent FAQs</p>
+                  <div className="mt-4 space-y-4">
+                    {faqItems.map((item) => (
+                      <div key={item.title}>
+                        <p className="text-sm font-semibold text-[#1F2D29]">{item.title}</p>
+                        <p className="mt-2 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {showProofBand ? (
           <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
             <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#E9DDD0] bg-[var(--warm-white)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:rounded-[2rem] sm:p-8">
@@ -276,7 +389,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   Real crèches. Real spaces.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  Every centre on CentreConnect is registered and verified before parents can apply.
+                  We highlight registered centres and verified partners so parents can apply with confidence.
                 </p>
               </div>
 
