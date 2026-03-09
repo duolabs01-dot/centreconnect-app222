@@ -175,7 +175,7 @@ export default async function ParentDashboardPage() {
                   <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">
                     {greeting}, {parentName}
                   </p>
-                  <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl">
+                  <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
                     {`Find a creche near you`}
                     <br />
                     in Alexandra.

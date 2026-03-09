@@ -53,7 +53,7 @@ function centreHref(centre: HomeActiveCentre) {
 
 export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
   const featuredCentre = activeCentres[0] ?? null
-  const showProofBand = activeCentres.length >= 2
+  const showProofBand = activeCentres.length > 0
 
   return (
     <div
