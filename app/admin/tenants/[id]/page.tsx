@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { TenantAccessManager } from '@/components/admin/tenant-access-manager'
 import { ActivateCentreButton } from '@/components/admin/ActivateCentreButton'
 import { SendOwnerInviteButton } from '@/components/admin/send-owner-invite-button'
+import { WhatsAppOwnerInviteButton } from '@/components/admin/whatsapp-owner-invite-button'
 import { DisconnectCentreButton } from '@/components/admin/disconnect-centre-button'
 import { APP_URL, ROOT_DOMAIN } from '@/lib/config'
 
@@ -271,6 +272,12 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
                 </div>
               </div>
               <SendOwnerInviteButton
+                centreId={tenantId}
+                centreName={centre.name}
+                ownerEmail={centre.email}
+                ownerPhone={centre.contact_phone ?? centre.phone}
+              />
+              <WhatsAppOwnerInviteButton
                 centreId={tenantId}
                 centreName={centre.name}
                 ownerEmail={centre.email}
