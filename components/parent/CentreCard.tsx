@@ -236,6 +236,12 @@ export function CentreCard({
     router.push(`/apply/${identifier}`)
   }
 
+  const resolvedLogoUrl = logo_url 
+    ? logo_url 
+    : (slug === 'bajabulile' || slug === 'bajabulile-day-care-centre')
+      ? '/centres/bajabulile/logo.jpg'
+      : null
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -265,10 +271,10 @@ export function CentreCard({
 
             <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
               <div className="flex items-end gap-3">
-                {logo_url ? (
+                {resolvedLogoUrl ? (
                   <div className="h-14 w-14 overflow-hidden rounded-2xl border-2 border-white/90 bg-white shadow-xl">
                     <Image
-                      src={logo_url}
+                      src={resolvedLogoUrl}
                       alt={`${name} logo`}
                       width={56}
                       height={56}

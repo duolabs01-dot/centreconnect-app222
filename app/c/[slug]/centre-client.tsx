@@ -117,7 +117,7 @@ function fromGalleryBlocks(contentBlocks: unknown): string[] {
 
 function isSafeImageUrl(url: string | null | undefined) {
   if (!url) return false
-  if (url.startsWith('/')) return true
+  if (url.startsWith('/') || url.startsWith('/centres/')) return true
 
   try {
     const parsed = new URL(url)
@@ -405,7 +405,11 @@ export function CentreClient({ slug }: { slug: string }) {
 
   const fallbackHeroImage = getCentreHeroImage(centre.slug, null)
   const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
-  const centreLogo = centre.logo_url && isSafeImageUrl(centre.logo_url) ? centre.logo_url : null
+  const centreLogo = (centre.logo_url && isSafeImageUrl(centre.logo_url)) 
+    ? centre.logo_url 
+    : (centre.slug === 'bajabulile' || centre.slug === 'bajabulile-day-care-centre')
+      ? '/centres/bajabulile/logo.jpg'
+      : null
   const centreInitial = (centre.name?.trim().charAt(0) || 'C').toUpperCase()
   const operationalStatus = getCentreOperationalStatus()
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })

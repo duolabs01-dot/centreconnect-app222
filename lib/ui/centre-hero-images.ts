@@ -20,7 +20,7 @@ const ECD_HERO_BY_SLUG: Record<string, string> = {
   'bright-horizons-jabulani':
     'https://images.pexels.com/photos/8363089/pexels-photo-8363089.jpeg?cs=srgb&dl=pexels-rdne-8363089.jpg&fm=jpg',
   'bajabulile':
-    'https://images.pexels.com/photos/8363783/pexels-photo-8363783.jpeg?cs=srgb&dl=pexels-rdne-8363783.jpg&fm=jpg',
+    '/centres/bajabulile/hero.jpg',
 }
 
 const DEFAULT_ECD_HERO =
