@@ -25,19 +25,28 @@ import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
-  { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash' },
-  { label: 'Centres', href: '/admin/tenants', icon: Building2, id: 'ecd' },
-  { label: 'Users', href: '/admin/users', icon: Users, id: 'users' },
-  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard, id: 'rev' },
-  { label: 'Parent Reliability', href: '/admin/parent-reliability', icon: Users, id: 'pr' },
-  { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf' },
-  { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit' },
-  { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook' },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, id: 'stat' },
-  { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd' },
-  { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites' },
-  { label: 'Support', href: '/admin/support', icon: LifeBuoy, id: 'sup' },
+  { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash', group: 'core' },
+  { label: 'Centres', href: '/admin/tenants', icon: Building2, id: 'ecd', group: 'core' },
+  { label: 'Users', href: '/admin/users', icon: Users, id: 'users', group: 'core' },
+  { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites', group: 'core' },
+  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard, id: 'rev', group: 'insights' },
+  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, id: 'stat', group: 'insights' },
+  { label: 'Parent Reliability', href: '/admin/parent-reliability', icon: Users, id: 'pr', group: 'insights' },
+  { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd', group: 'reliability' },
+  { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf', group: 'reliability' },
+  { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit', group: 'reliability' },
+  { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook', group: 'reliability' },
+  { label: 'Support', href: '/admin/support', icon: LifeBuoy, id: 'sup', group: 'support' },
 ]
+
+const GROUP_LABELS: Record<string, string> = {
+  core: 'Core',
+  insights: 'Insights',
+  reliability: 'Reliability',
+  support: 'Support',
+}
+
+const GROUP_ORDER = ['core', 'insights', 'reliability', 'support']
 
 export function AdminSidebar() {
   const pathname = usePathname()
@@ -79,34 +88,49 @@ export function AdminSidebar() {
         {/* Navigation Section */}
         <div className="flex-1 px-4 py-8 relative">
           <p className="px-4 mb-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Platform Control</p>
-          <nav className="space-y-1.5">
-            {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href
+          <div className="space-y-6">
+            {GROUP_ORDER.map((group) => {
+              const items = NAV_ITEMS.filter((item) => item.group === group)
+              if (items.length === 0) return null
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[13px] font-black transition-all duration-300 relative",
-                    isActive 
-                      ? "bg-white/5 text-white shadow-xl shadow-black/20" 
-                      : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]"
-                  )}
-                >
-                  {/* Active Indicator Line */}
-                  {isActive && (
-                    <div className="absolute left-0 w-1 h-5 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,1)]" />
-                  )}
-                  
-                  <item.icon className={cn(
-                    "w-5 h-5 transition-all duration-300", 
-                    isActive ? "text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]" : "text-slate-600 group-hover:text-slate-400"
-                  )} />
-                  <span className="tracking-tight">{item.label}</span>
-                </Link>
+                <div key={group} className="space-y-2">
+                  <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">
+                    {GROUP_LABELS[group] ?? group}
+                  </p>
+                  <nav className="space-y-1.5">
+                    {items.map((item) => {
+                      const isActive = pathname === item.href
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            "group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[13px] font-black transition-all duration-300 relative",
+                            isActive
+                              ? "bg-white/5 text-white shadow-xl shadow-black/20"
+                              : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]"
+                          )}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 w-1 h-5 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,1)]" />
+                          )}
+                          <item.icon
+                            className={cn(
+                              "w-5 h-5 transition-all duration-300",
+                              isActive
+                                ? "text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"
+                                : "text-slate-600 group-hover:text-slate-400"
+                            )}
+                          />
+                          <span className="tracking-tight">{item.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </nav>
+                </div>
               )
             })}
-          </nav>
+          </div>
         </div>
 
         {/* Sidebar Footer Info */}
