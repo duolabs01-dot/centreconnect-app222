@@ -211,7 +211,7 @@ export function MobileCentreDetailsSheet({
               {!isClaimed ? (
                 <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                   <p className="text-sm font-medium leading-6 text-[#5F6C68]">
-                    This centre has not joined CentreConnect yet, but parents can still save it and send a message through CentreConnect.
+                    This centre has not joined CentreConnect yet. Parents can still save it now and use the profile details while digital applications are being set up.
                   </p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
@@ -227,7 +227,7 @@ export function MobileCentreDetailsSheet({
                   <p className="mt-2 text-sm leading-6 text-[#315A51]">
                     {isClaimed
                       ? 'Apply now, or send one quick message and keep the whole conversation in CentreConnect.'
-                      : 'Save this creche now, or send a message that stays in the CentreConnect inbox while applications get set up.'}
+                      : 'Save this creche now and come back when digital applications open.'}
                   </p>
                 </div>
                 <ApplyCTA
@@ -242,22 +242,25 @@ export function MobileCentreDetailsSheet({
                   helperText={
                     isClaimed
                       ? 'Apply online now, or ask one quick question below if you want clarity first.'
-                      : 'Send a message now or save this creche while they finish joining CentreConnect.'
+                      : 'Save this creche now and come back when applications open.'
                   }
                 />
-                <ContactCentreSheet
-                  centreId={centreId}
-                  centreName={centreName}
-                  templates={inquiryTemplates}
-                  triggerLabel={isClaimed ? 'Ask the creche a quick question' : 'Send a message to this creche'}
-                  triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
-                  title={isClaimed ? `Ask ${centreName} a quick question` : `Send ${centreName} a message`}
-                  description={
-                    isClaimed
-                      ? 'Your message goes straight to the centre inbox in CentreConnect, so replies and updates stay together.'
-                      : 'You can still send a message now. When this creche finishes joining CentreConnect, the conversation will already be in one place.'
-                  }
-                />
+                {isClaimed ? (
+                  <ContactCentreSheet
+                    centreId={centreId}
+                    centreName={centreName}
+                    templates={inquiryTemplates}
+                    triggerLabel="Ask the creche a quick question"
+                    triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                    title={`Ask ${centreName} a quick question`}
+                    description="Your message goes straight to the centre inbox in CentreConnect, so replies and updates stay together."
+                  />
+                ) : (
+                  <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                    <p className="text-sm font-semibold text-[#22312E]">Profile details only for now</p>
+                    <p className="mt-1 text-xs leading-5 text-[#6A7672]">Messaging opens when this creche joins CentreConnect.</p>
+                  </div>
+                )}
                 <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
                   <div>
                     <p className="text-sm font-semibold text-[#22312E]">Save for later</p>

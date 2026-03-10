@@ -85,7 +85,7 @@ function haversineMeters(
 }
 
 function formatDistanceLabel(distanceMeters: number | null) {
-  if (!distanceMeters || !Number.isFinite(distanceMeters)) return null
+  if (distanceMeters == null || !Number.isFinite(distanceMeters)) return null
   const km = distanceMeters / 1000
   if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m away`
   return `${km.toFixed(1)} km away`

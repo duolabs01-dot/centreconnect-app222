@@ -325,7 +325,7 @@ export function CentreCard({
               </Button>
               <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
                 <p className="text-sm font-semibold text-[#22312E]">This creche is not on CentreConnect yet.</p>
-                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see fees, distance, and send a message through CentreConnect.</p>
+                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see fees, distance, and the centre details while digital applications are still offline.</p>
               </div>
 
               {showClaimLink ? (

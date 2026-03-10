@@ -340,7 +340,7 @@ export function CentreClient({
   const showAbout = visibleSectionSet.has('about')
   const showPrograms = visibleSectionSet.has('programs')
   const safeGalleryUrls = websiteContent.galleryUrls.filter((url) => isSafeImageUrl(url))
-  const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0
+  const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0 && !isClaimed
   const galleryPreviewUrls = safeGalleryUrls.slice(0, 4)
   const showContact = visibleSectionSet.has('contact')
   const aboutCopy =
@@ -379,7 +379,9 @@ export function CentreClient({
           description: 'Babies, toddlers, and older children can be placed into groups that match their age and stage as the centre grows.',
         },
       ]
-  const programCards = (websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms).slice(0, 2)
+  const programCards = (websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms).slice(0, isClaimed ? 1 : 2)
+  const visibleClassrooms = isClaimed ? classrooms.slice(0, 2) : classrooms
+  const showPracticalSection = showContact && !isClaimed
 
   const quickFacts = [
     { icon: Wallet, label: 'Monthly fees', value: feesLabel },
@@ -528,7 +530,7 @@ export function CentreClient({
                 <SectionHeading
                   eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
-                  description={isClaimed ? 'Parents usually want to know how a child learns here, what the routine feels like, and how communication works day to day.' : 'These are the parts of the day most parents usually want to understand before applying.'}
+                  description={isClaimed ? 'One quick look at the rhythm, routine, and learning style before you decide to apply.' : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => {
@@ -576,7 +578,7 @@ export function CentreClient({
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
-                description={isClaimed ? 'The essentials parents usually want here are age fit, class setup, and whether collection needs to happen straight after the school day.' : 'A simple look at the class setup before you contact the centre.'}
+                description={isClaimed ? 'The essentials parents usually want here are age fit, class setup, aftercare, and the practical details that affect daily life.' : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
@@ -591,7 +593,7 @@ export function CentreClient({
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {classrooms.length > 0 ? classrooms.map((room, index) => (
+                {visibleClassrooms.length > 0 ? visibleClassrooms.map((room, index) => (
                   <div key={`${room.id ?? index}-${room.name}`} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
                     <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
                     <h3 className="mt-2 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
@@ -606,7 +608,7 @@ export function CentreClient({
               </div>
             </section>
 
-            {showContact ? (
+            {showPracticalSection ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'The final details most parents want before they apply.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -633,13 +635,13 @@ export function CentreClient({
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
                     ? 'Apply when you are ready, or send one quick in-app message and keep every reply, update, and document in CentreConnect.'
-                    : 'This creche is still joining CentreConnect. You can still save it now and send a message that stays in the CentreConnect inbox.'}
+                    : 'This creche is still joining CentreConnect. Save it now, compare the details, and come back when digital applications open.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(isClaimed
                     ? ['Apply in minutes', 'Message the creche in-app', 'Keep one parent profile']
-                    : ['Save it for later', 'Send a message in-app', 'Come back when applications open']
+                    : ['Save it for later', 'Compare the details', 'Come back when applications open']
                   ).map((item) => (
                     <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
                       {item}
@@ -653,7 +655,7 @@ export function CentreClient({
                     {operationalStatus.label}
                   </p>
                   <p className="mt-1 text-sm text-[#5F6C68]">{operationalStatus.schedule}</p>
-                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} � Ages: {ageGroupsLabel}</p>
+                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
                 </div>
 
                 {showPilotTrustInfo ? (
@@ -684,7 +686,7 @@ export function CentreClient({
                 {!isClaimed ? (
                   <div className="mt-5 rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                     <p className="text-sm leading-6 text-[#5F6C68]">
-                      Online applications are not open yet, but parents can still save this creche and send a message through CentreConnect.
+                      Online applications are not open yet. Save this creche now and check the profile details while they finish joining CentreConnect.
                     </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
@@ -705,22 +707,25 @@ export function CentreClient({
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Apply online now, or send a quick question below if you want clarity first.' : 'Send a message now or save this creche while they finish joining CentreConnect.'
+                      isClaimed ? 'Apply online now, or send a quick question below if you want clarity first.' : 'Save this creche now and come back when applications open.'
                     }
                   />
-                  <ContactCentreSheet
-                    centreId={centre.id}
-                    centreName={centre.name}
-                    templates={inquiryTemplates}
-                    triggerLabel={isClaimed ? 'Ask the creche a quick question' : 'Send a message to this creche'}
-                    triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
-                    title={isClaimed ? `Ask ${centre.name} a quick question` : `Send ${centre.name} a message`}
-                    description={
-                      isClaimed
-                        ? 'Your message goes straight to the centre inbox in CentreConnect, so replies and application updates stay together.'
-                        : 'You can still send a message now. When this creche finishes joining CentreConnect, the conversation will already be in one place.'
-                    }
-                  />
+                  {isClaimed ? (
+                    <ContactCentreSheet
+                      centreId={centre.id}
+                      centreName={centre.name}
+                      templates={inquiryTemplates}
+                      triggerLabel="Ask the creche a quick question"
+                      triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                      title={`Ask ${centre.name} a quick question`}
+                      description="Your message goes straight to the centre inbox in CentreConnect, so replies and application updates stay together."
+                    />
+                  ) : (
+                    <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                      <p className="text-sm font-semibold text-[#22312E]">Profile details only for now</p>
+                      <p className="mt-1 text-xs leading-5 text-[#6A7672]">Messaging opens when the creche joins CentreConnect.</p>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
                     <div>
                       <p className="text-sm font-semibold text-[#22312E]">Save for later</p>
@@ -731,7 +736,7 @@ export function CentreClient({
                 </div>
               </div>
 
-              <CentreContactCard centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} />
+              {isClaimed ? <CentreContactCard centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} /> : null}
             </div>
           </aside>
         </section>
