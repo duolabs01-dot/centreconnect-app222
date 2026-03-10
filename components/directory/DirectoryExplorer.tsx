@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check } from 'lucide-react'
+import { Baby, MapPin, Search, ShieldCheck, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
@@ -128,9 +128,10 @@ export default function DirectoryExplorer({
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
 
   const quickFilters = [
-    { label: 'Near Me', active: geoStatus === 'granted', onClick: () => activateMapView() },
+    { label: 'Near Me', icon: MapPin, active: geoStatus === 'granted', onClick: () => activateMapView() },
     {
       label: 'Alexandra',
+      icon: MapPin,
       active: selectedSuburb === 'Alexandra',
       onClick: () => {
         setSelectedSuburb(selectedSuburb === 'Alexandra' ? '' : 'Alexandra')
@@ -139,6 +140,7 @@ export default function DirectoryExplorer({
     },
     {
       label: 'Subsidy',
+      icon: ShieldCheck,
       active: selectedSubsidy === 'true',
       onClick: () => {
         setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true')
@@ -147,6 +149,7 @@ export default function DirectoryExplorer({
     },
     {
       label: 'Infants',
+      icon: Baby,
       active: selectedAge === 'Infants (0-1 year)',
       onClick: () => {
         setSelectedAge(selectedAge === 'Infants (0-1 year)' ? '' : 'Infants (0-1 year)')
@@ -236,7 +239,7 @@ export default function DirectoryExplorer({
                 setSearch(e.target.value)
                 setCurrentPage(1)
               }}
-              className="h-14 rounded-2xl border-[#DDD5C8] bg-white pl-11 pr-4 text-base font-medium text-[#22312E] shadow-none focus-visible:border-[#0D9488] focus-visible:ring-2 focus-visible:ring-[#0D9488]/10"
+              className="h-14 rounded-[1.4rem] border-[#E4D9CC] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] pl-11 pr-4 text-base font-medium text-[#22312E] shadow-[0_10px_24px_rgba(31,44,39,0.05)] focus-visible:border-[#0D9488] focus-visible:ring-2 focus-visible:ring-[#0D9488]/10"
             />
           </div>
 
@@ -246,7 +249,7 @@ export default function DirectoryExplorer({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-14 w-14 rounded-2xl border-[#DDD5C8] bg-white text-[#5B6966] shadow-none transition-all hover:border-[#0D9488] hover:text-[#0D9488] active:scale-90"
+                className="h-14 w-14 rounded-[1.4rem] border-[#E4D9CC] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] text-[#5B6966] shadow-[0_10px_24px_rgba(31,44,39,0.05)] transition-all hover:border-[#0D9488] hover:text-[#0D9488] active:scale-90"
               >
                 <SlidersHorizontal className="h-5 w-5" />
               </Button>
@@ -361,7 +364,7 @@ export default function DirectoryExplorer({
             onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
             variant={viewMode === 'map' ? 'default' : 'outline'}
             className={cn(
-              'h-10 shrink-0 rounded-full px-5 text-xs font-semibold uppercase tracking-[0.16em] transition-all',
+              'h-10 shrink-0 rounded-full px-4 text-xs font-semibold tracking-[0.08em] transition-all',
               viewMode === 'map'
                 ? 'border-[#0D9488] bg-[#0D9488] text-white hover:bg-[#0B857A]'
                 : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
@@ -373,22 +376,26 @@ export default function DirectoryExplorer({
 
           <div className="mx-1 h-8 w-px shrink-0 self-center bg-[#E6DDD1]" />
 
-          {quickFilters.map((filter) => (
-            <Button
-              type="button"
-              key={filter.label}
-              onClick={filter.onClick}
-              variant={filter.active ? 'default' : 'outline'}
-              className={cn(
-                'h-10 shrink-0 whitespace-nowrap rounded-full px-5 text-xs font-medium transition-all',
-                filter.active
-                  ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
-                  : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
-              )}
-            >
-              {filter.label}
-            </Button>
-          ))}
+          {quickFilters.map((filter) => {
+            const Icon = filter.icon
+            return (
+              <Button
+                type="button"
+                key={filter.label}
+                onClick={filter.onClick}
+                variant={filter.active ? 'default' : 'outline'}
+                className={cn(
+                  'h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-xs font-medium transition-all',
+                  filter.active
+                    ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
+                    : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
+                )}
+              >
+                <Icon className="mr-1.5 h-3.5 w-3.5" />
+                {filter.label}
+              </Button>
+            )
+          })}
         </div>
       </div>
 

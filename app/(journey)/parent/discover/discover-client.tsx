@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { MapPin, ShieldCheck } from 'lucide-react'
+import { Clock3, MapPin, ShieldCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -351,16 +351,16 @@ export default function ParentDiscoverClient() {
                         {isVerified ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
                         {centre.is_claimed ? (
                           <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
-                            CentreConnect partner
+                            Partner
                           </Badge>
                         ) : (
                           <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9A5A10] shadow-none">
-                            Preview only
+                            Preview
                           </Badge>
                         )}
                         {centre.distanceLabel ? (
                           <Badge className="border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
-                            <ShieldCheck className="mr-1 h-3 w-3" />
+                            <Clock3 className="mr-1 h-3 w-3" />
                             {centre.distanceLabel}
                           </Badge>
                         ) : null}

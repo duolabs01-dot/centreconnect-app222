@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Baby, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, Eye, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -136,7 +136,7 @@ function CompactMetaItem({
   return (
     <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-[#E7DDD1] bg-[#FFFCF7] px-2.5 py-1.5 text-[#22312E]">
       <Icon className="h-3.5 w-3.5 shrink-0 text-[#D4935A]" />
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7B827E]">{label}</span>
+      <span className="text-[10px] font-medium text-[#7B827E]">{label}</span>
       <span className="truncate text-[12px] font-semibold leading-4 text-[#22312E]">{value}</span>
     </div>
   )
@@ -303,26 +303,26 @@ export function CentreCard({
             <div className="flex flex-wrap gap-1.5">
               {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
               {isFeatured ? (
-                <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-amber-700/90 shadow-none">
+                <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">
                   <ShieldCheck className="h-3 w-3" />
                   Recommended
                 </Badge>
               ) : isPilot ? (
-                <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-cyan-700 shadow-none">
+                <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                   Pilot Partner
                 </Badge>
               ) : null}
               {subsidy_accepted ? (
-                <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-emerald-700 shadow-none">
+                <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-emerald-700 shadow-none">
                   Subsidy friendly
                 </Badge>
               ) : null}
               {!is_claimed ? (
-                <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9A5A10] shadow-none">
+                <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#9A5A10] shadow-none">
                   Not yet on CentreConnect
                 </Badge>
               ) : usesPreviewImage ? (
-                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
+                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
                   Preview image
                 </Badge>
               ) : null}
@@ -344,11 +344,12 @@ export function CentreCard({
                 onClick={handleApply}
                 className="h-12 rounded-2xl bg-[#0D9488] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
               >
-                {primaryLabel}
+                <span>{primaryLabel}</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
               <Link
                 href={detailHref}
-                className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
+                className="text-center text-[11px] font-semibold tracking-[0.08em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
               >
                 View details
               </Link>
