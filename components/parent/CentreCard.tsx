@@ -188,6 +188,10 @@ export function CentreCard({
       ? [{ key: 'distance', icon: MapPin, label: 'Distance', value: distanceLabel.trim() }]
       : []),
   ]
+  const showRecommendedChip = !isVerifiedForParents && isFeatured
+  const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
+  const showSubsidyChip = subsidy_accepted
+  const showPreviewChip = !is_claimed || usesPreviewImage
 
   return (
     <motion.div
@@ -257,29 +261,31 @@ export function CentreCard({
 
             <div className="flex flex-wrap gap-1.5">
               {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
-              {isFeatured ? (
+              {showRecommendedChip ? (
                 <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">
                   <ShieldCheck className="h-3 w-3" />
                   Recommended
                 </Badge>
-              ) : isPilot ? (
+              ) : showPilotChip ? (
                 <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                   Pilot Partner
                 </Badge>
               ) : null}
-              {subsidy_accepted ? (
+              {showSubsidyChip ? (
                 <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-emerald-700 shadow-none">
                   Subsidy friendly
                 </Badge>
               ) : null}
-              {!is_claimed ? (
-                <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#9A5A10] shadow-none">
-                  Not yet on CentreConnect
-                </Badge>
-              ) : usesPreviewImage ? (
-                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
-                  Preview image
-                </Badge>
+              {showPreviewChip ? (
+                !is_claimed ? (
+                  <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#9A5A10] shadow-none">
+                    Not yet on CentreConnect
+                  </Badge>
+                ) : (
+                  <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
+                    Preview image
+                  </Badge>
+                )
               ) : null}
             </div>
 

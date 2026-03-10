@@ -165,6 +165,9 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     redirect('/parent/children/new')
   }
 
+  const documentCount = (parentDocuments ?? []).length
+  const childCount = (children ?? []).length
+
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-6 pb-28 sm:px-6 sm:py-8 sm:pb-10 lg:px-8">
       <div className="mb-3">
@@ -176,6 +179,16 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
           Back to centre
         </Link>
       </div>
+      <div className="mb-4 rounded-[1.6rem] border border-cyan-100 bg-cyan-50/70 p-4 shadow-sm">
+        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-800">Ready to apply</p>
+        <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 sm:text-[2rem]">Apply to {centre.name}</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-600">You are one calm step away from sending this application. Choose a child profile, reuse your saved documents, and submit in a few minutes.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="inline-flex items-center rounded-full border border-cyan-200 bg-white px-3 py-1 text-[11px] font-semibold text-cyan-800">{childCount} child profile{childCount === 1 ? '' : 's'} ready</span>
+          <span className="inline-flex items-center rounded-full border border-cyan-200 bg-white px-3 py-1 text-[11px] font-semibold text-cyan-800">{documentCount} document{documentCount === 1 ? '' : 's'} on file</span>
+        </div>
+      </div>
+
       <Card className="border-slate-200/90 bg-white/95 shadow-[var(--shadow-elevation-1)]">
         <CardHeader className="space-y-1.5 pb-3">
           <CardTitle className="text-xl text-slate-900 sm:text-2xl">Apply to {centre.name}</CardTitle>

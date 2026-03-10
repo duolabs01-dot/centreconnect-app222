@@ -206,11 +206,11 @@ export default function ParentDiscoverClient() {
         return {
           ...centre,
           distanceMeters,
-          distanceLabel: formatDistance(distanceMeters) ?? 'Distance unknown',
+          distanceLabel: locationMode === 'device' ? formatDistance(distanceMeters) ?? undefined : undefined,
         }
       })
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
-  }, [centres, location])
+  }, [centres, location, locationMode])
 
   const suburbOptions = useMemo(() => {
     return Array.from(
@@ -251,7 +251,7 @@ export default function ParentDiscoverClient() {
             <p>
               {locationMode === 'device'
                 ? 'Showing centres closest to your current location.'
-                : 'Showing Alexandra first because device location is not available yet.'}
+                : 'Showing Alexandra first. Allow location to see exact distance from you.'}
             </p>
             <p className="text-xs font-medium text-cyan-800">
               Preview image = the centre has not uploaded real photos yet. Not yet on CentreConnect = ask the centre directly before applying.

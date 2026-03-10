@@ -130,12 +130,27 @@ export default function DirectoryExplorer({
   }, [centres, geoStatus, initialFilters.suburb, selectedSuburb, userLocation])
 
   useEffect(() => {
+    if (geoStatus !== 'idle' || typeof navigator === 'undefined' || !navigator.geolocation) return
+
+    setGeoStatus('pending')
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation([pos.coords.longitude, pos.coords.latitude])
+        setGeoStatus('granted')
+      },
+      () => setGeoStatus('denied'),
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 600000 }
+    )
+  }, [geoStatus])
+
+  useEffect(() => {
     setVisible(!isFilterSheetOpen)
     return () => setVisible(true)
   }, [isFilterSheetOpen, setVisible])
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
   const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
+  const exactUserLocation = geoStatus === 'granted' ? userLocation : null
 
   const quickFilters = [
     { label: 'Near Me', icon: MapPin, active: geoStatus === 'granted', onClick: () => activateMapView() },
@@ -430,7 +445,7 @@ export default function DirectoryExplorer({
           <div className="animate-in fade-in zoom-in-95 duration-500">
             <div className="mb-4 flex items-center justify-between px-1">
               <p className="text-xs font-medium text-[#7B827E]">
-                {geoStatus === 'granted' ? 'Showing centres near your location' : 'Mappable centres in this area'}
+                {geoStatus === 'granted' ? 'Showing centres near your location' : 'Showing centres in this area'}
               </p>
               <Button
                 type="button"
@@ -443,8 +458,8 @@ export default function DirectoryExplorer({
             </div>
             <DirectoryMap
               centresWithLocation={centres.filter((centre) => centre.latitude != null && centre.longitude != null)}
-              userLocation={userLocation}
-              locationHint={geoStatus === 'granted' ? '' : 'Allow location for better results'}
+              userLocation={exactUserLocation}
+              locationHint={geoStatus === 'granted' ? '' : 'Allow location for exact distance'}
               showMap={true}
             />
           </div>
@@ -491,7 +506,7 @@ export default function DirectoryExplorer({
                       age_groups={centre.age_groups ?? []}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
-                      distanceLabel={formatDistanceLabel(haversineMeters(userLocation ?? getLocationReference({ suburb: centre.suburb, city: centre.city }), centre)) ?? undefined}
+                      distanceLabel={exactUserLocation ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
                       viewerRole={viewerRole}
                     />
                   </motion.div>
