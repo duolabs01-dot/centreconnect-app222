@@ -232,6 +232,12 @@ export function CentreCard({
       ? '/centres/bajabulile/logo.jpg'
       : null
 
+  const previewHelper = usesPreviewImage
+    ? is_claimed
+      ? 'Crèche photos coming soon. Tap to view the full profile and apply.'
+      : 'Preview image only. Open the profile to see details before contacting the crèche.'
+    : null
+
   const compactMeta = [
     { key: 'fees', icon: Wallet, label: 'Fees', value: feeSummary },
     { key: 'ages', icon: Baby, label: 'Ages', value: ageSummary },
@@ -300,6 +306,11 @@ export function CentreCard({
                   <MapPin className="h-3.5 w-3.5" />
                   <span className="truncate">{locationSummary}</span>
                 </p>
+                {previewHelper ? (
+                  <p className="mt-1 text-[12px] font-medium leading-5 text-[#5F6C68]">
+                    {previewHelper}
+                  </p>
+                ) : null}
               </div>
             </div>
 

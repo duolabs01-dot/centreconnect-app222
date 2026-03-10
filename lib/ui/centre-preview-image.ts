@@ -33,22 +33,33 @@ export function buildCentrePreviewImage({
           <stop offset="0%" stop-color="${theme.sky}" />
           <stop offset="100%" stop-color="#FFFFFF" />
         </linearGradient>
+        <linearGradient id="ground" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${theme.panel}" />
+          <stop offset="100%" stop-color="${theme.accentSoft}" />
+        </linearGradient>
       </defs>
       <rect width="1200" height="825" fill="url(#bg)" />
       <circle cx="1040" cy="140" r="145" fill="${theme.accentSoft}" opacity="0.9" />
       <circle cx="160" cy="110" r="105" fill="${theme.accentSoft}" opacity="0.8" />
       <rect x="72" y="96" width="250" height="56" rx="28" fill="${theme.panel}" opacity="0.96" />
       <text x="104" y="132" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="${theme.accent}">${statusLine}</text>
-      <rect x="76" y="520" width="1048" height="240" rx="40" fill="${theme.panel}" opacity="0.95" />
-      <rect x="84" y="290" width="270" height="270" rx="54" fill="${theme.accent}" />
-      <text x="219" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-size="112" font-weight="700" fill="#FFFFFF">${initials}</text>
-      <text x="392" y="382" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="${theme.text}">${name}</text>
-      <text x="392" y="440" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="${theme.accent}">${locationLine}</text>
-      <text x="92" y="618" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="${theme.text}">Centre photos have not been uploaded yet.</text>
-      <text x="92" y="666" font-family="Arial, sans-serif" font-size="24" fill="${theme.text}">This preview helps parents recognise the listing before real images are added.</text>
-      <text x="92" y="706" font-family="Arial, sans-serif" font-size="24" fill="${theme.text}">Use the status and buttons below to see whether applications happen online or directly.</text>
+      <rect x="0" y="520" width="1200" height="305" fill="url(#ground)" />
+      <rect x="112" y="360" width="240" height="184" rx="40" fill="${theme.accent}" opacity="0.94" />
+      <rect x="214" y="286" width="36" height="96" rx="18" fill="${theme.accent}" opacity="0.94" />
+      <rect x="402" y="328" width="164" height="216" rx="34" fill="${theme.panel}" opacity="0.98" />
+      <rect x="432" y="364" width="104" height="142" rx="24" fill="${theme.accentSoft}" />
+      <rect x="618" y="388" width="168" height="156" rx="32" fill="${theme.accent}" opacity="0.78" />
+      <rect x="820" y="346" width="252" height="198" rx="38" fill="${theme.panel}" opacity="0.96" />
+      <circle cx="946" cy="430" r="42" fill="${theme.accentSoft}" />
+      <circle cx="915" cy="410" r="10" fill="${theme.accent}" opacity="0.75" />
+      <circle cx="978" cy="410" r="10" fill="${theme.accent}" opacity="0.75" />
+      <path d="M906 464c18 22 58 22 76 0" stroke="${theme.accent}" stroke-width="12" stroke-linecap="round" fill="none" opacity="0.8" />
+      <rect x="94" y="612" width="320" height="30" rx="15" fill="${theme.panel}" opacity="0.92" />
+      <rect x="94" y="660" width="440" height="24" rx="12" fill="${theme.panel}" opacity="0.72" />
+      <rect x="94" y="700" width="360" height="24" rx="12" fill="${theme.panel}" opacity="0.56" />
+      <rect x="786" y="612" width="270" height="128" rx="32" fill="${theme.panel}" opacity="0.94" />
+      <text x="922" y="690" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="${theme.accent}">${initials}</text>
     </svg>
   `
-
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
 }
