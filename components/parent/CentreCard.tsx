@@ -132,6 +132,62 @@ function buildCentreWhatsappHref({
   return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`
 }
 
+function toSeed(value: string) {
+  return value.split('').reduce((total, char) => total + char.charCodeAt(0), 0)
+}
+
+function buildPreviewImage({
+  name,
+  suburb,
+  isClaimed,
+}: {
+  name: string
+  suburb?: string
+  isClaimed: boolean
+}) {
+  const themes = [
+    { sky: '#F6E7D8', accent: '#D4935A', accentSoft: '#FDF0E6', panel: '#FFF9F2', text: '#24413B' },
+    { sky: '#E8F4EF', accent: '#0D9488', accentSoft: '#DDF2EC', panel: '#F8FFFD', text: '#173B37' },
+    { sky: '#F7E9EE', accent: '#C65B7C', accentSoft: '#FCEEF3', panel: '#FFF8FB', text: '#3D2430' },
+    { sky: '#EAF0FA', accent: '#4D7DBF', accentSoft: '#EDF4FF', panel: '#F9FBFF', text: '#20354F' },
+  ]
+  const seed = toSeed(`${name}|${suburb ?? ''}|${isClaimed ? 'claimed' : 'preview'}`)
+  const theme = themes[seed % themes.length]
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join('') || 'CC'
+  const statusLine = isClaimed ? 'Preview image' : 'Not yet on CentreConnect'
+  const locationLine = suburb?.trim() || 'Johannesburg'
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 825" role="img" aria-label="${name}">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="${theme.sky}" />
+          <stop offset="100%" stop-color="#FFFFFF" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="825" fill="url(#bg)" />
+      <circle cx="1040" cy="140" r="145" fill="${theme.accentSoft}" opacity="0.9" />
+      <circle cx="160" cy="110" r="105" fill="${theme.accentSoft}" opacity="0.8" />
+      <rect x="72" y="96" width="250" height="56" rx="28" fill="${theme.panel}" opacity="0.96" />
+      <text x="104" y="132" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="${theme.accent}">${statusLine}</text>
+      <rect x="76" y="520" width="1048" height="240" rx="40" fill="${theme.panel}" opacity="0.95" />
+      <rect x="84" y="290" width="270" height="270" rx="54" fill="${theme.accent}" />
+      <text x="219" y="450" text-anchor="middle" font-family="Arial, sans-serif" font-size="112" font-weight="700" fill="#FFFFFF">${initials}</text>
+      <text x="392" y="382" font-family="Arial, sans-serif" font-size="64" font-weight="700" fill="${theme.text}">${name}</text>
+      <text x="392" y="440" font-family="Arial, sans-serif" font-size="28" font-weight="600" fill="${theme.accent}">${locationLine}</text>
+      <text x="92" y="618" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="${theme.text}">Centre photos have not been uploaded yet.</text>
+      <text x="92" y="666" font-family="Arial, sans-serif" font-size="24" fill="${theme.text}">This preview helps parents recognise the listing before real images are added.</text>
+      <text x="92" y="706" font-family="Arial, sans-serif" font-size="24" fill="${theme.text}">Use the status and buttons below to see whether applications happen online or directly.</text>
+    </svg>
+  `
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
 function CentreFact({
   icon: Icon,
   label,
@@ -207,15 +263,19 @@ export function CentreCard({
   const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
   const ageSummary = formatAgeSummary(age_groups)
   const locationSummary = formatLocation({ suburb, city, address })
+  const hasRealCoverImage = Boolean(cover_image_url)
+  const usesPreviewImage = !hasRealCoverImage
+  const previewImageSrc = buildPreviewImage({ name, suburb, isClaimed: is_claimed })
+  const heroImageSrc = hasRealCoverImage ? cover_image_url : previewImageSrc
   const trustSummary = is_registered
     ? subsidy_accepted
       ? 'Verified and subsidy friendly'
       : 'Verified by CentreConnect'
     : is_claimed
-      ? 'Profile live'
-      : 'Public listing only'
+      ? 'Live profile, photos pending'
+      : 'Not yet live on CentreConnect'
   const hoursSummary = 'Weekdays, Sat mornings'
-  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply now'
+  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
 
   const handleApply = () => {
     if (existingApplicationId) {
@@ -262,11 +322,12 @@ export function CentreCard({
         <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
           <div className="relative aspect-[16/11] overflow-hidden">
             <Image
-              src={cover_image_url || 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'}
-              alt={name}
+              src={heroImageSrc}
+              alt={usesPreviewImage ? `${name} preview image` : name}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized={usesPreviewImage}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#132320]/80 via-[#132320]/24 to-transparent" />
 
@@ -303,8 +364,12 @@ export function CentreCard({
                       </Badge>
                     ) : null}
                     {!is_claimed ? (
+                      <Badge className="border border-white/30 bg-[#B45309]/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
+                        Not yet on CentreConnect
+                      </Badge>
+                    ) : usesPreviewImage ? (
                       <Badge className="border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
-                        Public listing
+                        Preview image
                       </Badge>
                     ) : null}
                   </div>
@@ -331,8 +396,16 @@ export function CentreCard({
             </div>
 
             <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Before you open</p>
-              <p className="mt-1 text-sm font-semibold text-[#22312E]">Tap for photos, contact details, and application steps.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">
+                {usesPreviewImage ? 'Photo status' : 'Before you open'}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-[#22312E]">
+                {usesPreviewImage
+                  ? is_claimed
+                    ? 'This centre is live on CentreConnect, but the hero image is still a preview until they upload real photos.'
+                    : 'This centre has not joined CentreConnect yet, so the image is only a preview and contact happens directly.'
+                  : 'Tap for photos, contact details, and application steps.'}
+              </p>
             </div>
           </CardContent>
         </Link>
@@ -357,13 +430,13 @@ export function CentreCard({
                   className="h-12 rounded-2xl bg-[#25D366] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,211,102,0.18)] transition-all hover:bg-[#1EB85A] active:scale-95"
                 >
                   <a href={whatsappHref} target="_blank" rel="noreferrer">
-                    WhatsApp this crèche
+                    Ask about space on WhatsApp
                   </a>
                 </Button>
               ) : (
                 <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
                   <p className="text-sm font-semibold text-[#22312E]">This crèche is not on CentreConnect yet.</p>
-                  <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see their details and ask about space directly.</p>
+                  <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see their details, then contact them directly about space.</p>
                 </div>
               )}
 
@@ -376,7 +449,7 @@ export function CentreCard({
                 </p>
               ) : (
                 <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
-                  Listed on CentreConnect so parents can find trusted local options faster.
+                  Listed on CentreConnect so parents can compare local options before the centre finishes onboarding.
                 </p>
               )}
             </>

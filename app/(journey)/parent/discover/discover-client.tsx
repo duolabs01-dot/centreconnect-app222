@@ -25,6 +25,8 @@ type DiscoverCentre = {
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null
+  is_claimed?: boolean
+  is_registered?: boolean
   distanceMeters?: number
 }
 
@@ -35,11 +37,11 @@ const FALLBACK_CENTRES: DiscoverCentre[] = [
     tagline: 'Warm care, clear communication, safer pickup.',
     city: 'Johannesburg',
     suburb: 'Alexandra',
-    cover_image_url:
-      'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg',
     feesLabel: 'Ask centre for fees',
     age_groups: ['0-2', '2-4', '5-6'],
     rating: 4.8,
+    is_claimed: false,
+    is_registered: false,
   },
   {
     id: 'centre-local-2',
@@ -47,11 +49,11 @@ const FALLBACK_CENTRES: DiscoverCentre[] = [
     tagline: 'Simple routines and trusted care.',
     city: 'Johannesburg',
     suburb: 'Wynberg',
-    cover_image_url:
-      'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg',
     feesLabel: 'Ask centre for fees',
     age_groups: ['2-4', '5-6'],
     rating: 4.7,
+    is_claimed: false,
+    is_registered: false,
   },
 ]
 
@@ -113,7 +115,7 @@ export default function ParentDiscoverClient() {
     const loadCentres = async () => {
       const { data } = await supabase
         .from('public_ecd_centres')
-.select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone')
+.select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone,is_registered,is_claimed')
         .order('is_registered', { ascending: false })
         .order('name', { ascending: true })
         .limit(24)
@@ -138,6 +140,8 @@ export default function ParentDiscoverClient() {
             contact_whatsapp: centre.contact_whatsapp ?? null,
             contact_phone: centre.contact_phone ?? null,
             phone: centre.phone ?? null,
+            is_claimed: Boolean(centre.is_claimed),
+            is_registered: Boolean(centre.is_registered),
           })) as DiscoverCentre[]
         setCentres(mapped)
       } else {
@@ -218,10 +222,15 @@ export default function ParentDiscoverClient() {
             Find nearby centres, compare quickly, and open a full profile before you apply.
           </p>
 
-          <div className="rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-            {locationMode === 'device'
-              ? 'Showing centres closest to your current location.'
-              : 'Showing Alexandra first because device location is not available yet.'}
+          <div className="space-y-2 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            <p>
+              {locationMode === 'device'
+                ? 'Showing centres closest to your current location.'
+                : 'Showing Alexandra first because device location is not available yet.'}
+            </p>
+            <p className="text-xs font-medium text-cyan-800">
+              Preview image = the centre has not uploaded real photos yet. Not yet on CentreConnect = ask the centre directly before applying.
+            </p>
           </div>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
@@ -303,11 +312,3 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
-
-
-
-
-
-
-
-
