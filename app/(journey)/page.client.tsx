@@ -197,13 +197,13 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 </div>
 
                 <h1
-                  className="mt-5 text-[2.45rem] leading-[1.04] tracking-[-0.04em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[4rem] sm:leading-[0.98] lg:max-w-none lg:text-[5rem]"
+                  className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Finding the right crèche near you just got simpler.
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
+                <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
                   Search trusted crèches across Johannesburg, compare the details that matter, and apply without starting
                   from scratch each time.
                 </p>

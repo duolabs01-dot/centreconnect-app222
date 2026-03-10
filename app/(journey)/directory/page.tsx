@@ -289,12 +289,12 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             <span>{effectiveSuburb ? `${effectiveSuburb} is now live on CentreConnect` : 'Johannesburg CentreConnect hub'}</span>
           </div>
           <h1
-            className="mt-4 max-w-[14ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
+            className="mt-4 max-w-[14ch] text-[2.15rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1F2D29] sm:max-w-none sm:text-[3.1rem] sm:leading-[1.01]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             CentreConnect keeps your child’s centre organised.
           </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-[0.98]">
+          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-8">
             {effectiveSuburb
               ? `${effectiveSuburb} centres on CentreConnect share attendance, documents, pickup, and safety notes right away so you can keep trusting the same team and see those updates in one calm view.`
               : `CentreConnect keeps attendance, documents, pickup tools, and parent updates in one calm place for families whose children already attend a participating centre. The filters below are still available if you want to compare other trusted partners.`}

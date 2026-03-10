@@ -188,7 +188,7 @@ function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; tit
   return (
     <div className="space-y-2">
       {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A86C3A]">{eyebrow}</p> : null}
-      <h2 className="text-[2rem] leading-[1] tracking-[-0.03em] text-[#22312E] sm:text-[2.35rem]" style={{ fontFamily: 'var(--font-display)' }}>
+      <h2 className="text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E] sm:text-[2.25rem]" style={{ fontFamily: 'var(--font-display)' }}>
         {title}
       </h2>
       {description ? <p className="max-w-2xl text-sm leading-7 text-[#5F6C68] sm:text-base">{description}</p> : null}
@@ -265,7 +265,7 @@ export function CentreClient({
       <main className="min-h-screen bg-[#FAF8F4] py-10 sm:py-16">
         <Container className="max-w-2xl">
           <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-6 text-center shadow-[0_14px_34px_rgba(31,44,39,0.05)] sm:p-8">
-            <h1 className="text-[2.1rem] leading-none tracking-[-0.03em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+            <h1 className="text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
               Centre profile unavailable
             </h1>
             <p className="mt-4 text-sm leading-7 text-[#5F6C68]">
@@ -477,7 +477,7 @@ export function CentreClient({
                         </Badge>
                       ) : null}
                     </div>
-                    <h1 className="mt-1 text-[2rem] leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.7rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                    <h1 className="mt-1 text-[1.95rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-white sm:text-[2.55rem]" style={{ fontFamily: 'var(--font-display)' }}>
                       {centre.name}
                     </h1>
                     <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
@@ -689,7 +689,7 @@ export function CentreClient({
             <div className="sticky top-24 space-y-5">
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Next step</p>
-                <h3 className="mt-3 text-[2rem] leading-[1.02] tracking-[-0.03em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+                <h3 className="mt-3 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
                   {isClaimed ? 'Apply online or ask one smart question' : 'Ready to ask about a place?'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">

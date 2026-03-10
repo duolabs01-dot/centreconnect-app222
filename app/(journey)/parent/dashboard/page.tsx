@@ -177,7 +177,7 @@ export default async function ParentDashboardPage() {
                   <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">
                     {greeting}, {parentName}
                   </p>
-                  <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-3xl" style={{ fontFamily: "var(--font-display)" }}>
+                  <h1 className="mt-2 text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-900 sm:text-[2.45rem]" style={{ fontFamily: "var(--font-display)" }}>
                     CentreConnect keeps {firstChildName}&rsquo;s centre updates ready for you.
                   </h1>
                   <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
