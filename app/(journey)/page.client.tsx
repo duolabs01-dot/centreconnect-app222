@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { ArrowRight, Clock3, FileCheck2, ShieldCheck, Share2, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
+import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
 export type HomeActiveCentre = {
   id: string
@@ -14,6 +15,7 @@ export type HomeActiveCentre = {
   suburb: string | null
   primaryAgeGroup: string | null
   isRegistered: boolean
+  isClaimed?: boolean
   isPilot?: boolean
   isFeatured?: boolean
   coverImage?: string | null
@@ -106,6 +108,22 @@ function centreHref(centre: HomeActiveCentre) {
   return '/directory'
 }
 
+function getLandingCentreImage(centre: HomeActiveCentre | null) {
+  if (!centre) {
+    return 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
+  }
+
+  if (centre.coverImage && centre.coverImage.trim().length > 0) {
+    return getCentreHeroImage(centre.slug, centre.coverImage)
+  }
+
+  return buildCentrePreviewImage({
+    name: centre.name,
+    suburb: centre.suburb,
+    isClaimed: centre.isClaimed ?? false,
+  })
+}
+
 function toRadians(degrees: number) {
   return degrees * (Math.PI / 180)
 }
@@ -131,6 +149,8 @@ function metersToMinutes(meters: number, speedKmh: number = 30) {
 
 export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
   const featuredCentre = activeCentres[0] ?? null
+  const bajabulileCentre =
+    activeCentres.find((centre) => centre.slug === 'bajabulile-day-care-centre' || centre.slug === 'bajabulile') ?? featuredCentre
   const showProofBand = activeCentres.length > 0
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -160,9 +180,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
     return metersToMinutes(distanceMeters)
   }
 
-  const featuredHeroImage = featuredCentre
-    ? getCentreHeroImage(featuredCentre.slug, featuredCentre.coverImage)
-    : 'https://thumbs.dreamstime.com/b/young-african-preschool-kids-playing-playground-kindergarten-school-soweto-south-africa-july-180790376.jpg'
+  const featuredHeroImage = getLandingCentreImage(featuredCentre)
+  const bajabulileHeroImage = getLandingCentreImage(bajabulileCentre)
 
   return (
     <div
@@ -171,6 +190,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         fontFamily: 'var(--font-display)',
         ['--teal' as string]: '#0D9488',
         ['--amber' as string]: '#D4935A',
+        ['--coral' as string]: '#D86C6C',
+        ['--mauve' as string]: '#8B6FB3',
         ['--amber-light' as string]: '#FDF0E6',
         ['--forest' as string]: '#1A2E1F',
         ['--cream' as string]: '#FAF8F4',
@@ -178,15 +199,16 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
       }}
     >
       <main className="pb-[calc(env(safe-area-inset-bottom)+5rem)]">
-        <section className="relative overflow-hidden border-b border-[#E9DED1] bg-[var(--warm-white)]">
-          <div className="absolute inset-x-0 top-0 h-36 bg-[radial-gradient(circle_at_top_left,rgba(212,147,90,0.18),transparent_48%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.12),transparent_34%)]" />
-          <div className="absolute -left-20 top-16 h-40 w-40 rounded-full bg-[rgba(212,147,90,0.10)] blur-3xl" />
+        <section className="relative overflow-hidden border-b border-[#E9DED1] bg-[linear-gradient(180deg,#FFF9F3_0%,#FFFDF9_46%,#F8FBFA_100%)]">
+          <div className="absolute inset-x-0 top-0 h-44 bg-[radial-gradient(circle_at_top_left,rgba(212,147,90,0.22),transparent_44%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.16),transparent_34%),radial-gradient(circle_at_center_right,rgba(139,111,179,0.12),transparent_28%)]" />
+          <div className="absolute -left-20 top-16 h-40 w-40 rounded-full bg-[rgba(212,147,90,0.14)] blur-3xl" />
+          <div className="absolute right-[-3rem] top-24 h-44 w-44 rounded-full bg-[rgba(216,108,108,0.10)] blur-3xl" />
 
           <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-16 lg:px-8 lg:py-20">
             <div className="grid gap-6 lg:grid-cols-[1fr_0.92fr] lg:items-center lg:gap-12">
               <div className="min-w-0 max-w-3xl">
                 <div
-                  className="inline-flex items-center rounded-full border px-4 py-2 text-[13px] font-semibold sm:text-sm"
+                  className="inline-flex items-center rounded-full border px-4 py-2 text-[13px] font-semibold shadow-[0_10px_24px_rgba(212,147,90,0.10)] sm:text-sm"
                   style={{
                     backgroundColor: 'var(--amber-light)',
                     borderColor: 'rgba(212,147,90,0.28)',
@@ -218,7 +240,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <Link
                         key={suburb.name}
                         href={suburbHref(suburb.name)}
-                        className="inline-flex items-center whitespace-nowrap rounded-full border border-[#D9D8CF] bg-[var(--cream)] px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
+                        className="inline-flex items-center whitespace-nowrap rounded-full border border-[#D9D8CF] bg-white/90 px-4 py-2 text-sm font-medium text-[#485654] shadow-[0_8px_20px_rgba(31,44,39,0.04)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
                       >
                         <span>{suburb.name}</span>
                         <span className="ml-2 rounded-full bg-[var(--teal)] px-1.5 py-0.5 text-[10px] font-bold text-white">
@@ -280,15 +302,19 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               </div>
 
               <div className="min-h-[320px] lg:min-h-0">
-                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.75rem] border border-[#E8DDD0] bg-white shadow-xl sm:rounded-[2rem]">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.75rem] border border-[#E8DDD0] bg-white shadow-[0_28px_60px_rgba(31,44,39,0.14)] sm:rounded-[2rem]">
                   <Image
                     src={featuredHeroImage}
                     alt={featuredCentre?.name ?? 'ECD Centre'}
                     fill
                     className="object-cover"
                     priority
+                    unoptimized={featuredHeroImage.startsWith('data:image/svg+xml')}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#132320]/60 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,29,26,0.06)_0%,rgba(17,29,26,0.18)_38%,rgba(17,29,26,0.74)_100%)]" />
+                  <div className="absolute right-4 top-4 rounded-full border border-white/40 bg-white/18 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+                    {featuredCentre?.isClaimed ? 'CentreConnect live' : 'Preview profile'}
+                  </div>
                   
                   <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 sm:text-xs">Featured partner</p>
@@ -301,19 +327,25 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         </section>
 
         <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-[#E8DDD0] bg-white shadow-[0_32px_80px_rgba(27,40,36,0.06)]">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFF8F1_0%,#FFFDF9_54%,#F5FAF8_100%)] shadow-[0_32px_80px_rgba(27,40,36,0.08)]">
             <div className="grid lg:grid-cols-2 lg:items-stretch">
-              <div className="relative min-h-[320px] bg-[#EEF6F5] lg:min-h-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(13,148,136,0.15),transparent_70%)]" />
+              <div className="relative min-h-[320px] bg-[linear-gradient(160deg,#E8F6F2_0%,#FFF5EA_52%,#F8F1FF_100%)] lg:min-h-0">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.18),transparent_48%),radial-gradient(circle_at_bottom_right,rgba(139,111,179,0.16),transparent_36%)]" />
                 <div className="relative flex h-full flex-col items-center justify-center p-8 text-center sm:p-12">
-                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-white shadow-xl">
-                    <span className="text-3xl font-black text-[var(--teal)]">B</span>
+                  <div className="relative mb-6 h-24 w-24 overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-xl">
+                    <Image
+                      src={bajabulileHeroImage}
+                      alt={bajabulileCentre?.name ?? 'Bajabulile ECD'}
+                      fill
+                      className="object-cover"
+                      unoptimized={bajabulileHeroImage.startsWith('data:image/svg+xml')}
+                    />
                   </div>
                   <h3
                     className="text-[2rem] leading-tight text-[#1F2D29] sm:text-[2.6rem]"
                     style={{ fontFamily: 'var(--font-display)' }}
                   >
-                    Bajabulile ECD
+                    {bajabulileCentre?.name ?? 'Bajabulile ECD'}
                   </h3>
                   <p className="mt-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#7B827E]">Alexandra Pilot Partner</p>
                   
@@ -348,7 +380,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     className="h-14 rounded-2xl bg-[var(--teal)] px-8 font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A]"
                     asChild
                   >
-                    <Link href="/c/bajabulile">View Bajabulile Profile</Link>
+                    <Link href={bajabulileCentre ? centreHref(bajabulileCentre) : '/directory'}>View Bajabulile Profile</Link>
                   </Button>
                 </div>
               </div>
@@ -372,7 +404,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               {steps.map((step) => (
                 <article
                   key={step.title}
-                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)] sm:rounded-[1.7rem] sm:p-6"
+                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFF9F4_100%)] p-5 shadow-[0_12px_28px_rgba(31,44,39,0.06)] sm:rounded-[1.7rem] sm:p-6"
                 >
                   <div
                     className="flex h-12 w-12 items-center justify-center rounded-2xl"
@@ -393,7 +425,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         </section>
 
         <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E9DED1] bg-[var(--warm-white)] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.05)] sm:rounded-[2.4rem] sm:p-10">
+          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E9DED1] bg-[linear-gradient(135deg,#FFFDF9_0%,#FFF4EA_38%,#F4FBF8_100%)] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.07)] sm:rounded-[2.4rem] sm:p-10">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--amber)]">Parent answers</p>
               <h2
@@ -421,7 +453,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         </section>
 
         <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-white shadow-[0_24px_64px_rgba(31,44,39,0.06)]">
+          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_100%)] shadow-[0_24px_64px_rgba(31,44,39,0.07)]">
             <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div className="p-6 sm:p-10 lg:p-12">
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Apply prep</p>
@@ -467,7 +499,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
         {showProofBand ? (
           <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-            <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#E9DDD0] bg-[var(--warm-white)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:rounded-[2rem] sm:p-8">
+            <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-[#E9DDD0] bg-[linear-gradient(135deg,#FFFDF9_0%,#F7FCFA_44%,#FFF4E9_100%)] p-5 shadow-[0_18px_40px_rgba(31,44,39,0.07)] sm:rounded-[2rem] sm:p-8">
               <div className="max-w-2xl">
                 <h2
                   className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
@@ -489,10 +521,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   >
                     <div className="relative aspect-[16/9] w-full">
                       <Image
-                        src={getCentreHeroImage(centre.slug, centre.coverImage)}
+                        src={getLandingCentreImage(centre)}
                         alt={centre.name}
                         fill
                         className="object-cover"
+                        unoptimized={getLandingCentreImage(centre).startsWith('data:image/svg+xml')}
                       />
                     </div>
                     <div className="p-4">
@@ -600,7 +633,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
-        <section className="border-y border-[#E5D9CC] bg-white">
+        <section className="border-y border-[#E5D9CC] bg-[linear-gradient(90deg,#FFF8F1_0%,#FFFDF9_50%,#F5FBF9_100%)]">
           <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
             <p className="text-center text-sm leading-6 text-[#64716D]">
               Trusted by registered crèches in Alexandra, Marlboro, and across Johannesburg.

@@ -72,7 +72,7 @@ export default async function HomePage({
     try {
       const { data: centreRows } = await supabase
         .from('ecd_centres')
-        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude')
+        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude,owner_id,onboarding_complete,website_published')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(4)
@@ -85,6 +85,10 @@ export default async function HomePage({
           suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
           primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
           isRegistered: Boolean(centre.is_registered),
+          isClaimed:
+            (typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0) ||
+            centre.onboarding_complete === true ||
+            centre.website_published === true,
           isPilot: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
           isFeatured: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
           coverImage: centre.cover_image_url ?? null,
