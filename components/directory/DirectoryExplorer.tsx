@@ -87,9 +87,8 @@ function haversineMeters(
 function formatDistanceLabel(distanceMeters: number | null) {
   if (!distanceMeters || !Number.isFinite(distanceMeters)) return null
   const km = distanceMeters / 1000
-  const minutes = Math.max(1, Math.round((km / 30) * 60))
-  if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m · ${minutes} min away`
-  return `${km.toFixed(1)} km · ${minutes} min away`
+  if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m away`
+  return `${km.toFixed(1)} km away`
 }
 
 export default function DirectoryExplorer({
@@ -595,6 +594,7 @@ export default function DirectoryExplorer({
     </div>
   )
 }
+
 
 
 

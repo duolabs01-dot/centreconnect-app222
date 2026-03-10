@@ -12,12 +12,36 @@ const SUBURB_COORDINATES: Record<string, { lat: number; lng: number }> = {
 }
 
 const SLUG_COORDINATES: Record<string, { lat: number; lng: number }> = {
-  bajabulile: SUBURB_COORDINATES.alexandra,
-  'bajabulile-day-care-centre': SUBURB_COORDINATES.alexandra,
+  bajabulile: { lat: -26.1038, lng: 28.0916 },
+  'bajabulile-day-care-centre': { lat: -26.1038, lng: 28.0916 },
 }
 
 function normalizeKey(value: string | null | undefined) {
   return value?.trim().toLowerCase() ?? ''
+}
+
+function hashSeed(value: string) {
+  let hash = 0
+  for (const char of value) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0
+  }
+  return hash
+}
+
+function offsetFallbackCoordinate(base: { lat: number; lng: number }, seedInput: string) {
+  const seed = normalizeKey(seedInput)
+  if (!seed) return base
+
+  const hash = hashSeed(seed)
+  const radiusMeters = 180 + (hash % 1100)
+  const angle = ((hash >>> 8) % 360) * (Math.PI / 180)
+  const latOffset = (radiusMeters / 111320) * Math.cos(angle)
+  const lngOffset = (radiusMeters / (111320 * Math.cos((base.lat * Math.PI) / 180))) * Math.sin(angle)
+
+  return {
+    lat: Number((base.lat + latOffset).toFixed(6)),
+    lng: Number((base.lng + lngOffset).toFixed(6)),
+  }
 }
 
 export function toFiniteCoordinate(value: unknown): number | null {
@@ -55,18 +79,21 @@ export function resolveCentreCoordinates(input: {
 
   const suburbMatch = SUBURB_COORDINATES[normalizeKey(input.suburb)]
   if (suburbMatch) {
-    return { latitude: suburbMatch.lat, longitude: suburbMatch.lng, source: 'suburb-fallback' as const }
+    const offset = offsetFallbackCoordinate(suburbMatch, input.slug || input.address || input.suburb || input.city || '')
+    return { latitude: offset.lat, longitude: offset.lng, source: 'suburb-fallback' as const }
   }
 
   const cityMatch = SUBURB_COORDINATES[normalizeKey(input.city)]
   if (cityMatch) {
-    return { latitude: cityMatch.lat, longitude: cityMatch.lng, source: 'city-fallback' as const }
+    const offset = offsetFallbackCoordinate(cityMatch, input.slug || input.address || input.city || '')
+    return { latitude: offset.lat, longitude: offset.lng, source: 'city-fallback' as const }
   }
 
   const addressKey = normalizeKey(input.address)
   const addressMatch = Object.entries(SUBURB_COORDINATES).find(([key]) => key && addressKey.includes(key))?.[1]
   if (addressMatch) {
-    return { latitude: addressMatch.lat, longitude: addressMatch.lng, source: 'address-fallback' as const }
+    const offset = offsetFallbackCoordinate(addressMatch, input.slug || input.address || '')
+    return { latitude: offset.lat, longitude: offset.lng, source: 'address-fallback' as const }
   }
 
   return { latitude: null, longitude: null, source: 'missing' as const }

@@ -103,11 +103,10 @@ function haversine(lat1: number, lon1: number, lat2: number | null, lon2: number
 function formatDistance(meters: number) {
   if (!Number.isFinite(meters)) return null
   const km = meters / 1000
-  const minutes = Math.max(1, Math.round((km / 30) * 60))
   if (meters < 1000) {
-    return `${Math.round(meters)} m · ${minutes} min away`
+    return `${Math.round(meters)} m away`
   }
-  return `${km.toFixed(1)} km · ${minutes} min away`
+  return `${km.toFixed(1)} km away`
 }
 
 export default function ParentDiscoverClient() {
@@ -398,3 +397,4 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
+

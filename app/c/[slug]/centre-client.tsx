@@ -341,6 +341,7 @@ export function CentreClient({
   const showPrograms = visibleSectionSet.has('programs')
   const safeGalleryUrls = websiteContent.galleryUrls.filter((url) => isSafeImageUrl(url))
   const showGallery = visibleSectionSet.has('gallery') && safeGalleryUrls.length > 0
+  const galleryPreviewUrls = safeGalleryUrls.slice(0, 4)
   const showContact = visibleSectionSet.has('contact')
   const aboutCopy =
     websiteContent.aboutText.trim() ||
@@ -378,7 +379,7 @@ export function CentreClient({
           description: 'Babies, toddlers, and older children can be placed into groups that match their age and stage as the centre grows.',
         },
       ]
-  const programCards = websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms
+  const programCards = (websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms).slice(0, 2)
 
   const quickFacts = [
     { icon: Wallet, label: 'Monthly fees', value: feesLabel },
@@ -390,9 +391,8 @@ export function CentreClient({
 
   const parentHighlights = isClaimed
     ? [
-        'Apply online, track your status, and keep parent details in one profile that you can reuse at other CentreConnect centres.',
-        'Get parent updates, reminders, and report-card communication without paper getting lost in a school bag.',
-        'Use CentreConnect for safer pickup communication, cleaner records, and less admin stress when life gets busy.',
+        'Apply once, keep your documents in one secure parent profile, and reuse them when life changes.',
+        'Get updates, reminders, and safer pickup communication without chasing paper or phone calls.',
       ]
     : [
         'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
@@ -403,25 +403,6 @@ export function CentreClient({
           ? `The centre says it can care for around ${centre.capacity} children.`
           : 'Capacity is not listed yet, so asking early can help if you need a place soon.',
       ]
-
-  const parentBenefitCards = [
-    {
-      title: 'Updates to your phone',
-      description: 'Important messages, reminders, and follow-ups can reach you faster through CentreConnect.',
-    },
-    {
-      title: 'Safer pickup communication',
-      description: 'Families and centres get a clearer line for pickup changes, daily notes, and check-ins.',
-    },
-    {
-      title: 'Paperless parent profile',
-      description: 'Keep your child documents in one place and reuse them instead of starting from scratch each time.',
-    },
-    {
-      title: 'Report cards and records',
-      description: 'When a centre uses CentreConnect, it becomes easier to keep your child history, updates, and progress together.',
-    },
-  ]
 
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${centre.name}, I would like to ask if you still have space for my child.` },
@@ -492,7 +473,7 @@ export function CentreClient({
 
               <p className="mt-4 text-sm leading-7 text-[#5F6C68] sm:text-base">
                 {isClaimed
-                  ? 'This centre is on CentreConnect, which means parents can apply faster, keep documents in one secure profile, and get updates without chasing paper or waiting for phone calls.'
+                  ? 'This centre is on CentreConnect, so family admin feels lighter: fewer surprises, less paper, and one calmer place to manage updates for your child.'
                   : 'Parents want three things quickly here: what the fees look like, which ages are welcome, and whether this centre feels trusted. This page keeps those answers simple.'}
               </p>
 
@@ -533,40 +514,9 @@ export function CentreClient({
           </div>
         </section>
 
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {quickFacts.map((fact) => (
-            <QuickFact key={fact.label} icon={fact.icon} label={fact.label} value={fact.value} />
-          ))}
-        </section>
-
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_22rem] lg:items-start">
           <div className="space-y-6">
-            {isClaimed ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
-                <SectionHeading
-                  eyebrow="Why parents choose this centre on CentreConnect"
-                  title="A simpler, safer parent experience"
-                  description="This is where the centre and CentreConnect work together: less admin stress for you, clearer communication, and faster action when your child needs something."
-                />
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {parentBenefitCards.map((item, index) => {
-                    const Icon = parentBenefitIcons[index % parentBenefitIcons.length]
-                    return (
-                      <div key={item.title} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                          {item.title}
-                        </h3>
-                        <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{item.description}</p>
-                      </div>
-                    )
-                  })}
-                </div>
-              </section>
-            ) : null}
-            {showAbout ? (
+            {showAbout && !isClaimed ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger centre profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
                 <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[#4E5D59] sm:text-base">{aboutCopy}</p>
@@ -604,16 +554,16 @@ export function CentreClient({
 
             {showGallery ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
-                <SectionHeading eyebrow="Photos" title="A better look around" description="Parents can scan the space quickly before they decide whether to message or apply." />
+                <SectionHeading eyebrow="Photos" title="Photos parents can scan quickly" description="A short visual look at the space before you decide whether to apply or send a question." />
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {safeGalleryUrls.slice(0, 12).map((url, index) => (
+                  {galleryPreviewUrls.map((url, index) => (
                     <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.6rem] border border-[#E7DDD1] bg-white">
                       <Image
                         src={url}
                         alt={`${centre.name} gallery image ${index + 1}`}
                         width={420}
                         height={320}
-                        className="h-40 w-full object-cover sm:h-48"
+                        className="h-32 w-full object-cover sm:h-40"
                         unoptimized
                       />
                     </div>
@@ -626,7 +576,7 @@ export function CentreClient({
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
-                description={isClaimed ? 'Parents often decide faster when they can see the class setup, age grouping, and whether aftercare is available.' : 'A simple look at the class setup before you contact the centre.'}
+                description={isClaimed ? 'The essentials parents usually want here are age fit, class setup, and whether collection needs to happen straight after the school day.' : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
@@ -637,7 +587,7 @@ export function CentreClient({
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">The class names below help parents understand where their child will fit before they enquire or apply.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">A quick summary so parents can picture where their child may fit.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -650,7 +600,7 @@ export function CentreClient({
                   </div>
                 )) : (
                   <div className="rounded-[1.5rem] border border-dashed border-[#D7CEC2] bg-[#FFFCF7] p-5 text-sm leading-6 text-[#5F6C68] sm:col-span-3">
-                    The centre has not listed classes yet. Use the quick question button to ask where your child would fit best.
+                    Classes are not listed yet. Use the quick question button if you want the centre to guide you quickly.
                   </div>
                 )}
               </div>
@@ -658,7 +608,7 @@ export function CentreClient({
 
             {showContact ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
-                <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'If you are nearly ready, use these details to ask a final question, book a visit, or start the application.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
+                <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'The final details most parents want before they apply.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <InfoRow icon={MapPin} label="Address" value={fallbackAddressLabel} />
                   <InfoRow
