@@ -59,6 +59,26 @@ const FEE_OPTIONS = [
   { label: 'Under R2000', value: '2000' },
 ]
 
+function haversineMeters(userLocation: [number, number], centre: { latitude: number | null; longitude: number | null }) {
+  if (centre.latitude == null || centre.longitude == null) return null
+
+  const toRad = (value: number) => (value * Math.PI) / 180
+  const [userLng, userLat] = userLocation
+  const dLat = toRad(centre.latitude - userLat)
+  const dLon = toRad(centre.longitude - userLng)
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(userLat)) * Math.cos(toRad(centre.latitude)) * Math.sin(dLon / 2) ** 2
+  return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDistanceLabel(distanceMeters: number | null) {
+  if (!distanceMeters || !Number.isFinite(distanceMeters)) return null
+  const km = distanceMeters / 1000
+  const minutes = Math.max(1, Math.round((km / 30) * 60))
+  return `${km.toFixed(1)} km · ${minutes} min away`
+}
+
 export default function DirectoryExplorer({
   initialCentres,
   totalResults: initialTotal,
@@ -443,9 +463,9 @@ export default function DirectoryExplorer({
                       isFeatured={centre.is_featured}
                       capacity={centre.capacity ?? undefined}
                       age_groups={centre.age_groups ?? []}
-                      tagline={centre.tagline ?? undefined}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
+                      distanceLabel={userLocation ? formatDistanceLabel(haversineMeters(userLocation, centre)) ?? undefined : undefined}
                       viewerRole={viewerRole}
                     />
                   </motion.div>

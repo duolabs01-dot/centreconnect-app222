@@ -94,10 +94,12 @@ function haversine(lat1: number, lon1: number, lat2: number | null, lon2: number
 
 function formatDistance(meters: number) {
   if (!Number.isFinite(meters)) return null
+  const km = meters / 1000
+  const minutes = Math.max(1, Math.round((km / 30) * 60))
   if (meters < 1000) {
-    return `${Math.round(meters)} m away`
+    return `${Math.round(meters)} m · ${minutes} min away`
   }
-  return `${(meters / 1000).toFixed(1)} km away`
+  return `${km.toFixed(1)} km · ${minutes} min away`
 }
 
 export default function ParentDiscoverClient() {
@@ -280,7 +282,7 @@ export default function ParentDiscoverClient() {
                     <span>{centre.distanceLabel}</span>
                   </div>
                   <p className="mt-2 text-lg font-semibold text-slate-900">{centre.name}</p>
-                  <p className="text-xs uppercase tracking-[0.4em] text-slate-500">{centre.tagline ?? 'Trusted daily routine'}</p>
+                  <p className="text-xs uppercase tracking-[0.4em] text-slate-500">{centre.distanceLabel ?? 'Trusted daily routine'}</p>
                 </div>
               ))}
             </div>

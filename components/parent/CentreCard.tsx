@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Baby, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { Baby, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -13,12 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
-import {
-  getOperatingScheduleSummary,
-  readOperatingHoursSummaryFromSettings,
-  readOperatingScheduleFromSettings,
-  type CentreOperatingSchedule,
-} from '@/lib/time/centre-operating-schedule'
+import { type CentreOperatingSchedule } from '@/lib/time/centre-operating-schedule'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact' | null | undefined
@@ -42,7 +37,7 @@ interface CentreCardProps {
   monthly_fee_min?: number | null
   monthly_fee_max?: number | null
   age_groups: string[]
-  tagline?: string
+  tagline?: string | null
   capacity?: number
   subsidy_accepted?: boolean
   registration_fee?: number | null
@@ -105,18 +100,12 @@ function buildCentreWhatsappHref({
   contactWhatsapp,
   contactPhone,
   phone,
-  operating_schedule,
-  operating_hours_summary,
-  communication_automation_settings,
 }: {
   centreName: string
   centrePath: string
   contactWhatsapp?: string | null
   contactPhone?: string | null
   phone?: string | null
-  operating_schedule?: CentreOperatingSchedule | null
-  operating_hours_summary?: string | null
-  communication_automation_settings?: unknown
 }) {
   const rawPhone = [contactWhatsapp, contactPhone, phone].find((value) => typeof value === 'string' && value.trim().length > 0)
   if (!rawPhone) return null
@@ -135,7 +124,7 @@ function buildCentreWhatsappHref({
   return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`
 }
 
-function CentreFact({
+function CompactMetaItem({
   icon: Icon,
   label,
   value,
@@ -145,14 +134,14 @@ function CentreFact({
   value: string
 }) {
   return (
-    <div className="rounded-[1.2rem] border border-[#E7DDD1] bg-[#FFFCF7] p-3 shadow-[0_8px_18px_rgba(31,44,39,0.03)]">
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
-          <Icon className="h-4 w-4" />
+    <div className="min-w-0 rounded-[1.05rem] border border-[#E7DDD1] bg-[#FFFCF7] px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-[#FDF0E6] text-[#D4935A]">
+          <Icon className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{label}</p>
-          <p className="mt-1 text-sm font-semibold leading-5 text-[#22312E]">{value}</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">{label}</p>
+          <p className="truncate text-[13px] font-semibold leading-5 text-[#22312E]">{value}</p>
         </div>
       </div>
     </div>
@@ -167,20 +156,16 @@ export function CentreCard({
   suburb,
   city,
   address,
+  distanceLabel,
   contact_whatsapp,
   contact_phone,
   phone,
-  operating_schedule,
-  operating_hours_summary,
-  communication_automation_settings,
   feesLabel,
   fees_display_mode,
   monthly_fee_min,
   monthly_fee_max,
   age_groups,
-  tagline,
   subsidy_accepted = false,
-  registration_fee,
   existingApplicationId,
   existingApplicationStatus,
   is_claimed = true,
@@ -208,9 +193,6 @@ export function CentreCard({
         contactWhatsapp: contact_whatsapp,
         contactPhone: contact_phone,
         phone,
-  operating_schedule,
-  operating_hours_summary,
-  communication_automation_settings,
       })
     : null
 
@@ -222,24 +204,6 @@ export function CentreCard({
   const previewImageSrc = buildCentrePreviewImage({ name, suburb, isClaimed: is_claimed })
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
-  const savedOperatingSchedule =
-    operating_schedule ??
-    readOperatingScheduleFromSettings(communication_automation_settings) ??
-    null
-  const hoursSummary =
-    operating_hours_summary ??
-    readOperatingHoursSummaryFromSettings(communication_automation_settings) ??
-    getOperatingScheduleSummary(savedOperatingSchedule)
-  const registrationSummary = typeof registration_fee === 'number' && Number.isFinite(registration_fee)
-    ? `R${registration_fee} once-off`
-    : null
-  const trustSummary = isVerifiedForParents
-    ? subsidy_accepted
-      ? 'Verified and subsidy friendly'
-      : 'Verified by CentreConnect'
-    : is_claimed
-      ? 'Live profile, photos pending'
-      : 'Not yet live on CentreConnect'
   const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
 
   const handleApply = () => {
@@ -262,11 +226,19 @@ export function CentreCard({
     router.push(`/apply/${identifier}`)
   }
 
-  const resolvedLogoUrl = logo_url 
-    ? logo_url 
+  const resolvedLogoUrl = logo_url
+    ? logo_url
     : (slug === 'bajabulile' || slug === 'bajabulile-day-care-centre')
       ? '/centres/bajabulile/logo.jpg'
       : null
+
+  const compactMeta = [
+    { key: 'fees', icon: Wallet, label: 'Fees', value: feeSummary },
+    { key: 'ages', icon: Baby, label: 'Ages', value: ageSummary },
+    ...(distanceLabel?.trim()
+      ? [{ key: 'distance', icon: MapPin, label: 'Distance', value: distanceLabel.trim() }]
+      : []),
+  ]
 
   return (
     <motion.div
@@ -276,16 +248,18 @@ export function CentreCard({
       transition={{ duration: 0.28 }}
       className="group h-full"
     >
-      <Card className={cn(
-        "relative flex h-full flex-col overflow-hidden rounded-[2rem] border bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]",
-        isFeatured ? "border-amber-400 ring-1 ring-amber-400/20" : "border-[#E8DDD0]"
-      )}>
-        <div className="absolute left-4 top-4 z-20">
+      <Card
+        className={cn(
+          'relative flex h-full flex-col overflow-hidden rounded-[2rem] border bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]',
+          isFeatured ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-[#E8DDD0]'
+        )}
+      >
+        <div className="absolute right-4 top-4 z-20">
           <SaveCentreButton centreId={id} initialSaved={isSaved} />
         </div>
 
         <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
-          <div className="relative aspect-[16/11] overflow-hidden">
+          <div className="relative aspect-[16/7] overflow-hidden bg-[#F4ECE2]">
             <Image
               src={heroImageSrc}
               alt={usesPreviewImage ? `${name} preview image` : name}
@@ -294,88 +268,78 @@ export function CentreCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               unoptimized={usesPreviewImage}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#132320]/80 via-[#132320]/24 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-              <div className="flex items-end gap-3">
-                {resolvedLogoUrl ? (
-                  <div className="h-14 w-14 overflow-hidden rounded-2xl border-2 border-white/90 bg-white shadow-xl">
-                    <Image
-                      src={resolvedLogoUrl}
-                      alt={`${name} logo`}
-                      width={56}
-                      height={56}
-                      className="h-full w-full object-cover"
-                      sizes="56px"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-white/90 bg-[#F5EFE6] text-lg font-black text-[#0D9488] shadow-xl">
-                    {name.charAt(0)}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1 text-white">
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-white/60 bg-[#FFF8DA] text-[#6C4700]" /> : null}
-                    {isFeatured ? (
-                      <Badge className="flex items-center gap-1 border-amber-300/50 bg-amber-500/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-lg backdrop-blur-sm">
-                        <ShieldCheck className="h-3 w-3" />
-                        Recommended Partner
-                      </Badge>
-                    ) : isPilot ? (
-                      <Badge className="border border-cyan-400/50 bg-cyan-900/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
-                        Pilot Partner
-                      </Badge>
-                    ) : null}
-                    {!is_claimed ? (
-                      <Badge className="border border-white/30 bg-[#B45309]/80 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
-                        Not yet on CentreConnect
-                      </Badge>
-                    ) : usesPreviewImage ? (
-                      <Badge className="border border-white/30 bg-white/15 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-none backdrop-blur-sm">
-                        Preview image
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <h3 className="mt-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-white" style={{ fontFamily: 'var(--font-display)' }}>
-                    {name}
-                  </h3>
-                  <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {locationSummary}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <CardContent className="flex flex-1 flex-col space-y-4 p-5">
-            {tagline ? <p className="line-clamp-2 text-sm font-medium leading-6 text-[#5F6C68]">{tagline}</p> : null}
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <CentreFact icon={Wallet} label="Fees" value={feeSummary} />
-              <CentreFact icon={Baby} label="Ages" value={ageSummary} />
-              <CentreFact icon={ShieldCheck} label="Trust" value={trustSummary} />
-              <CentreFact icon={Clock3} label="Hours" value={hoursSummary} />
+          <CardContent className="flex flex-1 flex-col space-y-3 px-4 pb-4 pt-0">
+            <div className="relative -mt-6 flex items-end gap-3">
+              {resolvedLogoUrl ? (
+                <div className="h-14 w-14 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                  <Image
+                    src={resolvedLogoUrl}
+                    alt={`${name} logo`}
+                    width={56}
+                    height={56}
+                    className="h-full w-full object-cover"
+                    sizes="56px"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border-[3px] border-white bg-[#F5EFE6] text-lg font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                  {name.charAt(0)}
+                </div>
+              )}
+              <div className="min-w-0 flex-1 pb-1">
+                <h3
+                  className="truncate text-[1.1rem] font-bold leading-tight tracking-[-0.02em] text-[#22312E]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {name}
+                </h3>
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#7B827E]">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span className="truncate">{locationSummary}</span>
+                </p>
+              </div>
             </div>
 
-            <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">
-                {usesPreviewImage ? 'Photo status' : 'Before you open'}
-              </p>
-              <p className="mt-1 text-sm font-semibold text-[#22312E]">
-                {usesPreviewImage
-                  ? is_claimed
-                    ? 'This centre is live on CentreConnect, but the hero image is still a preview until they upload real photos.'
-                    : 'This centre has not joined CentreConnect yet, so the image is only a preview and contact happens directly.'
-                  : 'Tap for photos, curriculum, CentreConnect benefits, and application steps.'}
-              </p>
+            <div className="flex flex-wrap gap-1.5">
+              {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+              {isFeatured ? (
+                <Badge className="flex items-center gap-1 border-amber-300/60 bg-amber-500 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white shadow-none">
+                  <ShieldCheck className="h-3 w-3" />
+                  Recommended
+                </Badge>
+              ) : isPilot ? (
+                <Badge className="border border-cyan-300/70 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
+                  Pilot Partner
+                </Badge>
+              ) : null}
+              {subsidy_accepted ? (
+                <Badge className="border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-700 shadow-none">
+                  Subsidy friendly
+                </Badge>
+              ) : null}
+              {!is_claimed ? (
+                <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9A5A10] shadow-none">
+                  Not yet on CentreConnect
+                </Badge>
+              ) : usesPreviewImage ? (
+                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
+                  Preview image
+                </Badge>
+              ) : null}
+            </div>
+
+            <div className={cn('grid gap-2', compactMeta.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+              {compactMeta.map((item) => (
+                <CompactMetaItem key={item.key} icon={item.icon} label={item.label} value={item.value} />
+              ))}
             </div>
           </CardContent>
         </Link>
 
-        <CardFooter className="flex flex-col items-stretch gap-3 border-t border-[#E8DDD0] p-5 pt-4">
+        <CardFooter className="flex flex-col items-stretch gap-3 border-t border-[#E8DDD0] px-4 pb-4 pt-3">
           {is_claimed ? (
             <Button
               type="button"
@@ -418,14 +382,7 @@ export function CentreCard({
                 </p>
               )}
             </>
-          ) : (
-            <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
-              <p className="text-sm font-semibold text-[#22312E]">Apply online, ask on WhatsApp, or send a quick question.</p>
-              <p className="mt-1 text-xs leading-5 text-[#6A7672]">
-                {registrationSummary ? `Registration fee ${registrationSummary}. ` : ''}Open the profile for the full CentreConnect parent benefits, curriculum, and direct contact options.
-              </p>
-            </div>
-          )}
+          ) : null}
         </CardFooter>
       </Card>
     </motion.div>
