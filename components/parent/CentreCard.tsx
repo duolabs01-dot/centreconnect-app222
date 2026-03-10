@@ -291,7 +291,7 @@ export function CentreCard({
               )}
               <div className="min-w-0 flex-1 pb-1">
                 <h3
-                  className="truncate text-[1.1rem] font-bold leading-tight tracking-[-0.02em] text-[#22312E]"
+                  className="line-clamp-2 text-[1.05rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E] sm:text-[1.1rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {name}
@@ -306,7 +306,7 @@ export function CentreCard({
             <div className="flex flex-wrap gap-1.5">
               {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
               {isFeatured ? (
-                <Badge className="flex items-center gap-1 border-amber-300/60 bg-amber-500 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-white shadow-none">
+                <Badge className="flex items-center gap-1 border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-700 shadow-none">
                   <ShieldCheck className="h-3 w-3" />
                   Recommended
                 </Badge>
@@ -341,13 +341,21 @@ export function CentreCard({
 
         <CardFooter className="flex flex-col items-stretch gap-3 border-t border-[#E8DDD0] px-4 pb-4 pt-3">
           {is_claimed ? (
-            <Button
-              type="button"
-              onClick={handleApply}
-              className="h-12 rounded-2xl bg-[#0D9488] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
-            >
-              {primaryLabel}
-            </Button>
+            <>
+              <Button
+                type="button"
+                onClick={handleApply}
+                className="h-12 rounded-2xl bg-[#0D9488] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
+              >
+                {primaryLabel}
+              </Button>
+              <Link
+                href={detailHref}
+                className="text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
+              >
+                View details
+              </Link>
+            </>
           ) : null}
 
           {!is_claimed ? (
