@@ -22,11 +22,7 @@ export function PublicShell({ children }: PublicShellProps) {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[#EADFD2] bg-[#FFFDF9]/92 shadow-[0_6px_20px_rgba(34,49,46,0.06)] backdrop-blur-2xl">
         <Container className="flex min-h-[68px] items-center justify-between gap-3 py-2 sm:min-h-[72px] sm:py-3">
           <div className="flex items-center gap-3">
-            <BrandMark href="/" compact hideLabelOnMobile hideLabel className="shrink-0" />
-            <span className="flex items-center text-sm font-semibold text-slate-900">
-              <span>CentreConnect</span>
-              <span className="ml-2 hidden h-2 w-2 rounded-full bg-teal-500 sm:inline-block" aria-hidden />
-            </span>
+            <BrandMark href="/" compact className="shrink-0" />
           </div>
 
           <nav className="hidden items-center gap-8 md:flex">

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
+import { getLocationReference } from '@/lib/geo/centre-location'
 import type { DirectoryCentre } from '@/types/directory-centre'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import {
@@ -76,6 +77,7 @@ function formatDistanceLabel(distanceMeters: number | null) {
   if (!distanceMeters || !Number.isFinite(distanceMeters)) return null
   const km = distanceMeters / 1000
   const minutes = Math.max(1, Math.round((km / 30) * 60))
+  if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m · ${minutes} min away`
   return `${km.toFixed(1)} km · ${minutes} min away`
 }
 
@@ -109,6 +111,13 @@ export default function DirectoryExplorer({
 
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'idle' | 'pending' | 'granted' | 'denied'>('idle')
+
+  useEffect(() => {
+    if (userLocation || geoStatus === 'granted') return
+
+    const areaSuburb = selectedSuburb || initialFilters.suburb || centres[0]?.suburb || 'Alexandra'
+    setUserLocation(getLocationReference({ suburb: areaSuburb, city: centres[0]?.city }))
+  }, [centres, geoStatus, initialFilters.suburb, selectedSuburb, userLocation])
 
   useEffect(() => {
     setVisible(!isFilterSheetOpen)
@@ -416,7 +425,7 @@ export default function DirectoryExplorer({
               </Button>
             </div>
             <DirectoryMap
-              centresWithLocation={centres.filter((centre) => centre.latitude && centre.longitude)}
+              centresWithLocation={centres.filter((centre) => centre.latitude != null && centre.longitude != null)}
               userLocation={userLocation}
               locationHint={geoStatus === 'granted' ? '' : 'Allow location for better results'}
               showMap={true}
@@ -465,7 +474,7 @@ export default function DirectoryExplorer({
                       age_groups={centre.age_groups ?? []}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
-                      distanceLabel={userLocation ? formatDistanceLabel(haversineMeters(userLocation, centre)) ?? undefined : undefined}
+                      distanceLabel={formatDistanceLabel(haversineMeters(userLocation ?? getLocationReference({ suburb: centre.suburb, city: centre.city }), centre)) ?? undefined}
                       viewerRole={viewerRole}
                     />
                   </motion.div>

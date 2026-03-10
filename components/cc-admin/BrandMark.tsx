@@ -31,8 +31,9 @@ export function BrandMark({
         priority
         sizes="(max-width: 768px) 56px, (max-width: 1200px) 72px, 72px"
       />
-      <span className={cn('font-semibold text-white', compact ? 'text-lg' : 'text-2xl', hideLabelOnMobile && 'hidden sm:inline')}>
-        {label}
+      <span className={cn('inline-flex items-center font-semibold text-white', compact ? 'text-lg' : 'text-2xl', hideLabelOnMobile && 'hidden sm:inline')}>
+        <span>{label}</span>
+        <span className="ml-0.5 inline-block h-2 w-2 rounded-full bg-cyan-400" aria-hidden />
       </span>
     </Link>
   )

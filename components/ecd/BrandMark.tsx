@@ -36,12 +36,13 @@ export function BrandMark({
       />
       <span
         className={cn(
-          'font-semibold text-foreground',
+          'inline-flex items-center font-semibold text-foreground',
           compact ? 'text-lg' : 'text-2xl',
           hideLabel ? 'sr-only' : hideLabelOnMobile ? 'hidden sm:inline' : ''
         )}
       >
-        {label}
+        <span>{label}</span>
+        <span className="ml-0.5 inline-block h-2 w-2 rounded-full bg-cyan-500" aria-hidden />
       </span>
     </Link>
   )

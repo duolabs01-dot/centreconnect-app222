@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
+import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { createClient } from '@/lib/supabase/client'
 
 type DiscoverCentre = {
@@ -125,26 +126,36 @@ export default function ParentDiscoverClient() {
       if (!mounted) return
 
       if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((centre) => ({
-            id: centre.id,
-            slug: centre.slug ?? undefined,
-            name: centre.name ?? 'ECD centre',
-            tagline: centre.tagline ?? undefined,
-            city: centre.city ?? undefined,
-            suburb: centre.suburb ?? undefined,
-            cover_image_url: centre.cover_image_url ?? undefined,
-            logo_url: centre.logo_url ?? undefined,
-            feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
-            age_groups: toAgeGroups(centre.age_group_pricing),
-            rating: 4.8,
-            latitude: typeof centre.latitude === 'number' ? centre.latitude : centre.latitude ? Number(centre.latitude) : null,
-            longitude: typeof centre.longitude === 'number' ? centre.longitude : centre.longitude ? Number(centre.longitude) : null,
-            contact_whatsapp: centre.contact_whatsapp ?? null,
-            contact_phone: centre.contact_phone ?? null,
-            phone: centre.phone ?? null,
-            is_claimed: Boolean(centre.is_claimed),
-            is_registered: Boolean(centre.is_registered),
-          })) as DiscoverCentre[]
+          const mapped = data.map((centre) => {
+            const resolvedCoordinates = resolveCentreCoordinates({
+              latitude: centre.latitude,
+              longitude: centre.longitude,
+              slug: centre.slug ?? null,
+              suburb: centre.suburb ?? null,
+              city: centre.city ?? null,
+            })
+
+            return {
+              id: centre.id,
+              slug: centre.slug ?? undefined,
+              name: centre.name ?? 'ECD centre',
+              tagline: centre.tagline ?? undefined,
+              city: centre.city ?? undefined,
+              suburb: centre.suburb ?? undefined,
+              cover_image_url: centre.cover_image_url ?? undefined,
+              logo_url: centre.logo_url ?? undefined,
+              feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
+              age_groups: toAgeGroups(centre.age_group_pricing),
+              rating: 4.8,
+              latitude: resolvedCoordinates.latitude,
+              longitude: resolvedCoordinates.longitude,
+              contact_whatsapp: centre.contact_whatsapp ?? null,
+              contact_phone: centre.contact_phone ?? null,
+              phone: centre.phone ?? null,
+              is_claimed: Boolean(centre.is_claimed),
+              is_registered: Boolean(centre.is_registered),
+            }
+          }) as DiscoverCentre[]
         setCentres(mapped)
       } else {
         setCentres(FALLBACK_CENTRES)
@@ -158,6 +169,12 @@ export default function ParentDiscoverClient() {
       mounted = false
     }
   }, [supabase])
+
+  useEffect(() => {
+    if (locationMode === 'device') return
+    const [lng, lat] = getLocationReference({ suburb: selectedSuburb || centres[0]?.suburb || 'Alexandra', city: centres[0]?.city })
+    setLocation({ lat, lng })
+  }, [centres, locationMode, selectedSuburb])
 
   useEffect(() => {
     if (!navigator.geolocation) return

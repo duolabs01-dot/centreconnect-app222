@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
+import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
 
 type QueryParams = {
   search?: string
@@ -21,23 +22,13 @@ type CentreGeoRow = {
   longitude: number | string | null
   onboarding_complete: boolean | null
   owner_id: string | null
+  address: string | null
 }
 
 type CentreApplicationRow = {
   id: string
   ecd_id: string
   status: string | null
-}
-
-function toFiniteNumber(value: unknown): number | null {
-  if (typeof value === 'number') {
-    return Number.isFinite(value) ? value : null
-  }
-  if (typeof value === 'string' && value.trim() !== '') {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-  return null
 }
 
 export async function GET(req: Request) {
@@ -156,13 +147,14 @@ export async function GET(req: Request) {
       longitude: number | string | null
       onboarding_complete: boolean | null
       owner_id: string | null
+      address: string | null
     }
   >()
 
   if (centreIds.length > 0) {
     const { data: geoRows } = await supabase
       .from('ecd_centres')
-      .select('id,latitude,longitude,onboarding_complete,owner_id')
+      .select('id,latitude,longitude,onboarding_complete,owner_id,address')
       .in('id', centreIds)
 
       ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
@@ -171,6 +163,7 @@ export async function GET(req: Request) {
           longitude: row.longitude,
           onboarding_complete: row.onboarding_complete,
           owner_id: row.owner_id,
+          address: row.address,
         })
       })
   }
@@ -206,8 +199,14 @@ export async function GET(req: Request) {
         is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
         is_pilot: isPilotCentreIdentity(centre),
         is_featured: isPilotCentreIdentity(centre),
-        latitude: toFiniteNumber(geoById.get(centre.id as string)?.latitude),
-        longitude: toFiniteNumber(geoById.get(centre.id as string)?.longitude),
+        ...resolveCentreCoordinates({
+          latitude: geoById.get(centre.id as string)?.latitude,
+          longitude: geoById.get(centre.id as string)?.longitude,
+          slug: safeSlug,
+          suburb: (centre.suburb as string | null | undefined) ?? null,
+          city: (centre.city as string | null | undefined) ?? null,
+          address: geoById.get(centre.id as string)?.address ?? null,
+        }),
         existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
         existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
       },
