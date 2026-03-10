@@ -80,9 +80,12 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     monthly_fee_min: centre.monthly_fee_min,
     monthly_fee_max: centre.monthly_fee_max,
     subsidy_accepted: Boolean(centre.subsidy_accepted),
+    registration_fee: centre.registration_fee ?? null,
     is_claimed: Boolean(centre.is_claimed),
     is_pilot: isPilotCentreIdentity({ name: centre.name, slug: safeSlug }),
     is_featured: isPilotCentreIdentity({ name: centre.name, slug: safeSlug }),
+    operating_schedule: centre.operating_schedule ?? null,
+    operating_hours_summary: centre.operating_hours_summary ?? null,
     latitude,
     longitude,
     contact_whatsapp: centre.contact_whatsapp ?? null,
@@ -132,7 +135,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     let centresQuery = supabase
       .from('public_ecd_centres')
       .select(
-        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone'
+        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
       )
       .order('is_registered', { ascending: false })
       .order('name', { ascending: true })

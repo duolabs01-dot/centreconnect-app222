@@ -1,3 +1,5 @@
+import type { CentreOperatingSchedule } from '@/lib/time/centre-operating-schedule'
+
 export type DirectoryCentre = {
   id: string
   slug: string
@@ -13,10 +15,13 @@ export type DirectoryCentre = {
   fees_display_mode: 'exact' | 'range' | 'contact' | null
   monthly_fee_min: number | null
   monthly_fee_max: number | null
+  registration_fee?: number | null
   subsidy_accepted: boolean
   is_claimed: boolean
   is_pilot?: boolean
   is_featured?: boolean
+  operating_schedule?: CentreOperatingSchedule | null
+  operating_hours_summary?: string | null
   latitude: number | null
   longitude: number | null
   contact_whatsapp?: string | null

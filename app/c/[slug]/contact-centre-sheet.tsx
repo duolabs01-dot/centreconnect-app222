@@ -6,12 +6,18 @@ import { MessageCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
+type ContactTemplate = {
+  label: string
+  message: string
+}
+
 type ContactCentreSheetProps = {
   centreId: string
   centreName: string
+  templates?: ContactTemplate[]
 }
 
-export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetProps) {
+export function ContactCentreSheet({ centreId, centreName, templates = [] }: ContactCentreSheetProps) {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -45,7 +51,7 @@ export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetP
     return (
       <Button onClick={() => setOpen(true)} variant="outline" className="gap-2">
         <MessageCircle className="h-4 w-4" />
-        Message Centre
+        Send a quick question
       </Button>
     )
   }
@@ -73,18 +79,32 @@ export function ContactCentreSheet({ centreId, centreName }: ContactCentreSheetP
             </Button>
           </div>
           <p className="text-sm text-slate-600">
-            Your message will be sent to the centre. You can view it in your Inbox.
+            Pick a quick parent question below or write your own. Your message will be sent to the centre inbox and saved in CentreConnect.
           </p>
+          {templates.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {templates.map((template) => (
+                <button
+                  key={template.label}
+                  type="button"
+                  onClick={() => setMessage(template.message)}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-cyan-500 hover:text-cyan-700"
+                >
+                  {template.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={`Hi ${centreName}, I'm interested in enrolling my child...`}
+            placeholder={`Hi ${centreName}, I would like to ask about enrolling my child.`}
             className="cc-native-field min-h-[120px] w-full rounded-2xl p-3 text-sm"
             autoFocus
           />
           <div className="flex gap-2">
             <Button onClick={handleSend} disabled={isPending || !message.trim()} className="h-11 flex-1 rounded-2xl">
-              {isPending ? 'Sending...' : 'Send Message'}
+              {isPending ? 'Sending...' : 'Send question'}
             </Button>
             <Button variant="outline" onClick={() => setOpen(false)} className="h-11 rounded-2xl">
               Cancel

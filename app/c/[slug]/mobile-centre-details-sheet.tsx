@@ -19,6 +19,7 @@ type MobileCentreDetailsSheetProps = {
   tagline?: string | null
   locationLabel: string
   feesLabel: string
+  registrationFeeLabel: string
   ageGroupsLabel: string
   capacityLabel: string
   trustLabel: string
@@ -33,6 +34,7 @@ type MobileCentreDetailsSheetProps = {
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
   whatsappHref?: string | null
+  inquiryTemplates?: Array<{ label: string; message: string }>
 }
 
 function DetailFact({
@@ -66,6 +68,7 @@ export function MobileCentreDetailsSheet({
   tagline,
   locationLabel,
   feesLabel,
+  registrationFeeLabel,
   ageGroupsLabel,
   capacityLabel,
   trustLabel,
@@ -80,6 +83,7 @@ export function MobileCentreDetailsSheet({
   existingApplicationId,
   existingApplicationStatus,
   whatsappHref = null,
+  inquiryTemplates = [],
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
   const [dragY, setDragY] = useState(0)
@@ -152,7 +156,7 @@ export function MobileCentreDetailsSheet({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {isRegistered ? <PremiumVerifiedBadge compact label="Verified ECD" /> : null}
+                  {isRegistered ? <PremiumVerifiedBadge compact /> : null}
                   {showPilotTrustInfo ? (
                     <Badge className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-3 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
                       Pilot Partner
@@ -160,7 +164,7 @@ export function MobileCentreDetailsSheet({
                   ) : null}
                   {!isClaimed ? (
                     <Badge className="rounded-full border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
-                      Public listing
+                      Not yet on CentreConnect
                     </Badge>
                   ) : null}
                 </div>
@@ -173,15 +177,15 @@ export function MobileCentreDetailsSheet({
 
               <div className="grid grid-cols-2 gap-2.5">
                 <DetailFact icon={Wallet} label="Fees" value={feesLabel} />
+                <DetailFact icon={Wallet} label="Registration" value={registrationFeeLabel} />
                 <DetailFact icon={Baby} label="Ages" value={ageGroupsLabel} />
                 <DetailFact icon={ShieldCheck} label="Trust" value={trustLabel} />
-                <DetailFact icon={Clock3} label="Good to know" value={capacityLabel} />
               </div>
 
               <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-[#FAF8F4] p-4">
                 <p className={`flex items-center gap-2 text-sm font-semibold ${isOnline ? 'text-emerald-700' : 'text-[#7B827E]'}`}>
                   <Circle size={10} fill="currentColor" strokeWidth={0} />
-                  {isOnline ? 'Open now' : 'Open during the day'}
+                  {isOnline ? 'Open now' : 'Closed now'}
                 </p>
                 <p className="mt-1 text-sm font-medium text-[#5F6C68]">{schedule}</p>
                 <p className="mt-3 text-xs font-medium text-[#6A7672]">
@@ -226,6 +230,9 @@ export function MobileCentreDetailsSheet({
                   userRole={userRole}
                   existingApplicationId={existingApplicationId ?? null}
                   existingApplicationStatus={existingApplicationStatus ?? null}
+                  existingHelperText={isClaimed ? 'CentreConnect keeps your application and messages in one place.' : null}
+                  existingFollowUpHref={whatsappHref}
+                  existingFollowUpLabel={whatsappHref ? 'Send follow-up on WhatsApp' : null}
                   isAvailable={isClaimed}
                   unavailableLabel="Online applications not available yet"
                   helperText={
@@ -237,11 +244,16 @@ export function MobileCentreDetailsSheet({
                   fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                 />
                 <div className="grid grid-cols-2 gap-3">
-                  <ContactCentreSheet centreId={centreId} centreName={centreName} />
+                  <ContactCentreSheet centreId={centreId} centreName={centreName} templates={inquiryTemplates} />
                   <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white px-2">
                     <SaveCentreButton centreId={centreId} initialSaved={false} />
                   </div>
                 </div>
+                {isClaimed && whatsappHref ? (
+                  <Link href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-[#25D366]/30 bg-[#25D366]/10 text-sm font-semibold text-[#147A37]">
+                    Ask on WhatsApp
+                  </Link>
+                ) : null}
               </div>
 
               <Button

@@ -7,12 +7,18 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
+type ContactTemplate = {
+  label: string
+  message: string
+}
+
 type CentreContactCardProps = {
   centreId: string
   centreName: string
+  templates?: ContactTemplate[]
 }
 
-export function CentreContactCard({ centreId, centreName }: CentreContactCardProps) {
+export function CentreContactCard({ centreId, centreName, templates = [] }: CentreContactCardProps) {
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -52,10 +58,24 @@ export function CentreContactCard({ centreId, centreName }: CentreContactCardPro
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/95 p-5 shadow-[var(--shadow-elevation-3)]">
-      <p className="text-base font-bold text-slate-900">Message {centreName}</p>
+      <p className="text-base font-bold text-slate-900">Send a quick question</p>
       <p className="mt-1 text-sm leading-relaxed text-slate-500">
-        Ask about availability, tours, or any general questions — we will route your note straight to the centre inbox.
+        Ask about space, visits, fees, or subsidy support and we will route your note straight to the centre inbox.
       </p>
+      {templates.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {templates.map((template) => (
+            <button
+              key={template.label}
+              type="button"
+              onClick={() => setMessage(template.message)}
+              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-cyan-500 hover:text-cyan-700"
+            >
+              {template.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
         <div className="space-y-1">
           <Label htmlFor="centre-contact-message">Your message</Label>
@@ -63,18 +83,16 @@ export function CentreContactCard({ centreId, centreName }: CentreContactCardPro
             id="centre-contact-message"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="Hi, I'd like to learn more about your programmes…"
+            placeholder={`Hi ${centreName}, I would like to ask about enrolling my child.`}
             rows={4}
           />
         </div>
         <div className="flex justify-end">
           <Button type="submit" disabled={isPending}>
-            {isPending ? 'Sending…' : 'Send message'}
+            {isPending ? 'Sending...' : 'Send quick question'}
           </Button>
         </div>
       </form>
     </div>
   )
 }
-
-

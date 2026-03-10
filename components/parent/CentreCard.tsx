@@ -12,6 +12,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
+import {
+  getOperatingScheduleSummary,
+  readOperatingHoursSummaryFromSettings,
+  readOperatingScheduleFromSettings,
+  type CentreOperatingSchedule,
+} from '@/lib/time/centre-operating-schedule'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact' | null | undefined
@@ -38,6 +45,7 @@ interface CentreCardProps {
   tagline?: string
   capacity?: number
   subsidy_accepted?: boolean
+  registration_fee?: number | null
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
   existingApplicationStatusLabel?: string | null
@@ -48,28 +56,16 @@ interface CentreCardProps {
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null
+  operating_schedule?: CentreOperatingSchedule | null
+  operating_hours_summary?: string | null
+  communication_automation_settings?: unknown
   viewerRole?: string | null
   isSaved?: boolean
   onApply?: () => void
 }
 
-function parseAgeValue(age: string) {
-  const match = age.match(/(\d+)(?:\s*)([my])/i)
-  if (!match) return Number.MAX_SAFE_INTEGER
-  const value = Number(match[1])
-  const unit = match[2]?.toLowerCase()
-  return unit === 'y' ? value * 12 : value
-}
-
-function formatAgeSummary(ageGroups: string[]) {
-  const clean = ageGroups.map((age) => age.trim()).filter(Boolean)
-  if (clean.length === 0) return 'All ages'
-
-  const ordered = [...clean].sort((a, b) => parseAgeValue(a) - parseAgeValue(b))
-  const first = ordered[0]
-  const last = ordered[ordered.length - 1]
-  if (first === last) return first.replace(/(\d+)([my])/gi, '$1 $2')
-  return `${first.replace(/(\d+)([my])/gi, '$1 $2')} to ${last.replace(/(\d+)([my])/gi, '$1 $2')}`
+function formatAgeSummary(ageGroups: string[] | null | undefined) {
+  return formatAgeRangeSummary(ageGroups, 'All ages')
 }
 
 function formatFeeSummary({
@@ -109,12 +105,18 @@ function buildCentreWhatsappHref({
   contactWhatsapp,
   contactPhone,
   phone,
+  operating_schedule,
+  operating_hours_summary,
+  communication_automation_settings,
 }: {
   centreName: string
   centrePath: string
   contactWhatsapp?: string | null
   contactPhone?: string | null
   phone?: string | null
+  operating_schedule?: CentreOperatingSchedule | null
+  operating_hours_summary?: string | null
+  communication_automation_settings?: unknown
 }) {
   const rawPhone = [contactWhatsapp, contactPhone, phone].find((value) => typeof value === 'string' && value.trim().length > 0)
   if (!rawPhone) return null
@@ -168,6 +170,9 @@ export function CentreCard({
   contact_whatsapp,
   contact_phone,
   phone,
+  operating_schedule,
+  operating_hours_summary,
+  communication_automation_settings,
   feesLabel,
   fees_display_mode,
   monthly_fee_min,
@@ -175,6 +180,7 @@ export function CentreCard({
   age_groups,
   tagline,
   subsidy_accepted = false,
+  registration_fee,
   existingApplicationId,
   existingApplicationStatus,
   is_claimed = true,
@@ -202,6 +208,9 @@ export function CentreCard({
         contactWhatsapp: contact_whatsapp,
         contactPhone: contact_phone,
         phone,
+  operating_schedule,
+  operating_hours_summary,
+  communication_automation_settings,
       })
     : null
 
@@ -213,6 +222,17 @@ export function CentreCard({
   const previewImageSrc = buildCentrePreviewImage({ name, suburb, isClaimed: is_claimed })
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
+  const savedOperatingSchedule =
+    operating_schedule ??
+    readOperatingScheduleFromSettings(communication_automation_settings) ??
+    null
+  const hoursSummary =
+    operating_hours_summary ??
+    readOperatingHoursSummaryFromSettings(communication_automation_settings) ??
+    getOperatingScheduleSummary(savedOperatingSchedule)
+  const registrationSummary = typeof registration_fee === 'number' && Number.isFinite(registration_fee)
+    ? `R${registration_fee} once-off`
+    : null
   const trustSummary = isVerifiedForParents
     ? subsidy_accepted
       ? 'Verified and subsidy friendly'
@@ -220,7 +240,6 @@ export function CentreCard({
     : is_claimed
       ? 'Live profile, photos pending'
       : 'Not yet live on CentreConnect'
-  const hoursSummary = 'Weekdays, Sat mornings'
   const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
 
   const handleApply = () => {
@@ -350,7 +369,7 @@ export function CentreCard({
                   ? is_claimed
                     ? 'This centre is live on CentreConnect, but the hero image is still a preview until they upload real photos.'
                     : 'This centre has not joined CentreConnect yet, so the image is only a preview and contact happens directly.'
-                  : 'Tap for photos, contact details, and application steps.'}
+                  : 'Tap for photos, curriculum, CentreConnect benefits, and application steps.'}
               </p>
             </div>
           </CardContent>
@@ -400,9 +419,12 @@ export function CentreCard({
               )}
             </>
           ) : (
-            <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
-              Tap the card to see photos, contact details, and what parents need to know.
-            </p>
+            <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
+              <p className="text-sm font-semibold text-[#22312E]">Apply online, ask on WhatsApp, or send a quick question.</p>
+              <p className="mt-1 text-xs leading-5 text-[#6A7672]">
+                {registrationSummary ? `Registration fee ${registrationSummary}. ` : ''}Open the profile for the full CentreConnect parent benefits, curriculum, and direct contact options.
+              </p>
+            </div>
           )}
         </CardFooter>
       </Card>

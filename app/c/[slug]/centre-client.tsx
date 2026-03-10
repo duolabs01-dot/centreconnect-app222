@@ -14,11 +14,19 @@ import { ContactCentreSheet } from './contact-centre-sheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
+import {
+  buildDefaultOperatingSchedule,
+  getOperatingScheduleSummary,
+  readOperatingHoursSummaryFromSettings,
+  readOperatingScheduleFromSettings,
+  type CentreOperatingSchedule,
+} from '@/lib/time/centre-operating-schedule'
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
+import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 
 type Centre = {
   id: string
@@ -46,6 +54,9 @@ type Centre = {
   fees_last_updated_at: string | null
   contact_whatsapp: string | null
   contact_phone: string | null
+  operating_schedule?: CentreOperatingSchedule | null
+  operating_hours_summary?: string | null
+  communication_automation_settings?: unknown
   owner_id?: string | null
   onboarding_complete?: boolean | null
 }
@@ -153,27 +164,8 @@ function formatCurrency(amount: number | null | undefined) {
   return `R${new Intl.NumberFormat('en-ZA').format(amount)}`
 }
 
-function parseAgeValue(age: string) {
-  const match = age.match(/(\d+)(?:\s*)([my])/i)
-  if (!match) return Number.MAX_SAFE_INTEGER
-  const value = Number(match[1])
-  const unit = match[2]?.toLowerCase()
-  return unit === 'y' ? value * 12 : value
-}
-
-function formatAgeToken(age: string) {
-  return age.replace(/(\d+)\s*([my])/gi, '$1 $2')
-}
-
 function formatAgeSummary(ageGroups: string[] | null | undefined) {
-  const clean = (ageGroups ?? []).map((age) => age.trim()).filter(Boolean)
-  if (clean.length === 0) return 'All ages welcome'
-
-  const ordered = [...clean].sort((a, b) => parseAgeValue(a) - parseAgeValue(b))
-  const first = formatAgeToken(ordered[0])
-  const last = formatAgeToken(ordered[ordered.length - 1])
-
-  return first === last ? first : `${first} to ${last}`
+  return formatAgeRangeSummary(ageGroups, 'All ages welcome')
 }
 
 function formatFeesLabel(centre: Centre) {
@@ -184,6 +176,11 @@ function formatFeesLabel(centre: Centre) {
     if (minimum && maximum) return `${minimum} to ${maximum}`
   }
   return 'Ask the centre for fees'
+}
+
+function formatRegistrationFeeLabel(centre: Centre) {
+  const amount = formatCurrency(centre.registration_fee)
+  return amount ? `${amount} once-off` : 'Ask the centre'
 }
 
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
@@ -411,11 +408,19 @@ export function CentreClient({ slug }: { slug: string }) {
       ? '/centres/bajabulile/logo.jpg'
       : null
   const centreInitial = (centre.name?.trim().charAt(0) || 'C').toUpperCase()
-  const operationalStatus = getCentreOperationalStatus()
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
   const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
   const isClaimed = hasOwnerId
   const isVerifiedForParents = Boolean(isClaimed && centre.is_registered)
+  const savedOperatingSchedule =
+    centre.operating_schedule ??
+    readOperatingScheduleFromSettings(centre.communication_automation_settings) ??
+    buildDefaultOperatingSchedule()
+  const operatingHoursSummary =
+    centre.operating_hours_summary ??
+    readOperatingHoursSummaryFromSettings(centre.communication_automation_settings) ??
+    getOperatingScheduleSummary(savedOperatingSchedule)
+  const operationalStatus = getCentreOperationalStatus(savedOperatingSchedule, new Date(), operatingHoursSummary)
   const fallbackHeroImage = buildCentrePreviewImage({
     name: centre.name,
     suburb: centre.suburb,
@@ -434,12 +439,16 @@ export function CentreClient({ slug }: { slug: string }) {
   const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
   const showClaimLink = !isClaimed && userRole !== 'parent_user'
+  const defaultWhatsappMessage = isClaimed
+    ? `Hi ${centre.name}, I found your CentreConnect page and would like to ask about enrolling my child.`
+    : `Hi ${centre.name}, I found your centre on CentreConnect and would like to ask about enrolment.`
   const whatsappHref = createWhatsappClickToChatLink(
     centre.contact_whatsapp || centre.contact_phone || centre.phone,
-    `Hi ${centre.name}, I found your centre on CentreConnect and would like to ask about enrolment.`
+    defaultWhatsappMessage
   )
 
   const feesLabel = formatFeesLabel(centre)
+  const registrationFeeLabel = formatRegistrationFeeLabel(centre)
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
   const trustLabel = isVerifiedForParents
     ? centre.subsidy_accepted
@@ -463,38 +472,94 @@ export function CentreClient({ slug }: { slug: string }) {
   const aboutCopy =
     websiteContent.aboutText.trim() ||
     centre.description ||
-    'This centre provides a safe, warm space for children to learn, play, and settle into a steady routine.'
+    (isClaimed
+      ? 'This centre is on CentreConnect, so parents can move faster from first question to application without repeating forms or chasing updates.'
+      : 'This centre provides a safe, warm space for children to learn, play, and settle into a steady routine.')
 
-  const fallbackPrograms: ProgramCard[] = [
-    {
-      title: 'A calm daily routine',
-      description: 'Children move through meals, play, learning time, rest, and collection in a way that feels clear and familiar to parents.',
-    },
-    {
-      title: 'Age-appropriate groups',
-      description: 'Babies, toddlers, and older children can be placed into groups that match their age and stage as the centre grows.',
-    },
-  ]
+  const fallbackPrograms: ProgramCard[] = isClaimed
+    ? [
+        {
+          title: 'Learning through play',
+          description: 'The day is built around guided play, songs, movement, and hands-on learning so children stay engaged while building confidence.',
+        },
+        {
+          title: 'Routine, meals, and rest',
+          description: 'Parents can expect a steady rhythm of arrival, meals, learning time, naps or quiet rest, and calm collection at the end of the day.',
+        },
+        {
+          title: 'Early foundations',
+          description: 'Children build language, counting, listening, and social skills in ways that prepare them for the next stage without making the day feel too formal.',
+        },
+        {
+          title: 'Safety and parent communication',
+          description: 'CentreConnect supports parent updates, report cards, and safer pickup coordination so families know what is happening without paper going missing.',
+        },
+      ]
+    : [
+        {
+          title: 'A calm daily routine',
+          description: 'Children move through meals, play, learning time, rest, and collection in a way that feels clear and familiar to parents.',
+        },
+        {
+          title: 'Age-appropriate groups',
+          description: 'Babies, toddlers, and older children can be placed into groups that match their age and stage as the centre grows.',
+        },
+      ]
   const programCards = websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms
 
   const quickFacts = [
-    { icon: Wallet, label: 'Fees', value: feesLabel },
+    { icon: Wallet, label: 'Monthly fees', value: feesLabel },
+    { icon: Wallet, label: 'Registration fee', value: registrationFeeLabel },
     { icon: Baby, label: 'Ages', value: ageGroupsLabel },
-    { icon: Clock3, label: 'Hours', value: operationalStatus.schedule },
+    { icon: Clock3, label: 'Open', value: operationalStatus.schedule },
     { icon: ShieldCheck, label: 'Trust', value: trustLabel },
   ] as const
 
-  const parentHighlights = [
-    isClaimed
-      ? 'Parents can save this crèche, apply online, and track progress from their phone.'
-      : 'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
-    centre.subsidy_accepted
-      ? 'The centre says it accepts subsidy support, which can help families compare fit more quickly.'
-      : 'Subsidy support is not listed yet, so it helps to ask directly if that matters for your family.',
-    centre.capacity
-      ? `The centre says it can care for around ${centre.capacity} children.`
-      : 'Capacity is not listed yet, so asking early can help if you need a place soon.',
+  const parentHighlights = isClaimed
+    ? [
+        'Apply online, track your status, and keep parent details in one profile that you can reuse at other CentreConnect centres.',
+        'Get parent updates, reminders, and report-card communication without paper getting lost in a school bag.',
+        'Use CentreConnect for safer pickup communication, cleaner records, and less admin stress when life gets busy.',
+      ]
+    : [
+        'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
+        centre.subsidy_accepted
+          ? 'The centre says it accepts subsidy support, which can help families compare fit more quickly.'
+          : 'Subsidy support is not listed yet, so it helps to ask directly if that matters for your family.',
+        centre.capacity
+          ? `The centre says it can care for around ${centre.capacity} children.`
+          : 'Capacity is not listed yet, so asking early can help if you need a place soon.',
+      ]
+
+  const parentBenefitCards = [
+    {
+      title: 'Updates to your phone',
+      description: 'Important messages, reminders, and follow-ups can reach you faster through CentreConnect.',
+    },
+    {
+      title: 'Safer pickup communication',
+      description: 'Families and centres get a clearer line for pickup changes, daily notes, and check-ins.',
+    },
+    {
+      title: 'Paperless parent profile',
+      description: 'Keep your child documents in one place and reuse them instead of starting from scratch each time.',
+    },
+    {
+      title: 'Report cards and records',
+      description: 'When a centre uses CentreConnect, it becomes easier to keep your child history, updates, and progress together.',
+    },
   ]
+
+  const inquiryTemplates = [
+    { label: 'Ask about space', message: `Hi ${centre.name}, I would like to ask if you still have space for my child.` },
+    { label: 'Ask about fees', message: `Hi ${centre.name}, I would like to ask about your fees and what is included.` },
+    { label: 'Ask about subsidy', message: `Hi ${centre.name}, I would like to ask whether subsidy support applies to my child.` },
+    { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
+  ]
+  const whatsappInquiryTemplates = inquiryTemplates.map((template) => ({
+    ...template,
+    href: createWhatsappClickToChatLink(centre.contact_whatsapp || centre.contact_phone || centre.phone, template.message),
+  }))
 
   return (
     <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
@@ -556,8 +621,16 @@ export function CentreClient({ slug }: { slug: string }) {
               {centre.tagline ? <p className="mt-4 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{centre.tagline}</p> : null}
 
               <p className="mt-4 text-sm leading-7 text-[#5F6C68] sm:text-base">
-                Parents want three things quickly here: what the fees look like, which ages are welcome, and whether this centre feels trusted. This page keeps those answers simple.
+                {isClaimed
+                  ? 'This centre is on CentreConnect, which means parents can apply faster, keep documents in one secure profile, and get updates without chasing paper or waiting for phone calls.'
+                  : 'Parents want three things quickly here: what the fees look like, which ages are welcome, and whether this centre feels trusted. This page keeps those answers simple.'}
               </p>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {quickFacts.map((fact) => (
+                  <QuickFact key={fact.label} icon={fact.icon} label={fact.label} value={fact.value} />
+                ))}
+              </div>
 
               {showUnclaimedDisclaimer ? (
                 <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
@@ -575,7 +648,7 @@ export function CentreClient({ slug }: { slug: string }) {
             </div>
 
             <div className="mt-6 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">What parents need first</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{isClaimed ? 'CentreConnect parent benefits' : 'What parents need first'}</p>
               <div className="mt-3 space-y-3">
                 {parentHighlights.map((item) => (
                   <div key={item} className="flex items-start gap-3">
@@ -598,9 +671,31 @@ export function CentreClient({ slug }: { slug: string }) {
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_22rem] lg:items-start">
           <div className="space-y-8">
+            {isClaimed ? (
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+                <SectionHeading
+                  eyebrow="Why parents choose this centre on CentreConnect"
+                  title="A simpler, safer parent experience"
+                  description="This is where the centre and CentreConnect work together: less admin stress for you, clearer communication, and faster action when your child needs something."
+                />
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  {parentBenefitCards.map((item, index) => (
+                    <div key={item.title} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+                        {index % 2 === 0 ? <Sparkles className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                      </div>
+                      <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-serif)' }}>
+                        {item.title}
+                      </h3>
+                      <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{item.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
             {showAbout ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
-                <SectionHeading eyebrow="About" title="About this crèche" description="A quick, parent-friendly summary before you decide whether to ask more questions." />
+                <SectionHeading eyebrow="About" title="About this crèche" description={isClaimed ? 'A stronger centre profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
                 <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[#4E5D59] sm:text-base">{aboutCopy}</p>
               </section>
             ) : null}
@@ -608,9 +703,9 @@ export function CentreClient({ slug }: { slug: string }) {
             {showPrograms ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
                 <SectionHeading
-                  eyebrow="Daily life"
+                  eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
-                  description="These are the parts of the day most parents usually want to understand before applying."
+                  description={isClaimed ? 'Parents usually want to know how a child learns here, what the routine feels like, and how communication works day to day.' : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => (
@@ -652,7 +747,7 @@ export function CentreClient({ slug }: { slug: string }) {
 
             {showContact ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
-                <SectionHeading eyebrow="Practical details" title="Where to find them" description="Simple details for parents who want to visit, call, or compare one more time." />
+                <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'If you are nearly ready, use these details to ask a final question, book a visit, or start the application.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <InfoRow icon={MapPin} label="Address" value={fallbackAddressLabel} />
                   <InfoRow
@@ -672,10 +767,12 @@ export function CentreClient({ slug }: { slug: string }) {
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[2rem] leading-[1.02] tracking-[-0.03em] text-[#22312E]" style={{ fontFamily: 'var(--font-serif)' }}>
-                  Ready to ask about a place?
+                  {isClaimed ? 'Apply online or ask one smart question' : 'Ready to ask about a place?'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
-                  Save this crèche if you still want to compare options, or apply now if it already feels like the right fit.
+                  {isClaimed
+                    ? 'This is the direct line to the centre. Apply if it feels right, or use the quick questions below if you want clarity before you decide.'
+                    : 'Save this crèche if you still want to compare options, or message them directly while they finish joining CentreConnect.'}
                 </p>
 
                 <div className="mt-5 rounded-[1.3rem] border border-[#E7DDD1] bg-white p-4">
@@ -684,6 +781,7 @@ export function CentreClient({ slug }: { slug: string }) {
                     {operationalStatus.label}
                   </p>
                   <p className="mt-1 text-sm text-[#5F6C68]">{operationalStatus.schedule}</p>
+                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} · Ages: {ageGroupsLabel}</p>
                 </div>
 
                 {showPilotTrustInfo ? (
@@ -731,24 +829,43 @@ export function CentreClient({ slug }: { slug: string }) {
                     userRole={userRole}
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
+                    existingHelperText={isClaimed ? 'You will keep getting updates through CentreConnect, and you can message the centre anytime from this page.' : null}
+                    existingFollowUpHref={whatsappHref}
+                    existingFollowUpLabel={whatsappHref ? 'Send follow-up on WhatsApp' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? null : 'You can still save this centre or contact them directly while they finish joining CentreConnect.'
+                      isClaimed ? 'Parents can apply online, ask questions, and keep everything in one profile.' : 'You can still save this centre or contact them directly while they finish joining CentreConnect.'
                     }
                     fallbackHref={!isClaimed ? whatsappHref : null}
                     fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                   />
+                  {isClaimed && whatsappHref ? (
+                    <Link href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-[#25D366]/30 bg-[#25D366]/10 text-sm font-semibold text-[#147A37] transition-colors hover:bg-[#25D366]/15">
+                      Ask on WhatsApp
+                    </Link>
+                  ) : null}
                   <div className="grid grid-cols-2 gap-3">
-                    <ContactCentreSheet centreId={centre.id} centreName={centre.name} />
+                    <ContactCentreSheet centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} />
                     <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white">
                       <SaveCentreButton centreId={centre.id} initialSaved={false} />
                     </div>
                   </div>
+                  {isClaimed ? (
+                    <div className="flex flex-wrap gap-2">
+                      {whatsappInquiryTemplates.map((template) =>
+                        template.href ? (
+                          <Link key={template.label} href={template.href} target="_blank" rel="noreferrer" className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1.5 text-xs font-semibold text-[#4E5D59] hover:border-[#0D9488] hover:text-[#0D9488]">
+                            {template.label}
+                          </Link>
+                        ) : null
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
-              <CentreContactCard centreId={centre.id} centreName={centre.name} />
+              <CentreContactCard centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} />
             </div>
           </aside>
         </section>
@@ -761,6 +878,7 @@ export function CentreClient({ slug }: { slug: string }) {
         tagline={centre.tagline}
         locationLabel={locationLabel}
         feesLabel={feesLabel}
+        registrationFeeLabel={registrationFeeLabel}
         ageGroupsLabel={ageGroupsLabel}
         capacityLabel={practicalLabel}
         trustLabel={trustLabel}
@@ -775,6 +893,7 @@ export function CentreClient({ slug }: { slug: string }) {
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
         whatsappHref={whatsappHref}
+        inquiryTemplates={inquiryTemplates}
       />
     </main>
   )

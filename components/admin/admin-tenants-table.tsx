@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -25,6 +25,13 @@ import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  buildDefaultOperatingSchedule,
+  OPERATING_DAYS,
+  summarizeOperatingSchedule,
+  type CentreOperatingSchedule,
+  type OperatingDayKey,
+} from '@/lib/time/centre-operating-schedule'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact'
 type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
@@ -58,6 +65,7 @@ export type AdminTenantTableRow = {
   feesDisplayMode: FeeDisplayMode
   monthlyFeeMin: string
   monthlyFeeMax: string
+  registrationFee: string
   subsidyAccepted: boolean
   age0to2: string
   age2to4: string
@@ -65,7 +73,8 @@ export type AdminTenantTableRow = {
   age6plus: string
   ageRangeStart: string
   ageRangeEnd: string
-  operatingHours: string
+  operatingSchedule: CentreOperatingSchedule
+  operatingHoursSummary: string
   dsdStatus: DsdStatus
   marketplaceUpgrades: string
   isActive: boolean
@@ -137,15 +146,18 @@ function buildAgeGroupsFromRange(startValue: string, endValue: string) {
   const end = Math.max(start, parseWholeAge(endValue, 6))
   const groups: string[] = []
 
-  if (start < 2) groups.push(`${start}-2`)
-  if (end > 2 && start < 4) groups.push(`${Math.max(start, 2)}-4`)
-  if (end > 4 && start < 6) groups.push(`${Math.max(start, 4)}-6`)
+  const addBoundedGroup = (from: number, to: number) => {
+    if (to < from) return
+    groups.push(`${from}-${to}`)
+  }
+
+  if (start < 2) addBoundedGroup(start, Math.min(end, 2))
+  if (end > 2 && start < 4) addBoundedGroup(Math.max(start, 2), Math.min(end, 4))
+  if (end > 4 && start < 6) addBoundedGroup(Math.max(start, 4), Math.min(end, 6))
   if (end > 6) groups.push(`${Math.max(start, 6)}+`)
 
   if (groups.length === 0) {
-    if (end <= 2) return [`${start}-2`]
-    if (end <= 4) return [`${start}-4`]
-    return [`${start}-${end}`]
+    return [end > 6 ? `${start}+` : `${start}-${end}`]
   }
 
   return groups
@@ -155,10 +167,35 @@ function buildAgeBucketLabels(startValue: string, endValue: string) {
   const start = Math.max(0, parseWholeAge(startValue, 0))
   const end = Math.max(start, parseWholeAge(endValue, 6))
   return {
-    '0-2': `${start < 2 ? start : 0}-2 years`,
-    '2-4': `${Math.max(start, 2)}-4 years`,
-    '4-6': `${Math.max(start, 4)}-6 years`,
+    '0-2': `${start < 2 ? start : 0}-${Math.min(end, 2)} years`,
+    '2-4': `${Math.max(start, 2)}-${Math.min(end, 4)} years`,
+    '4-6': `${Math.max(start, 4)}-${Math.min(end, 6)} years`,
     '6+': end > 6 ? `${Math.max(start, 6)}+ years` : 'Aftercare (6+)',
+  }
+}
+
+function formatRangePreview(startValue: string, endValue: string) {
+  const start = Math.max(0, parseWholeAge(startValue, 0))
+  const end = Math.max(start, parseWholeAge(endValue, 6))
+  return start === end ? `${start} year` : `${start}-${end} years`
+}
+
+function updateOperatingDay(
+  schedule: CentreOperatingSchedule,
+  day: OperatingDayKey,
+  nextValue: { open?: string; close?: string } | null
+) {
+  if (!nextValue) {
+    return { ...schedule, [day]: null }
+  }
+
+  const existing = schedule[day] ?? { open: '07:00', close: '17:30' }
+  return {
+    ...schedule,
+    [day]: {
+      open: nextValue.open ?? existing.open,
+      close: nextValue.close ?? existing.close,
+    },
   }
 }
 
@@ -653,6 +690,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         feesDisplayMode: form.feesDisplayMode,
         monthlyFeeMin: parseNumberOrNull(form.monthlyFeeMin),
         monthlyFeeMax: parseNumberOrNull(form.monthlyFeeMax),
+        registrationFee: parseNumberOrNull(form.registrationFee),
         subsidyAccepted: form.subsidyAccepted,
         ageGroups: buildAgeGroupsFromRange(form.ageRangeStart, form.ageRangeEnd),
         ageGroupPricing: (() => {
@@ -664,7 +702,8 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
             '6+': { label: ageBucketLabels['6+'], monthly_fee_cents: ageFeeToCents(form.age6plus) },
           }
         })(),
-        operatingHours: form.operatingHours.trim() || null,
+        operatingSchedule: form.operatingSchedule,
+        operatingHours: summarizeOperatingSchedule(form.operatingSchedule),
         dsdStatus: form.dsdStatus,
         marketplaceUpgrades: form.marketplaceUpgrades
           .split(/[\n,;]+/g)
@@ -1270,8 +1309,29 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
               </TabsContent>
 
               <TabsContent value="pricing" className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <div className="space-y-2">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                  <p className="text-sm font-semibold text-white">Public parent summary</p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Ages</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{formatRangePreview(form.ageRangeStart, form.ageRangeEnd)}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Open</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{summarizeOperatingSchedule(form.operatingSchedule)}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Registration fee</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.registrationFee.trim() ? `R${form.registrationFee.trim()}` : 'Not listed yet'}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Subsidy</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.subsidyAccepted ? 'Yes' : 'Not listed'}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-4">
+                  <div className="space-y-2 sm:col-span-1">
                     <Label className="text-slate-300">Fees Display Mode</Label>
                     <Select
                       value={form.feesDisplayMode}
@@ -1313,11 +1373,23 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                       }
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Registration Fee (R)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className={darkInputClass}
+                      value={form.registrationFee}
+                      onChange={(event) =>
+                        setForm((prev) => (prev ? { ...prev, registrationFee: event.target.value } : prev))
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
                   <div className="mb-4 grid gap-3 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Starting age</Label>
+                      <Label className="text-slate-300">Starts from</Label>
                       <Input
                         type="number"
                         min={0}
@@ -1327,7 +1399,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Ending age</Label>
+                      <Label className="text-slate-300">Up to</Label>
                       <Input
                         type="number"
                         min={0}
@@ -1336,74 +1408,119 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                         onChange={(event) => setForm((prev) => (prev ? { ...prev, ageRangeEnd: event.target.value } : prev))}
                       />
                     </div>
-                    <p className="sm:col-span-2 text-xs text-slate-400">Use whole years only, for example 1 to 6. The fee buckets below still work, but the public age range stays easier to understand.</p>
+                    <div className="sm:col-span-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                      Public preview: {formatRangePreview(form.ageRangeStart, form.ageRangeEnd)}
+                    </div>
+                    <p className="sm:col-span-2 text-xs text-slate-400">Use whole years only. This drives the public age promise, while the fee buckets below stay separate for pricing.</p>
                   </div>
-                  <p className="mb-3 text-sm font-medium text-white">Pricing By Age (R/month)</p>
+                  <p className="mb-3 text-sm font-medium text-white">Pricing by age bucket (R/month)</p>
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div className="space-y-2">
                       <Label className="text-slate-300">0-2 years</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        className={darkInputClass}
-                        value={form.age0to2}
-                        onChange={(event) => setForm((prev) => (prev ? { ...prev, age0to2: event.target.value } : prev))}
-                      />
+                      <Input type="number" min={0} className={darkInputClass} value={form.age0to2} onChange={(event) => setForm((prev) => (prev ? { ...prev, age0to2: event.target.value } : prev))} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-300">2-4 years</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        className={darkInputClass}
-                        value={form.age2to4}
-                        onChange={(event) => setForm((prev) => (prev ? { ...prev, age2to4: event.target.value } : prev))}
-                      />
+                      <Input type="number" min={0} className={darkInputClass} value={form.age2to4} onChange={(event) => setForm((prev) => (prev ? { ...prev, age2to4: event.target.value } : prev))} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-300">4-6 years</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        className={darkInputClass}
-                        value={form.age4to6}
-                        onChange={(event) => setForm((prev) => (prev ? { ...prev, age4to6: event.target.value } : prev))}
-                      />
+                      <Input type="number" min={0} className={darkInputClass} value={form.age4to6} onChange={(event) => setForm((prev) => (prev ? { ...prev, age4to6: event.target.value } : prev))} />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-slate-300">6+ / Aftercare</Label>
-                      <Input
-                        type="number"
-                        min={0}
-                        className={darkInputClass}
-                        value={form.age6plus}
-                        onChange={(event) => setForm((prev) => (prev ? { ...prev, age6plus: event.target.value } : prev))}
-                      />
+                      <Input type="number" min={0} className={darkInputClass} value={form.age6plus} onChange={(event) => setForm((prev) => (prev ? { ...prev, age6plus: event.target.value } : prev))} />
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900/40 px-4 py-3">
                   <Label className="text-slate-300">DSD Subsidy Accepted</Label>
-                  <Switch
-                    checked={form.subsidyAccepted}
-                    onCheckedChange={(checked) => setForm((prev) => (prev ? { ...prev, subsidyAccepted: checked } : prev))}
-                  />
+                  <Switch checked={form.subsidyAccepted} onCheckedChange={(checked) => setForm((prev) => (prev ? { ...prev, subsidyAccepted: checked } : prev))} />
                 </div>
               </TabsContent>
 
               <TabsContent value="operations" className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label className="text-slate-300">Operating Hours</Label>
-                    <Textarea
-                      className={`${darkInputClass} min-h-[108px]`}
-                      value={form.operatingHours}
-                      onChange={(event) =>
-                        setForm((prev) => (prev ? { ...prev, operatingHours: event.target.value } : prev))
-                      }
-                      placeholder="Mon-Fri 06:30-17:30"
-                    />
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">Open days and times</p>
+                      <p className="text-xs text-slate-400">Default is weekdays only. Saturday stays off unless you turn it on.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-slate-700 bg-slate-950 text-slate-200 hover:bg-slate-900"
+                      onClick={() => setForm((prev) => (prev ? { ...prev, operatingSchedule: buildDefaultOperatingSchedule(), operatingHoursSummary: summarizeOperatingSchedule(buildDefaultOperatingSchedule()) } : prev))}
+                    >
+                      Use Mon-Fri only
+                    </Button>
                   </div>
+                  <div className="space-y-3">
+                    {OPERATING_DAYS.map((day) => {
+                      const window = form.operatingSchedule[day]
+                      const dayLabel = day.charAt(0).toUpperCase() + day.slice(1)
+                      return (
+                        <div key={day} className="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/70 p-3 sm:grid-cols-[120px_1fr_1fr_auto] sm:items-center">
+                          <Label className="text-slate-200">{dayLabel}</Label>
+                          <Input
+                            type="time"
+                            className={darkInputClass}
+                            value={window?.open ?? '07:00'}
+                            disabled={!window}
+                            onChange={(event) =>
+                              setForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      operatingSchedule: updateOperatingDay(prev.operatingSchedule, day, { open: event.target.value }),
+                                    }
+                                  : prev
+                              )
+                            }
+                          />
+                          <Input
+                            type="time"
+                            className={darkInputClass}
+                            value={window?.close ?? '17:30'}
+                            disabled={!window}
+                            onChange={(event) =>
+                              setForm((prev) =>
+                                prev
+                                  ? {
+                                      ...prev,
+                                      operatingSchedule: updateOperatingDay(prev.operatingSchedule, day, { close: event.target.value }),
+                                    }
+                                  : prev
+                              )
+                            }
+                          />
+                          <div className="flex items-center justify-between gap-3 sm:justify-end">
+                            <span className="text-xs text-slate-400">{window ? 'Open' : 'Closed'}</span>
+                            <Switch
+                              checked={Boolean(window)}
+                              onCheckedChange={(checked) =>
+                                setForm((prev) =>
+                                  prev
+                                    ? {
+                                        ...prev,
+                                        operatingSchedule: checked
+                                          ? updateOperatingDay(prev.operatingSchedule, day, { open: '07:00', close: '17:30' })
+                                          : updateOperatingDay(prev.operatingSchedule, day, null),
+                                      }
+                                    : prev
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <div className="mt-3 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                    Public preview: {summarizeOperatingSchedule(form.operatingSchedule)}
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label className="text-slate-300">Marketplace Upgrades</Label>
                     <Textarea

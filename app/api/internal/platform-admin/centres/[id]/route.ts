@@ -5,9 +5,29 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { combineName, splitFullName } from '@/lib/utils/name'
+import {
+  buildDefaultOperatingSchedule,
+  normalizeOperatingSchedule,
+  summarizeOperatingSchedule,
+} from '@/lib/time/centre-operating-schedule'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
+
+const operatingWindowSchema = z.object({
+  open: z.string().regex(/^\d{2}:\d{2}$/),
+  close: z.string().regex(/^\d{2}:\d{2}$/),
+})
+
+const operatingScheduleSchema = z.object({
+  mon: operatingWindowSchema.nullish(),
+  tue: operatingWindowSchema.nullish(),
+  wed: operatingWindowSchema.nullish(),
+  thu: operatingWindowSchema.nullish(),
+  fri: operatingWindowSchema.nullish(),
+  sat: operatingWindowSchema.nullish(),
+  sun: operatingWindowSchema.nullish(),
+})
 
 function normalizeRequestedTier(
   tier: RequestedTier,
@@ -71,9 +91,11 @@ const actionSchema = z.discriminatedUnion('action', [
     feesDisplayMode: z.enum(['exact', 'range', 'contact']).optional(),
     monthlyFeeMin: z.number().min(0).nullable().optional(),
     monthlyFeeMax: z.number().min(0).nullable().optional(),
+    registrationFee: z.number().min(0).nullable().optional(),
     subsidyAccepted: z.boolean().optional(),
     ageGroups: z.array(z.string().max(20)).max(12).optional(),
     ageGroupPricing: z.record(z.string(), z.any()).optional(),
+    operatingSchedule: operatingScheduleSchema.nullable().optional(),
     operatingHours: z.string().max(400).nullable().optional(),
     dsdStatus: z.string().max(80).nullable().optional(),
     marketplaceUpgrades: z.array(z.string().max(120)).max(25).optional(),
@@ -295,6 +317,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.feesDisplayMode !== undefined) updatePayload.fees_display_mode = payload.feesDisplayMode
     if (payload.monthlyFeeMin !== undefined) updatePayload.monthly_fee_min = payload.monthlyFeeMin
     if (payload.monthlyFeeMax !== undefined) updatePayload.monthly_fee_max = payload.monthlyFeeMax
+    if (payload.registrationFee !== undefined) updatePayload.registration_fee = payload.registrationFee
     if (payload.subsidyAccepted !== undefined) updatePayload.subsidy_accepted = payload.subsidyAccepted
     if (payload.ageGroups !== undefined) updatePayload.age_groups = payload.ageGroups
     if (payload.ageGroupPricing !== undefined) updatePayload.age_group_pricing = payload.ageGroupPricing
@@ -302,6 +325,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.isRegistered !== undefined) updatePayload.is_registered = payload.isRegistered
 
     if (
+      payload.operatingSchedule !== undefined ||
       payload.operatingHours !== undefined ||
       payload.dsdStatus !== undefined ||
       payload.marketplaceUpgrades !== undefined
@@ -326,7 +350,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
           : {}
 
-      if (payload.operatingHours !== undefined) tenantAdminOverrides.operating_hours = payload.operatingHours
+      if (payload.operatingSchedule !== undefined) {
+        const normalizedSchedule = payload.operatingSchedule
+          ? normalizeOperatingSchedule(payload.operatingSchedule, buildDefaultOperatingSchedule())
+          : buildDefaultOperatingSchedule()
+        tenantAdminOverrides.operating_schedule = normalizedSchedule
+        tenantAdminOverrides.operating_hours = payload.operatingHours ?? summarizeOperatingSchedule(normalizedSchedule)
+      } else if (payload.operatingHours !== undefined) {
+        tenantAdminOverrides.operating_hours = payload.operatingHours
+      }
       if (payload.dsdStatus !== undefined) tenantAdminOverrides.dsd_status = payload.dsdStatus
       if (payload.marketplaceUpgrades !== undefined) tenantAdminOverrides.marketplace_upgrades = payload.marketplaceUpgrades
 

@@ -59,7 +59,7 @@ export async function GET(req: Request) {
   let centresQuery = supabase
     .from('public_ecd_centres')
     .select(
-      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone'
+      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
     )
     .order('name', { ascending: true })
     .range(0, PAGE_SIZE - 1)
@@ -131,7 +131,7 @@ export async function GET(req: Request) {
   const bajabulileQuery = supabase
     .from('public_ecd_centres')
     .select(
-      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,contact_whatsapp,contact_phone'
+      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
     )
     .eq('id', BAJABULILE_ID)
     .maybeSingle()
@@ -193,7 +193,7 @@ export async function GET(req: Request) {
       })
   }
 
-  const centres = (centresData ?? []).flatMap((centre) => {
+  const centres = combinedData.flatMap((centre) => {
     const safeSlug = normalizeCentreSlug((centre.slug as string | null | undefined) ?? null)
     if (!safeSlug) return []
 
