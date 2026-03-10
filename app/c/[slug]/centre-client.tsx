@@ -1,11 +1,7 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Baby, CheckCircle2, Circle, Clock3, MapPin, Phone, ShieldCheck, Sparkles, Users, Wallet } from 'lucide-react'
 
-import { createClient } from '@/lib/supabase/client'
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
@@ -24,12 +20,12 @@ import {
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
-import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
+import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 import { readAftercareConfig } from '@/lib/ecd/centre-public-profile'
 
-type Centre = {
+export type Centre = {
   id: string
   slug: string
   name: string
@@ -65,28 +61,28 @@ type Centre = {
   onboarding_complete?: boolean | null
 }
 
-type ExistingApplication = {
+export type ExistingApplication = {
   id: string
   status: string | null
 }
 
-type ProgramCard = {
+export type ProgramCard = {
   title: string
   description: string
 }
 
-type WebsiteContentState = {
+export type WebsiteContentState = {
   aboutText: string
   programCards: ProgramCard[]
   galleryUrls: string[]
   visibleSections: string[]
 }
 
-const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
+export const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
 const ALLOWED_IMAGE_HOST_SUFFIXES = ['.supabase.co']
 const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com', 'thumbs.dreamstime.com'])
 
-function fromParagraphBlocks(contentBlocks: unknown): string {
+export function fromParagraphBlocks(contentBlocks: unknown): string {
   if (!Array.isArray(contentBlocks)) return ''
   const values = contentBlocks
     .map((block) => {
@@ -100,7 +96,7 @@ function fromParagraphBlocks(contentBlocks: unknown): string {
   return values.join('\n')
 }
 
-function fromProgramBlocks(contentBlocks: unknown): ProgramCard[] {
+export function fromProgramBlocks(contentBlocks: unknown): ProgramCard[] {
   if (!Array.isArray(contentBlocks)) return []
   return contentBlocks
     .map((block, index) => {
@@ -117,7 +113,7 @@ function fromProgramBlocks(contentBlocks: unknown): ProgramCard[] {
     .filter((value): value is ProgramCard => Boolean(value))
 }
 
-function fromGalleryBlocks(contentBlocks: unknown): string[] {
+export function fromGalleryBlocks(contentBlocks: unknown): string[] {
   if (!Array.isArray(contentBlocks)) return []
   const urls = contentBlocks
     .map((block) => {
@@ -244,143 +240,24 @@ function InfoRow({
     </div>
   )
 }
-export function CentreClient({ slug }: { slug: string }) {
-  const [centre, setCentre] = useState<Centre | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [userRole, setUserRole] = useState<string | null>(null)
-  const [existingApplication, setExistingApplication] = useState<ExistingApplication | null>(null)
-  const [websiteContent, setWebsiteContent] = useState<WebsiteContentState>({
+export function CentreClient({
+  slug,
+  centre,
+  websiteContent = {
     aboutText: '',
     programCards: [],
     galleryUrls: [],
     visibleSections: DEFAULT_VISIBLE_SECTIONS,
-  })
-
-  useEffect(() => {
-    async function fetchCentre() {
-      const supabase = createClient()
-      let resolvedCentre: Centre | null = null
-      const slugCandidates = resolveCentreSlugCandidates(slug)
-
-      if (slugCandidates.length === 0) {
-        setCentre(null)
-        setWebsiteContent({
-          aboutText: '',
-          programCards: [],
-          galleryUrls: [],
-          visibleSections: DEFAULT_VISIBLE_SECTIONS,
-        })
-        setUserRole(null)
-        setExistingApplication(null)
-        setLoading(false)
-        return
-      }
-
-      try {
-        const { data: centreRows } = await supabase.from('ecd_centres').select('*').in('slug', slugCandidates).limit(1)
-        const centreData = Array.isArray(centreRows) && centreRows.length > 0 ? (centreRows[0] as Centre) : null
-
-        const { data: fallbackRows } = await supabase
-          .from('public_ecd_centres')
-          .select('*')
-          .in('slug', slugCandidates)
-          .limit(1)
-
-        const publicCentreData = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
-
-        if (centreData) {
-          resolvedCentre = { ...publicCentreData, ...centreData }
-        } else {
-          resolvedCentre = publicCentreData
-        }
-
-        setCentre(resolvedCentre)
-
-        if (resolvedCentre?.id) {
-          const { data: contentRows } = await supabase
-            .from('ecd_content')
-            .select('section,content_blocks')
-            .eq('ecd_id', resolvedCentre.id)
-            .in('section', ['about', 'programs', 'gallery', 'website_sections'])
-
-          const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
-          const sections = Array.isArray(sectionMap.get('website_sections'))
-            ? (sectionMap.get('website_sections') as string[])
-            : DEFAULT_VISIBLE_SECTIONS
-
-          setWebsiteContent({
-            aboutText: fromParagraphBlocks(sectionMap.get('about')),
-            programCards: fromProgramBlocks(sectionMap.get('programs')),
-            galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
-            visibleSections: sections,
-          })
-        } else {
-          setWebsiteContent({
-            aboutText: '',
-            programCards: [],
-            galleryUrls: [],
-            visibleSections: DEFAULT_VISIBLE_SECTIONS,
-          })
-        }
-
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-
-        if (user) {
-          const [{ data: profile }, existingApplicationResult] = await Promise.all([
-            supabase.from('user_profiles').select('role').eq('id', user.id).single(),
-            resolvedCentre?.id
-              ? supabase
-                  .from('applications')
-                  .select('id,status')
-                  .eq('parent_id', user.id)
-                  .eq('ecd_id', resolvedCentre.id)
-                  .order('created_at', { ascending: false })
-                  .limit(1)
-                  .maybeSingle()
-              : Promise.resolve({ data: null }),
-          ])
-
-          setUserRole(profile?.role ?? null)
-          setExistingApplication(
-            existingApplicationResult?.data?.id
-              ? {
-                  id: existingApplicationResult.data.id,
-                  status: existingApplicationResult.data.status ?? null,
-                }
-              : null
-          )
-        } else {
-          setUserRole(null)
-          setExistingApplication(null)
-        }
-      } catch (error) {
-        console.error('[centre-client] Failed to load centre details:', error)
-        setCentre(null)
-        setWebsiteContent({
-          aboutText: '',
-          programCards: [],
-          galleryUrls: [],
-          visibleSections: DEFAULT_VISIBLE_SECTIONS,
-        })
-        setUserRole(null)
-        setExistingApplication(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchCentre()
-  }, [slug])
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#FAF8F4]">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#0D9488] border-t-transparent" />
-      </div>
-    )
-  }
+  },
+  userRole = null,
+  existingApplication = null,
+}: {
+  slug: string
+  centre: Centre | null
+  websiteContent?: WebsiteContentState
+  userRole?: string | null
+  existingApplication?: ExistingApplication | null
+}) {
 
   if (!centre) {
     return (
@@ -427,11 +304,13 @@ export function CentreClient({ slug }: { slug: string }) {
     readOperatingHoursSummaryFromSettings(centre.communication_automation_settings) ??
     getOperatingScheduleSummary(savedOperatingSchedule)
   const operationalStatus = getCentreOperationalStatus(savedOperatingSchedule, new Date(), operatingHoursSummary)
+  const aftercareSettings = readAftercareConfig(centre.communication_automation_settings)
   const aftercare = {
-    available: centre.aftercare_available === true || readAftercareConfig(centre.communication_automation_settings).available,
-    endTime: centre.aftercare_end_time ?? readAftercareConfig(centre.communication_automation_settings).endTime,
+    available: centre.aftercare_available === true || aftercareSettings.available,
+    endTime: centre.aftercare_end_time ?? aftercareSettings.endTime,
   }
-  const classrooms = (centre.classrooms ?? []).filter((room) => room?.name?.trim())
+  const classroomRows = Array.isArray(centre.classrooms) ? centre.classrooms : []
+  const classrooms = classroomRows.filter((room) => room?.name?.trim())
   const fallbackHeroImage = buildCentrePreviewImage({
     name: centre.name,
     suburb: centre.suburb,
@@ -575,13 +454,13 @@ export function CentreClient({ slug }: { slug: string }) {
         <section className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
           <div className="overflow-hidden rounded-[2.4rem] border border-[#E7DDD1] bg-white shadow-[0_20px_48px_rgba(31,44,39,0.07)]">
             <div className="relative aspect-[16/10] sm:aspect-[16/9]">
-              <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} />
+              <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} unoptimized />
               <div className="absolute inset-0 bg-gradient-to-t from-[#10211D]/72 via-[#10211D]/18 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
                 <div className="flex items-end gap-3">
                   {centreLogo ? (
                     <div className="h-16 w-16 overflow-hidden rounded-[1.5rem] border-2 border-white/90 bg-white shadow-xl">
-                      <Image src={centreLogo} alt={`${centre.name} logo`} width={64} height={64} className="h-full w-full object-cover" />
+                      <Image src={centreLogo} alt={`${centre.name} logo`} width={64} height={64} className="h-full w-full object-cover" unoptimized />
                     </div>
                   ) : (
                     <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-2 border-white/90 bg-[#F5EFE6] text-xl font-black text-[#0D9488] shadow-xl">
@@ -746,6 +625,7 @@ export function CentreClient({ slug }: { slug: string }) {
                         width={420}
                         height={320}
                         className="h-40 w-full object-cover sm:h-48"
+                        unoptimized
                       />
                     </div>
                   ))}
