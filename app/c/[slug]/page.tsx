@@ -76,8 +76,6 @@ const PRIVATE_CENTRE_ENRICHMENT_SELECT = [
   'onboarding_complete',
   'website_published',
   'communication_automation_settings',
-  'aftercare_available',
-  'aftercare_end_time',
   'owner_id',
 ].join(',')
 
