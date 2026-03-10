@@ -63,6 +63,8 @@ export type AdminTenantTableRow = {
   age2to4: string
   age4to6: string
   age6plus: string
+  ageRangeStart: string
+  ageRangeEnd: string
   operatingHours: string
   dsdStatus: DsdStatus
   marketplaceUpgrades: string
@@ -123,6 +125,41 @@ function ageFeeToCents(value: string) {
   const parsed = parseNumberOrNull(value)
   if (parsed == null) return 0
   return Math.max(0, Math.round(parsed * 100))
+}
+
+function parseWholeAge(value: string, fallback: number) {
+  const parsed = Number.parseInt(value.trim(), 10)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function buildAgeGroupsFromRange(startValue: string, endValue: string) {
+  const start = Math.max(0, parseWholeAge(startValue, 0))
+  const end = Math.max(start, parseWholeAge(endValue, 6))
+  const groups: string[] = []
+
+  if (start < 2) groups.push(`${start}-2`)
+  if (end > 2 && start < 4) groups.push(`${Math.max(start, 2)}-4`)
+  if (end > 4 && start < 6) groups.push(`${Math.max(start, 4)}-6`)
+  if (end > 6) groups.push(`${Math.max(start, 6)}+`)
+
+  if (groups.length === 0) {
+    if (end <= 2) return [`${start}-2`]
+    if (end <= 4) return [`${start}-4`]
+    return [`${start}-${end}`]
+  }
+
+  return groups
+}
+
+function buildAgeBucketLabels(startValue: string, endValue: string) {
+  const start = Math.max(0, parseWholeAge(startValue, 0))
+  const end = Math.max(start, parseWholeAge(endValue, 6))
+  return {
+    '0-2': `${start < 2 ? start : 0}-2 years`,
+    '2-4': `${Math.max(start, 2)}-4 years`,
+    '4-6': `${Math.max(start, 4)}-6 years`,
+    '6+': end > 6 ? `${Math.max(start, 6)}+ years` : 'Aftercare (6+)',
+  }
 }
 
 function slugify(value: string) {
@@ -617,12 +654,16 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         monthlyFeeMin: parseNumberOrNull(form.monthlyFeeMin),
         monthlyFeeMax: parseNumberOrNull(form.monthlyFeeMax),
         subsidyAccepted: form.subsidyAccepted,
-        ageGroupPricing: {
-          '0-2': { label: '0-2 years', monthly_fee_cents: ageFeeToCents(form.age0to2) },
-          '2-4': { label: '2-4 years', monthly_fee_cents: ageFeeToCents(form.age2to4) },
-          '4-6': { label: '4-6 years', monthly_fee_cents: ageFeeToCents(form.age4to6) },
-          '6+': { label: 'Aftercare (6+)', monthly_fee_cents: ageFeeToCents(form.age6plus) },
-        },
+        ageGroups: buildAgeGroupsFromRange(form.ageRangeStart, form.ageRangeEnd),
+        ageGroupPricing: (() => {
+          const ageBucketLabels = buildAgeBucketLabels(form.ageRangeStart, form.ageRangeEnd)
+          return {
+            '0-2': { label: ageBucketLabels['0-2'], monthly_fee_cents: ageFeeToCents(form.age0to2) },
+            '2-4': { label: ageBucketLabels['2-4'], monthly_fee_cents: ageFeeToCents(form.age2to4) },
+            '4-6': { label: ageBucketLabels['4-6'], monthly_fee_cents: ageFeeToCents(form.age4to6) },
+            '6+': { label: ageBucketLabels['6+'], monthly_fee_cents: ageFeeToCents(form.age6plus) },
+          }
+        })(),
         operatingHours: form.operatingHours.trim() || null,
         dsdStatus: form.dsdStatus,
         marketplaceUpgrades: form.marketplaceUpgrades
@@ -1274,6 +1315,29 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                   </div>
                 </div>
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                  <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Starting age</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className={darkInputClass}
+                        value={form.ageRangeStart}
+                        onChange={(event) => setForm((prev) => (prev ? { ...prev, ageRangeStart: event.target.value } : prev))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-slate-300">Ending age</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        className={darkInputClass}
+                        value={form.ageRangeEnd}
+                        onChange={(event) => setForm((prev) => (prev ? { ...prev, ageRangeEnd: event.target.value } : prev))}
+                      />
+                    </div>
+                    <p className="sm:col-span-2 text-xs text-slate-400">Use whole years only, for example 1 to 6. The fee buckets below still work, but the public age range stays easier to understand.</p>
+                  </div>
                   <p className="mb-3 text-sm font-medium text-white">Pricing By Age (R/month)</p>
                   <div className="grid gap-3 sm:grid-cols-4">
                     <div className="space-y-2">

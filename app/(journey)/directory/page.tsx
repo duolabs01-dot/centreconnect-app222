@@ -72,7 +72,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     suburb: centre.suburb,
     city: centre.city,
     age_groups: centre.age_groups,
-    is_registered: centre.is_registered,
+    is_registered: Boolean(centre.is_claimed) && Boolean(centre.is_registered),
     logo_url: centre.logo_url,
     cover_image_url: centre.cover_image_url,
     capacity: null,

@@ -18,6 +18,7 @@ import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
+import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
 type Centre = {
   id: string
@@ -403,8 +404,7 @@ export function CentreClient({ slug }: { slug: string }) {
     )
   }
 
-  const fallbackHeroImage = getCentreHeroImage(centre.slug, null)
-  const heroImage = getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
+  const hasRealCoverImage = typeof centre.cover_image_url === 'string' && centre.cover_image_url.trim().length > 0
   const centreLogo = (centre.logo_url && isSafeImageUrl(centre.logo_url)) 
     ? centre.logo_url 
     : (centre.slug === 'bajabulile' || centre.slug === 'bajabulile-day-care-centre')
@@ -415,10 +415,19 @@ export function CentreClient({ slug }: { slug: string }) {
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
   const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
   const isClaimed = hasOwnerId
+  const isVerifiedForParents = Boolean(isClaimed && centre.is_registered)
+  const fallbackHeroImage = buildCentrePreviewImage({
+    name: centre.name,
+    suburb: centre.suburb,
+    isClaimed: isClaimed,
+  })
+  const heroImage = hasRealCoverImage
+    ? getSafeImageUrl(getCentreHeroImage(centre.slug, centre.cover_image_url), fallbackHeroImage)
+    : fallbackHeroImage
   const showPilotTrustInfo = isPilotCentre
   const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
-    ? [centre.is_registered ? 'Verified ECD' : null, centre.subsidy_accepted ? 'Subsidy friendly' : null, 'Parent-ready profile'].filter(Boolean) as string[]
+    ? [isVerifiedForParents ? 'Verified' : null, centre.subsidy_accepted ? 'Subsidy friendly' : null, 'Parent-ready profile'].filter(Boolean) as string[]
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
@@ -432,13 +441,13 @@ export function CentreClient({ slug }: { slug: string }) {
 
   const feesLabel = formatFeesLabel(centre)
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
-  const trustLabel = centre.is_registered
+  const trustLabel = isVerifiedForParents
     ? centre.subsidy_accepted
       ? 'Verified and subsidy friendly'
       : 'Verified by CentreConnect'
     : isClaimed
-      ? 'Profile is live'
-      : 'Public listing only'
+      ? 'Live profile, photos pending'
+      : 'Not yet on CentreConnect'
   const practicalLabel = centre.capacity
     ? `Space for about ${centre.capacity} children`
     : centre.subsidy_accepted
@@ -531,7 +540,7 @@ export function CentreClient({ slug }: { slug: string }) {
           <div className="flex flex-col justify-between rounded-[2.4rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_20px_48px_rgba(31,44,39,0.06)] sm:p-6">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                {Boolean(centre.is_registered) ? <PremiumVerifiedBadge label="Verified ECD" /> : null}
+                {isVerifiedForParents ? <PremiumVerifiedBadge /> : null}
                 {centre.subsidy_accepted ? (
                   <Badge className="rounded-full border border-[#E7D6A8] bg-[#FFF5D9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
                     Subsidy friendly
@@ -539,7 +548,7 @@ export function CentreClient({ slug }: { slug: string }) {
                 ) : null}
                 {!isClaimed ? (
                   <Badge className="rounded-full border border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
-                    Public listing
+                    Not yet on CentreConnect
                   </Badge>
                 ) : null}
               </div>
@@ -553,6 +562,9 @@ export function CentreClient({ slug }: { slug: string }) {
               {showUnclaimedDisclaimer ? (
                 <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
                   <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+                  <p className="mt-2 text-xs font-medium leading-5 text-[#8F6200]">
+                    The hero image above is a preview until the centre uploads real photos.
+                  </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
                       Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
@@ -677,10 +689,10 @@ export function CentreClient({ slug }: { slug: string }) {
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {centre.is_registered ? <PremiumVerifiedBadge compact label="Verified ECD" /> : null}
-                      {!centre.is_registered ? (
+                      {isVerifiedForParents ? <PremiumVerifiedBadge compact /> : null}
+                      {!isVerifiedForParents ? (
                         <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
-                          Verification in progress
+                          {isClaimed ? 'Preview image' : 'Not yet on CentreConnect'}
                         </Badge>
                       ) : null}
                     </div>
@@ -752,7 +764,7 @@ export function CentreClient({ slug }: { slug: string }) {
         ageGroupsLabel={ageGroupsLabel}
         capacityLabel={practicalLabel}
         trustLabel={trustLabel}
-        isRegistered={Boolean(centre.is_registered)}
+        isRegistered={isVerifiedForParents}
         isClaimed={isClaimed}
         isOnline={operationalStatus.isOnline}
         schedule={operationalStatus.schedule}

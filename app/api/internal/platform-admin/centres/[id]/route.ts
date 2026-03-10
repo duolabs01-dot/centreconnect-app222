@@ -72,6 +72,7 @@ const actionSchema = z.discriminatedUnion('action', [
     monthlyFeeMin: z.number().min(0).nullable().optional(),
     monthlyFeeMax: z.number().min(0).nullable().optional(),
     subsidyAccepted: z.boolean().optional(),
+    ageGroups: z.array(z.string().max(20)).max(12).optional(),
     ageGroupPricing: z.record(z.string(), z.any()).optional(),
     operatingHours: z.string().max(400).nullable().optional(),
     dsdStatus: z.string().max(80).nullable().optional(),
@@ -295,6 +296,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.monthlyFeeMin !== undefined) updatePayload.monthly_fee_min = payload.monthlyFeeMin
     if (payload.monthlyFeeMax !== undefined) updatePayload.monthly_fee_max = payload.monthlyFeeMax
     if (payload.subsidyAccepted !== undefined) updatePayload.subsidy_accepted = payload.subsidyAccepted
+    if (payload.ageGroups !== undefined) updatePayload.age_groups = payload.ageGroups
     if (payload.ageGroupPricing !== undefined) updatePayload.age_group_pricing = payload.ageGroupPricing
     if (payload.isActive !== undefined) updatePayload.is_active = payload.isActive
     if (payload.isRegistered !== undefined) updatePayload.is_registered = payload.isRegistered

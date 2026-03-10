@@ -54,6 +54,22 @@ function extractAgeFee(ageGroupPricing: any, key: string) {
   return String(Math.round(cents / 100))
 }
 
+function deriveAgeRange(ageGroups: string[] | null | undefined) {
+  const values = (ageGroups ?? [])
+    .flatMap((group) => group.match(/\d+/g) ?? [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value))
+
+  if (values.length === 0) {
+    return { start: '0', end: '6' }
+  }
+
+  return {
+    start: String(Math.min(...values)),
+    end: String(Math.max(...values)),
+  }
+}
+
 export default async function AdminTenantsPage() {
   const { admin } = await requirePlatformAdmin()
 
@@ -61,7 +77,7 @@ export default async function AdminTenantsPage() {
     admin
       .from('ecd_centres')
       .select(
-        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,primary_contact_first_name,primary_contact_surname,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
+        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,primary_contact_first_name,primary_contact_surname,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,subsidy_accepted,age_groups,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
       )
       .or('is_deleted.is.null,is_deleted.eq.false')
       .order('created_at', { ascending: false })
@@ -106,6 +122,7 @@ export default async function AdminTenantsPage() {
     monthly_fee_min: number | null
     monthly_fee_max: number | null
     subsidy_accepted: boolean | null
+    age_groups: string[] | null
     age_group_pricing: Record<string, any> | null
     communication_automation_settings: Record<string, any> | null
     subscriptions:
@@ -153,6 +170,7 @@ export default async function AdminTenantsPage() {
     const marketplaceUpgrades = Array.isArray(tenantOverrides?.marketplace_upgrades)
       ? (tenantOverrides?.marketplace_upgrades as string[]).join(', ')
       : ''
+    const ageRange = deriveAgeRange(centre.age_groups)
     const dsdStatus = (() => {
       const raw = typeof tenantOverrides?.dsd_status === 'string' ? tenantOverrides.dsd_status : null
       if (raw === 'pending' || raw === 'registered' || raw === 'expired' || raw === 'suspended' || raw === 'not_required') {
@@ -190,6 +208,8 @@ export default async function AdminTenantsPage() {
       age2to4: extractAgeFee(centre.age_group_pricing, '2-4'),
       age4to6: extractAgeFee(centre.age_group_pricing, '4-6'),
       age6plus: extractAgeFee(centre.age_group_pricing, '6+'),
+      ageRangeStart: ageRange.start,
+      ageRangeEnd: ageRange.end,
       operatingHours: typeof tenantOverrides?.operating_hours === 'string' ? tenantOverrides.operating_hours : '',
       dsdStatus,
       marketplaceUpgrades,

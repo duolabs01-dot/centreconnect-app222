@@ -202,6 +202,7 @@ export async function GET(req: Request) {
         ...centre,
         slug: safeSlug,
         subsidy_accepted: Boolean(centre.subsidy_accepted),
+        is_registered: Boolean(geoById.get(centre.id as string)?.owner_id) ? Boolean(centre.is_registered) : false,
         is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
         is_pilot: isPilotCentreIdentity(centre),
         is_featured: isPilotCentreIdentity(centre),
