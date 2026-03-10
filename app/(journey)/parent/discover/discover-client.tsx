@@ -2,10 +2,17 @@
 
 import { useEffect, useMemo, useState } from 'react'
 
+import Image from 'next/image'
+import Link from 'next/link'
+import { MapPin, ShieldCheck } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import CentreCard from '@/components/parent/CentreCard'
+import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
+import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { createClient } from '@/lib/supabase/client'
 
 type DiscoverCentre = {
@@ -292,16 +299,76 @@ export default function ParentDiscoverClient() {
           <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Recommended for your area</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {filteredCentres.slice(0, 2).map((centre) => (
-                <div key={centre.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 shadow-sm">
-                  <div className="flex items-center justify-between text-sm text-slate-600">
-                    <span>{centre.suburb ?? 'Near you'}</span>
-                    <span>{centre.distanceLabel}</span>
-                  </div>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">{centre.name}</p>
-                  <p className="text-xs uppercase tracking-[0.4em] text-slate-500">{centre.distanceLabel ?? 'Trusted daily routine'}</p>
-                </div>
-              ))}
+              {filteredCentres.slice(0, 2).map((centre) => {
+                const hasRealCover = typeof centre.cover_image_url === 'string' && centre.cover_image_url.trim().length > 0
+                const heroSrc = hasRealCover
+                  ? centre.cover_image_url!.trim()
+                  : buildCentrePreviewImage({ name: centre.name, suburb: centre.suburb, isClaimed: centre.is_claimed ?? true })
+                const detailHref = centre.slug ? `/c/${encodeURIComponent(centre.slug)}` : '/directory'
+                const locationLabel = [centre.suburb, centre.city].filter(Boolean).join(', ') || 'Near you'
+                const logoSrc = centre.logo_url?.trim() || null
+                const isVerified = Boolean(centre.is_claimed && centre.is_registered)
+
+                return (
+                  <Link
+                    key={centre.id}
+                    href={detailHref}
+                    className="group overflow-hidden rounded-[1.6rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]"
+                  >
+                    <div className="relative aspect-[16/6.2] overflow-hidden bg-[#F4ECE2]">
+                      <Image
+                        src={heroSrc}
+                        alt={hasRealCover ? centre.name : `${centre.name} preview image`}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        unoptimized={!hasRealCover}
+                      />
+                    </div>
+                    <div className="space-y-2.5 px-4 pb-4 pt-3">
+                      <div className="relative min-h-[3rem] pl-[4rem]">
+                        <div className="absolute left-0 top-[-1.85rem]">
+                          {logoSrc ? (
+                            <div className="h-11 w-11 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                              <Image src={logoSrc} alt={`${centre.name} logo`} width={44} height={44} className="h-full w-full object-cover" sizes="44px" unoptimized />
+                            </div>
+                          ) : (
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border-[3px] border-white bg-[#F5EFE6] text-sm font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                              {centre.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="line-clamp-2 text-[0.98rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E]">{centre.name}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7B827E]">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span className="truncate">{locationLabel}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {isVerified ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+                        {centre.is_claimed ? (
+                          <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
+                            CentreConnect partner
+                          </Badge>
+                        ) : (
+                          <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9A5A10] shadow-none">
+                            Preview only
+                          </Badge>
+                        )}
+                        {centre.distanceLabel ? (
+                          <Badge className="border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
+                            <ShieldCheck className="mr-1 h-3 w-3" />
+                            {centre.distanceLabel}
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </section>
         )}

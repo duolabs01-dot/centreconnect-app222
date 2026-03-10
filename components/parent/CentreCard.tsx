@@ -303,17 +303,17 @@ export function CentreCard({
             <div className="flex flex-wrap gap-1.5">
               {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
               {isFeatured ? (
-                <Badge className="flex items-center gap-1 border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-amber-700 shadow-none">
+                <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-amber-700/90 shadow-none">
                   <ShieldCheck className="h-3 w-3" />
                   Recommended
                 </Badge>
               ) : isPilot ? (
-                <Badge className="border border-cyan-300/70 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
+                <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-cyan-700 shadow-none">
                   Pilot Partner
                 </Badge>
               ) : null}
               {subsidy_accepted ? (
-                <Badge className="border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-emerald-700 shadow-none">
+                <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-emerald-700 shadow-none">
                   Subsidy friendly
                 </Badge>
               ) : null}
