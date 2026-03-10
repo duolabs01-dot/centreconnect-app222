@@ -263,10 +263,10 @@ export function CentreCard({
   const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
   const ageSummary = formatAgeSummary(age_groups)
   const locationSummary = formatLocation({ suburb, city, address })
-  const hasRealCoverImage = Boolean(cover_image_url)
+  const hasRealCoverImage = typeof cover_image_url === 'string' && cover_image_url.trim().length > 0
   const usesPreviewImage = !hasRealCoverImage
   const previewImageSrc = buildPreviewImage({ name, suburb, isClaimed: is_claimed })
-  const heroImageSrc = hasRealCoverImage ? cover_image_url : previewImageSrc
+  const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const trustSummary = is_registered
     ? subsidy_accepted
       ? 'Verified and subsidy friendly'
@@ -465,3 +465,4 @@ export function CentreCard({
 }
 
 export default CentreCard
+
