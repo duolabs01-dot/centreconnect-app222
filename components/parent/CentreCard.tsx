@@ -265,7 +265,7 @@ export function CentreCard({
         </div>
 
         <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
-          <div className="relative aspect-[16/7] overflow-hidden bg-[#F4ECE2]">
+          <div className="relative aspect-[16/6.6] overflow-hidden bg-[#F4ECE2]">
             <Image
               src={heroImageSrc}
               alt={usesPreviewImage ? `${name} preview image` : name}
@@ -274,10 +274,8 @@ export function CentreCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               unoptimized={usesPreviewImage}
             />
-          </div>
 
-          <CardContent className="flex flex-1 flex-col space-y-3 px-4 pb-4 pt-0">
-            <div className="relative -mt-6 flex items-end gap-3">
+            <div className="absolute bottom-0 left-4 translate-y-1/2">
               {resolvedLogoUrl ? (
                 <div className="h-14 w-14 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
                   <Image
@@ -295,9 +293,15 @@ export function CentreCard({
                   {name.charAt(0)}
                 </div>
               )}
-              <div className="min-w-0 flex-1 pb-1">
+            </div>
+          </div>
+
+          <CardContent className="flex flex-1 flex-col space-y-3 px-4 pb-4 pt-9">
+            <div className="flex gap-3">
+              <div className="h-14 w-14 shrink-0" aria-hidden />
+              <div className="min-w-0 flex-1">
                 <h3
-                  className="line-clamp-2 text-[1.05rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E] sm:text-[1.1rem]"
+                  className="line-clamp-2 text-[1.02rem] font-bold leading-[1.14] tracking-[-0.02em] text-[#22312E] sm:text-[1.08rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {name}
