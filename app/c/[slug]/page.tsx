@@ -54,17 +54,10 @@ const PRIVATE_CENTRE_SELECT = [
   'id',
   'slug',
   'name',
-  'tagline',
-  'description',
   'suburb',
-  'city',
-  'province',
-  'postal_code',
   'age_groups',
-  'logo_url',
-  'cover_image_url',
-  'primary_color',
   'is_registered',
+  'cover_image_url',
 ].join(',')
 
 const PRIVATE_CENTRE_ENRICHMENT_SELECT = [
