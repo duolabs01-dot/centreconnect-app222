@@ -48,9 +48,6 @@ interface CentreCardProps {
   is_registered?: boolean | null
   isPilot?: boolean
   isFeatured?: boolean
-  contact_whatsapp?: string | null
-  contact_phone?: string | null
-  phone?: string | null
   operating_schedule?: CentreOperatingSchedule | null
   operating_hours_summary?: string | null
   communication_automation_settings?: unknown
@@ -94,36 +91,6 @@ function formatExistingStatus(status?: string | null) {
     .join(' ')
 }
 
-function buildCentreWhatsappHref({
-  centreName,
-  centrePath,
-  contactWhatsapp,
-  contactPhone,
-  phone,
-}: {
-  centreName: string
-  centrePath: string
-  contactWhatsapp?: string | null
-  contactPhone?: string | null
-  phone?: string | null
-}) {
-  const rawPhone = [contactWhatsapp, contactPhone, phone].find((value) => typeof value === 'string' && value.trim().length > 0)
-  if (!rawPhone) return null
-
-  const digits = rawPhone.replace(/[^\d]/g, '')
-  if (!digits) return null
-
-  let normalized = digits
-  if (digits.startsWith('0')) normalized = `27${digits.slice(1)}`
-  else if (!digits.startsWith('27') && rawPhone.startsWith('+')) normalized = digits
-
-  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://centreconnect.co.za').replace(/\/$/, '')
-  const centreUrl = centrePath.startsWith('http') ? centrePath : `${baseUrl}${centrePath}`
-  const message = `Hi ${centreName}! I found your crèche on CentreConnect. Your details are listed there, but your profile says you are not on CentreConnect yet. I would like to ask about fees and space. Here is the page I saw: ${centreUrl}`
-
-  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`
-}
-
 function CompactMetaItem({
   icon: Icon,
   label,
@@ -151,9 +118,6 @@ export function CentreCard({
   city,
   address,
   distanceLabel,
-  contact_whatsapp,
-  contact_phone,
-  phone,
   feesLabel,
   fees_display_mode,
   monthly_fee_min,
@@ -180,15 +144,6 @@ export function CentreCard({
       : '/directory'
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug ?? id)}`
   const showClaimLink = !is_claimed && viewerRole !== 'parent_user'
-  const whatsappHref = !is_claimed
-    ? buildCentreWhatsappHref({
-        centreName: name,
-        centrePath: detailHref,
-        contactWhatsapp: contact_whatsapp,
-        contactPhone: contact_phone,
-        phone,
-      })
-    : null
 
   const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
   const ageSummary = formatAgeSummary(age_groups)
@@ -358,26 +313,24 @@ export function CentreCard({
 
           {!is_claimed ? (
             <>
-              {whatsappHref ? (
-                <Button
-                  asChild
-                  type="button"
-                  className="h-12 rounded-2xl bg-[#25D366] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,211,102,0.18)] transition-all hover:bg-[#1EB85A] active:scale-95"
-                >
-                  <a href={whatsappHref} target="_blank" rel="noreferrer">
-                    Ask about space on WhatsApp
-                  </a>
-                </Button>
-              ) : (
-                <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
-                  <p className="text-sm font-semibold text-[#22312E]">This crèche is not on CentreConnect yet.</p>
-                  <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see their details, then contact them directly about space.</p>
-                </div>
-              )}
+              <Button
+                asChild
+                type="button"
+                className="h-12 rounded-2xl bg-[#1F4B42] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,75,66,0.18)] transition-all hover:bg-[#193D36] active:scale-95"
+              >
+                <Link href={detailHref}>
+                  View details
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
+                <p className="text-sm font-semibold text-[#22312E]">This creche is not on CentreConnect yet.</p>
+                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see fees, distance, and send a message through CentreConnect.</p>
+              </div>
 
               {showClaimLink ? (
                 <p className="text-center text-xs font-medium leading-5 text-[#6A7672]">
-                  Own this crèche?{' '}
+                  Own this creche?{' '}
                   <Link href={claimHref} className="font-semibold text-[#0D9488] hover:underline">
                     Claim it here →
                   </Link>

@@ -211,7 +211,7 @@ export function MobileCentreDetailsSheet({
               {!isClaimed ? (
                 <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                   <p className="text-sm font-medium leading-6 text-[#5F6C68]">
-                    This centre has not joined CentreConnect yet, so parents still need to contact them directly.
+                    This centre has not joined CentreConnect yet, but parents can still save it and send a message through CentreConnect.
                   </p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
@@ -282,6 +282,7 @@ export function MobileCentreDetailsSheet({
     </>
   )
 }
+
 
 
 

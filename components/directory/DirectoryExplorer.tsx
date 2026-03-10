@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
-import { getLocationReference } from '@/lib/geo/centre-location'
+import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import type { DirectoryCentre } from '@/types/directory-centre'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import {
@@ -60,16 +60,27 @@ const FEE_OPTIONS = [
   { label: 'Under R2000', value: '2000' },
 ]
 
-function haversineMeters(userLocation: [number, number], centre: { latitude: number | null; longitude: number | null }) {
-  if (centre.latitude == null || centre.longitude == null) return null
+function haversineMeters(
+  userLocation: [number, number],
+  centre: { latitude: number | null; longitude: number | null; slug?: string | null; suburb?: string | null; city?: string | null; address?: string | null }
+) {
+  const resolved = resolveCentreCoordinates({
+    latitude: centre.latitude,
+    longitude: centre.longitude,
+    slug: centre.slug,
+    suburb: centre.suburb,
+    city: centre.city,
+    address: centre.address,
+  })
+  if (resolved.latitude == null || resolved.longitude == null) return null
 
   const toRad = (value: number) => (value * Math.PI) / 180
   const [userLng, userLat] = userLocation
-  const dLat = toRad(centre.latitude - userLat)
-  const dLon = toRad(centre.longitude - userLng)
+  const dLat = toRad(resolved.latitude - userLat)
+  const dLon = toRad(resolved.longitude - userLng)
   const a =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(userLat)) * Math.cos(toRad(centre.latitude)) * Math.sin(dLon / 2) ** 2
+    Math.cos(toRad(userLat)) * Math.cos(toRad(resolved.latitude)) * Math.sin(dLon / 2) ** 2
   return 6371000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
