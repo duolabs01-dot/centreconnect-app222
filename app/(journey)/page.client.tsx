@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Clock3, FileCheck2, ShieldCheck, Share2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowRight, Clock3, FileCheck2, ShieldCheck, Share2, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
@@ -14,6 +15,8 @@ export type HomeActiveCentre = {
   isPilot?: boolean
   isFeatured?: boolean
   coverImage?: string | null
+  latitude?: number | null
+  longitude?: number | null
 }
 
 type HomeClientPageProps = {
@@ -101,9 +104,59 @@ function centreHref(centre: HomeActiveCentre) {
   return '/directory'
 }
 
+function toRadians(degrees: number) {
+  return degrees * (Math.PI / 180)
+}
+
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371
+  const dLat = toRadians(lat2 - lat1)
+  const dLon = toRadians(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+function metersToMinutes(meters: number, speedKmh: number = 30) {
+  const hours = meters / 1000 / speedKmh
+  const minutes = Math.round(hours * 60)
+  if (minutes < 1) return '< 1 min'
+  if (minutes === 1) return '1 min'
+  return `${minutes} min`
+}
+
 export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
   const featuredCentre = activeCentres[0] ?? null
   const showProofBand = activeCentres.length > 0
+
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude })
+      },
+      (error) => {
+        setLocationError(error.message)
+      }
+    )
+  }, [])
+
+  function getDistanceMinutes(centre: HomeActiveCentre) {
+    if (!userLocation || !centre.latitude || !centre.longitude) return null
+    const distanceKm = haversineDistance(
+      userLocation.lat,
+      userLocation.lng,
+      centre.latitude,
+      centre.longitude
+    )
+    const distanceMeters = distanceKm * 1000
+    return metersToMinutes(distanceMeters)
+  }
 
   const featuredHeroImage = featuredCentre
     ? getCentreHeroImage(featuredCentre.slug, featuredCentre.coverImage)
@@ -441,9 +494,17 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       />
                     </div>
                     <div className="p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D837F]">
-                        {centre.suburb ?? 'Johannesburg'}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#7D837F]">
+                          {centre.suburb ?? 'Johannesburg'}
+                        </p>
+                        {getDistanceMinutes(centre) && (
+                          <span className="flex items-center gap-1 text-xs font-bold text-[var(--teal)]">
+                            <MapPin className="h-3 w-3" />
+                            {getDistanceMinutes(centre)}
+                          </span>
+                        )}
+                      </div>
                       <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
                       <div className="mt-3 flex flex-wrap gap-2">
                         {centre.isRegistered && (
