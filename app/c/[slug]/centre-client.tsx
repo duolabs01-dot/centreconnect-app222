@@ -59,6 +59,7 @@ export type Centre = {
   classrooms?: Array<{ id?: string | null; name?: string | null; age_group?: string | null; practitioner_name?: string | null }> | null
   owner_id?: string | null
   onboarding_complete?: boolean | null
+  website_published?: boolean | null
 }
 
 export type ExistingApplication = {
@@ -293,7 +294,7 @@ export function CentreClient({
   const centreInitial = (centre.name?.trim().charAt(0) || 'C').toUpperCase()
   const isPilotCentre = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
   const hasOwnerId = typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0
-  const isClaimed = hasOwnerId
+  const isClaimed = hasOwnerId || centre.onboarding_complete === true || centre.website_published === true
   const isVerifiedForParents = Boolean(isClaimed && centre.is_registered)
   const savedOperatingSchedule =
     centre.operating_schedule ??

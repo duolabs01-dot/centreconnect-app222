@@ -1,4 +1,8 @@
+import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+
 import { createClient } from '@/lib/supabase/server'
+import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 import {
   CentreClient,
   DEFAULT_VISIBLE_SECTIONS,
@@ -9,9 +13,6 @@ import {
   type ExistingApplication,
   type WebsiteContentState,
 } from './centre-client'
-import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 
 type MetadataCentre = {
   name: string
@@ -25,8 +26,72 @@ type CentrePagePayload = {
   existingApplication: ExistingApplication | null
 }
 
-async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePagePayload> {
-  const emptyPayload: CentrePagePayload = {
+const PUBLIC_CENTRE_SELECT = [
+  'id',
+  'slug',
+  'name',
+  'tagline',
+  'description',
+  'suburb',
+  'city',
+  'province',
+  'postal_code',
+  'age_groups',
+  'logo_url',
+  'cover_image_url',
+  'primary_color',
+  'is_registered',
+  'fees_display_mode',
+  'monthly_fee_min',
+  'monthly_fee_max',
+  'registration_fee',
+  'subsidy_accepted',
+  'contact_whatsapp',
+  'contact_phone',
+].join(',')
+
+const PRIVATE_CENTRE_SELECT = [
+  'id',
+  'slug',
+  'name',
+  'tagline',
+  'description',
+  'suburb',
+  'city',
+  'province',
+  'postal_code',
+  'age_groups',
+  'logo_url',
+  'cover_image_url',
+  'primary_color',
+  'is_registered',
+].join(',')
+
+const PRIVATE_CENTRE_ENRICHMENT_SELECT = [
+  'id',
+  'email',
+  'phone',
+  'address',
+  'capacity',
+  'fees_display_mode',
+  'monthly_fee_min',
+  'monthly_fee_max',
+  'registration_fee',
+  'subsidy_accepted',
+  'contact_whatsapp',
+  'contact_phone',
+  'onboarding_complete',
+  'website_published',
+  'communication_automation_settings',
+  'aftercare_available',
+  'aftercare_end_time',
+  'owner_id',
+].join(',')
+
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+
+function buildEmptyPayload(): CentrePagePayload {
+  return {
     centre: null,
     websiteContent: {
       aboutText: '',
@@ -37,43 +102,159 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
     userRole: null,
     existingApplication: null,
   }
+}
 
+async function loadPublicCentreRow(supabase: SupabaseServerClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
+  try {
+    const { data, error } = await supabase
+      .from('public_ecd_centres')
+      .select(PUBLIC_CENTRE_SELECT)
+      .in('slug', slugCandidates)
+      .limit(1)
+
+    if (error) {
+      console.error('[centre-page] public_ecd_centres lookup failed:', error)
+      return null
+    }
+
+    return Array.isArray(data) && data.length > 0 ? (data[0] as Partial<Centre>) : null
+  } catch (error) {
+    console.error('[centre-page] Unexpected public centre lookup failure:', error)
+    return null
+  }
+}
+
+async function loadPrivateCentreRow(supabase: SupabaseServerClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
+  try {
+    const { data, error } = await supabase
+      .from('ecd_centres')
+      .select(PRIVATE_CENTRE_SELECT)
+      .in('slug', slugCandidates)
+      .limit(1)
+
+    if (error) {
+      console.error('[centre-page] ecd_centres base lookup failed:', error)
+      return null
+    }
+
+    return Array.isArray(data) && data.length > 0 ? (data[0] as Partial<Centre>) : null
+  } catch (error) {
+    console.error('[centre-page] Unexpected private centre base lookup failure:', error)
+    return null
+  }
+}
+
+async function loadPrivateCentreEnrichment(supabase: SupabaseServerClient, centreId: string): Promise<Partial<Centre> | null> {
+  try {
+    const { data, error } = await supabase
+      .from('ecd_centres')
+      .select(PRIVATE_CENTRE_ENRICHMENT_SELECT)
+      .eq('id', centreId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('[centre-page] ecd_centres enrichment lookup failed:', error)
+      return null
+    }
+
+    return data ? (data as Partial<Centre>) : null
+  } catch (error) {
+    console.error('[centre-page] Unexpected private centre enrichment failure:', error)
+    return null
+  }
+}
+
+async function loadCentreClassrooms(
+  supabase: SupabaseServerClient,
+  centreId: string
+): Promise<NonNullable<Centre['classrooms']>> {
+  try {
+    const { data, error } = await supabase
+      .from('ecd_classes')
+      .select('id,name,age_group,practitioner_name')
+      .eq('ecd_id', centreId)
+      .order('created_at', { ascending: true })
+      .order('name', { ascending: true })
+
+    if (error) {
+      console.error('[centre-page] ecd_classes lookup failed:', error)
+      return []
+    }
+
+    return Array.isArray(data) ? (data as NonNullable<Centre['classrooms']>) : []
+  } catch (error) {
+    console.error('[centre-page] Unexpected classroom lookup failure:', error)
+    return []
+  }
+}
+
+async function loadWebsiteContent(
+  supabase: SupabaseServerClient,
+  centreId: string
+): Promise<WebsiteContentState> {
+  const emptyContent: WebsiteContentState = {
+    aboutText: '',
+    programCards: [],
+    galleryUrls: [],
+    visibleSections: DEFAULT_VISIBLE_SECTIONS,
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('ecd_content')
+      .select('section,content_blocks')
+      .eq('ecd_id', centreId)
+      .in('section', ['about', 'programs', 'gallery', 'website_sections'])
+
+    if (error) {
+      console.error('[centre-page] ecd_content lookup failed:', error)
+      return emptyContent
+    }
+
+    const sectionMap = new Map((data ?? []).map((row) => [row.section, row.content_blocks]))
+    return {
+      aboutText: fromParagraphBlocks(sectionMap.get('about')),
+      programCards: fromProgramBlocks(sectionMap.get('programs')),
+      galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
+      visibleSections: Array.isArray(sectionMap.get('website_sections'))
+        ? (sectionMap.get('website_sections') as string[])
+        : DEFAULT_VISIBLE_SECTIONS,
+    }
+  } catch (error) {
+    console.error('[centre-page] Unexpected website content lookup failure:', error)
+    return emptyContent
+  }
+}
+
+async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePagePayload> {
+  const emptyPayload = buildEmptyPayload()
   if (slugCandidates.length === 0) return emptyPayload
 
   try {
     const supabase = await createClient()
-    const [{ data: centreRows }, { data: fallbackRows }] = await Promise.all([
-      supabase.from('ecd_centres').select('*').in('slug', slugCandidates).limit(1),
-      supabase.from('public_ecd_centres').select('*').in('slug', slugCandidates).limit(1),
-    ])
+    const publicCentre = await loadPublicCentreRow(supabase, slugCandidates)
+    const privateCentre = await loadPrivateCentreRow(supabase, slugCandidates)
+    const baseCentre = privateCentre ? { ...publicCentre, ...privateCentre } : publicCentre
 
-    const centreData = Array.isArray(centreRows) && centreRows.length > 0 ? (centreRows[0] as Centre) : null
-    const publicCentreData = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
-    const resolvedCentre = centreData ? { ...publicCentreData, ...centreData } : publicCentreData
-
-    if (!resolvedCentre?.id) {
+    if (!baseCentre?.id) {
       return emptyPayload
     }
 
-    const { data: contentRows } = await supabase
-      .from('ecd_content')
-      .select('section,content_blocks')
-      .eq('ecd_id', resolvedCentre.id)
-      .in('section', ['about', 'programs', 'gallery', 'website_sections'])
+    const [enrichment, classrooms, websiteContent] = await Promise.all([
+      loadPrivateCentreEnrichment(supabase, baseCentre.id),
+      loadCentreClassrooms(supabase, baseCentre.id),
+      loadWebsiteContent(supabase, baseCentre.id),
+    ])
 
-    const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
-    const visibleSections = Array.isArray(sectionMap.get('website_sections'))
-      ? (sectionMap.get('website_sections') as string[])
-      : DEFAULT_VISIBLE_SECTIONS
+    const resolvedCentre = {
+      ...baseCentre,
+      ...enrichment,
+      classrooms,
+    } as Centre
 
     const payload: CentrePagePayload = {
       centre: resolvedCentre,
-      websiteContent: {
-        aboutText: fromParagraphBlocks(sectionMap.get('about')),
-        programCards: fromProgramBlocks(sectionMap.get('programs')),
-        galleryUrls: fromGalleryBlocks(sectionMap.get('gallery')),
-        visibleSections,
-      },
+      websiteContent,
       userRole: null,
       existingApplication: null,
     }
@@ -86,7 +267,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
       return payload
     }
 
-    const [{ data: profile }, { data: existingApplicationData }] = await Promise.all([
+    const [{ data: profile, error: profileError }, { data: application, error: applicationError }] = await Promise.all([
       supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle(),
       supabase
         .from('applications')
@@ -98,11 +279,18 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
         .maybeSingle(),
     ])
 
+    if (profileError) {
+      console.error('[centre-page] user profile lookup failed:', profileError)
+    }
+    if (applicationError) {
+      console.error('[centre-page] application lookup failed:', applicationError)
+    }
+
     payload.userRole = profile?.role ?? null
-    payload.existingApplication = existingApplicationData?.id
+    payload.existingApplication = application?.id
       ? {
-          id: existingApplicationData.id,
-          status: existingApplicationData.status ?? null,
+          id: application.id,
+          status: application.status ?? null,
         }
       : null
 
@@ -118,25 +306,20 @@ async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCen
 
   try {
     const supabase = await createClient()
-
-    const { data: publicRows } = await supabase
-      .from('public_ecd_centres')
-      .select('name,tagline')
-      .in('slug', slugCandidates)
-      .limit(1)
-
-    if (Array.isArray(publicRows) && publicRows.length > 0) {
-      return publicRows[0] as MetadataCentre
+    const publicCentre = await loadPublicCentreRow(supabase, slugCandidates)
+    if (publicCentre?.name) {
+      return {
+        name: publicCentre.name,
+        tagline: publicCentre.tagline ?? null,
+      }
     }
 
-    const { data: privateRows } = await supabase
-      .from('ecd_centres')
-      .select('name,tagline')
-      .in('slug', slugCandidates)
-      .limit(1)
-
-    if (Array.isArray(privateRows) && privateRows.length > 0) {
-      return privateRows[0] as MetadataCentre
+    const privateCentre = await loadPrivateCentreRow(supabase, slugCandidates)
+    if (privateCentre?.name) {
+      return {
+        name: privateCentre.name,
+        tagline: privateCentre.tagline ?? null,
+      }
     }
   } catch (error) {
     console.error('[centre-page] Failed to load metadata:', error)
