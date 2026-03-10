@@ -6,8 +6,7 @@ import {
   normalizeAppUrl,
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
-import { queueEmail } from '@/lib/communications/emails'
-import { sendEmail, shouldAttemptDirectEmailForRecipient } from '@/lib/email/send'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { renderParentSignupConfirmationEmail } from '@/lib/email/templates/parent-signup-confirmation'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -114,39 +113,26 @@ export async function POST(request: Request) {
     logoUrl: `${appBaseUrl}/centreconnect-logo-email.png`,
   })
 
-  let delivered = false
-  let deliveryError: string | null = null
+  const delivery = await deliverTransactionalEmail({
+    to: normalizedEmail,
+    subject: emailTemplate.subject,
+    html: emailTemplate.html,
+    text: emailTemplate.text,
+    requireDirectDelivery: true,
+  })
 
-  const directEligibility = shouldAttemptDirectEmailForRecipient(normalizedEmail)
-  if (directEligibility.allowed) {
-    const directResult = await sendEmail({
-      to: normalizedEmail,
-      subject: emailTemplate.subject,
-      html: emailTemplate.html,
-      text: emailTemplate.text,
-    })
-    delivered = directResult.success
-    if (!directResult.success) {
-      deliveryError = directResult.error ?? 'SMTP delivery failed.'
+  if (!delivery.directSent) {
+    const signupUserId = signupResult.data?.user?.id
+    if (signupUserId) {
+      await admin.auth.admin.deleteUser(signupUserId)
     }
-  } else if (directEligibility.reason) {
-    deliveryError = directEligibility.reason
-  }
 
-  if (!delivered) {
-    const queued = await queueEmail(normalizedEmail, emailTemplate.subject, emailTemplate.html)
-    if (!queued.success) {
-      const signupUserId = signupResult.data?.user?.id
-      if (signupUserId) {
-        await admin.auth.admin.deleteUser(signupUserId)
-      }
-      return NextResponse.json(
-        {
-          error: `Unable to send confirmation email. ${deliveryError ? `${deliveryError} | ` : ''}${queued.error ?? 'Queue unavailable.'}`,
-        },
-        { status: 502 }
-      )
-    }
+    return NextResponse.json(
+      {
+        error: `Unable to send confirmation email. ${delivery.deliveryMessage}`,
+      },
+      { status: 502 }
+    )
   }
 
   void sendPlatformAdminActionNotification({
@@ -155,13 +141,13 @@ export async function POST(request: Request) {
     lines: [
       `Email: ${normalizedEmail}`,
       `Next path: ${safeNextPath}`,
-      `Delivery: ${delivered ? 'direct email sent' : 'email queued'}`,
+      `Delivery: ${delivery.directSent ? 'direct email sent' : delivery.status}`,
     ],
     details: {
       fullName,
       phone: data.phone.trim(),
       confirmationType: signupResult.data?.properties?.verification_type ?? 'signup',
-      deliveryError: deliveryError ?? '-',
+      deliveryError: delivery.directErrors.join(' | ') || delivery.directNotes.join(' | ') || '-',
     },
   }).catch((error) => {
     console.error('[register-parent] founder notification failed:', error)

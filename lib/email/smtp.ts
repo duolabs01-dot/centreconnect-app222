@@ -26,6 +26,11 @@ type SmtpConfig = {
   fromEnvelope: string
 }
 
+type SmtpResponse = {
+  status: number
+  lines: string[]
+}
+
 class SmtpClient {
   private socket: net.Socket | tls.TLSSocket
   private buffer = ''
@@ -71,8 +76,7 @@ class SmtpClient {
     })
   }
 
-  async expect(expectedCodes: number | number[]) {
-    const expectedList = Array.isArray(expectedCodes) ? expectedCodes : [expectedCodes]
+  async readResponse(expectedCodes?: number | number[]) {
     const first = await this.nextLine()
     const status = Number(first.slice(0, 3))
     const lines = [first]
@@ -85,9 +89,18 @@ class SmtpClient {
       isMultiline = next.startsWith(`${prefix}-`)
     }
 
-    if (!expectedList.includes(status)) {
-      throw new Error(`SMTP ${status}: ${lines.join(' | ')}`)
+    if (expectedCodes !== undefined) {
+      const expectedList = Array.isArray(expectedCodes) ? expectedCodes : [expectedCodes]
+      if (!expectedList.includes(status)) {
+        throw new Error(`SMTP ${status}: ${lines.join(' | ')}`)
+      }
     }
+
+    return { status, lines } satisfies SmtpResponse
+  }
+
+  async expect(expectedCodes: number | number[]) {
+    await this.readResponse(expectedCodes)
   }
 
   writeLine(line: string) {
@@ -96,6 +109,10 @@ class SmtpClient {
 
   writeRaw(data: string) {
     this.socket.write(data)
+  }
+
+  getSocket() {
+    return this.socket
   }
 
   end() {
@@ -247,6 +264,35 @@ async function connectClient(config: SmtpConfig): Promise<SmtpClient> {
   })
 }
 
+async function sendEhlo(client: SmtpClient, host: string) {
+  client.writeLine(`EHLO ${host}`)
+  const response = await client.readResponse(250)
+  return response.lines
+}
+
+function supportsStartTls(lines: string[]) {
+  return lines.some((line) => line.slice(4).trim().toUpperCase().startsWith('STARTTLS'))
+}
+
+async function upgradeClientToTls(client: SmtpClient, config: SmtpConfig): Promise<SmtpClient> {
+  const plainSocket = client.getSocket()
+
+  return await new Promise<SmtpClient>((resolve, reject) => {
+    const tlsSocket = tls.connect(
+      {
+        socket: plainSocket,
+        servername: config.host,
+      },
+      () => {
+        tlsSocket.setTimeout(20000, () => tlsSocket.destroy(new Error('SMTP TLS socket timeout')))
+        resolve(new SmtpClient(tlsSocket))
+      }
+    )
+
+    tlsSocket.once('error', reject)
+  })
+}
+
 export async function sendSmtpMail(input: SendSmtpMailInput): Promise<SendSmtpMailResult> {
   const config = getSmtpConfig()
   if (!config) {
@@ -267,8 +313,14 @@ export async function sendSmtpMail(input: SendSmtpMailInput): Promise<SendSmtpMa
     client = await connectClient(config)
     await client.expect(220)
 
-    client.writeLine(`EHLO ${config.host}`)
-    await client.expect(250)
+    let ehloLines = await sendEhlo(client, config.host)
+
+    if (!config.secure && supportsStartTls(ehloLines)) {
+      client.writeLine('STARTTLS')
+      await client.expect(220)
+      client = await upgradeClientToTls(client, config)
+      ehloLines = await sendEhlo(client, config.host)
+    }
 
     client.writeLine('AUTH LOGIN')
     await client.expect(334)

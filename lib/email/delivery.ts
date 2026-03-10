@@ -11,6 +11,7 @@ export type DeliverTransactionalEmailInput = {
   subject: string
   html: string
   text?: string
+  requireDirectDelivery?: boolean
 }
 
 export type DeliverTransactionalEmailResult = {
@@ -76,9 +77,12 @@ export async function deliverTransactionalEmail(
     directNotes.push(`Direct email skipped: ${directEligibility.reason}`)
   }
 
+  const queueAllowed = !input.requireDirectDelivery
   const queueResult = directSent
     ? { success: true, skipped: true }
-    : await queueEmail(recipient, subject, html)
+    : queueAllowed
+      ? await queueEmail(recipient, subject, html)
+      : { success: false, skipped: true, error: 'Direct delivery required for this email.' }
   const queueMessageId =
     !directSent &&
     queueResult.success &&
@@ -89,7 +93,7 @@ export async function deliverTransactionalEmail(
 
   const diagnostics = [...directNotes, ...directErrors].join(' | ')
   const queueError = !queueResult.success && 'error' in queueResult ? queueResult.error ?? 'unknown' : null
-  const status = directSent ? 'sent' : queueResult.success ? 'queued' : 'failed'
+  const status = directSent ? 'sent' : queueAllowed && queueResult.success ? 'queued' : 'failed'
   const deliveryMessage =
     status === 'sent'
       ? `Email sent via ${directProvider ?? 'direct provider'}.`
@@ -99,7 +103,13 @@ export async function deliverTransactionalEmail(
           } Queueing does not confirm delivery.`
         : `Email delivery failed. ${
             diagnostics.length > 0 ? diagnostics : 'No direct email provider succeeded.'
-          }${queueError ? ` Queue error: ${queueError}` : ''}`
+          }${
+            queueAllowed
+              ? queueError
+                ? ` Queue error: ${queueError}`
+                : ''
+              : ' Direct delivery is required for this email.'
+          }`
 
   return {
     status,

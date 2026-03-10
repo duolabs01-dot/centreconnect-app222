@@ -56,6 +56,9 @@ export function renderParentSignupConfirmationEmail(input: ParentSignupConfirmat
     previewText: 'Confirm your CentreConnect email to activate your parent account.',
     appBaseUrl: input.appBaseUrl,
     logoUrl: input.logoUrl,
+    supportEmail: input.supportEmail,
+    heading: 'Confirm your CentreConnect account',
+    subheading: 'One tap and your parent profile is ready for updates, applications, and secure records.',
     children: htmlContent
   })
 
