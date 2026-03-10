@@ -268,7 +268,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       <div
         className="space-y-6 pb-20 text-[#22312E]"
         style={{
-          fontFamily: 'var(--font-dm-sans)',
+          fontFamily: 'var(--font-display)',
           ['--teal' as string]: '#0D9488',
           ['--amber' as string]: '#D4935A',
           ['--amber-light' as string]: '#FDF0E6',
@@ -290,7 +290,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           </div>
           <h1
             className="mt-4 max-w-[14ch] text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:max-w-none sm:text-[3.2rem] sm:leading-[0.98]"
-            style={{ fontFamily: 'var(--font-serif)' }}
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             CentreConnect keeps your child’s centre organised.
           </h1>
@@ -324,6 +324,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
+
 
 
 

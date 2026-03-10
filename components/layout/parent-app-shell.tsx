@@ -151,7 +151,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     <div
       data-parent-theme="true"
       className="min-h-screen overflow-x-clip bg-card font-sans text-foreground"
-      style={{ fontFamily: 'var(--font-dm-sans)' }}
+      style={{ fontFamily: 'var(--font-display)' }}
     >
       {/* Premium Background Illustration */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.03]">
@@ -365,3 +365,4 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     </div>
   )
 }
+

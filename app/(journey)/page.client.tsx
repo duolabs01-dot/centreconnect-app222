@@ -168,7 +168,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
     <div
       className="min-h-screen overflow-x-clip bg-[var(--cream)] text-[#22312E] overscroll-none selection:bg-teal-100 selection:text-teal-950"
       style={{
-        fontFamily: 'var(--font-dm-sans)',
+        fontFamily: 'var(--font-display)',
         ['--teal' as string]: '#0D9488',
         ['--amber' as string]: '#D4935A',
         ['--amber-light' as string]: '#FDF0E6',
@@ -198,7 +198,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
                 <h1
                   className="mt-5 text-[2.45rem] leading-[1.04] tracking-[-0.04em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[4rem] sm:leading-[0.98] lg:max-w-none lg:text-[5rem]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Finding the right crèche near you just got simpler.
                 </h1>
@@ -311,7 +311,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   </div>
                   <h3
                     className="text-[2rem] leading-tight text-[#1F2D29] sm:text-[2.6rem]"
-                    style={{ fontFamily: 'var(--font-serif)' }}
+                    style={{ fontFamily: 'var(--font-display)' }}
                   >
                     Bajabulile ECD
                   </h3>
@@ -334,7 +334,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Pilot Success Story</p>
                 <h2
                   className="mt-4 text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:text-[2.8rem]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   &quot;Now I spend my time with children, not with paper.&quot;
                 </h2>
@@ -362,7 +362,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">How it works</p>
               <h2
                 className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-serif)' }}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 One calm flow from search to application.
               </h2>
@@ -378,11 +378,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     className="flex h-12 w-12 items-center justify-center rounded-2xl"
                     style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
                   >
-                    <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-serif)' }}>
+                    <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-display)' }}>
                       {step.number}
                     </span>
                   </div>
-                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-serif)' }}>
+                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-display)' }}>
                     {step.title}
                   </h3>
                   <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{step.body}</p>
@@ -398,7 +398,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--amber)]">Parent answers</p>
               <h2
                 className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-serif)' }}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Everything you want to know before you apply.
               </h2>
@@ -427,7 +427,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Apply prep</p>
                 <h2
                   className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.6rem]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   What you need to apply.
                 </h2>
@@ -471,7 +471,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               <div className="max-w-2xl">
                 <h2
                   className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Real crèches. Real spaces.
                 </h2>
@@ -543,7 +543,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               <div className="max-w-xl">
                 <h2
                   className="text-[2rem] leading-[1.04] tracking-[-0.035em] text-white sm:text-[3.1rem] sm:leading-[1.02]"
-                  style={{ fontFamily: 'var(--font-serif)' }}
+                  style={{ fontFamily: 'var(--font-display)' }}
                 >
                   Your child only leaves with someone you approved.
                 </h2>
@@ -613,7 +613,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
             <div className="max-w-3xl">
               <h2
                 className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-white sm:text-[3rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-serif)' }}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Start with your area. Save your profile when you’re ready.
               </h2>
@@ -648,3 +648,4 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
     </div>
   )
 }
+

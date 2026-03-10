@@ -194,7 +194,7 @@ export default function DirectoryExplorer({
   }
 
   return (
-    <div className="cc-stack overflow-x-clip text-[#22312E]" style={{ fontFamily: 'var(--font-dm-sans)' }}>
+    <div className="cc-stack overflow-x-clip text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
       <div className="sticky top-[84px] z-[60] mx-0 rounded-[1.7rem] border border-[#E8DDD0] bg-[#FFFDF9]/95 p-3 shadow-[0_12px_32px_rgba(31,44,39,0.06)] backdrop-blur-xl sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
@@ -224,7 +224,7 @@ export default function DirectoryExplorer({
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-[2.5rem] border-t-0 bg-[#FFFDF9] px-6 pb-12 pt-8 shadow-[0_-20px_50px_rgba(0,0,0,0.08)]">
               <SheetHeader className="mb-8">
-                <SheetTitle className="text-[2rem] tracking-[-0.03em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-serif)' }}>
+                <SheetTitle className="text-[2rem] tracking-[-0.03em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-display)' }}>
                   Refine results
                 </SheetTitle>
               </SheetHeader>
@@ -413,7 +413,7 @@ export default function DirectoryExplorer({
                 <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#FFFDF9] shadow-[0_10px_24px_rgba(31,44,39,0.05)]">
                   <Search className="h-10 w-10 text-[#B1BAB6]" />
                 </div>
-                <h3 className="text-[1.8rem] leading-tight text-[#1F2D29]" style={{ fontFamily: 'var(--font-serif)' }}>
+                <h3 className="text-[1.8rem] leading-tight text-[#1F2D29]" style={{ fontFamily: 'var(--font-display)' }}>
                   No crèches matched that search.
                 </h3>
                 <p className="mt-2 max-w-xs text-base font-medium text-[#66736F]">
@@ -499,7 +499,7 @@ export default function DirectoryExplorer({
               </div>
               <h3
                 className="mb-4 mt-5 text-[2rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.7rem]"
-                style={{ fontFamily: 'var(--font-serif)' }}
+                style={{ fontFamily: 'var(--font-display)' }}
               >
                 Found a few you like? Keep your next steps simple.
               </h3>
@@ -548,6 +548,7 @@ export default function DirectoryExplorer({
     </div>
   )
 }
+
 
 
 

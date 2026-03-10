@@ -338,7 +338,7 @@ export function CentreCard({
                       </Badge>
                     ) : null}
                   </div>
-                  <h3 className="mt-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-white" style={{ fontFamily: 'var(--font-serif)' }}>
+                  <h3 className="mt-2 text-[1.35rem] leading-tight tracking-[-0.02em] text-white" style={{ fontFamily: 'var(--font-display)' }}>
                     {name}
                   </h3>
                   <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/80">
@@ -433,4 +433,5 @@ export function CentreCard({
 }
 
 export default CentreCard
+
 
