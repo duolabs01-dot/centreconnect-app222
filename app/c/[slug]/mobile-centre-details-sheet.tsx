@@ -3,7 +3,7 @@
 import type { TouchEvent } from 'react'
 import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Baby, CheckCircle2, Circle, Clock3, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { Baby, CheckCircle2, Circle, Clock3, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { ContactCentreSheet } from './contact-centre-sheet'
@@ -53,7 +53,7 @@ function DetailFact({
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">{label}</p>
+          <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{label}</p>
           <p className="mt-1 text-sm font-semibold leading-5 text-[#22312E]">{value}</p>
         </div>
       </div>
@@ -158,12 +158,12 @@ export function MobileCentreDetailsSheet({
                 <div className="flex flex-wrap items-center gap-2">
                   {isRegistered ? <PremiumVerifiedBadge compact /> : null}
                   {showPilotTrustInfo ? (
-                    <Badge className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-3 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
+                    <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-0.5 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                       Pilot Partner
                     </Badge>
                   ) : null}
                   {!isClaimed ? (
-                    <Badge className="rounded-full border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+                    <Badge className="rounded-full border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
                       Not yet on CentreConnect
                     </Badge>
                   ) : null}
@@ -179,7 +179,7 @@ export function MobileCentreDetailsSheet({
                 <DetailFact icon={Wallet} label="Fees" value={feesLabel} />
                 <DetailFact icon={Wallet} label="Registration" value={registrationFeeLabel} />
                 <DetailFact icon={Baby} label="Ages" value={ageGroupsLabel} />
-                <DetailFact icon={ShieldCheck} label="Trust" value={trustLabel} />
+                <DetailFact icon={FileText} label="Trust" value={trustLabel} />
               </div>
 
               <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-[#FAF8F4] p-4">

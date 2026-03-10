@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Baby, CheckCircle2, Circle, Clock3, MapPin, Phone, ShieldCheck, Sparkles, Users, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, BellRing, BookOpenCheck, CheckCircle2, Circle, Clock3, FileText, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
@@ -80,6 +80,9 @@ export type WebsiteContentState = {
 }
 
 export const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
+
+const parentBenefitIcons = [BellRing, ShieldCheck, FileText, BookOpenCheck] as const
+const programCardIcons = [BookOpenCheck, Users, Baby, MessageCircle] as const
 const ALLOWED_IMAGE_HOST_SUFFIXES = ['.supabase.co']
 const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com', 'thumbs.dreamstime.com'])
 
@@ -212,7 +215,7 @@ function QuickFact({
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{label}</p>
+          <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{label}</p>
           <p className="mt-1 text-sm font-semibold leading-6 text-[#22312E]">{value}</p>
         </div>
       </div>
@@ -235,7 +238,7 @@ function InfoRow({
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{label}</p>
+        <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{label}</p>
         <p className="mt-1 text-sm font-semibold leading-6 text-[#22312E]">{value}</p>
       </div>
     </div>
@@ -536,7 +539,7 @@ export function CentreClient({
             </div>
 
             <div className="mt-6 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">{isClaimed ? 'CentreConnect parent benefits' : 'What parents need first'}</p>
+              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'CentreConnect parent benefits' : 'What parents need first'}</p>
               <div className="mt-3 space-y-3">
                 {parentHighlights.map((item) => (
                   <div key={item} className="flex items-start gap-3">
@@ -567,17 +570,20 @@ export function CentreClient({
                   description="This is where the centre and CentreConnect work together: less admin stress for you, clearer communication, and faster action when your child needs something."
                 />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {parentBenefitCards.map((item, index) => (
-                    <div key={item.title} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
-                        {index % 2 === 0 ? <Sparkles className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                  {parentBenefitCards.map((item, index) => {
+                    const Icon = parentBenefitIcons[index % parentBenefitIcons.length]
+                    return (
+                      <div key={item.title} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+                          {item.title}
+                        </h3>
+                        <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{item.description}</p>
                       </div>
-                      <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                        {item.title}
-                      </h3>
-                      <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{item.description}</p>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </section>
             ) : null}
@@ -596,20 +602,23 @@ export function CentreClient({
                   description={isClaimed ? 'Parents usually want to know how a child learns here, what the routine feels like, and how communication works day to day.' : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
-                  {programCards.map((program, index) => (
-                    <div
-                      key={`${program.title}-${index}`}
-                      className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]"
-                    >
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
-                        {index % 2 === 0 ? <Sparkles className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                  {programCards.map((program, index) => {
+                    const Icon = programCardIcons[index % programCardIcons.length]
+                    return (
+                      <div
+                        key={`${program.title}-${index}`}
+                        className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]"
+                      >
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+                          {program.title}
+                        </h3>
+                        <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{program.description}</p>
                       </div>
-                      <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                        {program.title}
-                      </h3>
-                      <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{program.description}</p>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </section>
             ) : null}
@@ -642,12 +651,12 @@ export function CentreClient({
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Aftercare</p>
+                  <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Aftercare</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
                   <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Useful for working parents who need a little extra time after the main school day.' : 'Parents should plan for collection at the normal closing time.'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Classes</p>
+                  <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
                   <p className="mt-2 text-sm leading-6 text-[#5F6C68]">The class names below help parents understand where their child will fit before they enquire or apply.</p>
                 </div>
@@ -655,7 +664,7 @@ export function CentreClient({
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {classrooms.length > 0 ? classrooms.map((room, index) => (
                   <div key={`${room.id ?? index}-${room.name}`} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
+                    <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
                     <h3 className="mt-2 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
                     <p className="mt-2 text-sm font-semibold text-[#0D9488]">{room.age_group?.trim() || 'All ages'}</p>
                     {room.practitioner_name?.trim() ? <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Led by {room.practitioner_name.trim()}</p> : null}
@@ -688,7 +697,7 @@ export function CentreClient({
           <aside className="hidden space-y-5 lg:block">
             <div className="sticky top-24 space-y-5">
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Next step</p>
+                <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
                   {isClaimed ? 'Apply online or ask one smart question' : 'Ready to ask about a place?'}
                 </h3>
@@ -723,7 +732,7 @@ export function CentreClient({
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {pilotBadges.map((badge) => (
-                          <span key={badge} className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[11px] font-semibold text-[#6C4700]">
+                          <span key={badge} className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[11px] font-medium text-[#6C4700]">
                             {badge}
                           </span>
                         ))}
