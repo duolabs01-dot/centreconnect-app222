@@ -150,19 +150,6 @@ function getSafeImageUrl(candidate: string | null | undefined, fallback: string)
   return fallback
 }
 
-function createWhatsappClickToChatLink(rawPhone: string | null | undefined, message: string) {
-  const raw = String(rawPhone ?? '').trim()
-  const digits = raw.replace(/[^\d]/g, '')
-  if (!digits || !message.trim()) return null
-
-  let normalized = digits
-  if (digits.startsWith('0')) normalized = `27${digits.slice(1)}`
-  else if (digits.startsWith('27')) normalized = digits
-  else if (raw.startsWith('+')) normalized = raw.replace(/[^\d]/g, '')
-
-  return `https://wa.me/${normalized}?text=${encodeURIComponent(message.trim())}`
-}
-
 function formatCurrency(amount: number | null | undefined) {
   if (typeof amount !== 'number' || Number.isNaN(amount)) return null
   return `R${new Intl.NumberFormat('en-ZA').format(amount)}`
@@ -333,14 +320,6 @@ export function CentreClient({
   const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
   const showClaimLink = !isClaimed && userRole !== 'parent_user'
-  const defaultWhatsappMessage = isClaimed
-    ? `Hi ${centre.name}, I found your CentreConnect page and would like to ask about enrolling my child.`
-    : `Hi ${centre.name}, I found your centre on CentreConnect and would like to ask about enrolment.`
-  const whatsappHref = createWhatsappClickToChatLink(
-    centre.contact_whatsapp || centre.contact_phone || centre.phone,
-    defaultWhatsappMessage
-  )
-
   const feesLabel = formatFeesLabel(centre)
   const registrationFeeLabel = formatRegistrationFeeLabel(centre)
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
@@ -531,7 +510,7 @@ export function CentreClient({
                   </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                      Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
+                      Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : null}
                 </div>
@@ -561,9 +540,9 @@ export function CentreClient({
         </section>
 
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_22rem] lg:items-start">
-          <div className="space-y-8">
+          <div className="space-y-6">
             {isClaimed ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading
                   eyebrow="Why parents choose this centre on CentreConnect"
                   title="A simpler, safer parent experience"
@@ -588,14 +567,14 @@ export function CentreClient({
               </section>
             ) : null}
             {showAbout ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
-                <SectionHeading eyebrow="About" title="About this crèche" description={isClaimed ? 'A stronger centre profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+                <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger centre profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
                 <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[#4E5D59] sm:text-base">{aboutCopy}</p>
               </section>
             ) : null}
 
             {showPrograms ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading
                   eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
@@ -624,7 +603,7 @@ export function CentreClient({
             ) : null}
 
             {showGallery ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="Photos" title="A better look around" description="Parents can scan the space quickly before they decide whether to message or apply." />
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {safeGalleryUrls.slice(0, 12).map((url, index) => (
@@ -643,7 +622,7 @@ export function CentreClient({
               </section>
             ) : null}
 
-            <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+            <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
@@ -678,7 +657,7 @@ export function CentreClient({
             </section>
 
             {showContact ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'If you are nearly ready, use these details to ask a final question, book a visit, or start the application.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <InfoRow icon={MapPin} label="Address" value={fallbackAddressLabel} />
@@ -698,14 +677,25 @@ export function CentreClient({
             <div className="sticky top-24 space-y-5">
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
-                <h3 className="mt-3 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {isClaimed ? 'Apply online or ask one smart question' : 'Ready to ask about a place?'}
+                <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+                  {isClaimed ? 'Choose the easiest way to move forward' : 'Keep this creche close while you decide'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'This is the direct line to the centre. Apply if it feels right, or use the quick questions below if you want clarity before you decide.'
-                    : 'Save this crèche if you still want to compare options, or message them directly while they finish joining CentreConnect.'}
+                    ? 'Apply when you are ready, or send one quick in-app message and keep every reply, update, and document in CentreConnect.'
+                    : 'This creche is still joining CentreConnect. You can still save it now and send a message that stays in the CentreConnect inbox.'}
                 </p>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {(isClaimed
+                    ? ['Apply in minutes', 'Message the creche in-app', 'Keep one parent profile']
+                    : ['Save it for later', 'Send a message in-app', 'Come back when applications open']
+                  ).map((item) => (
+                    <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
+                      {item}
+                    </span>
+                  ))}
+                </div>
 
                 <div className="mt-5 rounded-[1.3rem] border border-[#E7DDD1] bg-white p-4">
                   <p className={`flex items-center gap-2 text-sm font-semibold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-[#7B827E]'}`}>
@@ -713,7 +703,7 @@ export function CentreClient({
                     {operationalStatus.label}
                   </p>
                   <p className="mt-1 text-sm text-[#5F6C68]">{operationalStatus.schedule}</p>
-                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} · Ages: {ageGroupsLabel}</p>
+                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} � Ages: {ageGroupsLabel}</p>
                 </div>
 
                 {showPilotTrustInfo ? (
@@ -721,13 +711,13 @@ export function CentreClient({
                     <div className="flex flex-wrap items-center gap-2">
                       {isVerifiedForParents ? <PremiumVerifiedBadge compact /> : null}
                       {!isVerifiedForParents ? (
-                        <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
+                        <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F6200] shadow-none">
                           {isClaimed ? 'Preview image' : 'Not yet on CentreConnect'}
                         </Badge>
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6C4700]">
-                      This listing has stronger details so parents can feel confident before they enquire.
+                      This listing gives parents a clearer feel for the creche before they message or apply.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -744,11 +734,11 @@ export function CentreClient({
                 {!isClaimed ? (
                   <div className="mt-5 rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                     <p className="text-sm leading-6 text-[#5F6C68]">
-                      This centre is not yet taking digital applications, but parents can still save the listing or message them directly.
+                      Online applications are not open yet, but parents can still save this creche and send a message through CentreConnect.
                     </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                      Own this crèche? Claim it here <ArrowRight className="h-4 w-4" />
+                      Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : null}
                   </div>
@@ -761,22 +751,32 @@ export function CentreClient({
                     userRole={userRole}
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
-                    existingHelperText={isClaimed ? 'You will keep getting updates through CentreConnect, and you can message the centre anytime from this page.' : null}
-                    existingFollowUpHref={!isClaimed ? whatsappHref : null}
-                    existingFollowUpLabel={!isClaimed && whatsappHref ? 'Send follow-up on WhatsApp' : null}
+                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, and updates together in one place.' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Parents can apply online, ask questions, and keep everything in one profile.' : 'You can still save this centre or contact them directly while they finish joining CentreConnect.'
+                      isClaimed ? 'Apply online now, or send a quick question below if you want clarity first.' : 'Send a message now or save this creche while they finish joining CentreConnect.'
                     }
-                    fallbackHref={!isClaimed ? whatsappHref : null}
-                    fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                   />
-                  <div className="grid grid-cols-2 gap-3">
-                    <ContactCentreSheet centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} />
-                    <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white">
-                      <SaveCentreButton centreId={centre.id} initialSaved={false} />
+                  <ContactCentreSheet
+                    centreId={centre.id}
+                    centreName={centre.name}
+                    templates={inquiryTemplates}
+                    triggerLabel={isClaimed ? 'Ask the creche a quick question' : 'Send a message to this creche'}
+                    triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                    title={isClaimed ? `Ask ${centre.name} a quick question` : `Send ${centre.name} a message`}
+                    description={
+                      isClaimed
+                        ? 'Your message goes straight to the centre inbox in CentreConnect, so replies and application updates stay together.'
+                        : 'You can still send a message now. When this creche finishes joining CentreConnect, the conversation will already be in one place.'
+                    }
+                  />
+                  <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#22312E]">Save for later</p>
+                      <p className="text-xs text-[#6A7672]">Keep this creche in your shortlist while you compare.</p>
                     </div>
+                    <SaveCentreButton centreId={centre.id} initialSaved={false} />
                   </div>
                 </div>
               </div>
@@ -808,12 +808,13 @@ export function CentreClient({
         pilotBadges={pilotBadges}
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
-        whatsappHref={!isClaimed ? whatsappHref : null}
         inquiryTemplates={inquiryTemplates}
       />
     </main>
   )
 }
+
+
 
 
 

@@ -33,7 +33,6 @@ type MobileCentreDetailsSheetProps = {
   pilotBadges: string[]
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
-  whatsappHref?: string | null
   inquiryTemplates?: Array<{ label: string; message: string }>
 }
 
@@ -82,7 +81,6 @@ export function MobileCentreDetailsSheet({
   pilotBadges,
   existingApplicationId,
   existingApplicationStatus,
-  whatsappHref = null,
   inquiryTemplates = [],
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
@@ -217,37 +215,55 @@ export function MobileCentreDetailsSheet({
                   </p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
-                    Own this crèche? Claim it here →
+                    Own this creche? Claim it here →
                   </Link>
                 ) : null}
                 </div>
               ) : null}
 
               <div className="space-y-3 pt-1">
+                <div className="rounded-[1.4rem] border border-[#DCEEE8] bg-[#F4FBF8] p-4">
+                  <p className="text-[10px] font-semibold tracking-[0.08em] text-[#4B6B64]">Best next move</p>
+                  <p className="mt-2 text-sm leading-6 text-[#315A51]">
+                    {isClaimed
+                      ? 'Apply now, or send one quick message and keep the whole conversation in CentreConnect.'
+                      : 'Save this creche now, or send a message that stays in the CentreConnect inbox while applications get set up.'}
+                  </p>
+                </div>
                 <ApplyCTA
                   variant="hero"
                   centreSlug={centreSlug}
                   userRole={userRole}
                   existingApplicationId={existingApplicationId ?? null}
                   existingApplicationStatus={existingApplicationStatus ?? null}
-                  existingHelperText={isClaimed ? 'CentreConnect keeps your application and messages in one place.' : null}
-                  existingFollowUpHref={whatsappHref}
-                  existingFollowUpLabel={whatsappHref ? 'Send follow-up on WhatsApp' : null}
+                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, and updates together.' : null}
                   isAvailable={isClaimed}
                   unavailableLabel="Online applications not available yet"
                   helperText={
                     isClaimed
-                      ? null
-                      : 'You can still save this centre or contact them directly while they finish joining CentreConnect.'
+                      ? 'Apply online now, or ask one quick question below if you want clarity first.'
+                      : 'Send a message now or save this creche while they finish joining CentreConnect.'
                   }
-                  fallbackHref={!isClaimed ? whatsappHref : null}
-                  fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                 />
-                <div className="grid grid-cols-2 gap-3">
-                  <ContactCentreSheet centreId={centreId} centreName={centreName} templates={inquiryTemplates} />
-                  <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white px-2">
-                    <SaveCentreButton centreId={centreId} initialSaved={false} />
+                <ContactCentreSheet
+                  centreId={centreId}
+                  centreName={centreName}
+                  templates={inquiryTemplates}
+                  triggerLabel={isClaimed ? 'Ask the creche a quick question' : 'Send a message to this creche'}
+                  triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                  title={isClaimed ? `Ask ${centreName} a quick question` : `Send ${centreName} a message`}
+                  description={
+                    isClaimed
+                      ? 'Your message goes straight to the centre inbox in CentreConnect, so replies and updates stay together.'
+                      : 'You can still send a message now. When this creche finishes joining CentreConnect, the conversation will already be in one place.'
+                  }
+                />
+                <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[#22312E]">Save for later</p>
+                    <p className="text-xs text-[#6A7672]">Keep this creche handy while you compare.</p>
                   </div>
+                  <SaveCentreButton centreId={centreId} initialSaved={false} />
                 </div>
               </div>
 
@@ -266,6 +282,8 @@ export function MobileCentreDetailsSheet({
     </>
   )
 }
+
+
 
 
 

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { MessageCircle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 type ContactTemplate = {
   label: string
@@ -15,9 +16,21 @@ type ContactCentreSheetProps = {
   centreId: string
   centreName: string
   templates?: ContactTemplate[]
+  triggerLabel?: string
+  triggerClassName?: string
+  title?: string
+  description?: string
 }
 
-export function ContactCentreSheet({ centreId, centreName, templates = [] }: ContactCentreSheetProps) {
+export function ContactCentreSheet({
+  centreId,
+  centreName,
+  templates = [],
+  triggerLabel = 'Send a quick question',
+  triggerClassName,
+  title,
+  description,
+}: ContactCentreSheetProps) {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -49,9 +62,9 @@ export function ContactCentreSheet({ centreId, centreName, templates = [] }: Con
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} variant="outline" className="gap-2">
+      <Button onClick={() => setOpen(true)} variant="outline" className={cn('gap-2', triggerClassName)}>
         <MessageCircle className="h-4 w-4" />
-        Send a quick question
+        {triggerLabel}
       </Button>
     )
   }
@@ -67,7 +80,7 @@ export function ContactCentreSheet({ centreId, centreName, templates = [] }: Con
       >
         <CardContent className="space-y-4 p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900">Message {centreName}</h3>
+            <h3 className="text-lg font-bold text-slate-900">{title ?? `Message ${centreName}`}</h3>
             <Button
               type="button"
               variant="ghost"
@@ -79,7 +92,7 @@ export function ContactCentreSheet({ centreId, centreName, templates = [] }: Con
             </Button>
           </div>
           <p className="text-sm text-slate-600">
-            Pick a quick parent question below or write your own. Your message will be sent to the centre inbox and saved in CentreConnect.
+            {description ?? 'Pick a quick parent question below or write your own. Your message will be sent to the centre inbox and saved in CentreConnect.'}
           </p>
           {templates.length > 0 ? (
             <div className="flex flex-wrap gap-2">
