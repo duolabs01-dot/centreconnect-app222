@@ -12,8 +12,8 @@ import { Users, UserCheck, Shield, Zap } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Users | CC Control Tower',
-  description: 'Global user visibility, role management, and access telemetry.',
+  title: 'Users | Platform Admin',
+  description: 'View user accounts, roles, and recent access across the platform.',
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -69,8 +69,8 @@ export default async function AdminUsersPage() {
   return (
     <AdminPageLayout
       title="Users"
-      description="System-wide identity protocols and access management."
-      roleLabel="Architect Console"
+      description="View platform users, centre staff, and account access in one place."
+      roleLabel="Platform Admin"
       wide
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
@@ -79,7 +79,7 @@ export default async function AdminUsersPage() {
             <div>
               <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-1">Total Parents</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{totalParents}</h3>
-              <p className="text-[10px] text-cyber-cyan mt-1">PARENT_NODES_ACTIVE</p>
+              <p className="text-[10px] text-cyber-cyan mt-1">Parent accounts on CentreConnect</p>
             </div>
             <Users className="w-4 h-4 text-cyber-cyan" />
           </div>
@@ -90,7 +90,7 @@ export default async function AdminUsersPage() {
             <div>
               <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-1">Total Children</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{totalChildren}</h3>
-              <p className="text-[10px] text-cyber-violet mt-1">CHILD_ENTITIES_TRACKED</p>
+              <p className="text-[10px] text-cyber-violet mt-1">Children linked to parent accounts</p>
             </div>
             <Zap className="w-4 h-4 text-cyber-violet" />
           </div>
@@ -101,7 +101,7 @@ export default async function AdminUsersPage() {
             <div>
               <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-1">ECD Personnel</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{totalEcdStaff}</h3>
-              <p className="text-[10px] text-cyber-green mt-1">STAFF_AUTH_LEVEL</p>
+              <p className="text-[10px] text-cyber-green mt-1">Centre admins and staff with access</p>
             </div>
             <Shield className="w-4 h-4 text-cyber-green" />
           </div>
@@ -112,7 +112,7 @@ export default async function AdminUsersPage() {
             <div>
               <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-1">Active Users</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{monthlyActiveParents}</h3>
-              <p className="text-[10px] text-cyber-cyan mt-1">MAU_TELEMETRY</p>
+              <p className="text-[10px] text-cyber-cyan mt-1">Signed in within the last 30 days</p>
             </div>
             <UserCheck className="w-4 h-4 text-cyber-cyan" />
           </div>
@@ -121,8 +121,8 @@ export default async function AdminUsersPage() {
 
       <CyberCard className="p-0 overflow-hidden">
         <div className="px-6 py-4 border-b border-white/5 bg-white/2 flex items-center justify-between">
-          <h2 className="font-orbitron text-xs font-bold text-white tracking-widest uppercase text-cyber-cyan">ECD Admin Registry ({ecdAdminRows.length})</h2>
-          <Button variant="outline" size="sm" className="font-orbitron text-[9px] tracking-widest uppercase border-white/10 hover:bg-white/5">Export_Log</Button>
+          <h2 className="font-orbitron text-xs font-bold text-white tracking-widest uppercase text-cyber-cyan">Centre staff directory ({ecdAdminRows.length})</h2>
+          <Button variant="outline" size="sm" className="font-orbitron text-[9px] tracking-widest uppercase border-white/10 hover:bg-white/5">Export list</Button>
         </div>
         <div className="bg-slate-950/40">
           <Table>
@@ -130,9 +130,9 @@ export default async function AdminUsersPage() {
               <TableRow className="border-white/5 hover:bg-transparent">
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">User</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Contact</TableHead>
-                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Assigned Node</TableHead>
-                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Protocol</TableHead>
-                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Last Ping</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Centre</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Role</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500">Last sign in</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -143,7 +143,7 @@ export default async function AdminUsersPage() {
                     <span className="font-medium text-white block">{row.full_name}</span>
                     <span className="text-[9px] text-slate-500 uppercase tracking-tighter">ID: {row.id.slice(0,8)}</span>
                   </TableCell>
-                  <TableCell className="p-4 text-slate-300 text-xs">{row.email ?? 'NO_EMAIL'}</TableCell>
+                  <TableCell className="p-4 text-slate-300 text-xs">{row.email ?? 'No email saved'}</TableCell>
                   <TableCell className="p-4">
                     <span className="text-white text-xs block">{row.centreName ?? '-'}</span>
                     <span className="text-[10px] text-cyber-cyan uppercase font-bold">{row.tier ?? 'FREE'}</span>

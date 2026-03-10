@@ -66,8 +66,8 @@ export function CommandPalette() {
           </Command.Empty>
 
           <Command.Group heading="Navigation" className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            <Item onSelect={() => runCommand(() => router.push('/admin/command'))}>
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Command Tower
+            <Item onSelect={() => runCommand(() => router.push('/admin/dashboard'))}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Home
             </Item>
             <Item onSelect={() => runCommand(() => router.push('/admin/tenants'))}>
               <ShieldCheck className="mr-2 h-4 w-4" /> Centres
@@ -82,7 +82,7 @@ export function CommandPalette() {
 
           <Command.Separator className="my-2 h-px bg-white/5" />
 
-          <Command.Group heading="Protocols" className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+          <Command.Group heading="Workflows" className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">
             <Item onSelect={() => runCommand(() => router.push('/admin/analytics'))}>
               <BarChart3 className="mr-2 h-4 w-4" /> Analytics
             </Item>
@@ -97,7 +97,7 @@ export function CommandPalette() {
             <span><kbd className="rounded bg-white/5 px-1 py-0.5 mr-1 font-bold">↑↓</kbd> Navigate</span>
             <span><kbd className="rounded bg-white/5 px-1 py-0.5 mr-1 font-bold">↵</kbd> Select</span>
           </div>
-          <span className="font-orbitron tracking-tighter text-cyber-cyan opacity-50">CC_COMMAND_V1</span>
+          <span className="font-orbitron tracking-tighter text-cyber-cyan opacity-50">ADMIN SHORTCUTS</span>
         </div>
       </Command.Dialog>
 

@@ -9,7 +9,7 @@ import { WebhookFailureDashboard } from '@/components/admin/webhook-failure-dash
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Webhook Failures | CC Control Tower',
+  title: 'Webhook Failures | Platform Admin',
   description: 'Failed payment webhook events, triage state, and replay actions.',
 }
 

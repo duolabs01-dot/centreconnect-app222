@@ -1,9 +1,18 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Activity, AlertTriangle, ArrowUpRight, BellRing, Building2, Signal, Users } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowUpRight,
+  BellRing,
+  Building2,
+  CheckCircle2,
+  CreditCard,
+  HeartHandshake,
+  LifeBuoy,
+  Users,
+} from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
-import { DashboardAudience } from '@/components/admin/admin-audience-context'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
 import {
   Table,
@@ -17,34 +26,55 @@ import {
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
-  description: 'Audience-filtered dashboard for parent and ECD user segments.',
+  title: 'Admin Home',
+  description: 'Plain-English home for centres, parents, money, and support.',
 }
 
 const ECD_ROLES = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'] as const
 const ECD_INVITE_EVENTS = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
 const PARENT_WELCOME_KEYS = ['cc_welcome_intro', 'cc_welcome_inbox_guide', 'cc_welcome_legal', 'cc_welcome_security'] as const
+const OPEN_SUPPORT_STATUSES = ['open', 'in_progress', 'waiting_response'] as const
+const PENDING_INVOICE_STATUSES = ['draft', 'sent', 'overdue'] as const
 
 type NotificationStatus = 'queued' | 'sent' | 'delivered' | 'opened' | 'clicked' | 'claimed' | 'failed'
 type RowStatus = NotificationStatus | 'read' | 'unread'
 type ParentReliabilitySeverity = 'healthy' | 'warning' | 'critical'
-type ParentReliabilityCard = {
-  failureCount24h: number
-  severity: ParentReliabilitySeverity
-  severityLabel: string
-  severityHint: string
-  badgeClass: string
+
+type DashboardAction = {
+  title: string
+  count: string
+  detail: string
+  href: string
+  tone: 'cyan' | 'amber' | 'rose' | 'emerald'
 }
 
-type SearchParams = Record<string, string | string[] | undefined>
-
-function q(v: string | string[] | undefined) {
-  if (Array.isArray(v)) return v[0]?.trim().toLowerCase() ?? ''
-  return v?.trim().toLowerCase() ?? ''
+type RecentPerson = {
+  id: string
+  fullName: string
+  phone: string
+  createdAt: string
 }
 
-function audienceFrom(value: string): DashboardAudience {
-  return value === 'parent' ? 'parent' : 'ecd'
+type RecentCentre = {
+  id: string
+  name: string
+  city: string
+  meta: string
+  createdAt: string
+}
+
+type InviteRow = {
+  id: string
+  createdAt: string
+  centreName: string
+  recipient: string
+  channel: string
+  event: string
+  statusKey: RowStatus
+  statusLabel: string
+  statusStyle: string
+  detail: string
+  centreId: string | null
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -62,28 +92,12 @@ function fmtDate(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function roleLabel(role: string) {
-  if (role === 'parent_user') return 'Parent'
-  if (role === 'ecd_admin') return 'ECD Admin'
-  if (role === 'ecd_staff') return 'ECD Staff'
-  if (role === 'ecd_supervisor') return 'ECD Supervisor'
-  return role
-}
-
 function eventLabel(event: string) {
-  if (event === 'owner_invite') return 'Owner Invite'
-  if (event === 'admin_access_invite') return 'Admin Invite'
-  if (event === 'welcome_pack') return 'Welcome Pack'
-  if (event === 'centre_bootstrap_created') return 'Bootstrap Pack'
+  if (event === 'owner_invite') return 'Owner invite'
+  if (event === 'admin_access_invite') return 'Admin invite'
+  if (event === 'welcome_pack') return 'Welcome pack'
+  if (event === 'centre_bootstrap_created') return 'Bootstrap pack'
   return event
-}
-
-function templateLabel(templateKey: string | null | undefined) {
-  if (templateKey === 'cc_welcome_intro') return 'Welcome Intro'
-  if (templateKey === 'cc_welcome_inbox_guide') return 'Inbox Guide'
-  if (templateKey === 'cc_welcome_legal') return 'Legal Note'
-  if (templateKey === 'cc_welcome_security') return 'Security Note'
-  return 'Welcome Notification'
 }
 
 function statusClass(status: RowStatus) {
@@ -102,564 +116,396 @@ function parentReliabilitySeverityFromCount(failureCount24h: number): ParentReli
   return 'healthy'
 }
 
-function parentReliabilityCard(failureCount24h: number): ParentReliabilityCard {
+function parentHealthCopy(failureCount24h: number) {
   const severity = parentReliabilitySeverityFromCount(failureCount24h)
   if (severity === 'critical') {
     return {
-      failureCount24h,
-      severity,
-      severityLabel: 'CRITICAL',
-      severityHint: 'Escalate now. Parent submit failures are materially elevated.',
+      label: 'Critical',
       badgeClass: 'border-rose-500/30 bg-rose-500/10 text-rose-300',
+      hint: 'Parent forms need attention now.',
     }
   }
   if (severity === 'warning') {
     return {
-      failureCount24h,
-      severity,
-      severityLabel: 'WARNING',
-      severityHint: 'Investigate route hotspots before this becomes a trust blocker.',
+      label: 'Watch',
       badgeClass: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
+      hint: 'A few parents may be getting stuck.',
     }
   }
   return {
-    failureCount24h,
-    severity,
-    severityLabel: 'HEALTHY',
-    severityHint: 'Parent submit reliability is stable in the last 24 hours.',
+    label: 'Healthy',
     badgeClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
+    hint: 'Parent forms look stable right now.',
   }
 }
 
-function seriesFromDates(values: Array<string | null | undefined>, days = 14) {
-  const dayMs = 24 * 60 * 60 * 1000
-  const start = Date.now() - (days - 1) * dayMs
-  const keys: string[] = []
-  const map = new Map<string, number>()
-  for (let i = 0; i < days; i += 1) {
-    const key = new Date(start + i * dayMs).toISOString().slice(0, 10)
-    keys.push(key)
-    map.set(key, 0)
-  }
-  values.forEach((value) => {
-    if (!value) return
-    const key = new Date(value).toISOString().slice(0, 10)
-    if (!map.has(key)) return
-    map.set(key, (map.get(key) ?? 0) + 1)
-  })
-  return keys.map((key) => map.get(key) ?? 0)
+function actionToneClass(tone: DashboardAction['tone']) {
+  if (tone == 'rose') return 'border-rose-500/20 bg-rose-500/10'
+  if (tone == 'amber') return 'border-amber-500/20 bg-amber-500/10'
+  if (tone == 'emerald') return 'border-emerald-500/20 bg-emerald-500/10'
+  return 'border-cyan-500/20 bg-cyan-500/10'
 }
 
-function trend(series: number[]) {
-  if (series.length < 2) return 0
-  const mid = Math.floor(series.length / 2)
-  const first = series.slice(0, mid).reduce((a, b) => a + b, 0)
-  const second = series.slice(mid).reduce((a, b) => a + b, 0)
-  if (first === 0) return second > 0 ? 100 : 0
-  return Number((((second - first) / first) * 100).toFixed(1))
+function money(amountInCents: number) {
+  return `R${Math.round(amountInCents / 100).toLocaleString()}`
 }
 
-function Bars({ series, color }: { series: number[]; color: string }) {
-  const max = Math.max(...series, 1)
+function SectionCard({
+  title,
+  description,
+  href,
+  hrefLabel,
+  icon,
+  children,
+}: {
+  title: string
+  description: string
+  href: string
+  hrefLabel: string
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
   return (
-    <div className="mt-4 flex h-24 items-end gap-1.5 rounded-2xl border border-white/5 bg-black/30 px-3 py-3">
-      {series.map((value, index) => (
-        <span
-          key={`${index}-${value}`}
-          className={`w-full rounded-full ${color}`}
-          style={{ height: `${Math.max(8, Math.round((value / max) * 100))}%` }}
-        />
-      ))}
-    </div>
+    <section className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-cyan-300">{icon}</div>
+          <h2 className="text-2xl font-black tracking-tight text-white">{title}</h2>
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">{description}</p>
+        </div>
+        <Link
+          href={href}
+          className="inline-flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-4 text-xs font-black uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/5"
+        >
+          {hrefLabel}
+          <ArrowUpRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+      {children}
+    </section>
   )
 }
 
-type AdminDashboardPageProps = {
-  searchParams?: SearchParams
-}
-
-export default async function AdminDashboardPage({ searchParams }: AdminDashboardPageProps) {
-  const audience = audienceFrom(q(searchParams?.audience))
+export default async function AdminDashboardPage() {
   const admin = createAdminClient()
-  let heroDescription = 'See centre activity, invite delivery, and onboarding progress in one place.'
-  let cards: Array<{ label: string; value: string | number; trend?: number; sparklineData: number[] }> = []
-  let highlights: Array<{ label: string; value: string }> = []
-  let users: Array<{ id: string; fullName: string; roleLabel: string; phone: string; createdAt: string }> = []
-  let centres: Array<{ id: string; name: string; city: string; meta: string }> = []
-  let inviteRows: Array<{
-    id: string
-    audience: DashboardAudience
-    createdAt: string
-    centreName: string
-    recipient: string
-    channel: string
-    event: string
-    statusKey: RowStatus
-    statusLabel: string
-    statusStyle: string
-    detail: string
-    centreId: string | null
-    parentId: string | null
-  }> = []
-  let totalRows = 0
-  let pendingRows = 0
-  let parentReliability: ParentReliabilityCard | null = null
-  let primaryLabel = 'Invite Dispatch (14 Days)'
-  let primarySeries: number[] = []
-  let secondaryLabel = 'User Signups'
-  let secondarySeries: number[] = []
-  let tertiaryLabel = 'Centre Activity'
-  let tertiarySeries: number[] = []
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-  if (audience === 'parent') {
-    heroDescription = 'Onboarding, legal/security welcome visibility, and family account engagement signals.'
-    primaryLabel = 'Welcome Notifications (14 Days)'
-    secondaryLabel = 'Parent Signups'
-    tertiaryLabel = 'Parent Application Activity'
+  const [
+    totalCentresResult,
+    liveCentresResult,
+    onboardingCentresResult,
+    claimRequestsResult,
+    centreAccountsResult,
+    recentCentresResult,
+    totalParentsResult,
+    newParentsResult,
+    unreadWelcomesResult,
+    parentFailuresResult,
+    recentParentsResult,
+    openSupportResult,
+    paidInvoicesResult,
+    pendingInvoicesResult,
+    failedInviteCountResult,
+    inviteRowsResult,
+  ] = await Promise.all([
+    admin.from('ecd_centres').select('id', { count: 'exact', head: true }),
+    admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', false).eq('onboarding_complete', false),
+    admin.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    admin.from('user_profiles').select('id', { count: 'exact', head: true }).in('role', [...ECD_ROLES]),
+    admin.from('ecd_centres').select('id,name,city,is_active,created_at').order('created_at', { ascending: false }).limit(6),
+    admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
+    admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user').gte('created_at', sevenDaysAgo),
+    admin.from('parent_notifications').select('id', { count: 'exact', head: true }).in('template_key', [...PARENT_WELCOME_KEYS]).eq('is_read', false),
+    admin.from('parent_form_submit_failures').select('id', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgo),
+    admin.from('user_profiles').select('id,full_name,phone,created_at').eq('role', 'parent_user').order('created_at', { ascending: false }).limit(6),
+    admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', [...OPEN_SUPPORT_STATUSES]),
+    admin.from('invoices').select('id,total,status,due_at,paid_at').eq('status', 'paid').order('paid_at', { ascending: false }).limit(40),
+    admin.from('invoices').select('id,total,status,due_at').in('status', [...PENDING_INVOICE_STATUSES]).order('due_at', { ascending: true }).limit(40),
+    admin.from('notification_logs').select('id', { count: 'exact', head: true }).in('event_type', [...ECD_INVITE_EVENTS]).eq('status', 'failed'),
+    admin
+      .from('notification_logs')
+      .select('id,centre_id,event_type,channel,recipient,status,provider,error_message,created_at,ecd_centres(name)')
+      .in('event_type', [...ECD_INVITE_EVENTS])
+      .order('created_at', { ascending: false })
+      .limit(12),
+  ])
 
-    const [
-      totalParentsResult,
-      newParentsResult,
-      recentParentsResult,
-      welcomeRowsResult,
-      welcomeTotalResult,
-      unreadWelcomeResult,
-      parentSeriesResult,
-      welcomeSeriesResult,
-      applicationRowsResult,
-      parentFailure24hCountResult,
-    ] = await Promise.all([
-      admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
-      admin
-        .from('user_profiles')
-        .select('id', { count: 'exact', head: true })
-        .eq('role', 'parent_user')
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-      admin
-        .from('user_profiles')
-        .select('id,full_name,phone,role,created_at')
-        .eq('role', 'parent_user')
-        .order('created_at', { ascending: false })
-        .limit(8),
-      admin
-        .from('parent_notifications')
-        .select('id,parent_id,ecd_id,template_key,title,message,is_read,created_at')
-        .in('template_key', [...PARENT_WELCOME_KEYS])
-        .order('created_at', { ascending: false })
-        .limit(12),
-      admin.from('parent_notifications').select('id', { count: 'exact', head: true }).in('template_key', [...PARENT_WELCOME_KEYS]),
-      admin
-        .from('parent_notifications')
-        .select('id', { count: 'exact', head: true })
-        .in('template_key', [...PARENT_WELCOME_KEYS])
-        .eq('is_read', false),
-      admin.from('user_profiles').select('created_at').eq('role', 'parent_user').order('created_at', { ascending: false }).limit(360),
-      admin.from('parent_notifications').select('created_at').in('template_key', [...PARENT_WELCOME_KEYS]).order('created_at', { ascending: false }).limit(360),
-      admin.from('applications').select('ecd_id,created_at').order('created_at', { ascending: false }).limit(800),
-      admin
-        .from('parent_form_submit_failures')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    ])
+  const totalCentres = totalCentresResult.count ?? 0
+  const liveCentres = liveCentresResult.count ?? 0
+  const onboardingCentres = onboardingCentresResult.count ?? 0
+  const claimRequests = claimRequestsResult.count ?? 0
+  const centreAccounts = centreAccountsResult.count ?? 0
+  const totalParents = totalParentsResult.count ?? 0
+  const newParents = newParentsResult.count ?? 0
+  const unreadWelcomes = unreadWelcomesResult.count ?? 0
+  const parentFailures = parentFailuresResult.count ?? 0
+  const openSupport = openSupportResult.count ?? 0
+  const failedInvites = failedInviteCountResult.count ?? 0
+  const paidInvoices = (paidInvoicesResult.data ?? []) as Array<{ total: number | string | null }>
+  const pendingInvoices = (pendingInvoicesResult.data ?? []) as Array<{ total: number | string | null; due_at: string | null }>
+  const paidRevenueCents = paidInvoices.reduce((sum, row) => sum + (Number(row.total) || 0), 0)
+  const pendingRevenueCents = pendingInvoices.reduce((sum, row) => sum + (Number(row.total) || 0), 0)
+  const parentHealth = parentHealthCopy(parentFailures)
 
-    const welcomeRows = (welcomeRowsResult.data ?? []) as Array<{
-      id: string
-      parent_id: string
-      ecd_id: string | null
-      template_key: string | null
-      title: string
-      message: string
-      is_read: boolean
-      created_at: string
-    }>
-    const applicationRows = (applicationRowsResult.data ?? []) as Array<{ ecd_id: string | null; created_at: string }>
-    const parentIds = Array.from(new Set(welcomeRows.map((row) => row.parent_id)))
-    const centreIds = Array.from(new Set([...welcomeRows.map((row) => row.ecd_id), ...applicationRows.map((row) => row.ecd_id)].filter(Boolean) as string[]))
-    const [profileRowsResult, centreRowsResult] = await Promise.all([
-      parentIds.length ? admin.from('user_profiles').select('id,full_name,phone').in('id', parentIds) : Promise.resolve({ data: [] as any[] }),
-      centreIds.length ? admin.from('ecd_centres').select('id,name,city').in('id', centreIds) : Promise.resolve({ data: [] as any[] }),
-    ])
-    const profileMap = new Map((profileRowsResult.data ?? []).map((row: any) => [row.id, row]))
-    const centreMap = new Map((centreRowsResult.data ?? []).map((row: any) => [row.id, row]))
-    const appByCentre = new Map<string, number>()
-    applicationRows.forEach((row) => {
-      if (!row.ecd_id) return
-      appByCentre.set(row.ecd_id, (appByCentre.get(row.ecd_id) ?? 0) + 1)
-    })
+  const actions: DashboardAction[] = [
+    {
+      title: 'Centres still onboarding',
+      count: onboardingCentres.toLocaleString(),
+      detail: 'These centres still need setup, branding, or invite help.',
+      href: '/admin/tenants',
+      tone: onboardingCentres > 0 ? 'amber' : 'emerald',
+    },
+    {
+      title: 'Parent form issues (24h)',
+      count: parentFailures.toLocaleString(),
+      detail: parentHealth.hint,
+      href: '/admin/parent-reliability?window=24h',
+      tone: parentFailures >= 12 ? 'rose' : parentFailures >= 4 ? 'amber' : 'emerald',
+    },
+    {
+      title: 'Failed centre invites',
+      count: failedInvites.toLocaleString(),
+      detail: 'Resend or fix owner/admin invite problems quickly.',
+      href: '/admin/invites?status=failed',
+      tone: failedInvites > 0 ? 'rose' : 'emerald',
+    },
+    {
+      title: 'Open support tickets',
+      count: openSupport.toLocaleString(),
+      detail: 'These centres or parents still need a response.',
+      href: '/admin/support',
+      tone: openSupport > 0 ? 'cyan' : 'emerald',
+    },
+  ]
 
-    const totalParents = totalParentsResult.count ?? 0
-    const newParents = newParentsResult.count ?? 0
-    const totalWelcome = welcomeTotalResult.count ?? 0
-    const unreadWelcome = unreadWelcomeResult.count ?? 0
-    const readWelcome = Math.max(0, totalWelcome - unreadWelcome)
-    const readRate = totalWelcome > 0 ? Math.round((readWelcome / totalWelcome) * 100) : 0
-    const parentFailureCount24h = parentFailure24hCountResult.count ?? 0
+  const recentCentres = ((recentCentresResult.data ?? []) as Array<any>).map((row) => ({
+    id: row.id,
+    name: safe(row.name, 'Unnamed centre'),
+    city: safe(row.city, 'Unknown city'),
+    meta: row.is_active ? 'Live on CentreConnect' : 'Still onboarding',
+    createdAt: row.created_at,
+  })) as RecentCentre[]
 
-    parentReliability = parentReliabilityCard(parentFailureCount24h)
+  const recentParents = ((recentParentsResult.data ?? []) as Array<any>).map((row) => ({
+    id: row.id,
+    fullName: safe(row.full_name, 'Parent account'),
+    phone: safe(row.phone, 'No phone'),
+    createdAt: row.created_at,
+  })) as RecentPerson[]
 
-    primarySeries = seriesFromDates(((welcomeSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
-    secondarySeries = seriesFromDates(((parentSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
-    tertiarySeries = seriesFromDates(applicationRows.map((row) => row.created_at))
-
-    cards = [
-      { label: 'Parent Accounts', value: totalParents, trend: trend(secondarySeries), sparklineData: secondarySeries },
-      { label: 'New This Week', value: newParents, trend: trend(secondarySeries), sparklineData: secondarySeries },
-      { label: 'Welcome Notifications', value: totalWelcome, trend: trend(primarySeries), sparklineData: primarySeries },
-      { label: 'Read Rate', value: `${readRate}%`, trend: readRate - 50, sparklineData: [Math.max(readRate - 20, 0), Math.max(readRate - 10, 0), readRate] },
-    ]
-
-    highlights = [
-      { label: 'Unread welcomes', value: unreadWelcome.toLocaleString() },
-      { label: 'Read welcomes', value: readWelcome.toLocaleString() },
-      { label: 'Centres reached', value: appByCentre.size.toLocaleString() },
-    ]
-
-    users = ((recentParentsResult.data ?? []) as Array<any>).map((row) => ({
+  const rawInviteRows = (inviteRowsResult.data ?? []) as Array<any>
+  const inviteRows = rawInviteRows.map((row) => {
+    const centre = normalizeOne(row.ecd_centres)
+    const statusKey = row.status as RowStatus
+    return {
       id: row.id,
-      fullName: safe(row.full_name, 'Parent account'),
-      roleLabel: roleLabel(row.role),
-      phone: safe(row.phone, 'No phone'),
       createdAt: row.created_at,
-    }))
-
-    centres = Array.from(appByCentre.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([centreId, count]) => {
-        const centre = centreMap.get(centreId)
-        return {
-          id: centreId,
-          name: safe(centre?.name, 'Unknown Centre'),
-          city: safe(centre?.city, 'Unknown City'),
-          meta: `${count} applications linked`,
-        }
-      })
-
-    inviteRows = welcomeRows.map((row) => {
-      const profile = profileMap.get(row.parent_id)
-      const centre = row.ecd_id ? centreMap.get(row.ecd_id) : null
-      const recipient = profile?.phone ? `${safe(profile.full_name, 'Parent')} · ${profile.phone}` : safe(profile?.full_name, 'Parent')
-      const statusKey: RowStatus = row.is_read ? 'read' : 'unread'
-      return {
-        id: row.id,
-        audience: 'parent' as const,
-        createdAt: row.created_at,
-        centreName: safe(centre?.name, 'CentreConnect'),
-        recipient,
-        channel: 'in_app',
-        event: templateLabel(row.template_key),
-        statusKey,
-        statusLabel: row.is_read ? 'READ' : 'UNREAD',
-        statusStyle: statusClass(statusKey),
-        detail: row.title || row.message,
-        centreId: row.ecd_id,
-        parentId: row.parent_id,
-      }
-    })
-
-    totalRows = totalWelcome
-    pendingRows = unreadWelcome
-  } else {
-    const [
-      totalUsersResult,
-      newUsersResult,
-      totalCentresResult,
-      activeCentresResult,
-      centresInOnboardingResult,
-      pendingClaimRequestsResult,
-      pendingInviteResult,
-      totalInviteResult,
-      recentUsersResult,
-      recentCentresResult,
-      inviteRowsResult,
-      userSeriesResult,
-      inviteSeriesResult,
-      centreSeriesResult,
-      paidInvoicesResult,
-    ] = await Promise.all([
-      admin.from('user_profiles').select('id', { count: 'exact', head: true }).in('role', [...ECD_ROLES]),
-      admin
-        .from('user_profiles')
-        .select('id', { count: 'exact', head: true })
-        .in('role', [...ECD_ROLES])
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-      admin.from('ecd_centres').select('id', { count: 'exact', head: true }),
-      admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
-      admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', false).eq('onboarding_complete', false),
-      admin.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-      admin
-        .from('notification_logs')
-        .select('id', { count: 'exact', head: true })
-        .in('event_type', [...ECD_INVITE_EVENTS])
-        .in('status', ['queued', 'sent', 'delivered', 'opened', 'clicked']),
-      admin.from('notification_logs').select('id', { count: 'exact', head: true }).in('event_type', [...ECD_INVITE_EVENTS]),
-      admin.from('user_profiles').select('id,full_name,phone,role,created_at').in('role', [...ECD_ROLES]).order('created_at', { ascending: false }).limit(8),
-      admin.from('ecd_centres').select('id,name,city,is_active').order('created_at', { ascending: false }).limit(8),
-      admin
-        .from('notification_logs')
-        .select('id,centre_id,event_type,channel,recipient,status,provider,error_message,created_at,ecd_centres(name)')
-        .in('event_type', [...ECD_INVITE_EVENTS])
-        .order('created_at', { ascending: false })
-        .limit(12),
-      admin.from('user_profiles').select('created_at').in('role', [...ECD_ROLES]).order('created_at', { ascending: false }).limit(360),
-      admin.from('notification_logs').select('created_at').in('event_type', [...ECD_INVITE_EVENTS]).order('created_at', { ascending: false }).limit(360),
-      admin.from('ecd_centres').select('created_at').order('created_at', { ascending: false }).limit(360),
-      admin.from('invoices').select('total').eq('status', 'paid').limit(500),
-    ])
-
-    primarySeries = seriesFromDates(((inviteSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
-    secondarySeries = seriesFromDates(((userSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
-    tertiarySeries = seriesFromDates(((centreSeriesResult.data ?? []) as Array<{ created_at: string }>).map((row) => row.created_at))
-    const paidRevenue = ((paidInvoicesResult.data ?? []) as Array<{ total: number | string }>).reduce(
-      (sum, row) => sum + (Number(row.total) || 0),
-      0
-    ) / 100
-    const centresInOnboardingCount = centresInOnboardingResult.count ?? 0
-    const centresLiveCount = activeCentresResult.count ?? 0
-    const pendingClaimRequestsCount = pendingClaimRequestsResult.count ?? 0
-
-    cards = [
-      { label: 'ECD Team Users', value: totalUsersResult.count ?? 0, trend: trend(secondarySeries), sparklineData: secondarySeries },
-      { label: 'New This Week', value: newUsersResult.count ?? 0, trend: trend(secondarySeries), sparklineData: secondarySeries },
-      {
-        label: 'Active Centres',
-        value: `${activeCentresResult.count ?? 0}/${totalCentresResult.count ?? 0}`,
-        trend: trend(tertiarySeries),
-        sparklineData: tertiarySeries,
-      },
-      { label: 'Paid Revenue', value: `R${Math.round(paidRevenue).toLocaleString()}`, trend: trend(primarySeries), sparklineData: primarySeries },
-      {
-        label: 'Centres in onboarding',
-        value: centresInOnboardingCount,
-        sparklineData: Array.from({ length: 7 }, () => centresInOnboardingCount),
-      },
-      {
-        label: 'Centres live',
-        value: centresLiveCount,
-        sparklineData: Array.from({ length: 7 }, () => centresLiveCount),
-      },
-      {
-        label: 'Pending claim requests',
-        value: pendingClaimRequestsCount,
-        sparklineData: Array.from({ length: 7 }, () => pendingClaimRequestsCount),
-      },
-    ]
-    const rawInviteRows = (inviteRowsResult.data ?? []) as Array<any>
-    const claimed = rawInviteRows.filter((row) => row.status === 'claimed').length
-    const failed = rawInviteRows.filter((row) => row.status === 'failed').length
-    highlights = [
-      { label: 'Pending invites', value: (pendingInviteResult.count ?? 0).toLocaleString() },
-      { label: 'Claimed invites', value: claimed.toLocaleString() },
-      { label: 'Failed dispatches', value: failed.toLocaleString() },
-    ]
-
-    users = ((recentUsersResult.data ?? []) as Array<any>).map((row) => ({
-      id: row.id,
-      fullName: safe(row.full_name, 'ECD account'),
-      roleLabel: roleLabel(row.role),
-      phone: safe(row.phone, 'No phone'),
-      createdAt: row.created_at,
-    }))
-
-    centres = ((recentCentresResult.data ?? []) as Array<any>).map((row) => ({
-      id: row.id,
-      name: safe(row.name, 'Unnamed centre'),
-      city: safe(row.city, 'Unknown city'),
-      meta: row.is_active ? 'Active centre' : 'Inactive centre',
-    }))
-
-    inviteRows = rawInviteRows.map((row) => {
-      const centre = normalizeOne(row.ecd_centres)
-      const statusKey = row.status as RowStatus
-      return {
-        id: row.id,
-        audience: 'ecd' as const,
-        createdAt: row.created_at,
-        centreName: safe(centre?.name, 'Unknown centre'),
-        recipient: safe(row.recipient, 'No recipient'),
-        channel: safe(row.channel, 'unknown'),
-        event: eventLabel(row.event_type),
-        statusKey,
-        statusLabel: String(row.status ?? '').toUpperCase(),
-        statusStyle: statusClass(statusKey),
-        detail: row.error_message ? `${row.provider} · ${row.error_message}` : row.provider,
-        centreId: row.centre_id,
-        parentId: null,
-      }
-    })
-
-    totalRows = totalInviteResult.count ?? 0
-    pendingRows = pendingInviteResult.count ?? 0
-  }
+      centreName: safe(centre?.name, 'Unknown centre'),
+      recipient: safe(row.recipient, 'No recipient'),
+      channel: safe(row.channel, 'unknown'),
+      event: eventLabel(row.event_type),
+      statusKey,
+      statusLabel: String(row.status ?? '').toUpperCase(),
+      statusStyle: statusClass(statusKey),
+      detail: row.error_message ? `${row.provider} - ${row.error_message}` : safe(row.provider, 'No provider details'),
+      centreId: row.centre_id,
+    }
+  }) as InviteRow[]
 
   return (
-    <div className="space-y-12 pb-20">
-      <header className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full border border-white/5 bg-slate-500/5 px-3 py-1">
-              <Signal className="h-3 w-3 text-slate-500" />
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Audience: {audience.toUpperCase()}</p>
-            </div>
+    <div className="space-y-8 pb-20">
+      <header className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl lg:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-300">Founder command centre</p>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">Run CentreConnect from one screen</h1>
+            <p className="mt-3 max-w-3xl text-sm text-slate-400 sm:text-base">
+              Start here when you need to know which centres need help, whether parents are getting stuck, what money is still outstanding, and what needs action next.
+            </p>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-black leading-[0.9] tracking-tighter text-white sm:text-5xl lg:text-6xl">
-              Dash<span className="bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">board</span>
-            </h1>
-            <p className="max-w-3xl text-sm font-medium text-slate-400 sm:text-base lg:text-lg">{heroDescription}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/admin/tenants"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-5 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
+            >
+              Open centres
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/admin/support"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-5 text-xs font-black uppercase tracking-[0.18em] text-slate-200 transition-colors hover:bg-white/5"
+            >
+              Open support
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/admin/revenue"
+              className="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-5 text-xs font-black uppercase tracking-[0.18em] text-slate-200 transition-colors hover:bg-white/5"
+            >
+              Open revenue
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
           </div>
-        </div>
-        <div className="flex flex-col items-start gap-4 lg:items-end">
-          <Link
-            href="/admin/invites"
-            className="inline-flex h-11 items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/10 px-5 text-xs font-black uppercase tracking-[0.18em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
-          >
-            Open Invite Log
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Link>
         </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <AdminKpiCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            trend={card.trend}
-            sparklineData={card.sparklineData}
-          />
-        ))}
+        <AdminKpiCard label="Live centres" value={`${liveCentres}/${totalCentres}`} sparklineData={[Math.max(totalCentres - liveCentres, 0), liveCentres, totalCentres]} />
+        <AdminKpiCard label="Parents on CentreConnect" value={totalParents} sparklineData={[Math.max(totalParents - newParents, 0), newParents, totalParents]} />
+        <AdminKpiCard label="Paid revenue" value={money(paidRevenueCents)} sparklineData={[Math.max(paidRevenueCents / 200, 1), Math.max(paidRevenueCents / 150, 1), Math.max(paidRevenueCents / 100, 1)]} />
+        <AdminKpiCard label="Open support tickets" value={openSupport} sparklineData={[Math.max(openSupport - 2, 0), Math.max(openSupport - 1, 0), openSupport]} />
       </div>
 
-      {audience === 'parent' && parentReliability ? (
-        <section className="overflow-hidden rounded-[2rem] border border-white/5 bg-[#080B13] shadow-2xl">
-          <div className="flex flex-col gap-4 border-b border-white/5 bg-black/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-400/30 bg-cyan-500/10">
-                <AlertTriangle className="h-4 w-4 text-cyan-300" />
-              </span>
-              <div>
-                <h2 className="text-sm font-black uppercase tracking-[0.24em] text-white">Parent Reliability (24h)</h2>
-                <p className="mt-1 text-xs text-slate-400">{parentReliability.severityHint}</p>
-              </div>
-            </div>
-            <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] ${parentReliability.badgeClass}`}>
-              {parentReliability.severityLabel}
-            </span>
-          </div>
-          <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-slate-300">
-              Submit failures recorded in last 24h:{' '}
-              <span className="font-black text-white">{parentReliability.failureCount24h.toLocaleString()}</span>
-            </p>
+      <SectionCard
+        title="Today"
+        description="The most important things that need founder attention right now."
+        href="/admin/tenants"
+        hrefLabel="Open action queues"
+        icon={<CheckCircle2 className="h-4 w-4" />}
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {actions.map((action) => (
             <Link
-              href="/admin/parent-reliability?window=24h"
-              className="inline-flex h-10 items-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 text-xs font-black uppercase tracking-[0.16em] text-cyan-200 transition-colors hover:bg-cyan-500/20"
+              key={action.title}
+              href={action.href}
+              className={`rounded-2xl border p-4 transition-transform hover:-translate-y-0.5 ${actionToneClass(action.tone)}`}
             >
-              Open Parent Reliability
-              <ArrowUpRight className="h-3.5 w-3.5" />
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300">{action.title}</p>
+              <p className="mt-2 text-3xl font-black tracking-tight text-white">{action.count}</p>
+              <p className="mt-2 text-sm text-slate-400">{action.detail}</p>
             </Link>
-          </div>
-        </section>
-      ) : null}
+          ))}
+        </div>
+      </SectionCard>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-        <section className="relative lg:col-span-2">
-          <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-500/5" />
-          <div className="relative overflow-hidden rounded-[3rem] border border-white/5 bg-[#080B13] p-5 shadow-2xl sm:p-8 lg:p-10">
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-black tracking-tighter text-white">Overview</h2>
-                <p className="mt-1 text-sm text-slate-500">Filtered to the selected audience segment.</p>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/30 px-4 py-2">
-                <Activity className="h-4 w-4 text-cyan-400" />
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-300">Live Metrics</span>
-              </div>
+      <div className="grid gap-6 xl:grid-cols-3">
+        <SectionCard
+          title="Centres"
+          description="Track who is live, who still needs onboarding help, and who is waiting for a claim response."
+          href="/admin/tenants"
+          hrefLabel="Open centres"
+          icon={<Building2 className="h-4 w-4" />}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Centre team accounts</p>
+              <p className="mt-2 text-2xl font-black text-white">{centreAccounts}</p>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              {highlights.map((item) => (
-                <div key={item.label} className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
-                  <p className="mt-1 text-xl font-black tracking-tight text-white">{item.value}</p>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Still onboarding</p>
+              <p className="mt-2 text-2xl font-black text-white">{onboardingCentres}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Claim requests waiting</p>
+              <p className="mt-2 text-2xl font-black text-white">{claimRequests}</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            {recentCentres.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">No centres yet.</div>
+            ) : (
+              recentCentres.map((centre) => (
+                <div key={centre.id} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{centre.name}</p>
+                      <p className="text-xs text-slate-400">{centre.city}</p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">{centre.meta}</span>
+                  </div>
+                  <p className="mt-2 text-[11px] text-slate-500">Added {fmtDate(centre.createdAt)}</p>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
+          </div>
+        </SectionCard>
 
-            <div className="mt-7 grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-cyan-300">{primaryLabel}</p>
-                <Bars series={primarySeries} color="bg-gradient-to-t from-cyan-600/90 to-cyan-300/90" />
+        <SectionCard
+          title="Parents"
+          description="Watch signups, unread welcomes, and whether parents are hitting form problems."
+          href="/admin/parent-reliability?window=24h"
+          hrefLabel="Open parent health"
+          icon={<HeartHandshake className="h-4 w-4" />}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">New parents this week</p>
+              <p className="mt-2 text-2xl font-black text-white">{newParents}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Unread welcomes</p>
+              <p className="mt-2 text-2xl font-black text-white">{unreadWelcomes}</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Form health</p>
+                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.16em] ${parentHealth.badgeClass}`}>
+                  {parentHealth.label}
+                </span>
               </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">{secondaryLabel}</p>
-                  <Bars series={secondarySeries} color="bg-gradient-to-t from-emerald-600/90 to-emerald-300/90" />
+              <p className="mt-2 text-2xl font-black text-white">{parentFailures}</p>
+              <p className="mt-2 text-xs text-slate-400">{parentHealth.hint}</p>
+            </div>
+          </div>
+          <div className="mt-5 space-y-3">
+            {recentParents.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">No parent accounts yet.</div>
+            ) : (
+              recentParents.map((parent) => (
+                <div key={parent.id} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                  <p className="text-sm font-semibold text-white">{parent.fullName}</p>
+                  <p className="text-xs text-cyan-300">{parent.phone}</p>
+                  <p className="mt-2 text-[11px] text-slate-500">Joined {fmtDate(parent.createdAt)}</p>
                 </div>
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-400">{tertiaryLabel}</p>
-                  <Bars series={tertiarySeries} color="bg-gradient-to-t from-violet-600/90 to-violet-300/90" />
-                </div>
-              </div>
-            </div>
+              ))
+            )}
           </div>
-        </section>
+        </SectionCard>
 
-        <aside className="space-y-6">
-          <div className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl">
-            <div className="mb-4 flex items-center gap-2">
-              <Users className="h-4 w-4 text-cyan-400" />
-              <h3 className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">Users</h3>
+        <SectionCard
+          title="Money"
+          description="Keep a quick eye on paid revenue, unpaid invoices, and the value still waiting to be collected."
+          href="/admin/revenue"
+          hrefLabel="Open revenue"
+          icon={<CreditCard className="h-4 w-4" />}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Paid invoices</p>
+              <p className="mt-2 text-2xl font-black text-white">{paidInvoices.length}</p>
             </div>
-            <ul className="space-y-3">
-              {users.length === 0 && (
-                <li className="rounded-xl border border-white/5 bg-black/20 px-3 py-2 text-sm text-slate-500">No users in this segment yet.</li>
-              )}
-              {users.map((user) => (
-                <li key={user.id} className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
-                  <p className="text-sm font-semibold text-white">{user.fullName}</p>
-                  <p className="text-xs text-cyan-300">{user.roleLabel}</p>
-                  <p className="mt-1 text-[11px] text-slate-500">{user.phone}</p>
-                  <p className="text-[11px] text-slate-500">{fmtDate(user.createdAt)}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl">
-            <div className="mb-4 flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-cyan-400" />
-              <h3 className="text-xs font-black uppercase tracking-[0.24em] text-slate-200">Centres</h3>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Invoices still waiting</p>
+              <p className="mt-2 text-2xl font-black text-white">{pendingInvoices.length}</p>
             </div>
-            <ul className="space-y-3">
-              {centres.length === 0 && (
-                <li className="rounded-xl border border-white/5 bg-black/20 px-3 py-2 text-sm text-slate-500">No centres in this segment yet.</li>
-              )}
-              {centres.map((centre) => (
-                <li key={centre.id} className="rounded-xl border border-white/5 bg-black/20 px-3 py-2">
-                  <p className="text-sm font-semibold text-white">{centre.name}</p>
-                  <p className="text-xs text-slate-400">{centre.city}</p>
-                  <p className="mt-1 text-[11px] uppercase tracking-wide text-cyan-300">{centre.meta}</p>
-                </li>
-              ))}
-            </ul>
+            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Value still waiting</p>
+              <p className="mt-2 text-2xl font-black text-white">{money(pendingRevenueCents)}</p>
+            </div>
           </div>
-        </aside>
+          <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Latest paid revenue in this view</p>
+            <p className="mt-2 text-3xl font-black text-white">{money(paidRevenueCents)}</p>
+            <p className="mt-2 text-sm text-slate-400">This is a quick founder view. Use Revenue for invoice-by-invoice follow-up and collections.</p>
+          </div>
+        </SectionCard>
       </div>
 
-      <section className="overflow-hidden rounded-[2.5rem] border border-white/5 bg-[#080B13] shadow-2xl">
-        <div className="flex flex-col gap-3 border-b border-white/5 bg-black/20 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
-            <BellRing className="h-4 w-4 text-cyan-300" />
-            <h2 className="text-sm font-black uppercase tracking-[0.26em] text-white">Invite Tracking</h2>
-          </div>
-          <p className="text-xs text-slate-400">
-            Rows: {totalRows.toLocaleString()} | Pending: {pendingRows.toLocaleString()}
-          </p>
+      <SectionCard
+        title="Support and invite activity"
+        description="Recent centre invite traffic so you can resend, troubleshoot, or jump into a centre quickly."
+        href="/admin/invites"
+        hrefLabel="Open invites"
+        icon={<BellRing className="h-4 w-4" />}
+      >
+        <div className="mb-4 flex flex-wrap gap-3 text-xs text-slate-400">
+          <span>Rows in view: {inviteRows.length}</span>
+          <span>Failed invites: {failedInvites}</span>
+          <span>Open support: {openSupport}</span>
         </div>
-        <div className="bg-slate-950/40">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40">
           <Table>
             <TableHeader>
               <TableRow className="border-white/5 hover:bg-transparent">
@@ -677,7 +523,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               {inviteRows.length === 0 ? (
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableCell colSpan={8} className="px-6 py-10 text-sm text-slate-500">
-                    No invite rows found for this segment.
+                    No invite activity yet.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -695,21 +541,12 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                     </TableCell>
                     <TableCell className="max-w-[260px] p-4 text-xs text-slate-400">{row.detail}</TableCell>
                     <TableCell className="p-4">
-                      {row.audience === 'ecd' ? (
-                        <AdminDashboardInviteActions
-                          audience="ecd"
-                          rowId={row.id}
-                          centreId={row.centreId}
-                          status={row.statusKey as NotificationStatus}
-                        />
-                      ) : (
-                        <AdminDashboardInviteActions
-                          audience="parent"
-                          rowId={row.id}
-                          parentId={row.parentId}
-                          isRead={row.statusKey === 'read'}
-                        />
-                      )}
+                      <AdminDashboardInviteActions
+                        audience="ecd"
+                        rowId={row.id}
+                        centreId={row.centreId}
+                        status={row.statusKey as NotificationStatus}
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -717,8 +554,29 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
             </TableBody>
           </Table>
         </div>
-      </section>
+      </SectionCard>
+
+      <SectionCard
+        title="Need help now?"
+        description="Jump straight to the parts of the admin you use most when a centre phones you or something breaks."
+        href="/admin/dashboard"
+        hrefLabel="Stay on home"
+        icon={<LifeBuoy className="h-4 w-4" />}
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { href: '/admin/tenants', label: 'Centres', copy: 'Edit centre setup, ages, branding, and onboarding.' },
+            { href: '/admin/invites', label: 'Invites', copy: 'Check whether welcome packs and owner invites actually went out.' },
+            { href: '/admin/support', label: 'Support', copy: 'Reply to tickets and find centres at churn risk.' },
+            { href: '/admin/revenue', label: 'Revenue', copy: 'Follow unpaid invoices and payment collection.' },
+          ].map((item) => (
+            <Link key={item.href} href={item.href} className="rounded-2xl border border-white/10 bg-black/20 p-4 transition-colors hover:bg-white/5">
+              <p className="text-sm font-black text-white">{item.label}</p>
+              <p className="mt-2 text-sm text-slate-400">{item.copy}</p>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
     </div>
   )
 }
-

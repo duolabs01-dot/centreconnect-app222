@@ -28,7 +28,7 @@ export function AdminPageLayout({
           <div className="flex items-center gap-3">
              <div className="h-2 w-2 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,1)]" />
              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-400">
-               {roleLabel || 'System Operative'}
+               {roleLabel || 'Platform Admin'}
              </p>
           </div>
           <h1 className="text-4xl font-black text-white tracking-tighter sm:text-5xl leading-none">

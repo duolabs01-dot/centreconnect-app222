@@ -25,14 +25,14 @@ import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 
 const NAV_ITEMS = [
-  { label: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash', group: 'core' },
+  { label: 'Home', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash', group: 'core' },
   { label: 'Centres', href: '/admin/tenants', icon: Building2, id: 'ecd', group: 'core' },
   { label: 'Users', href: '/admin/users', icon: Users, id: 'users', group: 'core' },
   { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites', group: 'core' },
   { label: 'Revenue', href: '/admin/revenue', icon: CreditCard, id: 'rev', group: 'insights' },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, id: 'stat', group: 'insights' },
   { label: 'Parent Reliability', href: '/admin/parent-reliability', icon: Users, id: 'pr', group: 'insights' },
-  { label: 'Command Tower', href: '/admin/command', icon: ShieldCheck, id: 'cmd', group: 'reliability' },
+  { label: 'Operations', href: '/admin/command', icon: ShieldCheck, id: 'cmd', group: 'reliability' },
   { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf', group: 'reliability' },
   { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit', group: 'reliability' },
   { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook', group: 'reliability' },
@@ -40,9 +40,9 @@ const NAV_ITEMS = [
 ]
 
 const GROUP_LABELS: Record<string, string> = {
-  core: 'Core',
-  insights: 'Insights',
-  reliability: 'Reliability',
+  core: 'Run the business',
+  insights: 'Numbers',
+  reliability: 'Fix issues',
   support: 'Support',
 }
 
@@ -81,13 +81,13 @@ export function AdminSidebar() {
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/80 leading-none">CentreConnect</p>
-            <p className="text-sm font-black text-white tracking-tighter mt-1">Admin OS v4.1</p>
+            <p className="text-sm font-black text-white tracking-tighter mt-1">Platform Admin</p>
           </div>
         </div>
 
         {/* Navigation Section */}
         <div className="flex-1 px-4 py-8 relative">
-          <p className="px-4 mb-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">Platform Control</p>
+          <p className="px-4 mb-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">What you can do</p>
           <div className="space-y-6">
             {GROUP_ORDER.map((group) => {
               const items = NAV_ITEMS.filter((item) => item.group === group)
@@ -138,11 +138,11 @@ export function AdminSidebar() {
           <div className="mx-2 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-black border border-white/5 shadow-inner">
             <div className="flex items-center gap-2 mb-2">
               <Activity className="w-3 h-3 text-emerald-500" />
-              <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">Regional Nodes</span>
+              <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">Live pilot</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white tracking-tight">Gauteng Hub</span>
-              <span className="text-[10px] font-black text-emerald-500">OPTIMAL</span>
+              <span className="text-xs font-bold text-white tracking-tight">Gauteng centres</span>
+              <span className="text-[10px] font-black text-emerald-500">ONLINE</span>
             </div>
           </div>
           

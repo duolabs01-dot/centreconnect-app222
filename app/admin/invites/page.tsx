@@ -11,7 +11,7 @@ import { Mail, MessageCircle, PackageCheck, Send, Sparkles } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Invites | CC Control Tower',
+  title: 'Invites | Platform Admin',
   description: 'Track invite dispatch and welcome pack delivery activity across centres.',
 }
 
@@ -159,7 +159,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
     <AdminPageLayout
       title="Invites"
       description="Simple tracking for every invite and welcome pack sent from CC Admin flows."
-      roleLabel="Architect Console"
+      roleLabel="Platform Admin"
       wide
     >
       <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -168,7 +168,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Rows in View</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{logs.length}</h3>
-              <p className="mt-1 text-[10px] text-cyan-300">FILTERED_INVITE_LOGS</p>
+              <p className="mt-1 text-[10px] text-cyan-300">Invite records in the current view</p>
             </div>
             <Send className="h-4 w-4 text-cyan-300" />
           </div>
@@ -181,7 +181,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
               <h3 className="font-orbitron text-2xl font-bold text-white">
                 {sentCount} / {deliveredCount} / {clickedCount} / {claimedCount}
               </h3>
-              <p className="mt-1 text-[10px] text-cyber-violet">STATE_DISTRIBUTION</p>
+              <p className="mt-1 text-[10px] text-cyber-violet">Delivery progress across the current view</p>
             </div>
             <Sparkles className="h-4 w-4 text-cyber-violet" />
           </div>
@@ -192,7 +192,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Welcome Packs</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{welcomePackCount}</h3>
-              <p className="mt-1 text-[10px] text-cyber-green">PILOT_ONBOARDING_MAILERS</p>
+              <p className="mt-1 text-[10px] text-cyber-green">Welcome packs sent to centres</p>
             </div>
             <PackageCheck className="h-4 w-4 text-cyber-green" />
           </div>
@@ -205,7 +205,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
               <h3 className="font-orbitron text-2xl font-bold text-white">
                 {ownerInviteCount} / {failedCount}
               </h3>
-              <p className="mt-1 text-[10px] text-cyan-300">OWNER_REACHOUT_HEALTH</p>
+              <p className="mt-1 text-[10px] text-cyan-300">Owner outreach and failed sends</p>
             </div>
             {failedCount > 0 ? <MessageCircle className="h-4 w-4 text-cyan-300" /> : <Mail className="h-4 w-4 text-cyan-300" />}
           </div>
@@ -218,7 +218,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
               <h3 className="font-orbitron text-lg font-bold text-white">
                 Welcome Viewed: {welcomeViewedCount} | QR Viewed: {qrViewedCount} | QR Printed: {qrPrintedCount} | Onboarding Completed: {onboardingCompleteCount}
               </h3>
-              <p className="mt-1 text-[10px] text-cyber-green">LIVE_ONBOARDING_FUNNEL</p>
+              <p className="mt-1 text-[10px] text-cyber-green">How invite traffic is moving through onboarding</p>
             </div>
             <Sparkles className="h-4 w-4 text-cyber-green" />
           </div>

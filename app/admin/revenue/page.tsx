@@ -14,8 +14,8 @@ import { TrendingUp, TrendingDown, CreditCard, Clock } from 'lucide-react'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Revenue | CC Control Tower',
-  description: 'Financial performance, subscription health, and payment telemetry.',
+  title: 'Revenue | Platform Admin',
+  description: 'Track subscription health, payments, and what needs follow-up.',
 }
 
 function formatCurrency(amount: number) {
@@ -210,9 +210,9 @@ export default async function AdminRevenuePage() {
 
   return (
     <AdminPageLayout
-      title="Revenue Ops"
-      description="Real-time financial protocols and subscription telemetry."
-      roleLabel="Architect Console"
+      title="Revenue"
+      description="Track subscription health, invoices, and payment follow-up in one place."
+      roleLabel="Platform Admin"
       wide
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">

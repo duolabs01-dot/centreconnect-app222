@@ -11,8 +11,8 @@ import { Activity, BarChart3, Fingerprint, Zap, Globe, MessageSquare } from 'luc
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Neural | CC Control Tower',
-  description: 'Event-stream visibility and cross-platform neural indicators.',
+  title: 'Analytics | Platform Admin',
+  description: 'See parent interest, centre engagement, and application activity.',
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -130,9 +130,9 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <AdminPageLayout
-      title="Neural Stream"
-      description="Live platform activity and neural event telemetry."
-      roleLabel="Architect Console"
+      title="Analytics"
+      description="See how parents are viewing centres, clicking contact actions, and submitting applications."
+      roleLabel="Platform Admin"
       wide
     >
       <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -141,7 +141,7 @@ export default async function AdminAnalyticsPage() {
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Total Pings</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{total}</h3>
-              <p className="mt-1 text-[10px] text-cyber-cyan">LIFETIME_EVENT_COUNT</p>
+              <p className="mt-1 text-[10px] text-cyber-cyan">All tracked parent and centre events</p>
             </div>
             <Activity className="h-4 w-4 text-cyber-cyan" />
           </div>
@@ -152,7 +152,7 @@ export default async function AdminAnalyticsPage() {
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Active Week</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{last7}</h3>
-              <p className="mt-1 text-[10px] text-cyber-violet">LAST_7_DAYS_ACTIVITY</p>
+              <p className="mt-1 text-[10px] text-cyber-violet">Events recorded in the last 7 days</p>
             </div>
             <Zap className="h-4 w-4 text-cyber-violet" />
           </div>
@@ -163,7 +163,7 @@ export default async function AdminAnalyticsPage() {
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Engagement</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{byType.whatsapp_click + byType.call_click}</h3>
-              <p className="mt-1 text-[10px] text-cyber-green">TOUCHPOINT_CLICKS</p>
+              <p className="mt-1 text-[10px] text-cyber-green">WhatsApp and call clicks</p>
             </div>
             <Fingerprint className="h-4 w-4 text-cyber-green" />
           </div>
@@ -174,7 +174,7 @@ export default async function AdminAnalyticsPage() {
             <div>
               <p className="mb-1 font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500">Conversions</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{byType.application_submitted}</h3>
-              <p className="mt-1 text-[10px] text-cyber-cyan">APPS_SUBMITTED</p>
+              <p className="mt-1 text-[10px] text-cyber-cyan">Applications sent to centres</p>
             </div>
             <Globe className="h-4 w-4 text-cyber-cyan" />
           </div>
@@ -229,7 +229,7 @@ export default async function AdminAnalyticsPage() {
 
       <CyberCard className="mb-8 overflow-hidden p-0">
         <div className="border-b border-white/5 bg-white/2 px-6 py-4">
-          <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyber-cyan">Top Centre Activity</h2>
+          <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyber-cyan">Top centre activity</h2>
         </div>
         <div className="overflow-x-auto">
           <Table>
@@ -267,7 +267,7 @@ export default async function AdminAnalyticsPage() {
 
       <div className="mb-8 grid gap-6 lg:grid-cols-4">
         {[
-          { label: 'Neural Profile Views', val: byType.profile_view, color: 'text-white', icon: BarChart3 },
+          { label: 'Profile views', val: byType.profile_view, color: 'text-white', icon: BarChart3 },
           { label: 'Comm Link Clicks', val: byType.whatsapp_click, color: 'text-emerald-400', icon: MessageSquare },
           { label: 'Direct Dial Clicks', val: byType.call_click, color: 'text-amber-400', icon: Zap },
           { label: 'Application Nodes', val: byType.application_submitted, color: 'text-cyan-400', icon: Fingerprint },
@@ -286,7 +286,7 @@ export default async function AdminAnalyticsPage() {
 
       <CyberCard className="overflow-hidden p-0">
         <div className="border-b border-white/5 bg-white/2 px-6 py-4">
-          <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyber-cyan">Neural Stream Log</h2>
+          <h2 className="font-orbitron text-xs font-bold uppercase tracking-widest text-cyber-cyan">Recent activity log</h2>
         </div>
         <div className="h-72 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-cyber-cyan/30">
           <div className="bg-slate-950/40">

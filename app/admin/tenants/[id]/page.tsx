@@ -18,8 +18,8 @@ import { APP_URL, ROOT_DOMAIN } from '@/lib/config'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'CentreConnect - Tenant 360',
-  description: 'Complete operational profile for one tenant workspace.',
+  title: 'Centre detail | Platform Admin',
+  description: 'Operational profile for one centre workspace.',
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -152,16 +152,16 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
 
   return (
     <AdminPageLayout
-      title={`Tenant 360 | ${centre.name}`}
-      description="Operational, billing, user access, analytics, and support view for one tenant."
-      roleLabel="Architect Console"
+      title={`Centre detail | ${centre.name}`}
+      description="Billing, users, analytics, support, and setup for this centre."
+      roleLabel="Platform Admin"
       wide
     >
       <div className="space-y-6 pb-10">
         <Card className="border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f]">
           <CardHeader className="gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">Tenant 360</Badge>
+              <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">Centre workspace</Badge>
               <Badge className={centre.is_active ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-200' : 'border-rose-500/30 bg-rose-500/15 text-rose-200'}>
                 {centre.is_active ? 'Enabled' : 'Disabled'}
               </Badge>

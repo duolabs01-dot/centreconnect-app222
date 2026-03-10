@@ -8,7 +8,7 @@ import { ActivateAccountClient } from './activate-account-client'
 type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user'
 
 function toDashboardPath(role: UserRole | string | null | undefined) {
-  if (role === 'platform_admin') return '/admin/command'
+  if (role === 'platform_admin') return '/admin/dashboard'
   if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
   return '/parent/dashboard'
 }

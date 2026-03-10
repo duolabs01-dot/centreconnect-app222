@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/cc-admin/
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Payment Incident Runbook | CC Control Tower',
+  title: 'Payment Incident Runbook | Platform Admin',
   description: 'Operator quick guide for payment and webhook incidents.',
 }
 

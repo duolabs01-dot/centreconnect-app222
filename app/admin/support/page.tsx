@@ -13,8 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Relay | CC Control Tower',
-  description: 'Support protocols, ticket escalations, and churn-risk signals.',
+  title: 'Support | Platform Admin',
+  description: 'Track support tickets, urgent issues, and centres that need follow-up.',
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -108,9 +108,9 @@ export default async function AdminSupportPage() {
 
   return (
     <AdminPageLayout
-      title="Relay"
-      description="Support protocols and churn-risk telemetry."
-      roleLabel="Architect Console"
+      title="Support"
+      description="See open tickets, urgent issues, and where a centre might need help."
+      roleLabel="Platform Admin"
       wide
     >
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 mb-8">
@@ -119,7 +119,7 @@ export default async function AdminSupportPage() {
             <div>
               <p className="font-orbitron text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-1">Active Threads</p>
               <h3 className="font-orbitron text-2xl font-bold text-white">{totalTickets}</h3>
-              <p className="text-[10px] text-cyber-cyan mt-1">TOTAL_TICKET_NODES</p>
+              <p className="text-[10px] text-cyber-cyan mt-1">All support tickets in view</p>
             </div>
             <MessageSquare className="w-4 h-4 text-cyber-cyan" />
           </div>

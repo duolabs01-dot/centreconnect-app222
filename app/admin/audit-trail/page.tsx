@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Audit Trail | CC Control Tower',
+  title: 'Audit Trail | Platform Admin',
   description: 'Immutable timeline of platform admin and billing actions.',
 }
 

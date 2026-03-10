@@ -12,7 +12,7 @@ import { IncidentHandoffActions } from './_components/incident-handoff-actions'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Parent Reliability | CC Control Tower',
+  title: 'Parent Reliability | Platform Admin',
   description: 'Monitor parent submit failures by route and failure type.',
 }
 

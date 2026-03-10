@@ -13,8 +13,8 @@ import { Building2, Users, Activity, TrendingUp, Globe, Zap } from 'lucide-react
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Control Tower | CC Command',
-  description: 'Premium operations console for onboarding, verification, and neural telemetry.',
+  title: 'Operations | Platform Admin',
+  description: 'Operations view for platform health, onboarding, and live centre issues.',
 }
 
 const SA_PROVINCES: ProvinceScore[] = [
@@ -109,9 +109,9 @@ export default async function AdminDashboardPage() {
 
   return (
     <AdminPageLayout
-      title="Control Tower"
-      description="System protocols and neural platform activity."
-      roleLabel="Architect Console"
+      title="Operations"
+      description="Live platform activity, centre health, and quick operational checks."
+      roleLabel="Platform Admin"
       wide
     >
       <div className="space-y-6">
@@ -126,8 +126,8 @@ export default async function AdminDashboardPage() {
           <div className="lg:col-span-2 admin-card p-6 border-t-2 border-t-admin-accent">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-accent">Neural Activity Map</p>
-                <p className="text-xs text-admin-text-muted mt-1">Cross-platform centre engagement protocols</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-accent">Activity map</p>
+                <p className="text-xs text-admin-text-muted mt-1">Recent centre activity across the platform</p>
               </div>
               <Globe className="w-5 h-5 text-admin-accent" />
             </div>
@@ -138,10 +138,10 @@ export default async function AdminDashboardPage() {
 
           <div className="space-y-6">
             <div className="admin-card p-6 border-t-2 border-t-admin-warning">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-warning mb-4">Live Sessions</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-warning mb-4">Live sessions</p>
               <div className="py-6 text-center bg-admin-bg rounded-xl border border-admin-border mb-4">
                 <LiveSessionsCounter />
-                <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted mt-2">Concurrent Entities</p>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-admin-text-muted mt-2">Signed-in users</p>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -158,7 +158,7 @@ export default async function AdminDashboardPage() {
             </div>
 
             <div className="admin-card p-6">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-text-muted mb-4">Core Status</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-text-muted mb-4">System status</p>
               <div className="bg-admin-bg p-4 rounded-xl border border-admin-border">
                 <SystemHealthWidget />
               </div>
@@ -168,8 +168,8 @@ export default async function AdminDashboardPage() {
           <div className="lg:col-span-3 admin-card p-6 border-t-2 border-t-admin-accent">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-accent">Regional Neural Rollup</p>
-                <p className="text-xs text-admin-text-muted mt-1">Curriculum mastery and developmental telemetry per province</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-accent">Regional spread</p>
+                <p className="text-xs text-admin-text-muted mt-1">Where your active centres are concentrated right now</p>
               </div>
               <Zap className="w-5 h-5 text-admin-accent" />
             </div>

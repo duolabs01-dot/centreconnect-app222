@@ -16,8 +16,8 @@ import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Tenants & Onboarding | Platform Admin',
-  description: 'Create new centres (single or bulk) and manage the full tenant directory.',
+  title: 'Centres | Platform Admin',
+  description: 'Add centres, fix onboarding, and manage the full centre directory.',
 }
 
 async function requirePlatformAdmin() {
@@ -263,9 +263,9 @@ export default async function AdminTenantsPage() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Today&apos;s Action Queue</p>
-            <h2 className="mt-1 text-2xl font-black text-white">Pilot Onboarding Priority</h2>
+            <h2 className="mt-1 text-2xl font-black text-white">Today&apos;s centre actions</h2>
             <p className="mt-1 max-w-3xl text-sm text-cyan-50/90">
-              Visible operational queue for centres that still need onboarding completion. Start here every time.
+              The centres that need attention first so you can unblock onboarding quickly.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -274,7 +274,7 @@ export default async function AdminTenantsPage() {
             </Link>
             <Link href="/admin/tenants">
               <Button variant="outline" className="border-cyan-200/50 bg-white/10 text-cyan-50 hover:bg-cyan-900/40">
-                Open Tenant Directory
+                Open centre directory
               </Button>
             </Link>
           </div>
@@ -316,10 +316,9 @@ export default async function AdminTenantsPage() {
       <section className="space-y-6">
         <div className="space-y-2">
           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Create Tenant</p>
-          <h1 className="text-3xl font-black text-white">Single + Bulk Workspace Setup</h1>
+          <h1 className="text-3xl font-black text-white">Add or update centres</h1>
           <p className="max-w-3xl text-sm text-slate-400">
-            Launch a new centre either as a single owner or with a bulk team list, then let the welcome pack and owner
-            invite run automatically.
+            Add one centre or load a list, then send the right welcome and access messages without extra steps.
           </p>
         </div>
         <div className="rounded-3xl border border-slate-800 bg-slate-950/70 p-4 shadow-[0_25px_100px_rgba(2,6,23,0.65)]">
@@ -339,7 +338,7 @@ export default async function AdminTenantsPage() {
 
       <section className="space-y-4">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Onboarding Health</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Invite health</p>
           <h2 className="text-3xl font-black text-white">Invite Reliability</h2>
           <p className="max-w-3xl text-sm text-slate-400">
             Live checks for domain safety, invite delivery, and owner acceptance so you can catch onboarding failures
@@ -404,15 +403,14 @@ export default async function AdminTenantsPage() {
 
       <section className="space-y-4">
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Tenant Directory</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Centre directory</p>
           <h2 className="text-3xl font-black text-white">All Centres</h2>
           <p className="max-w-3xl text-sm text-slate-400">
-            TanStack-powered directory with a fully featured edit modal that touches package, pricing, branding, and the
-            marketplace toggles.
+            Edit centre details, pricing, branding, access, and onboarding settings from one place.
           </p>
         </div>
         <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Role Management</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">User roles</p>
           <p className="mt-1 text-sm text-cyan-50">
             Upgrade or downgrade users manually from <strong>Tenant Edit {'>'} Access & Team</strong>. Parent downgrade requires re-activation before login.
           </p>
