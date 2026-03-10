@@ -22,10 +22,12 @@ import { buildAuthCallbackRedirect } from '@/lib/auth/onboarding-links'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
+  const initialEmail = searchParams.get('email') ?? ''
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
@@ -50,6 +52,39 @@ export default function LoginPage() {
 
   function authDestinationPath() {
     return sanitizeNextPath(requestedNext) ?? '/'
+  }
+
+  async function handleResendConfirmation() {
+    const normalizedEmail = email.trim().toLowerCase()
+    if (!normalizedEmail) {
+      toast.error('Enter the parent email address first.')
+      return
+    }
+
+    setResendLoading(true)
+    try {
+      const response = await fetch('/api/auth/resend-parent-confirmation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: normalizedEmail,
+          nextPath: sanitizeNextPath(requestedNext) ?? '/parent/onboarding',
+        }),
+      })
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error || 'Failed to resend confirmation email')
+      }
+
+      toast.success('Fresh confirmation email sent. Check inbox and spam.')
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to resend confirmation email')
+    } finally {
+      setResendLoading(false)
+    }
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -146,8 +181,33 @@ export default function LoginPage() {
             </header>
 
             {confirmationErrorMessage(authError) && (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 mb-6 uppercase tracking-wider">
-                {confirmationErrorMessage(authError)}
+              <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-rose-700">{confirmationErrorMessage(authError)}</p>
+                <p className="mt-2 text-sm font-medium leading-6 text-rose-800">Use the email field below, then tap resend to send a fresh confirmation link.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 h-10 rounded-2xl border-rose-300 bg-white text-xs font-black uppercase tracking-[0.16em] text-rose-700 hover:bg-rose-100"
+                  onClick={() => void handleResendConfirmation()}
+                  disabled={resendLoading}
+                >
+                  {resendLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resend confirmation email'}
+                </Button>
+              </div>
+            )}
+            {searchParams.get('confirm_email') === '1' && !confirmationErrorMessage(authError) && (
+              <div className="mb-6 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-4">
+                <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Check your email to finish sign up</p>
+                <p className="mt-2 text-sm font-medium leading-6 text-cyan-900">We sent a confirmation email to the address below. If it does not arrive, tap resend.</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 h-10 rounded-2xl border-cyan-300 bg-white text-xs font-black uppercase tracking-[0.16em] text-cyan-700 hover:bg-cyan-100"
+                  onClick={() => void handleResendConfirmation()}
+                  disabled={resendLoading}
+                >
+                  {resendLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Resend confirmation email'}
+                </Button>
               </div>
             )}
             {reason === 'session_expired' && (

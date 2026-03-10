@@ -116,7 +116,12 @@ export default function RegisterPage() {
       }
 
       toast.success('Confirmation email sent. Check inbox/spam, then confirm and sign in.')
-      router.push(loginHref())
+      const destination = new URLSearchParams()
+      destination.set('email', normalizedEmail)
+      destination.set('confirm_email', '1')
+      const nextPath = sanitizeNextPath(requestedNext)
+      if (nextPath) destination.set('next', nextPath)
+      router.push(`/login?${destination.toString()}`)
     } catch (error: any) {
       const message = getErrorMessage(error, 'Failed to create account')
       toast.error(message)
