@@ -1,3 +1,8 @@
+const SLUG_ALIASES: Record<string, string[]> = {
+  bajabulile: ['bajabulile-day-care-centre'],
+  'bajabulile-day-care-centre': ['bajabulile'],
+}
+
 function safeDecode(value: string) {
   try {
     return decodeURIComponent(value)
@@ -20,5 +25,6 @@ export function resolveCentreSlugCandidates(value: string | null | undefined) {
 
   const decoded = safeDecode(raw).trim()
   const normalized = normalizeCentreSlug(raw)
-  return Array.from(new Set([normalized, decoded, raw].filter((entry): entry is string => Boolean(entry))))
+  const aliasCandidates = normalized ? SLUG_ALIASES[normalized] ?? [] : []
+  return Array.from(new Set([normalized, decoded, raw, ...aliasCandidates].filter((entry): entry is string => Boolean(entry))))
 }

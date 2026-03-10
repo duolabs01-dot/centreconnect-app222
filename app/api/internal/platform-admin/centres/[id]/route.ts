@@ -10,6 +10,7 @@ import {
   normalizeOperatingSchedule,
   summarizeOperatingSchedule,
 } from '@/lib/time/centre-operating-schedule'
+import { sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
@@ -27,6 +28,13 @@ const operatingScheduleSchema = z.object({
   fri: operatingWindowSchema.nullish(),
   sat: operatingWindowSchema.nullish(),
   sun: operatingWindowSchema.nullish(),
+})
+
+const classroomSchema = z.object({
+  id: z.string().uuid().nullable().optional(),
+  name: z.string().min(1).max(120),
+  ageGroup: z.string().max(40).optional().default(''),
+  practitionerName: z.string().max(120).optional().default(''),
 })
 
 function normalizeRequestedTier(
@@ -97,6 +105,9 @@ const actionSchema = z.discriminatedUnion('action', [
     ageGroupPricing: z.record(z.string(), z.any()).optional(),
     operatingSchedule: operatingScheduleSchema.nullable().optional(),
     operatingHours: z.string().max(400).nullable().optional(),
+    aftercareAvailable: z.boolean().optional(),
+    aftercareEndTime: z.string().regex(/^\d{2}:\d{2}$/).nullable().optional(),
+    classrooms: z.array(classroomSchema).max(6).optional(),
     dsdStatus: z.string().max(80).nullable().optional(),
     marketplaceUpgrades: z.array(z.string().max(120)).max(25).optional(),
     isActive: z.boolean().optional(),
@@ -327,6 +338,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (
       payload.operatingSchedule !== undefined ||
       payload.operatingHours !== undefined ||
+      payload.aftercareAvailable !== undefined ||
+      payload.aftercareEndTime !== undefined ||
       payload.dsdStatus !== undefined ||
       payload.marketplaceUpgrades !== undefined
     ) {
@@ -359,6 +372,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       } else if (payload.operatingHours !== undefined) {
         tenantAdminOverrides.operating_hours = payload.operatingHours
       }
+      if (payload.aftercareAvailable !== undefined || payload.aftercareEndTime !== undefined) {
+        tenantAdminOverrides.aftercare = {
+          available: payload.aftercareAvailable === true,
+          end_time: payload.aftercareAvailable === true ? payload.aftercareEndTime ?? null : null,
+        }
+      }
       if (payload.dsdStatus !== undefined) tenantAdminOverrides.dsd_status = payload.dsdStatus
       if (payload.marketplaceUpgrades !== undefined) tenantAdminOverrides.marketplace_upgrades = payload.marketplaceUpgrades
 
@@ -371,6 +390,39 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (Object.keys(updatePayload).length > 0) {
       const { error } = await admin.from('ecd_centres').update(updatePayload).eq('id', centreId)
       if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    if (payload.action === 'set_profile' && payload.classrooms !== undefined) {
+      const classrooms = sanitizeClassroomDrafts(payload.classrooms)
+      const incomingIds = classrooms.map((room) => room.id).filter((value): value is string => Boolean(value))
+
+      const { data: existingRooms, error: existingRoomsError } = await admin
+        .from('ecd_classes')
+        .select('id')
+        .eq('ecd_id', centreId)
+      if (existingRoomsError) return NextResponse.json({ error: existingRoomsError.message }, { status: 400 })
+
+      const existingIds = (existingRooms ?? []).map((room) => room.id as string)
+      const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id))
+      if (idsToDelete.length > 0) {
+        const { error: deleteRoomsError } = await admin.from('ecd_classes').delete().in('id', idsToDelete)
+        if (deleteRoomsError) return NextResponse.json({ error: deleteRoomsError.message }, { status: 400 })
+      }
+
+      if (classrooms.length > 0) {
+        const { error: upsertRoomsError } = await admin.from('ecd_classes').upsert(
+          classrooms.map((room) => ({
+            id: room.id ?? undefined,
+            ecd_id: centreId,
+            name: room.name,
+            age_group: room.ageGroup || null,
+            practitioner_name: room.practitionerName || null,
+            updated_at: new Date().toISOString(),
+          })),
+          { onConflict: 'id' }
+        )
+        if (upsertRoomsError) return NextResponse.json({ error: upsertRoomsError.message }, { status: 400 })
+      }
     }
 
     const hasSubscriptionUpdate =

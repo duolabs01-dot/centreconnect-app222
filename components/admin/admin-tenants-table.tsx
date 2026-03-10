@@ -32,6 +32,7 @@ import {
   type CentreOperatingSchedule,
   type OperatingDayKey,
 } from '@/lib/time/centre-operating-schedule'
+import { type CentreClassroomDraft } from '@/lib/ecd/centre-public-profile'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact'
 type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
@@ -75,6 +76,9 @@ export type AdminTenantTableRow = {
   ageRangeEnd: string
   operatingSchedule: CentreOperatingSchedule
   operatingHoursSummary: string
+  aftercareAvailable: boolean
+  aftercareEndTime: string
+  classrooms: CentreClassroomDraft[]
   dsdStatus: DsdStatus
   marketplaceUpgrades: string
   isActive: boolean
@@ -197,6 +201,23 @@ function updateOperatingDay(
       close: nextValue.close ?? existing.close,
     },
   }
+}
+
+function updateClassroomDraft(
+  classrooms: CentreClassroomDraft[],
+  index: number,
+  patch: Partial<CentreClassroomDraft>
+) {
+  const next = classrooms.slice(0, 6)
+  while (next.length <= index) {
+    next.push({ id: null, name: '', ageGroup: '', practitionerName: '' })
+  }
+  next[index] = { ...next[index], ...patch }
+  return next
+}
+
+function classroomAgeLabel(room: CentreClassroomDraft) {
+  return room.ageGroup.trim() || 'All ages'
 }
 
 function slugify(value: string) {
@@ -704,6 +725,14 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         })(),
         operatingSchedule: form.operatingSchedule,
         operatingHours: summarizeOperatingSchedule(form.operatingSchedule),
+        aftercareAvailable: form.aftercareAvailable,
+        aftercareEndTime: form.aftercareAvailable ? form.aftercareEndTime.trim() || null : null,
+        classrooms: form.classrooms.filter((room) => room.name.trim()).map((room) => ({
+          id: room.id ?? null,
+          name: room.name.trim(),
+          ageGroup: room.ageGroup.trim(),
+          practitionerName: room.practitionerName.trim(),
+        })),
         dsdStatus: form.dsdStatus,
         marketplaceUpgrades: form.marketplaceUpgrades
           .split(/[\n,;]+/g)
@@ -1327,6 +1356,14 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Subsidy</p>
                       <p className="mt-1 text-sm font-semibold text-white">{form.subsidyAccepted ? 'Yes' : 'Not listed'}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Aftercare</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.aftercareAvailable ? `Until ${form.aftercareEndTime || '17:30'}` : 'Not offered'}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Classes</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.classrooms.filter((room) => room.name.trim()).length || 0} listed</p>
                     </div>
                   </div>
                 </div>

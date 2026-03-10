@@ -249,11 +249,6 @@ export function MobileCentreDetailsSheet({
                     <SaveCentreButton centreId={centreId} initialSaved={false} />
                   </div>
                 </div>
-                {isClaimed && whatsappHref ? (
-                  <Link href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-[#25D366]/30 bg-[#25D366]/10 text-sm font-semibold text-[#147A37]">
-                    Ask on WhatsApp
-                  </Link>
-                ) : null}
               </div>
 
               <Button

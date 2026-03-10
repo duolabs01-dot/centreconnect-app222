@@ -10,6 +10,7 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { updateNotificationPreferencesAction } from '@/lib/actions/settings/update-notification-preferences'
 import { inviteStaffAction } from '@/lib/actions/settings/staff-management'
 import { requestCancellationAction } from '@/lib/actions/settings/cancel-subscription'
+import { readAftercareConfig, sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
 import { DangerZoneClient } from './danger-zone-client'
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
   const { data: centre } = await supabase
     .from('ecd_centres')
     .select(
-      'id,slug,name,tagline,description,logo_url,cover_image_url,phone,contact_phone,contact_whatsapp,fees_display_mode,email,address,suburb,city,province,postal_code,is_active,updated_at'
+      'id,slug,name,tagline,description,logo_url,cover_image_url,phone,contact_phone,contact_whatsapp,fees_display_mode,email,address,suburb,city,province,postal_code,is_active,updated_at,communication_automation_settings'
     )
     .eq('id', ecdId)
     .maybeSingle()
@@ -44,6 +45,12 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     )
     .eq('user_id', user.id)
     .maybeSingle()
+  const { data: classes } = await supabase
+    .from('ecd_classes')
+    .select('id,name,age_group,practitioner_name')
+    .eq('ecd_id', ecdId)
+    .order('created_at', { ascending: true })
+
   const { data: staffMembers } = await supabase
     .from('ecd_admins')
     .select('user_id,role,can_approve_applications,can_publish_announcements,user_profiles!ecd_admins_user_id_fkey(full_name)')
@@ -51,12 +58,21 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .order('invited_at', { ascending: false })
     .limit(20)
 
+  const aftercare = readAftercareConfig(centre?.communication_automation_settings)
+  const classRows = (classes ?? []).map((row: any) => ({
+    id: row.id as string,
+    name: String(row.name ?? ''),
+    ageGroup: String(row.age_group ?? ''),
+    practitionerName: String(row.practitioner_name ?? ''),
+  }))
+
   const checks = [
     { label: 'Crèche description', done: Boolean(centre?.description) },
     { label: 'Logo', done: Boolean(centre?.logo_url) },
     { label: 'Cover image', done: Boolean(centre?.cover_image_url) },
     { label: 'Contact phone', done: Boolean(centre?.contact_phone || centre?.phone) },
     { label: 'Fee mode configured', done: Boolean(centre?.fees_display_mode) },
+    { label: 'Classes listed', done: classRows.length > 0 },
   ]
   const complete = checks.filter((item) => item.done).length
   const score = Math.round((complete / checks.length) * 100)
@@ -94,6 +110,92 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
       })
       .eq('id', session.ecdId)
     revalidatePath('/ecd/profile')
+  }
+
+  async function saveClassroomsAndCare(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+
+    const { data: settingsRow } = await session.supabase
+      .from('ecd_centres')
+      .select('communication_automation_settings,slug')
+      .eq('id', session.ecdId)
+      .maybeSingle()
+
+    const existingSettings =
+      settingsRow?.communication_automation_settings &&
+      typeof settingsRow.communication_automation_settings === 'object' &&
+      !Array.isArray(settingsRow.communication_automation_settings)
+        ? (settingsRow.communication_automation_settings as Record<string, unknown>)
+        : {}
+
+    const tenantAdminOverrides =
+      existingSettings.tenant_admin_overrides &&
+      typeof existingSettings.tenant_admin_overrides === 'object' &&
+      !Array.isArray(existingSettings.tenant_admin_overrides)
+        ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
+        : {}
+
+    const aftercareAvailable = String(formData.get('aftercare_available') ?? 'false') === 'true'
+    const aftercareEndTime = String(formData.get('aftercare_end_time') ?? '').trim()
+
+    tenantAdminOverrides.aftercare = {
+      available: aftercareAvailable,
+      end_time: aftercareAvailable && /^\d{2}:\d{2}$/.test(aftercareEndTime) ? aftercareEndTime : null,
+    }
+
+    await session.supabase
+      .from('ecd_centres')
+      .update({
+        communication_automation_settings: {
+          ...existingSettings,
+          tenant_admin_overrides: tenantAdminOverrides,
+        },
+      })
+      .eq('id', session.ecdId)
+
+    const classrooms = sanitizeClassroomDrafts(
+      Array.from({ length: 5 }).map((_, index) => ({
+        id: String(formData.get(`class_id_${index}`) ?? '').trim() || null,
+        name: String(formData.get(`class_name_${index}`) ?? '').trim(),
+        ageGroup: String(formData.get(`class_age_${index}`) ?? '').trim(),
+        practitionerName: String(formData.get(`class_teacher_${index}`) ?? '').trim(),
+      }))
+    )
+
+    const { data: existingClasses } = await session.supabase
+      .from('ecd_classes')
+      .select('id')
+      .eq('ecd_id', session.ecdId)
+
+    const existingIds = ((existingClasses ?? []) as Array<{ id: string }>).map((row) => row.id)
+    const incomingIds = classrooms.map((room) => room.id).filter((value): value is string => Boolean(value))
+    const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id))
+
+    if (idsToDelete.length > 0) {
+      await session.supabase.from('ecd_classes').delete().in('id', idsToDelete)
+    }
+
+    if (classrooms.length > 0) {
+      await session.supabase.from('ecd_classes').upsert(
+        classrooms.map((room) => ({
+          id: room.id ?? undefined,
+          ecd_id: session.ecdId,
+          name: room.name,
+          age_group: room.ageGroup || null,
+          practitioner_name: room.practitionerName || null,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: 'id' }
+      )
+    }
+
+    revalidatePath('/ecd/profile')
+    revalidatePath('/ecd/dashboard')
+    if (settingsRow?.slug) {
+      revalidatePath(`/c/${settingsRow.slug}`)
+      revalidatePath(`/centre/${settingsRow.slug}`)
+    }
   }
 
   async function saveAccountDetails(formData: FormData) {
@@ -329,7 +431,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 <Link href="/ecd/billing">Open Billing</Link>
               </Button>
               <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-                <Link href="/ecd/support">Open Support</Link>
+                <Link href="/ecd/team-plans">Weekly Staff Plan</Link>
               </Button>
             </div>
             {centre?.slug ? (
@@ -394,6 +496,62 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="postal_code" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
               <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Location
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
+          <CardHeader className="bg-slate-50/50">
+            <CardTitle className="text-base font-bold">Classes & Aftercare</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-6">
+            <form action={saveClassroomsAndCare} className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Aftercare</label>
+                  <select name="aftercare_available" className="cc-native-field h-12 rounded-2xl" defaultValue={aftercare.available ? 'true' : 'false'}>
+                    <option value="false">Not offered</option>
+                    <option value="true">Offered</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Aftercare end time</label>
+                  <input name="aftercare_end_time" type="time" className="cc-native-field h-12 rounded-2xl" defaultValue={aftercare.endTime ?? ''} />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Public preview</p>
+                <p className="mt-2 text-sm font-semibold text-slate-900">
+                  {aftercare.available ? `Aftercare is offered until ${aftercare.endTime ?? '17:30'}.` : 'Aftercare is not offered.'}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, index) => {
+                  const classroom = classRows[index] ?? { id: '', name: '', ageGroup: '', practitionerName: '' }
+                  return (
+                    <div key={index} className="grid gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 md:grid-cols-3">
+                      <input type="hidden" name={`class_id_${index}`} defaultValue={classroom.id ?? ''} />
+                      <input name={`class_name_${index}`} className="cc-native-field h-12 rounded-2xl" defaultValue={classroom.name} placeholder={`Class ${index + 1} name`} />
+                      <input name={`class_age_${index}`} className="cc-native-field h-12 rounded-2xl" defaultValue={classroom.ageGroup} placeholder="Age group e.g. 1-2 years" />
+                      <input name={`class_teacher_${index}`} className="cc-native-field h-12 rounded-2xl" defaultValue={classroom.practitionerName} placeholder="Practitioner (optional)" />
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {classRows.length > 0 ? classRows.map((room) => (
+                  <span key={room.id} className="inline-flex items-center rounded-full border border-teal-100 bg-teal-50 px-3 py-1 text-xs font-bold text-teal-700">
+                    {room.name} • {room.ageGroup || 'All ages'}
+                  </span>
+                )) : <span className="text-sm text-slate-500">No classes listed yet.</span>}
+              </div>
+
+              <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">
+                Save Classes & Aftercare
               </Button>
             </form>
           </CardContent>

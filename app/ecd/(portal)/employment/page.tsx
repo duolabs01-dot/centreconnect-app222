@@ -251,11 +251,16 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
               </div>
             )}
 
-            {role === 'ecd_admin' ? (
+            <div className="flex flex-wrap gap-3">
+              {role === 'ecd_admin' ? (
+                <Button variant="outline" size="sm" asChild className={OUTLINE_BUTTON_CLASS}>
+                  <Link href="/ecd/profile#staff">Manage staff in settings</Link>
+                </Button>
+              ) : null}
               <Button variant="outline" size="sm" asChild className={OUTLINE_BUTTON_CLASS}>
-                <Link href="/ecd/profile#staff">Manage staff in settings</Link>
+                <Link href="/ecd/team-plans">Open weekly staff plan</Link>
               </Button>
-            ) : null}
+            </div>
           </CardContent>
         </Card>
 

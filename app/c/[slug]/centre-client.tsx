@@ -27,6 +27,7 @@ import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pi
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
+import { readAftercareConfig } from '@/lib/ecd/centre-public-profile'
 
 type Centre = {
   id: string
@@ -57,6 +58,9 @@ type Centre = {
   operating_schedule?: CentreOperatingSchedule | null
   operating_hours_summary?: string | null
   communication_automation_settings?: unknown
+  aftercare_available?: boolean | null
+  aftercare_end_time?: string | null
+  classrooms?: Array<{ id?: string | null; name?: string | null; age_group?: string | null; practitioner_name?: string | null }> | null
   owner_id?: string | null
   onboarding_complete?: boolean | null
 }
@@ -276,16 +280,18 @@ export function CentreClient({ slug }: { slug: string }) {
         const { data: centreRows } = await supabase.from('ecd_centres').select('*').in('slug', slugCandidates).limit(1)
         const centreData = Array.isArray(centreRows) && centreRows.length > 0 ? (centreRows[0] as Centre) : null
 
-        if (centreData) {
-          resolvedCentre = centreData
-        } else {
-          const { data: fallbackRows } = await supabase
-            .from('public_ecd_centres')
-            .select('*')
-            .in('slug', slugCandidates)
-            .limit(1)
+        const { data: fallbackRows } = await supabase
+          .from('public_ecd_centres')
+          .select('*')
+          .in('slug', slugCandidates)
+          .limit(1)
 
-          resolvedCentre = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
+        const publicCentreData = Array.isArray(fallbackRows) && fallbackRows.length > 0 ? (fallbackRows[0] as Centre) : null
+
+        if (centreData) {
+          resolvedCentre = { ...publicCentreData, ...centreData }
+        } else {
+          resolvedCentre = publicCentreData
         }
 
         setCentre(resolvedCentre)
@@ -421,6 +427,11 @@ export function CentreClient({ slug }: { slug: string }) {
     readOperatingHoursSummaryFromSettings(centre.communication_automation_settings) ??
     getOperatingScheduleSummary(savedOperatingSchedule)
   const operationalStatus = getCentreOperationalStatus(savedOperatingSchedule, new Date(), operatingHoursSummary)
+  const aftercare = {
+    available: centre.aftercare_available === true || readAftercareConfig(centre.communication_automation_settings).available,
+    endTime: centre.aftercare_end_time ?? readAftercareConfig(centre.communication_automation_settings).endTime,
+  }
+  const classrooms = (centre.classrooms ?? []).filter((room) => room?.name?.trim())
   const fallbackHeroImage = buildCentrePreviewImage({
     name: centre.name,
     suburb: centre.suburb,
@@ -556,10 +567,7 @@ export function CentreClient({ slug }: { slug: string }) {
     { label: 'Ask about subsidy', message: `Hi ${centre.name}, I would like to ask whether subsidy support applies to my child.` },
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
-  const whatsappInquiryTemplates = inquiryTemplates.map((template) => ({
-    ...template,
-    href: createWhatsappClickToChatLink(centre.contact_whatsapp || centre.contact_phone || centre.phone, template.message),
-  }))
+
 
   return (
     <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
@@ -745,6 +753,40 @@ export function CentreClient({ slug }: { slug: string }) {
               </section>
             ) : null}
 
+            <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
+              <SectionHeading
+                eyebrow="Classes and care"
+                title="How the day is organised"
+                description={isClaimed ? 'Parents often decide faster when they can see the class setup, age grouping, and whether aftercare is available.' : 'A simple look at the class setup before you contact the centre.'}
+              />
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Aftercare</p>
+                  <p className="mt-2 text-lg font-semibold text-[#22312E]">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Useful for working parents who need a little extra time after the main school day.' : 'Parents should plan for collection at the normal closing time.'}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Classes</p>
+                  <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">The class names below help parents understand where their child will fit before they enquire or apply.</p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                {classrooms.length > 0 ? classrooms.map((room, index) => (
+                  <div key={`${room.id ?? index}-${room.name}`} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
+                    <h3 className="mt-2 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-serif)' }}>{room.name}</h3>
+                    <p className="mt-2 text-sm font-semibold text-[#0D9488]">{room.age_group?.trim() || 'All ages'}</p>
+                    {room.practitioner_name?.trim() ? <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Led by {room.practitioner_name.trim()}</p> : null}
+                  </div>
+                )) : (
+                  <div className="rounded-[1.5rem] border border-dashed border-[#D7CEC2] bg-[#FFFCF7] p-5 text-sm leading-6 text-[#5F6C68] sm:col-span-3">
+                    The centre has not listed classes yet. Use the quick question button to ask where your child would fit best.
+                  </div>
+                )}
+              </div>
+            </section>
+
             {showContact ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-7">
                 <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'If you are nearly ready, use these details to ask a final question, book a visit, or start the application.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
@@ -830,8 +872,8 @@ export function CentreClient({ slug }: { slug: string }) {
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
                     existingHelperText={isClaimed ? 'You will keep getting updates through CentreConnect, and you can message the centre anytime from this page.' : null}
-                    existingFollowUpHref={whatsappHref}
-                    existingFollowUpLabel={whatsappHref ? 'Send follow-up on WhatsApp' : null}
+                    existingFollowUpHref={!isClaimed ? whatsappHref : null}
+                    existingFollowUpLabel={!isClaimed && whatsappHref ? 'Send follow-up on WhatsApp' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
@@ -840,28 +882,12 @@ export function CentreClient({ slug }: { slug: string }) {
                     fallbackHref={!isClaimed ? whatsappHref : null}
                     fallbackLabel={!isClaimed && whatsappHref ? 'Chat on WhatsApp' : null}
                   />
-                  {isClaimed && whatsappHref ? (
-                    <Link href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex h-11 w-full items-center justify-center rounded-2xl border border-[#25D366]/30 bg-[#25D366]/10 text-sm font-semibold text-[#147A37] transition-colors hover:bg-[#25D366]/15">
-                      Ask on WhatsApp
-                    </Link>
-                  ) : null}
                   <div className="grid grid-cols-2 gap-3">
                     <ContactCentreSheet centreId={centre.id} centreName={centre.name} templates={inquiryTemplates} />
                     <div className="flex items-center justify-center rounded-2xl border border-[#E7DDD1] bg-white">
                       <SaveCentreButton centreId={centre.id} initialSaved={false} />
                     </div>
                   </div>
-                  {isClaimed ? (
-                    <div className="flex flex-wrap gap-2">
-                      {whatsappInquiryTemplates.map((template) =>
-                        template.href ? (
-                          <Link key={template.label} href={template.href} target="_blank" rel="noreferrer" className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1.5 text-xs font-semibold text-[#4E5D59] hover:border-[#0D9488] hover:text-[#0D9488]">
-                            {template.label}
-                          </Link>
-                        ) : null
-                      )}
-                    </div>
-                  ) : null}
                 </div>
               </div>
 
@@ -892,7 +918,7 @@ export function CentreClient({ slug }: { slug: string }) {
         pilotBadges={pilotBadges}
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
-        whatsappHref={whatsappHref}
+        whatsappHref={!isClaimed ? whatsappHref : null}
         inquiryTemplates={inquiryTemplates}
       />
     </main>

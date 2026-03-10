@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { splitFullName } from '@/lib/utils/name'
 import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 import { deriveAgeRangeFromGroups } from '@/lib/ecd/age-groups'
+import { readAftercareConfig, type CentreClassroomDraft } from '@/lib/ecd/centre-public-profile'
 import {
   buildDefaultOperatingSchedule,
   getOperatingScheduleSummary,
@@ -64,7 +65,7 @@ function extractAgeFee(ageGroupPricing: any, key: string) {
 export default async function AdminTenantsPage() {
   const { admin } = await requirePlatformAdmin()
 
-  const [centresResult, invitationsResult, inviteLogsResult] = await Promise.all([
+  const [centresResult, invitationsResult, inviteLogsResult, classesResult] = await Promise.all([
     admin
       .from('ecd_centres')
       .select(
@@ -85,7 +86,19 @@ export default async function AdminTenantsPage() {
       .in('event_type', ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'])
       .order('created_at', { ascending: false })
       .limit(150),
+    admin
+      .from('ecd_classes')
+      .select('id,ecd_id,name,age_group,practitioner_name')
+      .limit(5000),
   ])
+
+  const classRows = (classesResult.data ?? []) as Array<{
+    id: string
+    ecd_id: string | null
+    name: string | null
+    age_group: string | null
+    practitioner_name: string | null
+  }>
 
   const centres = (centresResult.data ?? []) as Array<{
     id: string
@@ -130,6 +143,22 @@ export default async function AdminTenantsPage() {
         }>
       | null
   }>
+  const classesByCentre = new Map<string, CentreClassroomDraft[]>()
+  classRows.forEach((row) => {
+    const centreId = row.ecd_id ?? ''
+    if (!centreId) return
+    const next = classesByCentre.get(centreId) ?? []
+    if (row.name?.trim()) {
+      next.push({
+        id: row.id,
+        name: row.name.trim(),
+        ageGroup: row.age_group?.trim() ?? '',
+        practitionerName: row.practitioner_name?.trim() ?? '',
+      })
+      classesByCentre.set(centreId, next)
+    }
+  })
+
   const invitationRows = (invitationsResult.data ?? []) as Array<{
     ecd_id: string
     accepted_at: string | null
@@ -167,6 +196,8 @@ export default async function AdminTenantsPage() {
       operatingSchedule,
       readOperatingHoursSummaryFromSettings(centre.communication_automation_settings)
     )
+    const aftercare = readAftercareConfig(centre.communication_automation_settings)
+    const classrooms = classesByCentre.get(centre.id) ?? []
     const ageRange = deriveAgeRangeFromGroups(centre.age_groups)
     const dsdStatus = (() => {
       const raw = typeof tenantOverrides?.dsd_status === 'string' ? tenantOverrides.dsd_status : null
@@ -210,6 +241,9 @@ export default async function AdminTenantsPage() {
       ageRangeEnd: ageRange.end,
       operatingSchedule,
       operatingHoursSummary,
+      aftercareAvailable: aftercare.available,
+      aftercareEndTime: aftercare.endTime ?? '',
+      classrooms,
       dsdStatus,
       marketplaceUpgrades,
       isActive: Boolean(centre.is_active),
