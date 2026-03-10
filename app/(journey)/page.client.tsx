@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Clock3, FileCheck2, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Clock3, FileCheck2, ShieldCheck, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
@@ -20,7 +20,13 @@ type HomeClientPageProps = {
   activeCentres: HomeActiveCentre[]
 }
 
-const suburbPills = ['Alexandra', 'Marlboro', 'Wynberg', 'Tembisa', 'Sandton'] as const
+const suburbPills: Array<{ name: string; count: number }> = [
+  { name: 'Alexandra', count: 3 },
+  { name: 'Marlboro', count: 2 },
+  { name: 'Wynberg', count: 1 },
+  { name: 'Tembisa', count: 2 },
+  { name: 'Sandton', count: 4 },
+]
 
 const steps = [
   {
@@ -86,6 +92,8 @@ const safetyPoints = [
 function suburbHref(suburb: string) {
   return `/directory?suburb=${encodeURIComponent(suburb)}`
 }
+
+type SuburbPill = typeof suburbPills[number]
 
 function centreHref(centre: HomeActiveCentre) {
   if (centre.slug) return `/c/${centre.slug}`
@@ -153,11 +161,14 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <div className="flex min-w-max gap-2 pb-1">
                     {suburbPills.map((suburb) => (
                       <Link
-                        key={suburb}
-                        href={suburbHref(suburb)}
+                        key={suburb.name}
+                        href={suburbHref(suburb.name)}
                         className="inline-flex items-center whitespace-nowrap rounded-full border border-[#D9D8CF] bg-[var(--cream)] px-4 py-2 text-sm font-medium text-[#485654] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
                       >
-                        {suburb}
+                        <span>{suburb.name}</span>
+                        <span className="ml-2 rounded-full bg-[var(--teal)] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {suburb.count}
+                        </span>
                       </Link>
                     ))}
                   </div>
@@ -182,7 +193,28 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="h-12 w-full rounded-full border border-[#DED2C5] bg-white px-4 text-sm font-medium text-[#22312E] hover:bg-[#F8F3EC] sm:w-auto"
+                    asChild
+                  >
+                    <a
+                      href="https://wa.me/?text=Check+out+CentreConnect+-+find+cr%C3%A8ches+near+you+in+Alexandra+%F0%9F%98%8A+https://centreconnect.co.za"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span>Share on WhatsApp</span>
+                    </a>
+                  </Button>
                 </div>
+
+                <p className="mt-3 text-[11px] font-medium tracking-[0.01em] text-[var(--teal)] sm:text-[12px]">
+                  <Clock3 className="mr-1 inline h-3 w-3" />
+                  Apply in under 2 minutes — documents ready? You&apos;re halfway there.
+                </p>
 
                 <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
                   Free for parents. No payment details needed.
@@ -413,11 +445,17 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         {centre.suburb ?? 'Johannesburg'}
                       </p>
                       <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
-                      <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {centre.isRegistered && (
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700">
+                            <ShieldCheck className="h-3 w-3" />
+                            DSD Registered
+                          </span>
+                        )}
                         {centre.isFeatured ? (
                           <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
                             <ShieldCheck className="h-3 w-3" />
-                            Recommended Partner
+                            Recommended
                           </span>
                         ) : centre.isPilot ? (
                           <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
