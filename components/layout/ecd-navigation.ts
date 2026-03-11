@@ -39,7 +39,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/financials', label: 'Financials', icon: LineChart, group: 'admin', adminOnly: true },
   { href: '/ecd/compliance', label: 'Compliance', icon: FileText, group: 'admin', adminOnly: true },
   { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'admin', supervisorAllowed: true },
-  { href: '/ecd/dsd-export', label: 'DSD Export', icon: FileText, group: 'admin', adminOnly: true, comingSoon: true },
+  { href: '/ecd/dsd-export', label: 'DSD Export', icon: FileText, group: 'admin', adminOnly: true },
 
   // GROW
   { href: '/ecd/website', label: 'Website Builder', icon: Globe, group: 'grow', adminOnly: true },
