@@ -87,7 +87,12 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   const router = useRouter()
   const { isVisible } = useBottomNav()
   const prefetchedRef = useRef(false)
+  const [mounted, setMounted] = useState(false)
   const [savedBadges, setSavedBadges] = useState(0)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (prefetchedRef.current) return
@@ -129,7 +134,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   }, [pathname, router])
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
-  if (!isVisible || pathname === '/' || isAuthPage) return null
+  if (!mounted || !isVisible || pathname === '/' || isAuthPage) return null
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">

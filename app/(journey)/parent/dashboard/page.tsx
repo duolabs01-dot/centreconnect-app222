@@ -18,12 +18,9 @@ import {
 import { EnrolledConfetti } from './_components/enrolled-confetti'
 import { SurfaceCard } from '@/components/ui/surface-card'
 
-import { DashboardSummary, DashboardSummarySkeleton } from './_sections/summary-section'
-import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ParentJobsSection } from './_sections/parent-jobs-section'
-import { PushPermissionRequest } from '@/components/notifications/PushPermissionRequest'
 
 export const metadata: Metadata = {
   title: 'Parent Home | CentreConnect',
@@ -144,15 +141,6 @@ export default async function ParentDashboardPage() {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
         <div className="cc-stack">
-          <PushPermissionRequest />
-
-          <Suspense fallback={<DashboardSummarySkeleton />}>
-            <DashboardSummary />
-          </Suspense>
-          <Suspense fallback={<ProfileReadinessCardSkeleton />}>
-            <ProfileReadinessCard />
-          </Suspense>
-
           {screenState === 'empty' ? (
             <div className="cc-stack">
               <SurfaceCard className="relative overflow-hidden border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
@@ -177,10 +165,10 @@ export default async function ParentDashboardPage() {
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link
-                      href="/parent/profile"
+                      href="/parent/shortlist"
                       className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
                     >
-                      Finish my profile
+                      View saved creches
                     </Link>
                     <Link
                       href="/parent/support"
