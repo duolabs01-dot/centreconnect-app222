@@ -444,6 +444,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     const startTime = String(formData.get('start_time') ?? '').trim()
     const endTime = String(formData.get('end_time') ?? '').trim()
     const visibilityValue = String(formData.get('visibility') ?? 'internal')
+    const repeat = String(formData.get('repeat') ?? '').trim()
     const isPublic = visibilityValue === 'public'
 
     if (!title || !eventDate) return
@@ -452,16 +453,46 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) return
     if (startTime && endTime && startTime > endTime) return
 
-    await session.supabase.from('calendar_events').insert({
-      ecd_id: session.ecdId,
-      title,
-      description: description || null,
-      event_date: eventDate,
-      start_time: startTime || null,
-      end_time: endTime || null,
-      is_public: isPublic,
-      created_by: session.user.id,
-    })
+    const events = []
+    const baseDate = new Date(eventDate)
+    
+    if (!repeat) {
+      events.push({
+        ecd_id: session.ecdId,
+        title,
+        description: description || null,
+        event_date: eventDate,
+        start_time: startTime || null,
+        end_time: endTime || null,
+        is_public: isPublic,
+        created_by: session.user.id,
+      })
+    } else {
+      const maxOccurrences = repeat === 'daily' ? 30 : repeat === 'weekly' ? 12 : 12
+      for (let i = 0; i < maxOccurrences; i++) {
+        const currentDate = new Date(baseDate)
+        if (repeat === 'daily') {
+          currentDate.setDate(currentDate.getDate() + i)
+        } else if (repeat === 'weekly') {
+          currentDate.setDate(currentDate.getDate() + (i * 7))
+        } else if (repeat === 'monthly') {
+          currentDate.setMonth(currentDate.getMonth() + i)
+        }
+        
+        events.push({
+          ecd_id: session.ecdId,
+          title: `${title}${i > 0 ? ` (${i + 1})` : ''}`,
+          description: description || null,
+          event_date: currentDate.toISOString().split('T')[0],
+          start_time: startTime || null,
+          end_time: endTime || null,
+          is_public: isPublic,
+          created_by: session.user.id,
+        })
+      }
+    }
+
+    await session.supabase.from('calendar_events').insert(events)
 
     revalidatePath('/ecd/calendar')
   }
@@ -582,6 +613,40 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
           </p>
         </section>
 
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-amber-100 p-2">
+              <svg className="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-amber-800">Share with Parents</h3>
+              <p className="mt-1 text-sm text-amber-700">
+                Parents can see public events and birthdays on their app. Make events &quot;Public&quot; to share them.
+              </p>
+              <div className="mt-3 flex items-center gap-2">
+                <input 
+                  readOnly 
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/parent/calendar`}
+                  className="flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
+                />
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/parent/calendar`)
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <EcdIosCalendarView
           items={calendarFeed}
           initialMonthKey={currentMonthKey}
@@ -607,10 +672,18 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                   <input name="start_time" type="time" className="cc-native-field h-11 rounded-2xl" />
                   <input name="end_time" type="time" className="cc-native-field h-11 rounded-2xl" />
                 </div>
-                <select name="visibility" className="cc-native-field h-11 rounded-2xl">
-                  <option value="internal">Internal</option>
-                  <option value="public">Public (parent-facing)</option>
-                </select>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <select name="visibility" className="cc-native-field h-11 rounded-2xl">
+                    <option value="internal">Internal</option>
+                    <option value="public">Public (parent-facing)</option>
+                  </select>
+                  <select name="repeat" className="cc-native-field h-11 rounded-2xl">
+                    <option value="">Does not repeat</option>
+                    <option value="daily">Daily (every day)</option>
+                    <option value="weekly">Weekly (same day each week)</option>
+                    <option value="monthly">Monthly (same date each month)</option>
+                  </select>
+                </div>
                 <Button type="submit" className="h-11 rounded-3xl bg-teal-600 text-white hover:bg-teal-700">
                   Save Event
                 </Button>

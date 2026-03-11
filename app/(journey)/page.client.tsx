@@ -598,6 +598,16 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           {centre.primaryAgeGroup ?? 'Mixed age groups'}
                         </span>
                       </div>
+                      <div className={`mt-3 rounded-[1.05rem] border px-3 py-2 ${centre.isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
+                          {centre.isClaimed ? 'Why this feels better for parents' : 'What this profile helps with'}
+                        </p>
+                        <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
+                          {centre.isClaimed
+                            ? 'Daily updates, calmer pickup, and a more organised application journey once your child joins.'
+                            : 'A clean preview for comparing the creche now while CentreConnect applications are still coming online.'}
+                        </p>
+                      </div>
                     </div>
                   </Link>
                 ))}

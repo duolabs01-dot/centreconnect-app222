@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { CalendarDays, ChevronLeft, ChevronRight, Cake, Sparkles, Loader2 } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Cake, Sparkles, Loader2, Share2, CalendarPlus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 type CalendarEvent = {
   id: string
@@ -28,6 +30,23 @@ const MONTHS = [
 ]
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+const CHILD_RELEVANT_KEYWORDS = [
+  'birthday', 'birth day', 'bday',
+  'open day', 'open day',
+  'start day', 'starting day', 'first day',
+  'closing', 'closure', 'close day',
+  'graduation', 'grad', 'graduation day', 'ceremony',
+  'parent', 'parents', 'meeting',
+  'performance', 'show', 'concert',
+  'sports day', 'field day',
+  'excursion', 'trip', 'outings',
+]
+
+function isChildRelevantEvent(title: string): boolean {
+  const lowerTitle = title.toLowerCase()
+  return CHILD_RELEVANT_KEYWORDS.some(keyword => lowerTitle.includes(keyword.toLowerCase()))
+}
 
 export default function ParentCalendarPage() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -103,15 +122,83 @@ export default function ParentCalendarPage() {
   }
 
   function getUpcomingEvents() {
-    return events.filter(e => {
-      const eventDate = new Date(e.event_date)
-      eventDate.setHours(0, 0, 0, 0)
-      return eventDate >= today
-    }).slice(0, 10)
+    return events
+      .filter(e => {
+        if (!isChildRelevantEvent(e.title)) return false
+        const eventDate = new Date(e.event_date)
+        eventDate.setHours(0, 0, 0, 0)
+        return eventDate >= today
+      })
+      .slice(0, 10)
   }
 
   const birthdaysThisMonth = getBirthdaysThisMonth()
   const upcomingEvents = getUpcomingEvents()
+
+  function generateICS(event: CalendarEvent) {
+    const startDate = event.event_date.replace(/-/g, '')
+    const endDate = event.event_date.replace(/-/g, '')
+    const startTime = event.start_time ? event.start_time.replace(/:/g, '') + '00' : '090000'
+    const endTime = event.end_time ? event.end_time.replace(/:/g, '') + '00' : '100000'
+    
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//CentreConnect//Calendar//EN
+BEGIN:VEVENT
+UID:${event.id}@centreconnect.co.za
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART:${startDate}T${startTime}
+DTEND:${endDate}T${endTime}
+SUMMARY:${event.title}
+DESCRIPTION:${event.description || ''}
+LOCATION:${event.centre_name || ''}
+END:VEVENT
+END:VCALENDAR`
+
+    const blob = new Blob([icsContent], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${event.title.replace(/\s+/g, '-')}.ics`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function shareOnWhatsApp(event: CalendarEvent) {
+    const date = new Date(event.event_date).toLocaleDateString('en-ZA', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+    const message = `*${event.title}*\n📅 ${date}\n${event.centre_name ? `🏫 ${event.centre_name}\n` : ''}${event.description ? `\n${event.description}` : ''}\n\nFrom CentreConnect`
+    const url = `https://wa.me/?text=${encodeURIComponent(message)}`
+    window.open(url, '_blank')
+  }
+
+  function addBirthdayToCalendar(child: { first_name: string | null; last_name: string | null; nextBirthday: string }) {
+    const date = child.nextBirthday.replace(/-/g, '')
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//CentreConnect//Birthday//EN
+BEGIN:VEVENT
+UID:birthday-${child.nextBirthday}@centreconnect.co.za
+DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
+DTSTART;VALUE=DATE:${date}
+SUMMARY:🎂 ${child.first_name}'s Birthday
+DESCRIPTION:Don't forget to wish ${child.first_name} a happy birthday!
+RRULE:FREQ=YEARLY
+END:VEVENT
+END:VCALENDAR`
+
+    const blob = new Blob([icsContent], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${child.first_name}-birthday.ics`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   if (loading) {
     return (
@@ -156,9 +243,18 @@ export default function ParentCalendarPage() {
                         <p className="font-bold text-slate-900">{child.first_name} {child.last_name}</p>
                         <p className="text-sm text-slate-500">{child.date_of_birth}</p>
                       </div>
-                      <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
-                        {child.nextBirthday?.split('-')[2]} {MONTHS[parseInt(child.nextBirthday!.split('-')[1]) - 1]}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-bold text-amber-700">
+                          {child.nextBirthday?.split('-')[2]} {MONTHS[parseInt(child.nextBirthday!.split('-')[1]) - 1]}
+                        </span>
+                        <button 
+                          onClick={() => addBirthdayToCalendar(child)}
+                          className="rounded-full bg-teal-100 p-2 text-teal-600 hover:bg-teal-200"
+                          title="Add birthday to phone calendar"
+                        >
+                          <CalendarPlus className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -191,6 +287,22 @@ export default function ParentCalendarPage() {
                         {event.centre_name && (
                           <p className="text-xs text-teal-600 mt-1">{event.centre_name}</p>
                         )}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <button 
+                          onClick={() => generateICS(event)}
+                          className="rounded-full bg-white p-2 text-slate-500 hover:bg-teal-100 hover:text-teal-600"
+                          title="Add to phone calendar"
+                        >
+                          <CalendarPlus className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => shareOnWhatsApp(event)}
+                          className="rounded-full bg-green-100 p-2 text-green-600 hover:bg-green-200"
+                          title="Share on WhatsApp"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   ))}

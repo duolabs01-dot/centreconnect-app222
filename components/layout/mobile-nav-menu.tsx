@@ -12,7 +12,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { BrandMark } from '@/components/ecd/BrandMark'
 import { SignOutButton as EcdSignOutButton } from '@/components/ecd/SignOutButton'
 import { SignOutButton as AdminSignOutButton } from '@/components/cc-admin/SignOutButton'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
@@ -145,20 +144,7 @@ export function MobileNavMenu({
       </SheetTrigger>
       <SheetContent side="left" className="w-[280px] p-0 border-none bg-white">
         <div className="flex flex-col h-full">
-          <SheetHeader className="p-6 border-b border-slate-50 text-left">
-            <div className="flex items-center justify-between">
-              <div>
-                <BrandMark compact className="brightness-100" />
-                {roleLabel && (
-                  <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">
-                    {roleLabel}
-                  </p>
-                )}
-              </div>
-            </div>
-          </SheetHeader>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4">
             <nav className="space-y-1">
               {visibleNav.map((item, index) => {
                 const prevItem = visibleNav[index - 1]
@@ -178,7 +164,7 @@ export function MobileNavMenu({
             </nav>
           </div>
 
-          <div className="p-4 border-t border-slate-50 bg-slate-50/50 mt-auto">
+          <div className="shrink-0 p-4 border-t border-slate-50 bg-slate-50">
             {userEmail && (
               <div className="mb-4 px-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account</p>

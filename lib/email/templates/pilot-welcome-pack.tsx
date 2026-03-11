@@ -149,6 +149,33 @@ function renderFeatureScenarioCards(items: Array<{ title: string; body: string; 
   `
 }
 
+function renderCentreCardPreview(input: { centreName: string }) {
+  return `
+    <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ${BRAND.border};border-radius:18px;overflow:hidden;background:#FFFDF9;margin:0 0 18px;">
+      <tr>
+        <td style="padding:0;">
+          <div style="height:96px;background:linear-gradient(135deg,#F6FCFA 0%,#EAF6F2 48%,#FFF4E9 100%);"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:14px 16px 16px;">
+          <p style="margin:0 0 4px;font-size:17px;font-weight:800;line-height:1.3;color:${BRAND.heading};">${input.centreName}</p>
+          <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">CentreConnect parent card</p>
+          <div style="margin:0 0 10px;">
+            <span style="display:inline-block;margin:0 6px 6px 0;padding:6px 10px;border-radius:999px;border:1px solid #CCFBF1;background:#FFFFFF;font-size:11px;font-weight:700;color:#115E59;">Daily updates</span>
+            <span style="display:inline-block;margin:0 6px 6px 0;padding:6px 10px;border-radius:999px;border:1px solid #CCFBF1;background:#FFFFFF;font-size:11px;font-weight:700;color:#115E59;">Safer pickup</span>
+            <span style="display:inline-block;margin:0 6px 6px 0;padding:6px 10px;border-radius:999px;border:1px solid #CCFBF1;background:#FFFFFF;font-size:11px;font-weight:700;color:#115E59;">Less paperwork</span>
+          </div>
+          <div style="padding:10px 12px;border:1px solid #CCFBF1;border-radius:14px;background:linear-gradient(180deg,#F8FCFB 0%,#EEF8F5 100%);">
+            <p style="margin:0 0 4px;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">Why this feels better for parents</p>
+            <p style="margin:0;font-size:12px;line-height:1.6;color:${BRAND.body};">Parents see a calmer, more modern creche journey here: easier applications, visible daily activity updates, and clearer follow-up after they tap Apply.</p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  `
+}
+
 function describePlan(plan: PublicPlan) {
   const definition = getPublicPlanDefinition(plan)
   return {
@@ -532,6 +559,9 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     </table>
 
     ${centreLogoBlock}
+
+    <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">How parents will see your creche</p>
+    ${renderCentreCardPreview({ centreName: input.centreName })}
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
       ${button('Open my welcome guide', welcomeGuideUrl)}

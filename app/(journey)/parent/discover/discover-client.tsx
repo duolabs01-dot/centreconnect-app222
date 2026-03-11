@@ -319,7 +319,7 @@ export default function ParentDiscoverClient() {
                     href={detailHref}
                     className="group overflow-hidden rounded-[1.6rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]"
                   >
-                    <div className="relative aspect-[16/6.2] overflow-hidden bg-[#F4ECE2]">
+                    <div className="relative aspect-[16/5.9] overflow-hidden bg-[#F4ECE2]">
                       <Image
                         src={heroSrc}
                         alt={hasRealCover ? centre.name : `${centre.name} preview image`}
@@ -368,6 +368,17 @@ export default function ParentDiscoverClient() {
                             {centre.distanceLabel}
                           </Badge>
                         ) : null}
+                      </div>
+
+                      <div className={`rounded-[1.05rem] border px-3 py-2 ${centre.is_claimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
+                          {centre.is_claimed ? 'Why this feels better for parents' : 'What this profile helps with'}
+                        </p>
+                        <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
+                          {centre.is_claimed
+                            ? 'Daily activities, calmer pickup, and one organised parent journey after you tap Apply.'
+                            : 'A clean preview for comparing fees, ages, and location while digital applications are still offline.'}
+                        </p>
                       </div>
                     </div>
                   </Link>
