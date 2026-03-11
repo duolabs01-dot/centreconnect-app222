@@ -370,12 +370,12 @@ export function CentreClient({
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
         {
-          title: 'Play, learning, and daily rhythm',
-          description: 'A clear day with play, learning, meals, rest, and caring support.',
+          title: 'Fees, hours, and support',
+          description: 'See monthly fees, opening hours, and whether subsidy support is available before you decide.',
         },
         {
-          title: 'An easier parent experience',
-          description: 'Applications, updates, and next steps stay in one place instead of getting lost.',
+          title: 'Ages and class fit',
+          description: 'Check age groups now, then message the centre if you need help with placement or class fit.',
         },
       ]
     : [
@@ -596,9 +596,9 @@ export function CentreClient({
             {showPrograms ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading
-                  eyebrow="Curriculum and daily rhythm"
-                  title="What children do here"
-                  description={isClaimed ? undefined : 'These are the parts of the day most parents usually want to understand before applying.'}
+                  eyebrow={isClaimed ? 'What parents should know first' : 'Curriculum and daily rhythm'}
+                  title={isClaimed ? 'The basics that help you decide' : 'What children do here'}
+                  description={isClaimed ? 'Real centre details first, so you can decide without reading through filler.' : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => {
