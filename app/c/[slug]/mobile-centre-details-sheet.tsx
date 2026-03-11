@@ -34,6 +34,7 @@ type MobileCentreDetailsSheetProps = {
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
   inquiryTemplates?: Array<{ label: string; message: string }>
+  isSaved?: boolean
 }
 
 function DetailFact({
@@ -82,6 +83,7 @@ export function MobileCentreDetailsSheet({
   existingApplicationId,
   existingApplicationStatus,
   inquiryTemplates = [],
+  isSaved = false,
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
   const [dragY, setDragY] = useState(0)
@@ -241,7 +243,7 @@ export function MobileCentreDetailsSheet({
               {!isClaimed ? (
                 <div className="rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                   <p className="text-sm font-medium leading-6 text-[#5F6C68]">
-                    This centre has not joined CentreConnect yet. Parents can still save it now and use the profile details while digital applications are being set up.
+                    This creche has not joined CentreConnect yet. You can still save it now and use the profile details while digital applications are being set up.
                   </p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
@@ -283,7 +285,7 @@ export function MobileCentreDetailsSheet({
                     triggerLabel="Ask the creche a quick question"
                     triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
                     title={`Ask ${centreName} a quick question`}
-                    description="Your message goes straight to the centre inbox in CentreConnect, so replies, updates, and the application journey stay together."
+                    description="Your message goes straight to the creche inbox in CentreConnect, so replies, updates, and the application journey stay together."
                   />
                 ) : (
                   <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
@@ -294,9 +296,9 @@ export function MobileCentreDetailsSheet({
                 <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
                   <div>
                     <p className="text-sm font-semibold text-[#22312E]">Save for later</p>
-                    <p className="text-xs text-[#6A7672]">Keep this creche handy while you compare.</p>
+                    <p className="text-xs text-[#6A7672]">Keep this creche close while you compare.</p>
                   </div>
-                  <SaveCentreButton centreId={centreId} initialSaved={false} />
+                  <SaveCentreButton centreId={centreId} initialSaved={isSaved} />
                 </div>
               </div>
 

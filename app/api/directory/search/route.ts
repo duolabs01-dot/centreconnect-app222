@@ -5,6 +5,7 @@ import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
+import { getParentShortlistSummary } from '@/lib/parent/shortlist-data'
 
 type QueryParams = {
   search?: string
@@ -57,9 +58,7 @@ export async function GET(req: Request) {
     .order('name', { ascending: true })
     .range(0, PAGE_SIZE - 1)
 
-  let countQuery = supabase
-    .from('public_ecd_centres')
-    .select('id', { count: 'exact', head: true })
+  let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
   if (query.search) {
     const pattern = `%${query.search}%`
     centresQuery = centresQuery.ilike('name', pattern)
@@ -136,7 +135,7 @@ export async function GET(req: Request) {
   ])
 
   const combinedData = [...(centresData ?? [])]
-  if (bajabulileData && !combinedData.find((c) => c.id === BAJABULILE_ID)) {
+  if (bajabulileData && !combinedData.find((centre) => centre.id === BAJABULILE_ID)) {
     combinedData.unshift(bajabulileData)
   }
 
@@ -153,6 +152,7 @@ export async function GET(req: Request) {
       communication_automation_settings: Record<string, unknown> | null
     }
   >()
+  let savedCentreIds = new Set<string>()
 
   if (centreIds.length > 0) {
     const { data: geoRows } = await supabase
@@ -160,34 +160,39 @@ export async function GET(req: Request) {
       .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
       .in('id', centreIds)
 
-      ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
-        geoById.set(row.id, {
-          latitude: row.latitude,
-          longitude: row.longitude,
-          onboarding_complete: row.onboarding_complete,
-          owner_id: row.owner_id,
-          address: row.address,
-          communication_automation_settings: row.communication_automation_settings,
-        })
+    ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+      geoById.set(row.id, {
+        latitude: row.latitude,
+        longitude: row.longitude,
+        onboarding_complete: row.onboarding_complete,
+        owner_id: row.owner_id,
+        address: row.address,
+        communication_automation_settings: row.communication_automation_settings,
       })
+    })
   }
 
   if (user && centreIds.length > 0) {
-    const { data: applicationRows } = await supabase
-      .from('applications')
-      .select('id,ecd_id,status')
-      .eq('parent_id', user.id)
-      .in('ecd_id', centreIds)
-      .order('created_at', { ascending: false })
+    const [applicationRowsResult, shortlistSummary] = await Promise.all([
+      supabase
+        .from('applications')
+        .select('id,ecd_id,status')
+        .eq('parent_id', user.id)
+        .in('ecd_id', centreIds)
+        .order('created_at', { ascending: false }),
+      getParentShortlistSummary(supabase, user.id, centreIds),
+    ])
 
-      ; ((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
-        if (!applicationByCentre.has(row.ecd_id)) {
-          applicationByCentre.set(row.ecd_id, {
-            id: row.id,
-            status: row.status ?? null,
-          })
-        }
-      })
+    ;((applicationRowsResult.data ?? []) as CentreApplicationRow[]).forEach((row) => {
+      if (!applicationByCentre.has(row.ecd_id)) {
+        applicationByCentre.set(row.ecd_id, {
+          id: row.id,
+          status: row.status ?? null,
+        })
+      }
+    })
+
+    savedCentreIds = shortlistSummary.savedCentreIds
   }
 
   const centres = combinedData.flatMap((centre) => {
@@ -221,6 +226,7 @@ export async function GET(req: Request) {
           coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoordinates.source),
           existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
           existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
+          is_saved: savedCentreIds.has(centre.id as string),
         }
       })(),
     ]
@@ -237,5 +243,3 @@ export async function GET(req: Request) {
     totalResults: count ?? 0,
   })
 }
-
-

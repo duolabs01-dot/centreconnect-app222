@@ -32,14 +32,16 @@ export type DirectoryCentre = {
   phone?: string | null
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+  is_saved?: boolean
 }
 
 export type RawDirectoryCentre = Omit<
   DirectoryCentre,
-  'subsidy_accepted' | 'is_claimed' | 'existingApplicationId' | 'existingApplicationStatus'
+  'subsidy_accepted' | 'is_claimed' | 'existingApplicationId' | 'existingApplicationStatus' | 'is_saved'
 > & {
   subsidy_accepted: boolean | null
   is_claimed?: boolean | null
   existingApplicationId?: string | null
   existingApplicationStatus?: string | null
+  is_saved?: boolean | null
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { getLatestParentLinkRequestsByChildIds } from '@/lib/ecd/parent-link-requests'
 import { ChildrenRosterClient } from './children-roster-client'
 
 export const metadata: Metadata = {
@@ -69,15 +70,17 @@ export default async function EcdChildrenRosterPage() {
   }))
 
   const classMap = new Map(classes.map((row) => [row.id, row]))
+  const childIds = ((childrenResult.data ?? []) as Array<{ id: string }>).map((child) => String(child.id))
   const parentIds = Array.from(new Set((childrenResult.data ?? []).map((child) => child.parent_id).filter((value): value is string => Boolean(value))))
 
-  const [profileRows, parentMetaRows] = await Promise.all([
+  const [profileRows, parentMetaRows, parentLinkRequestsByChildId] = await Promise.all([
     parentIds.length > 0
       ? supabase.from('user_profiles').select('id,full_name,phone').in('id', parentIds)
       : Promise.resolve({ data: [] as ParentProfileRow[] }),
     parentIds.length > 0
       ? supabase.from('parents').select('id,alt_phone').in('id', parentIds)
       : Promise.resolve({ data: [] as ParentMetaRow[] }),
+    getLatestParentLinkRequestsByChildIds(childIds),
   ])
 
   const parentProfileMap = new Map(((profileRows.data ?? []) as ParentProfileRow[]).map((row) => [row.id, row]))
@@ -105,6 +108,7 @@ export default async function EcdChildrenRosterPage() {
       parentEmail: guardian.parent_email,
       createdAt: typeof child.created_at === 'string' ? child.created_at : null,
       parentSource: parentProfile ? ('synced' as const) : guardian.parent_name || guardian.parent_phone || guardian.parent_email ? ('snapshot' as const) : ('missing' as const),
+      parentLinkRequest: parentLinkRequestsByChildId.get(String(child.id)) ?? null,
       detailHref: `/ecd/children/${String(child.id)}`,
     }
   })
@@ -123,3 +127,7 @@ export default async function EcdChildrenRosterPage() {
     </EcdOsShell>
   )
 }
+
+
+
+

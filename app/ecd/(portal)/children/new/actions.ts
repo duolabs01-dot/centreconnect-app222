@@ -10,6 +10,10 @@ import {
   type AiExtractionPayload,
   type AiFieldKey,
 } from '@/lib/ai/document-extraction-service'
+import {
+  createOrResendParentLinkRequest,
+  type ParentLinkRequestSummary,
+} from '@/lib/ecd/parent-link-requests'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 const childDocumentTypeSchema = z.enum(['birth_certificate', 'medical_card', 'immunization_record'])
@@ -149,8 +153,8 @@ const quickAddChildrenCreateSchema = z.object({
 const sendParentLinkForExistingChildSchema = z.object({
   child_id: z.string().uuid(),
   parent_name: z.string().max(140).optional().or(z.literal('')).nullable(),
-  parent_phone: z.string().min(7).max(40),
-  parent_email: z.string().email().optional().or(z.literal('')).nullable(),
+  parent_phone: z.string().min(7).max(40).optional().or(z.literal('')).nullable(),
+  parent_email: z.string().email(),
 })
 
 export type ExistingChildBulkDraft = {
@@ -198,6 +202,7 @@ export type SendParentLinkForExistingChildResult = {
   childId?: string
   whatsappHref?: string
   parentOnboardingUrl?: string
+  request?: ParentLinkRequestSummary
 }
 
 function getAppUrl() {
@@ -842,118 +847,32 @@ export async function sendParentLinkForExistingChildAction(
 
   const parsed = sendParentLinkForExistingChildSchema.safeParse(input)
   if (!parsed.success) {
-    return { success: false, message: 'Add a parent WhatsApp number before sending the link.' }
+    return { success: false, message: 'Add the parent email before sending the family link.' }
   }
 
-  const { data: child, error } = await session.supabase
-    .from('children')
-    .select('id,first_name,last_name,parent_id,guardian_contacts,emergency_contacts')
-    .eq('ecd_id', session.ecdId)
-    .eq('id', parsed.data.child_id)
-    .maybeSingle()
-
-  if (error || !child) {
-    return { success: false, message: error?.message || 'Child profile not found.' }
-  }
-
-  if (child.parent_id) {
-    return { success: false, message: 'This child is already linked to a parent account.' }
-  }
-
-  const { data: centre } = await session.supabase
-    .from('ecd_centres')
-    .select('name')
-    .eq('id', session.ecdId)
-    .maybeSingle()
-
-  const parentName = parsed.data.parent_name?.trim() || null
-  const parentPhone = parsed.data.parent_phone.trim()
-  const parentEmail = parsed.data.parent_email?.trim() || null
-  const childName = `${child.first_name} ${child.last_name}`.trim()
-  const centreName = centre?.name?.trim() || 'your ECD centre'
-  const links = buildParentInviteLinks({
-    childId: String(child.id),
-    centreName,
-    childName,
-    parentName,
-    parentPhone,
+  const result = await createOrResendParentLinkRequest({
+    childId: parsed.data.child_id,
+    ecdId: session.ecdId,
+    requestedByUserId: session.user.id,
+    parentEmail: parsed.data.parent_email,
+    parentPhone: parsed.data.parent_phone ?? null,
+    parentName: parsed.data.parent_name ?? null,
   })
 
-  if (!links.whatsappHref) {
-    return { success: false, message: 'Parent phone number is invalid for WhatsApp.' }
+  if (!result.ok) {
+    return { success: false, message: result.message }
   }
-
-  const guardianContacts = normalizeGuardianContacts(child.guardian_contacts)
-  const emergencyContacts = normalizeEmergencyContacts(child.emergency_contacts)
-  const primaryGuardianIndex = guardianContacts.findIndex(
-    (entry) => entry.role === 'primary_guardian' || entry.relationship === 'parent' || entry.phone || entry.email
-  )
-
-  const primaryGuardian = {
-    full_name: parentName ?? guardianContacts[primaryGuardianIndex]?.full_name ?? null,
-    relationship: guardianContacts[primaryGuardianIndex]?.relationship ?? 'parent',
-    phone: parentPhone,
-    email: parentEmail ?? guardianContacts[primaryGuardianIndex]?.email ?? null,
-    can_pickup: guardianContacts[primaryGuardianIndex]?.can_pickup ?? true,
-    role: guardianContacts[primaryGuardianIndex]?.role ?? 'primary_guardian',
-  }
-
-  if (primaryGuardianIndex >= 0) {
-    guardianContacts[primaryGuardianIndex] = primaryGuardian
-  } else {
-    guardianContacts.unshift(primaryGuardian)
-  }
-
-  const nextEmergencyContacts = emergencyContacts.length > 0
-    ? emergencyContacts
-    : [
-        {
-          full_name: parentName,
-          relationship: 'primary_guardian',
-          phone: parentPhone,
-          notes: 'Added from CentreConnect child setup',
-        },
-      ]
-
-  const { error: updateError } = await session.supabase
-    .from('children')
-    .update({
-      guardian_contacts: guardianContacts,
-      emergency_contacts: nextEmergencyContacts,
-      emergency_contact_name: parentName,
-      emergency_contact_phone: parentPhone,
-      onboarding_link_sent_at: new Date().toISOString(),
-      enrollment_status: 'pending_parent',
-    })
-    .eq('ecd_id', session.ecdId)
-    .eq('id', child.id)
-
-  if (updateError) {
-    return { success: false, message: updateError.message || 'Failed to prepare the parent link.' }
-  }
-
-  await session.supabase.from('audit_logs').insert({
-    user_id: session.user.id,
-    ecd_id: session.ecdId,
-    action: 'existing_child_parent_link_generated',
-    resource_type: 'children',
-    resource_id: String(child.id),
-    changes: {
-      parent_phone: parentPhone,
-      whatsapp_href: links.whatsappHref,
-      parent_onboarding_url: links.parentOnboardingUrl,
-    },
-  })
 
   revalidatePath('/ecd/children')
   revalidatePath('/ecd/children/new')
 
   return {
     success: true,
-    message: 'Parent link ready. Open WhatsApp to send it.',
-    childId: String(child.id),
-    whatsappHref: links.whatsappHref,
-    parentOnboardingUrl: links.parentOnboardingUrl,
+    message: result.message,
+    childId: result.request?.childId,
+    whatsappHref: result.whatsappHref ?? undefined,
+    parentOnboardingUrl: result.accessLink ?? undefined,
+    request: result.request,
   }
 }
 export async function saveTempChildProfileAndInviteParentAction(
@@ -1225,6 +1144,10 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
+
+
+
+
 
 
 

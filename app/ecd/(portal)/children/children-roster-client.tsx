@@ -3,7 +3,16 @@
 import { useDeferredValue, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CalendarDays, MessageCircle, PencilLine, Search, UserRoundCheck, UserRoundPlus, Users } from 'lucide-react'
+import {
+  ArrowRight,
+  CalendarDays,
+  Mail,
+  PencilLine,
+  Search,
+  UserRoundCheck,
+  UserRoundPlus,
+  Users,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +37,22 @@ type ChildRosterClass = {
   ageGroup: string | null
 }
 
+type ParentLinkRequest = {
+  id: string
+  childId: string
+  ecdId: string
+  parentEmail: string
+  parentPhone: string | null
+  parentName: string | null
+  status: 'pending' | 'opened' | 'accepted' | 'expired' | 'cancelled'
+  emailMode: 'link_profile' | 'invite'
+  requestedAt: string
+  sentAt: string | null
+  openedAt: string | null
+  acceptedAt: string | null
+  linkedUserId: string | null
+}
+
 type ChildRosterItem = {
   id: string
   firstName: string
@@ -44,6 +69,7 @@ type ChildRosterItem = {
   parentEmail: string
   createdAt: string | null
   parentSource: 'synced' | 'snapshot' | 'missing'
+  parentLinkRequest: ParentLinkRequest | null
   detailHref: string
 }
 
@@ -75,30 +101,70 @@ function formatDateLabel(value: string | null) {
   return date.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function getRequestTone(request: ParentLinkRequest | null) {
+  if (!request) return null
+  if (request.status === 'opened') {
+    return {
+      label: 'Email opened',
+      badgeClassName: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+      helper: 'The parent opened the family email. If the profile is still not linked, you can resend or follow up kindly.',
+    }
+  }
+  if (request.status === 'accepted') {
+    return {
+      label: 'Accepted',
+      badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+      helper: 'The family email was accepted. The live parent profile should now appear on the family record.',
+    }
+  }
+  if (request.status === 'expired' || request.status === 'cancelled') {
+    return {
+      label: 'Needs resend',
+      badgeClassName: 'border-amber-200 bg-amber-50 text-amber-800',
+      helper: 'A family email was sent before, but it needs a fresh send now.',
+    }
+  }
+  return {
+    label: 'Email sent',
+    badgeClassName: 'border-teal-200 bg-teal-50 text-teal-800',
+    helper: 'The official family email is out. Once the parent accepts it, this child will link to the live parent profile.',
+  }
+}
+
 function getParentStatus(child: ChildRosterItem) {
   if (child.parentId) {
     return {
       key: 'linked' as const,
       label: 'Parent linked',
       badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-      helper: child.parentSource === 'synced' ? 'This child is already connected to a live parent profile.' : 'This child is already connected to a parent account.',
+      helper: child.parentSource === 'synced'
+        ? 'This child is already connected to a live parent profile.'
+        : 'This child is already connected to a parent account.',
     }
   }
 
-  if (child.parentPhone || child.parentEmail || child.parentName) {
+  const requestTone = getRequestTone(child.parentLinkRequest)
+  if (requestTone) {
     return {
       key: 'needs_parent' as const,
-      label: 'Parent link ready',
-      badgeClassName: 'border-teal-200 bg-teal-50 text-teal-800',
-      helper: 'Parent details are saved. Open the family record or send the join link when you are ready.',
+      ...requestTone,
+    }
+  }
+
+  if (child.parentEmail || child.parentPhone || child.parentName) {
+    return {
+      key: 'needs_parent' as const,
+      label: 'Ready to send',
+      badgeClassName: 'border-amber-200 bg-amber-50 text-amber-800',
+      helper: 'Parent details are saved. Send the family email when you are ready.',
     }
   }
 
   return {
     key: 'needs_parent' as const,
     label: 'Add parent details',
-    badgeClassName: 'border-amber-200 bg-amber-50 text-amber-800',
-    helper: 'You can save the parent details now or later. The child profile is already safe in CentreConnect.',
+    badgeClassName: 'border-slate-200 bg-slate-50 text-slate-700',
+    helper: 'Add the parent email now or later. The child profile is already safe in CentreConnect.',
   }
 }
 
@@ -107,12 +173,10 @@ function buildAttendanceHref(child: ChildRosterItem) {
   return '/ecd/attendance'
 }
 
-function openWhatsappLink(whatsappHref: string) {
-  const popup = window.open(whatsappHref, '_blank', 'noopener,noreferrer')
-  if (!popup) {
-    void navigator.clipboard.writeText(whatsappHref)
-    toast.info('WhatsApp link copied. Paste it into WhatsApp to continue.')
-  }
+function sendButtonLabel(child: ChildRosterItem) {
+  if (child.parentLinkRequest) return 'Resend family email'
+  if (child.parentEmail) return 'Send family email'
+  return 'Add parent details'
 }
 
 export function ChildrenRosterClient({ centreName, classes, initialChildren }: ChildrenRosterClientProps) {
@@ -177,9 +241,9 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
   function openParentDialog(child: ChildRosterItem) {
     setLinkingChildId(child.id)
     setParentForm({
-      parentName: child.parentName ?? '',
-      parentPhone: child.parentPhone ?? '',
-      parentEmail: child.parentEmail ?? '',
+      parentName: child.parentName ?? child.parentLinkRequest?.parentName ?? '',
+      parentPhone: child.parentPhone ?? child.parentLinkRequest?.parentPhone ?? '',
+      parentEmail: child.parentEmail ?? child.parentLinkRequest?.parentEmail ?? '',
     })
   }
 
@@ -221,8 +285,8 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
 
   function handleParentLinkSave() {
     if (!linkingChild) return
-    if (!parentForm.parentPhone.trim()) {
-      toast.error('Add a parent WhatsApp number before continuing.')
+    if (!parentForm.parentEmail.trim()) {
+      toast.error('Add the parent email before sending the family link.')
       return
     }
 
@@ -230,11 +294,11 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
       const result = await sendParentLinkForExistingChildAction({
         child_id: linkingChild.id,
         parent_name: parentForm.parentName.trim() || null,
-        parent_phone: parentForm.parentPhone.trim(),
-        parent_email: parentForm.parentEmail.trim() || null,
+        parent_phone: parentForm.parentPhone.trim() || null,
+        parent_email: parentForm.parentEmail.trim(),
       })
 
-      if (!result.success || !result.whatsappHref) {
+      if (!result.success) {
         toast.error(result.message)
         return
       }
@@ -243,18 +307,22 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
         parentName: parentForm.parentName.trim(),
         parentPhone: parentForm.parentPhone.trim(),
         parentEmail: parentForm.parentEmail.trim(),
+        parentLinkRequest: result.request ?? linkingChild.parentLinkRequest,
         enrollmentStatus: 'pending_parent',
       })
 
-      toast.success(result.message)
+      toast.success(result.message, {
+        description: result.whatsappHref
+          ? 'Email is the official path. A WhatsApp reminder is also ready if you want to nudge the parent.'
+          : undefined,
+      })
       setLinkingChildId(null)
-      openWhatsappLink(result.whatsappHref)
       router.refresh()
     })
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden">
       <Card className="rounded-[2rem] border-slate-200 bg-[linear-gradient(135deg,rgba(240,253,250,1)_0%,rgba(255,255,255,1)_62%,rgba(248,250,252,1)_100%)] shadow-[0_18px_50px_rgba(13,148,136,0.08)]">
         <CardHeader className="space-y-4">
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-teal-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-teal-700">
@@ -266,7 +334,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
               Keep every child profile in one simple place.
             </CardTitle>
             <CardDescription className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              Add the first 5 children fast, link a parent when you have their number, and jump straight into attendance without opening three different screens.
+              Add children fast, send the family email when you are ready, and keep the live parent record in sync instead of chasing details across paper and WhatsApp.
             </CardDescription>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -298,7 +366,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
         </Card>
         <Card className="rounded-[1.6rem] border-amber-200 bg-amber-50/70 shadow-sm">
           <CardContent className="p-5">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700">Needs parent link</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-700">Needs family email</p>
             <p className="mt-2 text-3xl font-black text-amber-900">{needsParentCount}</p>
           </CardContent>
         </Card>
@@ -312,7 +380,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
               <Input
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search child, class, or parent number"
+                placeholder="Search child, class, or parent email"
                 className="h-11 rounded-2xl border-slate-200 pl-10"
               />
             </div>
@@ -405,17 +473,25 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
 
                   <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-2 text-slate-800">
-                      {child.parentId ? <UserRoundCheck className="h-4 w-4 text-emerald-600" /> : <MessageCircle className="h-4 w-4 text-teal-600" />}
-                      <p className="text-sm font-black">Parent link</p>
+                      {child.parentId ? <UserRoundCheck className="h-4 w-4 text-emerald-600" /> : <Mail className="h-4 w-4 text-teal-600" />}
+                      <p className="text-sm font-black">Family link</p>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{parentStatus.helper}</p>
                     <div className="mt-3 space-y-1 text-sm text-slate-700">
                       <p>{child.parentName || 'Parent name not added yet'}</p>
-                      <p>{child.parentPhone || 'WhatsApp number not added yet'}</p>
-                      {child.parentEmail ? <p>{child.parentEmail}</p> : null}
+                      <p>{child.parentEmail || 'Parent email not added yet'}</p>
+                      <p>{child.parentPhone || 'Phone number optional'}</p>
                     </div>
                     <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                      {child.parentSource === 'synced' ? 'Live parent profile' : child.parentSource === 'snapshot' ? 'Saved from child record' : 'No parent shared yet'}
+                      {child.parentSource === 'synced'
+                        ? 'Live parent profile'
+                        : child.parentLinkRequest?.status === 'opened'
+                          ? `Opened ${formatDateLabel(child.parentLinkRequest.openedAt)}`
+                          : child.parentLinkRequest?.status === 'pending'
+                            ? `Sent ${formatDateLabel(child.parentLinkRequest.sentAt)}`
+                            : child.parentSource === 'snapshot'
+                              ? 'Saved from child record'
+                              : 'No parent shared yet'}
                     </p>
                   </div>
 
@@ -426,13 +502,13 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                         className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700"
                         onClick={() => openParentDialog(child)}
                       >
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        {child.parentPhone ? 'Open Parent WhatsApp Link' : 'Add Parent Details'}
+                        <Mail className="mr-2 h-4 w-4" />
+                        {sendButtonLabel(child)}
                       </Button>
                     ) : (
                       <Button type="button" variant="outline" className="rounded-2xl border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100" disabled>
                         <UserRoundCheck className="mr-2 h-4 w-4" />
-                        Parent Linked
+                        Parent linked
                       </Button>
                     )}
 
@@ -450,13 +526,13 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                       onClick={() => openEditDialog(child)}
                     >
                       <PencilLine className="mr-2 h-4 w-4" />
-                      Edit Child
+                      Edit child
                     </Button>
 
                     <Button asChild type="button" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
                       <Link href={buildAttendanceHref(child)}>
                         <CalendarDays className="mr-2 h-4 w-4" />
-                        Mark Attendance
+                        Mark attendance
                       </Link>
                     </Button>
                   </div>
@@ -470,7 +546,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
           <CardContent className="space-y-3 p-8 text-center">
             <h2 className="text-xl font-black tracking-tight text-slate-900">Nothing matched that search.</h2>
             <p className="text-sm leading-7 text-slate-600">
-              Try another child name, parent number, or switch the filter back to all children.
+              Try another child name, parent email, or switch the filter back to all children.
             </p>
           </CardContent>
         </Card>
@@ -554,9 +630,9 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
         <DialogContent className="rounded-[1.8rem] border-slate-200 bg-white p-0 sm:max-w-xl">
           <div className="p-6 sm:p-7">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900">Send the parent join link</DialogTitle>
+              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900">Send the family email</DialogTitle>
               <DialogDescription className="mt-2 text-sm leading-6 text-slate-600">
-                Add the parent details below. CentreConnect will prepare the WhatsApp message for you so you can send it in one tap.
+                Add the parent email below. CentreConnect will send the official link so the parent can connect the child profile, and you can still follow up on WhatsApp if you need to nudge them.
               </DialogDescription>
             </DialogHeader>
 
@@ -572,23 +648,23 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="parent-phone">Parent WhatsApp number</Label>
-                <Input
-                  id="parent-phone"
-                  value={parentForm.parentPhone}
-                  onChange={(event) => setParentForm((current) => ({ ...current, parentPhone: event.target.value }))}
-                  placeholder="e.g. 071 234 5678"
-                  className="h-11 rounded-2xl border-slate-200"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="parent-email">Parent email</Label>
                 <Input
                   id="parent-email"
                   type="email"
                   value={parentForm.parentEmail}
                   onChange={(event) => setParentForm((current) => ({ ...current, parentEmail: event.target.value }))}
-                  placeholder="Optional"
+                  placeholder="name@example.com"
+                  className="h-11 rounded-2xl border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="parent-phone">Parent phone (optional)</Label>
+                <Input
+                  id="parent-phone"
+                  value={parentForm.parentPhone}
+                  onChange={(event) => setParentForm((current) => ({ ...current, parentPhone: event.target.value }))}
+                  placeholder="071 234 5678"
                   className="h-11 rounded-2xl border-slate-200"
                 />
               </div>
@@ -599,7 +675,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                 Cancel
               </Button>
               <Button type="button" className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700" disabled={isSendingParentLink} onClick={handleParentLinkSave}>
-                {isSendingParentLink ? 'Preparing...' : 'Open WhatsApp message'}
+                {isSendingParentLink ? 'Sending...' : 'Send family email'}
               </Button>
             </DialogFooter>
           </div>
@@ -608,5 +684,3 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
     </div>
   )
 }
-
-

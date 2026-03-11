@@ -4,8 +4,10 @@ import { CalendarDays, HeartPulse, ShieldCheck, UserRound } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ParentDossierCards } from '@/components/ecd/parent-dossier-cards'
+import { ParentLinkRequestCard } from '@/components/ecd/parent-link-request-card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { buildParentDossierForChild } from '@/lib/ecd/parent-dossier'
+import { getLatestParentLinkRequestsByChildIds } from '@/lib/ecd/parent-link-requests'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate } from '@/lib/utils'
 
@@ -111,6 +113,9 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
     guardianContacts: child.guardian_contacts,
   })
 
+  const parentLinkRequests = await getLatestParentLinkRequestsByChildIds([String(child.id)])
+  const latestParentLinkRequest = parentLinkRequests.get(String(child.id)) ?? null
+
   const communicationsHref = dossier.primaryParent.userId
     ? `/ecd/communications?recipient=${encodeURIComponent(dossier.primaryParent.userId)}&contextType=child&contextId=${encodeURIComponent(String(child.id))}`
     : null
@@ -165,6 +170,14 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
             </Card>
 
             <ParentDossierCards dossier={dossier} communicationsHref={communicationsHref} />
+            <ParentLinkRequestCard
+              childId={String(child.id)}
+              parentId={child.parent_id ? String(child.parent_id) : null}
+              defaultParentName={dossier.primaryParent.fullName !== 'Profile not shared yet' ? dossier.primaryParent.fullName : primaryGuardian.parent_name}
+              defaultParentPhone={dossier.primaryParent.phone || dossier.primaryParent.alternatePhone || primaryGuardian.parent_phone}
+              defaultParentEmail={dossier.primaryParent.billingEmail || primaryGuardian.parent_email}
+              request={latestParentLinkRequest}
+            />
           </div>
 
           <aside className="space-y-5">
@@ -223,4 +236,8 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
     </EcdOsShell>
   )
 }
+
+
+
+
 

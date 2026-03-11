@@ -14,6 +14,7 @@ import {
   type WebsiteContentState,
 } from './centre-client'
 import { demoCentrePageBySlug, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
+import { getParentShortlistSummary } from '@/lib/parent/shortlist-data'
 
 type MetadataCentre = {
   name: string
@@ -25,6 +26,7 @@ type CentrePagePayload = {
   websiteContent: WebsiteContentState
   userRole: string | null
   existingApplication: ExistingApplication | null
+  isSaved: boolean
 }
 
 const PUBLIC_CENTRE_SELECT = [
@@ -93,6 +95,7 @@ function buildEmptyPayload(): CentrePagePayload {
     },
     userRole: null,
     existingApplication: null,
+    isSaved: false,
   }
 }
 
@@ -224,7 +227,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
 
   if (shouldUseDemoCentreData()) {
     const match = slugCandidates.map((slug) => demoCentrePageBySlug[slug]).find(Boolean)
-    return match ?? emptyPayload
+    return match ? { ...match, isSaved: false } : emptyPayload
   }
 
   try {
@@ -254,6 +257,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
       websiteContent,
       userRole: null,
       existingApplication: null,
+      isSaved: false,
     }
 
     const {
@@ -264,7 +268,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
       return payload
     }
 
-    const [{ data: profile, error: profileError }, { data: application, error: applicationError }] = await Promise.all([
+    const [{ data: profile, error: profileError }, { data: application, error: applicationError }, shortlistSummary] = await Promise.all([
       supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle(),
       supabase
         .from('applications')
@@ -274,6 +278,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle(),
+      getParentShortlistSummary(supabase, user.id, [resolvedCentre.id]),
     ])
 
     if (profileError) {
@@ -290,6 +295,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
           status: application.status ?? null,
         }
       : null
+    payload.isSaved = shortlistSummary.savedCentreIds.has(resolvedCentre.id)
 
     return payload
   } catch (error) {
@@ -391,6 +397,7 @@ export default async function CentrePage({
         websiteContent={payload.websiteContent}
         userRole={payload.userRole}
         existingApplication={payload.existingApplication}
+        isSaved={payload.isSaved}
       />
     )
   }
@@ -437,6 +444,7 @@ export default async function CentrePage({
       websiteContent={payload.websiteContent}
       userRole={payload.userRole}
       existingApplication={payload.existingApplication}
+      isSaved={payload.isSaved}
     />
   )
 }

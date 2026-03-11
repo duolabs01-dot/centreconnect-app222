@@ -29,7 +29,7 @@ function isTabActive(pathname: string, href: string) {
 const NavButton = memo(({
   item,
   active,
-  onPress
+  onPress,
 }: {
   item: NavItem
   active: boolean
@@ -53,34 +53,30 @@ const NavButton = memo(({
       aria-label={item.label}
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
-      {active ? (
-        <span className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan-50/40" />
-      ) : null}
+      {active ? <span className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan-50/40" /> : null}
 
-          <div className="relative z-10 flex flex-col items-center justify-center gap-0.5">
-            <div className="relative">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-0.5">
+        <div className="relative">
           <Icon
             size={20}
             strokeWidth={active ? 2.4 : 2}
             className={cn(
-              active ? 'drop-shadow-[0_0_16px_rgba(14,165,233,0.4)] text-cyan-900' : 'text-slate-500',
+              active ? 'text-cyan-900 drop-shadow-[0_0_16px_rgba(14,165,233,0.4)]' : 'text-slate-500',
               isSavedTab ? 'text-cyan-600' : ''
             )}
           />
-          {hasBadge ? (
-            <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
-          ) : null}
+          {hasBadge ? <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" /> : null}
         </div>
 
-          <span
-            className={cn(
-              'text-[10px] font-semibold tracking-[0.08em] uppercase',
-              active ? 'text-cyan-800' : 'text-slate-500'
-            )}
-          >
-            {item.label}
-          </span>
-        </div>
+        <span
+          className={cn(
+            'text-[10px] font-semibold uppercase tracking-[0.08em]',
+            active ? 'text-cyan-800' : 'text-slate-500'
+          )}
+        >
+          {item.label}
+        </span>
+      </div>
     </button>
   )
 })
@@ -100,27 +96,49 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
   useEffect(() => {
     if (prefetchedRef.current) return
     prefetchedRef.current = true
-    items.forEach(item => router.prefetch(item.href))
+    items.forEach((item) => router.prefetch(item.href))
   }, [items, router])
 
   useEffect(() => {
-    const readSavedCount = () => {
+    const readSavedCount = async () => {
       if (typeof window === 'undefined') return
+
       const stored = window.localStorage.getItem('cc:saved-count')
-      if (stored) {
+      if (stored != null) {
         setSavedBadges(Number(stored) || 0)
       }
-    }
 
-    readSavedCount()
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === 'cc:saved-count') {
-        readSavedCount()
+      try {
+        const response = await fetch('/api/parent/shortlist/summary', { cache: 'no-store' })
+        if (!response.ok) return
+        const payload = await response.json()
+        const nextCount = Number(payload?.savedCount ?? 0) || 0
+        window.localStorage.setItem('cc:saved-count', String(nextCount))
+        setSavedBadges(nextCount)
+      } catch {
+        // Keep the locally cached count if the summary request fails.
       }
     }
 
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'cc:saved-count') {
+        setSavedBadges(Number(event.newValue ?? 0) || 0)
+      }
+    }
+
+    const handleSavedCountChange = (event: Event) => {
+      const nextCount = Number((event as CustomEvent<number>).detail ?? 0) || 0
+      setSavedBadges(nextCount)
+    }
+
+    void readSavedCount()
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+    window.addEventListener('cc:saved-count-change', handleSavedCountChange as EventListener)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      window.removeEventListener('cc:saved-count-change', handleSavedCountChange as EventListener)
+    }
   }, [])
 
   const decoratedItems = useMemo(() => {
@@ -131,16 +149,19 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     )
   }, [items, savedBadges])
 
-  const handleNav = useCallback((href: string) => {
-    if (href === pathname) return
-    router.push(href)
-  }, [pathname, router])
+  const handleNav = useCallback(
+    (href: string) => {
+      if (href === pathname) return
+      router.push(href)
+    },
+    [pathname, router]
+  )
 
   const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
   if (!mounted || !isVisible || pathname === '/' || isAuthPage) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] flex justify-center pointer-events-none md:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[100] flex justify-center md:hidden">
       <div className="pointer-events-auto mb-[calc(0.75rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-3">
         <nav
           className="flex items-center gap-1 rounded-[1.75rem] border border-white/40 bg-white/30 p-1.5 shadow-[0_12px_30px_rgba(15,23,42,0.22)]"
@@ -150,16 +171,10 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
           }}
         >
           {decoratedItems.map((item) => (
-            <NavButton
-              key={item.href}
-              item={item}
-              active={isTabActive(pathname, item.href)}
-              onPress={handleNav}
-            />
+            <NavButton key={item.href} item={item} active={isTabActive(pathname, item.href)} onPress={handleNav} />
           ))}
         </nav>
       </div>
     </div>
   )
 }
-

@@ -107,7 +107,7 @@ export async function submitApplicationAction(input: unknown) {
     .limit(1)
     .maybeSingle()
 
-  if (duplicate?.id) {
+  if (duplicate?.id && duplicate.status !== 'withdrawn') {
     return {
       error: 'Application already submitted for this creche. View your existing status instead.',
       existingApplicationId: duplicate.id,
@@ -229,3 +229,4 @@ export async function submitApplicationAction(input: unknown) {
     totalRequiredDocuments: documentChecklist.totalRequired,
   }
 }
+

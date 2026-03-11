@@ -4,15 +4,20 @@ import { useEffect, useMemo, useState } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Clock3, MapPin, ShieldCheck } from 'lucide-react'
+import { Clock3, MapPin } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import CentreCard from '@/components/parent/CentreCard'
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { PremiumVerifiedBadge, GovernmentRegisteredBadge } from '@/components/ui/premium-verified-badge'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
-import { defaultConfidenceForSource, isTrustedDistanceSource, type CentreCoordinateConfidence, type CentreCoordinateSource } from '@/lib/geo/centre-location-metadata'
+import {
+  defaultConfidenceForSource,
+  isTrustedDistanceSource,
+  type CentreCoordinateConfidence,
+  type CentreCoordinateSource,
+} from '@/lib/geo/centre-location-metadata'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { createClient } from '@/lib/supabase/client'
 
@@ -44,11 +49,11 @@ type DiscoverCentre = {
 const FALLBACK_CENTRES: DiscoverCentre[] = [
   {
     id: 'centre-local-1',
-    name: 'Community Learning Centre',
+    name: 'Community Learning Creche',
     tagline: 'Warm care, clear communication, safer pickup.',
     city: 'Johannesburg',
     suburb: 'Alexandra',
-    feesLabel: 'Ask centre for fees',
+    feesLabel: 'Ask the creche for fees',
     age_groups: ['0-2', '2-4', '5-6'],
     rating: 4.8,
     is_claimed: false,
@@ -56,11 +61,11 @@ const FALLBACK_CENTRES: DiscoverCentre[] = [
   },
   {
     id: 'centre-local-2',
-    name: 'Sunrise ECD Home',
+    name: 'Sunrise Creche Home',
     tagline: 'Simple routines and trusted care.',
     city: 'Johannesburg',
     suburb: 'Wynberg',
-    feesLabel: 'Ask centre for fees',
+    feesLabel: 'Ask the creche for fees',
     age_groups: ['2-4', '5-6'],
     rating: 4.7,
     is_claimed: false,
@@ -74,7 +79,7 @@ function formatFees(min: number | null, max: number | null) {
   if (safeMin && safeMax) return `R${safeMin} - R${safeMax} / month`
   if (safeMin) return `From R${safeMin} / month`
   if (safeMax) return `Up to R${safeMax} / month`
-  return 'Ask centre for fees'
+  return 'Ask the creche for fees'
 }
 
 function toAgeGroups(ageGroupPricing: unknown) {
@@ -120,6 +125,7 @@ export default function ParentDiscoverClient() {
   const [location, setLocation] = useState({ lat: -26.1881, lng: 28.0473 })
   const [selectedSuburb, setSelectedSuburb] = useState('')
   const [locationMode, setLocationMode] = useState<'device' | 'fallback'>('fallback')
+  const [savedCentreIds, setSavedCentreIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let mounted = true
@@ -127,7 +133,7 @@ export default function ParentDiscoverClient() {
     const loadCentres = async () => {
       const { data } = await supabase
         .from('public_ecd_centres')
-.select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone,is_registered,is_claimed')
+        .select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone,is_registered,is_claimed')
         .order('is_registered', { ascending: false })
         .order('name', { ascending: true })
         .limit(24)
@@ -135,38 +141,38 @@ export default function ParentDiscoverClient() {
       if (!mounted) return
 
       if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((centre) => {
-            const resolvedCoordinates = resolveCentreCoordinates({
-              latitude: centre.latitude,
-              longitude: centre.longitude,
-              slug: centre.slug ?? null,
-              suburb: centre.suburb ?? null,
-              city: centre.city ?? null,
-            })
+        const mapped = data.map((centre) => {
+          const resolvedCoordinates = resolveCentreCoordinates({
+            latitude: centre.latitude,
+            longitude: centre.longitude,
+            slug: centre.slug ?? null,
+            suburb: centre.suburb ?? null,
+            city: centre.city ?? null,
+          })
 
-            return {
-              id: centre.id,
-              slug: centre.slug ?? undefined,
-              name: centre.name ?? 'ECD centre',
-              tagline: centre.tagline ?? undefined,
-              city: centre.city ?? undefined,
-              suburb: centre.suburb ?? undefined,
-              cover_image_url: centre.cover_image_url ?? undefined,
-              logo_url: centre.logo_url ?? undefined,
-              feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
-              age_groups: toAgeGroups(centre.age_group_pricing),
-              rating: 4.8,
-              latitude: resolvedCoordinates.latitude,
-              longitude: resolvedCoordinates.longitude,
-              coordinateSource: resolvedCoordinates.source,
-              coordinateConfidence: defaultConfidenceForSource(resolvedCoordinates.source),
-              contact_whatsapp: centre.contact_whatsapp ?? null,
-              contact_phone: centre.contact_phone ?? null,
-              phone: centre.phone ?? null,
-              is_claimed: Boolean(centre.is_claimed),
-              is_registered: Boolean(centre.is_registered),
-            }
-          }) as DiscoverCentre[]
+          return {
+            id: centre.id,
+            slug: centre.slug ?? undefined,
+            name: centre.name ?? 'Creche',
+            tagline: centre.tagline ?? undefined,
+            city: centre.city ?? undefined,
+            suburb: centre.suburb ?? undefined,
+            cover_image_url: centre.cover_image_url ?? undefined,
+            logo_url: centre.logo_url ?? undefined,
+            feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
+            age_groups: toAgeGroups(centre.age_group_pricing),
+            rating: 4.8,
+            latitude: resolvedCoordinates.latitude,
+            longitude: resolvedCoordinates.longitude,
+            coordinateSource: resolvedCoordinates.source,
+            coordinateConfidence: defaultConfidenceForSource(resolvedCoordinates.source),
+            contact_whatsapp: centre.contact_whatsapp ?? null,
+            contact_phone: centre.contact_phone ?? null,
+            phone: centre.phone ?? null,
+            is_claimed: Boolean(centre.is_claimed),
+            is_registered: Boolean(centre.is_registered),
+          }
+        }) as DiscoverCentre[]
         setCentres(mapped)
       } else {
         setCentres(FALLBACK_CENTRES)
@@ -180,6 +186,44 @@ export default function ParentDiscoverClient() {
       mounted = false
     }
   }, [supabase])
+
+  useEffect(() => {
+    let active = true
+
+    const loadShortlistSummary = async () => {
+      try {
+        const response = await fetch('/api/parent/shortlist/summary', { cache: 'no-store' })
+        if (!response.ok) return
+        const payload = await response.json()
+        if (!active) return
+        setSavedCentreIds(new Set((payload?.centreIds ?? []).map((value: string) => String(value))))
+      } catch {
+        // Public browsing can continue without saved-state hydration.
+      }
+    }
+
+    const handleShortlistUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<{ centreId?: string; saved?: boolean }>).detail
+      const centreId = detail?.centreId
+      if (!centreId) return
+      setSavedCentreIds((current) => {
+        const next = new Set(current)
+        if (detail.saved) {
+          next.add(centreId)
+        } else {
+          next.delete(centreId)
+        }
+        return next
+      })
+    }
+
+    void loadShortlistSummary()
+    window.addEventListener('cc:shortlist-updated', handleShortlistUpdated as EventListener)
+    return () => {
+      active = false
+      window.removeEventListener('cc:shortlist-updated', handleShortlistUpdated as EventListener)
+    }
+  }, [])
 
   useEffect(() => {
     if (locationMode === 'device') return
@@ -211,7 +255,10 @@ export default function ParentDiscoverClient() {
         return {
           ...centre,
           distanceMeters,
-          distanceLabel: locationMode === 'device' && isTrustedDistanceSource(centre.coordinateSource ?? null, centre.coordinateConfidence ?? null) ? formatDistance(distanceMeters) ?? undefined : undefined,
+          distanceLabel:
+            locationMode === 'device' && isTrustedDistanceSource(centre.coordinateSource ?? null, centre.coordinateConfidence ?? null)
+              ? formatDistance(distanceMeters) ?? undefined
+              : undefined,
         }
       })
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
@@ -247,34 +294,32 @@ export default function ParentDiscoverClient() {
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Parent discovery</p>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">Discover trusted creches</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">Find a creche you can feel good about</h1>
           <p className="max-w-2xl text-sm text-slate-600">
-            Find nearby centres, compare quickly, and open a full profile before you apply.
+            Browse nearby creches, save the ones you love, and open a full profile before you apply.
           </p>
 
           <div className="space-y-2 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
             <p>
               {locationMode === 'device'
-                ? 'Showing centres closest to your current location.'
+                ? 'Showing creches closest to your current location.'
                 : 'Showing Alexandra first. Allow location to see exact distance from you.'}
             </p>
             <p className="text-xs font-medium text-cyan-800">
-              Preview image = the centre has not uploaded real photos yet. Not yet on CentreConnect = ask the centre directly before applying.
+              Preview image means the creche has not uploaded real photos yet. Public listing means contact the creche directly before you apply.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center">
             <label className="relative flex-1">
               <Input
-                placeholder="Search by suburb, city, or centre name"
+                placeholder="Search by suburb, area, or creche name"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 className="bg-white text-slate-900 placeholder:text-slate-400"
               />
             </label>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-              Search by suburb or centre name
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Fast search</p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -299,9 +344,9 @@ export default function ParentDiscoverClient() {
           </div>
         </header>
 
-        {!loading && filteredCentres.length > 0 && (
+        {!loading && filteredCentres.length > 0 ? (
           <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Recommended for your area</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Start here</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {filteredCentres.slice(0, 2).map((centre) => {
                 const hasRealCover = typeof centre.cover_image_url === 'string' && centre.cover_image_url.trim().length > 0
@@ -311,7 +356,8 @@ export default function ParentDiscoverClient() {
                 const detailHref = centre.slug ? `/c/${encodeURIComponent(centre.slug)}` : '/directory'
                 const locationLabel = [centre.suburb, centre.city].filter(Boolean).join(', ') || 'Near you'
                 const logoSrc = centre.logo_url?.trim() || null
-                const isVerified = Boolean(centre.is_claimed && centre.is_registered)
+                const isVerified = Boolean(centre.is_claimed)
+                const isRegistered = Boolean(centre.is_claimed && centre.is_registered)
 
                 return (
                   <Link
@@ -330,19 +376,17 @@ export default function ParentDiscoverClient() {
                       />
                     </div>
                     <div className="space-y-2.5 px-4 pb-4 pt-3">
-                      <div className="relative min-h-[3rem] pl-[4rem]">
-                        <div className="absolute left-0 top-[-1.85rem]">
-                          {logoSrc ? (
-                            <div className="h-11 w-11 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
-                              <Image src={logoSrc} alt={`${centre.name} logo`} width={44} height={44} className="h-full w-full object-cover" sizes="44px" unoptimized />
-                            </div>
-                          ) : (
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border-[3px] border-white bg-[#F5EFE6] text-sm font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
-                              {centre.name.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
+                      <div className="flex items-start gap-3">
+                        {logoSrc ? (
+                          <div className="h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                            <Image src={logoSrc} alt={`${centre.name} logo`} width={44} height={44} className="h-full w-full object-cover" sizes="44px" unoptimized />
+                          </div>
+                        ) : (
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white bg-[#F5EFE6] text-sm font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                            {centre.name.charAt(0)}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-[0.98rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E]">{centre.name}</p>
                           <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7B827E]">
                             <MapPin className="h-3.5 w-3.5" />
@@ -353,31 +397,28 @@ export default function ParentDiscoverClient() {
 
                       <div className="flex flex-wrap gap-1.5">
                         {isVerified ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
-                        {centre.is_claimed ? (
-                          <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
-                            Partner
-                          </Badge>
-                        ) : (
-                          <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#9A5A10] shadow-none">
-                            Preview
-                          </Badge>
-                        )}
+                        {isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                         {centre.distanceLabel ? (
                           <Badge className="border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
                             <Clock3 className="mr-1 h-3 w-3" />
                             {centre.distanceLabel}
                           </Badge>
                         ) : null}
+                        {!centre.is_claimed ? (
+                          <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
+                            Public listing
+                          </Badge>
+                        ) : null}
                       </div>
 
                       <div className={`rounded-[1.05rem] border px-3 py-2 ${centre.is_claimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
-                          {centre.is_claimed ? 'Why this feels better for parents' : 'What this profile helps with'}
+                          {centre.is_claimed ? 'Why parents love this' : 'Why it is still worth saving'}
                         </p>
                         <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
                           {centre.is_claimed
-                            ? 'Daily activities, calmer pickup, and one organised parent journey after you tap Apply.'
-                            : 'A clean preview for comparing fees, ages, and location while digital applications are still offline.'}
+                            ? 'Apply, message, and keep the parent journey calm and organised in one place.'
+                            : 'Compare fees, ages, and location now, then contact the creche directly if you want to move today.'}
                         </p>
                       </div>
                     </div>
@@ -386,7 +427,7 @@ export default function ParentDiscoverClient() {
               })}
             </div>
           </section>
-        )}
+        ) : null}
 
         {loading ? (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -405,7 +446,7 @@ export default function ParentDiscoverClient() {
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCentres.map((centre) => (
-              <CentreCard key={centre.id} {...centre} viewerRole={"parent_user"} />
+              <CentreCard key={centre.id} {...centre} viewerRole="parent_user" isSaved={savedCentreIds.has(centre.id)} />
             ))}
           </section>
         )}
@@ -413,4 +454,5 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
+
 

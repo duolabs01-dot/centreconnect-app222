@@ -268,12 +268,14 @@ export function CentreClient({
   },
   userRole = null,
   existingApplication = null,
+  isSaved = false,
 }: {
   slug: string
   centre: Centre | null
   websiteContent?: WebsiteContentState
   userRole?: string | null
   existingApplication?: ExistingApplication | null
+  isSaved?: boolean
 }) {
 
   if (!centre) {
@@ -811,7 +813,7 @@ export function CentreClient({
                       <p className="text-sm font-semibold text-[#22312E]">Save this centre</p>
                       <p className="text-xs text-[#6A7672]">Keep it in your shortlist while you compare your options.</p>
                     </div>
-                    <SaveCentreButton centreId={centre.id} initialSaved={false} />
+                    <SaveCentreButton centreId={centre.id} initialSaved={isSaved} />
                   </div>
                 </div>
               </div>
@@ -844,6 +846,7 @@ export function CentreClient({
         existingApplicationId={existingApplication?.id ?? null}
         existingApplicationStatus={existingApplication?.status ?? null}
         inquiryTemplates={inquiryTemplates}
+        isSaved={isSaved}
       />
     </main>
   )

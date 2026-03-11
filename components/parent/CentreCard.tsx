@@ -182,9 +182,9 @@ export function CentreCard({
   const whatsappHref = buildWhatsappHref(contact_whatsapp ?? contact_phone ?? phone, name)
   const callHref = buildCallHref(contact_phone ?? phone ?? contact_whatsapp)
   const publicPrimaryHref = whatsappHref ?? callHref ?? detailHref
-  const publicPrimaryLabel = whatsappHref ? 'WhatsApp centre' : callHref ? 'Call centre' : 'View details'
+  const publicPrimaryLabel = whatsappHref ? 'WhatsApp creche' : callHref ? 'Call creche' : 'View details'
   const publicSecondaryHref = whatsappHref && callHref ? callHref : detailHref
-  const publicSecondaryLabel = whatsappHref && callHref ? 'Call centre' : 'View details'
+  const publicSecondaryLabel = whatsappHref && callHref ? 'Call creche' : 'View details'
   const claimHref = slug ? `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug)}` : null
   const showClaimLink = !is_claimed && viewerRole !== 'parent_user' && Boolean(claimHref)
 
@@ -325,7 +325,7 @@ export function CentreCard({
             </div>
 
             <p className="text-[12px] leading-5 text-[#4E5D59]">
-              {is_claimed ? 'Apply online or message the centre in the app.' : 'Call or WhatsApp the centre if you want to act now.'}
+              {is_claimed ? 'Apply online or message the creche in the app.' : 'Call or WhatsApp the creche if you want to act now.'}
             </p>
           </CardContent>
         </Link>
@@ -345,7 +345,7 @@ export function CentreCard({
                 centreId={id}
                 centreName={name}
                 templates={inquiryTemplates}
-                triggerLabel="Message Centre"
+                triggerLabel="Message creche"
                 triggerClassName="h-11 rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] transition-all hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
                 title={`Message ${name}`}
                 description="Send a quick question without leaving the directory. Replies stay inside CentreConnect so your next step stays clear."
@@ -373,12 +373,12 @@ export function CentreCard({
                 className="h-11 rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
               >
                 <Link href={publicSecondaryHref} target={publicSecondaryHref === detailHref ? undefined : '_blank'} rel={publicSecondaryHref === detailHref ? undefined : 'noopener noreferrer'}>
-                  {publicSecondaryLabel === 'Call centre' ? <Phone className="h-4 w-4" /> : null}
+                  {publicSecondaryLabel === 'Call creche' ? <Phone className="h-4 w-4" /> : null}
                   {publicSecondaryLabel}
                 </Link>
               </Button>
               <p className="text-center text-[11px] font-medium leading-5 text-[#7B827E]">
-                Public listing only. Contact the centre directly for space and next steps.
+                Public listing only. Contact the creche directly for space and next steps.
               </p>
               {showClaimLink ? (
                 <Link href={claimHref!} className="text-center text-[11px] font-semibold leading-5 text-[#0D9488] hover:underline">
@@ -394,6 +394,7 @@ export function CentreCard({
 }
 
 export default CentreCard
+
 
 
 

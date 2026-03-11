@@ -1,123 +1,229 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Compass, Heart, Scale, Sparkles } from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-import { Heart, Compass } from 'lucide-react'
 import { SurfaceCard } from '@/components/ui/surface-card'
+import CentreCard from '@/components/parent/CentreCard'
 
 export const metadata: Metadata = {
-  title: 'Saved Crèches | CentreConnect',
-  description: 'Your shortlisted ECD crèches.',
+  title: 'Saved Creches | CentreConnect',
+  description: 'Your saved creches, ready to compare and revisit.',
+}
+
+type ShortlistCentreRow = {
+  id: string
+  slug: string | null
+  name: string | null
+  tagline: string | null
+  suburb: string | null
+  city: string | null
+  age_groups: string[] | null
+  is_registered: boolean | null
+  logo_url: string | null
+  cover_image_url: string | null
+  fees_display_mode: 'exact' | 'range' | 'contact' | null
+  monthly_fee_min: number | null
+  monthly_fee_max: number | null
+  registration_fee: number | null
+  subsidy_accepted: boolean | null
+  contact_whatsapp: string | null
+  contact_phone: string | null
+  phone: string | null
+}
+
+type ApplicationRow = {
+  id: string
+  ecd_id: string
+  status: string | null
+}
+
+type CentreOwnerRow = {
+  id: string
+  owner_id: string | null
 }
 
 export default async function ParentShortlistPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const { data: rows } = user
+  const shortlistRows = user
     ? await supabase
         .from('parent_shortlists')
-        .select('centre_id, ecd_centres(id,name,slug,suburb,city,tagline,is_registered)')
+        .select('centre_id, created_at')
         .eq('parent_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(20)
+        .limit(24)
     : { data: [] }
 
-  const centres = (rows ?? [])
-    .map((row: any) => row.ecd_centres)
-    .filter(Boolean)
+  const centreIds = ((shortlistRows.data ?? []) as Array<{ centre_id: string }>).map((row) => row.centre_id)
+
+  let centres: ShortlistCentreRow[] = []
+  const existingApplications = new Map<string, { id: string; status: string | null }>()
+  const claimedCentreIds = new Set<string>()
+
+  if (centreIds.length > 0) {
+    const [centresResult, applicationsResult, ownerRowsResult] = await Promise.all([
+      supabase
+        .from('public_ecd_centres')
+        .select('id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,phone')
+        .in('id', centreIds),
+      user
+        ? supabase
+            .from('applications')
+            .select('id,ecd_id,status')
+            .eq('parent_id', user.id)
+            .in('ecd_id', centreIds)
+            .order('created_at', { ascending: false })
+        : Promise.resolve({ data: [] }),
+      supabase.from('ecd_centres').select('id,owner_id').in('id', centreIds),
+    ])
+
+    ;((applicationsResult.data ?? []) as ApplicationRow[]).forEach((row) => {
+      if (!existingApplications.has(row.ecd_id)) {
+        existingApplications.set(row.ecd_id, { id: row.id, status: row.status ?? null })
+      }
+    })
+
+    ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row) => {
+      if (row.owner_id?.trim()) claimedCentreIds.add(row.id)
+    })
+
+    const centresById = new Map(
+      (((centresResult.data ?? []) as ShortlistCentreRow[])).map((centre) => [centre.id, centre])
+    )
+
+    centres = centreIds
+      .map((centreId) => centresById.get(centreId))
+      .filter((centre): centre is ShortlistCentreRow => Boolean(centre))
+  }
+
+  const compareHref = '/parent/compare'
 
   return (
-    <div className="bg-surface-secondary px-4 pt-4 pb-28 min-h-screen">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-          Saved Crèches
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Crèches you have saved for later. Apply when ready.
-        </p>
-      </header>
+    <div className="min-h-screen bg-surface-secondary px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-4">
+      <div className="cc-stack">
+        <SurfaceCard className="border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">Saved creches</p>
+              <h1
+                className="mt-2 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 sm:text-[2.3rem]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Keep your favourite creches close.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                Save first, compare when you are ready, and come back without starting your search from zero.
+              </p>
+            </div>
 
-      <div className="space-y-6">
+            <div className="grid gap-2 sm:grid-cols-2 lg:w-[24rem]">
+              <div className="rounded-[1.3rem] border border-cyan-100 bg-cyan-50 px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700">Saved now</p>
+                <p className="mt-1 text-lg font-semibold text-slate-900">{centres.length} {centres.length === 1 ? 'creche' : 'creches'}</p>
+              </div>
+              <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Best next move</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">Compare your top options</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Button asChild className="min-h-[48px] rounded-2xl bg-cyan-600 px-5 text-sm font-semibold hover:bg-cyan-700">
+              <Link href={compareHref}>
+                <Scale className="mr-2 h-4 w-4" />
+                Compare saved creches
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="min-h-[48px] rounded-2xl px-5 text-sm font-semibold">
+              <Link href="/directory">
+                <Compass className="mr-2 h-4 w-4" />
+                Find more creches
+              </Link>
+            </Button>
+          </div>
+        </SurfaceCard>
+
         {centres.length === 0 ? (
           <SurfaceCard className="flex flex-col items-center justify-center gap-5 py-16 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-secondary shadow-card">
               <Heart className="h-8 w-8 text-cyan-400" />
             </div>
             <div>
-              <p className="text-base font-bold text-slate-800">
-                No saved crèches yet
-              </p>
-              <p className="mt-1 text-sm text-slate-500">
-                Tap the heart icon on any crèche to save it here.
-              </p>
+              <p className="text-base font-bold text-slate-800">No saved creches yet</p>
+              <p className="mt-1 text-sm text-slate-500">Tap the heart on any creche you like, and we will keep it here for you.</p>
             </div>
             <Button asChild className="min-h-[44px] px-8">
               <Link href="/directory">
                 <Compass className="mr-2 h-4 w-4" />
-                Browse Crèches
+                Browse creches
               </Link>
             </Button>
           </SurfaceCard>
         ) : (
-          <section className="grid gap-4 sm:grid-cols-2">
-            {centres.map((centre: any) => (
-              <Link
-                key={centre.id}
-                href={`/c/${centre.slug}`}
-                className="group block"
-              >
-                <SurfaceCard className="p-4 transition-all duration-200 hover:ring-1 hover:ring-cyan-500/30 h-full">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-bold text-slate-900">
-                      {centre.name}
-                    </p>
-                    {centre.is_registered && (
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 uppercase tracking-wider">
-                        Registered
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500 font-medium">
-                    {[centre.suburb, centre.city].filter(Boolean).join(', ')}
-                  </p>
-                  {centre.tagline && (
-                    <p className="mt-2 text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {centre.tagline}
-                    </p>
-                  )}
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-700 group-hover:text-cyan-800 uppercase tracking-widest">
-                      View Crèche
-                    </span>
-                    <Link
-                      href={`/apply/${centre.slug}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-1.5 text-xs font-bold text-cyan-700 hover:bg-cyan-100 min-h-[32px] flex items-center"
-                    >
-                      Apply
-                    </Link>
-                  </div>
-                </SurfaceCard>
-              </Link>
-            ))}
-          </section>
-        )}
+          <>
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {centres.map((centre) => {
+                const existingApplication = existingApplications.get(centre.id)
+                return (
+                  <CentreCard
+                    key={centre.id}
+                    id={centre.id}
+                    slug={centre.slug ?? undefined}
+                    name={centre.name?.trim() || 'Creche'}
+                    tagline={centre.tagline}
+                    suburb={centre.suburb ?? undefined}
+                    city={centre.city ?? undefined}
+                    age_groups={centre.age_groups ?? []}
+                    is_registered={Boolean(claimedCentreIds.has(centre.id) && centre.is_registered)}
+                    logo_url={centre.logo_url ?? undefined}
+                    cover_image_url={centre.cover_image_url ?? undefined}
+                    fees_display_mode={centre.fees_display_mode}
+                    monthly_fee_min={centre.monthly_fee_min}
+                    monthly_fee_max={centre.monthly_fee_max}
+                    registration_fee={centre.registration_fee}
+                    subsidy_accepted={Boolean(centre.subsidy_accepted)}
+                    contact_whatsapp={centre.contact_whatsapp}
+                    contact_phone={centre.contact_phone}
+                    phone={centre.phone}
+                    is_claimed={claimedCentreIds.has(centre.id)}
+                    existingApplicationId={existingApplication?.id ?? null}
+                    existingApplicationStatus={existingApplication?.status ?? null}
+                    viewerRole="parent_user"
+                    isSaved
+                  />
+                )
+              })}
+            </section>
 
-        <section className="flex flex-wrap gap-3 pt-2">
-          <Button variant="outline" className="min-h-[44px] rounded-2xl flex-1 sm:flex-none" asChild>
-            <Link href="/directory">Find more crèches</Link>
-          </Button>
-          <Button variant="outline" className="min-h-[44px] rounded-2xl flex-1 sm:flex-none" asChild>
-            <Link href="/parent/compare">Compare selected</Link>
-          </Button>
-        </section>
+            <SurfaceCard className="p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-700">Shortlist workflow</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Save the creches that feel right, compare them side by side, then apply when one feels like the best fit for your child.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700">
+                    <Sparkles className="h-3.5 w-3.5 text-cyan-600" />
+                    Save first
+                  </span>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-700">
+                    <Scale className="h-3.5 w-3.5 text-cyan-600" />
+                    Compare next
+                  </span>
+                </div>
+              </div>
+            </SurfaceCard>
+          </>
+        )}
       </div>
     </div>
   )
 }
-
-
-
-
-

@@ -120,20 +120,20 @@ function parentHealthCopy(failureCount24h: number) {
   const severity = parentReliabilitySeverityFromCount(failureCount24h)
   if (severity === 'critical') {
     return {
-      label: 'Critical',
+      label: 'CRITICAL',
       badgeClass: 'border-rose-500/30 bg-rose-500/10 text-rose-300',
       hint: 'Parent forms need attention now.',
     }
   }
   if (severity === 'warning') {
     return {
-      label: 'Watch',
+      label: 'WARNING',
       badgeClass: 'border-amber-500/30 bg-amber-500/10 text-amber-300',
       hint: 'A few parents may be getting stuck.',
     }
   }
   return {
-    label: 'Healthy',
+    label: 'HEALTHY',
     badgeClass: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300',
     hint: 'Parent forms look stable right now.',
   }
@@ -258,7 +258,7 @@ export default async function AdminDashboardPage() {
       tone: onboardingCentres > 0 ? 'amber' : 'emerald',
     },
     {
-      title: 'Parent form issues (24h)',
+      title: 'Parent Reliability (24h)',
       count: parentFailures.toLocaleString(),
       detail: parentHealth.hint,
       href: '/admin/parent-reliability?window=24h',
@@ -580,3 +580,5 @@ export default async function AdminDashboardPage() {
     </div>
   )
 }
+
+

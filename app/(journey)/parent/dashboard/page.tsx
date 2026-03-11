@@ -8,7 +8,6 @@ import {
   CalendarDays,
   CheckCircle2,
   FileText,
-  Heart,
   MessageSquare,
   Search,
   ShieldCheck,
@@ -17,6 +16,7 @@ import {
 import { createClient } from '@/lib/supabase/server'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
+import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { formatDate } from '@/lib/utils'
 import { deriveParentHomeState, type ParentHomeState } from '@/lib/parent/home-state'
@@ -426,19 +426,9 @@ export default async function ParentDashboardPage() {
               </SurfaceCard>
 
               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                <SurfaceCard className="p-5">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Heart className="h-4 w-4 text-cyan-600" />
-                    <h2 className="text-base font-bold">Keep your profile ready</h2>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Centres move faster when your name, emergency contact, and documents are already in place.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <QuickLink href="/parent/profile" label="Open profile" />
-                    <QuickLink href="/parent/profile/documents" label="Open documents" />
-                  </div>
-                </SurfaceCard>
+                <Suspense fallback={<ProfileReadinessCardSkeleton />}>
+                  <ProfileReadinessCard />
+                </Suspense>
 
                 <SurfaceCard className="p-5">
                   <div className="flex items-center gap-2 text-slate-900">

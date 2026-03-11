@@ -32,7 +32,7 @@ type ApplicationsPageProps = {
   }
 }
 
-type TabKey = 'pending' | 'awaiting_offer_response' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected'
+type TabKey = 'pending' | 'awaiting_offer_response' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
 
 type ApplicationRow = {
   id: string
@@ -331,7 +331,8 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     searchParams?.tab === 'approved' ||
     searchParams?.tab === 'enrolled' ||
     searchParams?.tab === 'waitlisted' ||
-    searchParams?.tab === 'rejected'
+    searchParams?.tab === 'rejected' ||
+    searchParams?.tab === 'withdrawn'
       ? searchParams.tab
       : 'pending'
 
@@ -342,7 +343,14 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
   const pageFrom = (currentPage - 1) * pageSize
   const pageTo = pageFrom + pageSize - 1
 
-  const countsResult = await supabase.rpc('get_ecd_application_counts', { p_ecd_id: ecdId })
+  const [countsResult, withdrawnCountResult] = await Promise.all([
+    supabase.rpc('get_ecd_application_counts', { p_ecd_id: ecdId }),
+    supabase
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .eq('status', 'withdrawn'),
+  ])
   const counts = (countsResult.data?.[0] ?? {}) as {
     pending_count?: number
     awaiting_offer_response_count?: number
@@ -359,6 +367,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     enrolled: counts.enrolled_count ?? 0,
     waitlisted: counts.waitlisted_count ?? 0,
     rejected: counts.rejected_count ?? 0,
+    withdrawn: withdrawnCountResult.count ?? 0,
   }
 
   let selectedApplications: ApplicationRow[] = []
@@ -401,6 +410,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       enrolled: filteredApplications.filter((app) => app.status === 'enrolled'),
       waitlisted: filteredApplications.filter((app) => app.status === 'waitlisted'),
       rejected: filteredApplications.filter((app) => app.status === 'rejected'),
+      withdrawn: filteredApplications.filter((app) => app.status === 'withdrawn'),
     }
 
     incompleteApplications = filteredApplications
@@ -426,6 +436,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       enrolled: grouped.enrolled.length,
       waitlisted: grouped.waitlisted.length,
       rejected: grouped.rejected.length,
+      withdrawn: grouped.withdrawn.length,
     }
 
     const selectedPool =
@@ -439,7 +450,9 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               ? grouped.enrolled
               : selectedTab === 'waitlisted'
                 ? grouped.waitlisted
-                : grouped.rejected
+                : selectedTab === 'rejected'
+                  ? grouped.rejected
+                  : grouped.withdrawn
 
     selectedApplications = selectedPool.slice(pageFrom, pageTo + 1)
   } else {
@@ -492,6 +505,17 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
         .order('submitted_at', { ascending: false })
         .range(pageFrom, pageTo)
       selectedApplications = ((rows ?? []) as ApplicationRow[]) ?? []
+    } else if (selectedTab === 'withdrawn') {
+      const { data: rows } = await supabase
+        .from('applications')
+        .select(
+          'id,parent_id,child_id,application_number,status,missing_documents,submitted_at,offer_accepted_at,parent_message,admin_notes,children(first_name,last_name,date_of_birth,gender),parents(id,alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))'
+        )
+        .eq('ecd_id', ecdId)
+        .eq('status', 'withdrawn')
+        .order('submitted_at', { ascending: false })
+        .range(pageFrom, pageTo)
+      selectedApplications = ((rows ?? []) as ApplicationRow[]) ?? []
     } else {
       const { data: rows } = await supabase
         .from('applications')
@@ -517,7 +541,9 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
             ? filteredCounts.enrolled
             : selectedTab === 'waitlisted'
               ? filteredCounts.waitlisted
-              : filteredCounts.rejected
+              : selectedTab === 'rejected'
+                ? filteredCounts.rejected
+                : filteredCounts.withdrawn
 
   const totalPages = Math.max(1, Math.ceil(totalForSelected / pageSize))
   const canPrev = currentPage > 1
@@ -608,7 +634,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm border-t-4 border-t-slate-200">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Filtered</p>
             <p className="mt-2 text-3xl font-black text-slate-900">
-              {filteredCounts.pending + filteredCounts.awaitingOfferResponse + filteredCounts.approved + filteredCounts.enrolled + filteredCounts.waitlisted + filteredCounts.rejected}
+              {filteredCounts.pending + filteredCounts.awaitingOfferResponse + filteredCounts.approved + filteredCounts.enrolled + filteredCounts.waitlisted + filteredCounts.rejected + filteredCounts.withdrawn}
             </p>
           </div>
         </div>
@@ -638,6 +664,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                 { key: 'enrolled', label: 'Enrolled', count: filteredCounts.enrolled },
                 { key: 'waitlisted', label: 'Waitlist', count: filteredCounts.waitlisted },
                 { key: 'rejected', label: 'Rejected', count: filteredCounts.rejected },
+                { key: 'withdrawn', label: 'Withdrawn', count: filteredCounts.withdrawn },
               ].map((tab) => (
                 <Link
                   key={tab.key}

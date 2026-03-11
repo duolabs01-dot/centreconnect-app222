@@ -341,7 +341,14 @@ export async function extractStructuredDocumentWithGemini(input: {
     const status = response.status
     
     if (status === 429 || details.includes('quota') || details.includes('rate limit')) {
-      return await extractWithTesseract(input)
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI is busy, continuing with document scan.',
+        }
+      }
+      return fallback
     }
     
     return {
@@ -417,3 +424,4 @@ export async function extractStructuredDocumentWithGemini(input: {
     },
   }
 }
+

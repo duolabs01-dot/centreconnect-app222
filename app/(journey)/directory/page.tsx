@@ -9,6 +9,7 @@ import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
+import { getParentShortlistSummary } from '@/lib/parent/shortlist-data'
 
 export const metadata: Metadata = {
   title: 'CentreConnect directory',
@@ -96,6 +97,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     phone: centre.phone ?? null,
     existingApplicationId: centre.existingApplicationId ?? null,
     existingApplicationStatus: centre.existingApplicationStatus ?? null,
+    is_saved: Boolean(centre.is_saved),
   }
 }
 
@@ -139,86 +141,88 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     })
     allActiveCentres = demoDirectoryCentres.map((centre) => ({ suburb: centre.suburb, age_groups: centre.age_groups }))
     totalResults = centres.length
-  } else try {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
-      viewerRole = profile?.role ?? null
-    }
-
-    const facetsQuery = supabase.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
-
-    let centresQuery = supabase
-      .from('public_ecd_centres')
-      .select(
-        'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
-      )
-      .order('is_registered', { ascending: false })
-      .order('name', { ascending: true })
-      .range(pageFrom, pageTo)
-
-    let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
-
-    if (search) {
-      centresQuery = centresQuery.ilike('name', `%${search}%`)
-      countQuery = countQuery.ilike('name', `%${search}%`)
-    }
-
-    effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
-
-    if (effectiveSuburb) {
-      centresQuery = centresQuery.eq('suburb', effectiveSuburb)
-      countQuery = countQuery.eq('suburb', effectiveSuburb)
-    }
-
-    if (selectedAgeGroup) {
-      centresQuery = centresQuery.contains('age_groups', [selectedAgeGroup])
-      countQuery = countQuery.contains('age_groups', [selectedAgeGroup])
-    }
-
-    if (selectedFee) {
-      const feeCap = Number(selectedFee)
-      if (!Number.isNaN(feeCap)) {
-        centresQuery = centresQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
-        countQuery = countQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
+  } else {
+    try {
+      const supabase = await createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
+        viewerRole = profile?.role ?? null
       }
-    }
 
-    if (selectedRegistered) {
-      centresQuery = centresQuery.eq('is_registered', true)
-      countQuery = countQuery.eq('is_registered', true)
-    }
+      const facetsQuery = supabase.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
 
-    const [facetsResult, centresResult, countResult] = await Promise.all([facetsQuery, centresQuery, countQuery])
+      let centresQuery = supabase
+        .from('public_ecd_centres')
+        .select(
+          'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
+        )
+        .order('is_registered', { ascending: false })
+        .order('name', { ascending: true })
+        .range(pageFrom, pageTo)
 
-    allActiveCentres = (facetsResult.data ?? []) as DirectoryFacetSource[]
-    totalResults = countResult.count ?? 0
+      let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
 
-    const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
-    const centreIds = centreRows.map((centre) => centre.id)
-    const applicationByCentre = new Map<string, { id: string; status: string | null }>()
-    const geoById = new Map<
-      string,
-      {
-        latitude: number | string | null
-        longitude: number | string | null
-        onboarding_complete: boolean | null
-        owner_id: string | null
-        address: string | null
-        communication_automation_settings: Record<string, unknown> | null
+      if (search) {
+        centresQuery = centresQuery.ilike('name', `%${search}%`)
+        countQuery = countQuery.ilike('name', `%${search}%`)
       }
-    >()
 
-    if (centreIds.length > 0) {
-      const { data: geoRows } = await supabase
-        .from('ecd_centres')
-        .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
-        .in('id', centreIds)
+      effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
 
-        ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+      if (effectiveSuburb) {
+        centresQuery = centresQuery.eq('suburb', effectiveSuburb)
+        countQuery = countQuery.eq('suburb', effectiveSuburb)
+      }
+
+      if (selectedAgeGroup) {
+        centresQuery = centresQuery.contains('age_groups', [selectedAgeGroup])
+        countQuery = countQuery.contains('age_groups', [selectedAgeGroup])
+      }
+
+      if (selectedFee) {
+        const feeCap = Number(selectedFee)
+        if (!Number.isNaN(feeCap)) {
+          centresQuery = centresQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
+          countQuery = countQuery.or(`monthly_fee_min.lte.${feeCap},monthly_fee_max.lte.${feeCap}`)
+        }
+      }
+
+      if (selectedRegistered) {
+        centresQuery = centresQuery.eq('is_registered', true)
+        countQuery = countQuery.eq('is_registered', true)
+      }
+
+      const [facetsResult, centresResult, countResult] = await Promise.all([facetsQuery, centresQuery, countQuery])
+
+      allActiveCentres = (facetsResult.data ?? []) as DirectoryFacetSource[]
+      totalResults = countResult.count ?? 0
+
+      const centreRows = (centresResult.data ?? []) as Array<RawDirectoryCentre & { id: string }>
+      const centreIds = centreRows.map((centre) => centre.id)
+      const applicationByCentre = new Map<string, { id: string; status: string | null }>()
+      const geoById = new Map<
+        string,
+        {
+          latitude: number | string | null
+          longitude: number | string | null
+          onboarding_complete: boolean | null
+          owner_id: string | null
+          address: string | null
+          communication_automation_settings: Record<string, unknown> | null
+        }
+      >()
+      let savedCentreIds = new Set<string>()
+
+      if (centreIds.length > 0) {
+        const { data: geoRows } = await supabase
+          .from('ecd_centres')
+          .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
+          .in('id', centreIds)
+
+        ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
           geoById.set(row.id, {
             latitude: row.latitude,
             longitude: row.longitude,
@@ -228,17 +232,20 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             communication_automation_settings: row.communication_automation_settings,
           })
         })
-    }
+      }
 
-    if (user && centreIds.length > 0) {
-      const { data: applicationRows } = await supabase
-        .from('applications')
-        .select('id,ecd_id,status')
-        .eq('parent_id', user.id)
-        .in('ecd_id', centreIds)
-        .order('created_at', { ascending: false })
+      if (user && centreIds.length > 0) {
+        const [applicationRowsResult, shortlistSummary] = await Promise.all([
+          supabase
+            .from('applications')
+            .select('id,ecd_id,status')
+            .eq('parent_id', user.id)
+            .in('ecd_id', centreIds)
+            .order('created_at', { ascending: false }),
+          getParentShortlistSummary(supabase, user.id, centreIds),
+        ])
 
-        ; ((applicationRows ?? []) as CentreApplicationRow[]).forEach((row) => {
+        ;((applicationRowsResult.data ?? []) as CentreApplicationRow[]).forEach((row) => {
           if (!applicationByCentre.has(row.ecd_id)) {
             applicationByCentre.set(row.ecd_id, {
               id: row.id,
@@ -246,44 +253,48 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             })
           }
         })
-    }
 
-    centres = centreRows
-      .map((centre) => {
-        const geo = geoById.get(centre.id)
-        const existingApplication = applicationByCentre.get(centre.id)
-        const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
-        const locationMetadata = readCentreLocationMetadata(geo?.communication_automation_settings)
-        const resolvedCoords = resolveCentreCoordinates({
-          latitude: geo?.latitude,
-          longitude: geo?.longitude,
-          slug: centre.slug,
-          suburb: centre.suburb,
-          city: centre.city,
-          address: geo?.address ?? null,
-          storedSource: locationMetadata?.source,
+        savedCentreIds = shortlistSummary.savedCentreIds
+      }
+
+      centres = centreRows
+        .map((centre) => {
+          const geo = geoById.get(centre.id)
+          const existingApplication = applicationByCentre.get(centre.id)
+          const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
+          const locationMetadata = readCentreLocationMetadata(geo?.communication_automation_settings)
+          const resolvedCoords = resolveCentreCoordinates({
+            latitude: geo?.latitude,
+            longitude: geo?.longitude,
+            slug: centre.slug,
+            suburb: centre.suburb,
+            city: centre.city,
+            address: geo?.address ?? null,
+            storedSource: locationMetadata?.source,
+          })
+          return toDirectoryCentre({
+            ...centre,
+            is_claimed: hasOwner,
+            latitude: resolvedCoords.latitude,
+            longitude: resolvedCoords.longitude,
+            coordinate_source: resolvedCoords.source,
+            coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoords.source),
+            existingApplicationId: existingApplication?.id ?? null,
+            existingApplicationStatus: existingApplication?.status ?? null,
+            is_saved: savedCentreIds.has(centre.id),
+          } as RawDirectoryCentre)
         })
-        return toDirectoryCentre({
-          ...centre,
-          is_claimed: hasOwner,
-          latitude: resolvedCoords.latitude,
-          longitude: resolvedCoords.longitude,
-          coordinate_source: resolvedCoords.source,
-          coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoords.source),
-          existingApplicationId: existingApplication?.id ?? null,
-          existingApplicationStatus: existingApplication?.status ?? null,
-        } as RawDirectoryCentre)
-      })
-      .filter((centre): centre is DirectoryCentre => Boolean(centre))
-      .sort((a, b) => {
-        if (a.is_featured && !b.is_featured) return -1
-        if (!a.is_featured && b.is_featured) return 1
-        if (a.is_pilot && !b.is_pilot) return -1
-        if (!a.is_pilot && b.is_pilot) return 1
-        return 0
-      })
-  } catch (err) {
-    console.error('DirectoryPage error:', err)
+        .filter((centre): centre is DirectoryCentre => Boolean(centre))
+        .sort((a, b) => {
+          if (a.is_featured && !b.is_featured) return -1
+          if (!a.is_featured && b.is_featured) return 1
+          if (a.is_pilot && !b.is_pilot) return -1
+          if (!a.is_pilot && b.is_pilot) return 1
+          return 0
+        })
+    } catch (err) {
+      console.error('DirectoryPage error:', err)
+    }
   }
 
   const suburbs = Array.from(
@@ -332,7 +343,9 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
                 Find the right creche faster.
               </h1>
               <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[16px] sm:leading-7">
-                {effectiveSuburb ? `See centres in ${effectiveSuburb}, check fees, ages, and next steps fast, then apply or contact the centre.` : 'Check fees, ages, and next steps fast, then apply online or contact the centre directly.'}
+                {effectiveSuburb
+                  ? `See creches in ${effectiveSuburb}, check fees, ages, and next steps fast, then apply or contact the creche.`
+                  : 'Check fees, ages, and next steps fast, then apply online or contact the creche directly.'}
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3 lg:w-[26rem]">
@@ -372,11 +385,3 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
-
-
-
-
-
-
-
-

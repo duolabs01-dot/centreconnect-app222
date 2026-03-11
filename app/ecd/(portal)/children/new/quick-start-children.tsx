@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Clock3, MessageCircle, Sparkles, Users } from 'lucide-react'
+import { ArrowRight, Clock3, Mail, Sparkles, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,6 +32,7 @@ type QuickAddRow = {
   first_name: string
   last_name: string
   class_id: string
+  parent_email: string
   parent_phone: string
 }
 
@@ -47,6 +48,7 @@ function createQuickAddRows() {
     first_name: '',
     last_name: '',
     class_id: '',
+    parent_email: '',
     parent_phone: '',
   }))
 }
@@ -100,17 +102,15 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
     }))
   }
 
-  function openWhatsappLink(whatsappHref: string) {
-    const popup = window.open(whatsappHref, '_blank', 'noopener,noreferrer')
-    if (!popup) {
-      void navigator.clipboard.writeText(whatsappHref)
-      toast.info('WhatsApp link copied. Paste it into WhatsApp to continue.')
-    }
-  }
-
   function handleQuickCreate() {
     const startedRows = quickRows.filter((row) =>
-      Boolean(row.first_name.trim() || row.last_name.trim() || row.parent_phone.trim() || row.class_id)
+      Boolean(
+        row.first_name.trim() ||
+          row.last_name.trim() ||
+          row.parent_email.trim() ||
+          row.parent_phone.trim() ||
+          row.class_id
+      )
     )
 
     if (startedRows.length === 0) {
@@ -131,6 +131,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
           last_name: row.last_name.trim(),
           enrollment_start_date: quickStartDate,
           class_id: row.class_id || null,
+          parent_email: row.parent_email.trim() || null,
           parent_phone: row.parent_phone.trim() || null,
         })),
       })
@@ -172,8 +173,8 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
 
   async function handleSendParentLink(childId: string) {
     const form = pendingForms[childId]
-    if (!form?.parent_phone?.trim()) {
-      toast.error('Add a parent WhatsApp number first.')
+    if (!form?.parent_email?.trim()) {
+      toast.error('Add the parent email first so CentreConnect can send the official family link.')
       return
     }
 
@@ -182,17 +183,20 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
       const result = await sendParentLinkForExistingChildAction({
         child_id: childId,
         parent_name: form.parent_name.trim() || null,
-        parent_phone: form.parent_phone.trim(),
-        parent_email: form.parent_email.trim() || null,
+        parent_phone: form.parent_phone.trim() || null,
+        parent_email: form.parent_email.trim(),
       })
 
-      if (!result.success || !result.whatsappHref) {
+      if (!result.success) {
         toast.error(result.message)
         return
       }
 
-      toast.success(result.message)
-      openWhatsappLink(result.whatsappHref)
+      toast.success(result.message, {
+        description: result.whatsappHref
+          ? 'The official email is sent. A WhatsApp reminder is also ready if you want to follow up.'
+          : 'The family email is out. Once the parent accepts it, this child record will sync to the live parent profile.',
+      })
     } finally {
       setSendingChildId(null)
     }
@@ -211,14 +215,14 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
               Add your first 5 children in one sitting.
             </CardTitle>
             <CardDescription className="mt-2 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              Start with the child names first. Add the parent WhatsApp number now if you have it. If not, save the child now and send the parent link later.
+              Start with the child names first. Add the parent email now if you have it. CentreConnect will send the official family email later, and phone numbers stay optional for follow-up nudges.
             </CardDescription>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
               '1. Add names from your paper register.',
-              '2. Add a parent WhatsApp number now, or skip it.',
-              '3. Send the parent link when you are ready.',
+              '2. Add a parent email now, or save it for later.',
+              '3. Send the family email when you are ready.',
             ].map((item, index) => (
               <div key={item} className="rounded-[1.5rem] border border-white bg-white/90 p-4 shadow-sm">
                 <div className="flex items-start gap-3">
@@ -239,7 +243,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
             <div>
               <CardTitle className="text-xl font-black text-slate-900 sm:text-2xl">Quick add first 5 children</CardTitle>
               <CardDescription className="mt-1 text-sm leading-6 text-slate-600">
-                Keep it simple: child name, optional class, optional parent WhatsApp. Leave a row empty if you do not need all five.
+                Keep it simple: child name, optional class, parent email if you already have it, and phone only if you want an extra reminder option.
               </CardDescription>
             </div>
             <div className="w-full sm:w-[220px]">
@@ -262,7 +266,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
                 </span>
                 <p className="text-sm font-black text-slate-700">Child {index + 1}</p>
               </div>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
                 <Input
                   className="h-11 rounded-2xl bg-white"
                   placeholder="First name"
@@ -289,7 +293,13 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
                 </select>
                 <Input
                   className="h-11 rounded-2xl bg-white"
-                  placeholder="Parent WhatsApp (optional)"
+                  placeholder="Parent email (optional)"
+                  value={row.parent_email}
+                  onChange={(event) => updateQuickRow(row.id, { parent_email: event.target.value })}
+                />
+                <Input
+                  className="h-11 rounded-2xl bg-white"
+                  placeholder="Parent phone (optional)"
                   value={row.parent_phone}
                   onChange={(event) => updateQuickRow(row.id, { parent_phone: event.target.value })}
                 />
@@ -319,7 +329,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
           <CardHeader>
             <CardTitle className="text-xl font-black text-emerald-900">These children are now on CentreConnect.</CardTitle>
             <CardDescription className="text-sm leading-6 text-emerald-800">
-              Send the parent link now where a WhatsApp number is ready. The others can be linked later below.
+              Beautiful. The child records are saved. The next best step is sending the family email so each parent can unlock the best creche experience on CentreConnect.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3 md:grid-cols-2">
@@ -329,17 +339,10 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
                   <p className="text-base font-black text-slate-900">{child.firstName} {child.lastName}</p>
                   <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Start date {child.enrollmentStartDate}</p>
                 </div>
-                <div className="mt-4">
-                  {child.whatsappHref ? (
-                    <Button type="button" className="w-full rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => openWhatsappLink(child.whatsappHref!)}>
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Open parent WhatsApp link
-                    </Button>
-                  ) : (
-                    <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm font-medium leading-6 text-amber-900">
-                      No parent number yet. Use the section below when you are ready.
-                    </p>
-                  )}
+                <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-3 text-sm font-medium leading-6 text-emerald-900">
+                  {child.parentEmail
+                    ? 'Parent email saved. Send the family email from the section below.'
+                    : 'Parent email still missing. Add it below whenever you have it.'}
                 </div>
               </div>
             ))}
@@ -352,10 +355,10 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
           <CardHeader>
             <div className="flex items-center gap-2 text-teal-700">
               <Users className="h-5 w-5" />
-              <CardTitle className="text-xl font-black text-slate-900">Link a parent later</CardTitle>
+              <CardTitle className="text-xl font-black text-slate-900">Send the family email later</CardTitle>
             </div>
             <CardDescription className="text-sm leading-6 text-slate-600">
-              These children are already saved. Add the parent details when you have them, then open WhatsApp from here.
+              These children are already safe in CentreConnect. Add the parent email when you have it, then send the official family email from here.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -370,7 +373,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
                     </div>
                     <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-slate-600">
                       <Clock3 className="h-3.5 w-3.5" />
-                      Waiting for parent link
+                      Waiting for family email
                     </div>
                   </div>
                   <div className="grid gap-3 md:grid-cols-3">
@@ -382,28 +385,29 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
                     />
                     <Input
                       className="h-11 rounded-2xl bg-white"
-                      placeholder="Parent WhatsApp"
-                      value={form.parent_phone}
-                      onChange={(event) => updatePendingForm(child.id, { parent_phone: event.target.value })}
-                    />
-                    <Input
-                      className="h-11 rounded-2xl bg-white"
-                      placeholder="Parent email (optional)"
+                      placeholder="Parent email"
                       value={form.parent_email}
                       onChange={(event) => updatePendingForm(child.id, { parent_email: event.target.value })}
                     />
+                    <Input
+                      className="h-11 rounded-2xl bg-white"
+                      placeholder="Parent phone (optional)"
+                      value={form.parent_phone}
+                      onChange={(event) => updatePendingForm(child.id, { parent_phone: event.target.value })}
+                    />
                   </div>
-                  <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Button
                       type="button"
                       className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700"
                       disabled={sendingChildId === child.id}
                       onClick={() => void handleSendParentLink(child.id)}
                     >
-                      {sendingChildId === child.id ? 'Preparing link...' : 'Open WhatsApp link'}
+                      <Mail className="mr-2 h-4 w-4" />
+                      {sendingChildId === child.id ? 'Sending family email...' : 'Send family email'}
                     </Button>
                     <p className="text-sm font-medium leading-6 text-slate-500">
-                      You can do this now, later today, or when the parent is standing in front of you.
+                      Parents who accept this email unlock daily updates, messages, documents, and a calmer relationship with the creche.
                     </p>
                   </div>
                 </div>
@@ -415,4 +419,3 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
     </div>
   )
 }
-

@@ -397,6 +397,17 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
 
   if (status === 'enrolled') {
     const child = normalizeOne(application.children)
+
+    const { error: childEnrollmentError } = await session.supabase
+      .from('children')
+      .update({ enrollment_status: 'active' })
+      .eq('id', application.child_id)
+      .eq('ecd_id', session.ecdId)
+
+    if (childEnrollmentError) {
+      warnings.push('child enrollment sync')
+    }
+
     try {
       await syncBirthdayEventsForEnrolledChild({
         supabase: session.supabase,
@@ -408,6 +419,74 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
       })
     } catch {
       // Enrollment status should not fail if birthday sync is temporarily unavailable.
+    }
+
+    if (application.parent_id && application.child_id) {
+      try {
+        const admin = createAdminClient()
+        const { data: otherApplications } = await admin
+          .from('applications')
+          .select('id,ecd_id,application_number,status')
+          .eq('parent_id', application.parent_id)
+          .eq('child_id', application.child_id)
+          .neq('id', applicationId)
+          .in('status', ['draft', 'partial', 'submitted', 'in_review', 'approved', 'waitlisted'])
+
+        const otherRows = (otherApplications ?? []) as Array<{ id: string; ecd_id: string; application_number: string | null; status: string | null }>
+        if (otherRows.length > 0) {
+          const otherIds = otherRows.map((row) => row.id)
+          await admin
+            .from('applications')
+            .update({
+              status: 'withdrawn',
+              withdrawn_at: now,
+              withdraw_reason: 'auto_after_accept',
+              decided_at: now,
+              updated_at: now,
+            })
+            .in('id', otherIds)
+
+          await admin.from('application_status_history').insert(
+            otherRows.map((row) => ({
+              application_id: row.id,
+              old_status: row.status ?? 'approved',
+              new_status: 'withdrawn',
+              changed_by: session.user.id,
+              notes: 'Withdrawn automatically after enrollment was confirmed at another creche.',
+              ecd_id: row.ecd_id,
+            }))
+          )
+
+          await admin.from('parent_notifications').insert(
+            otherRows.map((row) => ({
+              parent_id: application.parent_id,
+              ecd_id: row.ecd_id,
+              application_id: row.id,
+              template_key: null,
+              title: 'Application withdrawn',
+              message: `${child?.first_name ?? 'Your child'}'s other active application was withdrawn automatically after enrollment was confirmed at another creche.`,
+              is_read: false,
+            }))
+          )
+
+          await admin.from('ecd_notifications').insert(
+            otherRows.map((row) => ({
+              ecd_id: row.ecd_id,
+              application_id: row.id,
+              title: 'Application withdrawn',
+              message: 'This application was withdrawn automatically because the family confirmed enrollment at another creche.',
+              metadata: {
+                kind: 'application_auto_withdrawn_after_enrollment',
+                child_name: `${child?.first_name ?? ''} ${child?.last_name ?? ''}`.trim(),
+                changed_by: session.user.id,
+              },
+              is_read: false,
+            }))
+          )
+        }
+      } catch {
+        warnings.push('other application withdrawal sync')
+      }
     }
   }
 
