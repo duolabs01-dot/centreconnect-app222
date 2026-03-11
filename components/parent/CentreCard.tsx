@@ -15,6 +15,7 @@ import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 import { type CentreOperatingSchedule } from '@/lib/time/centre-operating-schedule'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
+import { ContactCentreSheet } from '@/components/public/ContactCentreSheet'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact' | null | undefined
 
@@ -220,17 +221,22 @@ export function CentreCard({
       : []),
   ]
   const claimedValuePoints = [
-    { icon: BellRing, label: 'Daily updates that feel close' },
-    { icon: ShieldCheck, label: 'Calmer pickup and reminders' },
-    { icon: FileText, label: 'Less repeated paperwork' },
+    { icon: BellRing, label: 'Apply online faster' },
+    { icon: MessageCircle, label: 'Message in the app' },
+    { icon: ShieldCheck, label: 'Pickup stays safer' },
   ]
   const compactConvictionCopy = is_claimed
-    ? 'CentreConnect parents get a calmer journey here: daily visibility, clearer pickup, and one profile that makes applying easier.'
-    : 'Use this profile to compare the creche now, then come back when digital applications open on CentreConnect.'
+    ? 'This centre gives parents a faster next step now: apply online, send a message in CentreConnect, and keep important updates together.'
+    : 'This is a public listing for comparing first. If you like what you see, contact the centre directly by WhatsApp or phone.'
   const showRecommendedChip = !isVerifiedForParents && isFeatured
   const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
   const showSubsidyChip = subsidy_accepted
   const showPreviewChip = !is_claimed || usesPreviewImage
+  const inquiryTemplates = [
+    { label: 'Ask about space', message: `Hi ${name}, do you still have space for my child?` },
+    { label: 'Ask about fees', message: `Hi ${name}, please share your fees and what is included.` },
+    { label: 'Ask for a visit', message: `Hi ${name}, I would like to visit before I decide.` },
+  ]
 
   return (
     <motion.div
@@ -367,19 +373,17 @@ export function CentreCard({
                 <span>{primaryLabel}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Button
-                asChild
-                type="button"
-                variant="outline"
-                className="h-11 rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] transition-all hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
-              >
-                <Link href={detailHref}>
-                  <MessageCircle className="h-4 w-4" />
-                  Message Centre
-                </Link>
-              </Button>
+              <ContactCentreSheet
+                centreId={id}
+                centreName={name}
+                templates={inquiryTemplates}
+                triggerLabel="Message Centre"
+                triggerClassName="h-11 rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] transition-all hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                title={`Message ${name}`}
+                description="Send a quick question without leaving the directory. Replies stay inside CentreConnect so your next step stays clear."
+              />
               <p className="text-[11px] font-medium leading-5 text-[#5F6C68]">
-                Apply online first, then message the centre in CentreConnect if you need help.
+                Apply online or message the centre right here if you need a quick answer first.
               </p>
             </>
           ) : null}

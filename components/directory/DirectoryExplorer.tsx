@@ -260,7 +260,7 @@ export default function DirectoryExplorer({
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8682]" />
             <Input
               type="text"
-              placeholder="Search by centre name or suburb..."
+              placeholder="Search centre or suburb..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
@@ -564,10 +564,10 @@ export default function DirectoryExplorer({
                 className="mb-4 mt-5 text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#1F2D29] sm:text-[2.55rem]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Found a few you like? Keep your next steps simple.
+                Found one you like? Apply when you are ready.
               </h3>
               <p className="mb-8 max-w-md text-[15px] font-medium leading-7 text-[#5F6C68] sm:text-[17px]">
-                Save your documents once, apply from your phone, and track each reply without going back to WhatsApp chats and paper forms.
+                Create an account only when you want to apply. Then keep your documents, replies, and next steps in one place.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button
@@ -575,7 +575,7 @@ export default function DirectoryExplorer({
                   size="lg"
                   className="h-14 rounded-[1.1rem] bg-[#0D9488] px-7 text-base font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[#0B857A]"
                 >
-                  <Link href="/register?next=%2Fdirectory">Create Parent Profile</Link>
+                  <Link href="/register?next=%2Fdirectory">Create account</Link>
                 </Button>
                 <Button
                   asChild

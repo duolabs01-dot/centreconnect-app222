@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Baby, BellRing, CheckCircle2, Circle, Clock3, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { ApplyCTA } from '@/components/public/ApplyCTA'
-import { ContactCentreSheet } from './contact-centre-sheet'
+import { ContactCentreSheet } from '@/components/public/ContactCentreSheet'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
-import { ContactCentreSheet } from './contact-centre-sheet'
+import { ContactCentreSheet } from '@/components/public/ContactCentreSheet'
 import { CentreContactCard } from '@/components/public/CentreContactCard'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { getCentreOperationalStatus } from '@/lib/time/centre-operational-status'
@@ -350,8 +350,8 @@ export function CentreClient({
     websiteContent.aboutText.trim() ||
     centre.description ||
     (isClaimed
-      ? 'Parents are not only choosing a classroom here. They are choosing a calmer, more organised daily experience with one place for applications, updates, pickup communication, and the paperwork that usually goes missing.'
-      : 'This centre provides a safe, warm space for children to learn, play, and settle into a steady routine.')
+      ? 'Parents are choosing a place for their child, but they also need the day to feel easier. CentreConnect keeps applications, updates, and pickup details in one place.'
+      : 'This centre gives parents a simple starting point: learn the basics, ask questions, and decide whether it feels right.')
 
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
@@ -388,18 +388,18 @@ export function CentreClient({
 
   const parentHighlights = isClaimed
     ? [
-        "Apply with less stress and keep your child's documents in one secure CentreConnect profile instead of starting from zero every time.",
-        'Follow daily activities, reminders, report cards, and pickup communication in one parent journey that feels easier to trust.',
-        'If your family ever moves between CentreConnect creches, your profile and paperwork are far easier to carry with you.',
+        "Apply without starting from zero each time and keep your child's documents in one secure place.",
+        'See updates, reminders, and pickup details in one place instead of chasing different chats.',
+        'If you need to compare or move later, your saved profile makes the next step easier.',
       ]
     : [
-        'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
+        'You can still compare the centre now and contact them directly while they finish joining CentreConnect.',
         centre.subsidy_accepted
-          ? 'The centre says it accepts subsidy support, which can help families compare fit more quickly.'
-          : 'Subsidy support is not listed yet, so it helps to ask directly if that matters for your family.',
+          ? 'The centre says it accepts subsidy support, which can help you decide faster if budget matters.'
+          : 'Subsidy support is not listed yet, so ask directly if that matters for your family.',
         centre.capacity
           ? `The centre says it can care for around ${centre.capacity} children.`
-          : 'Capacity is not listed yet, so asking early can help if you need a place soon.',
+          : 'Capacity is not listed yet, so asking early can help if you need space soon.',
       ]
 
   const inquiryTemplates = [
@@ -664,18 +664,18 @@ export function CentreClient({
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {isClaimed ? 'A forward-thinking creche choice for modern parents' : 'Keep this creche close while you decide'}
+                  {isClaimed ? 'A calmer choice for busy parents' : 'Keep this creche close while you decide'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Parents who choose a CentreConnect creche get more than a place for their child. They get a calmer system around the child too: simpler applications, clearer daily visibility, and fewer loose ends after enrolment.'
-                    : 'This creche is still joining CentreConnect. Save it now, compare the details, and come back when digital applications open.'}
+                    ? 'Choosing a CentreConnect centre means you can apply online, message the centre, and keep important updates together once your child joins.'
+                    : 'This centre is still joining CentreConnect. Check the details now, then use WhatsApp or phone if you want to act today.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(isClaimed
-                    ? ['Apply in minutes', 'Daily activities visible', 'Less repeated paperwork']
-                    : ['Save it for later', 'Compare the details', 'Come back when applications open']
+                    ? ['Apply online', 'Message in app', 'Updates stay together']
+                    : ['Public listing', 'Call or WhatsApp', 'Apply later when live']
                   ).map((item) => (
                     <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
                       {item}
@@ -725,7 +725,7 @@ export function CentreClient({
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6C4700]">
-                      Claimed CentreConnect creches are designed to feel stronger for parents: better visibility, digital applications, calmer follow-up, and a more modern parent journey after you tap Apply.
+                      CentreConnect centres let parents do more straight away: apply online, send a message in the app, and follow what happens next with less confusion.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -742,7 +742,7 @@ export function CentreClient({
                 {!isClaimed ? (
                   <div className="mt-5 rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
                     <p className="text-sm leading-6 text-[#5F6C68]">
-                      Online applications are not open yet. Save this creche now and check the profile details while they finish joining CentreConnect.
+                      Online applications are not open yet. If you want to act now, use the centre phone or WhatsApp details on this page.
                     </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
@@ -759,11 +759,11 @@ export function CentreClient({
                     userRole={userRole}
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
-                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, daily updates, replies, and next steps together so you always feel closer to what is happening.' : null}
+                    existingHelperText={isClaimed ? 'Your application, messages, and next steps stay together in CentreConnect.' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Apply now and move into a calmer parent journey with one organised profile, visible daily activities, and clearer follow-up from the creche.' : 'Save this creche now and come back when applications open.'
+                      isClaimed ? 'Apply now if you are ready, or send a quick message first if you need one more answer.' : 'Use the public details now, then come back when online applications open.'
                     }
                   />
                   {isClaimed ? (
@@ -771,10 +771,10 @@ export function CentreClient({
                       centreId={centre.id}
                       centreName={centre.name}
                       templates={inquiryTemplates}
-                      triggerLabel="Ask the creche a quick question"
+                      triggerLabel="Message centre"
                       triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
                       title={`Ask ${centre.name} a quick question`}
-                      description="Your message goes straight to the centre inbox in CentreConnect, so replies, updates, and your application journey stay together in one calmer place."
+                      description="Your message goes straight to the centre inbox in CentreConnect, so replies and next steps stay in one place."
                     />
                   ) : (
                     <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
@@ -784,8 +784,8 @@ export function CentreClient({
                   )}
                   <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
                     <div>
-                      <p className="text-sm font-semibold text-[#22312E]">Save for later</p>
-                      <p className="text-xs text-[#6A7672]">Keep this creche in your shortlist while you compare.</p>
+                      <p className="text-sm font-semibold text-[#22312E]">Save this centre</p>
+                      <p className="text-xs text-[#6A7672]">Keep it in your shortlist while you compare your options.</p>
                     </div>
                     <SaveCentreButton centreId={centre.id} initialSaved={false} />
                   </div>
