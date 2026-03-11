@@ -350,26 +350,22 @@ export function CentreClient({
     websiteContent.aboutText.trim() ||
     centre.description ||
     (isClaimed
-      ? 'This centre is on CentreConnect, so parents can move faster from first question to application without repeating forms or chasing updates.'
+      ? 'Parents are not only choosing a classroom here. They are choosing a calmer, more organised daily experience with one place for applications, updates, pickup communication, and the paperwork that usually goes missing.'
       : 'This centre provides a safe, warm space for children to learn, play, and settle into a steady routine.')
 
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
         {
-          title: 'Learning through play',
-          description: 'The day is built around guided play, songs, movement, and hands-on learning so children stay engaged while building confidence.',
+          title: 'Learning that feels joyful and structured',
+          description: 'Children learn through play, songs, stories, movement, blocks, puzzles, and guided activities that build confidence without making the day feel too formal too early.',
         },
         {
-          title: 'Routine, meals, and rest',
-          description: 'Parents can expect a steady rhythm of arrival, meals, learning time, naps or quiet rest, and calm collection at the end of the day.',
+          title: 'A daily rhythm parents can trust',
+          description: 'The day follows a steady flow of arrival, meals, learning, play, rest, and collection, while CentreConnect helps parents stay informed without chasing paper notes.',
         },
         {
-          title: 'Early foundations',
-          description: 'Children build language, counting, listening, and social skills in ways that prepare them for the next stage without making the day feel too formal.',
-        },
-        {
-          title: 'Safety and parent communication',
-          description: 'CentreConnect supports parent updates, report cards, and safer pickup coordination so families know what is happening without paper going missing.',
+          title: 'A more modern parent experience',
+          description: 'Parents at CentreConnect creches can receive updates, safer pickup communication, reminders, and easier report-card access in one familiar place.',
         },
       ]
     : [
@@ -382,8 +378,8 @@ export function CentreClient({
           description: 'Babies, toddlers, and older children can be placed into groups that match their age and stage as the centre grows.',
         },
       ]
-  const programCards = (websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms).slice(0, isClaimed ? 1 : 2)
-  const visibleClassrooms = isClaimed ? classrooms.slice(0, 2) : classrooms
+  const programCards = (websiteContent.programCards.length > 0 ? websiteContent.programCards : fallbackPrograms).slice(0, isClaimed ? 2 : 2)
+  const visibleClassrooms = isClaimed ? classrooms.slice(0, 3) : classrooms
   const showPracticalSection = showContact && !isClaimed
 
   const quickFacts = [
@@ -396,8 +392,9 @@ export function CentreClient({
 
   const parentHighlights = isClaimed
     ? [
-        'Apply once, keep your documents in one secure parent profile, and reuse them when life changes.',
-        'Get updates, reminders, and safer pickup communication without chasing paper or phone calls.',
+        "Apply with less stress and keep your child's documents in one secure CentreConnect profile instead of starting from zero again.",
+        'Get updates, reminders, report cards, and safer pickup communication in one place that respects your time.',
+        'If your family ever moves between CentreConnect creches, your parent profile moves with you far more easily.',
       ]
     : [
         'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
@@ -509,7 +506,7 @@ export function CentreClient({
             </div>
 
             <div className="mt-6 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-4">
-              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'CentreConnect parent benefits' : 'What parents need first'}</p>
+              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'Why CentreConnect parents feel more in control here' : 'What parents need first'}</p>
               <div className="mt-3 space-y-3">
                 {parentHighlights.map((item) => (
                   <div key={item} className="flex items-start gap-3">
@@ -538,7 +535,7 @@ export function CentreClient({
                 <SectionHeading
                   eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
-                  description={isClaimed ? 'One quick look at the rhythm, routine, and learning style before you decide to apply.' : 'These are the parts of the day most parents usually want to understand before applying.'}
+                  description={isClaimed ? "Parents usually want to know two things quickly here: what the children's day feels like, and whether the centre communicates in a modern, organised way. This answers both." : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => {
@@ -586,7 +583,7 @@ export function CentreClient({
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
-                description={isClaimed ? 'The essentials parents usually want here are age fit, class setup, aftercare, and the practical details that affect daily life.' : 'A simple look at the class setup before you contact the centre.'}
+                description={isClaimed ? 'You should be able to picture where your child fits here in seconds: the age range, the class names, and whether aftercare is part of the rhythm.' : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
@@ -597,7 +594,7 @@ export function CentreClient({
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">A quick summary so parents can picture where their child may fit.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Class names make it easier to picture your child&apos;s day and ask the right question before you apply.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -638,17 +635,17 @@ export function CentreClient({
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {isClaimed ? 'Choose the easiest way to move forward' : 'Keep this creche close while you decide'}
+                  {isClaimed ? 'Feel ready, then apply with confidence' : 'Keep this creche close while you decide'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Apply when you are ready, or send one quick in-app message and keep every reply, update, and document in CentreConnect.'
+                    ? 'Parents who choose a CentreConnect creche get a more organised experience from the start: one application flow, one parent profile, one calmer place for updates and next steps.'
                     : 'This creche is still joining CentreConnect. Save it now, compare the details, and come back when digital applications open.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(isClaimed
-                    ? ['Apply in minutes', 'Message the creche in-app', 'Keep one parent profile']
+                    ? ['Apply in minutes', 'Updates in one place', 'No repeated paperwork']
                     : ['Save it for later', 'Compare the details', 'Come back when applications open']
                   ).map((item) => (
                     <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
@@ -677,7 +674,7 @@ export function CentreClient({
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6C4700]">
-                      This listing gives parents a clearer feel for the creche before they message or apply.
+                      Claimed CentreConnect creches get the strongest parent experience here: better visibility, digital applications, and a calmer follow-up journey after you tap Apply.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -711,11 +708,11 @@ export function CentreClient({
                     userRole={userRole}
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
-                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, and updates together in one place.' : null}
+                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, updates, and next steps together so you always know what is happening.' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Apply online now, or send a quick question below if you want clarity first.' : 'Save this creche now and come back when applications open.'
+                      isClaimed ? 'Apply online now and move forward with one organised parent profile, or ask one quick in-app question first.' : 'Save this creche now and come back when applications open.'
                     }
                   />
                   {isClaimed ? (

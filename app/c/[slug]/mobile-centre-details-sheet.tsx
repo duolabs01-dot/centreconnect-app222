@@ -170,6 +170,9 @@ export function MobileCentreDetailsSheet({
                   <h3 className="text-xl font-black text-[#22312E]">{centreName}</h3>
                   <p className="text-sm font-medium text-[#5F6C68]">{locationLabel}</p>
                   {tagline ? <p className="mt-1 text-sm leading-6 text-[#6A7672]">{tagline}</p> : null}
+                  {isClaimed ? (
+                    <p className="mt-2 text-sm leading-6 text-[#5F6C68]">This CentreConnect creche gives parents a more organised start: easier applications, calmer updates, and less repeated paperwork.</p>
+                  ) : null}
                 </div>
               </div>
 
@@ -226,7 +229,7 @@ export function MobileCentreDetailsSheet({
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#4B6B64]">Best next move</p>
                   <p className="mt-2 text-sm leading-6 text-[#315A51]">
                     {isClaimed
-                      ? 'Apply now, or send one quick message and keep the whole conversation in CentreConnect.'
+                      ? 'Apply when you are ready and keep the whole journey cleaner: one parent profile, one application flow, and one place for updates.'
                       : 'Save this creche now and come back when digital applications open.'}
                   </p>
                 </div>
@@ -236,12 +239,12 @@ export function MobileCentreDetailsSheet({
                   userRole={userRole}
                   existingApplicationId={existingApplicationId ?? null}
                   existingApplicationStatus={existingApplicationStatus ?? null}
-                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, and updates together.' : null}
+                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, updates, and next steps together.' : null}
                   isAvailable={isClaimed}
                   unavailableLabel="Online applications not available yet"
                   helperText={
                     isClaimed
-                      ? 'Apply online now, or ask one quick question below if you want clarity first.'
+                      ? 'Apply online now and move forward with one organised parent profile, or ask one quick in-app question first.'
                       : 'Save this creche now and come back when applications open.'
                   }
                 />
