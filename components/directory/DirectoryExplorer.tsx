@@ -506,7 +506,7 @@ export default function DirectoryExplorer({
                       age_groups={centre.age_groups ?? []}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
-                      distanceLabel={exactUserLocation ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
+                      distanceLabel={exactUserLocation && centre.coordinate_source === 'exact' ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
                       viewerRole={viewerRole}
                     />
                   </motion.div>

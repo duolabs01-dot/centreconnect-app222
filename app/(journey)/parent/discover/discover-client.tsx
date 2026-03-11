@@ -36,6 +36,7 @@ type DiscoverCentre = {
   is_claimed?: boolean
   is_registered?: boolean
   distanceMeters?: number
+  coordinateSource?: 'exact' | 'slug-fallback' | 'suburb-fallback' | 'city-fallback' | 'address-fallback' | 'missing'
 }
 
 const FALLBACK_CENTRES: DiscoverCentre[] = [
@@ -155,6 +156,7 @@ export default function ParentDiscoverClient() {
               rating: 4.8,
               latitude: resolvedCoordinates.latitude,
               longitude: resolvedCoordinates.longitude,
+              coordinateSource: resolvedCoordinates.source,
               contact_whatsapp: centre.contact_whatsapp ?? null,
               contact_phone: centre.contact_phone ?? null,
               phone: centre.phone ?? null,
@@ -206,7 +208,7 @@ export default function ParentDiscoverClient() {
         return {
           ...centre,
           distanceMeters,
-          distanceLabel: locationMode === 'device' ? formatDistance(distanceMeters) ?? undefined : undefined,
+          distanceLabel: locationMode === 'device' && centre.coordinateSource === 'exact' ? formatDistance(distanceMeters) ?? undefined : undefined,
         }
       })
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))

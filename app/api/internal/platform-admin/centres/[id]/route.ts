@@ -94,6 +94,8 @@ const actionSchema = z.discriminatedUnion('action', [
     city: z.string().max(120).optional(),
     province: z.string().max(120).optional(),
     postalCode: z.string().max(20).nullable().optional(),
+    latitude: z.number().min(-90).max(90).nullable().optional(),
+    longitude: z.number().min(-180).max(180).nullable().optional(),
     logoUrl: z.string().url().nullable().optional(),
     coverImageUrl: z.string().url().nullable().optional(),
     feesDisplayMode: z.enum(['exact', 'range', 'contact']).optional(),
@@ -323,6 +325,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.city !== undefined) updatePayload.city = payload.city
     if (payload.province !== undefined) updatePayload.province = payload.province
     if (payload.postalCode !== undefined) updatePayload.postal_code = payload.postalCode
+    if (payload.latitude !== undefined) updatePayload.latitude = payload.latitude
+    if (payload.longitude !== undefined) updatePayload.longitude = payload.longitude
     if (payload.logoUrl !== undefined) updatePayload.logo_url = payload.logoUrl
     if (payload.coverImageUrl !== undefined) updatePayload.cover_image_url = payload.coverImageUrl
     if (payload.feesDisplayMode !== undefined) updatePayload.fees_display_mode = payload.feesDisplayMode

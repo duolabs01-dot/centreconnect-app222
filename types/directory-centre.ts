@@ -24,6 +24,7 @@ export type DirectoryCentre = {
   operating_hours_summary?: string | null
   latitude: number | null
   longitude: number | null
+  coordinate_source?: 'exact' | 'slug-fallback' | 'suburb-fallback' | 'city-fallback' | 'address-fallback' | 'missing'
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null

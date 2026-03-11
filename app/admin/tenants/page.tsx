@@ -69,7 +69,7 @@ export default async function AdminTenantsPage() {
     admin
       .from('ecd_centres')
       .select(
-        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,primary_contact_first_name,primary_contact_surname,address,suburb,city,province,postal_code,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,age_groups,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
+        'id,slug,name,email,phone,contact_phone,contact_whatsapp,primary_contact_name,primary_contact_first_name,primary_contact_surname,address,suburb,city,province,postal_code,latitude,longitude,is_active,is_registered,owner_id,created_at,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,age_groups,age_group_pricing,communication_automation_settings,subscriptions(tier,status,monthly_price)'
       )
       .or('is_deleted.is.null,is_deleted.eq.false')
       .order('created_at', { ascending: false })
@@ -116,6 +116,8 @@ export default async function AdminTenantsPage() {
     city: string | null
     province: string | null
     postal_code: string | null
+    latitude: number | string | null
+    longitude: number | string | null
     is_active: boolean | null
     is_registered: boolean | null
     owner_id: string | null
@@ -226,6 +228,8 @@ export default async function AdminTenantsPage() {
       city: centre.city?.trim() || 'Johannesburg',
       province: centre.province?.trim() || 'Gauteng',
       postalCode: centre.postal_code?.trim() || '',
+      latitude: toRandString(centre.latitude),
+      longitude: toRandString(centre.longitude),
       logoUrl: centre.logo_url?.trim() || '',
       coverImageUrl: centre.cover_image_url?.trim() || '',
       feesDisplayMode: centre.fees_display_mode ?? 'range',

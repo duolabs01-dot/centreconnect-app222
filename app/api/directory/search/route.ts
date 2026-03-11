@@ -191,25 +191,30 @@ export async function GET(req: Request) {
     if (!safeSlug) return []
 
     return [
-      {
-        ...centre,
-        slug: safeSlug,
-        subsidy_accepted: Boolean(centre.subsidy_accepted),
-        is_registered: Boolean(geoById.get(centre.id as string)?.owner_id) ? Boolean(centre.is_registered) : false,
-        is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
-        is_pilot: isPilotCentreIdentity(centre),
-        is_featured: isPilotCentreIdentity(centre),
-        ...resolveCentreCoordinates({
+      (() => {
+        const resolvedCoordinates = resolveCentreCoordinates({
           latitude: geoById.get(centre.id as string)?.latitude,
           longitude: geoById.get(centre.id as string)?.longitude,
           slug: safeSlug,
           suburb: (centre.suburb as string | null | undefined) ?? null,
           city: (centre.city as string | null | undefined) ?? null,
           address: geoById.get(centre.id as string)?.address ?? null,
-        }),
-        existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
-        existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
-      },
+        })
+        return {
+          ...centre,
+          slug: safeSlug,
+          subsidy_accepted: Boolean(centre.subsidy_accepted),
+          is_registered: Boolean(geoById.get(centre.id as string)?.owner_id) ? Boolean(centre.is_registered) : false,
+          is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
+          is_pilot: isPilotCentreIdentity(centre),
+          is_featured: isPilotCentreIdentity(centre),
+          latitude: resolvedCoordinates.latitude,
+          longitude: resolvedCoordinates.longitude,
+          coordinate_source: resolvedCoordinates.source,
+          existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
+          existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
+        }
+      })(),
     ]
   })
 

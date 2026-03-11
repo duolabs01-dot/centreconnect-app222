@@ -53,7 +53,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
   const safeSlug = normalizeCentreSlug(centre.slug)
   if (!safeSlug) return null
 
-  const { latitude, longitude } = resolveCentreCoordinates({
+  const { latitude, longitude, source } = resolveCentreCoordinates({
     latitude: centre.latitude,
     longitude: centre.longitude,
     slug: safeSlug,
@@ -85,6 +85,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     operating_hours_summary: centre.operating_hours_summary ?? null,
     latitude,
     longitude,
+    coordinate_source: source,
     contact_whatsapp: centre.contact_whatsapp ?? null,
     contact_phone: centre.contact_phone ?? null,
     phone: centre.phone ?? null,

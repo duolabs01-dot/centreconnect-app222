@@ -61,6 +61,8 @@ export type AdminTenantTableRow = {
   city: string
   province: string
   postalCode: string
+  latitude: string
+  longitude: string
   logoUrl: string
   coverImageUrl: string
   feesDisplayMode: FeeDisplayMode
@@ -706,6 +708,8 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         city: form.city.trim() || 'Johannesburg',
         province: form.province.trim() || 'Gauteng',
         postalCode: form.postalCode.trim() || null,
+        latitude: parseNumberOrNull(form.latitude),
+        longitude: parseNumberOrNull(form.longitude),
         logoUrl: form.logoUrl.trim() || null,
         coverImageUrl: form.coverImageUrl.trim() || null,
         feesDisplayMode: form.feesDisplayMode,
@@ -1256,6 +1260,27 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                       onChange={(event) => setForm((prev) => (prev ? { ...prev, postalCode: event.target.value } : prev))}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Exact Latitude</Label>
+                    <Input
+                      className={darkInputClass}
+                      value={form.latitude}
+                      placeholder="-26.1038"
+                      onChange={(event) => setForm((prev) => (prev ? { ...prev, latitude: event.target.value } : prev))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-300">Exact Longitude</Label>
+                    <Input
+                      className={darkInputClass}
+                      value={form.longitude}
+                      placeholder="28.0916"
+                      onChange={(event) => setForm((prev) => (prev ? { ...prev, longitude: event.target.value } : prev))}
+                    />
+                  </div>
+                  <div className="sm:col-span-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                    Location accuracy: {form.latitude.trim() && form.longitude.trim() ? 'Exact pin set' : 'Approximate only until you save exact coordinates'}
+                  </div>
                 </div>
               </TabsContent>
 
@@ -1356,6 +1381,10 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Subsidy</p>
                       <p className="mt-1 text-sm font-semibold text-white">{form.subsidyAccepted ? 'Yes' : 'Not listed'}</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Distance accuracy</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.latitude.trim() && form.longitude.trim() ? 'Exact location set' : 'Approximate only'}</p>
                     </div>
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Aftercare</p>

@@ -29,7 +29,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
   const { data: centre } = await supabase
     .from('ecd_centres')
     .select(
-      'id,slug,name,tagline,description,logo_url,cover_image_url,phone,contact_phone,contact_whatsapp,fees_display_mode,email,address,suburb,city,province,postal_code,is_active,updated_at,communication_automation_settings'
+      'id,slug,name,tagline,description,logo_url,cover_image_url,phone,contact_phone,contact_whatsapp,fees_display_mode,email,address,suburb,city,province,postal_code,latitude,longitude,is_active,updated_at,communication_automation_settings'
     )
     .eq('id', ecdId)
     .maybeSingle()
@@ -107,6 +107,8 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
         city: String(formData.get('city') ?? '').trim() || null,
         province: String(formData.get('province') ?? '').trim() || null,
         postal_code: String(formData.get('postal_code') ?? '').trim() || null,
+        latitude: (() => { const raw = String(formData.get('latitude') ?? '').trim(); const parsed = Number(raw); return raw && Number.isFinite(parsed) ? parsed : null })(),
+        longitude: (() => { const raw = String(formData.get('longitude') ?? '').trim(); const parsed = Number(raw); return raw && Number.isFinite(parsed) ? parsed : null })(),
       })
       .eq('id', session.ecdId)
     revalidatePath('/ecd/profile')
@@ -494,6 +496,11 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="city" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.city ?? ''} placeholder="City" />
               <input name="province" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.province ?? ''} placeholder="Province" />
               <input name="postal_code" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.postal_code ?? ''} placeholder="Postal code" />
+              <input name="latitude" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.latitude ?? ''} placeholder="Exact latitude e.g. -26.1038" />
+              <input name="longitude" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.longitude ?? ''} placeholder="Exact longitude e.g. 28.0916" />
+              <div className="md:col-span-2 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+                Distance accuracy: {centre?.latitude != null && centre?.longitude != null ? 'Exact location set.' : 'Approximate only until you save exact coordinates.'}
+              </div>
               <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Location
               </Button>
