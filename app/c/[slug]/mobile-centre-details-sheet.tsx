@@ -191,7 +191,7 @@ export function MobileCentreDetailsSheet({
                 </p>
                 <p className="mt-1 text-sm font-medium text-[#5F6C68]">{schedule}</p>
                 <p className="mt-3 text-xs font-medium text-[#6A7672]">
-                  {isRegistered ? 'Government registration is shown on this profile.' : 'Government registration is not shown yet. Ask the creche directly if that matters to you.'}
+                  {isRegistered ? 'DSD registration is shown on this profile.' : 'DSD registration is not shown yet. Ask the creche directly if that matters to you.'}
                 </p>
               </div>
 

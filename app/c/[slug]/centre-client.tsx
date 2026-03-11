@@ -383,7 +383,7 @@ export function CentreClient({
     ? [
         {
           title: 'Fees, hours, and support',
-          description: 'See monthly fees, opening hours, and whether government registration is shown before you decide.',
+          description: 'See monthly fees, opening hours, and whether DSD registration is shown before you decide.',
         },
         {
           title: 'Ages and class fit',
@@ -420,8 +420,8 @@ export function CentreClient({
     : [
         'You can still compare the centre now and contact them directly while they finish joining CentreConnect.',
         isVerifiedForParents
-          ? 'Government registration is shown on this profile, so trust checks are easier to do quickly.'
-          : 'Government registration is not shown yet, so ask directly if that matters for your family.',
+          ? 'DSD registration is shown on this profile, so trust checks are easier to do quickly.'
+          : 'DSD registration is not shown yet, so ask directly if that matters for your family.',
         centre.capacity
           ? `The centre says it can care for around ${centre.capacity} children.`
           : 'Capacity is not listed yet, so asking early can help if you need space soon.',
@@ -430,7 +430,7 @@ export function CentreClient({
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${centre.name}, I would like to ask if you still have space for my child.` },
     { label: 'Ask about fees', message: `Hi ${centre.name}, I would like to ask about your fees and what is included.` },
-    { label: 'Ask about registration', message: `Hi ${centre.name}, I would like to ask about your government registration status.` },
+    { label: 'Ask about registration', message: `Hi ${centre.name}, I would like to ask about your DSD registration status.` },
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
 
