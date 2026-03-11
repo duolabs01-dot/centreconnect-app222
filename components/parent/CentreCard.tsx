@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowRight, Baby, BellRing, FileText, MapPin, MessageCircle, Phone, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, MapPin, MessageCircle, Phone, ShieldCheck, Wallet } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -220,14 +220,6 @@ export function CentreCard({
       ? [{ key: 'distance', icon: MapPin, label: 'Distance', value: distanceLabel.trim() }]
       : []),
   ]
-  const claimedValuePoints = [
-    { icon: BellRing, label: 'Apply online faster' },
-    { icon: MessageCircle, label: 'Message in the app' },
-    { icon: ShieldCheck, label: 'Pickup stays safer' },
-  ]
-  const compactConvictionCopy = is_claimed
-    ? 'This centre gives parents a faster next step now: apply online, send a message in CentreConnect, and keep important updates together.'
-    : 'This is a public listing for comparing first. If you like what you see, contact the centre directly by WhatsApp or phone.'
   const showRecommendedChip = !isVerifiedForParents && isFeatured
   const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
   const showSubsidyChip = subsidy_accepted
@@ -318,20 +310,18 @@ export function CentreCard({
               ) : null}
               {showSubsidyChip ? (
                 <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-emerald-700 shadow-none">
-                  Subsidy friendly
+                  Subsidy
                 </Badge>
               ) : null}
-              {showPreviewChip ? (
-                !is_claimed ? (
-                  <Badge className="border border-amber-200 bg-[#FFF6E8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#9A5A10] shadow-none">
-                    Not yet on CentreConnect
-                  </Badge>
-                ) : (
-                  <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
-                    Preview image
-                  </Badge>
-                )
-              ) : null}
+              {is_claimed ? (
+                <Badge className="border border-[#DCEEE8] bg-[#F4FBF8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#0D9488] shadow-none">
+                  Apply now
+                </Badge>
+              ) : (
+                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
+                  Public listing
+                </Badge>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -340,25 +330,9 @@ export function CentreCard({
               ))}
             </div>
 
-            <div className={`rounded-[1.1rem] border px-3 py-2.5 ${is_claimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
-                {is_claimed ? 'Why this feels better for parents' : 'What this profile helps with'}
-              </p>
-              {is_claimed ? (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {claimedValuePoints.map((item) => {
-                    const Icon = item.icon
-                    return (
-                      <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-[#1F4B42]">
-                        <Icon className="h-3.5 w-3.5 text-[#0D9488]" />
-                        {item.label}
-                      </span>
-                    )
-                  })}
-                </div>
-              ) : null}
-              <p className="mt-2 text-[12px] leading-5 text-[#4E5D59]">{compactConvictionCopy}</p>
-            </div>
+            <p className="text-[12px] leading-5 text-[#4E5D59]">
+              {is_claimed ? 'Apply online or message the centre in the app.' : 'Call or WhatsApp the centre if you want to act now.'}
+            </p>
           </CardContent>
         </Link>
 
@@ -382,9 +356,7 @@ export function CentreCard({
                 title={`Message ${name}`}
                 description="Send a quick question without leaving the directory. Replies stay inside CentreConnect so your next step stays clear."
               />
-              <p className="text-[11px] font-medium leading-5 text-[#5F6C68]">
-                Apply online or message the centre right here if you need a quick answer first.
-              </p>
+
             </>
           ) : null}
 
