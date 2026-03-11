@@ -20,8 +20,16 @@ export async function SuggestedCentresSection() {
 
   return (
     <section className="glass-card rounded-2xl p-4 sm:p-6">
-      <h2 className="text-lg font-semibold">Creches worth a look</h2>
-      <p className="mt-1 text-sm text-slate-600">A few good places to start if you still need options.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-slate-900">Start here</h2>
+          <p className="mt-1 text-sm text-slate-600">A few nearby creches you can open first.</p>
+        </div>
+        <Button size="sm" variant="ghost" asChild className="rounded-full px-3 text-cyan-700 hover:text-cyan-800">
+          <Link href="/parent/discover">See all</Link>
+        </Button>
+      </div>
+
       <div className="mt-4 space-y-3">
         {suggestedCentres.length === 0 ? (
           <EmptyState title="No suggestions yet" description="Check back soon for creche recommendations." />
@@ -29,14 +37,16 @@ export async function SuggestedCentresSection() {
           suggestedCentres.map((centre) => (
             <div
               key={centre.id}
-              className="flex flex-col gap-2 rounded-md border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div>
                 <p className="text-sm font-semibold text-slate-900">{centre.name}</p>
-                <p className="mt-1 text-xs text-slate-600">{centre.suburb ?? 'Suburb not listed'}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                  {centre.suburb ?? 'Area not listed'}
+                </p>
               </div>
-              <Button size="sm" variant="outline" asChild>
-                <Link href={`/c/${centre.slug}`}>View creche</Link>
+              <Button size="sm" variant="outline" asChild className="rounded-full">
+                <Link href={`/c/${centre.slug}`}>Open</Link>
               </Button>
             </div>
           ))

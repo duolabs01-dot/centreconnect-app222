@@ -7,11 +7,9 @@ import {
   ArrowRight,
   Building2,
   CheckCircle2,
-  ChevronRight,
   FileText,
   Heart,
   MessageSquare,
-  Search,
   Sparkles,
   UserRound,
 } from 'lucide-react'
@@ -96,6 +94,7 @@ export default async function ParentDashboardPage() {
     const activeApplications = applications.filter((application) => application.status !== 'enrolled')
     const screenState: 'empty' | 'pending' | 'enrolled' = !hasApplications ? 'empty' : enrolledApplication ? 'enrolled' : 'pending'
 
+    const parentFirstName = parentName.split(' ')[0] || 'there'
     const firstChildName =
       `${childrenResult.data?.[0]?.first_name ?? ''} ${childrenResult.data?.[0]?.last_name ?? ''}`.trim() ||
       applications[0]?.childName ||
@@ -146,7 +145,10 @@ export default async function ParentDashboardPage() {
               <SurfaceCard className="relative overflow-hidden border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_55%),radial-gradient(circle_at_top_right,rgba(212,147,90,0.12),transparent_38%)]" />
                 <div className="relative">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-700">
+                    Good to see you, {parentFirstName}
+                  </p>
+                  <div className="mt-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
                     <Heart className="h-6 w-6" />
                   </div>
                   <h1 className="mt-4 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 sm:text-[2.3rem]" style={{ fontFamily: 'var(--font-display)' }}>
@@ -297,3 +299,4 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+

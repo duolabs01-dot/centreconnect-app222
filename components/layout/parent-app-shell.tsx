@@ -70,7 +70,7 @@ function isDesktopTabActive(pathname: string, href: string) {
 }
 
 export function ParentAppShell({ children }: ParentAppShellProps) {
-  const { userName, avatarUrl, isVerified, profileNudge, userId } = useParentLayout()
+  const { userName, avatarUrl, isVerified, userId } = useParentLayout()
   const pathname = usePathname()
   const router = useRouter()
   useAppNavLock()
@@ -126,6 +126,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
   const showMobileBack = shouldShowMobileBack(pathname)
   const hideParentBottomNav = shouldHideParentBottomNav(pathname)
+  const showMobileTitle = pathname !== '/parent/dashboard'
 
   return (
     <div
@@ -265,13 +266,14 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
       >
         <Container className="max-w-6xl px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
           <AppBreadcrumbs rootHref="/parent/dashboard" rootLabel="Home" />
-          {/* Mobile Title View */}
-          <div className="md:hidden mb-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-cyan-600" />
-              <h1 className="text-2xl font-black tracking-tight text-slate-950">{getTitle(pathname)}</h1>
+          {showMobileTitle ? (
+            <div className="mb-6 md:hidden">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-cyan-600" />
+                <h1 className="text-2xl font-black tracking-tight text-slate-950">{getTitle(pathname)}</h1>
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="parent-page-content">{children}</div>
 
@@ -281,4 +283,5 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     </div>
   )
 }
+
 
