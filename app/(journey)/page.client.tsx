@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { ArrowRight, CheckCircle2, Clock3, FileCheck2, MapPin, Share2, ShieldCheck, Smartphone, Users2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ApplicationProgressSection } from '@/components/landing/application-progress-section'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
@@ -42,40 +41,31 @@ const safetyPoints = [
   'Parents get notified as soon as collection happens.',
 ] as const
 
-const connectedFlow = [
-  {
-    icon: Smartphone,
-    eyebrow: 'Parent side',
-    title: 'Parents should know what to do straight away.',
-    body: 'Working parents do not have time to guess. The next step must be clear on every screen.',
-    detail: 'The UI should feel calm, obvious, and mobile-first from the first screen.',
-  },
-  {
-    icon: FileCheck2,
-    eyebrow: 'Saved once',
-    title: 'What you already did should stay saved.',
-    body: 'If a parent already filled something in, the app should remember it and make the next step easier.',
-    detail: 'That is what makes CentreConnect feel like a product instead of a collection of forms.',
-  },
-  {
-    icon: Users2,
-    eyebrow: 'Centre side',
-    title: 'The centre should see the same story clearly.',
-    body: 'If a parent applies or sends a message, the centre side should reflect that clearly and fast.',
-    detail: 'One action should make sense to both the parent and the centre.',
-  },
-] as const
-
 const parentMoments = [
-  'Search nearby centres and compare quickly',
-  'Save your child profile and documents once',
-  'Track replies, approvals, and next steps in one place',
+  'See nearby centres fast',
+  'Check fees, ages, and hours quickly',
+  'Apply online or contact the centre right away',
 ] as const
 
 const centreMoments = [
-  'Receive a clear application with the right documents',
-  'Update status once and reflect it back to the parent',
-  'Run attendance and pickup without paper confusion',
+  'See new applications clearly',
+  'Reply once and keep the parent updated',
+  'Run attendance and pickup with less paper',
+] as const
+
+const parentTrustChecks = [
+  {
+    title: 'No account needed to browse',
+    body: 'Parents can start with the directory first and create an account only when they want to apply.',
+  },
+  {
+    title: 'Clear next step on every centre',
+    body: 'CentreConnect centres let parents apply online. Public listings show direct WhatsApp or call options.',
+  },
+  {
+    title: 'Safety stays visible',
+    body: 'Pickup codes and authorised collection stay clear, so parents do not need to guess what happens later.',
+  },
 ] as const
 function suburbHref(suburb: string) {
   return `/directory?suburb=${encodeURIComponent(suburb)}`
@@ -204,15 +194,15 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Find the right crèche for your child. Fast.
+                  A safe crèche search that fits real parent life.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  Find a centre near you, check the important details quickly, and apply when you are ready.
+                  You need a place that feels safe, close enough, and easy to act on. Start with the directory and move fast.
                 </p>
 
                 <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[15px] sm:leading-7">
-                  Busy parents need clear answers fast. This is built for that.
+                  Simple English. Clear next steps. No long story before you can start.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -271,7 +261,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
                 <p className="mt-3 text-[11px] font-medium tracking-[0.01em] text-[var(--teal)] sm:text-[12px]">
                   <Clock3 className="mr-1 inline h-3 w-3" />
-                  Start with the directory. Create an account only when you are ready to apply.
+                  No account needed to browse. Create one only when you want to apply.
                 </p>
 
                 <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
@@ -289,10 +279,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <div className="p-5 sm:p-6">
                         <div className="inline-flex items-center gap-2 rounded-full border border-[#DDEBE7] bg-[#F3FBF8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--teal)]">
                           <Smartphone className="h-3.5 w-3.5" />
-                          Parent journey preview
+                          What parents need first
                         </div>
                         <h2 className="mt-4 text-[1.45rem] font-bold leading-tight text-[#1F2D29] sm:text-[1.7rem]">
-                          Search first. Save once. Track everything after.
+                          See your options. Know your next step. Keep moving.
                         </h2>
                         <div className="mt-5 space-y-3">
                           {parentMoments.map((item, index) => (
@@ -309,11 +299,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         </div>
                         <div className="mt-4 rounded-2xl border border-[#DCEBE6] bg-[linear-gradient(135deg,#F4FBF8_0%,#FFF8F1_100%)] p-4">
                           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6F7E79]">
-                            Why this feels like a product
+                            Why this feels easier
                           </p>
                           <p className="mt-2 text-sm leading-6 text-[#4F5E5A]">
-                            The next step stays obvious, your saved details carry forward, and updates come back to you
-                            without you chasing three different people.
+                            You can browse first, act fast, and keep your progress in one place when you are ready.
                           </p>
                         </div>
                       </div>
@@ -322,7 +311,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         <div className="rounded-[1.35rem] border border-[#E2EEE9] bg-white/95 p-4 shadow-[0_16px_34px_rgba(31,44,39,0.08)]">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A847F]">Featured centre</p>
+                              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A847F]">Example centre</p>
                               <p className="mt-1 text-base font-bold text-[#20302C]">{featuredCentre?.name ?? 'ECD Centre'}</p>
                             </div>
                             <div className="rounded-full bg-[#EDF8F5] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--teal)]">
@@ -340,8 +329,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                             />
                             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,29,26,0.04)_0%,rgba(17,29,26,0.14)_45%,rgba(17,29,26,0.48)_100%)]" />
                             <div className="absolute inset-x-0 bottom-0 p-4">
-                              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85">Parent sees</p>
-                              <p className="mt-1 text-sm font-semibold text-white">Trust, suburb, and the next step to apply</p>
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85">Parent sees first</p>
+                              <p className="mt-1 text-sm font-semibold text-white">Fees, area, and what to do next</p>
                             </div>
                           </div>
                         </div>
@@ -375,10 +364,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Real crèches. Real spaces.
+                  Centres parents can act on today.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  We highlight registered centres and verified partners so parents can apply with confidence.
+                  Browse first. Then choose whether to apply online or contact the centre directly.
                 </p>
               </div>
 
@@ -434,11 +423,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </div>
                       <div className={`mt-3 rounded-[1.05rem] border px-3 py-2 ${centre.isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
                         <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
-                          {centre.isClaimed ? 'Why this feels better for parents' : 'What this profile helps with'}
+                          {centre.isClaimed ? 'Why parents choose this faster' : 'What this profile helps with'}
                         </p>
                         <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
                           {centre.isClaimed
-                            ? 'Daily updates, calmer pickup, and a more organised application journey once your child joins.'
+                            ? 'Online applications, in-app messages, and a clearer parent journey after your child joins.'
                             : 'A clean preview for comparing the creche now while CentreConnect applications are still coming online.'}
                         </p>
                       </div>
@@ -458,11 +447,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="text-[2rem] leading-[1.04] tracking-[-0.035em] text-white sm:text-[3.1rem] sm:leading-[1.02]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Your child only leaves with someone you approved.
+                  Pickup should feel safe, even on a busy day.
                 </h2>
                 <p className="mt-5 text-[15px] leading-7 text-[#D8E5D7] sm:text-[17px] sm:leading-8">
-                  Pickup stays simple for the crèche and clear for the parent. The secure code is checked, authorised
-                  adults are visible, and you hear about collection straight away.
+                  You should know who can collect your child, what code is needed, and when pickup happened.
                 </p>
 
                 <div className="mt-7 space-y-3">
@@ -528,10 +516,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-white sm:text-[3rem] sm:leading-[1]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Start with the directory. Create an account when you need it.
+                Ready to look? Start with the directory.
               </h2>
               <p className="mt-4 max-w-2xl text-[15px] leading-7 text-teal-50 sm:text-[17px] sm:leading-8">
-                Look first. Decide faster. Save your details once when you are ready to apply.
+                Browse first, then create an account only when you want to apply.
               </p>
             </div>
 
