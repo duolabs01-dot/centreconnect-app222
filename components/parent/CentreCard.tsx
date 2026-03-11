@@ -261,28 +261,27 @@ export function CentreCard({
 
           </div>
 
-          <CardContent className="flex flex-1 flex-col space-y-2 px-4 pb-3.5 pt-3">
-            <div className="relative min-h-[3.15rem] pl-[4.15rem]">
-              <div className="absolute left-0 top-[-1.9rem]">
-                {resolvedLogoUrl ? (
-                  <div className="h-12 w-12 overflow-hidden rounded-2xl border-[3px] border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
-                    <Image
-                      src={resolvedLogoUrl}
-                      alt={`${name} logo`}
-                      width={48}
-                      height={48}
-                      className="h-full w-full object-cover"
-                      sizes="48px"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-[3px] border-white bg-[#F5EFE6] text-base font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
-                    {name.charAt(0)}
-                  </div>
-                )}
-              </div>
-              <div className="min-w-0">
+          <CardContent className="flex flex-1 flex-col gap-2.5 px-4 pb-3.5 pt-3.5">
+            <div className="flex items-start gap-3">
+              {resolvedLogoUrl ? (
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-white bg-white shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                  <Image
+                    src={resolvedLogoUrl}
+                    alt={`${name} logo`}
+                    width={48}
+                    height={48}
+                    className="h-full w-full object-cover"
+                    sizes="48px"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white bg-[#F5EFE6] text-base font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                  {name.charAt(0)}
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1 pt-0.5">
                 <h3
                   className="line-clamp-2 text-[1rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E] sm:text-[1.05rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
@@ -290,7 +289,7 @@ export function CentreCard({
                   {name}
                 </h3>
                 <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7B827E]">
-                  <MapPin className="h-3.5 w-3.5" />
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{locationSummary}</span>
                 </p>
               </div>
