@@ -310,15 +310,13 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             className="mt-4 max-w-[14ch] text-[2.15rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1F2D29] sm:max-w-none sm:text-[3.1rem] sm:leading-[1.01]"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            CentreConnect keeps your child’s centre organised.
+            Find a crèche near you. Then act fast.
           </h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-8">
-            {effectiveSuburb
-              ? `${effectiveSuburb} centres on CentreConnect share attendance, documents, pickup, and safety notes right away so you can keep trusting the same team and see those updates in one calm view.`
-              : `CentreConnect keeps attendance, documents, pickup tools, and parent updates in one calm place for families whose children already attend a participating centre. The filters below are still available if you want to compare other trusted partners.`}
+            {effectiveSuburb ? `See centres in ${effectiveSuburb}, compare the basics quickly, and choose your next step.` : `Search centres, compare the basics, and move fast when you find the right fit.`}
           </p>
           <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-            This is your CentreConnect hub—it is better for you now because it highlights the updates parents already get from their centre. Use the filters below only if you also want to compare other trusted crèches that keep families informed.
+            CentreConnect centres let you apply online and message the centre in the app. Public listings are for checking details first, then contacting the centre directly.
           </p>
         </header>
 

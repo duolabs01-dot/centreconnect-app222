@@ -36,61 +36,6 @@ const suburbPills: Array<{ name: string; count: number }> = [
   { name: 'Sandton', count: 4 },
 ]
 
-const steps = [
-  {
-    number: '1',
-    title: 'Search by area',
-    body: 'Find trusted crèches near you with the details parents actually need to decide.',
-  },
-  {
-    number: '2',
-    title: 'Save documents once',
-    body: 'Keep your child’s documents in one secure place and reuse them for every application.',
-  },
-  {
-    number: '3',
-    title: 'Get updates in one place',
-    body: 'See replies, next steps, and reminders without bouncing between calls and WhatsApp chats.',
-  },
-] as const
-
-const parentPromises = [
-  {
-    title: 'Fees and hours upfront',
-    body: 'Know monthly fees, hours, and available age groups before you visit.',
-  },
-  {
-    title: 'Safety you can see',
-    body: 'Pickup verification and authorised adults stay visible in your account.',
-  },
-  {
-    title: 'Your docs stay private',
-    body: 'Only the centres you apply to can view your child’s documents.',
-  },
-] as const
-
-const applyChecklist = [
-  'Child’s birth certificate or clinic card',
-  'Parent/guardian ID or passport',
-  'Proof of address (if required by the centre)',
-  'Immunisation record or clinic card',
-] as const
-
-const faqItems = [
-  {
-    title: 'Is this free for parents?',
-    body: 'Yes. Parents can search and apply without payment details.',
-  },
-  {
-    title: 'How do I know a centre is legitimate?',
-    body: 'We highlight registered centres and verified partners before you apply.',
-  },
-  {
-    title: 'Can I apply to more than one crèche?',
-    body: 'Yes. Save your profile once and apply to multiple centres faster.',
-  },
-] as const
-
 const safetyPoints = [
   'Every pickup uses a secure code.',
   'Staff see who is authorised before release.',
@@ -101,22 +46,22 @@ const connectedFlow = [
   {
     icon: Smartphone,
     eyebrow: 'Parent side',
-    title: 'A parent should understand the next step in seconds.',
-    body: 'Search nearby options, compare quickly, and move forward without wondering where to tap next.',
+    title: 'Parents should know what to do straight away.',
+    body: 'Working parents do not have time to guess. The next step must be clear on every screen.',
     detail: 'The UI should feel calm, obvious, and mobile-first from the first screen.',
   },
   {
     icon: FileCheck2,
     eyebrow: 'Saved once',
-    title: 'The work you already did should carry forward.',
-    body: 'Profiles, documents, and status should not reset every time a parent moves through the journey.',
+    title: 'What you already did should stay saved.',
+    body: 'If a parent already filled something in, the app should remember it and make the next step easier.',
     detail: 'That is what makes CentreConnect feel like a product instead of a collection of forms.',
   },
   {
     icon: Users2,
     eyebrow: 'Centre side',
-    title: 'The ECD side should see the same story clearly.',
-    body: 'Applications, updates, attendance, and pickup should reflect across both sides without guesswork.',
+    title: 'The centre should see the same story clearly.',
+    body: 'If a parent applies or sends a message, the centre side should reflect that clearly and fast.',
     detail: 'One action should make sense to both the parent and the centre.',
   },
 ] as const
@@ -259,16 +204,15 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Finding the right crèche near you just got simpler.
+                  Find the right crèche for your child. Fast.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  Search trusted crèches across Johannesburg, compare the details that matter, and apply without starting
-                  from scratch each time.
+                  Find a centre near you, check the important details quickly, and apply when you are ready.
                 </p>
 
                 <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[15px] sm:leading-7">
-                  Finally, no more asking the same questions on three WhatsApp chats.
+                  Busy parents need clear answers fast. This is built for that.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -294,7 +238,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     className="h-14 w-full justify-center rounded-[1.05rem] bg-[var(--teal)] px-7 text-base font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A] sm:w-auto"
                     asChild
                   >
-                    <Link href="/directory">Search Crèches Near Me</Link>
+                    <Link href="/directory">Directory</Link>
                   </Button>
                   <Button
                     size="lg"
@@ -303,7 +247,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     asChild
                   >
                     <Link href="/register">
-                      <span>Save My Parent Profile</span>
+                      <span>Create account</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -327,7 +271,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
                 <p className="mt-3 text-[11px] font-medium tracking-[0.01em] text-[var(--teal)] sm:text-[12px]">
                   <Clock3 className="mr-1 inline h-3 w-3" />
-                  Apply in under 2 minutes — documents ready? You&apos;re halfway there.
+                  Start with the directory. Create an account only when you are ready to apply.
                 </p>
 
                 <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
@@ -422,253 +366,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <ApplicationProgressSection />
-          </div>
-        </section>
-
-        <section className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFFDF9_0%,#F4FBF8_52%,#FFF5EC_100%)] p-6 shadow-[0_18px_44px_rgba(31,44,39,0.07)] sm:p-8">
-            <div className="max-w-3xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">One connected system</p>
-              <h2
-                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                What a parent does should make sense on the centre side too.
-              </h2>
-              <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                CentreConnect should not feel like separate tools. It should feel like one calm system where search,
-                applications, updates, attendance, and pickup all connect properly.
-              </p>
-            </div>
-
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {connectedFlow.map((item) => {
-                const Icon = item.icon
-                return (
-                  <article
-                    key={item.title}
-                    className="rounded-[1.45rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)]"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F2FBF8] text-[var(--teal)]">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B827E]">{item.eyebrow}</p>
-                    <h3 className="mt-2 text-[1.2rem] font-bold leading-tight text-[#21302D]">{item.title}</h3>
-                    <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
-                    <p className="mt-3 text-sm font-medium text-[#40514C]">{item.detail}</p>
-                  </article>
-                )
-              })}
-            </div>
-          </div>
-        </section>
-        <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFF8F1_0%,#FFFDF9_54%,#F5FAF8_100%)] shadow-[0_32px_80px_rgba(27,40,36,0.08)]">
-            <div className="grid lg:grid-cols-2 lg:items-stretch">
-              <div className="relative min-h-[320px] bg-[linear-gradient(160deg,#E8F6F2_0%,#FFF5EA_52%,#F8F1FF_100%)] lg:min-h-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.18),transparent_48%),radial-gradient(circle_at_bottom_right,rgba(139,111,179,0.16),transparent_36%)]" />
-                <div className="relative flex h-full flex-col items-center justify-center p-8 text-center sm:p-12">
-                  <div className="relative mb-6 h-24 w-24 overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-xl">
-                    <Image
-                      src={bajabulileHeroImage}
-                      alt={bajabulileCentre?.name ?? 'Bajabulile ECD'}
-                      fill
-                      className="object-cover"
-                      unoptimized={bajabulileHeroImage.startsWith('data:image/svg+xml')}
-                    />
-                  </div>
-                  <h3
-                    className="text-[2rem] leading-tight text-[#1F2D29] sm:text-[2.6rem]"
-                    style={{ fontFamily: 'var(--font-display)' }}
-                  >
-                    {bajabulileCentre?.name ?? 'Bajabulile ECD'}
-                  </h3>
-                  <p className="mt-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#7B827E]">Alexandra Pilot Partner</p>
-                  
-                  <div className="mt-8 grid w-full grid-cols-2 gap-3 sm:max-w-md">
-                    <div className="rounded-2xl border border-[#D1E2E0] bg-white/50 p-4 backdrop-blur-sm">
-                      <p className="text-2xl font-bold text-[var(--teal)]">35+</p>
-                      <p className="mt-1 text-xs font-medium text-[#5F6C68]">Children enrolled</p>
-                    </div>
-                    <div className="rounded-2xl border border-[#D1E2E0] bg-white/50 p-4 backdrop-blur-sm">
-                      <p className="text-2xl font-bold text-[var(--teal)]">100%</p>
-                      <p className="mt-1 text-xs font-medium text-[#5F6C68]">Digital records</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-16">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Pilot Success Story</p>
-                <h2
-                  className="mt-4 text-[2.2rem] leading-[1.04] tracking-[-0.035em] text-[#1F2D29] sm:text-[2.8rem]"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  &quot;Now I spend my time with children, not with paper.&quot;
-                </h2>
-                <blockquote className="mt-6 border-l-2 border-[#D4935A] pl-6 text-[17px] italic leading-8 text-[#5F6C68] sm:text-[19px]">
-                  Before CentreConnect, Mama Bajabulile managed attendance and parent updates on paper. Today, Bajabulile Day Care is the first fully digital pilot centre in Alexandra — proving that technology can work for every local crèche.
-                </blockquote>
-                
-                <div className="mt-10 flex flex-wrap gap-4">
-                  <Button
-                    size="lg"
-                    className="h-14 rounded-2xl bg-[var(--teal)] px-8 font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A]"
-                    asChild
-                  >
-                    <Link href={bajabulileCentre ? centreHref(bajabulileCentre) : '/directory'}>View Bajabulile Profile</Link>
-                  </Button>
-                </div>
-                {spotlightCentres.length > 0 ? (
-                  <div className="mt-8 space-y-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7B827E]">Also live on CentreConnect</p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {spotlightCentres.map((centre) => {
-                        const centreImage = getLandingCentreImage(centre)
-                        return (
-                          <Link
-                            key={centre.id}
-                            href={centreHref(centre)}
-                            className="group flex items-center gap-3 rounded-[1.45rem] border border-[#E5D8CB] bg-white/88 p-3 shadow-[0_12px_28px_rgba(31,44,39,0.05)] transition-transform hover:-translate-y-0.5"
-                          >
-                            <div className="relative h-16 w-16 overflow-hidden rounded-[1.25rem] border border-white bg-white shadow-sm">
-                              <Image
-                                src={centreImage}
-                                alt={centre.name}
-                                fill
-                                className="object-cover"
-                                unoptimized={centreImage.startsWith('data:image/svg+xml')}
-                              />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="line-clamp-2 text-sm font-semibold leading-5 text-[#22312E]">{centre.name}</p>
-                              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-[#6A7672]">
-                                {centre.suburb ?? 'Johannesburg'}
-                              </p>
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-[#0D9488] transition-transform group-hover:translate-x-0.5" />
-                          </Link>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-          <div className="mx-auto max-w-6xl">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">How it works</p>
-              <h2
-                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.9rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                One calm flow from search to application.
-              </h2>
-            </div>
-
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {steps.map((step) => (
-                <article
-                  key={step.title}
-                  className="rounded-[1.5rem] border border-[#E8DDD0] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFF9F4_100%)] p-5 shadow-[0_12px_28px_rgba(31,44,39,0.06)] sm:rounded-[1.7rem] sm:p-6"
-                >
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-2xl"
-                    style={{ backgroundColor: 'var(--amber-light)', color: 'var(--amber)' }}
-                  >
-                    <span className="text-2xl leading-none" style={{ fontFamily: 'var(--font-display)' }}>
-                      {step.number}
-                    </span>
-                  </div>
-                  <h3 className="mt-5 text-[1.35rem] leading-tight text-[#21302D] sm:text-[1.45rem]" style={{ fontFamily: 'var(--font-display)' }}>
-                    {step.title}
-                  </h3>
-                  <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{step.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E9DED1] bg-[linear-gradient(135deg,#FFFDF9_0%,#FFF4EA_38%,#F4FBF8_100%)] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.07)] sm:rounded-[2.4rem] sm:p-10">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--amber)]">Parent answers</p>
-              <h2
-                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
-                style={{ fontFamily: 'var(--font-display)' }}
-              >
-                Everything you want to know before you apply.
-              </h2>
-              <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                Real details upfront so parents can make a calm, confident choice.
-              </p>
-            </div>
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {parentPromises.map((item) => (
-                <article
-                  key={item.title}
-                  className="rounded-[1.4rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_10px_26px_rgba(31,44,39,0.04)]"
-                >
-                  <h3 className="text-lg font-semibold text-[#21302D]">{item.title}</h3>
-                  <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <div className="mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_100%)] shadow-[0_24px_64px_rgba(31,44,39,0.07)]">
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-              <div className="p-6 sm:p-10 lg:p-12">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">Apply prep</p>
-                <h2
-                  className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.6rem]"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  What you need to apply.
-                </h2>
-                <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  Keep these on your phone once, then reuse them for every application.
-                </p>
-                <div className="mt-6 space-y-3">
-                  {applyChecklist.map((item) => (
-                    <div
-                      key={item}
-                      className="flex items-center gap-3 rounded-2xl border border-[#E8DDD0] bg-[var(--warm-white)] px-4 py-3 text-sm font-medium text-[#37433F]"
-                    >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--teal)] text-xs font-bold text-white">
-                        ✓
-                      </span>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-[#F5EFE7] p-6 sm:p-10 lg:p-12">
-                <div className="rounded-[1.8rem] border border-[#E2D6C9] bg-white p-6 shadow-[0_16px_40px_rgba(31,44,39,0.08)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#7B827E]">Parent FAQs</p>
-                  <div className="mt-4 space-y-4">
-                    {faqItems.map((item) => (
-                      <div key={item.title}>
-                        <p className="text-sm font-semibold text-[#1F2D29]">{item.title}</p>
-                        <p className="mt-2 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {showProofBand ? (
           <section className="px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
@@ -831,10 +528,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-white sm:text-[3rem] sm:leading-[1]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Start with your area. Save your profile when you’re ready.
+                Start with the directory. Create an account when you need it.
               </h2>
               <p className="mt-4 max-w-2xl text-[15px] leading-7 text-teal-50 sm:text-[17px] sm:leading-8">
-                Browse what is near you first, then keep one parent profile ready for every application that follows.
+                Look first. Decide faster. Save your details once when you are ready to apply.
               </p>
             </div>
 
@@ -845,7 +542,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 asChild
               >
                 <Link href="/directory">
-                  <span>Search Crèches Near Me</span>
+                  <span>Directory</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -855,7 +552,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 className="h-14 w-full rounded-[1.05rem] border border-white/30 px-7 text-base font-semibold text-white hover:bg-white/10 hover:text-white sm:w-auto"
                 asChild
               >
-                <Link href="/register">Create My Parent Profile</Link>
+                <Link href="/register">Create account</Link>
               </Button>
             </div>
           </div>

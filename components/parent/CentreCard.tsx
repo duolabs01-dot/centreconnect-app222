@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowRight, Baby, BellRing, Eye, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, BellRing, FileText, MapPin, MessageCircle, Phone, ShieldCheck, Wallet } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -51,6 +51,9 @@ interface CentreCardProps {
   operating_schedule?: CentreOperatingSchedule | null
   operating_hours_summary?: string | null
   communication_automation_settings?: unknown
+  contact_whatsapp?: string | null
+  contact_phone?: string | null
+  phone?: string | null
   viewerRole?: string | null
   isSaved?: boolean
   onApply?: () => void
@@ -89,6 +92,25 @@ function formatExistingStatus(status?: string | null) {
     .filter(Boolean)
     .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
     .join(' ')
+}
+
+function normalizePhoneNumber(phone?: string | null) {
+  const digits = (phone ?? '').replace(/[^\d]/g, '')
+  return digits.length > 0 ? digits : null
+}
+
+function buildWhatsappHref(phone?: string | null, centreName?: string) {
+  const digits = normalizePhoneNumber(phone)
+  if (!digits) return null
+  const message = centreName
+    ? `Hi ${centreName}, I would like to ask about space for my child.`
+    : 'Hi, I would like to ask about space for my child.'
+  return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+}
+
+function buildCallHref(phone?: string | null) {
+  const digits = normalizePhoneNumber(phone)
+  return digits ? `tel:${digits}` : null
 }
 
 function CompactMetaItem({
@@ -130,6 +152,9 @@ export function CentreCard({
   is_registered = false,
   isPilot = false,
   isFeatured = false,
+  contact_whatsapp,
+  contact_phone,
+  phone,
   viewerRole = null,
   isSaved = false,
   name,
@@ -153,7 +178,13 @@ export function CentreCard({
   const previewImageSrc = buildCentrePreviewImage({ name, suburb, isClaimed: is_claimed })
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
-  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
+  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply to ECD'
+  const whatsappHref = buildWhatsappHref(contact_whatsapp ?? contact_phone ?? phone, name)
+  const callHref = buildCallHref(contact_phone ?? phone ?? contact_whatsapp)
+  const publicPrimaryHref = whatsappHref ?? callHref ?? detailHref
+  const publicPrimaryLabel = whatsappHref ? 'WhatsApp centre' : callHref ? 'Call centre' : 'View details'
+  const publicSecondaryHref = whatsappHref && callHref ? callHref : detailHref
+  const publicSecondaryLabel = whatsappHref && callHref ? 'Call centre' : 'View details'
 
   const handleApply = () => {
     if (existingApplicationId) {
@@ -336,18 +367,20 @@ export function CentreCard({
                 <span>{primaryLabel}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[11px] font-medium leading-5 text-[#5F6C68]">
-                  Daily activities, calmer pickup, and less paper once you apply.
-                </p>
-                <Link
-                  href={detailHref}
-                  className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  View
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="h-11 rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] transition-all hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+              >
+                <Link href={detailHref}>
+                  <MessageCircle className="h-4 w-4" />
+                  Message Centre
                 </Link>
-              </div>
+              </Button>
+              <p className="text-[11px] font-medium leading-5 text-[#5F6C68]">
+                Apply online first, then message the centre in CentreConnect if you need help.
+              </p>
             </>
           ) : null}
 
@@ -358,14 +391,25 @@ export function CentreCard({
                 type="button"
                 className="h-12 rounded-2xl bg-[#1F4B42] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,75,66,0.18)] transition-all hover:bg-[#193D36] active:scale-95"
               >
-                <Link href={detailHref}>
-                  View details
+                <Link href={publicPrimaryHref} target={publicPrimaryHref === detailHref ? undefined : '_blank'} rel={publicPrimaryHref === detailHref ? undefined : 'noopener noreferrer'}>
+                  {publicPrimaryLabel}
                   <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                type="button"
+                variant="outline"
+                className="h-11 rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
+              >
+                <Link href={publicSecondaryHref} target={publicSecondaryHref === detailHref ? undefined : '_blank'} rel={publicSecondaryHref === detailHref ? undefined : 'noopener noreferrer'}>
+                  {publicSecondaryLabel === 'Call centre' ? <Phone className="h-4 w-4" /> : null}
+                  {publicSecondaryLabel}
                 </Link>
               </Button>
               <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
                 <p className="text-sm font-semibold text-[#22312E]">This creche is not on CentreConnect yet.</p>
-                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Open the profile to see fees, distance, and the centre details while digital applications are still offline.</p>
+                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Details are still public-only for now, so contact the centre directly by WhatsApp or phone while CentreConnect applications stay offline.</p>
               </div>
 
               {showClaimLink ? (
