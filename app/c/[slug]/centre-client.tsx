@@ -422,13 +422,7 @@ export function CentreClient({
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
 
-  const centreConnectAdvantage = isClaimed
-    ? [
-        { icon: BellRing, title: 'Updates stay in one place', description: 'Meals, reminders, and day-to-day updates stop getting lost.' },
-        { icon: ShieldCheck, title: 'Pickup feels safer', description: 'Collection details stay clear when someone else fetches your child.' },
-        { icon: FileText, title: 'Less paperwork', description: 'Applications and documents stay together instead of being repeated.' },
-      ]
-    : []
+  const centreConnectAdvantage = [] as Array<{ icon: typeof BellRing; title: string; description: string }>
 
   const classEmphasis = [
     'A gentle start with care, rhythm, and close attention.',
@@ -437,9 +431,8 @@ export function CentreClient({
   ]
 
   const claimedFoldPromises = [
-    'Apply with one organised parent profile',
-    'Follow daily activities and updates in one place',
-    'Feel calmer about pickup, reminders, and next steps',
+    'Apply online when you are ready',
+    'Message the centre in the app',
   ]
 
   return (
@@ -493,8 +486,8 @@ export function CentreClient({
 
             <p className="mt-5 text-sm leading-7 text-[#5F6C68] sm:text-base">
               {isClaimed
-                ? 'See the basics first, then apply or send one quick message if you still need an answer.'
-                : 'See the basics first, then call or WhatsApp the centre if you want to move forward today.'}
+                ? 'Fees, ages, and hours first. Apply or message when you are ready.'
+                : 'Fees, ages, and contact details first. Call or WhatsApp if you want to move today.'}
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -504,7 +497,7 @@ export function CentreClient({
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              {(isClaimed ? claimedFoldPromises : ['Compare the basics fast', 'Contact the centre directly', 'Apply later when live']).map((item) => (
+              {(isClaimed ? claimedFoldPromises : ['Compare fast', 'Contact directly']).map((item) => (
                 <span key={item} className="rounded-full border border-[#E7DDD1] bg-white px-3 py-2 text-[11px] font-semibold text-[#315A51] shadow-none">
                   {item}
                 </span>
@@ -585,7 +578,7 @@ export function CentreClient({
             <div className="border-t border-[#E7DDD1] p-4 sm:p-5">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Centre photo</p>
               <p className="mt-2 text-sm leading-6 text-[#5F6C68]">
-                A clear photo helps you recognise the centre before you visit or contact them.
+                See the centre before you visit or contact them.
               </p>
             </div>
           </div>
@@ -659,12 +652,12 @@ export function CentreClient({
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Aftercare</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Helpful for working parents who need a little breathing room after the main day ends.' : 'Parents can plan confidently for normal collection without expecting a late-afternoon aftercare handoff.'}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Helpful if you collect later in the day.' : 'Plan for normal collection times.'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Named classes help parents picture where their child belongs instead of trying to decode a generic age list.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Ask the centre which class fits your child best.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -681,7 +674,7 @@ export function CentreClient({
                   </div>
                 )) : (
                   <div className="rounded-[1.5rem] border border-dashed border-[#D7CEC2] bg-[#FFFCF7] p-5 text-sm leading-6 text-[#5F6C68] sm:col-span-3">
-                    Classes are not listed yet. Use the quick question button if you want the centre to guide you quickly.
+                    Classes are not listed yet. Send a quick question if you need help with placement.
                   </div>
                 )}
               </div>
@@ -709,12 +702,12 @@ export function CentreClient({
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {isClaimed ? 'A calmer choice for busy parents' : 'Keep this creche close while you decide'}
+                  {isClaimed ? 'Ready to act?' : 'Keep this creche close'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Apply online, send one quick message, and keep updates together.'
-                    : 'This centre is still joining CentreConnect. Check the details now, then use WhatsApp or phone if you want to act today.'}
+                    ? 'Apply online or send one quick message.'
+                    : 'Check the details, then use WhatsApp or phone if you want to act today.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -737,7 +730,7 @@ export function CentreClient({
                   <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
                 </div>
 
-                {isClaimed ? (
+                {centreConnectAdvantage.length > 0 ? (
                   <div className="mt-5 rounded-[1.6rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
                     <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why this feels easier</p>
                     <div className="mt-4 space-y-3">
@@ -869,6 +862,9 @@ export function CentreClient({
     </main>
   )
 }
+
+
+
 
 
 

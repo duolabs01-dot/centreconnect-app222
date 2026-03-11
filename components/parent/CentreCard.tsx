@@ -168,8 +168,6 @@ export function CentreCard({
     : slug
       ? `/c/${encodeURIComponent(slug)}`
       : '/directory'
-  const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug ?? id)}`
-  const showClaimLink = !is_claimed && viewerRole !== 'parent_user'
 
   const feeSummary = formatFeeSummary({ feesLabel, fees_display_mode, monthly_fee_min, monthly_fee_max })
   const ageSummary = formatAgeSummary(age_groups)
@@ -223,7 +221,6 @@ export function CentreCard({
   const showRecommendedChip = !isVerifiedForParents && isFeatured
   const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
   const showSubsidyChip = subsidy_accepted
-  const showPreviewChip = !is_claimed || usesPreviewImage
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${name}, do you still have space for my child?` },
     { label: 'Ask about fees', message: `Hi ${name}, please share your fees and what is included.` },
@@ -382,23 +379,9 @@ export function CentreCard({
                   {publicSecondaryLabel}
                 </Link>
               </Button>
-              <div className="rounded-[1.1rem] border border-[#E7DDD1] bg-[#FAF8F4] px-4 py-3 text-center">
-                <p className="text-sm font-semibold text-[#22312E]">This creche is not on CentreConnect yet.</p>
-                <p className="mt-1 text-xs leading-5 text-[#6A7672]">Details are still public-only for now, so contact the centre directly by WhatsApp or phone while CentreConnect applications stay offline.</p>
-              </div>
-
-              {showClaimLink ? (
-                <p className="text-center text-xs font-medium leading-5 text-[#6A7672]">
-                  Own this creche?{' '}
-                  <Link href={claimHref} className="font-semibold text-[#0D9488] hover:underline">
-                    Claim it here →
-                  </Link>
-                </p>
-              ) : (
-                <p className="text-center text-xs font-medium leading-5 text-[#7B827E]">
-                  Listed on CentreConnect so parents can compare local options before the centre finishes onboarding.
-                </p>
-              )}
+              <p className="text-center text-[11px] font-medium leading-5 text-[#7B827E]">
+                Public listing only. Contact the centre directly for space and next steps.
+              </p>
             </>
           ) : null}
         </CardFooter>
@@ -408,5 +391,6 @@ export function CentreCard({
 }
 
 export default CentreCard
+
 
 
