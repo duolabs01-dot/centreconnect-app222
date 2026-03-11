@@ -654,6 +654,27 @@ export async function bulkCreateExistingChildrenAction(
   }
 
   const createdIds = (inserted ?? []).map((row) => String(row.id))
+
+  // Auto-sync birthdays for created children
+  if (createdIds.length > 0) {
+    for (const childId of createdIds) {
+      const child = payload.find((c: any) => String(c.id) === childId)
+      if (child?.date_of_birth) {
+        try {
+          await session.supabase.rpc('ensure_child_birthday_events', {
+            p_ecd_id: session.ecdId,
+            p_child_id: childId,
+            p_first_name: child.first_name || '',
+            p_last_name: child.last_name || '',
+            p_date_of_birth: child.date_of_birth,
+          })
+        } catch (e) {
+          console.error('[children] Birthday sync failed for child:', childId, e)
+        }
+      }
+    }
+  }
+
   return {
     success: true,
     message: `Created ${createdIds.length} child profile${createdIds.length === 1 ? '' : 's'} from the bulk list.`,

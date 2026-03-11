@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   Home,
   Search,
   ClipboardList,
@@ -16,6 +17,7 @@ export const PARENT_NAV_ITEMS: NavItem[] = [
   { href: '/parent/dashboard', label: 'Home', icon: Home },
   { href: '/directory', label: 'Discover', icon: Search },
   { href: '/parent/applications', label: 'Apply', icon: ClipboardList },
+  { href: '/parent/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/parent/profile', label: 'Profile', icon: User },
 ]
 

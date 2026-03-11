@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -30,6 +31,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/pickup', label: 'Pickup Verification', icon: ShieldCheck, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/daily-reports', label: 'Daily Reports', icon: Zap, group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/calendar', label: 'Calendar', icon: CalendarDays, group: 'daily_ops', supervisorAllowed: true },
 
   // ADMIN
   { href: '/ecd/children', label: 'Children', icon: Users, group: 'admin', supervisorAllowed: true },
