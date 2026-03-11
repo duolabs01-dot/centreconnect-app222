@@ -79,7 +79,21 @@ export default async function EcdAddChildWizardPage() {
       userRole={role}
     >
       <section className="mx-auto w-full max-w-7xl space-y-6 px-1 py-2 sm:py-3">
-        <QuickStartChildren centreName={centreName} classes={classes} pendingParentChildren={pendingParentChildren} />
+        <div id="quick-add" className="space-y-4 rounded-[2rem] border-2 border-teal-200 bg-teal-50 p-4 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-teal-700">Quick Add</p>
+              <h2 className="text-2xl font-black tracking-tight text-slate-900">Add children in seconds</h2>
+              <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                Add up to 5 children at once. Just name, surname, class, and parent phone.
+              </p>
+            </div>
+            <Button variant="outline" asChild className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+              <Link href="#full-child-profile">Need more detail?</Link>
+            </Button>
+          </div>
+          <QuickStartChildren centreName={centreName} classes={classes} pendingParentChildren={pendingParentChildren} />
+        </div>
 
         <div id="full-child-profile" className="space-y-4 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
