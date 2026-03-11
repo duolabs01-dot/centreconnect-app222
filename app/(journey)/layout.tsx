@@ -13,8 +13,21 @@ export default async function JourneyLayout({ children }: { children: React.Reac
     return <>{children}</>
   }
 
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let supabase: Awaited<ReturnType<typeof createClient>> | null = null
+  let user: { id: string; email?: string | null } | null = null
+
+  try {
+    supabase = await createClient()
+    const userResult = await supabase.auth.getUser()
+    user = (userResult.data?.user as { id: string; email?: string | null } | null) ?? null
+  } catch (error) {
+    console.error('[journey/layout] Falling back to public shell:', error)
+    return (
+      <PublicShell>
+        {children}
+      </PublicShell>
+    )
+  }
 
   if (!user) {
     return (
