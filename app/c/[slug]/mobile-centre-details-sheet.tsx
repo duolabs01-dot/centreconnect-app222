@@ -171,7 +171,7 @@ export function MobileCentreDetailsSheet({
                   <p className="text-sm font-medium text-[#5F6C68]">{locationLabel}</p>
                   {tagline ? <p className="mt-1 text-sm leading-6 text-[#6A7672]">{tagline}</p> : null}
                   {isClaimed ? (
-                    <p className="mt-2 text-sm leading-6 text-[#5F6C68]">This CentreConnect creche gives parents a more organised start: easier applications, calmer updates, and less repeated paperwork.</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5F6C68]">This CentreConnect creche gives parents a more modern, more organised start: easier applications, daily visibility, calmer updates, and less repeated paperwork.</p>
                   ) : null}
                 </div>
               </div>
@@ -199,9 +199,9 @@ export function MobileCentreDetailsSheet({
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#4B6B64]">Why this feels easier for parents</p>
                   <div className="mt-3 space-y-2.5">
                     {[
-                      { icon: BellRing, title: 'Daily updates', body: 'Stay closer to meals, activities, and reminders without chasing paper notes.' },
+                      { icon: BellRing, title: 'Daily activities stay visible', body: 'Stay closer to meals, activities, and reminders without chasing paper notes or waiting for WhatsApp replies.' },
                       { icon: ShieldCheck, title: 'Safer pickup flow', body: 'Collection and follow-up feel clearer when the creche and parent use one organised system.' },
-                      { icon: FileText, title: 'Less repeated paperwork', body: 'Your parent profile, documents, and next steps stay easier to manage in one place.' },
+                      { icon: FileText, title: 'One parent profile that works harder', body: 'Your documents, applications, and next steps stay easier to manage in one place that respects your time.' },
                     ].map((item) => {
                       const Icon = item.icon
                       return (
@@ -255,7 +255,7 @@ export function MobileCentreDetailsSheet({
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#4B6B64]">Best next move</p>
                   <p className="mt-2 text-sm leading-6 text-[#315A51]">
                     {isClaimed
-                      ? 'Apply when you are ready and keep the whole journey cleaner: one parent profile, one application flow, and one place for updates.'
+                      ? 'Apply when you are ready and move into a calmer parent journey: one profile, one application flow, and one place for daily visibility and next steps.'
                       : 'Save this creche now and come back when digital applications open.'}
                   </p>
                 </div>
@@ -265,12 +265,12 @@ export function MobileCentreDetailsSheet({
                   userRole={userRole}
                   existingApplicationId={existingApplicationId ?? null}
                   existingApplicationStatus={existingApplicationStatus ?? null}
-                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, updates, and next steps together.' : null}
+                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, daily updates, replies, and next steps together.' : null}
                   isAvailable={isClaimed}
                   unavailableLabel="Online applications not available yet"
                   helperText={
                     isClaimed
-                      ? 'Apply online now and move forward with one organised parent profile, or ask one quick in-app question first.'
+                      ? 'Apply now and move forward with one organised parent profile, visible daily activities, and a calmer follow-up journey.'
                       : 'Save this creche now and come back when applications open.'
                   }
                 />

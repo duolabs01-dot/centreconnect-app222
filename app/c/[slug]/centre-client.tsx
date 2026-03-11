@@ -417,6 +417,17 @@ export function CentreClient({
       ]
     : []
 
+  const classEmphasis = [
+    'A gentle start for little ones who need warmth, rhythm, and close attention.',
+    'A playful group where growing independence, language, and confidence start to bloom.',
+    'A stronger school-readiness stage with more routine, curiosity, and big-child energy.',
+  ]
+
+  const claimedFoldPromises = [
+    'Apply with one organised parent profile',
+    'Follow daily activities and updates in one place',
+    'Feel calmer about pickup, reminders, and next steps',
+  ]
 
   return (
     <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
@@ -484,9 +495,19 @@ export function CentreClient({
 
               <p className="mt-4 text-sm leading-7 text-[#5F6C68] sm:text-base">
                 {isClaimed
-                  ? 'This centre is on CentreConnect, so family admin feels lighter: fewer surprises, less paper, and one calmer place to manage updates for your child.'
+                  ? 'This is not just a creche profile. It is a better parent experience from the start: quicker applications, clearer daily communication, and fewer loose ends once your child joins.'
                   : 'Parents want three things quickly here: what the fees look like, which ages are welcome, and whether this centre feels trusted. This page keeps those answers simple.'}
               </p>
+
+              {isClaimed ? (
+                <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                  {claimedFoldPromises.map((item) => (
+                    <div key={item} className="rounded-[1.25rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)] px-3 py-3">
+                      <p className="text-[11px] font-semibold leading-5 text-[#1F4B42]">{item}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {quickFacts.map((fact) => (
@@ -509,8 +530,8 @@ export function CentreClient({
               ) : null}
             </div>
 
-            <div className="mt-6 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-4">
-              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'Why CentreConnect parents feel more in control here' : 'What parents need first'}</p>
+            <div className={`mt-6 rounded-[1.5rem] border p-4 ${isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F7FCFA_100%)]' : 'border-[#E7DDD1] bg-white'}`}>
+              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'Why this choice feels lighter for parents' : 'What parents need first'}</p>
               <div className="mt-3 space-y-3">
                 {parentHighlights.map((item) => (
                   <div key={item} className="flex items-start gap-3">
@@ -539,7 +560,7 @@ export function CentreClient({
                 <SectionHeading
                   eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
-                  description={isClaimed ? "Parents usually want to know two things quickly here: what the children's day feels like, and whether the centre communicates in a modern, organised way. This answers both." : 'These are the parts of the day most parents usually want to understand before applying.'}
+                  description={isClaimed ? "Parents should quickly feel both care and confidence here: what the day feels like for their child, and how this creche uses CentreConnect to make parenting feel easier after enrolment." : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => {
@@ -587,27 +608,31 @@ export function CentreClient({
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
-                description={isClaimed ? 'You should be able to picture where your child fits here in seconds: the age range, the class names, and whether aftercare is part of the rhythm.' : 'A simple look at the class setup before you contact the centre.'}
+                description={isClaimed ? 'Parents should be able to picture their child here in seconds: the age fit, the class names, and the kind of daily care rhythm this creche offers.' : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Aftercare</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Useful for working parents who need a little extra time after the main school day.' : 'Parents should plan for collection at the normal closing time.'}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Helpful for working parents who need a little breathing room after the main day ends.' : 'Parents can plan confidently for normal collection without expecting a late-afternoon aftercare handoff.'}</p>
                 </div>
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
                   <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Class names make it easier to picture your child&apos;s day and ask the right question before you apply.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Named classes help parents picture where their child belongs instead of trying to decode a generic age list.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {visibleClassrooms.length > 0 ? visibleClassrooms.map((room, index) => (
-                  <div key={`${room.id ?? index}-${room.name}`} className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
-                    <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
-                    <h3 className="mt-2 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
+                  <div key={`${room.id ?? index}-${room.name}`} className={`rounded-[1.5rem] border p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)] ${isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FCFB_100%)]' : 'border-[#E7DDD1] bg-white'}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
+                      {isClaimed ? <span className="rounded-full border border-[#DCEEE8] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#1F4B42]">Parents can picture this group quickly</span> : null}
+                    </div>
+                    <h3 className="mt-3 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
                     <p className="mt-2 text-sm font-semibold text-[#0D9488]">{room.age_group?.trim() || 'All ages'}</p>
-                    {room.practitioner_name?.trim() ? <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Led by {room.practitioner_name.trim()}</p> : null}
+                    <p className="mt-3 text-sm leading-6 text-[#5F6C68]">{classEmphasis[index] ?? 'A caring, age-matched space designed to help children feel secure, curious, and ready for the rhythm of the day.'}</p>
+                    {room.practitioner_name?.trim() ? <p className="mt-3 text-sm leading-6 text-[#5F6C68]">Led by {room.practitioner_name.trim()}</p> : null}
                   </div>
                 )) : (
                   <div className="rounded-[1.5rem] border border-dashed border-[#D7CEC2] bg-[#FFFCF7] p-5 text-sm leading-6 text-[#5F6C68] sm:col-span-3">
@@ -639,17 +664,17 @@ export function CentreClient({
               <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
                 <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-                  {isClaimed ? 'Feel ready, then apply with confidence' : 'Keep this creche close while you decide'}
+                  {isClaimed ? 'A forward-thinking creche choice for modern parents' : 'Keep this creche close while you decide'}
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Parents who choose a CentreConnect creche get a smoother start: one organised application flow, one parent profile, and a calmer way to follow what matters after enrolment.'
+                    ? 'Parents who choose a CentreConnect creche get more than a place for their child. They get a calmer system around the child too: simpler applications, clearer daily visibility, and fewer loose ends after enrolment.'
                     : 'This creche is still joining CentreConnect. Save it now, compare the details, and come back when digital applications open.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(isClaimed
-                    ? ['Apply in minutes', 'Daily updates', 'Less repeated paperwork']
+                    ? ['Apply in minutes', 'Daily activities visible', 'Less repeated paperwork']
                     : ['Save it for later', 'Compare the details', 'Come back when applications open']
                   ).map((item) => (
                     <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
@@ -734,11 +759,11 @@ export function CentreClient({
                     userRole={userRole}
                     existingApplicationId={existingApplication?.id ?? null}
                     existingApplicationStatus={existingApplication?.status ?? null}
-                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, replies, updates, and next steps together so you always know what is happening.' : null}
+                    existingHelperText={isClaimed ? 'CentreConnect keeps your application, daily updates, replies, and next steps together so you always feel closer to what is happening.' : null}
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Apply online now and move forward with one organised parent profile, or ask one quick in-app question first.' : 'Save this creche now and come back when applications open.'
+                      isClaimed ? 'Apply now and move into a calmer parent journey with one organised profile, visible daily activities, and clearer follow-up from the creche.' : 'Save this creche now and come back when applications open.'
                     }
                   />
                   {isClaimed ? (
