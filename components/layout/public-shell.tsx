@@ -7,6 +7,7 @@ import { Container } from '@/components/layout/container'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { usePathname, useRouter } from 'next/navigation'
+import { getBreadcrumbClassName, shouldShowBreadcrumbs } from '@/lib/navigation/breadcrumb-visibility'
 
 type PublicShellProps = {
   children: React.ReactNode
@@ -16,6 +17,7 @@ export function PublicShell({ children }: PublicShellProps) {
   const router = useRouter()
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const showBreadcrumbs = shouldShowBreadcrumbs(pathname, 'public')
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[#FAF8F4] text-foreground">
@@ -47,9 +49,13 @@ export function PublicShell({ children }: PublicShellProps) {
       <div className="h-[84px] sm:h-[88px]" aria-hidden />
 
       <div className="animate-in fade-in duration-500">
-        {!isHome ? (
+        {!isHome && showBreadcrumbs ? (
           <Container className="pt-4">
-            <AppBreadcrumbs rootHref="/" rootLabel="Home" />
+            <AppBreadcrumbs
+              rootHref="/"
+              rootLabel="Home"
+              className={getBreadcrumbClassName('public')}
+            />
           </Container>
         ) : null}
         {children}

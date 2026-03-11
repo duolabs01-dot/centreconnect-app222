@@ -20,6 +20,9 @@ interface BottomNavProps {
 
 function isTabActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/'
+  if (href === '/parent/discover') {
+    return pathname === '/parent/discover' || pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
+  }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 

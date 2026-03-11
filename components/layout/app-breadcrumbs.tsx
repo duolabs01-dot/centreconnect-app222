@@ -128,11 +128,16 @@ export function AppBreadcrumbs({ rootHref, rootLabel, className, tone = 'light' 
     rootSegments.every((segment, index) => segments[index]?.toLowerCase() === segment.toLowerCase())
 
   const breadcrumbSegments = rootMatchesPath ? segments.slice(rootSegments.length) : segments
-  if (breadcrumbSegments.length === 0) return null
+  const rootNamespace = rootSegments[0]?.toLowerCase() ?? null
+  const dedupedSegments =
+    !rootMatchesPath && rootNamespace && breadcrumbSegments[0]?.toLowerCase() === rootNamespace
+      ? breadcrumbSegments.slice(1)
+      : breadcrumbSegments
+  if (dedupedSegments.length === 0) return null
 
   let runningPath = rootMatchesPath ? `/${rootSegments.join('/')}` : ''
   let previousSegment: string | null = rootMatchesPath ? rootSegments[rootSegments.length - 1] ?? null : null
-  const items = breadcrumbSegments.map((segment) => {
+  const items = dedupedSegments.map((segment) => {
     runningPath = `${runningPath}/${segment}`
     const label = toSegmentLabel(segment, previousSegment)
     const isLinkable = !NON_LINKABLE_SEGMENTS.has(segment.toLowerCase())

@@ -29,6 +29,17 @@ function getPrimaryGuardian(raw: unknown) {
   }
 }
 
+type ParentProfileRow = {
+  id: string
+  full_name: string | null
+  phone: string | null
+}
+
+type ParentMetaRow = {
+  id: string
+  alt_phone: string | null
+}
+
 export default async function EcdChildrenRosterPage() {
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
 
@@ -58,10 +69,25 @@ export default async function EcdChildrenRosterPage() {
   }))
 
   const classMap = new Map(classes.map((row) => [row.id, row]))
+  const parentIds = Array.from(new Set((childrenResult.data ?? []).map((child) => child.parent_id).filter((value): value is string => Boolean(value))))
+
+  const [profileRows, parentMetaRows] = await Promise.all([
+    parentIds.length > 0
+      ? supabase.from('user_profiles').select('id,full_name,phone').in('id', parentIds)
+      : Promise.resolve({ data: [] as ParentProfileRow[] }),
+    parentIds.length > 0
+      ? supabase.from('parents').select('id,alt_phone').in('id', parentIds)
+      : Promise.resolve({ data: [] as ParentMetaRow[] }),
+  ])
+
+  const parentProfileMap = new Map(((profileRows.data ?? []) as ParentProfileRow[]).map((row) => [row.id, row]))
+  const parentMetaMap = new Map(((parentMetaRows.data ?? []) as ParentMetaRow[]).map((row) => [row.id, row]))
 
   const children = (childrenResult.data ?? []).map((child: any) => {
     const guardian = getPrimaryGuardian(child.guardian_contacts)
     const classMeta = child.class_id ? classMap.get(String(child.class_id)) : null
+    const parentProfile = child.parent_id ? parentProfileMap.get(String(child.parent_id)) : null
+    const parentMeta = child.parent_id ? parentMetaMap.get(String(child.parent_id)) : null
 
     return {
       id: String(child.id),
@@ -74,10 +100,12 @@ export default async function EcdChildrenRosterPage() {
       enrollmentStartDate: typeof child.enrollment_start_date === 'string' ? child.enrollment_start_date : null,
       enrollmentStatus: typeof child.enrollment_status === 'string' ? child.enrollment_status : null,
       parentId: child.parent_id ? String(child.parent_id) : null,
-      parentName: guardian.parent_name,
-      parentPhone: guardian.parent_phone,
+      parentName: parentProfile?.full_name?.trim() || guardian.parent_name,
+      parentPhone: parentProfile?.phone?.trim() || parentMeta?.alt_phone?.trim() || guardian.parent_phone,
       parentEmail: guardian.parent_email,
       createdAt: typeof child.created_at === 'string' ? child.created_at : null,
+      parentSource: parentProfile ? ('synced' as const) : guardian.parent_name || guardian.parent_phone || guardian.parent_email ? ('snapshot' as const) : ('missing' as const),
+      detailHref: `/ecd/children/${String(child.id)}`,
     }
   })
 
@@ -95,4 +123,3 @@ export default async function EcdChildrenRosterPage() {
     </EcdOsShell>
   )
 }
-

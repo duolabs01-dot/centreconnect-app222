@@ -2,6 +2,7 @@
 // Allowed imports: components/ecd/* + components/ui/*
 // Never import from components/cc-admin/*
 
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdPortalSidebar } from '@/components/layout/ecd-portal-sidebar'
@@ -9,6 +10,7 @@ import { EcdMainScrollMemory } from '@/components/layout/ecd-main-scroll-memory'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
+import { getBreadcrumbClassName, shouldShowBreadcrumbs } from '@/lib/navigation/breadcrumb-visibility'
 import '../ecd-theme.css'
 
 type EcdLayoutProps = {
@@ -16,6 +18,10 @@ type EcdLayoutProps = {
 }
 
 export default async function EcdLayout({ children }: EcdLayoutProps) {
+  const requestHeaders = await headers()
+  const pathname = requestHeaders.get('x-cc-pathname') ?? ''
+  const showBreadcrumbs = shouldShowBreadcrumbs(pathname, 'ecd')
+
   const { user, role, ecdId } = await requireEcdPortalSession()
   const admin = createAdminClient()
 
@@ -30,8 +36,8 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     owner_id?: string | null
     onboarding_complete?: boolean | null
   } | null
+
   if (!centre && centreWithOnboardingError) {
-    // Backward compatible fallback if onboarding_complete is not yet migrated in the target DB.
     const { data: centreFallback } = await admin.from('ecd_centres').select('id').eq('id', ecdId).maybeSingle()
     centre = centreFallback as {
       id: string
@@ -131,10 +137,14 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         <EcdMainScrollMemory />
         <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-24 sm:px-6 md:pb-10 md:pt-12 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
-          <AppBreadcrumbs rootHref="/ecd/dashboard" rootLabel="ECD" />
-          <div className="text-foreground">
-            {children}
-          </div>
+          {showBreadcrumbs ? (
+            <AppBreadcrumbs
+              rootHref="/ecd/dashboard"
+              rootLabel="ECD"
+              className={getBreadcrumbClassName('ecd')}
+            />
+          ) : null}
+          <div className="text-foreground">{children}</div>
         </div>
       </main>
     </div>

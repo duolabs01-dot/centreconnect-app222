@@ -16,6 +16,7 @@ import { robustSignOut } from '@/lib/auth/client-sign-out'
 import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
 import { ParentNotificationBell } from '@/components/notifications/parent-notification-bell'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
+import { getBreadcrumbClassName, shouldShowBreadcrumbs } from '@/lib/navigation/breadcrumb-visibility'
 
 type ParentAppShellProps = {
   children: React.ReactNode
@@ -23,7 +24,7 @@ type ParentAppShellProps = {
 
 const DESKTOP_PARENT_TABS: Array<{ href: string; label: string }> = [
   { href: '/parent/dashboard', label: 'Dashboard' },
-  { href: '/directory', label: 'Discover' },
+  { href: '/parent/discover', label: 'Discover' },
   { href: '/parent/applications', label: 'Applications' },
   { href: '/parent/daily-reports', label: 'Daily Reports' },
   { href: '/parent/report-cards', label: 'Report Cards' },
@@ -47,7 +48,7 @@ function getTitle(pathname: string) {
 function shouldShowMobileBack(pathname: string) {
   if (pathname === '/parent/profile') return false
   if (shouldHideParentBottomNav(pathname)) return true
-  const topLevelTabs = new Set(['/directory', '/parent/dashboard'])
+  const topLevelTabs = new Set(['/parent/discover', '/parent/dashboard', '/directory'])
   if (topLevelTabs.has(pathname)) return false
   return true
 }
@@ -63,8 +64,8 @@ function getMobileBackTarget(pathname: string) {
 }
 
 function isDesktopTabActive(pathname: string, href: string) {
-  if (href === '/directory') {
-    return pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
+  if (href === '/parent/discover') {
+    return pathname === '/parent/discover' || pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
@@ -79,7 +80,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   const [showUserDropdown, setShowUserDropdown] = useState(false)
 
   useEffect(() => {
-    router.prefetch('/directory')
+    router.prefetch('/parent/discover')
     router.prefetch('/parent/dashboard')
   }, [router])
 
@@ -127,6 +128,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   const showMobileBack = shouldShowMobileBack(pathname)
   const hideParentBottomNav = shouldHideParentBottomNav(pathname)
   const showMobileTitle = pathname !== '/parent/dashboard'
+  const showBreadcrumbs = shouldShowBreadcrumbs(pathname, 'parent')
 
   return (
     <div
@@ -265,7 +267,13 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         )}
       >
         <Container className="max-w-6xl px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
-          <AppBreadcrumbs rootHref="/parent/dashboard" rootLabel="Home" />
+          {showBreadcrumbs ? (
+            <AppBreadcrumbs
+              rootHref="/parent/dashboard"
+              rootLabel="Home"
+              className={getBreadcrumbClassName('parent')}
+            />
+          ) : null}
           {showMobileTitle ? (
             <div className="mb-6 md:hidden">
               <div className="flex items-center gap-2">

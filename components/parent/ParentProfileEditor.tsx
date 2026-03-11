@@ -207,7 +207,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
                 label: 'Pickup & Collection',
                 value: `${profile.enrolled_child_count} enrolled profile${profile.enrolled_child_count === 1 ? '' : 's'}`,
                 icon: Shield,
-                href: '/ecd/pickup',
+                href: '/parent/applications',
               },
             ]
           : []),
@@ -232,7 +232,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
             </div>
           )
         },
-        { label: 'Documents', icon: FileText, href: '/parent/profile/documents' },
+        { label: 'Documents', value: 'Upload and share', icon: FileText, href: '/parent/profile/documents' },
         { label: 'Search Preferences', icon: Sliders, href: '/parent/preferences' },
         { label: 'Security History', icon: Lock, href: '/parent/profile/security' },
       ]

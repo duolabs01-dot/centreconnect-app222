@@ -43,6 +43,8 @@ type ChildRosterItem = {
   parentPhone: string
   parentEmail: string
   createdAt: string | null
+  parentSource: 'synced' | 'snapshot' | 'missing'
+  detailHref: string
 }
 
 type ChildrenRosterClientProps = {
@@ -79,7 +81,7 @@ function getParentStatus(child: ChildRosterItem) {
       key: 'linked' as const,
       label: 'Parent linked',
       badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-      helper: 'This child is already connected to a parent account.',
+      helper: child.parentSource === 'synced' ? 'This child is already connected to a live parent profile.' : 'This child is already connected to a parent account.',
     }
   }
 
@@ -88,7 +90,7 @@ function getParentStatus(child: ChildRosterItem) {
       key: 'needs_parent' as const,
       label: 'Parent link ready',
       badgeClassName: 'border-teal-200 bg-teal-50 text-teal-800',
-      helper: 'Parent details are saved. Open WhatsApp when you are ready to send the join link.',
+      helper: 'Parent details are saved. Open the family record or send the join link when you are ready.',
     }
   }
 
@@ -412,6 +414,9 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                       <p>{child.parentPhone || 'WhatsApp number not added yet'}</p>
                       {child.parentEmail ? <p>{child.parentEmail}</p> : null}
                     </div>
+                    <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                      {child.parentSource === 'synced' ? 'Live parent profile' : child.parentSource === 'snapshot' ? 'Saved from child record' : 'No parent shared yet'}
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -430,6 +435,13 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                         Parent Linked
                       </Button>
                     )}
+
+                    <Button asChild type="button" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+                      <Link href={child.detailHref}>
+                        <UserRoundCheck className="mr-2 h-4 w-4" />
+                        Open family record
+                      </Link>
+                    </Button>
 
                     <Button
                       type="button"
