@@ -145,7 +145,8 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
   const showMobileBack = shouldShowMobileBack(pathname)
   const hideParentBottomNav = shouldHideParentBottomNav(pathname)
-  const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !pathname.startsWith('/parent/profile'))
+  const suppressDashboardNudges = pathname === '/parent/dashboard'
+  const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !suppressDashboardNudges && !pathname.startsWith('/parent/profile'))
 
   return (
     <div
@@ -333,7 +334,7 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
         </Container>
       </main>
 
-      {showProfilePrompt ? (
+      {showProfilePrompt && !suppressDashboardNudges ? (
         <section className="fixed inset-x-4 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[70] rounded-3xl border border-teal-200 bg-white/95 p-4 shadow-[var(--shadow-elevation-3)] md:inset-x-auto md:bottom-6 md:right-6 md:w-[360px]">
           <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-600">Quick boost</p>
           <p className="mt-1 text-sm font-bold text-slate-900">Complete your profile for faster responses.</p>

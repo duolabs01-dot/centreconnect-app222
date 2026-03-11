@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 type BridgeMode = 'ecd' | 'parent'
@@ -29,6 +30,7 @@ export function BrowserNotificationBridge({
   parentId,
   pollMs = 0,
 }: BrowserNotificationBridgeProps) {
+  const pathname = usePathname()
   const supabase = useMemo(() => createClient(), [])
   const initializedRef = useRef(false)
   const seenRef = useRef<Set<string>>(new Set())
@@ -166,7 +168,9 @@ export function BrowserNotificationBridge({
     setPermission(next)
   }
 
-  if (!hasNotificationSupport() || permission !== 'default' || dismissedPrompt || !canRun) {
+  const suppressPrompt = mode === 'parent' && pathname === '/parent/dashboard'
+
+  if (!hasNotificationSupport() || permission !== 'default' || dismissedPrompt || !canRun || suppressPrompt) {
     return null
   }
 

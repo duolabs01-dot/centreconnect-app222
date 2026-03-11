@@ -196,9 +196,6 @@ export default async function ParentDashboardPage() {
                 <SuggestedCentresSection />
               </Suspense>
 
-              <Suspense fallback={null}>
-                <ParentJobsSection />
-              </Suspense>
             </div>
           ) : screenState === 'pending' ? (
             <div className="cc-stack">
