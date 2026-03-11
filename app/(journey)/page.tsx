@@ -10,8 +10,8 @@ export const revalidate = 3600
 type UserRole = 'platform_admin' | 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | 'parent_user' | null
 
 export const metadata: Metadata = {
-  title: 'CentreConnect - Find ECD Crèches Near You',
-  description: 'Browse trusted ECD crèches, compare options, and track your applications in one place.',
+  title: 'CentreConnect - Find Creches Near You',
+  description: 'Browse trusted creches, compare options, and track your applications in one place.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -99,7 +99,7 @@ export default async function HomePage({
         })
         .map((centre: any) => ({
           id: String(centre.id),
-          name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'ECD Crèche',
+          name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'Creche',
           slug: typeof centre.slug === 'string' && centre.slug.trim().length > 0 ? centre.slug.trim() : null,
           suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
           primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),

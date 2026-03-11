@@ -11,7 +11,7 @@ type QueryParams = {
   suburb?: string
   age?: string
   fee?: string
-  subsidy?: string
+  registered?: string
   page?: string
 }
 
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     suburb: params.get('suburb') ?? undefined,
     age: params.get('age') ?? undefined,
     fee: params.get('fee') ?? undefined,
-    subsidy: params.get('subsidy') ?? undefined,
+    registered: params.get('registered') ?? undefined,
     page: params.get('page') ?? '1',
   }
 
@@ -108,9 +108,9 @@ export async function GET(req: Request) {
     }
   }
 
-  if (query.subsidy === 'true') {
-    centresQuery = centresQuery.eq('subsidy_accepted', true)
-    countQuery = countQuery.eq('subsidy_accepted', true)
+  if (query.registered === 'true') {
+    centresQuery = centresQuery.eq('is_registered', true)
+    countQuery = countQuery.eq('is_registered', true)
   }
 
   const pageNumber = Number.parseInt(query.page ?? '1', 10)

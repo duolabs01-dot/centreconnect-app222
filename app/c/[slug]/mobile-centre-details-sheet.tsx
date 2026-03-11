@@ -154,7 +154,7 @@ export function MobileCentreDetailsSheet({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {isRegistered ? <PremiumVerifiedBadge compact /> : null}
+                  {isRegistered ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
                   {showPilotTrustInfo ? (
                     <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-0.5 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                       Pilot Partner
@@ -171,7 +171,7 @@ export function MobileCentreDetailsSheet({
                   <p className="text-sm font-medium text-[#5F6C68]">{locationLabel}</p>
                   {tagline ? <p className="mt-1 text-sm leading-6 text-[#6A7672]">{tagline}</p> : null}
                   {isClaimed ? (
-                    <p className="mt-2 text-sm leading-6 text-[#5F6C68]">This CentreConnect creche gives parents a more modern, more organised start: easier applications, daily visibility, calmer updates, and less repeated paperwork.</p>
+                    <p className="mt-2 text-sm leading-6 text-[#5F6C68]">This creche lets parents apply, message, and keep next steps together in one place.</p>
                   ) : null}
                 </div>
               </div>
@@ -190,7 +190,7 @@ export function MobileCentreDetailsSheet({
                 </p>
                 <p className="mt-1 text-sm font-medium text-[#5F6C68]">{schedule}</p>
                 <p className="mt-3 text-xs font-medium text-[#6A7672]">
-                  {subsidyAccepted ? 'This centre says it accepts government subsidy support.' : 'Subsidy support is not listed yet. Ask the centre directly.'}
+                  {isRegistered ? 'Government registration is shown on this profile.' : 'Government registration is not shown yet. Ask the creche directly if that matters to you.'}
                 </p>
               </div>
 
@@ -244,7 +244,7 @@ export function MobileCentreDetailsSheet({
                   </p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex text-sm font-semibold text-[#0D9488] hover:underline">
-                    Own this creche? Claim it here →
+                    Do you run this creche? Claim it →
                   </Link>
                 ) : null}
                 </div>

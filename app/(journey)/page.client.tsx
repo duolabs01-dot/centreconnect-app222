@@ -259,6 +259,13 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <Clock3 className="mr-1 inline h-3 w-3" />
                   No account needed to browse. Create one only when you want to apply.
                 </p>
+                <p className="mt-2 text-[12px] font-medium text-[#5D6966] sm:text-[13px]">
+                  Do you run a creche?{' '}
+                  <Link href="/for-centres" className="font-semibold text-[var(--teal)] hover:underline">
+                    See CentreConnect for owners
+                  </Link>
+                  .
+                </p>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {parentTrustChecks.map((item) => (
@@ -310,7 +317,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           <div className="flex items-center justify-between gap-3">
                             <div>
                               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A847F]">Example centre</p>
-                              <p className="mt-1 text-base font-bold text-[#20302C]">{featuredCentre?.name ?? 'ECD Centre'}</p>
+                              <p className="mt-1 text-base font-bold text-[#20302C]">{featuredCentre?.name ?? 'Creche'}</p>
                             </div>
                             <div className="rounded-full bg-[#EDF8F5] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--teal)]">
                               {featuredCentre?.isClaimed ? 'Live now' : 'Preview'}
@@ -319,7 +326,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-[1.2rem] border border-[#E8DDD0]">
                             <Image
                               src={featuredHeroImage}
-                              alt={featuredCentre?.name ?? 'ECD Centre'}
+                              alt={featuredCentre?.name ?? 'Creche'}
                               fill
                               className="object-cover"
                               priority
@@ -365,7 +372,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   Start with centres you can act on today.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  CentreConnect centres let you apply online. Public listings show the fastest direct contact option.
+                  Creches on CentreConnect let you apply online. Public listings show the fastest direct contact option.
                 </p>
               </div>
 
@@ -402,7 +409,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         {centre.isRegistered && (
                           <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700">
                             <ShieldCheck className="h-3 w-3" />
-                            DSD Registered
+                            Government registered
                           </span>
                         )}
                         {centre.isFeatured ? (
@@ -547,5 +554,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
     </div>
   )
 }
+
 
 

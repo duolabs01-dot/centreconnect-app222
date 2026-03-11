@@ -39,7 +39,7 @@ type DirectoryFilters = {
   suburb?: string
   age?: string
   fee?: string
-  subsidy?: boolean
+  registered?: boolean
   page?: number
 }
 
@@ -114,7 +114,7 @@ export default function DirectoryExplorer({
   const [selectedSuburb, setSelectedSuburb] = useState(initialFilters.suburb ?? '')
   const [selectedAge, setSelectedAge] = useState(initialFilters.age ?? '')
   const [selectedFee, setSelectedFee] = useState(initialFilters.fee ?? '')
-  const [selectedSubsidy, setSelectedSubsidy] = useState(initialFilters.subsidy ? 'true' : '')
+  const [selectedRegistered, setSelectedRegistered] = useState(initialFilters.registered ? 'true' : '')
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [debouncedSearch, setDebouncedSearch] = useState(initialFilters.search ?? '')
   const [isPending, startTransition] = useTransition()
@@ -151,7 +151,7 @@ export default function DirectoryExplorer({
   }, [isFilterSheetOpen, setVisible])
 
   const totalPages = Math.max(1, Math.ceil(totalResults / pageSize))
-  const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedSubsidy === 'true')
+  const hasActiveFilters = Boolean(selectedSuburb || selectedAge || selectedFee || selectedRegistered === 'true')
   const exactUserLocation = geoStatus === 'granted' ? userLocation : null
 
   const quickFilters = [
@@ -166,11 +166,11 @@ export default function DirectoryExplorer({
       },
     },
     {
-      label: 'Subsidy',
+      label: 'Government registered',
       icon: ShieldCheck,
-      active: selectedSubsidy === 'true',
+      active: selectedRegistered === 'true',
       onClick: () => {
-        setSelectedSubsidy(selectedSubsidy === 'true' ? '' : 'true')
+        setSelectedRegistered(selectedRegistered === 'true' ? '' : 'true')
         setCurrentPage(1)
       },
     },
@@ -196,12 +196,12 @@ export default function DirectoryExplorer({
     if (selectedSuburb) params.set('suburb', selectedSuburb)
     if (selectedAge) params.set('age', selectedAge)
     if (selectedFee) params.set('fee', selectedFee)
-    if (selectedSubsidy === 'true') params.set('subsidy', 'true')
+    if (selectedRegistered === 'true') params.set('registered', 'true')
     if (currentPage > 1) params.set('page', String(currentPage))
 
     const next = params.toString()
     router.replace(next ? `${pathname}?${next}` : pathname, { scroll: false })
-  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage, pathname, router])
+  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedRegistered, currentPage, pathname, router])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -212,7 +212,7 @@ export default function DirectoryExplorer({
         if (selectedSuburb) params.set('suburb', selectedSuburb)
         if (selectedAge) params.set('age', selectedAge)
         if (selectedFee) params.set('fee', selectedFee)
-        if (selectedSubsidy === 'true') params.set('subsidy', 'true')
+        if (selectedRegistered === 'true') params.set('registered', 'true')
         params.set('page', String(currentPage))
 
         const res = await fetch(`/api/directory/search?${params.toString()}`, { signal: controller.signal })
@@ -223,7 +223,7 @@ export default function DirectoryExplorer({
       } catch {}
     })
     return () => controller.abort()
-  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedSubsidy, currentPage])
+  }, [debouncedSearch, selectedSuburb, selectedAge, selectedFee, selectedRegistered, currentPage])
 
   const activateMapView = () => {
     if (geoStatus === 'granted') {
@@ -248,7 +248,7 @@ export default function DirectoryExplorer({
     setSelectedSuburb('')
     setSelectedAge('')
     setSelectedFee('')
-    setSelectedSubsidy('')
+    setSelectedRegistered('')
     setCurrentPage(1)
   }
 
@@ -355,12 +355,12 @@ export default function DirectoryExplorer({
                       <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDF0E6]">
                         <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
                       </div>
-                      <span className="text-sm font-semibold text-[#22312E]">Accepts government subsidy</span>
+                      <span className="text-sm font-semibold text-[#22312E]">Government registered</span>
                     </div>
                     <input
                       type="checkbox"
-                      checked={selectedSubsidy === 'true'}
-                      onChange={(e) => setSelectedSubsidy(e.target.checked ? 'true' : '')}
+                      checked={selectedRegistered === 'true'}
+                      onChange={(e) => setSelectedRegistered(e.target.checked ? 'true' : '')}
                       className="h-6 w-6 rounded-lg border-[#DDD5C8] text-[#0D9488] focus:ring-[#0D9488]"
                     />
                   </label>
@@ -435,7 +435,7 @@ export default function DirectoryExplorer({
                 {totalResults} {totalResults === 1 ? 'centre' : 'centres'} to compare
               </p>
               <p className="mt-1 text-xs leading-5 text-[#66736F]">
-                CentreConnect centres let you apply online. Public listings show direct contact options.
+                Creches on CentreConnect let you apply online. Public listings show direct contact options.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

@@ -72,7 +72,7 @@ export function AppHeader({
             target="_blank"
             rel="noopener noreferrer"
             className="sm:hidden rounded-full border border-slate-200 bg-white/80 p-2 text-slate-400 transition-colors hover:border-cyan-300 hover:text-cyan-600"
-            aria-label="For ECD Centres"
+            aria-label="For creche owners"
           >
             <Building2 className="h-4 w-4" />
           </a>
@@ -83,7 +83,7 @@ export function AppHeader({
             className="ml-auto hidden items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-500 transition-colors hover:border-cyan-300 hover:text-cyan-600 sm:inline-flex"
           >
             <Building2 className="h-3.5 w-3.5" />
-            For ECDs
+            For creche owners
           </a>
           {mobileAuthLink ? (
             <Button size="sm" variant="outline" asChild className="font-semibold">
@@ -112,4 +112,5 @@ export function AppHeader({
     </header>
   )
 }
+
 

@@ -177,13 +177,15 @@ export function CentreCard({
   const previewImageSrc = buildCentrePreviewImage({ name, suburb, isClaimed: is_claimed })
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
-  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply to ECD'
+  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
   const whatsappHref = buildWhatsappHref(contact_whatsapp ?? contact_phone ?? phone, name)
   const callHref = buildCallHref(contact_phone ?? phone ?? contact_whatsapp)
   const publicPrimaryHref = whatsappHref ?? callHref ?? detailHref
   const publicPrimaryLabel = whatsappHref ? 'WhatsApp centre' : callHref ? 'Call centre' : 'View details'
   const publicSecondaryHref = whatsappHref && callHref ? callHref : detailHref
   const publicSecondaryLabel = whatsappHref && callHref ? 'Call centre' : 'View details'
+  const claimHref = slug ? `/for-centres/register?flow=confirm&claim=${encodeURIComponent(slug)}` : null
+  const showClaimLink = !is_claimed && viewerRole !== 'parent_user' && Boolean(claimHref)
 
   const handleApply = () => {
     if (existingApplicationId) {
@@ -219,8 +221,7 @@ export function CentreCard({
       : []),
   ]
   const showRecommendedChip = !isVerifiedForParents && isFeatured
-  const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
-  const showSubsidyChip = subsidy_accepted
+  const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${name}, do you still have space for my child?` },
     { label: 'Ask about fees', message: `Hi ${name}, please share your fees and what is included.` },
@@ -293,7 +294,7 @@ export function CentreCard({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {isVerifiedForParents ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+              {isVerifiedForParents ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
               {showRecommendedChip ? (
                 <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">
                   <ShieldCheck className="h-3 w-3" />
@@ -303,12 +304,7 @@ export function CentreCard({
                 <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                   Pilot Partner
                 </Badge>
-              ) : null}
-              {showSubsidyChip ? (
-                <Badge className="border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-emerald-700 shadow-none">
-                  Subsidy
-                </Badge>
-              ) : null}
+              ) : null}
               {is_claimed ? (
                 <Badge className="border border-[#DCEEE8] bg-[#F4FBF8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#0D9488] shadow-none">
                   Apply now
@@ -382,6 +378,11 @@ export function CentreCard({
               <p className="text-center text-[11px] font-medium leading-5 text-[#7B827E]">
                 Public listing only. Contact the centre directly for space and next steps.
               </p>
+              {showClaimLink ? (
+                <Link href={claimHref!} className="text-center text-[11px] font-semibold leading-5 text-[#0D9488] hover:underline">
+                  Do you run this creche? Claim it
+                </Link>
+              ) : null}
             </>
           ) : null}
         </CardFooter>

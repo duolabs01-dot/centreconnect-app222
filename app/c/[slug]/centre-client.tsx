@@ -340,7 +340,7 @@ export function CentreClient({
   const showPilotTrustInfo = isPilotCentre
   const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
-    ? [isVerifiedForParents ? 'Verified' : null, centre.subsidy_accepted ? 'Subsidy friendly' : null, 'Parent-ready profile'].filter(Boolean) as string[]
+    ? [isVerifiedForParents ? 'Government registered' : null, 'Parent-ready profile'].filter(Boolean) as string[]
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
@@ -352,17 +352,13 @@ export function CentreClient({
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
   const showExactLocationBadge = isClaimed && locationMetadata?.source === 'exact'
   const trustLabel = isVerifiedForParents
-    ? centre.subsidy_accepted
-      ? 'Verified and subsidy friendly'
-      : 'Verified by CentreConnect'
+    ? 'Government registration confirmed'
     : isClaimed
       ? 'Live profile, photos pending'
       : 'Not yet on CentreConnect'
   const practicalLabel = centre.capacity
     ? `Space for about ${centre.capacity} children`
-    : centre.subsidy_accepted
-      ? 'Subsidy friendly centre'
-      : 'Ask about availability'
+    : 'Ask about availability'
   const phoneHref = formatPhoneHref(centre.contact_phone ?? centre.phone)
   const whatsappHref = formatWhatsAppHref(centre.contact_whatsapp ?? centre.contact_phone ?? centre.phone)
   const presentationTagline = normalizeCentreCopy(centre.tagline)
@@ -380,13 +376,13 @@ export function CentreClient({
     presentationDescription ||
     (isClaimed
       ? 'Parents are choosing a place for their child, but they also need the day to feel easier. CentreConnect keeps applications, updates, and pickup details in one place.'
-      : 'This centre gives parents a simple starting point: learn the basics, ask questions, and decide whether it feels right.')
+      : 'This creche gives parents a simple starting point: learn the basics, ask questions, and decide whether it feels right.')
 
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
         {
           title: 'Fees, hours, and support',
-          description: 'See monthly fees, opening hours, and whether subsidy support is available before you decide.',
+          description: 'See monthly fees, opening hours, and whether government registration is shown before you decide.',
         },
         {
           title: 'Ages and class fit',
@@ -422,9 +418,9 @@ export function CentreClient({
       ]
     : [
         'You can still compare the centre now and contact them directly while they finish joining CentreConnect.',
-        centre.subsidy_accepted
-          ? 'The centre says it accepts subsidy support, which can help you decide faster if budget matters.'
-          : 'Subsidy support is not listed yet, so ask directly if that matters for your family.',
+        isVerifiedForParents
+          ? 'Government registration is shown on this profile, so trust checks are easier to do quickly.'
+          : 'Government registration is not shown yet, so ask directly if that matters for your family.',
         centre.capacity
           ? `The centre says it can care for around ${centre.capacity} children.`
           : 'Capacity is not listed yet, so asking early can help if you need space soon.',
@@ -433,7 +429,7 @@ export function CentreClient({
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${centre.name}, I would like to ask if you still have space for my child.` },
     { label: 'Ask about fees', message: `Hi ${centre.name}, I would like to ask about your fees and what is included.` },
-    { label: 'Ask about subsidy', message: `Hi ${centre.name}, I would like to ask whether subsidy support applies to my child.` },
+    { label: 'Ask about registration', message: `Hi ${centre.name}, I would like to ask about your government registration status.` },
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
 
@@ -457,12 +453,7 @@ export function CentreClient({
               <Badge className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
                 Centre profile
               </Badge>
-              {isVerifiedForParents ? <PremiumVerifiedBadge /> : null}
-              {centre.subsidy_accepted ? (
-                <Badge className="rounded-full border border-[#E7D6A8] bg-[#FFF5D9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
-                  Subsidy friendly
-                </Badge>
-              ) : null}
+              {isVerifiedForParents ? <PremiumVerifiedBadge label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
               {showExactLocationBadge ? (
                 <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
                   Exact location
@@ -571,7 +562,7 @@ export function CentreClient({
                 <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                    Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
+                    Do you run this creche? Claim it <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : null}
               </div>
@@ -601,7 +592,7 @@ export function CentreClient({
           <div className="space-y-6">
             {showAbout && !isClaimed ? (
               <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
-                <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger centre profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
+                <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger creche profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
                 <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[#4E5D59] sm:text-base">{aboutCopy}</p>
               </section>
             ) : null}
@@ -747,7 +738,7 @@ export function CentreClient({
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {isVerifiedForParents ? <PremiumVerifiedBadge compact /> : null}
+                      {isVerifiedForParents ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
                       {!isVerifiedForParents ? (
                         <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F6200] shadow-none">
                           {isClaimed ? 'Preview image' : 'Not yet on CentreConnect'}
@@ -755,7 +746,7 @@ export function CentreClient({
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6C4700]">
-                      CentreConnect centres let parents do more straight away: apply online, send a message in the app, and follow what happens next with less confusion.
+                      Creches on CentreConnect let parents do more straight away: apply online, send a message in the app, and follow what happens next with less confusion.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -776,7 +767,7 @@ export function CentreClient({
                     </p>
                   {showClaimLink ? (
                     <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                      Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
+                      Do you run this creche? Claim it <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : null}
                   </div>

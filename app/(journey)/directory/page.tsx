@@ -26,7 +26,7 @@ type DirectoryPageProps = {
     suburb?: string
     age?: string
     fee?: string
-    subsidy?: string
+    registered?: string
     page?: string
   }
 }
@@ -104,12 +104,12 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   const rawSuburb = (searchParams?.suburb ?? '').trim()
   const rawAgeGroup = (searchParams?.age ?? '').trim()
   const rawFee = (searchParams?.fee ?? '').trim()
-  const rawSubsidy = (searchParams?.subsidy ?? '').trim()
+  const rawRegistered = (searchParams?.registered ?? '').trim()
 
   const selectedSuburb = rawSuburb.toLowerCase() === 'all' ? '' : rawSuburb
   const selectedAgeGroup = rawAgeGroup.toLowerCase() === 'all' ? '' : rawAgeGroup
   const selectedFee = rawFee.toLowerCase() === 'any' ? '' : rawFee
-  const selectedSubsidy = rawSubsidy === 'true'
+  const selectedRegistered = rawRegistered === 'true'
   let effectiveSuburb = selectedSuburb
 
   const pageSize = 20
@@ -128,7 +128,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     centres = demoDirectoryCentres.filter((centre) => {
       if (search && !centre.name.toLowerCase().includes(search.toLowerCase())) return false
       if (effectiveSuburb && centre.suburb !== effectiveSuburb) return false
-      if (selectedSubsidy && !centre.subsidy_accepted) return false
+      if (selectedRegistered && !centre.is_registered) return false
       if (selectedAgeGroup && !(centre.age_groups ?? []).includes(selectedAgeGroup)) return false
       if (selectedFee) {
         const feeCap = Number(selectedFee)
@@ -187,9 +187,9 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       }
     }
 
-    if (selectedSubsidy) {
-      centresQuery = centresQuery.eq('subsidy_accepted', true)
-      countQuery = countQuery.eq('subsidy_accepted', true)
+    if (selectedRegistered) {
+      centresQuery = centresQuery.eq('is_registered', true)
+      countQuery = countQuery.eq('is_registered', true)
     }
 
     const [facetsResult, centresResult, countResult] = await Promise.all([facetsQuery, centresQuery, countQuery])
@@ -364,7 +364,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             suburb: effectiveSuburb,
             age: selectedAgeGroup,
             fee: selectedFee,
-            subsidy: selectedSubsidy,
+            registered: selectedRegistered,
           }}
           viewerRole={viewerRole}
         />

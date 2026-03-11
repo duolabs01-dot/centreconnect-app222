@@ -18,8 +18,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PUBLIC_PLAN_OPTIONS, getPublicPlanDefinition, getPublicPlanLabel, getPublicPlanPrice, type PublicPlan } from '@/lib/billing/plans'
 
 export const metadata: Metadata = {
-  title: 'For ECD Centres - CentreConnect',
-  description: 'A friendly, professional CentreConnect setup for crèches that want more parent trust and less admin stress.',
+  title: 'For Creche Owners - CentreConnect',
+  description: 'A friendly, professional CentreConnect setup for creches that want more parent trust and less admin stress.',
 }
 
 type Centre = {
@@ -143,7 +143,7 @@ export default async function ForCentresPage() {
           { href: '#plans', label: 'Plans' },
           { href: '#compare', label: 'Compare' },
           { href: '#active-centres', label: 'Live Centres' },
-          { href: '/ecd/login', label: 'ECD Login' },
+          { href: '/ecd/login', label: 'Creche login' },
         ]}
         cta={{ href: '/for-centres/register?plan=growth&flow=confirm', label: 'Start my setup 😊' }}
       />
@@ -152,7 +152,7 @@ export default async function ForCentresPage() {
         <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
           <div className="space-y-5">
             <Badge className="w-fit border-amber-200 bg-amber-50 text-amber-800 shadow-none hover:bg-amber-50">
-              Made for South African crèches 💛
+              Made for South African creche owners 💛
             </Badge>
             <div className="space-y-4">
               <h1 className="max-w-4xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
@@ -446,5 +446,6 @@ export default async function ForCentresPage() {
     </main>
   )
 }
+
 
 
