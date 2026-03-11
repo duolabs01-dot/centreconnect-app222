@@ -194,11 +194,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Find a creche you can trust faster.
+                  Find a creche you trust. Act today.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  Check nearby options, compare the basics quickly, and move forward without feeling lost.
+                  See fees, ages, and next steps before you call, message, or apply.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -300,7 +300,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                             Why parents love this
                           </p>
                           <p className="mt-2 text-sm leading-6 text-[#4F5E5A]">
-                            You browse first, act when you are ready, and keep everything together after that.
+                            You do not need to guess what to do next.
                           </p>
                         </div>
                       </div>

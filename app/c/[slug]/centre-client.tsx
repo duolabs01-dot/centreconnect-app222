@@ -424,9 +424,9 @@ export function CentreClient({
 
   const centreConnectAdvantage = isClaimed
     ? [
-        { icon: BellRing, title: 'Daily moments arrive more clearly', description: 'Parents can stay close to meals, activities, little milestones, and reminders without waiting for a crumpled note or a late-night WhatsApp reply.' },
-        { icon: ShieldCheck, title: 'Pickup feels safer and more organised', description: 'Important collection details and parent updates stay clearer, which helps reduce that stressful uncertainty at the end of the day.' },
-        { icon: FileText, title: 'One profile, less admin fatigue', description: 'The same parent profile can help with applications, documents, and report cards, so you spend less time repeating yourself and more time deciding well.' },
+        { icon: BellRing, title: 'Updates stay in one place', description: 'Meals, reminders, and day-to-day updates stop getting lost.' },
+        { icon: ShieldCheck, title: 'Pickup feels safer', description: 'Collection details stay clear when someone else fetches your child.' },
+        { icon: FileText, title: 'Less paperwork', description: 'Applications and documents stay together instead of being repeated.' },
       ]
     : []
 
@@ -605,7 +605,7 @@ export function CentreClient({
                 <SectionHeading
                   eyebrow="Curriculum and daily rhythm"
                   title="What children do here"
-                  description={isClaimed ? "Parents should quickly feel both care and confidence here: what the day feels like for their child, and how this creche uses CentreConnect to make parenting feel easier after enrolment." : 'These are the parts of the day most parents usually want to understand before applying.'}
+                  description={isClaimed ? undefined : 'These are the parts of the day most parents usually want to understand before applying.'}
                 />
                 <div className={`mt-5 grid gap-4 ${programCards.length > 1 ? 'sm:grid-cols-2' : ''}`}>
                   {programCards.map((program, index) => {
@@ -653,7 +653,7 @@ export function CentreClient({
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
-                description={isClaimed ? 'Parents should be able to picture their child here in seconds: the age fit, the class names, and the kind of daily care rhythm this creche offers.' : 'A simple look at the class setup before you contact the centre.'}
+                description={isClaimed ? undefined : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
                 <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
@@ -713,7 +713,7 @@ export function CentreClient({
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Apply online, send one quick message, and keep updates together after your child joins.'
+                    ? 'Apply online, send one quick message, and keep updates together.'
                     : 'This centre is still joining CentreConnect. Check the details now, then use WhatsApp or phone if you want to act today.'}
                 </p>
 
