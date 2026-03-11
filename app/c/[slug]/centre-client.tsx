@@ -383,7 +383,6 @@ export function CentreClient({
     { icon: Wallet, label: 'Registration fee', value: registrationFeeLabel },
     { icon: Baby, label: 'Ages', value: ageGroupsLabel },
     { icon: Clock3, label: 'Open', value: operationalStatus.schedule },
-    { icon: ShieldCheck, label: 'Trust', value: trustLabel },
   ] as const
 
   const parentHighlights = isClaimed
@@ -432,116 +431,99 @@ export function CentreClient({
   return (
     <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
       <Container className="space-y-8 py-6 sm:py-8 lg:space-y-10">
-        <section className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
-          <div className="overflow-hidden rounded-[2.4rem] border border-[#E7DDD1] bg-white shadow-[0_20px_48px_rgba(31,44,39,0.07)]">
-            <div className="relative aspect-[16/10] sm:aspect-[16/9]">
-              <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} unoptimized />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#10211D]/72 via-[#10211D]/18 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-                <div className="flex items-end gap-3">
-                  {centreLogo ? (
-                    <div className="h-16 w-16 overflow-hidden rounded-[1.5rem] border-2 border-white/90 bg-white shadow-xl">
-                      <Image src={centreLogo} alt={`${centre.name} logo`} width={64} height={64} className="h-full w-full object-cover" unoptimized />
-                    </div>
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border-2 border-white/90 bg-[#F5EFE6] text-xl font-black text-[#0D9488] shadow-xl">
-                      {centreInitial}
-                    </div>
-                  )}
-                  <div className="min-w-0 text-white">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/80">Parent listing view</p>
-                      {isPilotCentre ? (
-                        <Badge className="rounded-full border border-cyan-400/50 bg-cyan-900/40 px-3 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-cyan-50 shadow-none backdrop-blur-sm">
-                          Pilot Partner
-                        </Badge>
-                      ) : null}
-                    </div>
-                    <h1 className="mt-1 text-[1.95rem] font-extrabold leading-[1.02] tracking-[-0.025em] text-white sm:text-[2.55rem]" style={{ fontFamily: 'var(--font-display)' }}>
-                      {centre.name}
-                    </h1>
-                    <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white/80">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {locationLabel || 'Johannesburg'}
-                    </p>
-                  </div>
+        <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+          <div className="rounded-[2.4rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_20px_48px_rgba(31,44,39,0.06)] sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+                Centre profile
+              </Badge>
+              {isVerifiedForParents ? <PremiumVerifiedBadge /> : null}
+              {centre.subsidy_accepted ? (
+                <Badge className="rounded-full border border-[#E7D6A8] bg-[#FFF5D9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
+                  Subsidy friendly
+                </Badge>
+              ) : null}
+              {showExactLocationBadge ? (
+                <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
+                  Exact location
+                </Badge>
+              ) : null}
+              {!isClaimed ? (
+                <Badge className="rounded-full border border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+                  Public listing
+                </Badge>
+              ) : null}
+            </div>
+
+            <div className="mt-5 flex items-start gap-4">
+              {centreLogo ? (
+                <div className="h-16 w-16 overflow-hidden rounded-[1.5rem] border border-[#E7DDD1] bg-white shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
+                  <Image src={centreLogo} alt={`${centre.name} logo`} width={64} height={64} className="h-full w-full object-cover" unoptimized />
                 </div>
+              ) : (
+                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-[#E7DDD1] bg-[#F5EFE6] text-xl font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
+                  {centreInitial}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-[2rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-[#22312E] sm:text-[2.8rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                  {centre.name}
+                </h1>
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#7B827E]">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {locationLabel || 'Johannesburg'}
+                </p>
+                {centre.tagline ? <p className="mt-3 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{centre.tagline}</p> : null}
               </div>
             </div>
+
+            <p className="mt-5 text-sm leading-7 text-[#5F6C68] sm:text-base">
+              {isClaimed
+                ? 'See the basics first, then apply or send one quick message if you still need an answer.'
+                : 'See the basics first, then call or WhatsApp the centre if you want to move forward today.'}
+            </p>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {quickFacts.map((fact) => (
+                <QuickFact key={fact.label} icon={fact.icon} label={fact.label} value={fact.value} />
+              ))}
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(isClaimed ? claimedFoldPromises : ['Compare the basics fast', 'Contact the centre directly', 'Apply later when live']).map((item) => (
+                <span key={item} className="rounded-full border border-[#E7DDD1] bg-white px-3 py-2 text-[11px] font-semibold text-[#315A51] shadow-none">
+                  {item}
+                </span>
+              ))}
+            </div>
+
+            {showUnclaimedDisclaimer ? (
+              <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
+                <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+                {showClaimLink ? (
+                  <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
+                    Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
-          <div className="flex flex-col justify-between rounded-[2.4rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_20px_48px_rgba(31,44,39,0.06)] sm:p-6">
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                {isVerifiedForParents ? <PremiumVerifiedBadge /> : null}
-                {centre.subsidy_accepted ? (
-                  <Badge className="rounded-full border border-[#E7D6A8] bg-[#FFF5D9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
-                    Subsidy friendly
-                  </Badge>
-                ) : null}
-                {showExactLocationBadge ? (
-                  <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
-                    Exact location
-                  </Badge>
-                ) : null}
-                {!isClaimed ? (
-                  <Badge className="rounded-full border border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
-                    Not yet on CentreConnect
-                  </Badge>
-                ) : null}
+          <div className="overflow-hidden rounded-[2.4rem] border border-[#E7DDD1] bg-white shadow-[0_20px_48px_rgba(31,44,39,0.07)]">
+            <div className="relative aspect-[16/11] sm:aspect-[16/10]">
+              <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} unoptimized />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#10211D]/45 via-transparent to-transparent" />
+              <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
+                <Badge className="rounded-full border border-white/60 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#22312E] shadow-none backdrop-blur-sm">
+                  {hasRealCoverImage ? 'Real centre photo' : 'Preview image'}
+                </Badge>
               </div>
-
-              {centre.tagline ? <p className="mt-4 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{centre.tagline}</p> : null}
-
-              <p className="mt-4 text-sm leading-7 text-[#5F6C68] sm:text-base">
-                {isClaimed
-                  ? 'This is not just a creche profile. It is a better parent experience from the start: quicker applications, clearer daily communication, and fewer loose ends once your child joins.'
-                  : 'Parents want three things quickly here: what the fees look like, which ages are welcome, and whether this centre feels trusted. This page keeps those answers simple.'}
-              </p>
-
-              {isClaimed ? (
-                <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                  {claimedFoldPromises.map((item) => (
-                    <div key={item} className="rounded-[1.25rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)] px-3 py-3">
-                      <p className="text-[11px] font-semibold leading-5 text-[#1F4B42]">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                {quickFacts.map((fact) => (
-                  <QuickFact key={fact.label} icon={fact.icon} label={fact.label} value={fact.value} />
-                ))}
-              </div>
-
-              {showUnclaimedDisclaimer ? (
-                <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
-                  <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
-                  <p className="mt-2 text-xs font-medium leading-5 text-[#8F6200]">
-                    The hero image above is a preview until the centre uploads real photos.
-                  </p>
-                  {showClaimLink ? (
-                    <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
-                      Own this creche? Claim it here <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
-
-            <div className={`mt-6 rounded-[1.5rem] border p-4 ${isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F7FCFA_100%)]' : 'border-[#E7DDD1] bg-white'}`}>
-              <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{isClaimed ? 'Why this choice feels lighter for parents' : 'What parents need first'}</p>
-              <div className="mt-3 space-y-3">
-                {parentHighlights.map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EAF6F2] text-[#0D9488]">
-                      <CheckCircle2 className="h-4 w-4" />
-                    </span>
-                    <p className="text-sm leading-6 text-[#4E5D59]">{item}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="border-t border-[#E7DDD1] p-4 sm:p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Centre photo</p>
+              <p className="mt-2 text-sm leading-6 text-[#5F6C68]">
+                A clear photo helps you recognise the centre before you visit or contact them.
+              </p>
             </div>
           </div>
         </section>
@@ -824,6 +806,8 @@ export function CentreClient({
     </main>
   )
 }
+
+
 
 
 

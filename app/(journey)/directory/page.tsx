@@ -294,30 +294,45 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           ['--warm-white' as string]: '#FFFDF9',
         }}
       >
-        <header className="rounded-[2rem] border border-[#E8DDD0] bg-[var(--warm-white)] px-5 py-6 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:px-8 sm:py-8">
-          <div
-            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] sm:text-[13px]"
-            style={{
-              backgroundColor: 'var(--amber-light)',
-              borderColor: 'rgba(212,147,90,0.28)',
-              color: 'var(--amber)',
-            }}
-          >
-            <MapPin className="h-3.5 w-3.5" />
-            <span>{effectiveSuburb ? `${effectiveSuburb} is now live on CentreConnect` : 'Johannesburg CentreConnect hub'}</span>
+        <header className="rounded-[2rem] border border-[#E8DDD0] bg-[var(--warm-white)] px-5 py-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:px-8 sm:py-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+            <div>
+              <div
+                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] sm:text-[13px]"
+                style={{
+                  backgroundColor: 'var(--amber-light)',
+                  borderColor: 'rgba(212,147,90,0.28)',
+                  color: 'var(--amber)',
+                }}
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{effectiveSuburb ? `${effectiveSuburb} directory` : 'Johannesburg directory'}</span>
+              </div>
+              <h1
+                className="mt-4 max-w-[13ch] text-[2rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:max-w-none sm:text-[2.8rem]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                Find the right creche faster.
+              </h1>
+              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[16px] sm:leading-7">
+                {effectiveSuburb ? `See centres in ${effectiveSuburb}, check fees, ages, and next steps fast, then apply or contact the centre.` : 'Check fees, ages, and next steps fast, then apply online or contact the centre directly.'}
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 lg:w-[26rem]">
+              <div className="rounded-[1.25rem] border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">CentreConnect</p>
+                <p className="mt-1 text-sm font-semibold text-[#1F4B42]">Apply online</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">CentreConnect</p>
+                <p className="mt-1 text-sm font-semibold text-[#1F4B42]">Message in app</p>
+              </div>
+              <div className="rounded-[1.25rem] border border-[#E7DDD1] bg-white px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">Public listing</p>
+                <p className="mt-1 text-sm font-semibold text-[#22312E]">Call or WhatsApp</p>
+              </div>
+            </div>
           </div>
-          <h1
-            className="mt-4 max-w-[14ch] text-[2.15rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1F2D29] sm:max-w-none sm:text-[3.1rem] sm:leading-[1.01]"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            Find a crèche near you. Then act fast.
-          </h1>
-          <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[17px] sm:leading-8">
-            {effectiveSuburb ? `See centres in ${effectiveSuburb}, compare the basics quickly, and choose your next step.` : `Search centres, compare the basics, and move fast when you find the right fit.`}
-          </p>
-          <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-            CentreConnect centres let you apply online and message the centre in the app. Public listings are for checking details first, then contacting the centre directly.
-          </p>
         </header>
 
         <DirectoryExplorer
@@ -340,6 +355,8 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
+
+
 
 
 
