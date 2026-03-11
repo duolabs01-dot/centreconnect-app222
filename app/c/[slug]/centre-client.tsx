@@ -370,12 +370,12 @@ export function CentreClient({
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
         {
-          title: 'Play-led learning with real daily purpose',
-          description: 'Parents should be able to imagine a real day here quickly: songs, stories, blocks, puzzles, movement, and guided early-learning activities that feel joyful while still building confidence and readiness.',
+          title: 'Play, learning, and daily rhythm',
+          description: 'A clear day with play, learning, meals, rest, and caring support.',
         },
         {
-          title: 'A calmer parent experience from the first day',
-          description: 'This is where CentreConnect makes the difference: daily updates, safer pickup communication, reminders, report cards, and less repeated paperwork all start feeling more organised for parents.',
+          title: 'An easier parent experience',
+          description: 'Applications, updates, and next steps stay in one place instead of getting lost.',
         },
       ]
     : [
@@ -431,9 +431,9 @@ export function CentreClient({
     : []
 
   const classEmphasis = [
-    'A gentle start for little ones who need warmth, rhythm, and close attention.',
-    'A playful group where growing independence, language, and confidence start to bloom.',
-    'A stronger school-readiness stage with more routine, curiosity, and big-child energy.',
+    'A gentle start with care, rhythm, and close attention.',
+    'A playful group for growing confidence and independence.',
+    'A stronger school-readiness stage with routine and curiosity.',
   ]
 
   const claimedFoldPromises = [
@@ -713,7 +713,7 @@ export function CentreClient({
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Choosing a CentreConnect centre means you can apply online, message the centre, and keep important updates together once your child joins.'
+                    ? 'Apply online, send one quick message, and keep updates together after your child joins.'
                     : 'This centre is still joining CentreConnect. Check the details now, then use WhatsApp or phone if you want to act today.'}
                 </p>
 
@@ -739,7 +739,7 @@ export function CentreClient({
 
                 {isClaimed ? (
                   <div className="mt-5 rounded-[1.6rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
-                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why parents feel more settled here</p>
+                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why this feels easier</p>
                     <div className="mt-4 space-y-3">
                       {centreConnectAdvantage.map((item) => {
                         const Icon = item.icon

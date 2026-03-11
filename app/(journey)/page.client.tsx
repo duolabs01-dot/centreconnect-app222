@@ -56,15 +56,15 @@ const centreMoments = [
 const parentTrustChecks = [
   {
     title: 'No account needed to browse',
-    body: 'Parents can start with the directory first and create an account only when they want to apply.',
+    body: 'Browse first. Create an account only when you want to apply.',
   },
   {
     title: 'Clear next step on every centre',
-    body: 'CentreConnect centres let parents apply online. Public listings show direct WhatsApp or call options.',
+    body: 'Apply online on CentreConnect centres. Call or WhatsApp public listings.',
   },
   {
     title: 'Safety stays visible',
-    body: 'Pickup codes and authorised collection stay clear, so parents do not need to guess what happens later.',
+    body: 'Pickup codes and collection updates stay clear after your child joins.',
   },
 ] as const
 function suburbHref(suburb: string) {
@@ -194,11 +194,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Find a creche you feel good about.
+                  Find a creche you can trust faster.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  Check nearby options, compare the basics fast, and choose your next step without feeling lost.
+                  Check nearby options, compare the basics quickly, and move forward without feeling lost.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
