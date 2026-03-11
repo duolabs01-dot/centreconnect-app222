@@ -413,6 +413,14 @@ export function CentreClient({
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
 
+  const centreConnectAdvantage = isClaimed
+    ? [
+        { icon: BellRing, title: 'Daily updates that feel close', description: 'Parents can stay connected to meals, activities, reminders, and the little moments that make them feel present even during a busy day.' },
+        { icon: ShieldCheck, title: 'Safer pickup and clearer trust', description: 'CentreConnect supports safer pickup communication and clearer next steps, which helps reduce those stressful end-of-day misunderstandings.' },
+        { icon: FileText, title: 'Less paper, less repetition', description: 'Applications, documents, and report cards stay easier to manage because everything starts living in one parent journey instead of scattered chats and files.' },
+      ]
+    : []
+
 
   return (
     <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
@@ -663,6 +671,28 @@ export function CentreClient({
                   <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
                 </div>
 
+                {isClaimed ? (
+                  <div className="mt-5 rounded-[1.6rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
+                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why parents feel the difference here</p>
+                    <div className="mt-4 space-y-3">
+                      {centreConnectAdvantage.map((item) => {
+                        const Icon = item.icon
+                        return (
+                          <div key={item.title} className="flex items-start gap-3 rounded-[1.2rem] border border-white/70 bg-white/80 p-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EAF6F2] text-[#0D9488]">
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-[#22312E]">{item.title}</p>
+                              <p className="mt-1 text-xs leading-5 text-[#5F6C68]">{item.description}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
@@ -723,7 +753,7 @@ export function CentreClient({
                       triggerLabel="Ask the creche a quick question"
                       triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
                       title={`Ask ${centre.name} a quick question`}
-                      description="Your message goes straight to the centre inbox in CentreConnect, so replies and application updates stay together."
+                      description="Your message goes straight to the centre inbox in CentreConnect, so replies, updates, and your application journey stay together in one calmer place."
                     />
                   ) : (
                     <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">

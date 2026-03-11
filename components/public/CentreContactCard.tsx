@@ -47,7 +47,7 @@ export function CentreContactCard({ centreId, centreName, templates = [] }: Cent
           return
         }
 
-        toast.success('Message sent! The centre will reply shortly.')
+        toast.success('Message sent! The creche can now reply inside CentreConnect.')
         setMessage('')
       } catch (error) {
         console.error(error)
@@ -60,7 +60,7 @@ export function CentreContactCard({ centreId, centreName, templates = [] }: Cent
     <div className="rounded-2xl border border-white/10 bg-white/95 p-5 shadow-[var(--shadow-elevation-3)]">
       <p className="text-base font-bold text-slate-900">Send a quick question</p>
       <p className="mt-1 text-sm leading-relaxed text-slate-500">
-        Ask about space, visits, fees, or subsidy support and we will route your note straight to the centre inbox.
+        Ask about space, visits, fees, or subsidy support and CentreConnect will route your note straight to the centre inbox so the conversation stays organised.
       </p>
       {templates.length > 0 ? (
         <div className="mt-4 flex flex-wrap gap-2">

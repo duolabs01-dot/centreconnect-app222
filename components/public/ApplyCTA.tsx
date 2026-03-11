@@ -144,14 +144,14 @@ export function ApplyCTA({
         href={href}
         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-cyan-600 py-4 text-lg font-black text-white shadow-[var(--shadow-elevation-3)] shadow-cyan-900/30 transition-all hover:bg-cyan-700 active:scale-[0.98]"
       >
-        Apply online <ArrowRight className="w-5 h-5" />
+        Apply now <ArrowRight className="w-5 h-5" />
       </Link>
     )
   }
 
   return (
     <Link href={href} className="inline-flex items-center gap-1 font-black text-sm text-cyan-600 transition-colors hover:text-cyan-700">
-      Apply online <ArrowRight className="w-3.5 h-3.5" />
+      Apply now <ArrowRight className="w-3.5 h-3.5" />
     </Link>
   )
 }

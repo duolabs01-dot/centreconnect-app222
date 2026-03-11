@@ -3,7 +3,7 @@
 import type { TouchEvent } from 'react'
 import { useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Baby, CheckCircle2, Circle, Clock3, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { Baby, BellRing, CheckCircle2, Circle, Clock3, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { ApplyCTA } from '@/components/public/ApplyCTA'
 import { ContactCentreSheet } from './contact-centre-sheet'
@@ -194,6 +194,32 @@ export function MobileCentreDetailsSheet({
                 </p>
               </div>
 
+              {isClaimed ? (
+                <div className="rounded-[1.4rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#4B6B64]">Why this feels easier for parents</p>
+                  <div className="mt-3 space-y-2.5">
+                    {[
+                      { icon: BellRing, title: 'Daily updates', body: 'Stay closer to meals, activities, and reminders without chasing paper notes.' },
+                      { icon: ShieldCheck, title: 'Safer pickup flow', body: 'Collection and follow-up feel clearer when the creche and parent use one organised system.' },
+                      { icon: FileText, title: 'Less repeated paperwork', body: 'Your parent profile, documents, and next steps stay easier to manage in one place.' },
+                    ].map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <div key={item.title} className="flex items-start gap-3 rounded-[1.2rem] border border-white/70 bg-white/85 p-3">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[#EAF6F2] text-[#0D9488]">
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[#22312E]">{item.title}</p>
+                            <p className="mt-1 text-xs leading-5 text-[#5F6C68]">{item.body}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
               {showPilotTrustInfo && pilotBadges.length > 0 ? (
                 <div className="rounded-[1.4rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200]">Why this profile feels stronger</p>
@@ -256,7 +282,7 @@ export function MobileCentreDetailsSheet({
                     triggerLabel="Ask the creche a quick question"
                     triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
                     title={`Ask ${centreName} a quick question`}
-                    description="Your message goes straight to the centre inbox in CentreConnect, so replies and updates stay together."
+                    description="Your message goes straight to the centre inbox in CentreConnect, so replies, updates, and the application journey stay together."
                   />
                 ) : (
                   <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
