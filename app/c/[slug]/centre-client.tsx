@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Baby, BellRing, BookOpenCheck, CheckCircle2, Circle, Clock3, FileText, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, BookOpenCheck, CheckCircle2, Circle, Clock3, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
@@ -82,7 +82,6 @@ export type WebsiteContentState = {
 
 export const DEFAULT_VISIBLE_SECTIONS = ['hero', 'about', 'programs', 'gallery', 'contact']
 
-const parentBenefitIcons = [BellRing, ShieldCheck, FileText, BookOpenCheck] as const
 const programCardIcons = [BookOpenCheck, Users, Baby, MessageCircle] as const
 const ALLOWED_IMAGE_HOST_SUFFIXES = ['.supabase.co']
 const ALLOWED_IMAGE_HOSTS = new Set(['images.pexels.com', 'thumbs.dreamstime.com'])
@@ -185,6 +184,20 @@ function formatWhatsAppHref(value: string | null | undefined) {
   if (!value) return null
   const cleaned = value.replace(/[^\d]/g, '')
   return cleaned ? `https://wa.me/${cleaned}` : null
+}
+
+
+function normalizeCentreCopy(value: string | null | undefined) {
+  const trimmed = value?.replace(/\s+/g, ' ').trim()
+  if (!trimmed) return null
+
+  const cleaned = trimmed
+    .replace(/\b1year\b/gi, '1 year')
+    .replace(/\bis a day care catering for children from\b/gi, ' is a day care for children from')
+    .replace(/\bday care catering for children from\b/gi, 'Day care for children from')
+    .replace(/\bgoing to school age\b/gi, 'school-going age')
+
+  return /[.!?]$/.test(cleaned) ? cleaned : `${cleaned}.`
 }
 
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
@@ -352,6 +365,8 @@ export function CentreClient({
       : 'Ask about availability'
   const phoneHref = formatPhoneHref(centre.contact_phone ?? centre.phone)
   const whatsappHref = formatWhatsAppHref(centre.contact_whatsapp ?? centre.contact_phone ?? centre.phone)
+  const presentationTagline = normalizeCentreCopy(centre.tagline)
+  const presentationDescription = normalizeCentreCopy(centre.description)
 
   const visibleSectionSet = new Set(websiteContent.visibleSections)
   const showAbout = visibleSectionSet.has('about')
@@ -362,7 +377,7 @@ export function CentreClient({
   const showContact = visibleSectionSet.has('contact')
   const aboutCopy =
     websiteContent.aboutText.trim() ||
-    centre.description ||
+    presentationDescription ||
     (isClaimed
       ? 'Parents are choosing a place for their child, but they also need the day to feel easier. CentreConnect keeps applications, updates, and pickup details in one place.'
       : 'This centre gives parents a simple starting point: learn the basics, ask questions, and decide whether it feels right.')
@@ -422,8 +437,6 @@ export function CentreClient({
     { label: 'Ask for a visit', message: `Hi ${centre.name}, I would like to ask if I can visit the centre before I apply.` },
   ]
 
-  const centreConnectAdvantage = [] as Array<{ icon: typeof BellRing; title: string; description: string }>
-
   const classEmphasis = [
     'A gentle start with care, rhythm, and close attention.',
     'A playful group for growing confidence and independence.',
@@ -480,7 +493,7 @@ export function CentreClient({
                   <MapPin className="h-3.5 w-3.5" />
                   {locationLabel || 'Johannesburg'}
                 </p>
-                {centre.tagline ? <p className="mt-3 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{centre.tagline}</p> : null}
+                {presentationTagline ? <p className="mt-3 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{presentationTagline}</p> : null}
               </div>
             </div>
 
@@ -730,27 +743,6 @@ export function CentreClient({
                   <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
                 </div>
 
-                {centreConnectAdvantage.length > 0 ? (
-                  <div className="mt-5 rounded-[1.6rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
-                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why this feels easier</p>
-                    <div className="mt-4 space-y-3">
-                      {centreConnectAdvantage.map((item) => {
-                        const Icon = item.icon
-                        return (
-                          <div key={item.title} className="flex items-start gap-3 rounded-[1.2rem] border border-white/70 bg-white/80 p-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#EAF6F2] text-[#0D9488]">
-                              <Icon className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-[#22312E]">{item.title}</p>
-                              <p className="mt-1 text-xs leading-5 text-[#5F6C68]">{item.description}</p>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                ) : null}
 
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
@@ -840,7 +832,7 @@ export function CentreClient({
         centreId={centre.id}
         centreSlug={centre.slug}
         centreName={centre.name}
-        tagline={centre.tagline}
+        tagline={presentationTagline}
         locationLabel={locationLabel}
         feesLabel={feesLabel}
         registrationFeeLabel={registrationFeeLabel}
@@ -862,6 +854,7 @@ export function CentreClient({
     </main>
   )
 }
+
 
 
 
