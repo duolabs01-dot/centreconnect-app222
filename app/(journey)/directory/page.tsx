@@ -8,6 +8,7 @@ import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
+import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
 
 export const metadata: Metadata = {
   title: 'CentreConnect directory',
@@ -122,7 +123,23 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let totalResults = 0
   let viewerRole: string | null = null
 
-  try {
+  if (shouldUseDemoCentreData()) {
+    effectiveSuburb = selectedSuburb || 'Alexandra'
+    centres = demoDirectoryCentres.filter((centre) => {
+      if (search && !centre.name.toLowerCase().includes(search.toLowerCase())) return false
+      if (effectiveSuburb && centre.suburb !== effectiveSuburb) return false
+      if (selectedSubsidy && !centre.subsidy_accepted) return false
+      if (selectedAgeGroup && !(centre.age_groups ?? []).includes(selectedAgeGroup)) return false
+      if (selectedFee) {
+        const feeCap = Number(selectedFee)
+        const feeValue = centre.monthly_fee_min ?? centre.monthly_fee_max
+        if (!Number.isNaN(feeCap) && typeof feeValue === 'number' && feeValue > feeCap) return false
+      }
+      return true
+    })
+    allActiveCentres = demoDirectoryCentres.map((centre) => ({ suburb: centre.suburb, age_groups: centre.age_groups }))
+    totalResults = centres.length
+  } else try {
     const supabase = await createClient()
     const {
       data: { user },

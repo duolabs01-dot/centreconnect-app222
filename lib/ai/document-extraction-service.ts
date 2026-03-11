@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
+import Tesseract from 'tesseract.js'
 
 export const AI_DOCUMENT_TYPES = [
   'birth_certificate',
@@ -201,16 +202,100 @@ export async function uploadPhotoForAiExtraction(input: {
   }
 }
 
+export async function extractWithTesseract(input: {
+  file: File
+  documentType: AiDocumentType
+}): Promise<AiExtractionResult> {
+  try {
+    const bytes = Buffer.from(await input.file.arrayBuffer())
+    const base64 = bytes.toString('base64')
+    const mimeType = input.file.type || 'image/jpeg'
+
+    const result = await Tesseract.recognize(`data:${mimeType};base64,${base64}`, 'eng', {
+      logger: () => {},
+    })
+
+    const text = result.data.text
+    if (!text || text.trim().length < 5) {
+      return {
+        success: false,
+        message: 'No text detected in image.',
+      }
+    }
+
+    const extractedFields = extractFieldsFromText(text, input.documentType)
+
+    if (Object.keys(extractedFields).length === 0) {
+      return {
+        success: false,
+        message: 'Could not extract structured fields from text.',
+      }
+    }
+
+    return {
+      success: true,
+      message: 'Text extracted via OCR.',
+      extraction: {
+        documentType: input.documentType,
+        fields: extractedFields,
+        summary: `OCR extracted ${text.split(/\s+/).length} words from document.`,
+      },
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: `OCR extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
+}
+
+function extractFieldsFromText(
+  text: string,
+  documentType: AiDocumentType
+): Partial<Record<AiFieldKey, AiFieldSuggestion>> {
+  const fields: Partial<Record<AiFieldKey, AiFieldSuggestion>> = {}
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
+
+  const nameMatch = text.match(/(?:name|first.?name|full.?name)[:\s]+([a-zA-Z]+)/i)
+  if (nameMatch) {
+    fields.first_name = { value: nameMatch[1], confidence: 50 }
+  }
+
+  const surnameMatch = text.match(/(?:surname|last.?name|family.?name)[:\s]+([a-zA-Z]+)/i)
+  if (surnameMatch) {
+    fields.last_name = { value: surnameMatch[1], confidence: 50 }
+  }
+
+  const dobMatch = text.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})/)
+  if (dobMatch) {
+    fields.date_of_birth = { value: dobMatch[1], confidence: 60 }
+  }
+
+  const docNumMatch = text.match(/(?:number|id|ref|registration)[:\s]*([A-Z0-9]{5,})/i)
+  if (docNumMatch) {
+    fields.document_number = { value: docNumMatch[1], confidence: 40 }
+  }
+
+  const dateMatch = text.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/)
+  if (dateMatch) {
+    fields.record_date = { value: dateMatch[1], confidence: 40 }
+  }
+
+  const notes = lines.slice(0, 3).join(' ').slice(0, 200)
+  if (notes) {
+    fields.notes = { value: notes, confidence: 30 }
+  }
+
+  return fields
+}
+
 export async function extractStructuredDocumentWithGemini(input: {
   file: File
   documentType: AiDocumentType
 }): Promise<AiExtractionResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim()
   if (!apiKey) {
-    return {
-      success: false,
-      message: 'GEMINI_API_KEY is not configured.',
-    }
+    return await extractWithTesseract(input)
   }
 
   const bytes = Buffer.from(await input.file.arrayBuffer())
@@ -253,9 +338,15 @@ export async function extractStructuredDocumentWithGemini(input: {
 
   if (!response.ok) {
     const details = await response.text()
+    const status = response.status
+    
+    if (status === 429 || details.includes('quota') || details.includes('rate limit')) {
+      return await extractWithTesseract(input)
+    }
+    
     return {
       success: false,
-      message: `AI extraction request failed (${response.status}): ${details.slice(0, 220)}`,
+      message: `AI extraction request failed (${status}): ${details.slice(0, 220)}`,
     }
   }
 

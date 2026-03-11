@@ -3,6 +3,7 @@ import HomeClientPage, { type HomeActiveCentre } from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
+import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
 
 export const revalidate = 3600
 
@@ -66,9 +67,24 @@ export default async function HomePage({
     }
   }
 
-  let activeCentres: HomeActiveCentre[] = []
+  let activeCentres: HomeActiveCentre[] = shouldUseDemoCentreData()
+    ? demoDirectoryCentres.map((centre) => ({
+        id: centre.id,
+        name: centre.name,
+        slug: centre.slug,
+        suburb: centre.suburb,
+        primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
+        isRegistered: centre.is_registered,
+        isClaimed: centre.is_claimed,
+        isPilot: centre.is_pilot,
+        isFeatured: centre.is_featured,
+        coverImage: centre.cover_image_url,
+        latitude: centre.latitude,
+        longitude: centre.longitude,
+      }))
+    : []
 
-  if (supabase) {
+  if (supabase && !shouldUseDemoCentreData()) {
     try {
       const { data: centreRows } = await supabase
         .from('ecd_centres')

@@ -13,6 +13,7 @@ import {
   type ExistingApplication,
   type WebsiteContentState,
 } from './centre-client'
+import { demoCentrePageBySlug, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
 
 type MetadataCentre = {
   name: string
@@ -221,6 +222,11 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
   const emptyPayload = buildEmptyPayload()
   if (slugCandidates.length === 0) return emptyPayload
 
+  if (shouldUseDemoCentreData()) {
+    const match = slugCandidates.map((slug) => demoCentrePageBySlug[slug]).find(Boolean)
+    return match ?? emptyPayload
+  }
+
   try {
     const supabase = await createClient()
     const publicCentre = await loadPublicCentreRow(supabase, slugCandidates)
@@ -294,6 +300,16 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
 
 async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCentre | null> {
   if (slugCandidates.length === 0) return null
+
+  if (shouldUseDemoCentreData()) {
+    const match = slugCandidates.map((slug) => demoCentrePageBySlug[slug]?.centre).find(Boolean)
+    if (match) {
+      return {
+        name: match.name,
+        tagline: match.tagline ?? null,
+      }
+    }
+  }
 
   try {
     const supabase = await createClient()
