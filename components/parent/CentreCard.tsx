@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { ArrowRight, Baby, Eye, MapPin, ShieldCheck, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, BellRing, Eye, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
@@ -188,6 +188,14 @@ export function CentreCard({
       ? [{ key: 'distance', icon: MapPin, label: 'Distance', value: distanceLabel.trim() }]
       : []),
   ]
+  const claimedValuePoints = [
+    { icon: BellRing, label: 'Daily updates that feel close' },
+    { icon: ShieldCheck, label: 'Calmer pickup and reminders' },
+    { icon: FileText, label: 'Less repeated paperwork' },
+  ]
+  const compactConvictionCopy = is_claimed
+    ? 'CentreConnect parents get a calmer journey here: daily visibility, clearer pickup, and one profile that makes applying easier.'
+    : 'Use this profile to compare the creche now, then come back when digital applications open on CentreConnect.'
   const showRecommendedChip = !isVerifiedForParents && isFeatured
   const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
   const showSubsidyChip = subsidy_accepted
@@ -212,7 +220,7 @@ export function CentreCard({
         </div>
 
         <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
-          <div className="relative aspect-[16/6.2] overflow-hidden bg-[#F4ECE2]">
+          <div className="relative aspect-[16/5.9] overflow-hidden bg-[#F4ECE2]">
             <Image
               src={heroImageSrc}
               alt={usesPreviewImage ? `${name} preview image` : name}
@@ -224,7 +232,7 @@ export function CentreCard({
 
           </div>
 
-          <CardContent className="flex flex-1 flex-col space-y-2.5 px-4 pb-4 pt-3">
+          <CardContent className="flex flex-1 flex-col space-y-2 px-4 pb-3.5 pt-3">
             <div className="relative min-h-[3.15rem] pl-[4.15rem]">
               <div className="absolute left-0 top-[-1.9rem]">
                 {resolvedLogoUrl ? (
@@ -294,10 +302,30 @@ export function CentreCard({
                 <CompactMetaItem key={item.key} icon={item.icon} label={item.label} value={item.value} />
               ))}
             </div>
+
+            <div className={`rounded-[1.1rem] border px-3 py-2.5 ${is_claimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
+                {is_claimed ? 'Why this feels better for parents' : 'What this profile helps with'}
+              </p>
+              {is_claimed ? (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {claimedValuePoints.map((item) => {
+                    const Icon = item.icon
+                    return (
+                      <span key={item.label} className="inline-flex items-center gap-1.5 rounded-full border border-white bg-white/85 px-2.5 py-1 text-[10px] font-semibold text-[#1F4B42]">
+                        <Icon className="h-3.5 w-3.5 text-[#0D9488]" />
+                        {item.label}
+                      </span>
+                    )
+                  })}
+                </div>
+              ) : null}
+              <p className="mt-2 text-[12px] leading-5 text-[#4E5D59]">{compactConvictionCopy}</p>
+            </div>
           </CardContent>
         </Link>
 
-        <CardFooter className="flex flex-col items-stretch gap-3 border-t border-[#E8DDD0] px-4 pb-4 pt-3">
+        <CardFooter className="flex flex-col items-stretch gap-2.5 border-t border-[#E8DDD0] px-4 pb-4 pt-3">
           {is_claimed ? (
             <>
               <Button
@@ -308,12 +336,18 @@ export function CentreCard({
                 <span>{primaryLabel}</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <Link
-                href={detailHref}
-                className="text-center text-[11px] font-semibold tracking-[0.08em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
-              >
-                View details
-              </Link>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[11px] font-medium leading-5 text-[#5F6C68]">
+                  Daily activities, calmer pickup, and less paper once you apply.
+                </p>
+                <Link
+                  href={detailHref}
+                  className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold tracking-[0.08em] text-[#0D9488] transition-colors hover:text-[#0B857A]"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  View
+                </Link>
+              </div>
             </>
           ) : null}
 
