@@ -11,7 +11,7 @@ import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 import { type CentreOperatingSchedule } from '@/lib/time/centre-operating-schedule'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
@@ -176,6 +176,7 @@ export function CentreCard({
   const usesPreviewImage = !hasRealCoverImage
   const previewImageSrc = buildCentrePreviewImage({ name, suburb, isClaimed: is_claimed })
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
+  const isOnCentreConnect = Boolean(is_claimed)
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
   const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
   const whatsappHref = buildWhatsappHref(contact_whatsapp ?? contact_phone ?? phone, name)
@@ -294,7 +295,8 @@ export function CentreCard({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {isVerifiedForParents ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
+              {isOnCentreConnect ? <PremiumVerifiedBadge compact label="On CentreConnect" className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+              {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
               {showRecommendedChip ? (
                 <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">
                   <ShieldCheck className="h-3 w-3" />

@@ -10,7 +10,7 @@ import { ContactCentreSheet } from '@/components/public/ContactCentreSheet'
 import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 
 type MobileCentreDetailsSheetProps = {
   centreId: string
@@ -154,7 +154,8 @@ export function MobileCentreDetailsSheet({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {isRegistered ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
+                  {isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                  {isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                   {showPilotTrustInfo ? (
                     <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-0.5 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                       Pilot Partner

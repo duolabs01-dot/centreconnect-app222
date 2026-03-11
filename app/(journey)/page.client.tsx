@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { ArrowRight, CheckCircle2, Clock3, FileCheck2, MapPin, Share2, ShieldCheck, Smartphone, Users2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
@@ -406,12 +407,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </div>
                       <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {centre.isRegistered && (
-                          <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-700">
-                            <ShieldCheck className="h-3 w-3" />
-                            Government registered
-                          </span>
-                        )}
+                        {centre.isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                        {centre.isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                         {centre.isFeatured ? (
                           <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">
                             <ShieldCheck className="h-3 w-3" />

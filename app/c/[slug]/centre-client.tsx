@@ -18,7 +18,7 @@ import {
   type CentreOperatingSchedule,
 } from '@/lib/time/centre-operating-schedule'
 import { MobileCentreDetailsSheet } from './mobile-centre-details-sheet'
-import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
+import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { isPilotCentreIdentity, UNCLAIMED_CENTRE_DISCLAIMER } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
@@ -340,7 +340,7 @@ export function CentreClient({
   const showPilotTrustInfo = isPilotCentre
   const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
-    ? [isVerifiedForParents ? 'Government registered' : null, 'Parent-ready profile'].filter(Boolean) as string[]
+    ? [isClaimed ? 'On CentreConnect' : null, isVerifiedForParents ? 'Government registered' : null, 'Parent-ready profile'].filter(Boolean) as string[]
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
@@ -352,10 +352,11 @@ export function CentreClient({
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
   const showExactLocationBadge = isClaimed && locationMetadata?.source === 'exact'
   const trustLabel = isVerifiedForParents
-    ? 'Government registration confirmed'
+    ? 'On CentreConnect and government registration confirmed'
     : isClaimed
-      ? 'Live profile, photos pending'
+      ? 'On CentreConnect'
       : 'Not yet on CentreConnect'
+    
   const practicalLabel = centre.capacity
     ? `Space for about ${centre.capacity} children`
     : 'Ask about availability'
@@ -453,7 +454,8 @@ export function CentreClient({
               <Badge className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
                 Centre profile
               </Badge>
-              {isVerifiedForParents ? <PremiumVerifiedBadge label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
+              {isClaimed ? <PremiumVerifiedBadge label="On CentreConnect" /> : null}
+              {isVerifiedForParents ? <GovernmentRegisteredBadge /> : null}
               {showExactLocationBadge ? (
                 <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
                   Exact location
@@ -738,7 +740,8 @@ export function CentreClient({
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {isVerifiedForParents ? <PremiumVerifiedBadge compact label="Government registered" className="border-blue-200 bg-blue-50 text-blue-700" /> : null}
+                      {isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                      {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
                       {!isVerifiedForParents ? (
                         <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F6200] shadow-none">
                           {isClaimed ? 'Preview image' : 'Not yet on CentreConnect'}
