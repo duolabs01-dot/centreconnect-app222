@@ -33,6 +33,7 @@ import {
   type OperatingDayKey,
 } from '@/lib/time/centre-operating-schedule'
 import { type CentreClassroomDraft } from '@/lib/ecd/centre-public-profile'
+import type { CentreCoordinateConfidence, CentreCoordinateSource } from '@/lib/geo/centre-location-metadata'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact'
 type SubscriptionTier = 'none' | 'basic' | 'standard' | 'premium'
@@ -63,6 +64,8 @@ export type AdminTenantTableRow = {
   postalCode: string
   latitude: string
   longitude: string
+  coordinateSource: CentreCoordinateSource
+  coordinateConfidence: CentreCoordinateConfidence
   logoUrl: string
   coverImageUrl: string
   feesDisplayMode: FeeDisplayMode
@@ -259,6 +262,7 @@ function hasPackageChanged(
 export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [locationFilter, setLocationFilter] = useState<'all' | 'exact' | 'missing'>('all')
   const [sorting, setSorting] = useState<SortingState>([{ id: 'claimedDate', desc: true }])
   const [editOpen, setEditOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -637,8 +641,15 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     [openEdit, selectedIds, toggleSelection, rowUpgrading, handleRowUpgrade, deleteTenant, deletingIds]
   )
 
+  const filteredTenants = useMemo(() => {
+    if (locationFilter === 'all') return tenants
+    return tenants.filter((tenant) =>
+      locationFilter === 'exact' ? tenant.coordinateSource === 'exact' : tenant.coordinateSource !== 'exact'
+    )
+  }, [locationFilter, tenants])
+
   const table = useReactTable({
-    data: tenants,
+    data: filteredTenants,
     columns,
     state: {
       sorting,
@@ -1019,7 +1030,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
           <CardDescription className="text-slate-400">
             Full tenant operations table with one-click edit modal.
           </CardDescription>
-          <div className="max-w-sm">
+          <div className="flex max-w-2xl flex-col gap-3 sm:flex-row">
             <Input
               value={query}
               onChange={(event) => {
@@ -1029,6 +1040,14 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
               placeholder="Search centres, owners, suburbs..."
               className={darkInputClass}
             />
+            <Select value={locationFilter} onValueChange={(value) => { setLocationFilter(value as 'all' | 'exact' | 'missing'); table.setPageIndex(0) }}>
+              <SelectTrigger className={`${darkInputClass} w-full sm:w-[220px] [&_span]:text-slate-100`}><SelectValue /></SelectTrigger>
+              <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                <SelectItem value="all">All centres</SelectItem>
+                <SelectItem value="exact">Exact location set</SelectItem>
+                <SelectItem value="missing">Missing exact coordinates</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardHeader>
         <CardContent>
@@ -1279,7 +1298,8 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     />
                   </div>
                   <div className="sm:col-span-2 rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
-                    Location accuracy: {form.latitude.trim() && form.longitude.trim() ? 'Exact pin set' : 'Approximate only until you save exact coordinates'}
+                    <p>Location accuracy: {form.coordinateSource === 'exact' || (form.latitude.trim() && form.longitude.trim()) ? 'Exact pin set' : form.coordinateSource === 'geocoded' ? 'Geocoded from address' : 'Approximate only until you save exact coordinates'}</p>
+                    <p className="mt-1 text-[11px] text-cyan-50/80">Leave the pin blank if you only know the street address. CentreConnect will geocode it through Pelias when you save.</p>
                   </div>
                 </div>
               </TabsContent>
@@ -1384,7 +1404,17 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     </div>
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Distance accuracy</p>
-                      <p className="mt-1 text-sm font-semibold text-white">{form.latitude.trim() && form.longitude.trim() ? 'Exact location set' : 'Approximate only'}</p>
+                      <p className="mt-1 text-sm font-semibold text-white">{form.coordinateSource === 'exact' || (form.latitude.trim() && form.longitude.trim()) ? 'Exact location set' : form.coordinateSource === 'geocoded' ? 'Geocoded from address' : 'Approximate only'}</p>
+                      {form.latitude.trim() && form.longitude.trim() ? (
+                        <a
+                          href={`https://www.openstreetmap.org/?mlat=${encodeURIComponent(form.latitude.trim())}&mlon=${encodeURIComponent(form.longitude.trim())}#map=18/${encodeURIComponent(form.latitude.trim())}/${encodeURIComponent(form.longitude.trim())}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-2 inline-flex text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+                        >
+                          Preview pin on OpenStreetMap
+                        </a>
+                      ) : null}
                     </div>
                     <div className="rounded-xl border border-slate-800 bg-slate-950/70 p-3">
                       <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Aftercare</p>

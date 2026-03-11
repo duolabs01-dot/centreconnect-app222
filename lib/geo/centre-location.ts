@@ -1,23 +1,25 @@
+import type { CentreCoordinateSource } from "@/lib/geo/centre-location-metadata"
+
 const SUBURB_COORDINATES: Record<string, { lat: number; lng: number }> = {
   alexandra: { lat: -26.1052, lng: 28.0872 },
   marlboro: { lat: -26.0891, lng: 28.0997 },
   wynberg: { lat: -26.0962, lng: 28.1034 },
   bramley: { lat: -26.0831, lng: 28.0876 },
-  'linbro park': { lat: -26.0674, lng: 28.1188 },
+  "linbro park": { lat: -26.0674, lng: 28.1188 },
   sandringham: { lat: -26.1292, lng: 28.0947 },
   kew: { lat: -26.1253, lng: 28.1027 },
-  'orange grove': { lat: -26.1529, lng: 28.0929 },
-  'lombardy east': { lat: -26.1252, lng: 28.1193 },
+  "orange grove": { lat: -26.1529, lng: 28.0929 },
+  "lombardy east": { lat: -26.1252, lng: 28.1193 },
   johannesburg: { lat: -26.2041, lng: 28.0473 },
 }
 
 const SLUG_COORDINATES: Record<string, { lat: number; lng: number }> = {
   bajabulile: { lat: -26.1038, lng: 28.0916 },
-  'bajabulile-day-care-centre': { lat: -26.1038, lng: 28.0916 },
+  "bajabulile-day-care-centre": { lat: -26.1038, lng: 28.0916 },
 }
 
 function normalizeKey(value: string | null | undefined) {
-  return value?.trim().toLowerCase() ?? ''
+  return value?.trim().toLowerCase() ?? ""
 }
 
 function hashSeed(value: string) {
@@ -45,11 +47,11 @@ function offsetFallbackCoordinate(base: { lat: number; lng: number }, seedInput:
 }
 
 export function toFiniteCoordinate(value: unknown): number | null {
-  if (typeof value === 'number') {
+  if (typeof value === "number") {
     return Number.isFinite(value) ? value : null
   }
 
-  if (typeof value === 'string' && value.trim() !== '') {
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
   }
@@ -64,39 +66,44 @@ export function resolveCentreCoordinates(input: {
   suburb?: string | null
   city?: string | null
   address?: string | null
+  storedSource?: CentreCoordinateSource | null
 }) {
   const latitude = toFiniteCoordinate(input.latitude)
   const longitude = toFiniteCoordinate(input.longitude)
 
   if (latitude != null && longitude != null) {
-    return { latitude, longitude, source: 'exact' as const }
+    return {
+      latitude,
+      longitude,
+      source: (input.storedSource ?? "exact") as CentreCoordinateSource,
+    }
   }
 
   const slugMatch = SLUG_COORDINATES[normalizeKey(input.slug)]
   if (slugMatch) {
-    return { latitude: slugMatch.lat, longitude: slugMatch.lng, source: 'slug-fallback' as const }
+    return { latitude: slugMatch.lat, longitude: slugMatch.lng, source: "slug-fallback" as const }
   }
 
   const suburbMatch = SUBURB_COORDINATES[normalizeKey(input.suburb)]
   if (suburbMatch) {
-    const offset = offsetFallbackCoordinate(suburbMatch, input.slug || input.address || input.suburb || input.city || '')
-    return { latitude: offset.lat, longitude: offset.lng, source: 'suburb-fallback' as const }
+    const offset = offsetFallbackCoordinate(suburbMatch, input.slug || input.address || input.suburb || input.city || "")
+    return { latitude: offset.lat, longitude: offset.lng, source: "suburb-fallback" as const }
   }
 
   const cityMatch = SUBURB_COORDINATES[normalizeKey(input.city)]
   if (cityMatch) {
-    const offset = offsetFallbackCoordinate(cityMatch, input.slug || input.address || input.city || '')
-    return { latitude: offset.lat, longitude: offset.lng, source: 'city-fallback' as const }
+    const offset = offsetFallbackCoordinate(cityMatch, input.slug || input.address || input.city || "")
+    return { latitude: offset.lat, longitude: offset.lng, source: "city-fallback" as const }
   }
 
   const addressKey = normalizeKey(input.address)
   const addressMatch = Object.entries(SUBURB_COORDINATES).find(([key]) => key && addressKey.includes(key))?.[1]
   if (addressMatch) {
-    const offset = offsetFallbackCoordinate(addressMatch, input.slug || input.address || '')
-    return { latitude: offset.lat, longitude: offset.lng, source: 'address-fallback' as const }
+    const offset = offsetFallbackCoordinate(addressMatch, input.slug || input.address || "")
+    return { latitude: offset.lat, longitude: offset.lng, source: "address-fallback" as const }
   }
 
-  return { latitude: null, longitude: null, source: 'missing' as const }
+  return { latitude: null, longitude: null, source: "missing" as const }
 }
 
 export function getLocationReference(input: { suburb?: string | null; city?: string | null }) {

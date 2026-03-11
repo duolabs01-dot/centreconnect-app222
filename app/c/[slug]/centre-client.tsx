@@ -24,6 +24,7 @@ import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 import { readAftercareConfig } from '@/lib/ecd/centre-public-profile'
+import { readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 
 export type Centre = {
   id: string
@@ -296,6 +297,7 @@ export function CentreClient({
     getOperatingScheduleSummary(savedOperatingSchedule)
   const operationalStatus = getCentreOperationalStatus(savedOperatingSchedule, new Date(), operatingHoursSummary)
   const aftercareSettings = readAftercareConfig(centre.communication_automation_settings)
+  const locationMetadata = readCentreLocationMetadata(centre.communication_automation_settings)
   const aftercare = {
     available: centre.aftercare_available === true || aftercareSettings.available,
     endTime: centre.aftercare_end_time ?? aftercareSettings.endTime,
@@ -323,6 +325,7 @@ export function CentreClient({
   const feesLabel = formatFeesLabel(centre)
   const registrationFeeLabel = formatRegistrationFeeLabel(centre)
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
+  const showExactLocationBadge = isClaimed && locationMetadata?.source === 'exact'
   const trustLabel = isVerifiedForParents
     ? centre.subsidy_accepted
       ? 'Verified and subsidy friendly'
@@ -462,6 +465,11 @@ export function CentreClient({
                 {centre.subsidy_accepted ? (
                   <Badge className="rounded-full border border-[#E7D6A8] bg-[#FFF5D9] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8F6200] shadow-none">
                     Subsidy friendly
+                  </Badge>
+                ) : null}
+                {showExactLocationBadge ? (
+                  <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
+                    Exact location
                   </Badge>
                 ) : null}
                 {!isClaimed ? (

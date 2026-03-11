@@ -14,6 +14,7 @@ import { splitFullName } from '@/lib/utils/name'
 import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 import { deriveAgeRangeFromGroups } from '@/lib/ecd/age-groups'
 import { readAftercareConfig, type CentreClassroomDraft } from '@/lib/ecd/centre-public-profile'
+import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 import {
   buildDefaultOperatingSchedule,
   getOperatingScheduleSummary,
@@ -201,6 +202,7 @@ export default async function AdminTenantsPage() {
     const aftercare = readAftercareConfig(centre.communication_automation_settings)
     const classrooms = classesByCentre.get(centre.id) ?? []
     const ageRange = deriveAgeRangeFromGroups(centre.age_groups)
+    const locationMetadata = readCentreLocationMetadata(centre.communication_automation_settings)
     const dsdStatus = (() => {
       const raw = typeof tenantOverrides?.dsd_status === 'string' ? tenantOverrides.dsd_status : null
       if (raw === 'pending' || raw === 'registered' || raw === 'expired' || raw === 'suspended' || raw === 'not_required') {
@@ -230,6 +232,8 @@ export default async function AdminTenantsPage() {
       postalCode: centre.postal_code?.trim() || '',
       latitude: toRandString(centre.latitude),
       longitude: toRandString(centre.longitude),
+      coordinateSource: locationMetadata?.source ?? (centre.latitude != null && centre.longitude != null ? 'exact' : 'missing'),
+      coordinateConfidence: locationMetadata?.confidence ?? defaultConfidenceForSource(centre.latitude != null && centre.longitude != null ? 'exact' : 'missing'),
       logoUrl: centre.logo_url?.trim() || '',
       coverImageUrl: centre.cover_image_url?.trim() || '',
       feesDisplayMode: centre.fees_display_mode ?? 'range',

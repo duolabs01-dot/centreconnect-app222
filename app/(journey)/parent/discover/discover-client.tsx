@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import CentreCard from '@/components/parent/CentreCard'
 import { PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
+import { defaultConfidenceForSource, isTrustedDistanceSource, type CentreCoordinateConfidence, type CentreCoordinateSource } from '@/lib/geo/centre-location-metadata'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { createClient } from '@/lib/supabase/client'
 
@@ -36,7 +37,8 @@ type DiscoverCentre = {
   is_claimed?: boolean
   is_registered?: boolean
   distanceMeters?: number
-  coordinateSource?: 'exact' | 'slug-fallback' | 'suburb-fallback' | 'city-fallback' | 'address-fallback' | 'missing'
+  coordinateSource?: CentreCoordinateSource
+  coordinateConfidence?: CentreCoordinateConfidence | null
 }
 
 const FALLBACK_CENTRES: DiscoverCentre[] = [
@@ -157,6 +159,7 @@ export default function ParentDiscoverClient() {
               latitude: resolvedCoordinates.latitude,
               longitude: resolvedCoordinates.longitude,
               coordinateSource: resolvedCoordinates.source,
+              coordinateConfidence: defaultConfidenceForSource(resolvedCoordinates.source),
               contact_whatsapp: centre.contact_whatsapp ?? null,
               contact_phone: centre.contact_phone ?? null,
               phone: centre.phone ?? null,
@@ -208,7 +211,7 @@ export default function ParentDiscoverClient() {
         return {
           ...centre,
           distanceMeters,
-          distanceLabel: locationMode === 'device' && centre.coordinateSource === 'exact' ? formatDistance(distanceMeters) ?? undefined : undefined,
+          distanceLabel: locationMode === 'device' && isTrustedDistanceSource(centre.coordinateSource ?? null, centre.coordinateConfidence ?? null) ? formatDistance(distanceMeters) ?? undefined : undefined,
         }
       })
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))

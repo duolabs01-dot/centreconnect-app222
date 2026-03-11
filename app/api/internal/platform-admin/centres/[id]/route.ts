@@ -11,6 +11,8 @@ import {
   summarizeOperatingSchedule,
 } from '@/lib/time/centre-operating-schedule'
 import { sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
+import { readCentreLocationMetadata, writeCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
+import { geocodeAddressWithPelias } from '@/lib/geo/pelias'
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 type RequestedTier = 'pilot' | 'basic' | 'standard' | 'premium'
@@ -52,6 +54,11 @@ function normalizeRequestedTier(
   }
 
   return { tier, status, monthlyPrice, isPilotPlan: false }
+}
+
+function trimText(value: string | null | undefined) {
+  const trimmed = value?.trim() ?? ''
+  return trimmed || null
 }
 
 const actionSchema = z.discriminatedUnion('action', [
@@ -149,7 +156,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const admin = createAdminClient()
   const payload = parsed.data
-  const { data: centreSnapshot } = await admin.from('ecd_centres').select('id,name,slug').eq('id', centreId).maybeSingle()
+  const { data: centreSnapshot } = await admin.from('ecd_centres').select('id,name,slug,address,suburb,city,latitude,longitude,communication_automation_settings').eq('id', centreId).maybeSingle()
   const centreName = centreSnapshot?.name ?? centreId
   const centreSlug = centreSnapshot?.slug ?? '-'
 
@@ -320,6 +327,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.phone !== undefined) updatePayload.phone = payload.phone
     if (payload.contactPhone !== undefined) updatePayload.contact_phone = payload.contactPhone
     if (payload.contactWhatsapp !== undefined) updatePayload.contact_whatsapp = payload.contactWhatsapp
+    const locationFieldsTouched =
+      payload.address !== undefined ||
+      payload.suburb !== undefined ||
+      payload.city !== undefined ||
+      payload.province !== undefined ||
+      payload.postalCode !== undefined ||
+      payload.latitude !== undefined ||
+      payload.longitude !== undefined
+
     if (payload.address !== undefined) updatePayload.address = payload.address
     if (payload.suburb !== undefined) updatePayload.suburb = payload.suburb
     if (payload.city !== undefined) updatePayload.city = payload.city
@@ -339,34 +355,92 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (payload.isActive !== undefined) updatePayload.is_active = payload.isActive
     if (payload.isRegistered !== undefined) updatePayload.is_registered = payload.isRegistered
 
+    let locationMetadata = readCentreLocationMetadata(centreSnapshot?.communication_automation_settings)
+    let existingSettings =
+      centreSnapshot?.communication_automation_settings &&
+      typeof centreSnapshot.communication_automation_settings === 'object' &&
+      !Array.isArray(centreSnapshot.communication_automation_settings)
+        ? (centreSnapshot.communication_automation_settings as Record<string, unknown>)
+        : {}
+    let tenantAdminOverrides =
+      existingSettings.tenant_admin_overrides &&
+      typeof existingSettings.tenant_admin_overrides === 'object' &&
+      !Array.isArray(existingSettings.tenant_admin_overrides)
+        ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
+        : {}
+
+    if (locationFieldsTouched) {
+      const manualLatitude = payload.latitude !== undefined ? payload.latitude : centreSnapshot?.latitude ?? null
+      const manualLongitude = payload.longitude !== undefined ? payload.longitude : centreSnapshot?.longitude ?? null
+      const nextAddress = payload.address !== undefined ? payload.address : centreSnapshot?.address ?? null
+      const nextSuburb = payload.suburb !== undefined ? payload.suburb : centreSnapshot?.suburb ?? null
+      const nextCity = payload.city !== undefined ? payload.city : centreSnapshot?.city ?? null
+      const currentLocationMetadata = readCentreLocationMetadata(existingSettings)
+      const hasExactCoordinates = manualLatitude != null && manualLongitude != null
+      const hasManualPinInput = payload.latitude !== undefined || payload.longitude !== undefined
+      const addressChanged = payload.address !== undefined || payload.suburb !== undefined || payload.city !== undefined
+
+      if (hasExactCoordinates && hasManualPinInput) {
+        locationMetadata = {
+          source: 'exact',
+          confidence: 'high',
+          provider: 'manual',
+          label: [trimText(nextAddress), trimText(nextSuburb), trimText(nextCity)].filter(Boolean).join(', ') || centreName,
+          geocodedAt: new Date().toISOString(),
+        }
+      } else if (!hasExactCoordinates || (addressChanged && currentLocationMetadata?.source !== 'exact')) {
+        const geocoded = await geocodeAddressWithPelias({
+          address: nextAddress,
+          suburb: nextSuburb,
+          city: nextCity,
+          country: 'South Africa',
+        })
+
+        if (geocoded) {
+          updatePayload.latitude = geocoded.latitude
+          updatePayload.longitude = geocoded.longitude
+          locationMetadata = {
+            source: 'geocoded',
+            confidence: geocoded.confidence,
+            provider: 'pelias',
+            label: geocoded.label,
+            geocodedAt: new Date().toISOString(),
+          }
+        } else if (!hasExactCoordinates) {
+          locationMetadata = {
+            source: 'missing',
+            confidence: 'low',
+            provider: 'pelias',
+            label: null,
+            geocodedAt: new Date().toISOString(),
+          }
+        }
+      }
+
+      existingSettings = writeCentreLocationMetadata(existingSettings, locationMetadata ?? {
+        source: hasExactCoordinates ? 'exact' : 'missing',
+        confidence: hasExactCoordinates ? 'high' : 'low',
+        provider: hasExactCoordinates ? 'manual' : 'pelias',
+        label: null,
+        geocodedAt: new Date().toISOString(),
+      })
+      tenantAdminOverrides =
+        existingSettings.tenant_admin_overrides &&
+        typeof existingSettings.tenant_admin_overrides === 'object' &&
+        !Array.isArray(existingSettings.tenant_admin_overrides)
+          ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
+          : {}
+    }
+
     if (
       payload.operatingSchedule !== undefined ||
       payload.operatingHours !== undefined ||
       payload.aftercareAvailable !== undefined ||
       payload.aftercareEndTime !== undefined ||
       payload.dsdStatus !== undefined ||
-      payload.marketplaceUpgrades !== undefined
+      payload.marketplaceUpgrades !== undefined ||
+      locationFieldsTouched
     ) {
-      const { data: settingsRow, error: settingsError } = await admin
-        .from('ecd_centres')
-        .select('communication_automation_settings')
-        .eq('id', centreId)
-        .maybeSingle()
-      if (settingsError) return NextResponse.json({ error: settingsError.message }, { status: 400 })
-
-      const existingSettings =
-        settingsRow?.communication_automation_settings &&
-        typeof settingsRow.communication_automation_settings === 'object' &&
-        !Array.isArray(settingsRow.communication_automation_settings)
-          ? (settingsRow.communication_automation_settings as Record<string, unknown>)
-          : {}
-      const tenantAdminOverrides =
-        existingSettings.tenant_admin_overrides &&
-        typeof existingSettings.tenant_admin_overrides === 'object' &&
-        !Array.isArray(existingSettings.tenant_admin_overrides)
-          ? { ...(existingSettings.tenant_admin_overrides as Record<string, unknown>) }
-          : {}
-
       if (payload.operatingSchedule !== undefined) {
         const normalizedSchedule = payload.operatingSchedule
           ? normalizeOperatingSchedule(payload.operatingSchedule, buildDefaultOperatingSchedule())

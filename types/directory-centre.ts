@@ -1,3 +1,4 @@
+import type { CentreCoordinateConfidence, CentreCoordinateSource } from '@/lib/geo/centre-location-metadata'
 import type { CentreOperatingSchedule } from '@/lib/time/centre-operating-schedule'
 
 export type DirectoryCentre = {
@@ -24,7 +25,8 @@ export type DirectoryCentre = {
   operating_hours_summary?: string | null
   latitude: number | null
   longitude: number | null
-  coordinate_source?: 'exact' | 'slug-fallback' | 'suburb-fallback' | 'city-fallback' | 'address-fallback' | 'missing'
+  coordinate_source?: CentreCoordinateSource
+  coordinate_confidence?: CentreCoordinateConfidence | null
   contact_whatsapp?: string | null
   contact_phone?: string | null
   phone?: string | null

@@ -11,6 +11,8 @@ import { updateNotificationPreferencesAction } from '@/lib/actions/settings/upda
 import { inviteStaffAction } from '@/lib/actions/settings/staff-management'
 import { requestCancellationAction } from '@/lib/actions/settings/cancel-subscription'
 import { readAftercareConfig, sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
+import { readCentreLocationMetadata, writeCentreLocationMetadata, type CentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
+import { geocodeAddressWithPelias } from '@/lib/geo/pelias'
 import { DangerZoneClient } from './danger-zone-client'
 
 export const metadata: Metadata = {
@@ -59,6 +61,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .limit(20)
 
   const aftercare = readAftercareConfig(centre?.communication_automation_settings)
+  const locationMetadata = readCentreLocationMetadata(centre?.communication_automation_settings)
   const classRows = (classes ?? []).map((row: any) => ({
     id: row.id as string,
     name: String(row.name ?? ''),
@@ -99,16 +102,84 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
   async function saveCentreLocation(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
+    const address = String(formData.get('address') ?? '').trim() || null
+    const suburb = String(formData.get('suburb') ?? '').trim() || null
+    const city = String(formData.get('city') ?? '').trim() || null
+    const province = String(formData.get('province') ?? '').trim() || null
+    const postalCode = String(formData.get('postal_code') ?? '').trim() || null
+    const rawLatitude = String(formData.get('latitude') ?? '').trim()
+    const rawLongitude = String(formData.get('longitude') ?? '').trim()
+    const parsedLatitude = rawLatitude ? Number(rawLatitude) : null
+    const parsedLongitude = rawLongitude ? Number(rawLongitude) : null
+    const hasManualPin = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
+
+    const { data: existingCentre } = await session.supabase
+      .from('ecd_centres')
+      .select('communication_automation_settings')
+      .eq('id', session.ecdId)
+      .maybeSingle()
+
+    let settings =
+      existingCentre?.communication_automation_settings &&
+      typeof existingCentre.communication_automation_settings === 'object' &&
+      !Array.isArray(existingCentre.communication_automation_settings)
+        ? (existingCentre.communication_automation_settings as Record<string, unknown>)
+        : {}
+
+    let latitude = hasManualPin ? parsedLatitude : null
+    let longitude = hasManualPin ? parsedLongitude : null
+    let metadata: CentreLocationMetadata | null = hasManualPin
+      ? {
+          source: 'exact' as const,
+          confidence: 'high' as const,
+          provider: 'manual',
+          label: [address, suburb, city].filter(Boolean).join(', ') || 'Exact pin saved',
+          geocodedAt: new Date().toISOString(),
+        }
+      : null
+
+    if (!hasManualPin && (address || suburb || city)) {
+      const geocoded = await geocodeAddressWithPelias({
+        address,
+        suburb,
+        city,
+        country: 'South Africa',
+      })
+      if (geocoded) {
+        latitude = geocoded.latitude
+        longitude = geocoded.longitude
+        metadata = {
+          source: 'geocoded' as const,
+          confidence: geocoded.confidence,
+          provider: 'pelias',
+          label: geocoded.label,
+          geocodedAt: new Date().toISOString(),
+        }
+      }
+    }
+
+    settings = writeCentreLocationMetadata(
+      settings,
+      metadata ?? {
+        source: 'missing',
+        confidence: 'low',
+        provider: 'pelias',
+        label: null,
+        geocodedAt: new Date().toISOString(),
+      }
+    )
+
     await session.supabase
       .from('ecd_centres')
       .update({
-        address: String(formData.get('address') ?? '').trim() || null,
-        suburb: String(formData.get('suburb') ?? '').trim() || null,
-        city: String(formData.get('city') ?? '').trim() || null,
-        province: String(formData.get('province') ?? '').trim() || null,
-        postal_code: String(formData.get('postal_code') ?? '').trim() || null,
-        latitude: (() => { const raw = String(formData.get('latitude') ?? '').trim(); const parsed = Number(raw); return raw && Number.isFinite(parsed) ? parsed : null })(),
-        longitude: (() => { const raw = String(formData.get('longitude') ?? '').trim(); const parsed = Number(raw); return raw && Number.isFinite(parsed) ? parsed : null })(),
+        address,
+        suburb,
+        city,
+        province,
+        postal_code: postalCode,
+        latitude,
+        longitude,
+        communication_automation_settings: settings,
       })
       .eq('id', session.ecdId)
     revalidatePath('/ecd/profile')
@@ -499,7 +570,20 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
               <input name="latitude" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.latitude ?? ''} placeholder="Exact latitude e.g. -26.1038" />
               <input name="longitude" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.longitude ?? ''} placeholder="Exact longitude e.g. 28.0916" />
               <div className="md:col-span-2 rounded-2xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
-                Distance accuracy: {centre?.latitude != null && centre?.longitude != null ? 'Exact location set.' : 'Approximate only until you save exact coordinates.'}
+                Distance accuracy: {locationMetadata?.source === 'exact' ? 'Exact location set.' : locationMetadata?.source === 'geocoded' ? 'Geocoded from your address.' : 'Approximate only until you save exact coordinates.'}
+              </div>
+              <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-600">
+                Save your street address and CentreConnect will geocode it with Pelias. If you already know the exact pin, paste latitude and longitude to get the most accurate distance for parents.
+                {centre?.latitude != null && centre?.longitude != null ? (
+                  <a
+                    href={`https://www.openstreetmap.org/?mlat=${centre.latitude}&mlon=${centre.longitude}#map=18/${centre.latitude}/${centre.longitude}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex font-semibold text-teal-700 hover:text-teal-800"
+                  >
+                    Preview saved pin on OpenStreetMap
+                  </a>
+                ) : null}
               </div>
               <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Location

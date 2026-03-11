@@ -7,6 +7,7 @@ import type { DirectoryCentre, RawDirectoryCentre } from '@/types/directory-cent
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
+import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 
 export const metadata: Metadata = {
   title: 'CentreConnect directory',
@@ -41,6 +42,7 @@ type CentreGeoRow = {
   onboarding_complete: boolean | null
   owner_id: string | null
   address: string | null
+  communication_automation_settings: Record<string, unknown> | null
 }
 
 type CentreApplicationRow = {
@@ -59,6 +61,7 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     slug: safeSlug,
     suburb: centre.suburb,
     city: centre.city,
+    storedSource: centre.coordinate_source ?? null,
   })
 
   return {
@@ -85,7 +88,8 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
     operating_hours_summary: centre.operating_hours_summary ?? null,
     latitude,
     longitude,
-    coordinate_source: source,
+    coordinate_source: centre.coordinate_source ?? source,
+    coordinate_confidence: centre.coordinate_confidence ?? defaultConfidenceForSource(centre.coordinate_source ?? source),
     contact_whatsapp: centre.contact_whatsapp ?? null,
     contact_phone: centre.contact_phone ?? null,
     phone: centre.phone ?? null,
@@ -187,13 +191,14 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         onboarding_complete: boolean | null
         owner_id: string | null
         address: string | null
+        communication_automation_settings: Record<string, unknown> | null
       }
     >()
 
     if (centreIds.length > 0) {
       const { data: geoRows } = await supabase
         .from('ecd_centres')
-        .select('id,latitude,longitude,onboarding_complete,owner_id,address')
+        .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
         .in('id', centreIds)
 
         ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
@@ -203,6 +208,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
             onboarding_complete: row.onboarding_complete,
             owner_id: row.owner_id,
             address: row.address,
+            communication_automation_settings: row.communication_automation_settings,
           })
         })
     }
@@ -230,6 +236,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         const geo = geoById.get(centre.id)
         const existingApplication = applicationByCentre.get(centre.id)
         const hasOwner = typeof geo?.owner_id === 'string' && geo.owner_id.trim().length > 0
+        const locationMetadata = readCentreLocationMetadata(geo?.communication_automation_settings)
         const resolvedCoords = resolveCentreCoordinates({
           latitude: geo?.latitude,
           longitude: geo?.longitude,
@@ -237,12 +244,15 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           suburb: centre.suburb,
           city: centre.city,
           address: geo?.address ?? null,
+          storedSource: locationMetadata?.source,
         })
         return toDirectoryCentre({
           ...centre,
           is_claimed: hasOwner,
           latitude: resolvedCoords.latitude,
           longitude: resolvedCoords.longitude,
+          coordinate_source: resolvedCoords.source,
+          coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoords.source),
           existingApplicationId: existingApplication?.id ?? null,
           existingApplicationStatus: existingApplication?.status ?? null,
         } as RawDirectoryCentre)

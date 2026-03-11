@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
 import { cn } from '@/lib/utils'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
+import { isTrustedDistanceSource } from '@/lib/geo/centre-location-metadata'
 import type { DirectoryCentre } from '@/types/directory-centre'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import {
@@ -62,7 +63,7 @@ const FEE_OPTIONS = [
 
 function haversineMeters(
   userLocation: [number, number],
-  centre: { latitude: number | null; longitude: number | null; slug?: string | null; suburb?: string | null; city?: string | null; address?: string | null }
+  centre: { latitude: number | null; longitude: number | null; slug?: string | null; suburb?: string | null; city?: string | null; address?: string | null; coordinate_source?: string | null }
 ) {
   const resolved = resolveCentreCoordinates({
     latitude: centre.latitude,
@@ -71,6 +72,7 @@ function haversineMeters(
     suburb: centre.suburb,
     city: centre.city,
     address: centre.address,
+    storedSource: (centre.coordinate_source as any) ?? null,
   })
   if (resolved.latitude == null || resolved.longitude == null) return null
 
@@ -506,7 +508,7 @@ export default function DirectoryExplorer({
                       age_groups={centre.age_groups ?? []}
                       logo_url={centre.logo_url ?? undefined}
                       cover_image_url={centre.cover_image_url ?? undefined}
-                      distanceLabel={exactUserLocation && centre.coordinate_source === 'exact' ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
+                      distanceLabel={exactUserLocation && isTrustedDistanceSource(centre.coordinate_source ?? null, centre.coordinate_confidence ?? null) ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
                       viewerRole={viewerRole}
                     />
                   </motion.div>

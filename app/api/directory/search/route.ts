@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
+import { defaultConfidenceForSource, readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 
 type QueryParams = {
   search?: string
@@ -23,6 +24,7 @@ type CentreGeoRow = {
   onboarding_complete: boolean | null
   owner_id: string | null
   address: string | null
+  communication_automation_settings: Record<string, unknown> | null
 }
 
 type CentreApplicationRow = {
@@ -148,13 +150,14 @@ export async function GET(req: Request) {
       onboarding_complete: boolean | null
       owner_id: string | null
       address: string | null
+      communication_automation_settings: Record<string, unknown> | null
     }
   >()
 
   if (centreIds.length > 0) {
     const { data: geoRows } = await supabase
       .from('ecd_centres')
-      .select('id,latitude,longitude,onboarding_complete,owner_id,address')
+      .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
       .in('id', centreIds)
 
       ; ((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
@@ -164,6 +167,7 @@ export async function GET(req: Request) {
           onboarding_complete: row.onboarding_complete,
           owner_id: row.owner_id,
           address: row.address,
+          communication_automation_settings: row.communication_automation_settings,
         })
       })
   }
@@ -192,13 +196,16 @@ export async function GET(req: Request) {
 
     return [
       (() => {
+        const geo = geoById.get(centre.id as string)
+        const locationMetadata = readCentreLocationMetadata(geo?.communication_automation_settings)
         const resolvedCoordinates = resolveCentreCoordinates({
-          latitude: geoById.get(centre.id as string)?.latitude,
-          longitude: geoById.get(centre.id as string)?.longitude,
+          latitude: geo?.latitude,
+          longitude: geo?.longitude,
           slug: safeSlug,
           suburb: (centre.suburb as string | null | undefined) ?? null,
           city: (centre.city as string | null | undefined) ?? null,
-          address: geoById.get(centre.id as string)?.address ?? null,
+          address: geo?.address ?? null,
+          storedSource: locationMetadata?.source,
         })
         return {
           ...centre,
@@ -211,6 +218,7 @@ export async function GET(req: Request) {
           latitude: resolvedCoordinates.latitude,
           longitude: resolvedCoordinates.longitude,
           coordinate_source: resolvedCoordinates.source,
+          coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoordinates.source),
           existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,
           existingApplicationStatus: applicationByCentre.get(centre.id as string)?.status ?? null,
         }
