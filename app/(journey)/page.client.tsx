@@ -260,13 +260,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   <Clock3 className="mr-1 inline h-3 w-3" />
                   No account needed to browse. Create one only when you want to apply.
                 </p>
-                <p className="mt-2 text-[12px] font-medium text-[#5D6966] sm:text-[13px]">
-                  Do you run a creche?{' '}
-                  <Link href="/for-centres" className="font-semibold text-[var(--teal)] hover:underline">
-                    See CentreConnect for owners
-                  </Link>
-                  .
-                </p>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-3">
                   {parentTrustChecks.map((item) => (
@@ -508,6 +501,43 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
             <p className="text-center text-sm leading-6 text-[#64716D]">
               Trusted by registered creches in Alexandra, Marlboro, and across Johannesburg.{locationError ? ' Location access is optional for quick nearby estimates.' : ''}
             </p>
+          </div>
+        </section>
+
+        <section className="px-4 pb-4 pt-10 sm:px-6 sm:pb-6 sm:pt-14 lg:px-8">
+          <div className="mx-auto max-w-6xl rounded-[1.9rem] border border-[#E5D9CC] bg-[linear-gradient(135deg,#FFF8F1_0%,#FFFDF9_52%,#F4FBF8_100%)] px-5 py-8 shadow-[0_18px_44px_rgba(31,44,39,0.06)] sm:rounded-[2.2rem] sm:px-10 sm:py-10 lg:px-14">
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div className="max-w-2xl">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#0D9488]">For creche owners</p>
+                <h2
+                  className="mt-2 text-[1.85rem] leading-[1.06] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.6rem] sm:leading-[1.02]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  Bring your creche onto CentreConnect.
+                </h2>
+                <p className="mt-3 max-w-xl text-[15px] leading-7 text-[#616E6B] sm:text-base">
+                  Show parents your creche properly, take applications in one place, and claim your listing if parents can already see you here.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:min-w-[240px]">
+                <Button
+                  size="lg"
+                  className="h-12 w-full justify-center rounded-[1.05rem] bg-[#1F2D29] px-6 text-sm font-semibold text-white hover:bg-[#16211E] sm:w-auto lg:w-full"
+                  asChild
+                >
+                  <Link href="/for-centres">For creche owners</Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="h-12 w-full rounded-[1.05rem] border-[#D9CEC1] bg-white px-6 text-sm font-semibold text-[#22312E] hover:bg-[#F8F3EC] sm:w-auto lg:w-full"
+                  asChild
+                >
+                  <Link href="/for-centres/register?flow=confirm">Claim your creche</Link>
+                </Button>
+              </div>
+            </div>
           </div>
         </section>
 

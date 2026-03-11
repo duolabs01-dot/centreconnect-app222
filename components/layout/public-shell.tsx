@@ -34,15 +34,7 @@ export function PublicShell({ children }: PublicShellProps) {
             </Link>
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-full border-slate-200 px-3 text-[11px] font-semibold text-slate-600 sm:hidden"
-              onClick={() => router.push('/for-centres')}
-            >
-              For owners
-            </Button>
+          <div className="flex shrink-0 items-center">
             <Button size="sm" className="rounded-full px-3 sm:px-4" onClick={() => router.push('/login')}>
               Sign In
             </Button>
