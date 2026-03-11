@@ -72,12 +72,15 @@ export default async function HomePage({
     try {
       const { data: centreRows } = await supabase
         .from('ecd_centres')
-        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude,owner_id,onboarding_complete,website_published')
-        .eq('is_active', true)
+        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude,owner_id,onboarding_complete,website_published,is_active')
         .order('created_at', { ascending: false })
-        .limit(4)
+        .limit(16)
 
       activeCentres = (centreRows ?? [])
+        .filter((centre: any) => {
+          const pilot = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
+          return centre.is_active === true || pilot
+        })
         .map((centre: any) => ({
           id: String(centre.id),
           name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'ECD Crèche',
@@ -102,6 +105,7 @@ export default async function HomePage({
           if (!a.isPilot && b.isPilot) return 1
           return 0
         })
+        .slice(0, 6)
     } catch (error) {
       console.error('[home] Failed to load active centres for landing page:', error)
     }

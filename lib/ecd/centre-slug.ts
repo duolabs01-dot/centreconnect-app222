@@ -1,6 +1,8 @@
 const SLUG_ALIASES: Record<string, string[]> = {
   bajabulile: ['bajabulile-day-care-centre'],
   'bajabulile-day-care-centre': ['bajabulile'],
+  sakhisizwe: ['sakhisizwe-day-care-centre'],
+  'sakhisizwe-day-care-centre': ['sakhisizwe'],
 }
 
 function safeDecode(value: string) {

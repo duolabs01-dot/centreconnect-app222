@@ -356,16 +356,12 @@ export function CentreClient({
   const fallbackPrograms: ProgramCard[] = isClaimed
     ? [
         {
-          title: 'Learning that feels joyful and structured',
-          description: 'Children learn through play, songs, stories, movement, blocks, puzzles, and guided activities that build confidence without making the day feel too formal too early.',
+          title: 'Play-led learning with real daily purpose',
+          description: 'Parents should be able to imagine a real day here quickly: songs, stories, blocks, puzzles, movement, and guided early-learning activities that feel joyful while still building confidence and readiness.',
         },
         {
-          title: 'A daily rhythm parents can trust',
-          description: 'The day follows a steady flow of arrival, meals, learning, play, rest, and collection, while CentreConnect helps parents stay informed without chasing paper notes.',
-        },
-        {
-          title: 'A more modern parent experience',
-          description: 'Parents at CentreConnect creches can receive updates, safer pickup communication, reminders, and easier report-card access in one familiar place.',
+          title: 'A calmer parent experience from the first day',
+          description: 'This is where CentreConnect makes the difference: daily updates, safer pickup communication, reminders, report cards, and less repeated paperwork all start feeling more organised for parents.',
         },
       ]
     : [
@@ -392,9 +388,9 @@ export function CentreClient({
 
   const parentHighlights = isClaimed
     ? [
-        "Apply with less stress and keep your child's documents in one secure CentreConnect profile instead of starting from zero again.",
-        'Get updates, reminders, report cards, and safer pickup communication in one place that respects your time.',
-        'If your family ever moves between CentreConnect creches, your parent profile moves with you far more easily.',
+        "Apply with less stress and keep your child's documents in one secure CentreConnect profile instead of starting from zero every time.",
+        'Follow daily activities, reminders, report cards, and pickup communication in one parent journey that feels easier to trust.',
+        'If your family ever moves between CentreConnect creches, your profile and paperwork are far easier to carry with you.',
       ]
     : [
         'Parents can still view the profile now, then contact the centre directly while they finish joining CentreConnect.',
@@ -415,9 +411,9 @@ export function CentreClient({
 
   const centreConnectAdvantage = isClaimed
     ? [
-        { icon: BellRing, title: 'Daily updates that feel close', description: 'Parents can stay connected to meals, activities, reminders, and the little moments that make them feel present even during a busy day.' },
-        { icon: ShieldCheck, title: 'Safer pickup and clearer trust', description: 'CentreConnect supports safer pickup communication and clearer next steps, which helps reduce those stressful end-of-day misunderstandings.' },
-        { icon: FileText, title: 'Less paper, less repetition', description: 'Applications, documents, and report cards stay easier to manage because everything starts living in one parent journey instead of scattered chats and files.' },
+        { icon: BellRing, title: 'Daily moments arrive more clearly', description: 'Parents can stay close to meals, activities, little milestones, and reminders without waiting for a crumpled note or a late-night WhatsApp reply.' },
+        { icon: ShieldCheck, title: 'Pickup feels safer and more organised', description: 'Important collection details and parent updates stay clearer, which helps reduce that stressful uncertainty at the end of the day.' },
+        { icon: FileText, title: 'One profile, less admin fatigue', description: 'The same parent profile can help with applications, documents, and report cards, so you spend less time repeating yourself and more time deciding well.' },
       ]
     : []
 
@@ -647,13 +643,13 @@ export function CentreClient({
                 </h3>
                 <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
                   {isClaimed
-                    ? 'Parents who choose a CentreConnect creche get a more organised experience from the start: one application flow, one parent profile, one calmer place for updates and next steps.'
+                    ? 'Parents who choose a CentreConnect creche get a smoother start: one organised application flow, one parent profile, and a calmer way to follow what matters after enrolment.'
                     : 'This creche is still joining CentreConnect. Save it now, compare the details, and come back when digital applications open.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {(isClaimed
-                    ? ['Apply in minutes', 'Updates in one place', 'No repeated paperwork']
+                    ? ['Apply in minutes', 'Daily updates', 'Less repeated paperwork']
                     : ['Save it for later', 'Compare the details', 'Come back when applications open']
                   ).map((item) => (
                     <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
@@ -673,7 +669,7 @@ export function CentreClient({
 
                 {isClaimed ? (
                   <div className="mt-5 rounded-[1.6rem] border border-[#DCEEE8] bg-[linear-gradient(180deg,#F6FCFA_0%,#ECF8F4_100%)] p-4">
-                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why parents feel the difference here</p>
+                    <p className="text-[10px] font-semibold tracking-[0.16em] text-[#4B6B64]">Why parents feel more settled here</p>
                     <div className="mt-4 space-y-3">
                       {centreConnectAdvantage.map((item) => {
                         const Icon = item.icon
@@ -704,7 +700,7 @@ export function CentreClient({
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-[#6C4700]">
-                      Claimed CentreConnect creches get the strongest parent experience here: better visibility, digital applications, and a calmer follow-up journey after you tap Apply.
+                      Claimed CentreConnect creches are designed to feel stronger for parents: better visibility, digital applications, calmer follow-up, and a more modern parent journey after you tap Apply.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">

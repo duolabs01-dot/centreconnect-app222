@@ -110,7 +110,7 @@ export function SendOwnerInviteButton({
   return (
     <div className="mt-4 space-y-2 rounded-xl border border-slate-700/80 bg-slate-950/40 p-3">
       <p className="text-xs text-slate-400">
-        Resends the main access email and prepares a WhatsApp follow-up link for this centre owner.
+        Send the CentreConnect access email again. If the owner has not set a password yet, this resends the password setup path first.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <Button
@@ -121,7 +121,7 @@ export function SendOwnerInviteButton({
           className="bg-cyan-500 text-black hover:bg-cyan-400"
         >
           <MailPlus className="h-4 w-4" />
-          Resend access email
+          Resend password / access email
         </Button>
         <Button
           asChild

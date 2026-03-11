@@ -149,8 +149,10 @@ function metersToMinutes(meters: number, speedKmh: number = 30) {
 
 export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
   const featuredCentre = activeCentres[0] ?? null
+  const pilotCentres = activeCentres.filter((centre) => centre.isPilot).slice(0, 3)
   const bajabulileCentre =
     activeCentres.find((centre) => centre.slug === 'bajabulile-day-care-centre' || centre.slug === 'bajabulile') ?? featuredCentre
+  const spotlightCentres = pilotCentres.filter((centre) => centre.id !== bajabulileCentre?.id).slice(0, 2)
   const showProofBand = activeCentres.length > 0
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
@@ -383,6 +385,40 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     <Link href={bajabulileCentre ? centreHref(bajabulileCentre) : '/directory'}>View Bajabulile Profile</Link>
                   </Button>
                 </div>
+                {spotlightCentres.length > 0 ? (
+                  <div className="mt-8 space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7B827E]">Also live on CentreConnect</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {spotlightCentres.map((centre) => {
+                        const centreImage = getLandingCentreImage(centre)
+                        return (
+                          <Link
+                            key={centre.id}
+                            href={centreHref(centre)}
+                            className="group flex items-center gap-3 rounded-[1.45rem] border border-[#E5D8CB] bg-white/88 p-3 shadow-[0_12px_28px_rgba(31,44,39,0.05)] transition-transform hover:-translate-y-0.5"
+                          >
+                            <div className="relative h-16 w-16 overflow-hidden rounded-[1.25rem] border border-white bg-white shadow-sm">
+                              <Image
+                                src={centreImage}
+                                alt={centre.name}
+                                fill
+                                className="object-cover"
+                                unoptimized={centreImage.startsWith('data:image/svg+xml')}
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="line-clamp-2 text-sm font-semibold leading-5 text-[#22312E]">{centre.name}</p>
+                              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-[#6A7672]">
+                                {centre.suburb ?? 'Johannesburg'}
+                              </p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-[#0D9488] transition-transform group-hover:translate-x-0.5" />
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

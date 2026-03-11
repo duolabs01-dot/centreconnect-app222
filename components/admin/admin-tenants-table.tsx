@@ -283,6 +283,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
   const [bulkInvitesBusy, setBulkInvitesBusy] = useState(false)
   const [bulkUpgradeBusy, setBulkUpgradeBusy] = useState(false)
   const [rowUpgrading, setRowUpgrading] = useState<Record<string, boolean>>({})
+  const [rowInviting, setRowInviting] = useState<Record<string, boolean>>({})
   const [welcomePackBusy, setWelcomePackBusy] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Record<string, boolean>>({})
 
@@ -360,6 +361,22 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       setSelectedIds(new Set())
     }
   }, [router, selectedIds, sendOwnerInvite])
+
+  const handleRowInvite = useCallback(
+    async (tenantId: string) => {
+      setRowInviting((prev) => ({ ...prev, [tenantId]: true }))
+      try {
+        await sendOwnerInvite(tenantId)
+        toast.success('Password / access email sent.')
+        router.refresh()
+      } catch (error: any) {
+        toast.error(error?.message || 'Failed to send password / access email.')
+      } finally {
+        setRowInviting((prev) => ({ ...prev, [tenantId]: false }))
+      }
+    },
+    [router, sendOwnerInvite]
+  )
 
   const handleBulkUpgrade = useCallback(async () => {
     if (selectedIds.size === 0) {
@@ -618,6 +635,15 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
               <Link href={`/admin/tenants/${row.original.id}`}>View</Link>
             </Button>
             <Button
+              size="sm"
+              variant="outline"
+              className="border-amber-500/30 bg-slate-900 text-amber-200 hover:bg-slate-800"
+              onClick={() => void handleRowInvite(row.original.id)}
+              disabled={Boolean(rowInviting[row.original.id]) || !row.original.email?.trim()}
+            >
+              {rowInviting[row.original.id] ? 'Sending…' : 'Password'}
+            </Button>
+            <Button
               asChild
               size="sm"
               variant="outline"
@@ -638,7 +664,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
         ),
       },
     ],
-    [openEdit, selectedIds, toggleSelection, rowUpgrading, handleRowUpgrade, deleteTenant, deletingIds]
+    [openEdit, selectedIds, toggleSelection, rowUpgrading, rowInviting, handleRowUpgrade, handleRowInvite, deleteTenant, deletingIds]
   )
 
   const filteredTenants = useMemo(() => {
