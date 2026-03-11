@@ -175,6 +175,18 @@ function formatRegistrationFeeLabel(centre: Centre) {
   return amount ? `${amount} once-off` : 'Ask the centre'
 }
 
+function formatPhoneHref(value: string | null | undefined) {
+  if (!value) return null
+  const cleaned = value.replace(/[^\d+]/g, '')
+  return cleaned ? `tel:${cleaned}` : null
+}
+
+function formatWhatsAppHref(value: string | null | undefined) {
+  if (!value) return null
+  const cleaned = value.replace(/[^\d]/g, '')
+  return cleaned ? `https://wa.me/${cleaned}` : null
+}
+
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
   return (
     <div className="space-y-2">
@@ -338,6 +350,8 @@ export function CentreClient({
     : centre.subsidy_accepted
       ? 'Subsidy friendly centre'
       : 'Ask about availability'
+  const phoneHref = formatPhoneHref(centre.contact_phone ?? centre.phone)
+  const whatsappHref = formatWhatsAppHref(centre.contact_whatsapp ?? centre.contact_phone ?? centre.phone)
 
   const visibleSectionSet = new Set(websiteContent.visibleSections)
   const showAbout = visibleSectionSet.has('about')
@@ -495,6 +509,55 @@ export function CentreClient({
                   {item}
                 </span>
               ))}
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:hidden">
+              {isClaimed ? (
+                <>
+                  <ApplyCTA
+                    variant="hero"
+                    centreSlug={centre.slug}
+                    userRole={userRole}
+                    existingApplicationId={existingApplication?.id ?? null}
+                    existingApplicationStatus={existingApplication?.status ?? null}
+                    existingHelperText={null}
+                    isAvailable={true}
+                    helperText={null}
+                  />
+                  <ContactCentreSheet
+                    centreId={centre.id}
+                    centreName={centre.name}
+                    templates={inquiryTemplates}
+                    triggerLabel="Message centre"
+                    triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                    title={`Ask ${centre.name} a quick question`}
+                    description="Your message goes straight to the centre inbox in CentreConnect, so replies and next steps stay in one place."
+                  />
+                </>
+              ) : (
+                <>
+                  {whatsappHref ? (
+                    <Link
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0D9488] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.16)]"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      WhatsApp centre
+                    </Link>
+                  ) : null}
+                  {phoneHref ? (
+                    <Link
+                      href={phoneHref}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#DDD5C8] bg-white px-5 text-sm font-semibold text-[#22312E]"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Call centre
+                    </Link>
+                  ) : null}
+                </>
+              )}
             </div>
 
             {showUnclaimedDisclaimer ? (

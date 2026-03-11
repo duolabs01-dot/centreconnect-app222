@@ -194,15 +194,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  A safe crèche search that fits real parent life.
+                  Find a creche you feel good about.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  You need a place that feels safe, close enough, and easy to act on. Start with the directory and move fast.
-                </p>
-
-                <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[15px] sm:leading-7">
-                  Simple English. Clear next steps. No long story before you can start.
+                  Check nearby options, compare the basics fast, and choose your next step without feeling lost.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -264,12 +260,14 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   No account needed to browse. Create one only when you want to apply.
                 </p>
 
-                <p className="mt-4 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
-                  Free for parents. No payment details needed.
-                </p>
-                <p className="mt-2 text-[11px] font-medium tracking-[0.01em] text-[#7B817C] sm:text-[12px]">
-                  Starting in Alexandra. Growing across Johannesburg.
-                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  {parentTrustChecks.map((item) => (
+                    <div key={item.title} className="rounded-[1.25rem] border border-[#E8DDD0] bg-white/90 px-4 py-4 shadow-[0_8px_20px_rgba(31,44,39,0.04)]">
+                      <p className="text-sm font-semibold text-[#22312E]">{item.title}</p>
+                      <p className="mt-1 text-[12px] leading-5 text-[#66736F]">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="min-h-[320px] lg:min-h-0">
@@ -299,10 +297,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         </div>
                         <div className="mt-4 rounded-2xl border border-[#DCEBE6] bg-[linear-gradient(135deg,#F4FBF8_0%,#FFF8F1_100%)] p-4">
                           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6F7E79]">
-                            Why this feels easier
+                            Why parents love this
                           </p>
                           <p className="mt-2 text-sm leading-6 text-[#4F5E5A]">
-                            You can browse first, act fast, and keep your progress in one place when you are ready.
+                            You browse first, act when you are ready, and keep everything together after that.
                           </p>
                         </div>
                       </div>
@@ -364,10 +362,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Centres parents can act on today.
+                  Start with centres you can act on today.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
-                  Browse first. Then choose whether to apply online or contact the centre directly.
+                  CentreConnect centres let you apply online. Public listings show the fastest direct contact option.
                 </p>
               </div>
 
@@ -427,8 +425,8 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         </p>
                         <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
                           {centre.isClaimed
-                            ? 'Online applications, in-app messages, and a clearer parent journey after your child joins.'
-                            : 'A clean preview for comparing the creche now while CentreConnect applications are still coming online.'}
+                            ? 'Apply online or send one quick message in the app.'
+                            : 'Call or WhatsApp the centre directly from the listing.'}
                         </p>
                       </div>
                     </div>
@@ -504,7 +502,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         <section className="border-y border-[#E5D9CC] bg-[linear-gradient(90deg,#FFF8F1_0%,#FFFDF9_50%,#F5FBF9_100%)]">
           <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
             <p className="text-center text-sm leading-6 text-[#64716D]">
-              Trusted by registered crèches in Alexandra, Marlboro, and across Johannesburg.{locationError ? ' Location access is optional for quick nearby estimates.' : ''}
+              Trusted by registered creches in Alexandra, Marlboro, and across Johannesburg.{locationError ? ' Location access is optional for quick nearby estimates.' : ''}
             </p>
           </div>
         </section>

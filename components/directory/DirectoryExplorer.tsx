@@ -427,6 +427,24 @@ export default function DirectoryExplorer({
       </div>
 
       <div className="relative mt-2 min-h-[500px]">
+        <div className="mb-4 rounded-[1.5rem] border border-[#E7DDD1] bg-[#FFFDF9] px-4 py-4 shadow-[0_10px_24px_rgba(31,44,39,0.04)] sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Results</p>
+              <p className="mt-1 text-sm font-semibold text-[#22312E]">
+                {totalResults} {totalResults === 1 ? 'centre' : 'centres'} to compare
+              </p>
+              <p className="mt-1 text-xs leading-5 text-[#66736F]">
+                CentreConnect centres let you apply online. Public listings show direct contact options.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-semibold text-[#1F4B42]">Apply online</span>
+              <span className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-semibold text-[#1F4B42]">Message in app</span>
+              <span className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[11px] font-semibold text-[#22312E]">Call or WhatsApp</span>
+            </div>
+          </div>
+        </div>
         <AnimatePresence>
           {isPending && (
             <motion.div
@@ -477,7 +495,7 @@ export default function DirectoryExplorer({
                   <Search className="h-10 w-10 text-[#B1BAB6]" />
                 </div>
                 <h3 className="text-[1.7rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-display)' }}>
-                  No crèches matched that search.
+                  No creches matched that search.
                 </h3>
                 <p className="mt-2 max-w-xs text-base font-medium text-[#66736F]">
                   Try another suburb, remove a filter, or search by centre name.
@@ -491,7 +509,7 @@ export default function DirectoryExplorer({
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {centres.map((centre, index) => (
                   <motion.div
                     key={centre.id}
@@ -564,7 +582,7 @@ export default function DirectoryExplorer({
                 className="mb-4 mt-5 text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#1F2D29] sm:text-[2.55rem]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Found one you like? Apply when you are ready.
+                Found one you like? Apply in minutes.
               </h3>
               <p className="mb-8 max-w-md text-[15px] font-medium leading-7 text-[#5F6C68] sm:text-[17px]">
                 Create an account only when you want to apply. Then keep your documents, replies, and next steps in one place.
