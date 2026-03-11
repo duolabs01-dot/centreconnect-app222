@@ -407,7 +407,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       </div>
                       <h3 className="mt-2 text-lg font-semibold leading-snug text-[#21302D]">{centre.name}</h3>
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {centre.isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                        {centre.isClaimed ? <PremiumVerifiedBadge compact  /> : null}
                         {centre.isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                         {centre.isFeatured ? (
                           <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-bold text-white shadow-sm">

@@ -166,7 +166,7 @@ export default function DirectoryExplorer({
       },
     },
     {
-      label: 'Government registered',
+      label: 'DSD registered',
       icon: ShieldCheck,
       active: selectedRegistered === 'true',
       onClick: () => {
@@ -355,7 +355,7 @@ export default function DirectoryExplorer({
                       <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDF0E6]">
                         <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
                       </div>
-                      <span className="text-sm font-semibold text-[#22312E]">Government registered</span>
+                      <span className="text-sm font-semibold text-[#22312E]">DSD registered</span>
                     </div>
                     <input
                       type="checkbox"

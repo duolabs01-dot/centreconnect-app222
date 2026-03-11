@@ -154,7 +154,7 @@ export function MobileCentreDetailsSheet({
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                  {isClaimed ? <PremiumVerifiedBadge compact  /> : null}
                   {isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                   {showPilotTrustInfo ? (
                     <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-0.5 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">

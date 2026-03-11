@@ -295,7 +295,7 @@ export function CentreCard({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {isOnCentreConnect ? <PremiumVerifiedBadge compact label="On CentreConnect" className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+              {isOnCentreConnect ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
               {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
               {showRecommendedChip ? (
                 <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">

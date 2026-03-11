@@ -340,7 +340,7 @@ export function CentreClient({
   const showPilotTrustInfo = isPilotCentre
   const showUnclaimedDisclaimer = !hasOwnerId
   const pilotBadges = showPilotTrustInfo
-    ? [isClaimed ? 'On CentreConnect' : null, isVerifiedForParents ? 'Government registered' : null, 'Parent-ready profile'].filter(Boolean) as string[]
+    ? [isClaimed ? 'Verified' : null, isVerifiedForParents ? 'DSD registered' : null, 'Parent-ready profile'].filter(Boolean) as string[]
     : []
   const locationLabel = [centre.suburb?.trim(), centre.city?.trim()].filter(Boolean).join(', ')
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
@@ -352,9 +352,9 @@ export function CentreClient({
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
   const showExactLocationBadge = isClaimed && locationMetadata?.source === 'exact'
   const trustLabel = isVerifiedForParents
-    ? 'On CentreConnect and government registration confirmed'
+    ? 'Verified and DSD registered'
     : isClaimed
-      ? 'On CentreConnect'
+      ? 'Verified'
       : 'Not yet on CentreConnect'
     
   const practicalLabel = centre.capacity
@@ -454,7 +454,7 @@ export function CentreClient({
               <Badge className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
                 Centre profile
               </Badge>
-              {isClaimed ? <PremiumVerifiedBadge label="On CentreConnect" /> : null}
+              {isClaimed ? <PremiumVerifiedBadge  /> : null}
               {isVerifiedForParents ? <GovernmentRegisteredBadge /> : null}
               {showExactLocationBadge ? (
                 <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
@@ -740,7 +740,7 @@ export function CentreClient({
                 {showPilotTrustInfo ? (
                   <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      {isClaimed ? <PremiumVerifiedBadge compact label="On CentreConnect" /> : null}
+                      {isClaimed ? <PremiumVerifiedBadge compact  /> : null}
                       {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
                       {!isVerifiedForParents ? (
                         <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F6200] shadow-none">
@@ -848,6 +848,7 @@ export function CentreClient({
     </main>
   )
 }
+
 
 
 

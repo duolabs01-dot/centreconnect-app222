@@ -30,7 +30,7 @@ export function PremiumVerifiedBadge({
 
 
 export function GovernmentRegisteredBadge({
-  label = 'Government registered',
+  label = 'DSD registered',
   compact = false,
   className,
 }: PremiumVerifiedBadgeProps) {
