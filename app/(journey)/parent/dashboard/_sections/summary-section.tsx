@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
-import { SurfaceCard } from '@/components/ui/surface-card'
 import { getJohannesburgGreeting } from '@/lib/utils'
 
 export async function DashboardSummary() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const { data: profile } = await supabase
     .from('user_profiles')
     .select('full_name')
@@ -20,8 +21,8 @@ export async function DashboardSummary() {
       <p className="text-sm font-medium text-slate-500">
         {greeting}, {parentName}
       </p>
-      <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl tracking-tight">
-        Your Parent Dashboard
+      <h1 className="mt-1 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+        Parent home
       </h1>
     </div>
   )

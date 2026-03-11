@@ -27,14 +27,22 @@ export function PublicShell({ children }: PublicShellProps) {
 
           <nav className="hidden items-center gap-8 md:flex">
             <Link href="/directory" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">
-              Find a Centre
+              Find a creche
             </Link>
             <Link href="/for-centres" className="text-sm font-medium text-slate-600 transition hover:text-slate-900">
-              For ECDs
+              For creche owners
             </Link>
           </nav>
 
-          <div className="flex shrink-0 items-center">
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full border-slate-200 px-3 text-[11px] font-semibold text-slate-600 sm:hidden"
+              onClick={() => router.push('/for-centres')}
+            >
+              For owners
+            </Button>
             <Button size="sm" className="rounded-full px-3 sm:px-4" onClick={() => router.push('/login')}>
               Sign In
             </Button>

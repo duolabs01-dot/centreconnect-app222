@@ -78,8 +78,8 @@ export async function ProfileReadinessCard() {
     <SurfaceCard className="animate-in fade-in slide-in-from-bottom-2 duration-500 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Readiness health</p>
-          <h2 className="mt-1 text-lg font-black tracking-tight text-slate-900">Profile progress</h2>
+          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Ready to apply</p>
+          <h2 className="mt-1 text-lg font-black tracking-tight text-slate-900">Application checklist</h2>
         </div>
         <div
           className={cn(
@@ -106,9 +106,7 @@ export async function ProfileReadinessCard() {
 
       {actions.length > 0 ? (
         <div className="mt-4 space-y-2">
-          <p className="text-sm text-slate-600">
-            Next best actions:
-          </p>
+          <p className="text-sm text-slate-600">Do these next:</p>
           <div className="flex flex-wrap gap-2">
             {actions.map((action) => (
               <Link
@@ -123,7 +121,7 @@ export async function ProfileReadinessCard() {
           </div>
         </div>
       ) : (
-        <p className="mt-4 text-sm text-emerald-700">All key setup actions are complete.</p>
+        <p className="mt-4 text-sm text-emerald-700">Your details are ready when you want to apply.</p>
       )}
     </SurfaceCard>
   )

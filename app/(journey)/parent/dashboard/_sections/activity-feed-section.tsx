@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
@@ -38,7 +38,7 @@ export async function ActivityFeedSection() {
         id: activity.id as string,
         createdAt: activity.created_at as string,
         newStatus: (activity.new_status as string | null) ?? 'submitted',
-        centreName: (centre?.name as string | undefined) ?? 'Unknown crèche',
+        centreName: (centre?.name as string | undefined) ?? 'Unknown creche',
         centreSlug: (centre?.slug as string | undefined) ?? null,
         childFirstName: (child?.first_name as string | undefined) ?? 'A child',
         childLastName: (child?.last_name as string | undefined) ?? '',
@@ -47,11 +47,11 @@ export async function ActivityFeedSection() {
 
   return (
     <section className="glass-card rounded-2xl p-4 sm:p-6">
-      <h2 className="text-lg font-semibold">Activity feed</h2>
-      <p className="mt-1 text-sm text-slate-600">Recent updates on your applications.</p>
+      <h2 className="text-lg font-semibold">Application updates</h2>
+      <p className="mt-1 text-sm text-slate-600">See the latest decisions and messages from creches.</p>
       <div className="mt-4 space-y-4">
         {activities.length === 0 ? (
-          <EmptyState title="No recent activity" description="No recent activity yet." />
+          <EmptyState title="No updates yet" description="When a creche replies or changes your application, it will show here." />
         ) : (
           activities.map((activity) => (
             <div
@@ -86,5 +86,3 @@ export async function ActivityFeedSection() {
     </section>
   )
 }
-
-

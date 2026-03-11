@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { getJohannesburgGreeting } from '@/lib/utils'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 import {
+  ArrowRight,
   Building2,
+  CheckCircle2,
   ChevronRight,
   FileText,
   Heart,
@@ -17,7 +18,6 @@ import {
 import { EnrolledConfetti } from './_components/enrolled-confetti'
 import { SurfaceCard } from '@/components/ui/surface-card'
 
-// Sections
 import { DashboardSummary, DashboardSummarySkeleton } from './_sections/summary-section'
 import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { ActivityFeedSection } from './_sections/activity-feed-section'
@@ -26,8 +26,8 @@ import { ParentJobsSection } from './_sections/parent-jobs-section'
 import { PushPermissionRequest } from '@/components/notifications/PushPermissionRequest'
 
 export const metadata: Metadata = {
-  title: 'Parent Dashboard | CentreConnect',
-  description: 'Your parent home for applications, enrolment milestones, and quick actions.',
+  title: 'Parent Home | CentreConnect',
+  description: 'Your parent home for applications, updates, and quick next steps.',
   openGraph: {
     images: ['/og-image.png'],
   },
@@ -66,9 +66,8 @@ export default async function ParentDashboardPage() {
       data: { user },
     } = await supabase.auth.getUser()
 
-    const [profileResult, parentResult, childrenResult, applicationsResult] = await Promise.all([
+    const [profileResult, childrenResult, applicationsResult] = await Promise.all([
       supabase.from('user_profiles').select('full_name').eq('id', user?.id ?? '').maybeSingle(),
-      supabase.from('parents').select('suburb').eq('id', user?.id ?? '').maybeSingle(),
       supabase.from('children').select('id,first_name,last_name').eq('parent_id', user?.id ?? '').limit(1),
       supabase
         .from('applications')
@@ -79,8 +78,6 @@ export default async function ParentDashboardPage() {
     ])
 
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
-    const parentSuburb = parentResult.data?.suburb?.trim() || 'Alexandra'
-    const greeting = getJohannesburgGreeting()
 
     const applications = ((applicationsResult.data ?? []) as unknown as RawApplicationRow[]).map((application) => {
       const centre = normalizeOne<{ name?: string | null; slug?: string | null }>(application.ecd_centres)
@@ -99,6 +96,7 @@ export default async function ParentDashboardPage() {
 
     const enrolledApplication = applications.find((application) => application.status === 'enrolled')
     const hasApplications = applications.length > 0
+    const activeApplications = applications.filter((application) => application.status !== 'enrolled')
     const screenState: 'empty' | 'pending' | 'enrolled' = !hasApplications ? 'empty' : enrolledApplication ? 'enrolled' : 'pending'
 
     const firstChildName =
@@ -107,36 +105,37 @@ export default async function ParentDashboardPage() {
       'your child'
     const enrolledChildName = enrolledApplication?.childName ?? firstChildName
     const enrolledCentreName = enrolledApplication?.centreName ?? 'their creche'
-    const centreInfoHref = enrolledApplication?.centreSlug ? `/c/${enrolledApplication.centreSlug}` : '/directory'
+    const centreInfoHref = enrolledApplication?.centreSlug ? `/c/${enrolledApplication.centreSlug}` : '/parent/discover'
+    const latestPendingApplication = activeApplications[0] ?? null
 
     const quickActions = [
       {
         label: "Today's Report",
-        description: 'See meals, mood, and activities for today.',
+        description: 'Meals, mood, and activities from today.',
         href: '/parent/daily-reports',
         icon: Sparkles,
       },
       {
-        label: 'Report Cards',
-        description: 'View term progress reports and teacher feedback.',
-        href: '/parent/report-cards',
-        icon: FileText,
-      },
-      {
         label: 'Messages',
-        description: 'Open your parent inbox and creche notifications.',
+        description: 'Open your inbox and centre replies.',
         href: '/parent/notifications',
         icon: MessageSquare,
       },
       {
+        label: 'Applications',
+        description: 'Track every application in one place.',
+        href: '/parent/applications',
+        icon: FileText,
+      },
+      {
         label: 'Creche Info',
-        description: 'View hours, contacts, and programme details.',
+        description: 'Hours, contacts, and daily details.',
         href: centreInfoHref,
         icon: Building2,
       },
       {
         label: 'Profile',
-        description: 'Manage child and family profile information.',
+        description: 'Keep family and child details ready.',
         href: '/parent/profile',
         icon: UserRound,
       },
@@ -147,7 +146,6 @@ export default async function ParentDashboardPage() {
         <div className="cc-stack">
           <PushPermissionRequest />
 
-          {/* Header Section - Suspended for instant shell */}
           <Suspense fallback={<DashboardSummarySkeleton />}>
             <DashboardSummary />
           </Suspense>
@@ -157,54 +155,51 @@ export default async function ParentDashboardPage() {
 
           {screenState === 'empty' ? (
             <div className="cc-stack">
-              <SurfaceCard className="animate-fade-in relative overflow-hidden p-6 sm:p-8">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sky-50/70 via-cyan-50/40 to-white" />
+              <SurfaceCard className="relative overflow-hidden border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_55%),radial-gradient(circle_at_top_right,rgba(212,147,90,0.12),transparent_38%)]" />
                 <div className="relative">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50">
-                      <Heart className="h-7 w-7 text-cyan-600" />
-                    </div>
-                    <a
-                      href={`https://wa.me/27123456789?text=${encodeURIComponent(`Hello CentreConnect, I need help finding a crèche in ${parentSuburb}.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2 text-xs font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      WhatsApp Help
-                    </a>
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200 bg-cyan-50 text-cyan-700">
+                    <Heart className="h-6 w-6" />
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-cyan-700">
-                    {greeting}, {parentName}
-                  </p>
-                  <h1 className="mt-2 text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-900 sm:text-[2.45rem]" style={{ fontFamily: "var(--font-display)" }}>
-                    CentreConnect keeps {firstChildName}&rsquo;s centre updates ready for you.
+                  <h1 className="mt-4 text-[1.9rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 sm:text-[2.3rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                    Let&apos;s find the right creche for {firstChildName}.
                   </h1>
-                  <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                    Check attendance, daily notes, documents, and safe pickup every time {firstChildName} leaves the centre — your CentreConnect workspace now brings those updates straight to your phone.
-                  </p>
-                  <p className="mt-3 text-[13px] italic leading-6 text-[#7B827E] sm:text-[14px]">
-                    Your centre shared this link, so everything you read here highlights the benefits you already get. This space is better for you now because it keeps attendance, documents, and safe pickup notes flowing straight to your phone.
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:text-[15px]">
+                    Start with nearby creches, compare quickly, and apply only when you feel ready.
                   </p>
 
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <form action="/directory" className="flex flex-1 gap-2">
-                      <label className="relative flex-1">
-                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                          name="search"
-                          type="search"
-                          placeholder="Search by suburb or crèche name"
-                          className="cc-native-field h-11 w-full rounded-2xl pl-10"
-                        />
-                      </label>
-                      <button
-                        type="submit"
-                        className="inline-flex h-11 min-h-[44px] shrink-0 items-center justify-center rounded-2xl bg-cyan-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                      >
-                        Browse
-                      </button>
-                    </form>
+                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <Link
+                      href="/parent/discover"
+                      className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                    >
+                      Find a creche
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      href="/parent/profile"
+                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
+                    >
+                      Finish my profile
+                    </Link>
+                    <Link
+                      href="/parent/support"
+                      className="inline-flex min-h-[48px] items-center justify-center text-sm font-semibold text-cyan-700 hover:text-cyan-800"
+                    >
+                      Need help choosing?
+                    </Link>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {[
+                      'Browse first. No pressure to apply.',
+                      'Verified and DSD registered creches are easier to trust fast.',
+                      'Public listings still show the fastest call or WhatsApp path.',
+                    ].map((item) => (
+                      <div key={item} className="rounded-2xl border border-[#E8DDD0] bg-white/90 px-4 py-3 text-sm font-medium leading-6 text-slate-700">
+                        {item}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </SurfaceCard>
@@ -219,26 +214,44 @@ export default async function ParentDashboardPage() {
             </div>
           ) : screenState === 'pending' ? (
             <div className="cc-stack">
-              <SurfaceCard className="animate-fade-in p-5 sm:p-6">
-                <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Your applications are in progress</h1>
-                <p className="mt-2 text-sm text-slate-600">Keep an eye on updates from each creche while decisions are pending.</p>
+              <SurfaceCard className="border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-5 sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-700">Applications in progress</p>
+                    <h1 className="mt-2 text-[1.55rem] font-extrabold leading-tight tracking-[-0.03em] text-slate-900 sm:text-[2rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                      You&apos;re waiting on {activeApplications.length} application{activeApplications.length === 1 ? '' : 's'}.
+                    </h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
+                      Keep an eye on updates, reply quickly when a creche needs something, and keep browsing if you want more options.
+                    </p>
+                    {latestPendingApplication ? (
+                      <p className="mt-3 text-sm font-medium text-slate-700">
+                        Most recent: <span className="font-semibold text-slate-900">{latestPendingApplication.childName}</span> at{' '}
+                        <span className="font-semibold text-slate-900">{latestPendingApplication.centreName}</span>
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-3 sm:w-auto sm:min-w-[220px]">
+                    <Link
+                      href="/parent/applications"
+                      className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                    >
+                      View applications
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    <Link
+                      href="/parent/discover"
+                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
+                    >
+                      Find more creches
+                    </Link>
+                  </div>
+                </div>
               </SurfaceCard>
 
               <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-slate-100" />}>
                 <ActivityFeedSection />
               </Suspense>
-
-              <div className="animate-fade-in" style={{ animationDelay: '180ms' }}>
-                <Link href="/directory" className="group block">
-                  <SurfaceCard className="flex items-center justify-between p-4 transition-all duration-300 hover:border-cyan-300">
-                    <div className="flex items-center gap-3">
-                      <Search className="h-4 w-4 text-slate-400 group-hover:text-cyan-600" />
-                      <span className="text-sm font-semibold text-slate-600 group-hover:text-cyan-700">Browse more creches</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-slate-400 group-hover:text-cyan-700" />
-                  </SurfaceCard>
-                </Link>
-              </div>
 
               <Suspense fallback={null}>
                 <ParentJobsSection />
@@ -246,18 +259,18 @@ export default async function ParentDashboardPage() {
             </div>
           ) : (
             <div className="cc-stack">
-              <SurfaceCard className="animate-fade-in relative overflow-hidden p-5 sm:p-6">
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-emerald-100/60 via-cyan-100/40 to-white" />
+              <SurfaceCard className="relative overflow-hidden border border-emerald-200 bg-[linear-gradient(180deg,#F4FCF8_0%,#FFFFFF_100%)] p-5 sm:p-6">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_52%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.10),transparent_38%)]" />
                 <EnrolledConfetti applicationId={enrolledApplication?.id ?? 'enrolled'} />
                 <div className="relative">
                   <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
-                    <Sparkles className="h-5 w-5" />
+                    <CheckCircle2 className="h-5 w-5" />
                   </div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Celebration</p>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">You&apos;re in</p>
                   <h1 className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
-                    {enrolledChildName} is learning at {enrolledCentreName}!
+                    {enrolledChildName} is enrolled at {enrolledCentreName}.
                   </h1>
-                  <p className="mt-2 text-sm text-slate-600">You are all set. Use the shortcuts below to stay connected every day.</p>
+                  <p className="mt-2 text-sm text-slate-600">Use the shortcuts below for daily updates, messages, and centre details.</p>
                 </div>
               </SurfaceCard>
 
@@ -299,4 +312,3 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
-
