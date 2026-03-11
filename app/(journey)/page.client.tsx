@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { ArrowRight, Clock3, FileCheck2, ShieldCheck, Share2, MapPin } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Clock3, FileCheck2, MapPin, Share2, ShieldCheck, Smartphone, Users2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ApplicationProgressSection } from '@/components/landing/application-progress-section'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 
@@ -96,11 +97,45 @@ const safetyPoints = [
   'Parents get notified as soon as collection happens.',
 ] as const
 
+const connectedFlow = [
+  {
+    icon: Smartphone,
+    eyebrow: 'Parent side',
+    title: 'A parent should understand the next step in seconds.',
+    body: 'Search nearby options, compare quickly, and move forward without wondering where to tap next.',
+    detail: 'The UI should feel calm, obvious, and mobile-first from the first screen.',
+  },
+  {
+    icon: FileCheck2,
+    eyebrow: 'Saved once',
+    title: 'The work you already did should carry forward.',
+    body: 'Profiles, documents, and status should not reset every time a parent moves through the journey.',
+    detail: 'That is what makes CentreConnect feel like a product instead of a collection of forms.',
+  },
+  {
+    icon: Users2,
+    eyebrow: 'Centre side',
+    title: 'The ECD side should see the same story clearly.',
+    body: 'Applications, updates, attendance, and pickup should reflect across both sides without guesswork.',
+    detail: 'One action should make sense to both the parent and the centre.',
+  },
+] as const
+
+const parentMoments = [
+  'Search nearby centres and compare quickly',
+  'Save your child profile and documents once',
+  'Track replies, approvals, and next steps in one place',
+] as const
+
+const centreMoments = [
+  'Receive a clear application with the right documents',
+  'Update status once and reflect it back to the parent',
+  'Run attendance and pickup without paper confusion',
+] as const
 function suburbHref(suburb: string) {
   return `/directory?suburb=${encodeURIComponent(suburb)}`
 }
 
-type SuburbPill = typeof suburbPills[number]
 
 function centreHref(centre: HomeActiveCentre) {
   if (centre.slug) return `/c/${centre.slug}`
@@ -304,23 +339,82 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
               </div>
 
               <div className="min-h-[320px] lg:min-h-0">
-                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.75rem] border border-[#E8DDD0] bg-white shadow-[0_28px_60px_rgba(31,44,39,0.14)] sm:rounded-[2rem]">
-                  <Image
-                    src={featuredHeroImage}
-                    alt={featuredCentre?.name ?? 'ECD Centre'}
-                    fill
-                    className="object-cover"
-                    priority
-                    unoptimized={featuredHeroImage.startsWith('data:image/svg+xml')}
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,29,26,0.06)_0%,rgba(17,29,26,0.18)_38%,rgba(17,29,26,0.74)_100%)]" />
-                  <div className="absolute right-4 top-4 rounded-full border border-white/40 bg-white/18 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                    {featuredCentre?.isClaimed ? 'CentreConnect live' : 'Preview profile'}
-                  </div>
-                  
-                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/90 sm:text-xs">Featured partner</p>
-                    <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">{featuredCentre?.name}</h2>
+                <div className="grid gap-4">
+                  <div className="overflow-hidden rounded-[1.75rem] border border-[#E8DDD0] bg-white shadow-[0_28px_60px_rgba(31,44,39,0.12)] sm:rounded-[2rem]">
+                    <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
+                      <div className="p-5 sm:p-6">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#DDEBE7] bg-[#F3FBF8] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--teal)]">
+                          <Smartphone className="h-3.5 w-3.5" />
+                          Parent journey preview
+                        </div>
+                        <h2 className="mt-4 text-[1.45rem] font-bold leading-tight text-[#1F2D29] sm:text-[1.7rem]">
+                          Search first. Save once. Track everything after.
+                        </h2>
+                        <div className="mt-5 space-y-3">
+                          {parentMoments.map((item, index) => (
+                            <div
+                              key={item}
+                              className="flex items-start gap-3 rounded-2xl border border-[#E8DDD0] bg-[#FFFDF9] px-4 py-3"
+                            >
+                              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--teal)] text-xs font-bold text-white">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm font-medium leading-6 text-[#33423E]">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 rounded-2xl border border-[#DCEBE6] bg-[linear-gradient(135deg,#F4FBF8_0%,#FFF8F1_100%)] p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#6F7E79]">
+                            Why this feels like a product
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-[#4F5E5A]">
+                            The next step stays obvious, your saved details carry forward, and updates come back to you
+                            without you chasing three different people.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative min-h-[280px] border-t border-[#E8DDD0] bg-[linear-gradient(180deg,#F8FBFA_0%,#FFF7EF_100%)] p-5 md:min-h-full md:border-l md:border-t-0 sm:p-6">
+                        <div className="rounded-[1.35rem] border border-[#E2EEE9] bg-white/95 p-4 shadow-[0_16px_34px_rgba(31,44,39,0.08)]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7A847F]">Featured centre</p>
+                              <p className="mt-1 text-base font-bold text-[#20302C]">{featuredCentre?.name ?? 'ECD Centre'}</p>
+                            </div>
+                            <div className="rounded-full bg-[#EDF8F5] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--teal)]">
+                              {featuredCentre?.isClaimed ? 'Live now' : 'Preview'}
+                            </div>
+                          </div>
+                          <div className="relative mt-4 aspect-[16/10] overflow-hidden rounded-[1.2rem] border border-[#E8DDD0]">
+                            <Image
+                              src={featuredHeroImage}
+                              alt={featuredCentre?.name ?? 'ECD Centre'}
+                              fill
+                              className="object-cover"
+                              priority
+                              unoptimized={featuredHeroImage.startsWith('data:image/svg+xml')}
+                            />
+                            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,29,26,0.04)_0%,rgba(17,29,26,0.14)_45%,rgba(17,29,26,0.48)_100%)]" />
+                            <div className="absolute inset-x-0 bottom-0 p-4">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/85">Parent sees</p>
+                              <p className="mt-1 text-sm font-semibold text-white">Trust, suburb, and the next step to apply</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 rounded-[1.35rem] border border-[#E8DDD0] bg-[#1E2C28] p-4 text-white shadow-[0_18px_40px_rgba(31,44,39,0.18)]">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#CBE1D6]">Centre side</p>
+                          <div className="mt-3 space-y-2">
+                            {centreMoments.map((item) => (
+                              <div key={item} className="flex items-start gap-2 rounded-xl bg-white/6 px-3 py-2">
+                                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#8CE1B6]" />
+                                <span className="text-sm leading-5 text-[#E7F2EC]">{item}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -328,6 +422,49 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
           </div>
         </section>
 
+        <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+          <div className="mx-auto max-w-6xl">
+            <ApplicationProgressSection />
+          </div>
+        </section>
+
+        <section className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+          <div className="mx-auto max-w-6xl rounded-[2rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFFDF9_0%,#F4FBF8_52%,#FFF5EC_100%)] p-6 shadow-[0_18px_44px_rgba(31,44,39,0.07)] sm:p-8">
+            <div className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--teal)]">One connected system</p>
+              <h2
+                className="mt-3 text-[2rem] leading-[1.04] tracking-[-0.03em] text-[#1F2D29] sm:text-[2.8rem] sm:leading-[1]"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
+                What a parent does should make sense on the centre side too.
+              </h2>
+              <p className="mt-4 text-[15px] leading-7 text-[#616E6B] sm:text-base">
+                CentreConnect should not feel like separate tools. It should feel like one calm system where search,
+                applications, updates, attendance, and pickup all connect properly.
+              </p>
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              {connectedFlow.map((item) => {
+                const Icon = item.icon
+                return (
+                  <article
+                    key={item.title}
+                    className="rounded-[1.45rem] border border-[#E8DDD0] bg-white p-5 shadow-[0_12px_28px_rgba(31,44,39,0.05)]"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F2FBF8] text-[var(--teal)]">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#7B827E]">{item.eyebrow}</p>
+                    <h3 className="mt-2 text-[1.2rem] font-bold leading-tight text-[#21302D]">{item.title}</h3>
+                    <p className="mt-3 text-[15px] leading-7 text-[#616E6B]">{item.body}</p>
+                    <p className="mt-3 text-sm font-medium text-[#40514C]">{item.detail}</p>
+                  </article>
+                )
+              })}
+            </div>
+          </div>
+        </section>
         <section className="px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
           <div className="mx-auto max-w-6xl overflow-hidden rounded-[2.5rem] border border-[#E8DDD0] bg-[linear-gradient(135deg,#FFF8F1_0%,#FFFDF9_54%,#F5FAF8_100%)] shadow-[0_32px_80px_rgba(27,40,36,0.08)]">
             <div className="grid lg:grid-cols-2 lg:items-stretch">
@@ -682,7 +819,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
         <section className="border-y border-[#E5D9CC] bg-[linear-gradient(90deg,#FFF8F1_0%,#FFFDF9_50%,#F5FBF9_100%)]">
           <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
             <p className="text-center text-sm leading-6 text-[#64716D]">
-              Trusted by registered crèches in Alexandra, Marlboro, and across Johannesburg.
+              Trusted by registered crèches in Alexandra, Marlboro, and across Johannesburg.{locationError ? ' Location access is optional for quick nearby estimates.' : ''}
             </p>
           </div>
         </section>
@@ -727,4 +864,5 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
     </div>
   )
 }
+
 
