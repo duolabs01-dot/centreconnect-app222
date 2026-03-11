@@ -75,8 +75,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
   const router = useRouter()
   useAppNavLock()
   
-  const [hideProfileNudge, setHideProfileNudge] = useState(false)
-  const [showProfilePrompt, setShowProfilePrompt] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
 
@@ -89,23 +87,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
     document.documentElement.setAttribute('data-app-shell', 'true')
     return () => document.documentElement.removeAttribute('data-app-shell')
   }, [])
-
-  useEffect(() => {
-    if (!profileNudge) return
-    if (pathname.startsWith('/parent/profile')) return
-    if (typeof window === 'undefined') return
-
-    const dayKey = new Date().toISOString().slice(0, 10)
-    const storageKey = `cc:profile-nudge-popup:${userId}:${dayKey}`
-    if (window.sessionStorage.getItem(storageKey)) return
-
-    const timer = window.setTimeout(() => {
-      setShowProfilePrompt(true)
-    }, 700)
-    window.sessionStorage.setItem(storageKey, 'shown')
-
-    return () => window.clearTimeout(timer)
-  }, [pathname, profileNudge, userId])
 
   async function handleSignOut() {
     if (isSigningOut) return
@@ -145,8 +126,6 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
 
   const showMobileBack = shouldShowMobileBack(pathname)
   const hideParentBottomNav = shouldHideParentBottomNav(pathname)
-  const suppressDashboardNudges = pathname === '/parent/dashboard'
-  const showProfileNudge = Boolean(profileNudge && !hideProfileNudge && !suppressDashboardNudges && !pathname.startsWith('/parent/profile'))
 
   return (
     <div
@@ -294,75 +273,11 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             </div>
           </div>
 
-          {showProfileNudge ? (
-            <section className="mb-6 overflow-hidden rounded-[2rem] border border-amber-200 bg-amber-50/80 p-5 shadow-xl shadow-amber-900/5 backdrop-blur-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-700">Complete your profile</p>
-                  </div>
-                  <p className="text-base font-black text-slate-900 tracking-tight">
-                    Complete your profile to get faster responses.
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600 leading-relaxed">
-                    You are {profileNudge?.completionPct ?? 0}% ready. Add missing details so centres can respond faster.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <Button size="sm" className="h-10 rounded-2xl bg-teal-600 text-white font-bold hover:bg-teal-500" asChild>
-                      <Link href="/parent/profile">Finish Profile</Link>
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-10 rounded-2xl border-amber-200 bg-white text-amber-700 font-bold" asChild>
-                      <Link href="/parent/profile/documents">Upload IDs</Link>
-                    </Button>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setHideProfileNudge(true)}
-                  className="h-8 w-8 rounded-full text-amber-700 hover:bg-amber-100"
-                >
-                  <ChevronDown className="h-5 w-5" />
-                </Button>
-              </div>
-            </section>
-          ) : null}
-
           <div className="parent-page-content">{children}</div>
+
         </Container>
       </main>
 
-      {showProfilePrompt && !suppressDashboardNudges ? (
-        <section className="fixed inset-x-4 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[70] rounded-3xl border border-teal-200 bg-white/95 p-4 shadow-[var(--shadow-elevation-3)] md:inset-x-auto md:bottom-6 md:right-6 md:w-[360px]">
-          <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-600">Quick boost</p>
-          <p className="mt-1 text-sm font-bold text-slate-900">Complete your profile for faster responses.</p>
-          <p className="mt-1 text-xs text-slate-600">
-            You are {profileNudge?.completionPct ?? 0}% ready. Add missing details so centres can review quicker.
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            <Button size="sm" className="h-9 rounded-2xl bg-teal-600 text-white hover:bg-teal-500" asChild>
-              <Link
-                href="/parent/profile"
-                onClick={() => {
-                  setShowProfilePrompt(false)
-                }}
-              >
-                Complete profile
-              </Link>
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700"
-              onClick={() => setShowProfilePrompt(false)}
-            >
-              Remind me later
-            </Button>
-          </div>
-        </section>
-      ) : null}
     </div>
   )
 }

@@ -1,10 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useState } from 'react'
 import { GlobalDesktopFooter } from './global-desktop-footer'
 import { GlobalMobileLegalStrip } from './global-mobile-legal-strip'
-import { BottomNav } from './bottom-nav'
+const BottomNav = dynamic(() => import('./bottom-nav').then((mod) => mod.BottomNav), { ssr: false })
 import { PARENT_NAV_ITEMS, ADMIN_MOBILE_NAV_ITEMS } from '@/lib/navigation-config'
 import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
 

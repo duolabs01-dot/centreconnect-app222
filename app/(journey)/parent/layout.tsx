@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 
 export default async function ParentAuthLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -55,10 +54,5 @@ export default async function ParentAuthLayout({ children }: { children: React.R
     console.error('[parent/layout] Failed to ensure parent record:', parentBootstrapError)
   }
 
-  return (
-    <div className="animate-in fade-in duration-200">
-      <BrowserNotificationBridge mode="parent" parentId={user.id} />
-      {children}
-    </div>
-  )
+  return <div className="animate-in fade-in duration-200">{children}</div>
 }
