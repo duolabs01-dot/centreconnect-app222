@@ -21,6 +21,7 @@ import {
   type CompanyHqSummaryStat,
   type CompanyHqTone,
 } from '@/lib/admin/company-hq'
+import type { OpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/types'
 import { AdminInfoNote } from '@/components/admin/AdminInfoNote'
 import { AdminPageLayout } from '@/components/admin/admin-page-layout'
 import { ADMIN_TASK_ROUTER } from '@/components/admin/admin-nav'
@@ -243,7 +244,7 @@ function ReadinessCard({ item }: { item: CompanyHqReadinessItem }) {
   )
 }
 
-export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }) {
+export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: CompanyHqSnapshot; openclawSnapshot: OpenClawOpsSnapshot }) {
   const doneItems = snapshot.backlog.find((bucket) => bucket.id === 'done')?.items ?? []
   const topNowItems = snapshot.roadmap.find((bucket) => bucket.id === 'now')?.items ?? []
 
@@ -396,6 +397,44 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        <Card className={PANEL_CLASS}>
+          <CardHeader>
+            <CardTitle className="text-xl text-white">Agent Performance Board</CardTitle>
+            <CardDescription className="text-sm leading-6 text-slate-400">
+              Live lane accountability: who is running, who is stale, and who needs escalation now.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {openclawSnapshot.agents.slice(0, 8).map((agent) => {
+              const updatedAt = agent.updatedAt ? new Date(agent.updatedAt) : null
+              const ageHours = updatedAt ? (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60) : null
+              const staleTone: CompanyHqTone = ageHours === null ? 'watch' : ageHours > 72 ? 'critical' : ageHours > 24 ? 'watch' : 'good'
+              const staleLabel = ageHours === null ? 'No recent signal' : ageHours > 72 ? 'Stale >72h' : ageHours > 24 ? 'Stale >24h' : 'Fresh'
+
+              return (
+                <div key={agent.id} className={`${INNER_PANEL_CLASS} p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-white">{agent.name}</p>
+                      <p className="text-xs text-slate-500">{agent.sourceLabel}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <ToneBadge label={agent.statusLabel} tone={agent.status === 'failed' ? 'critical' : agent.status === 'running' ? 'good' : 'watch'} />
+                      <ToneBadge label={staleLabel} tone={staleTone} />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">{agent.summary}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <SmallAction href="/admin/openclaw" label="Open lane" />
+                    <SmallAction href="/admin/support" label="Escalate" />
+                    <SmallAction href="/admin/hq" label="Reassign" />
+                  </div>
+                </div>
+              )
+            })}
           </CardContent>
         </Card>
 

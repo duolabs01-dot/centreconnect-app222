@@ -253,6 +253,44 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
+        <div className="admin-card p-6 border-t-2 border-t-admin-warning">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-warning">Agent performance board</p>
+              <p className="text-xs text-admin-text-muted mt-1">Hard accountability for AI lanes. Stale lanes are flagged for escalation.</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {openclawSnapshot.agents.slice(0, 6).map((agent) => {
+              const updatedAt = agent.updatedAt ? new Date(agent.updatedAt) : null
+              const ageHours = updatedAt ? (Date.now() - updatedAt.getTime()) / (1000 * 60 * 60) : null
+              const staleClass = ageHours !== null && ageHours > 72 ? 'border-rose-400/60' : ageHours !== null && ageHours > 24 ? 'border-amber-300/60' : 'border-admin-border'
+              return (
+                <div key={agent.id} className={`rounded-2xl border ${staleClass} bg-admin-bg p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-admin-text">{agent.name}</p>
+                      <p className="text-[11px] text-admin-text-muted">{agent.summary}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-admin-accent">{agent.statusLabel}</p>
+                      <p className="text-[11px] text-admin-text-muted">
+                        {ageHours === null ? 'No recent signal' : ageHours > 72 ? 'Stale > 72h' : ageHours > 24 ? 'Stale > 24h' : 'Fresh'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link href="/admin/openclaw" className="text-xs font-bold text-admin-accent hover:underline">Open lane</Link>
+                    <Link href="/admin/support" className="text-xs font-bold text-admin-accent hover:underline">Escalate</Link>
+                    <Link href="/admin/hq" className="text-xs font-bold text-admin-accent hover:underline">Reassign</Link>
+                    <Link href="/admin/openclaw" className="text-xs font-bold text-rose-300 hover:underline">Disable lane</Link>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 admin-card p-6 border-t-2 border-t-admin-accent">
             <div className="flex items-center justify-between mb-6">

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { CompanyHqDashboard } from '@/components/admin/company-hq-dashboard'
 import { getCompanyHqSnapshot } from '@/lib/admin/company-hq'
+import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
 
 export const dynamic = 'force-dynamic'
@@ -15,9 +16,10 @@ export default async function AdminCompanyHqPage() {
   const identity = await requirePlatformAdmin()
   if (!identity) redirect('/login')
 
-  const snapshot = await getCompanyHqSnapshot({
-    ownerEmail: identity.email,
-  })
+  const [snapshot, openclawSnapshot] = await Promise.all([
+    getCompanyHqSnapshot({ ownerEmail: identity.email }),
+    getOpenClawOpsSnapshot(),
+  ])
 
-  return <CompanyHqDashboard snapshot={snapshot} />
+  return <CompanyHqDashboard snapshot={snapshot} openclawSnapshot={openclawSnapshot} />
 }
