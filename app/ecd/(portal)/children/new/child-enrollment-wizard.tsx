@@ -560,11 +560,11 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
       <Card className="rounded-3xl border-slate-200 bg-white">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl font-black text-slate-900">
-            <Bot className="h-5 w-5 text-teal-600" />
-            Bulk Add Existing Children (AI)
+            <Users className="h-5 w-5 text-teal-600" />
+            Bulk Add Existing Children
           </CardTitle>
           <CardDescription className="text-slate-600">
-            Upload a class register photo, review detected names, set start dates, then create child profiles in one go.
+            Fast local OCR extraction (no Gemini). Upload a clear register photo, review names, set start dates, then create profiles.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -596,7 +596,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
               onClick={runBulkExtract}
               disabled={isBulkExtracting || !bulkFile}
             >
-              {isBulkExtracting ? 'Extracting...' : 'Extract from Photo'}
+              {isBulkExtracting ? 'Reading photo...' : 'Read photo'}
             </Button>
             <Button variant="outline" asChild className="h-11 rounded-3xl border-slate-200 bg-white text-slate-700">
               <Link href="/ecd/ai-upload">Open AI Register Import</Link>

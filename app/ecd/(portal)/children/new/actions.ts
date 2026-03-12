@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
   extractStructuredDocumentWithGemini,
+  extractWithTesseract,
   isSupportedAiDocumentType,
   uploadPhotoForAiExtraction,
   type AiExtractionPayload,
@@ -542,22 +543,7 @@ export async function extractExistingChildrenFromPhotoAction(
 
   const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
-  const uploadResult = await uploadPhotoForAiExtraction({
-    supabase: session.supabase,
-    ecdId: session.ecdId,
-    documentType: 'register',
-    file,
-    folder: 'children-registers',
-  })
-
-  if (!uploadResult.success) {
-    return {
-      success: false,
-      message: uploadResult.message,
-    }
-  }
-
-  const extractionResult = await extractStructuredDocumentWithGemini({
+  const extractionResult = await extractWithTesseract({
     file,
     documentType: 'register',
   })
@@ -566,7 +552,6 @@ export async function extractExistingChildrenFromPhotoAction(
     return {
       success: false,
       message: extractionResult.message,
-      storagePublicUrl: uploadResult.publicUrl,
     }
   }
 
@@ -574,8 +559,7 @@ export async function extractExistingChildrenFromPhotoAction(
   if (names.length === 0) {
     return {
       success: false,
-      message: 'AI could not detect child names from this photo. Try a clearer image.',
-      storagePublicUrl: uploadResult.publicUrl,
+      message: 'Could not detect child names from this photo. Try a clearer image.',
     }
   }
 
@@ -596,9 +580,8 @@ export async function extractExistingChildrenFromPhotoAction(
 
   return {
     success: true,
-    message: `AI extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
+    message: `Extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
     drafts,
-    storagePublicUrl: uploadResult.publicUrl,
     summary: extractionResult.extraction.summary,
   }
 }
