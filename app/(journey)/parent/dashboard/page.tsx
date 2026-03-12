@@ -570,9 +570,14 @@ export default async function ParentDashboardPage() {
                       Pickup &amp; collection
                     </Link>
                   </div>
-                  <Link href="/parent/discover" className="mt-4 inline-flex text-sm font-semibold text-slate-500 transition-colors hover:text-cyan-700">
-                    Explore other creches only if you are thinking of moving later.
-                  </Link>
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Continue where you left off</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <QuickLink href="/parent/daily-reports" label="Today updates" />
+                      <QuickLink href="/parent/notifications" label="Messages" />
+                      <QuickLink href="/parent/applications" label="Applications" />
+                    </div>
+                  </div>
                 </div>
               </SurfaceCard>
 
