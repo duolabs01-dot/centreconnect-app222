@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChevronRight, Compass, Map } from 'lucide-react'
+import { ChevronRight, Compass, Map, X } from 'lucide-react'
 import { toast } from 'sonner'
 import ApplicationTimeline, { type AppStatus, type TimelineEvent } from '@/components/parent/ApplicationTimeline'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ApprovalActions } from './approval-actions'
 import { ApprovalReceivedToast } from './approval-received-toast'
@@ -446,6 +446,9 @@ export function ApplicationsList({
       {isDesktop ? (
         <Dialog open={Boolean(activeApplication)} onOpenChange={(open) => (!open ? setActiveApplicationId(null) : null)}>
           <DialogContent className="glass-modal max-h-[90vh] max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-5">
+            <DialogClose className="absolute right-4 top-4 rounded-full p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" aria-label="Close application timeline">
+              <X className="h-4 w-4" />
+            </DialogClose>
             <DialogHeader className="sr-only">
               <DialogTitle>Application timeline</DialogTitle>
               <DialogDescription>Detailed timeline for the selected application.</DialogDescription>

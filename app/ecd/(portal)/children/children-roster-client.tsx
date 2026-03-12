@@ -12,6 +12,7 @@ import {
   UserRoundCheck,
   UserRoundPlus,
   Users,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -554,6 +556,9 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
 
       <Dialog open={Boolean(editingChild)} onOpenChange={(open) => !open && setEditingChildId(null)}>
         <DialogContent className="rounded-[1.8rem] border-slate-200 bg-white p-0 sm:max-w-xl">
+          <DialogClose className="absolute right-4 top-4 rounded-full p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" aria-label="Close child dialog">
+            <X className="h-4 w-4" />
+          </DialogClose>
           <div className="p-6 sm:p-7">
             <DialogHeader>
               <DialogTitle className="text-2xl font-black tracking-tight text-slate-900">Edit child details</DialogTitle>
@@ -628,6 +633,9 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
 
       <Dialog open={Boolean(linkingChild)} onOpenChange={(open) => !open && setLinkingChildId(null)}>
         <DialogContent className="rounded-[1.8rem] border-slate-200 bg-white p-0 sm:max-w-xl">
+          <DialogClose className="absolute right-4 top-4 rounded-full p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-800" aria-label="Close family email dialog">
+            <X className="h-4 w-4" />
+          </DialogClose>
           <div className="p-6 sm:p-7">
             <DialogHeader>
               <DialogTitle className="text-2xl font-black tracking-tight text-slate-900">Send the family email</DialogTitle>

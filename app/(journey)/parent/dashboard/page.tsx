@@ -390,7 +390,7 @@ export default async function ParentDashboardPage() {
         <div className="cc-stack">
           {homeState === 'discover' ? (
             <div className="cc-stack">
-              <SurfaceCard className="relative overflow-hidden border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
+              <SurfaceCard className="relative overflow-hidden border border-border bg-gradient-to-b from-muted/40 to-background p-6 sm:p-7">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_55%),radial-gradient(circle_at_top_right,rgba(212,147,90,0.12),transparent_38%)]" />
                 <div className="relative">
                   <SectionHeading
@@ -451,7 +451,7 @@ export default async function ParentDashboardPage() {
             </div>
           ) : homeState === 'pending' ? (
             <div className="cc-stack">
-              <SurfaceCard className="border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-5 sm:p-6">
+              <SurfaceCard className="border border-border bg-gradient-to-b from-muted/40 to-background p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <SectionHeading
@@ -538,7 +538,7 @@ export default async function ParentDashboardPage() {
             </div>
           ) : (
             <div className="cc-stack">
-              <SurfaceCard className="relative overflow-hidden border border-emerald-200 bg-[linear-gradient(180deg,#F4FCF8_0%,#FFFFFF_100%)] p-5 sm:p-6">
+              <SurfaceCard className="relative overflow-hidden border border-border bg-gradient-to-b from-emerald-50/60 to-background p-5 sm:p-6">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_52%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.10),transparent_38%)]" />
                 <div className="relative">
                   <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">

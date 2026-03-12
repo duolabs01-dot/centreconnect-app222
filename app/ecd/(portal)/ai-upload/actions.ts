@@ -154,11 +154,11 @@ function splitPossibleNames(input: string) {
 }
 
 function isLikelyPersonName(value: string) {
-  const cleaned = value.replace(/\s+/g, ' ').trim()
+  const cleaned = value.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim()
   if (!cleaned) return false
 
   const parts = cleaned.split(' ').filter(Boolean)
-  if (parts.length < 2 || parts.length > 4) return false
+  if (parts.length < 1 || parts.length > 6) return false
 
   const banned = new Set([
     'present',
@@ -173,10 +173,15 @@ function isLikelyPersonName(value: string) {
     'signature',
   ])
 
+  const hasAlpha = parts.some((part) => /[A-Za-z]/.test(part))
+  if (!hasAlpha) return false
+
   return parts.every((part) => {
-    const lower = part.toLowerCase()
+    const normalized = part.replace(/[^A-Za-z'\-]/g, '')
+    if (!normalized) return false
+    const lower = normalized.toLowerCase()
     if (banned.has(lower)) return false
-    return /^[A-Za-z][A-Za-z'\-]+$/.test(part)
+    return /^[A-Za-z][A-Za-z'\-]+$/.test(normalized)
   })
 }
 

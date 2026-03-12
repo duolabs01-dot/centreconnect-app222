@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/cc-admin/Button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -94,6 +95,9 @@ export function CreateSupportTicketDialog({ open, onOpenChange, availableCentres
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
+        <DialogClose className="absolute right-4 top-4 rounded-full p-1 text-slate-300 hover:bg-slate-800 hover:text-white" aria-label="Close support ticket dialog">
+          <X className="h-4 w-4" />
+        </DialogClose>
         <DialogHeader>
           <DialogTitle className={adminTheme.cardTitle}>New Support Ticket</DialogTitle>
           <DialogDescription className="text-slate-300">
