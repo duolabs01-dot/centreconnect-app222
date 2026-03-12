@@ -363,6 +363,22 @@ function splitPossibleNames(input: string) {
     .filter(Boolean)
 }
 
+function extractNumberedNameCandidates(rawText: string) {
+  return rawText
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*\d{1,3}[\).:\-\s]+/, '').trim())
+    .filter((line) => line.length >= 2)
+    .filter((line) => /[A-Za-z]/.test(line))
+}
+
+function normalizeCandidateName(value: string) {
+  return value
+    .replace(/^\s*\d{1,3}[\).:\-\s]+/, '')
+    .replace(/[|•·]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function parseRegisterNames(extraction: AiExtractionPayload) {
   const fullNameValue = extraction.fields.full_name?.value
   const fromArray = Array.isArray(fullNameValue) ? fullNameValue : []
@@ -373,9 +389,13 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
 
   const banned = new Set(['present', 'absent', 'late', 'sick', 'attendance', 'register', 'date', 'class', 'total'])
 
-  const cleanedCandidates = [...fromArray, ...fromString, mergedSingle]
-    .map((name) => name.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim())
-    .map((name) => name.replace(/^\d+[.)\-:\s]+/, '').trim())
+  const notesText = getFieldString(extraction, 'notes') ?? ''
+  const numberedCandidates = extractNumberedNameCandidates(
+    [typeof fullNameValue === 'string' ? fullNameValue : '', notesText].join('\\n')
+  )
+
+  const cleanedCandidates = [...fromArray, ...fromString, mergedSingle, ...numberedCandidates]
+    .map((name) => normalizeCandidateName(name))
     .filter((name) => name.length >= 2)
 
   const strict = cleanedCandidates.filter((name) => {
@@ -1160,6 +1180,7 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
+
 
 
 

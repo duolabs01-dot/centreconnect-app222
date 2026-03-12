@@ -185,6 +185,22 @@ function isLikelyPersonName(value: string) {
   })
 }
 
+function extractNumberedNameCandidates(rawText: string) {
+  return rawText
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^\s*\d{1,3}[\).:\-\s]+/, '').trim())
+    .filter((line) => line.length >= 2)
+    .filter((line) => /[A-Za-z]/.test(line))
+}
+
+function normalizeCandidateName(value: string) {
+  return value
+    .replace(/^\s*\d{1,3}[\).:\-\s]+/, '')
+    .replace(/[|•·]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function parseExtractedNames(extraction: {
   fields: Record<string, { value: string | string[]; confidence: number }>
 }) {
@@ -196,8 +212,13 @@ function parseExtractedNames(extraction: {
   const lastName = fieldAsString(extraction, 'last_name')
   const mergedSingle = [firstName, lastName].filter(Boolean).join(' ').trim()
 
-  const all = [...namesFromArray, ...namesFromString, mergedSingle]
-    .map((entry) => entry.replace(/\s+/g, ' ').trim())
+  const notesText = fieldAsString(extraction, 'notes') ?? ''
+  const numberedCandidates = extractNumberedNameCandidates(
+    [fieldAsString(extraction, 'full_name') ?? '', notesText].join('\n')
+  )
+
+  const all = [...namesFromArray, ...namesFromString, mergedSingle, ...numberedCandidates]
+    .map((entry) => normalizeCandidateName(entry))
     .filter((entry) => entry.length >= 2)
     .filter((entry) => isLikelyPersonName(entry))
 
