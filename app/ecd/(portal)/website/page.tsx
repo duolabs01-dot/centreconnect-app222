@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cn } from '@/lib/utils'
 import { filterWebsiteSectionsByTier, getAllowedWebsiteSections, type WebsiteSectionKey } from '@/lib/billing/entitlements'
@@ -265,6 +266,7 @@ export default async function EcdWebsitePage({
         : null
   const statusMeta = status && status in websiteStatusCopy ? websiteStatusCopy[status as WebsiteActionStatus] : null
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'website-builder' })
   const [{ data: centre }, { data: contentRows }, { data: subscription }] = await Promise.all([
     supabase
       .from('ecd_centres')
@@ -311,6 +313,11 @@ export default async function EcdWebsitePage({
   async function saveWebsiteContent(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
+    await requireEcdFeatureAccess({
+      supabase: session.supabase,
+      ecdId: session.ecdId,
+      feature: 'website-builder',
+    })
     const admin = createAdminClient()
     const tagline = String(formData.get('tagline') ?? '').trim()
     const about = String(formData.get('about') ?? '').trim()
@@ -455,6 +462,11 @@ export default async function EcdWebsitePage({
   async function setWebsitePublished(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
+    await requireEcdFeatureAccess({
+      supabase: session.supabase,
+      ecdId: session.ecdId,
+      feature: 'website-builder',
+    })
     const nextPublished = String(formData.get('next_published') ?? '') === 'true'
     const nowIso = new Date().toISOString()
 
@@ -475,6 +487,11 @@ export default async function EcdWebsitePage({
   async function submitWebsiteBrief(formData: FormData) {
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
+    await requireEcdFeatureAccess({
+      supabase: session.supabase,
+      ecdId: session.ecdId,
+      feature: 'website-builder',
+    })
     const siteType = String(formData.get('site_type') ?? 'mini-site')
     const domainPlan = String(formData.get('domain_plan') ?? 'platform-subdomain')
     const style = String(formData.get('style') ?? '').trim()

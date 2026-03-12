@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { ComplianceDocumentRow } from './compliance-document-row'
 import { addStaffCheckAction } from './actions'
 import { Printer } from 'lucide-react'
@@ -85,6 +86,7 @@ function expiryWarning(expiresAt: string | null) {
 
 export default async function EcdCompliancePage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'compliance' })
   const admin = createAdminClient()
 
   const { count: docsCount } = await admin

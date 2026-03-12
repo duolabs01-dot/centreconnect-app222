@@ -20,6 +20,7 @@ import {
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 import { revokeUserSessionsByUserId } from '@/lib/auth/revoke-user-sessions'
+import { upsertCentreSubscription, upsertEcdAdminLink } from '@/lib/ecd/provisioning'
 
 const APP_BASE_URL = normalizeAppUrl()
 
@@ -396,12 +397,11 @@ export async function POST(request: Request) {
     console.warn('[admin/centres] Failed to sync auth metadata role:', metadataSync.error)
   }
 
-  const { error: ecdAdminError } = await adminClient.from('ecd_admins').upsert({
-    ecd_id: centre.id,
-    user_id: adminUserId,
-    role: 'ecd_admin',
-    accepted_at: new Date().toISOString(),
-  }, { onConflict: 'ecd_id,user_id' })
+  const { error: ecdAdminError } = await upsertEcdAdminLink({
+    admin: adminClient,
+    ecdId: centre.id,
+    userId: adminUserId,
+  })
 
   if (ecdAdminError) {
     if (createdNewAuthUser) {
@@ -438,15 +438,13 @@ export async function POST(request: Request) {
     )
   }
 
-  const { error: subscriptionError } = await adminClient.from('subscriptions').upsert(
-    {
-      ecd_id: centre.id,
-      tier: normalizedTier,
-      status: 'trial',
-      monthly_price: normalizedMonthlyPrice,
-    },
-    { onConflict: 'ecd_id' }
-  )
+  const { error: subscriptionError } = await upsertCentreSubscription({
+    admin: adminClient,
+    ecdId: centre.id,
+    selectedTier: normalizedTier,
+    status: 'trial',
+    monthlyPrice: normalizedMonthlyPrice,
+  })
 
   if (subscriptionError) {
     await adminClient.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', adminUserId)

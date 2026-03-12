@@ -2,23 +2,14 @@ import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { writePlatformActivity } from '@/lib/admin/activity-log'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
+import {
+  assignCentreOwnerIfMissing,
+  getUniqueCentreSlug,
+  upsertCentreSubscription,
+  upsertEcdAdminLink,
+} from '@/lib/ecd/provisioning'
 
 type ServiceAction = 'approve' | 'reject' | 'provision'
-
-const MONTHLY_PRICE_BY_TIER: Record<'basic' | 'standard' | 'premium', number> = {
-  basic: 199,
-  standard: 299,
-  premium: 499,
-}
-
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 48)
-}
 
 function appendAdminNote(current: string | null, action: string, actorEmail: string | null, note?: string) {
   const time = new Date().toISOString()
@@ -28,19 +19,6 @@ function appendAdminNote(current: string | null, action: string, actorEmail: str
   return [current?.trim(), line].filter(Boolean).join('\n')
 }
 
-async function getUniqueCentreSlug(admin: ReturnType<typeof createAdminClient>, centreName: string, userId: string) {
-  const baseSlug = slugify(centreName) || `ecd-${userId.slice(0, 8)}`
-  let slug = baseSlug
-  let counter = 1
-
-  while (true) {
-    const { data: exists, error } = await admin.from('ecd_centres').select('id').eq('slug', slug).maybeSingle()
-    if (error) throw new Error(error.message)
-    if (!exists) return slug
-    counter += 1
-    slug = `${baseSlug}-${counter}`
-  }
-}
 
 type RunServiceActionInput = {
   admin: ReturnType<typeof createAdminClient>
@@ -203,11 +181,7 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
   if (linkCheckError) return { ok: false, error: linkCheckError.message, statusCode: 400 }
 
   if (existingAdminLink?.ecd_id) {
-    await admin
-      .from('ecd_centres')
-      .update({ owner_id: application.user_id })
-      .eq('id', existingAdminLink.ecd_id)
-      .is('owner_id', null)
+    await assignCentreOwnerIfMissing(admin, existingAdminLink.ecd_id, application.user_id)
 
     const { error: markProvisionedError } = await admin
       .from('ecd_service_applications')
@@ -282,12 +256,11 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
     return { ok: false, error: centreError?.message || 'Failed to create centre record', statusCode: 400 }
   }
 
-  const { error: adminLinkError } = await admin.from('ecd_admins').insert({
-    ecd_id: centre.id,
-    user_id: application.user_id,
-    role: 'ecd_admin',
-    invited_by: actorUserId,
-    accepted_at: new Date().toISOString(),
+  const { error: adminLinkError } = await upsertEcdAdminLink({
+    admin,
+    ecdId: centre.id,
+    userId: application.user_id,
+    invitedBy: actorUserId,
   })
   if (adminLinkError) {
     await admin.from('ecd_centres').delete().eq('id', centre.id)
@@ -295,15 +268,12 @@ export async function runServiceApplicationAction(input: RunServiceActionInput):
   }
 
   const selectedTier = (application.selected_tier ?? 'basic') as 'basic' | 'standard' | 'premium'
-  const { error: subscriptionError } = await admin.from('subscriptions').upsert(
-    {
-      ecd_id: centre.id,
-      tier: selectedTier,
-      status: 'trial',
-      monthly_price: MONTHLY_PRICE_BY_TIER[selectedTier],
-    },
-    { onConflict: 'ecd_id' }
-  )
+  const { error: subscriptionError } = await upsertCentreSubscription({
+    admin,
+    ecdId: centre.id,
+    selectedTier,
+    status: 'trial',
+  })
   if (subscriptionError) {
     await admin.from('ecd_admins').delete().eq('ecd_id', centre.id).eq('user_id', application.user_id)
     await admin.from('ecd_centres').delete().eq('id', centre.id)

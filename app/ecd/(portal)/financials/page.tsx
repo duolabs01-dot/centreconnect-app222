@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from 'next'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { FinancialEntryClient } from './financial-entry-client'
 import { PlChart } from './pl-chart'
 
@@ -43,6 +44,7 @@ function resolvePeriod(periodParam?: string): string {
 
 export default async function EcdFinancialsPage({ searchParams }: FinancialsPageProps) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'financials' })
   const canEdit = role === 'ecd_admin' || role === 'ecd_supervisor'
   const currentPeriod = resolvePeriod(searchParams?.period)
   const currentPeriodDate = new Date(`${currentPeriod}T00:00:00`)

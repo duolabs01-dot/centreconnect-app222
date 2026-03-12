@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { ReportCardsClient } from './report-cards-client'
 
 export const metadata: Metadata = {
@@ -67,6 +68,7 @@ function isMissingReportCardsSchemaError(error: PostgrestLikeError) {
 
 export default async function ReportCardsPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'report-cards' })
 
   const [{ data: childrenRows }, { data: enrolledRows }] = await Promise.all([
     supabase

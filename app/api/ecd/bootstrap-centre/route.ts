@@ -3,21 +3,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { APP_URL } from '@/lib/config'
 import { writeInviteLog } from '@/lib/admin/invite-logs'
-
-function slugify(input: string) {
-  return input
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 48)
-}
-
-async function rollbackProvisionedCentre(admin: ReturnType<typeof createAdminClient>, centreId: string, userId: string) {
-  await admin.from('ecd_admins').delete().eq('ecd_id', centreId).eq('user_id', userId)
-  await admin.from('subscriptions').delete().eq('ecd_id', centreId)
-  await admin.from('ecd_centres').delete().eq('id', centreId)
-}
+import {
+  assignCentreOwnerIfMissing,
+  getUniqueCentreSlug,
+  rollbackProvisionedCentre,
+  upsertCentreSubscription,
+  upsertEcdAdminLink,
+} from '@/lib/ecd/provisioning'
 
 function isPilotRequested(selectedTier: string | null | undefined, adminNotes: string | null | undefined) {
   const tier = (selectedTier ?? '').trim().toLowerCase()
@@ -49,11 +41,7 @@ export async function POST() {
       .maybeSingle()
 
     if (existingAssignment?.ecd_id) {
-      await admin
-        .from('ecd_centres')
-        .update({ owner_id: user.id })
-        .eq('id', existingAssignment.ecd_id)
-        .is('owner_id', null)
+      await assignCentreOwnerIfMissing(admin, existingAssignment.ecd_id, user.id)
       return NextResponse.json({ ok: true, created: false })
     }
 
@@ -101,20 +89,12 @@ export async function POST() {
 
       const recoveredEcdId = centreLookupByEmail.data?.id ?? centreLookupByName.data?.id ?? null
       if (recoveredEcdId) {
-        await admin.from('ecd_admins').upsert(
-          {
-            ecd_id: recoveredEcdId,
-            user_id: user.id,
-            role: 'ecd_admin',
-            accepted_at: new Date().toISOString(),
-          },
-          { onConflict: 'ecd_id,user_id' }
-        )
-        await admin
-          .from('ecd_centres')
-          .update({ owner_id: user.id })
-          .eq('id', recoveredEcdId)
-          .is('owner_id', null)
+        await upsertEcdAdminLink({
+          admin,
+          ecdId: recoveredEcdId,
+          userId: user.id,
+        })
+        await assignCentreOwnerIfMissing(admin, recoveredEcdId, user.id)
         return NextResponse.json({ ok: true, created: false, recovered: true })
       }
     }
@@ -126,20 +106,7 @@ export async function POST() {
     const centreCityRaw = (serviceApplication.centre_city ?? '').trim() || 'Johannesburg'
     const centreProvinceRaw = (serviceApplication.centre_province ?? '').trim() || 'Gauteng'
 
-    const baseSlug = slugify(centreName) || `ecd-${user.id.slice(0, 8)}`
-    let finalSlug = baseSlug
-    let suffix = 1
-
-    while (true) {
-      const { data: slugCheck } = await admin
-        .from('ecd_centres')
-        .select('id')
-        .eq('slug', finalSlug)
-        .maybeSingle()
-      if (!slugCheck) break
-      suffix += 1
-      finalSlug = `${baseSlug}-${suffix}`
-    }
+    const finalSlug = await getUniqueCentreSlug(admin, centreName, user.id)
 
     const { data: centre, error: centreError } = await admin
       .from('ecd_centres')
@@ -162,11 +129,10 @@ export async function POST() {
       return NextResponse.json({ error: centreError?.message || 'Failed to create centre' }, { status: 400 })
     }
 
-    const { error: adminLinkError } = await admin.from('ecd_admins').insert({
-      ecd_id: centre.id,
-      user_id: user.id,
-      role: 'ecd_admin',
-      accepted_at: new Date().toISOString(),
+    const { error: adminLinkError } = await upsertEcdAdminLink({
+      admin,
+      ecdId: centre.id,
+      userId: user.id,
     })
 
     if (adminLinkError) {
@@ -174,21 +140,12 @@ export async function POST() {
       return NextResponse.json({ error: adminLinkError.message }, { status: 400 })
     }
 
-    const monthlyPriceByTier: Record<string, number> = {
-      basic: 199,
-      standard: 299,
-      premium: 499,
-    }
-
-    const { error: subscriptionError } = await admin.from('subscriptions').upsert(
-      {
-        ecd_id: centre.id,
-        tier: serviceApplication.selected_tier ?? 'basic',
-        status: 'trial',
-        monthly_price: monthlyPriceByTier[serviceApplication.selected_tier ?? 'basic'] ?? 199,
-      },
-      { onConflict: 'ecd_id' }
-    )
+    const { error: subscriptionError } = await upsertCentreSubscription({
+      admin,
+      ecdId: centre.id,
+      selectedTier: serviceApplication.selected_tier,
+      status: 'trial',
+    })
     if (subscriptionError) {
       await rollbackProvisionedCentre(admin, centre.id, user.id)
       return NextResponse.json(

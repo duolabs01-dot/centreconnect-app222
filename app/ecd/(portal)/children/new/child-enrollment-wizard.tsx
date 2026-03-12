@@ -454,21 +454,25 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
     }
 
     startBulkExtractTransition(async () => {
-      const formData = new FormData()
-      formData.set('file', bulkFile)
-      if (form.enrollment_start_date) {
-        formData.set('default_start_date', form.enrollment_start_date)
-      }
+      try {
+        const formData = new FormData()
+        formData.set('file', bulkFile)
+        if (form.enrollment_start_date) {
+          formData.set('default_start_date', form.enrollment_start_date)
+        }
 
-      const result = await extractExistingChildrenFromPhotoAction(formData)
-      if (!result.success || !result.drafts) {
-        toast.error(result.message)
-        return
-      }
+        const result = await extractExistingChildrenFromPhotoAction(formData)
+        if (!result.success || !result.drafts) {
+          toast.error(result.message)
+          return
+        }
 
-      setBulkDrafts(result.drafts)
-      setBulkSummary(result.summary ?? '')
-      toast.success(result.message)
+        setBulkDrafts(result.drafts)
+        setBulkSummary(result.summary ?? '')
+        toast.success(result.message)
+      } catch {
+        toast.error('We could not read this photo right now. Try CSV import or a clearer image.')
+      }
     })
   }
 
