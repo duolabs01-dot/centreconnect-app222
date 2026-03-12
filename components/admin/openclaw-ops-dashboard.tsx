@@ -201,7 +201,7 @@ function WorkList({
                   {item.ownerLabel} · {item.sourceLabel}
                 </p>
               </div>
-              <StatusBadge status={item.badgeTone} label={item.statusLabel} />
+              <StatusBadge status={item.statusLabel} />
             </div>
             <p className="mt-3 text-sm leading-6 text-slate-400">{item.summary}</p>
             <div className="mt-3 flex flex-wrap gap-2">
