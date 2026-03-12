@@ -3,157 +3,87 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Building2, LifeBuoy, Settings, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { 
-  LayoutDashboard, 
-  Users, 
-  Building2, 
-  CreditCard, 
-  BarChart3, 
-  ShieldCheck, 
-  Settings,
-  Activity,
-  ScrollText,
-  AlertTriangle,
-  BookOpen,
-  Cpu,
-  LifeBuoy,
-  Mail
-} from 'lucide-react'
-import { BrandMark } from '@/components/cc-admin/BrandMark'
 import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
-
-const NAV_ITEMS = [
-  { label: 'Home', href: '/admin/dashboard', icon: LayoutDashboard, id: 'dash', group: 'core' },
-  { label: 'Centres', href: '/admin/tenants', icon: Building2, id: 'ecd', group: 'core' },
-  { label: 'Users', href: '/admin/users', icon: Users, id: 'users', group: 'core' },
-  { label: 'Invites', href: '/admin/invites', icon: Mail, id: 'invites', group: 'core' },
-  { label: 'Revenue', href: '/admin/revenue', icon: CreditCard, id: 'rev', group: 'insights' },
-  { label: 'Analytics', href: '/admin/analytics', icon: BarChart3, id: 'stat', group: 'insights' },
-  { label: 'Parent Reliability', href: '/admin/parent-reliability', icon: Users, id: 'pr', group: 'insights' },
-  { label: 'Operations', href: '/admin/command', icon: ShieldCheck, id: 'cmd', group: 'reliability' },
-  { label: 'Webhook Failures', href: '/admin/webhook-failures', icon: AlertTriangle, id: 'whf', group: 'reliability' },
-  { label: 'Audit Trail', href: '/admin/audit-trail', icon: ScrollText, id: 'audit', group: 'reliability' },
-  { label: 'Runbook', href: '/admin/runbooks/payment-incidents', icon: BookOpen, id: 'runbook', group: 'reliability' },
-  { label: 'Support', href: '/admin/support', icon: LifeBuoy, id: 'sup', group: 'support' },
-]
-
-const GROUP_LABELS: Record<string, string> = {
-  core: 'Run the business',
-  insights: 'Numbers',
-  reliability: 'Fix issues',
-  support: 'Support',
-}
-
-const GROUP_ORDER = ['core', 'insights', 'reliability', 'support']
+import { ADMIN_NAV_ITEMS, ADMIN_NAV_SECTIONS } from './admin-nav'
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const mobileItems = ADMIN_NAV_ITEMS.map((item) => ({
+    ...item,
+    icon:
+      item.href === '/admin/tenants'
+        ? Building2
+        : item.href === '/admin/support'
+        ? LifeBuoy
+        : Sparkles,
+    group: 'core',
+  }))
 
   return (
     <>
-      {/* Mobile Top Header - Unified look */}
-      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-[#080B13]/80 backdrop-blur-md border-b border-white/5 z-40 px-4 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-[#080B13]/85 backdrop-blur-md border-b border-white/10 z-40 px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <MobileNavMenu 
-            items={NAV_ITEMS} 
-            type="admin"
-            roleLabel="Platform Admin"
-            userRole="platform_admin"
-          />
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white">
-            <Cpu className="w-4 h-4 animate-pulse" />
+          <MobileNavMenu items={mobileItems} type="admin" roleLabel="Platform Admin" userRole="platform_admin" />
+          <div className="h-8 w-8 rounded-lg bg-teal-600/90 flex items-center justify-center text-white">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/80 leading-none">CentreConnect</p>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300/90 leading-none">CentreConnect</p>
+            <p className="text-[10px] text-slate-300">Platform Admin</p>
+          </div>
         </div>
       </div>
 
-      {/* Desktop Persistent Sidebar */}
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/5 z-50 overflow-hidden">
-        {/* Subtle background glow */}
-        <div className="absolute top-0 -left-20 w-40 h-80 bg-cyan-500/5 blur-[120px]" />
-        
-        {/* Logo & Brand Header */}
-        <div className="relative p-8 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white shadow-[0_0_20px_rgba(6,182,212,0.3)]">
-            <Cpu className="w-5 h-5 animate-pulse" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-cyan-500/80 leading-none">CentreConnect</p>
-            <p className="text-sm font-black text-white tracking-tighter mt-1">Platform Admin</p>
-          </div>
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/10 z-50">
+        <div className="p-6 border-b border-white/10">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">CentreConnect</p>
+          <p className="mt-1 text-lg font-semibold text-white">Platform Admin</p>
+          <p className="mt-1 text-xs text-slate-400">One place to run company, product, and operations.</p>
         </div>
 
-        {/* Navigation Section */}
-        <div className="flex-1 px-4 py-8 relative">
-          <p className="px-4 mb-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">What you can do</p>
-          <div className="space-y-6">
-            {GROUP_ORDER.map((group) => {
-              const items = NAV_ITEMS.filter((item) => item.group === group)
-              if (items.length === 0) return null
-              return (
-                <div key={group} className="space-y-2">
-                  <p className="px-4 text-[9px] font-black uppercase tracking-[0.3em] text-slate-600">
-                    {GROUP_LABELS[group] ?? group}
-                  </p>
-                  <nav className="space-y-1.5">
-                    {items.map((item) => {
-                      const isActive = pathname === item.href
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          className={cn(
-                            "group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-[13px] font-black transition-all duration-300 relative",
-                            isActive
-                              ? "bg-white/5 text-white shadow-xl shadow-black/20"
-                              : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02]"
-                          )}
-                        >
-                          {isActive && (
-                            <div className="absolute left-0 w-1 h-5 bg-cyan-500 rounded-full shadow-[0_0_10px_rgba(6,182,212,1)]" />
-                          )}
-                          <item.icon
-                            className={cn(
-                              "w-5 h-5 transition-all duration-300",
-                              isActive
-                                ? "text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]"
-                                : "text-slate-600 group-hover:text-slate-400"
-                            )}
-                          />
-                          <span className="tracking-tight">{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </nav>
-                </div>
-              )
-            })}
-          </div>
+        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
+          {ADMIN_NAV_SECTIONS.map((section) => (
+            <section key={section.id} className="space-y-2">
+              <p className="px-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
+              <nav className="space-y-1.5">
+                {section.items.map((item) => {
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
+                        isActive
+                          ? 'bg-teal-500/15 text-teal-200 border border-teal-500/30'
+                          : 'text-slate-300 border border-transparent hover:bg-white/5 hover:text-white'
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </nav>
+            </section>
+          ))}
         </div>
 
-        {/* Sidebar Footer Info */}
-        <div className="p-4 space-y-3 relative">
-          <div className="mx-2 p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-black border border-white/5 shadow-inner">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="w-3 h-3 text-emerald-500" />
-              <span className="text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">Live pilot</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white tracking-tight">Gauteng centres</span>
-              <span className="text-[10px] font-black text-emerald-500">ONLINE</span>
-            </div>
+        <div className="p-4 border-t border-white/10">
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-amber-200">Current pilot truth</p>
+            <p className="mt-1 text-xs text-amber-100">2 real centres: Bajabulile + Sakhisizwe</p>
           </div>
-          
-          <div className="px-4 py-2 flex items-center justify-between border-t border-white/5 pt-4">
-            <button className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-all">
+          <div className="mt-3 flex items-center justify-between">
+            <button className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors" aria-label="Settings">
               <Settings className="w-5 h-5" />
             </button>
             <SignOutButton
               redirectTo="/"
               variant="ghost"
-              className="h-9 rounded-lg px-3 text-xs font-bold text-rose-500/80 hover:bg-rose-500/10 hover:text-rose-400"
+              className="h-9 rounded-lg px-3 text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300"
             />
           </div>
         </div>

@@ -6,7 +6,22 @@ import {
   extractStructuredDocumentWithGemini,
   uploadPhotoForAiExtraction,
 } from '@/lib/ai/document-extraction-service'
-import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import {
+  ATTENDANCE_CSV_GUIDANCE,
+  ATTENDANCE_CSV_LIMITATIONS,
+  ATTENDANCE_CSV_MAX_ROWS,
+  type AttendanceRecordStatus,
+  normalizeNameForMatch,
+  parseAttendanceCsvText,
+  validateAttendanceCsvFile,
+} from '@/lib/attendance/csv'
+import {
+  ATTENDANCE_IMPORT_FALLBACK_STEPS,
+  buildAttendanceBoardHref,
+  normalizeAttendanceImportDate,
+  validateAttendanceImportFile,
+} from '@/lib/attendance/imports'
+import { requireEcdPortalSession, type EcdPortalSession } from '@/lib/ecd/portal-session'
 
 const extractSchema = z.object({
   attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
@@ -20,6 +35,28 @@ const importSchema = z.object({
   attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
   create_child_if_missing: z.boolean().default(false),
   notes: z.string().max(2000).optional(),
+})
+
+const csvPreviewSchema = z.object({
+  attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
+  notes: z.string().max(2000).optional(),
+})
+
+const csvPreviewRowSchema = z.object({
+  lineNumber: z.number().int().positive(),
+  childName: z.string().min(1).max(240),
+  attendanceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')),
+  status: z.enum(['present', 'absent', 'sick', 'late']),
+  className: z.string().max(160).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  matchedChildId: z.string().uuid().nullable(),
+  matchedChildName: z.string().max(240).nullable(),
+  issues: z.array(z.string().max(240)).max(10),
+})
+
+const csvImportSchema = z.object({
+  source_file_name: z.string().min(1).max(240),
+  rows: z.array(csvPreviewRowSchema).max(ATTENDANCE_CSV_MAX_ROWS),
 })
 
 type ImportRow = {
@@ -36,32 +73,59 @@ type ImportRow = {
   created_at: string
 }
 
+const registerImportSelectFields =
+  'id,source_file_url,source_file_name,extracted_names,extracted_date,status,selected_name,imported_child_id,imported_attendance_id,notes,created_at'
+
 export type RegisterExtractionActionResult = {
   success: boolean
   message: string
   items?: ImportRow[]
   item?: ImportRow
+  fallbackHref?: string
+  guidance?: string[]
 }
 
 export type RegisterImportActionResult = {
   success: boolean
   message: string
   item?: ImportRow
+  attendanceHref?: string
 }
 
-function normalizeDate(value: string | null | undefined) {
-  if (!value) return null
-  const cleaned = value.trim()
-  if (!cleaned) return null
-  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned
+export type AttendanceCsvPreviewRow = z.infer<typeof csvPreviewRowSchema>
 
-  const ddmmyyyy = cleaned.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/)
-  if (ddmmyyyy) {
-    const [, dd, mm, yyyy] = ddmmyyyy
-    return `${yyyy}-${mm}-${dd}`
-  }
+export type AttendanceCsvPreviewActionResult = {
+  success: boolean
+  message: string
+  fileName?: string
+  headers?: string[]
+  rows?: AttendanceCsvPreviewRow[]
+  warnings?: string[]
+  readyCount?: number
+  blockedCount?: number
+  fallbackHref?: string
+  guidance?: string[]
+}
 
-  return null
+export type AttendanceCsvImportActionResult = {
+  success: boolean
+  message: string
+  importedCount?: number
+  blockedCount?: number
+  attendanceHref?: string
+  warnings?: string[]
+}
+
+type ChildMatchRow = {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  class_id: string | null
+}
+
+type ClassMatchRow = {
+  id: string
+  name: string
 }
 
 function fieldAsString(extraction: {
@@ -89,6 +153,33 @@ function splitPossibleNames(input: string) {
     .filter(Boolean)
 }
 
+function isLikelyPersonName(value: string) {
+  const cleaned = value.replace(/\s+/g, ' ').trim()
+  if (!cleaned) return false
+
+  const parts = cleaned.split(' ').filter(Boolean)
+  if (parts.length < 2 || parts.length > 4) return false
+
+  const banned = new Set([
+    'present',
+    'absent',
+    'late',
+    'sick',
+    'register',
+    'attendance',
+    'total',
+    'class',
+    'date',
+    'signature',
+  ])
+
+  return parts.every((part) => {
+    const lower = part.toLowerCase()
+    if (banned.has(lower)) return false
+    return /^[A-Za-z][A-Za-z'\-]+$/.test(part)
+  })
+}
+
 function parseExtractedNames(extraction: {
   fields: Record<string, { value: string | string[]; confidence: number }>
 }) {
@@ -103,6 +194,7 @@ function parseExtractedNames(extraction: {
   const all = [...namesFromArray, ...namesFromString, mergedSingle]
     .map((entry) => entry.replace(/\s+/g, ' ').trim())
     .filter((entry) => entry.length >= 2)
+    .filter((entry) => isLikelyPersonName(entry))
 
   const unique: string[] = []
   const seen = new Set<string>()
@@ -149,6 +241,541 @@ function splitNameForChild(fullName: string) {
   }
 }
 
+function displayChildName(input: { first_name: string | null; last_name: string | null }) {
+  const value = `${input.first_name ?? ''} ${input.last_name ?? ''}`.trim()
+  return value || 'Unnamed child'
+}
+
+function dedupeGuidance(values: Array<string | null | undefined>) {
+  const output: string[] = []
+  const seen = new Set<string>()
+
+  for (const value of values) {
+    const cleaned = value?.trim()
+    if (!cleaned) continue
+    const key = cleaned.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    output.push(cleaned)
+  }
+
+  return output
+}
+
+function buildLegacyAttendanceNotes(input: {
+  notes: string | null
+  status: AttendanceRecordStatus
+}) {
+  const output: string[] = []
+  const trimmedNotes = input.notes?.trim()
+  if (trimmedNotes) {
+    output.push(trimmedNotes)
+  }
+
+  if (input.status === 'late') {
+    output.push('Imported from attendance register as late.')
+  }
+
+  if (input.status === 'absent' || input.status === 'sick') {
+    output.push(`Imported from attendance register as ${input.status}.`)
+  }
+
+  return output.length > 0 ? output.join(' ') : null
+}
+
+function buildAttendanceRecordPayload(
+  session: EcdPortalSession,
+  input: {
+    childId: string
+    classId: string | null
+    attendanceDate: string
+    status: AttendanceRecordStatus
+  }
+) {
+  return {
+    centre_id: session.ecdId,
+    child_id: input.childId,
+    class_id: input.classId,
+    date: input.attendanceDate,
+    status: input.status,
+    recorded_by: session.user.id,
+    updated_at: new Date().toISOString(),
+  }
+}
+
+type ChildMatchOption = {
+  id: string
+  name: string
+  classId: string | null
+  className: string | null
+}
+
+function findPreviewChildMatch(
+  row: {
+    childName: string
+    className: string | null
+    issues: string[]
+  },
+  childrenByName: Map<string, ChildMatchOption[]>
+) {
+  const issues = [...row.issues]
+  const matches = childrenByName.get(normalizeNameForMatch(row.childName)) ?? []
+
+  if (matches.length === 0) {
+    issues.push('No exact CentreConnect child match was found for this name.')
+    return {
+      matchedChildId: null,
+      matchedChildName: null,
+      issues,
+    }
+  }
+
+  if (matches.length === 1) {
+    return {
+      matchedChildId: matches[0].id,
+      matchedChildName: matches[0].name,
+      issues,
+    }
+  }
+
+  const normalizedClassName = row.className ? normalizeNameForMatch(row.className) : ''
+  if (normalizedClassName) {
+    const classMatches = matches.filter((child) => normalizeNameForMatch(child.className ?? '') === normalizedClassName)
+
+    if (classMatches.length === 1) {
+      return {
+        matchedChildId: classMatches[0].id,
+        matchedChildName: classMatches[0].name,
+        issues,
+      }
+    }
+  }
+
+  issues.push('More than one child has this exact name. Add class_name to the CSV or save this row manually.')
+  return {
+    matchedChildId: null,
+    matchedChildName: null,
+    issues,
+  }
+}
+
+async function createFailedRegisterImportRow(
+  session: EcdPortalSession,
+  input: {
+    sourceFilePath: string
+    sourceFileUrl: string
+    sourceFileName: string
+    extractedDate: string | null
+    notes: string
+    extraction?: Record<string, unknown>
+  }
+) {
+  const { data } = await session.supabase
+    .from('attendance_register_imports')
+    .insert({
+      ecd_id: session.ecdId,
+      uploaded_by: session.user.id,
+      source_file_path: input.sourceFilePath,
+      source_file_url: input.sourceFileUrl,
+      source_file_name: input.sourceFileName,
+      extraction: input.extraction ?? {},
+      extracted_names: [],
+      extracted_date: input.extractedDate,
+      status: 'failed',
+      notes: input.notes,
+    })
+    .select(registerImportSelectFields)
+    .maybeSingle()
+
+  return data ? serializeImportRow(data as Record<string, unknown>) : undefined
+}
+
+async function upsertLegacyAttendance(
+  session: EcdPortalSession,
+  input: {
+    childId: string
+    attendanceDate: string
+    status: AttendanceRecordStatus
+    notes: string | null
+  }
+) {
+  const { data: existingAttendance, error: existingAttendanceError } = await session.supabase
+    .from('attendance')
+    .select('id')
+    .eq('ecd_id', session.ecdId)
+    .eq('child_id', input.childId)
+    .eq('date', input.attendanceDate)
+    .maybeSingle()
+
+  if (existingAttendanceError) {
+    return {
+      success: false,
+      message: existingAttendanceError.message || 'Failed to inspect the live attendance log.',
+      attendanceId: null,
+    }
+  }
+
+  const checkedInAt = new Date().toISOString()
+  const shouldCheckIn = input.status === 'present' || input.status === 'late'
+  const legacyNotes = buildLegacyAttendanceNotes({
+    notes: input.notes,
+    status: input.status,
+  })
+
+  if (existingAttendance?.id) {
+    const updatePayload: {
+      checked_in: boolean
+      checked_in_at: string | null
+      checked_in_by: string | null
+      picked_up?: boolean
+      picked_up_at?: string | null
+      pickup_code_id?: null
+      notes: string | null
+    } = {
+      checked_in: shouldCheckIn,
+      checked_in_at: shouldCheckIn ? checkedInAt : null,
+      checked_in_by: shouldCheckIn ? session.user.id : null,
+      notes: legacyNotes,
+    }
+
+    if (!shouldCheckIn) {
+      updatePayload.picked_up = false
+      updatePayload.picked_up_at = null
+      updatePayload.pickup_code_id = null
+    }
+
+    const { data: updatedAttendance, error: updateAttendanceError } = await session.supabase
+      .from('attendance')
+      .update(updatePayload)
+      .eq('id', existingAttendance.id)
+      .select('id')
+      .single()
+
+    if (updateAttendanceError || !updatedAttendance?.id) {
+      return {
+        success: false,
+        message: updateAttendanceError?.message || 'Failed to update the live attendance log.',
+        attendanceId: null,
+      }
+    }
+
+    return {
+      success: true,
+      attendanceId: updatedAttendance.id,
+    }
+  }
+
+  const { data: createdAttendance, error: createAttendanceError } = await session.supabase
+    .from('attendance')
+    .insert({
+      ecd_id: session.ecdId,
+      child_id: input.childId,
+      date: input.attendanceDate,
+      checked_in: shouldCheckIn,
+      checked_in_at: shouldCheckIn ? checkedInAt : null,
+      checked_in_by: shouldCheckIn ? session.user.id : null,
+      picked_up: false,
+      notes: legacyNotes,
+    })
+    .select('id')
+    .single()
+
+  if (createAttendanceError || !createdAttendance?.id) {
+    return {
+      success: false,
+      message: createAttendanceError?.message || 'Failed to update the live attendance log.',
+      attendanceId: null,
+    }
+  }
+
+  return {
+    success: true,
+    attendanceId: createdAttendance.id,
+  }
+}
+
+async function upsertAttendanceRecord(
+  session: EcdPortalSession,
+  input: {
+    childId: string
+    classId: string | null
+    attendanceDate: string
+    status: AttendanceRecordStatus
+  }
+) {
+  const { error } = await session.supabase
+    .from('attendance_records')
+    .upsert(buildAttendanceRecordPayload(session, input), { onConflict: 'child_id,date' })
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message || 'Failed to save to the attendance register.',
+    }
+  }
+
+  return {
+    success: true,
+  }
+}
+
+export async function previewAttendanceCsvAction(formData: FormData): Promise<AttendanceCsvPreviewActionResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+
+  const parsed = csvPreviewSchema.safeParse({
+    attendance_date: String(formData.get('attendance_date') ?? '').trim(),
+    notes: String(formData.get('notes') ?? '').trim(),
+  })
+
+  if (!parsed.success) {
+    return { success: false, message: 'Invalid CSV preview request.' }
+  }
+
+  const fallbackDate = normalizeAttendanceImportDate(parsed.data.attendance_date)
+  const fallbackHref = buildAttendanceBoardHref(fallbackDate)
+  const file = formData.get('file')
+
+  if (!(file instanceof File)) {
+    return {
+      success: false,
+      message: 'Select one CSV file before previewing it.',
+      fallbackHref,
+      guidance: dedupeGuidance([
+        'Upload a CSV file with one attendance row per child.',
+        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+      ]),
+    }
+  }
+
+  const fileValidation = validateAttendanceCsvFile(file)
+  if (!fileValidation.ok) {
+    return {
+      success: false,
+      message: fileValidation.message,
+      fallbackHref,
+      guidance: dedupeGuidance([fileValidation.guidance, ...ATTENDANCE_IMPORT_FALLBACK_STEPS]),
+    }
+  }
+
+  const csvText = await file.text()
+  const preview = parseAttendanceCsvText({
+    text: csvText,
+    fallbackAttendanceDate: fallbackDate,
+    fallbackNotes: parsed.data.notes?.trim() || null,
+  })
+
+  if (!preview.ok) {
+    return {
+      success: false,
+      message: preview.message,
+      fallbackHref,
+      guidance: dedupeGuidance([
+        preview.guidance,
+        ...ATTENDANCE_CSV_GUIDANCE,
+        ...ATTENDANCE_CSV_LIMITATIONS,
+        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+      ]),
+    }
+  }
+
+  const [
+    { data: childrenData, error: childrenError },
+    { data: classesData, error: classesError },
+  ] = await Promise.all([
+    session.supabase
+      .from('children')
+      .select('id,first_name,last_name,class_id')
+      .eq('ecd_id', session.ecdId)
+      .order('first_name', { ascending: true }),
+    session.supabase
+      .from('ecd_classes')
+      .select('id,name')
+      .eq('ecd_id', session.ecdId),
+  ])
+
+  if (childrenError || classesError) {
+    return {
+      success: false,
+      message: childrenError?.message || classesError?.message || 'Failed to prepare the CSV preview.',
+      fallbackHref,
+      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+    }
+  }
+
+  const classNameById = new Map(
+    ((classesData ?? []) as ClassMatchRow[]).map((row) => [row.id, row.name])
+  )
+
+  const childrenByName = new Map<string, ChildMatchOption[]>()
+  for (const child of (childrenData ?? []) as ChildMatchRow[]) {
+    const childName = displayChildName(child)
+    const key = normalizeNameForMatch(childName)
+    if (!key) continue
+    const nextValue: ChildMatchOption = {
+      id: child.id,
+      name: childName,
+      classId: child.class_id,
+      className: child.class_id ? classNameById.get(child.class_id) ?? null : null,
+    }
+    childrenByName.set(key, [...(childrenByName.get(key) ?? []), nextValue])
+  }
+
+  const rows: AttendanceCsvPreviewRow[] = preview.rows.map((row) => {
+    const match = findPreviewChildMatch(row, childrenByName)
+    return {
+      lineNumber: row.lineNumber,
+      childName: row.childName,
+      attendanceDate: row.attendanceDate ?? '',
+      status: row.status,
+      className: row.className,
+      notes: row.notes,
+      matchedChildId: match.matchedChildId,
+      matchedChildName: match.matchedChildName,
+      issues: match.issues,
+    }
+  })
+
+  const readyCount = rows.filter((row) => row.matchedChildId && row.issues.length === 0).length
+  const blockedCount = rows.length - readyCount
+
+  return {
+    success: true,
+    message:
+      blockedCount === 0
+        ? `${readyCount} row${readyCount === 1 ? '' : 's'} are ready to import.`
+        : `${readyCount} row${readyCount === 1 ? '' : 's'} are ready. ${blockedCount} need attention before you rely on them.`,
+    fileName: file.name,
+    headers: preview.headers,
+    rows,
+    warnings: preview.warnings,
+    readyCount,
+    blockedCount,
+    fallbackHref: buildAttendanceBoardHref(rows.find((row) => row.attendanceDate)?.attendanceDate ?? fallbackDate),
+    guidance: dedupeGuidance([
+      ...ATTENDANCE_CSV_GUIDANCE,
+      ...ATTENDANCE_CSV_LIMITATIONS,
+      ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+    ]),
+  }
+}
+
+export async function importAttendanceCsvAction(formData: FormData): Promise<AttendanceCsvImportActionResult> {
+  const session = await requireEcdPortalSession({ cached: false })
+  let parsedRows: unknown = []
+
+  try {
+    parsedRows = JSON.parse(String(formData.get('rows') ?? '[]'))
+  } catch {
+    return { success: false, message: 'Invalid CSV import payload.' }
+  }
+
+  const parsed = csvImportSchema.safeParse({
+    source_file_name: String(formData.get('source_file_name') ?? '').trim(),
+    rows: parsedRows,
+  })
+
+  if (!parsed.success) {
+    return { success: false, message: 'Invalid CSV import payload.' }
+  }
+
+  const readyRows = parsed.data.rows.filter((row) => row.matchedChildId && row.attendanceDate && row.issues.length === 0)
+  const blockedCount = parsed.data.rows.length - readyRows.length
+  const fallbackDate = readyRows[0]?.attendanceDate ?? new Date().toISOString().slice(0, 10)
+  const attendanceHref = buildAttendanceBoardHref(fallbackDate)
+
+  if (readyRows.length === 0) {
+    return {
+      success: false,
+      message: 'No CSV rows are ready to import yet.',
+      blockedCount,
+      attendanceHref,
+      warnings: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+    }
+  }
+
+  const childIds = Array.from(new Set(readyRows.map((row) => row.matchedChildId).filter(Boolean))) as string[]
+  const { data: childMatches, error: childMatchError } = await session.supabase
+    .from('children')
+    .select('id,ecd_id,class_id,first_name,last_name')
+    .eq('ecd_id', session.ecdId)
+    .in('id', childIds)
+
+  if (childMatchError) {
+    return {
+      success: false,
+      message: childMatchError.message || 'Failed to validate the matched children before import.',
+      blockedCount,
+      attendanceHref,
+    }
+  }
+
+  const childMap = new Map(
+    ((childMatches ?? []) as Array<ChildMatchRow & { ecd_id: string }>).map((row) => [row.id, row])
+  )
+
+  if (childMap.size !== childIds.length) {
+    return {
+      success: false,
+      message: 'One or more preview matches no longer belong to this centre. Preview the CSV again before importing.',
+      blockedCount,
+      attendanceHref,
+    }
+  }
+
+  const upsertPayload = readyRows.map((row) => {
+    const child = childMap.get(row.matchedChildId as string)
+    return buildAttendanceRecordPayload(session, {
+      childId: row.matchedChildId as string,
+      classId: child?.class_id ? String(child.class_id) : null,
+      attendanceDate: row.attendanceDate,
+      status: row.status,
+    })
+  })
+
+  const { error: attendanceRecordError } = await session.supabase
+    .from('attendance_records')
+    .upsert(upsertPayload, { onConflict: 'child_id,date' })
+
+  if (attendanceRecordError) {
+    return {
+      success: false,
+      message: attendanceRecordError.message || 'Failed to save the CSV rows to the attendance register.',
+      blockedCount,
+      attendanceHref,
+    }
+  }
+
+  const legacyWarnings: string[] = []
+
+  for (const row of readyRows) {
+    const legacyAttendance = await upsertLegacyAttendance(session, {
+      childId: row.matchedChildId as string,
+      attendanceDate: row.attendanceDate,
+      status: row.status,
+      notes: row.notes ?? null,
+    })
+
+    if (!legacyAttendance.success) {
+      legacyWarnings.push(`Line ${row.lineNumber}: ${legacyAttendance.message}`)
+    }
+  }
+
+  revalidatePath('/ecd/ai-upload')
+  revalidatePath('/ecd/attendance')
+
+  return {
+    success: true,
+    message:
+      legacyWarnings.length === 0
+        ? `Imported ${readyRows.length} CSV row${readyRows.length === 1 ? '' : 's'} into the attendance register.`
+        : `Imported ${readyRows.length} CSV row${readyRows.length === 1 ? '' : 's'} into the attendance register. Some older attendance mirrors need a quick check.`,
+    importedCount: readyRows.length,
+    blockedCount,
+    attendanceHref,
+    warnings: legacyWarnings.length > 0 ? legacyWarnings : undefined,
+  }
+}
+
 export async function extractRegisterPhotoAction(formData: FormData): Promise<RegisterExtractionActionResult> {
   const session = await requireEcdPortalSession({ cached: false })
   if (!session.ecdId) return { success: false, message: 'ECD session not found.' }
@@ -162,9 +789,27 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
     return { success: false, message: 'Invalid extraction request.' }
   }
 
+  const requestedDate = normalizeAttendanceImportDate(parsed.data.attendance_date)
+  const fallbackHref = buildAttendanceBoardHref(requestedDate)
+
   const file = formData.get('file')
   if (!(file instanceof File)) {
-    return { success: false, message: 'Select a photo before extracting.' }
+    return {
+      success: false,
+      message: 'Select one register page photo before extracting.',
+      fallbackHref,
+      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+    }
+  }
+
+  const fileValidation = validateAttendanceImportFile(file)
+  if (!fileValidation.ok) {
+    return {
+      success: false,
+      message: fileValidation.message,
+      fallbackHref,
+      guidance: dedupeGuidance([fileValidation.guidance, ...ATTENDANCE_IMPORT_FALLBACK_STEPS]),
+    }
   }
 
   const upload = await uploadPhotoForAiExtraction({
@@ -176,7 +821,12 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
   })
 
   if (!upload.success || !upload.path || !upload.publicUrl) {
-    return { success: false, message: upload.message || 'Failed to upload register photo.' }
+    return {
+      success: false,
+      message: upload.message || 'Failed to upload register photo.',
+      fallbackHref,
+      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+    }
   }
 
   const extraction = await extractStructuredDocumentWithGemini({
@@ -185,81 +835,84 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
   })
 
   if (!extraction.success || !extraction.extraction) {
-    const { data: failedRow } = await session.supabase
-      .from('attendance_register_imports')
-      .insert({
-        ecd_id: session.ecdId,
-        uploaded_by: session.user.id,
-        source_file_path: upload.path,
-        source_file_url: upload.publicUrl,
-        source_file_name: file.name,
-        extraction: {},
-        extracted_names: [],
-        extracted_date: normalizeDate(parsed.data.attendance_date) ?? null,
-        status: 'failed',
-        notes: extraction.message,
-      })
-      .select(
-        'id,source_file_url,source_file_name,extracted_names,extracted_date,status,selected_name,imported_child_id,imported_attendance_id,notes,created_at'
-      )
-      .maybeSingle()
+    const failedRow = await createFailedRegisterImportRow(session, {
+      sourceFilePath: upload.path,
+      sourceFileUrl: upload.publicUrl,
+      sourceFileName: file.name,
+      extractedDate: requestedDate,
+      notes: extraction.message,
+    })
 
     revalidatePath('/ecd/ai-upload')
     return {
       success: false,
       message: extraction.message,
-      item: failedRow ? serializeImportRow(failedRow as Record<string, unknown>) : undefined,
+      item: failedRow,
+      fallbackHref,
+      guidance: dedupeGuidance([
+        'Use one clear page photo at a time.',
+        'If AI cannot read the page, switch to CSV or continue in the attendance register.',
+        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+      ]),
     }
   }
 
-  const names = parseExtractedNames(extraction.extraction)
+  const extractedPayload = extraction.extraction
+  const names = parseExtractedNames(extractedPayload)
   const extractedDate =
-    normalizeDate(fieldAsString(extraction.extraction, 'record_date')) ??
-    normalizeDate(parsed.data.attendance_date) ??
+    normalizeAttendanceImportDate(fieldAsString(extractedPayload, 'record_date')) ??
+    requestedDate ??
     null
 
-  const rowsPayload =
-    names.length > 0
-      ? names.map((name) => ({
-          ecd_id: session.ecdId,
-          uploaded_by: session.user.id,
-          source_file_path: upload.path,
-          source_file_url: upload.publicUrl,
-          source_file_name: file.name,
-          extraction: {
-            summary: extraction.extraction?.summary ?? null,
-            fields: extraction.extraction?.fields ?? {},
-          },
-          extracted_names: [name],
-          extracted_date: extractedDate,
-          selected_name: name,
-          status: 'extracted' as const,
-          notes: parsed.data.notes?.trim() || extraction.extraction?.summary || null,
-        }))
-      : [
-          {
-            ecd_id: session.ecdId,
-            uploaded_by: session.user.id,
-            source_file_path: upload.path,
-            source_file_url: upload.publicUrl,
-            source_file_name: file.name,
-            extraction: {
-              summary: extraction.extraction?.summary ?? null,
-              fields: extraction.extraction?.fields ?? {},
-            },
-            extracted_names: [],
-            extracted_date: extractedDate,
-            status: 'extracted' as const,
-            notes: parsed.data.notes?.trim() || extraction.extraction?.summary || null,
-          },
-        ]
+  if (names.length === 0) {
+    const failureMessage = 'We could not find reliable child names on this page.'
+    const failedRow = await createFailedRegisterImportRow(session, {
+      sourceFilePath: upload.path,
+      sourceFileUrl: upload.publicUrl,
+      sourceFileName: file.name,
+      extractedDate,
+      notes: failureMessage,
+      extraction: {
+        summary: extractedPayload.summary ?? null,
+        fields: extractedPayload.fields ?? {},
+      },
+    })
+
+    revalidatePath('/ecd/ai-upload')
+    return {
+      success: false,
+      message: failureMessage,
+      item: failedRow,
+      fallbackHref: buildAttendanceBoardHref(extractedDate),
+      guidance: dedupeGuidance([
+        'Retake the page in good light if you want to try again.',
+        'If this register is urgent, switch to CSV or finish it in the attendance register instead.',
+        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+      ]),
+    }
+  }
+
+  const rowsPayload = names.map((name) => ({
+    ecd_id: session.ecdId,
+    uploaded_by: session.user.id,
+    source_file_path: upload.path,
+    source_file_url: upload.publicUrl,
+    source_file_name: file.name,
+    extraction: {
+      summary: extractedPayload.summary ?? null,
+      fields: extractedPayload.fields ?? {},
+    },
+    extracted_names: [name],
+    extracted_date: extractedDate,
+    selected_name: name,
+    status: 'extracted' as const,
+    notes: parsed.data.notes?.trim() || extractedPayload.summary || null,
+  }))
 
   const { data: createdRows, error } = await session.supabase
     .from('attendance_register_imports')
     .insert(rowsPayload)
-    .select(
-      'id,source_file_url,source_file_name,extracted_names,extracted_date,status,selected_name,imported_child_id,imported_attendance_id,notes,created_at'
-    )
+    .select(registerImportSelectFields)
     .order('created_at', { ascending: false })
 
   if (error || !createdRows || createdRows.length === 0) {
@@ -271,12 +924,10 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
   revalidatePath('/ecd/ai-upload')
   return {
     success: true,
-    message:
-      names.length > 0
-        ? `Register extracted. ${serializedItems.length} name${serializedItems.length === 1 ? '' : 's'} ready for import.`
-        : 'Register extracted. No names detected; please review manually.',
+    message: `Read 1 page. ${serializedItems.length} child name${serializedItems.length === 1 ? '' : 's'} need review before saving.`,
     items: serializedItems,
     item: serializedItems[0],
+    fallbackHref: buildAttendanceBoardHref(extractedDate),
   }
 }
 
@@ -305,6 +956,14 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
 
   if (importError || !importRow) {
     return { success: false, message: 'Register import record not found.' }
+  }
+
+  if (importRow.status === 'failed') {
+    return {
+      success: false,
+      message: 'This page was not reliable enough to import. Use CSV or the attendance register instead.',
+      attendanceHref: buildAttendanceBoardHref(importRow.extracted_date ? String(importRow.extracted_date) : null),
+    }
   }
 
   let childId = parsed.data.child_id || ''
@@ -346,7 +1005,7 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
 
   const { data: childMatch, error: childMatchError } = await session.supabase
     .from('children')
-    .select('id')
+    .select('id,class_id')
     .eq('id', childId)
     .eq('ecd_id', session.ecdId)
     .maybeSingle()
@@ -356,61 +1015,33 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
   }
 
   const attendanceDate =
-    normalizeDate(parsed.data.attendance_date) ??
+    normalizeAttendanceImportDate(parsed.data.attendance_date) ??
     (importRow.extracted_date ? String(importRow.extracted_date) : null) ??
     new Date().toISOString().slice(0, 10)
+  const attendanceHref = buildAttendanceBoardHref(attendanceDate)
+  const importNotes = parsed.data.notes?.trim() || importRow.notes || null
 
-  const { data: existingAttendance } = await session.supabase
-    .from('attendance')
-    .select('id,picked_up,picked_up_at')
-    .eq('ecd_id', session.ecdId)
-    .eq('child_id', childId)
-    .eq('date', attendanceDate)
-    .maybeSingle()
+  const attendanceRecord = await upsertAttendanceRecord(session, {
+    childId,
+    classId: childMatch.class_id ? String(childMatch.class_id) : null,
+    attendanceDate,
+    status: 'present',
+  })
 
-  let attendanceId: string | null = null
-  const checkedInAt = new Date().toISOString()
-
-  if (existingAttendance?.id) {
-    const { data: updatedAttendance, error: updateAttendanceError } = await session.supabase
-      .from('attendance')
-      .update({
-        checked_in: true,
-        checked_in_at: checkedInAt,
-        checked_in_by: session.user.id,
-        notes: parsed.data.notes?.trim() || importRow.notes || null,
-      })
-      .eq('id', existingAttendance.id)
-      .select('id')
-      .single()
-
-    if (updateAttendanceError || !updatedAttendance?.id) {
-      return { success: false, message: updateAttendanceError?.message || 'Failed to update attendance.' }
+  if (!attendanceRecord.success) {
+    return {
+      success: false,
+      message: attendanceRecord.message || 'Failed to save to the attendance register.',
+      attendanceHref,
     }
-
-    attendanceId = updatedAttendance.id
-  } else {
-    const { data: createdAttendance, error: createAttendanceError } = await session.supabase
-      .from('attendance')
-      .insert({
-        ecd_id: session.ecdId,
-        child_id: childId,
-        date: attendanceDate,
-        checked_in: true,
-        checked_in_at: checkedInAt,
-        checked_in_by: session.user.id,
-        picked_up: false,
-        notes: parsed.data.notes?.trim() || importRow.notes || null,
-      })
-      .select('id')
-      .single()
-
-    if (createAttendanceError || !createdAttendance?.id) {
-      return { success: false, message: createAttendanceError?.message || 'Failed to create attendance.' }
-    }
-
-    attendanceId = createdAttendance.id
   }
+
+  const legacyAttendance = await upsertLegacyAttendance(session, {
+    childId,
+    attendanceDate,
+    status: 'present',
+    notes: importNotes,
+  })
 
   const { data: updatedImport, error: updateImportError } = await session.supabase
     .from('attendance_register_imports')
@@ -418,25 +1049,30 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
       status: 'imported',
       selected_name: selectedName || null,
       imported_child_id: childId,
-      imported_attendance_id: attendanceId,
-      notes: parsed.data.notes?.trim() || importRow.notes || null,
+      imported_attendance_id: legacyAttendance.success ? legacyAttendance.attendanceId : null,
+      notes: importNotes,
     })
     .eq('id', importRow.id)
     .eq('ecd_id', session.ecdId)
-    .select(
-      'id,source_file_url,source_file_name,extracted_names,extracted_date,status,selected_name,imported_child_id,imported_attendance_id,notes,created_at'
-    )
+    .select(registerImportSelectFields)
     .single()
 
   if (updateImportError || !updatedImport) {
-    return { success: false, message: updateImportError?.message || 'Attendance imported, but register item was not updated.' }
+    return {
+      success: false,
+      message: updateImportError?.message || 'Attendance was saved, but the import card was not updated.',
+      attendanceHref,
+    }
   }
 
   revalidatePath('/ecd/ai-upload')
   revalidatePath('/ecd/attendance')
   return {
     success: true,
-    message: 'Attendance imported successfully.',
+    message: legacyAttendance.success
+      ? 'Attendance saved to the attendance register.'
+      : 'Attendance saved to the attendance register. An older attendance log did not sync, so check the register view.',
     item: serializeImportRow(updatedImport as Record<string, unknown>),
+    attendanceHref,
   }
 }
