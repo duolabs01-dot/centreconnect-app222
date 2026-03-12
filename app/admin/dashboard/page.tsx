@@ -253,6 +253,8 @@ export default async function AdminDashboardPage() {
   const totalCentres = totalCentresResult.count ?? 0
   const liveCentres = liveCentresResult.count ?? 0
   const onboardingCentres = onboardingCentresResult.count ?? 0
+  const nonLiveCentres = Math.max(totalCentres - liveCentres, 0)
+  const prospectCentres = Math.max(nonLiveCentres - onboardingCentres, 0)
   const claimRequests = claimRequestsResult.count ?? 0
   const centreAccounts = centreAccountsResult.count ?? 0
   const totalParents = totalParentsResult.count ?? 0
@@ -574,12 +576,13 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-2xl font-black text-white">{centreAccounts}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Still onboarding</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Onboarding in progress</p>
               <p className="mt-2 text-2xl font-black text-white">{onboardingCentres}</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Claim requests waiting</p>
-              <p className="mt-2 text-2xl font-black text-white">{claimRequests}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Prospect centres (not live yet)</p>
+              <p className="mt-2 text-2xl font-black text-white">{prospectCentres}</p>
+              <p className="mt-1 text-[11px] text-slate-500">Claim requests waiting: {claimRequests}</p>
             </div>
           </div>
           <div className="mt-5 space-y-3">
