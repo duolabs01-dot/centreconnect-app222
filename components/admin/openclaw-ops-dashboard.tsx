@@ -547,7 +547,7 @@ export function OpenClawOpsDashboard({ snapshot }: { snapshot: OpenClawOpsSnapsh
                         </CardDescription>
                         <CardTitle className="mt-2 text-xl text-white">{agent.name}</CardTitle>
                       </div>
-                      <StatusBadge status={agent.badgeTone} label={agent.statusLabel} />
+                      <StatusBadge status={agent.statusLabel} />
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {agent.model ? <MetaPill>{agent.model}</MetaPill> : null}
@@ -602,7 +602,7 @@ export function OpenClawOpsDashboard({ snapshot }: { snapshot: OpenClawOpsSnapsh
                             {subagent.lastWork ?? subagent.summary}
                           </TableCell>
                           <TableCell className="py-4">
-                            <StatusBadge status={subagent.badgeTone} label={subagent.statusLabel} />
+                            <StatusBadge status={subagent.statusLabel} />
                           </TableCell>
                           <TableCell className="py-4 text-sm text-slate-400">
                             {formatDateTime(subagent.updatedAt)}
