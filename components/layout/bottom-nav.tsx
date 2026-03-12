@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { type LucideIcon } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
@@ -43,8 +44,10 @@ const NavButton = memo(({
   }, [item.href, onPress])
 
   return (
-    <button
+    <motion.button
       onClick={handleClick}
+      whileTap={{ scale: 0.94 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 28, mass: 0.7 }}
       className={cn(
         'mobile-nav-item relative flex min-h-[44px] flex-1 items-center justify-center overflow-hidden rounded-2xl px-1.5 outline-none transition-colors duration-200',
         active ? 'text-cyan-900' : 'text-slate-600 hover:text-slate-900'
@@ -53,9 +56,24 @@ const NavButton = memo(({
       aria-label={item.label}
       style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
     >
-      {active ? <span className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan-50/40" /> : null}
+      <AnimatePresence>
+        {active ? (
+          <motion.span
+            layoutId="bottom-nav-active-pill"
+            className="pointer-events-none absolute inset-0 rounded-2xl bg-cyan-50/40"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+          />
+        ) : null}
+      </AnimatePresence>
 
-      <div className="relative z-10 flex flex-col items-center justify-center gap-0.5">
+      <motion.div
+        className="relative z-10 flex flex-col items-center justify-center gap-0.5"
+        animate={{ y: active ? -1 : 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+      >
         <div className="relative">
           <Icon
             size={20}
@@ -76,8 +94,8 @@ const NavButton = memo(({
         >
           {item.label}
         </span>
-      </div>
-    </button>
+      </motion.div>
+    </motion.button>
   )
 })
 NavButton.displayName = 'NavButton'
@@ -162,19 +180,25 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[100] flex justify-center md:hidden">
-      <div className="pointer-events-auto mb-[calc(0.75rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-3">
-        <nav
+      <motion.div
+        initial={{ y: 18, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 24 }}
+        className="pointer-events-auto mb-[calc(0.75rem+env(safe-area-inset-bottom))] w-full max-w-[420px] px-3"
+      >
+        <motion.nav
           className="flex items-center gap-1 rounded-[1.75rem] border border-white/40 bg-white/30 p-1.5 shadow-[0_12px_30px_rgba(15,23,42,0.22)]"
           style={{
             WebkitBackdropFilter: 'blur(18px) saturate(160%)',
             backdropFilter: 'blur(18px) saturate(160%)',
           }}
+          whileHover={{ scale: 1.005 }}
         >
           {decoratedItems.map((item) => (
             <NavButton key={item.href} item={item} active={isTabActive(pathname, item.href)} onPress={handleNav} />
           ))}
-        </nav>
-      </div>
+        </motion.nav>
+      </motion.div>
     </div>
   )
 }
