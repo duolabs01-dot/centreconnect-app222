@@ -39,6 +39,7 @@
     "lint:forms": "node scripts/check-form-standards.mjs",
     "lint:ecd-light": "node scripts/check-ecd-no-admin-classes.mjs",
     "lint:journey-ui": "node scripts/check-shadcn-journey-consistency.mjs",
+    "audit:design": "node scripts/design-audit.mjs",
     "audit:high": "npm audit --omit=dev --audit-level=high",
     "security:ci": "npm run lint && npm run audit:high",
     "seed": "tsx scripts/seed-centres.ts",

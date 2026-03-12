@@ -373,20 +373,31 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
 
   const banned = new Set(['present', 'absent', 'late', 'sick', 'attendance', 'register', 'date', 'class', 'total'])
 
-  const all = [...fromArray, ...fromString, mergedSingle]
+  const cleanedCandidates = [...fromArray, ...fromString, mergedSingle]
     .map((name) => name.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim())
     .map((name) => name.replace(/^\d+[.)\-:\s]+/, '').trim())
     .filter((name) => name.length >= 2)
-    .filter((name) => {
-      const parts = name.split(' ').filter(Boolean)
-      if (parts.length < 2 || parts.length > 5) return false
-      return parts.every((part) => {
-        const normalized = part.replace(/[^A-Za-z'\-]/g, '')
-        if (!normalized) return false
-        if (banned.has(normalized.toLowerCase())) return false
-        return /^[A-Za-z][A-Za-z'\-]+$/.test(normalized)
-      })
+
+  const strict = cleanedCandidates.filter((name) => {
+    const parts = name.split(' ').filter(Boolean)
+    if (parts.length < 1 || parts.length > 5) return false
+    return parts.every((part) => {
+      const normalized = part.replace(/[^A-Za-z'\-]/g, '')
+      if (!normalized) return false
+      if (banned.has(normalized.toLowerCase())) return false
+      return /^[A-Za-z][A-Za-z'\-]+$/.test(normalized)
     })
+  })
+
+  const relaxed = cleanedCandidates.filter((name) => {
+    const parts = name.split(' ').filter(Boolean)
+    if (parts.length < 1 || parts.length > 6) return false
+    const alphaCount = parts.filter((part) => /[A-Za-z]/.test(part)).length
+    if (alphaCount === 0) return false
+    return !parts.some((part) => banned.has(part.toLowerCase()))
+  })
+
+  const all = strict.length > 0 ? strict : relaxed
 
   const unique: string[] = []
   const seen = new Set<string>()
@@ -1149,6 +1160,7 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
+
 
 
 
