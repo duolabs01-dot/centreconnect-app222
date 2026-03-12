@@ -595,6 +595,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
   }
 
   const clearSelectionHref = `/ecd/calendar?month=${currentMonthKey}&day=${focusDayKey}#editor`
+  const parentCalendarHref = '/parent/calendar'
 
   return (
     <EcdOsShell
@@ -626,21 +627,19 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
                 Parents can see public events and birthdays on their app. Make events &quot;Public&quot; to share them.
               </p>
               <div className="mt-3 flex items-center gap-2">
-                <input 
-                  readOnly 
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/parent/calendar`}
+                <input
+                  readOnly
+                  value={parentCalendarHref}
                   className="flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
                 />
-                <Button 
+                <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  asChild
                   className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/parent/calendar`)
-                  }}
                 >
-                  Copy
+                  <Link href={parentCalendarHref}>Open</Link>
                 </Button>
               </div>
             </div>

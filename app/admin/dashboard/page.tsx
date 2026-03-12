@@ -1,17 +1,19 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
-  AlertTriangle,
   ArrowUpRight,
   BellRing,
   Building2,
   CheckCircle2,
   CreditCard,
+  FileSpreadsheet,
   HeartHandshake,
   LifeBuoy,
-  Users,
+  ShieldCheck,
 } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
+import { getCompanyHqSnapshot } from '@/lib/admin/company-hq'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
 import {
@@ -46,6 +48,15 @@ type DashboardAction = {
   detail: string
   href: string
   tone: 'cyan' | 'amber' | 'rose' | 'emerald'
+}
+
+type ProductReadinessCard = {
+  title: string
+  statusLabel: string
+  detail: string
+  href: string
+  hrefLabel: string
+  tone: DashboardAction['tone']
 }
 
 type RecentPerson = {
@@ -144,6 +155,13 @@ function actionToneClass(tone: DashboardAction['tone']) {
   if (tone == 'amber') return 'border-amber-500/20 bg-amber-500/10'
   if (tone == 'emerald') return 'border-emerald-500/20 bg-emerald-500/10'
   return 'border-cyan-500/20 bg-cyan-500/10'
+}
+
+function toneBadgeClass(tone: DashboardAction['tone']) {
+  if (tone === 'rose') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
+  if (tone === 'amber') return 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+  if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+  return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
 }
 
 function money(amountInCents: number) {
@@ -248,6 +266,59 @@ export default async function AdminDashboardPage() {
   const paidRevenueCents = paidInvoices.reduce((sum, row) => sum + (Number(row.total) || 0), 0)
   const pendingRevenueCents = pendingInvoices.reduce((sum, row) => sum + (Number(row.total) || 0), 0)
   const parentHealth = parentHealthCopy(parentFailures)
+  const inviteDomainHealth = assertInviteDomainHealth()
+  const onboardingFollowThroughTone: DashboardAction['tone'] =
+    onboardingCentres > 0 || claimRequests > 0 ? 'amber' : 'emerald'
+
+  const readinessCards: ProductReadinessCard[] = [
+    {
+      title: 'Owner access path',
+      statusLabel: !inviteDomainHealth.ok ? 'Action required' : failedInvites > 0 ? 'Follow up' : 'Ready',
+      detail: !inviteDomainHealth.ok
+        ? `${inviteDomainHealth.message} Fix this before you widen live onboarding.`
+        : failedInvites > 0
+        ? `${failedInvites} centre invite records still failed, but the domain path is healthy. Repair follow-through before the next onboarding call.`
+        : 'Invite domains and callback links look safe for live owner onboarding today.',
+      href: '/admin/invites',
+      hrefLabel: 'Open invite health',
+      tone: !inviteDomainHealth.ok ? 'rose' : failedInvites > 0 ? 'amber' : 'emerald',
+    },
+    {
+      title: 'Pilot onboarding truth',
+      statusLabel: onboardingFollowThroughTone === 'emerald' ? 'Clear' : 'Needs follow-through',
+      detail:
+        onboardingCentres > 0 || claimRequests > 0
+          ? `${onboardingCentres} centres are still not live and ${claimRequests} claim requests are still waiting. Unblock real centre setup before adding new scope.`
+          : 'No current centre backlog is showing up in live onboarding or claim-request counts.',
+      href: '/admin/tenants',
+      hrefLabel: 'Open centre readiness',
+      tone: onboardingFollowThroughTone,
+    },
+    {
+      title: 'Attendance fallback',
+      statusLabel: 'Ready',
+      detail:
+        'ECD register import now supports photo review, CSV attendance import, and a manual attendance register fallback. This is the safe path when a pilot centre sends typed registers or poor photos.',
+      href: '/admin/tenants',
+      hrefLabel: 'Open pilot centres',
+      tone: 'emerald',
+    },
+    {
+      title: 'Founder visibility',
+      statusLabel: 'Read-only',
+      detail:
+        'AI Company OS and OpenClaw stay as visibility layers. Use them for status and handoff context, not as a runtime controller or a fake queue feed.',
+      href: '/admin/openclaw',
+      hrefLabel: 'Open OpenClaw ops',
+      tone: 'cyan',
+    },
+  ]
+
+  const companyHqSnapshot = await getCompanyHqSnapshot()
+  const hierarchyPreview = companyHqSnapshot.hierarchy.slice(0, 6)
+  const planNow = companyHqSnapshot.roadmap.find((bucket) => bucket.id === 'now')?.items ?? []
+  const planNext = companyHqSnapshot.roadmap.find((bucket) => bucket.id === 'next')?.items ?? []
+  const delegatedWork = companyHqSnapshot.roadmap.flatMap((bucket) => bucket.items).slice(0, 8)
 
   const actions: DashboardAction[] = [
     {
@@ -319,10 +390,10 @@ export default async function AdminDashboardPage() {
       <header className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl lg:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-300">Founder command centre</p>
-            <h1 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">Run CentreConnect from one screen</h1>
+            <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-300">Founder overview</p>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">What needs attention today</h1>
             <p className="mt-3 max-w-3xl text-sm text-slate-400 sm:text-base">
-              Start here when you need to know which centres need help, whether parents are getting stuck, what money is still outstanding, and what needs action next.
+              Start here when you need live counts, onboarding truth, and the next admin action for pilot centres without inventing pipeline or payment state.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -358,9 +429,84 @@ export default async function AdminDashboardPage() {
         <AdminKpiCard label="Open support tickets" value={openSupport} sparklineData={[Math.max(openSupport - 2, 0), Math.max(openSupport - 1, 0), openSupport]} />
       </div>
 
+      <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-400">
+        This page uses live admin counts plus already-shipped product capabilities. It does not guess future conversions or mark unpaid work as revenue.
+      </div>
+
+      <SectionCard
+        title="Company hierarchy"
+        description="Visible ownership so you can see who owns what without opening a separate page."
+        href="/admin/hq"
+        hrefLabel="Open Company HQ"
+        icon={<Building2 className="h-4 w-4" />}
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {hierarchyPreview.map((role) => (
+            <div key={role.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">{role.owner}</p>
+              <p className="mt-2 text-sm font-bold text-white">{role.label}</p>
+              <p className="mt-2 text-xs text-slate-400">{role.currentFocus}</p>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Plans (Now + Next)"
+        description="The working plan is pinned here so it is impossible to lose track."
+        href="/admin/hq#task-router"
+        hrefLabel="Open full planning board"
+        icon={<ShieldCheck className="h-4 w-4" />}
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-rose-300">Now</p>
+            <div className="mt-3 space-y-2">
+              {planNow.length > 0 ? planNow.slice(0, 5).map((item) => (
+                <p key={item.id} className="text-sm text-slate-200">• {item.title}</p>
+              )) : <p className="text-sm text-slate-500">No now items captured.</p>}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-300">Next</p>
+            <div className="mt-3 space-y-2">
+              {planNext.length > 0 ? planNext.slice(0, 5).map((item) => (
+                <p key={item.id} className="text-sm text-slate-200">• {item.title}</p>
+              )) : <p className="text-sm text-slate-500">No next items captured.</p>}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Delegated agent work"
+        description="Live delegated lanes from AI Company OS and OpenClaw surfaces, visible from dashboard."
+        href="/admin/openclaw"
+        hrefLabel="Open delegated work"
+        icon={<BellRing className="h-4 w-4" />}
+      >
+        <div className="space-y-2">
+          {delegatedWork.length > 0 ? delegatedWork.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">{item.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">{item.owner ?? 'Unassigned owner'} • {item.sourceLabel}</p>
+                </div>
+                {item.href ? (
+                  <Link href={item.href} className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300 hover:text-cyan-200">
+                    Open
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          )) : <p className="text-sm text-slate-500">No delegated items visible yet.</p>}
+        </div>
+      </SectionCard>
+
       <SectionCard
         title="Today"
-        description="The most important things that need founder attention right now."
+        description="The live queues that need founder attention first."
         href="/admin/tenants"
         hrefLabel="Open action queues"
         icon={<CheckCircle2 className="h-4 w-4" />}
@@ -375,6 +521,40 @@ export default async function AdminDashboardPage() {
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-300">{action.title}</p>
               <p className="mt-2 text-3xl font-black tracking-tight text-white">{action.count}</p>
               <p className="mt-2 text-sm text-slate-400">{action.detail}</p>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Product readiness today"
+        description="A practical read before you onboard Sakhisizwe or any other pilot centre. Everything here is either live data or a shipped capability already in the product."
+        href="/admin/ai-os"
+        hrefLabel="Open founder status"
+        icon={<ShieldCheck className="h-4 w-4" />}
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          {readinessCards.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className={`rounded-2xl border p-4 transition-transform hover:-translate-y-0.5 ${actionToneClass(card.tone)}`}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="max-w-2xl">
+                  <p className="text-sm font-black text-white">{card.title}</p>
+                  <p className="mt-3 text-sm leading-6 text-slate-400">{card.detail}</p>
+                </div>
+                <span
+                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${toneBadgeClass(card.tone)}`}
+                >
+                  {card.statusLabel}
+                </span>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-cyan-200">
+                {card.title === 'Attendance fallback' ? <FileSpreadsheet className="h-3.5 w-3.5" /> : <ArrowUpRight className="h-3.5 w-3.5" />}
+                {card.hrefLabel}
+              </div>
             </Link>
           ))}
         </div>
