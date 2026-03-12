@@ -544,75 +544,78 @@ export async function extractChildDocumentWithGeminiAction(formData: FormData): 
 export async function extractExistingChildrenFromPhotoAction(
   formData: FormData
 ): Promise<ExtractExistingChildrenFromPhotoResult> {
-  const session = await requireEcdPortalSession({ cached: false })
-  if (!session.ecdId) {
-    return { success: false, message: 'ECD session not found.' }
-  }
+  try {
+    const session = await requireEcdPortalSession({ cached: false })
+    if (!session.ecdId) {
+      return { success: false, message: 'ECD session not found.' }
+    }
 
-  const file = formData.get('file')
-  if (!(file instanceof File)) {
-    return { success: false, message: 'Upload a register photo first.' }
-  }
+    const file = formData.get('file')
+    if (!(file instanceof File)) {
+      return { success: false, message: 'Upload a register photo first.' }
+    }
 
-  const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
+    const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
-  let extractionResult = await extractWithTesseract({
-    file,
-    documentType: 'register',
-  })
-
-  if (!extractionResult.success || !extractionResult.extraction) {
-    const rescue = await extractStructuredDocumentWithGemini({
+    const ocrResult = await extractWithTesseract({
       file,
       documentType: 'register',
     })
 
-    if (rescue.success && rescue.extraction) {
-      extractionResult = rescue
-    } else {
+    const aiResult = await extractStructuredDocumentWithGemini({
+      file,
+      documentType: 'register',
+    })
+
+    const ocrNames = ocrResult.success && ocrResult.extraction ? parseRegisterNames(ocrResult.extraction) : []
+    const aiNames = aiResult.success && aiResult.extraction ? parseRegisterNames(aiResult.extraction) : []
+
+    const extractionPayload =
+      (aiNames.length >= ocrNames.length ? aiResult.extraction : ocrResult.extraction) ??
+      aiResult.extraction ??
+      ocrResult.extraction
+
+    if (!extractionPayload) {
       return {
         success: false,
-        message: `${extractionResult.message} If this keeps failing, use CSV import for typed lists.`,
+        message: 'Could not extract readable names from this photo. Try a clearer image, then use CSV if needed.',
       }
     }
-  }
 
-  const extractionPayload = extractionResult.extraction
-  if (!extractionPayload) {
+    const names = [...(aiNames.length >= ocrNames.length ? aiNames : ocrNames)]
+    if (names.length === 0) {
+      return {
+        success: false,
+        message: 'Could not detect child names from this photo. Try a clearer image or use CSV import.',
+      }
+    }
+
+    const suggestedStartDate =
+      normalizeDateString(getFieldString(extractionPayload, 'record_date')) ??
+      fallbackStartDate ??
+      new Date().toISOString().slice(0, 10)
+    const confidence =
+      getFieldConfidence(extractionPayload, 'full_name') ??
+      getFieldConfidence(extractionPayload, 'first_name') ??
+      65
+
+    const drafts: ExistingChildBulkDraft[] = names.map((name) => ({
+      full_name: name,
+      enrollment_start_date: suggestedStartDate,
+      confidence,
+    }))
+
+    return {
+      success: true,
+      message: `Extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
+      drafts,
+      summary: extractionPayload.summary,
+    }
+  } catch {
     return {
       success: false,
-      message: 'Could not extract readable data from this photo. Try CSV import for typed lists.',
+      message: 'Extraction failed unexpectedly. Try again with a clearer image, or use CSV import for urgent capture.',
     }
-  }
-
-  const names = parseRegisterNames(extractionPayload)
-  if (names.length === 0) {
-    return {
-      success: false,
-      message: 'Could not detect child names from this photo. Try a clearer image.',
-    }
-  }
-
-  const suggestedStartDate =
-    normalizeDateString(getFieldString(extractionPayload, 'record_date')) ??
-    fallbackStartDate ??
-    new Date().toISOString().slice(0, 10)
-  const confidence =
-    getFieldConfidence(extractionPayload, 'full_name') ??
-    getFieldConfidence(extractionPayload, 'first_name') ??
-    65
-
-  const drafts: ExistingChildBulkDraft[] = names.map((name) => ({
-    full_name: name,
-    enrollment_start_date: suggestedStartDate,
-    confidence,
-  }))
-
-  return {
-    success: true,
-    message: `Extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
-    drafts,
-    summary: extractionPayload.summary,
   }
 }
 

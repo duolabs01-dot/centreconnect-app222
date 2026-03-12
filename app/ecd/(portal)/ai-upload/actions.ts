@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
   extractStructuredDocumentWithGemini,
+  extractWithTesseract,
   uploadPhotoForAiExtraction,
 } from '@/lib/ai/document-extraction-service'
 import {
@@ -777,157 +778,154 @@ export async function importAttendanceCsvAction(formData: FormData): Promise<Att
 }
 
 export async function extractRegisterPhotoAction(formData: FormData): Promise<RegisterExtractionActionResult> {
-  const session = await requireEcdPortalSession({ cached: false })
-  if (!session.ecdId) return { success: false, message: 'ECD session not found.' }
+  try {
+    const session = await requireEcdPortalSession({ cached: false })
+    if (!session.ecdId) return { success: false, message: 'ECD session not found.' }
 
-  const parsed = extractSchema.safeParse({
-    attendance_date: String(formData.get('attendance_date') ?? '').trim(),
-    notes: String(formData.get('notes') ?? '').trim(),
-  })
-
-  if (!parsed.success) {
-    return { success: false, message: 'Invalid extraction request.' }
-  }
-
-  const requestedDate = normalizeAttendanceImportDate(parsed.data.attendance_date)
-  const fallbackHref = buildAttendanceBoardHref(requestedDate)
-
-  const file = formData.get('file')
-  if (!(file instanceof File)) {
-    return {
-      success: false,
-      message: 'Select one register page photo before extracting.',
-      fallbackHref,
-      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
-    }
-  }
-
-  const fileValidation = validateAttendanceImportFile(file)
-  if (!fileValidation.ok) {
-    return {
-      success: false,
-      message: fileValidation.message,
-      fallbackHref,
-      guidance: dedupeGuidance([fileValidation.guidance, ...ATTENDANCE_IMPORT_FALLBACK_STEPS]),
-    }
-  }
-
-  const upload = await uploadPhotoForAiExtraction({
-    supabase: session.supabase,
-    ecdId: session.ecdId,
-    documentType: 'register',
-    file,
-    folder: 'attendance-registers',
-  })
-
-  if (!upload.success || !upload.path || !upload.publicUrl) {
-    return {
-      success: false,
-      message: upload.message || 'Failed to upload register photo.',
-      fallbackHref,
-      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
-    }
-  }
-
-  const extraction = await extractStructuredDocumentWithGemini({
-    file,
-    documentType: 'register',
-  })
-
-  if (!extraction.success || !extraction.extraction) {
-    const failedRow = await createFailedRegisterImportRow(session, {
-      sourceFilePath: upload.path,
-      sourceFileUrl: upload.publicUrl,
-      sourceFileName: file.name,
-      extractedDate: requestedDate,
-      notes: extraction.message,
+    const parsed = extractSchema.safeParse({
+      attendance_date: String(formData.get('attendance_date') ?? '').trim(),
+      notes: String(formData.get('notes') ?? '').trim(),
     })
 
-    revalidatePath('/ecd/ai-upload')
-    return {
-      success: false,
-      message: extraction.message,
-      item: failedRow,
-      fallbackHref,
-      guidance: dedupeGuidance([
-        'Use one clear page photo at a time.',
-        'If AI cannot read the page, switch to CSV or continue in the attendance register.',
-        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
-      ]),
+    if (!parsed.success) {
+      return { success: false, message: 'Invalid extraction request.' }
     }
-  }
 
-  const extractedPayload = extraction.extraction
-  const names = parseExtractedNames(extractedPayload)
-  const extractedDate =
-    normalizeAttendanceImportDate(fieldAsString(extractedPayload, 'record_date')) ??
-    requestedDate ??
-    null
+    const requestedDate = normalizeAttendanceImportDate(parsed.data.attendance_date)
+    const fallbackHref = buildAttendanceBoardHref(requestedDate)
 
-  if (names.length === 0) {
-    const failureMessage = 'We could not find reliable child names on this page.'
-    const failedRow = await createFailedRegisterImportRow(session, {
-      sourceFilePath: upload.path,
-      sourceFileUrl: upload.publicUrl,
-      sourceFileName: file.name,
-      extractedDate,
-      notes: failureMessage,
+    const file = formData.get('file')
+    if (!(file instanceof File)) {
+      return {
+        success: false,
+        message: 'Select one register page photo before extracting.',
+        fallbackHref,
+        guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+      }
+    }
+
+    const fileValidation = validateAttendanceImportFile(file)
+    if (!fileValidation.ok) {
+      return {
+        success: false,
+        message: fileValidation.message,
+        fallbackHref,
+        guidance: dedupeGuidance([fileValidation.guidance, ...ATTENDANCE_IMPORT_FALLBACK_STEPS]),
+      }
+    }
+
+    const upload = await uploadPhotoForAiExtraction({
+      supabase: session.supabase,
+      ecdId: session.ecdId,
+      documentType: 'register',
+      file,
+      folder: 'attendance-registers',
+    })
+
+    if (!upload.success || !upload.path || !upload.publicUrl) {
+      return {
+        success: false,
+        message: upload.message || 'Failed to upload register photo.',
+        fallbackHref,
+        guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+      }
+    }
+
+    const aiExtraction = await extractStructuredDocumentWithGemini({
+      file,
+      documentType: 'register',
+    })
+    const ocrExtraction = await extractWithTesseract({
+      file,
+      documentType: 'register',
+    })
+
+    const aiPayload = aiExtraction.success ? aiExtraction.extraction : null
+    const ocrPayload = ocrExtraction.success ? ocrExtraction.extraction : null
+
+    const aiNames = aiPayload ? parseExtractedNames(aiPayload) : []
+    const ocrNames = ocrPayload ? parseExtractedNames(ocrPayload) : []
+
+    const extractedPayload = (aiNames.length >= ocrNames.length ? aiPayload : ocrPayload) ?? aiPayload ?? ocrPayload
+    const names = aiNames.length >= ocrNames.length ? aiNames : ocrNames
+
+    const extractedDate =
+      normalizeAttendanceImportDate(extractedPayload ? fieldAsString(extractedPayload, 'record_date') : undefined) ??
+      requestedDate ??
+      null
+
+    if (!extractedPayload || names.length === 0) {
+      const failureMessage = 'We could not find reliable child names on this page.'
+      const failedRow = await createFailedRegisterImportRow(session, {
+        sourceFilePath: upload.path,
+        sourceFileUrl: upload.publicUrl,
+        sourceFileName: file.name,
+        extractedDate,
+        notes: failureMessage,
+        extraction: {
+          summary: extractedPayload?.summary ?? null,
+          fields: extractedPayload?.fields ?? {},
+        },
+      })
+
+      revalidatePath('/ecd/ai-upload')
+      return {
+        success: false,
+        message: failureMessage,
+        item: failedRow,
+        fallbackHref: buildAttendanceBoardHref(extractedDate),
+        guidance: dedupeGuidance([
+          'Retake the page in good light if you want to try again.',
+          'Handwritten pages may need higher contrast and a tighter crop around names.',
+          'If this register is urgent, switch to CSV or finish it in the attendance register instead.',
+          ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
+        ]),
+      }
+    }
+
+    const rowsPayload = names.map((name) => ({
+      ecd_id: session.ecdId,
+      uploaded_by: session.user.id,
+      source_file_path: upload.path,
+      source_file_url: upload.publicUrl,
+      source_file_name: file.name,
       extraction: {
         summary: extractedPayload.summary ?? null,
         fields: extractedPayload.fields ?? {},
       },
-    })
+      extracted_names: [name],
+      extracted_date: extractedDate,
+      selected_name: name,
+      status: 'extracted' as const,
+      notes: parsed.data.notes?.trim() || extractedPayload.summary || null,
+    }))
+
+    const { data: createdRows, error } = await session.supabase
+      .from('attendance_register_imports')
+      .insert(rowsPayload)
+      .select(registerImportSelectFields)
+      .order('created_at', { ascending: false })
+
+    if (error || !createdRows || createdRows.length === 0) {
+      return { success: false, message: error?.message || 'Failed to save extracted register data.' }
+    }
+
+    const serializedItems = (createdRows as Record<string, unknown>[]).map((row) => serializeImportRow(row))
 
     revalidatePath('/ecd/ai-upload')
     return {
-      success: false,
-      message: failureMessage,
-      item: failedRow,
+      success: true,
+      message: `Read 1 page. ${serializedItems.length} child name${serializedItems.length === 1 ? '' : 's'} need review before saving.`,
+      items: serializedItems,
+      item: serializedItems[0],
       fallbackHref: buildAttendanceBoardHref(extractedDate),
-      guidance: dedupeGuidance([
-        'Retake the page in good light if you want to try again.',
-        'If this register is urgent, switch to CSV or finish it in the attendance register instead.',
-        ...ATTENDANCE_IMPORT_FALLBACK_STEPS,
-      ]),
     }
-  }
-
-  const rowsPayload = names.map((name) => ({
-    ecd_id: session.ecdId,
-    uploaded_by: session.user.id,
-    source_file_path: upload.path,
-    source_file_url: upload.publicUrl,
-    source_file_name: file.name,
-    extraction: {
-      summary: extractedPayload.summary ?? null,
-      fields: extractedPayload.fields ?? {},
-    },
-    extracted_names: [name],
-    extracted_date: extractedDate,
-    selected_name: name,
-    status: 'extracted' as const,
-    notes: parsed.data.notes?.trim() || extractedPayload.summary || null,
-  }))
-
-  const { data: createdRows, error } = await session.supabase
-    .from('attendance_register_imports')
-    .insert(rowsPayload)
-    .select(registerImportSelectFields)
-    .order('created_at', { ascending: false })
-
-  if (error || !createdRows || createdRows.length === 0) {
-    return { success: false, message: error?.message || 'Failed to save extracted register data.' }
-  }
-
-  const serializedItems = (createdRows as Record<string, unknown>[]).map((row) => serializeImportRow(row))
-
-  revalidatePath('/ecd/ai-upload')
-  return {
-    success: true,
-    message: `Read 1 page. ${serializedItems.length} child name${serializedItems.length === 1 ? '' : 's'} need review before saving.`,
-    items: serializedItems,
-    item: serializedItems[0],
-    fallbackHref: buildAttendanceBoardHref(extractedDate),
+  } catch {
+    return {
+      success: false,
+      message: 'Extraction failed unexpectedly. Try again with a clearer image, or use CSV import for urgent attendance.',
+      guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
+    }
   }
 }
 
