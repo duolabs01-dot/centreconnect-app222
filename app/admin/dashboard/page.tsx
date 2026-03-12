@@ -14,6 +14,7 @@ import {
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 import { getCompanyHqSnapshot } from '@/lib/admin/company-hq'
+import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
 import {
@@ -316,11 +317,15 @@ export default async function AdminDashboardPage() {
     },
   ]
 
-  const companyHqSnapshot = await getCompanyHqSnapshot()
+  const [companyHqSnapshot, openclawSnapshot] = await Promise.all([
+    getCompanyHqSnapshot(),
+    getOpenClawOpsSnapshot(),
+  ])
   const hierarchyPreview = companyHqSnapshot.hierarchy.slice(0, 6)
   const planNow = companyHqSnapshot.roadmap.find((bucket) => bucket.id === 'now')?.items ?? []
   const planNext = companyHqSnapshot.roadmap.find((bucket) => bucket.id === 'next')?.items ?? []
   const delegatedWork = companyHqSnapshot.roadmap.flatMap((bucket) => bucket.items).slice(0, 8)
+  const runtimeDelegated = [...openclawSnapshot.activeWork, ...openclawSnapshot.queuedWork].slice(0, 8)
 
   const actions: DashboardAction[] = [
     {
@@ -482,27 +487,52 @@ export default async function AdminDashboardPage() {
 
       <SectionCard
         title="Delegated agent work"
-        description="Live delegated lanes from AI Company OS and OpenClaw surfaces, visible from dashboard."
+        description="Company plan lanes + OpenClaw runtime feed, visible in one place."
         href="/admin/openclaw"
         hrefLabel="Open delegated work"
         icon={<BellRing className="h-4 w-4" />}
       >
+        <div className="mb-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Runtime mode</p>
+            <p className="mt-1 text-sm font-semibold text-white">{openclawSnapshot.mode === 'filesystem' ? 'Live filesystem feed' : 'Placeholder feed'}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Running now</p>
+            <p className="mt-1 text-sm font-semibold text-white">{openclawSnapshot.runningCount}</p>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Queued tasks</p>
+            <p className="mt-1 text-sm font-semibold text-white">{openclawSnapshot.queuedCount}</p>
+          </div>
+        </div>
+
         <div className="space-y-2">
-          {delegatedWork.length > 0 ? delegatedWork.map((item) => (
+          {[...runtimeDelegated.map((item) => ({
+            id: item.id,
+            title: item.title,
+            owner: item.ownerLabel,
+            sourceLabel: item.sourceLabel,
+            href: '/admin/openclaw',
+          })), ...delegatedWork.map((item) => ({
+            id: `hq-${item.id}`,
+            title: item.title,
+            owner: item.owner ?? 'Unassigned owner',
+            sourceLabel: item.sourceLabel,
+            href: item.href ?? '/admin/hq',
+          }))].slice(0, 10).map((item) => (
             <div key={item.id} className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-white">{item.title}</p>
-                  <p className="mt-1 text-xs text-slate-400">{item.owner ?? 'Unassigned owner'} • {item.sourceLabel}</p>
+                  <p className="mt-1 text-xs text-slate-400">{item.owner} • {item.sourceLabel}</p>
                 </div>
-                {item.href ? (
-                  <Link href={item.href} className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300 hover:text-cyan-200">
-                    Open
-                  </Link>
-                ) : null}
+                <Link href={item.href} className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300 hover:text-cyan-200">
+                  Open
+                </Link>
               </div>
             </div>
-          )) : <p className="text-sm text-slate-500">No delegated items visible yet.</p>}
+          ))}
         </div>
       </SectionCard>
 

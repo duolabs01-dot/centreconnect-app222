@@ -225,7 +225,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     className="h-14 w-full justify-center rounded-[1.05rem] bg-[var(--teal)] px-7 text-base font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-[#0B857A] sm:w-auto"
                     asChild
                   >
-                    <Link href="/directory">Directory</Link>
+                    <Link href="/directory">Find creches near me</Link>
                   </Button>
                   <Button
                     size="lg"
@@ -234,7 +234,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     asChild
                   >
                     <Link href="/register">
-                      <span>Create account</span>
+                      <span>Save and apply faster</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -254,6 +254,12 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                       <span>Share on WhatsApp</span>
                     </a>
                   </Button>
+                </div>
+
+                <div className="mt-3">
+                  <Link href="/for-centres/intro" className="text-[12px] font-semibold text-[#1F6059] underline-offset-4 hover:underline">
+                    Run your centre on CentreConnect
+                  </Link>
                 </div>
 
                 <p className="mt-3 text-[11px] font-medium tracking-[0.01em] text-[var(--teal)] sm:text-[12px]">

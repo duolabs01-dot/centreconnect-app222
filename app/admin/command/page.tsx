@@ -8,6 +8,7 @@ import { NeuralMap } from '@/components/cc-admin/NeuralMap'
 import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
 import { SystemHealthWidget } from '@/components/cc-admin/SystemHealthWidget'
 import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
+import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import Link from 'next/link'
 import { Building2, Users, Activity, TrendingUp, Globe, Zap, AlertTriangle, LifeBuoy, BellDot, ArrowRight } from 'lucide-react'
 
@@ -45,6 +46,7 @@ function normalizeProvinceToCode(value: string | null): ProvinceScore['shortLabe
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
+  const openclawSnapshot = await getOpenClawOpsSnapshot()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
@@ -183,6 +185,34 @@ export default async function AdminDashboardPage() {
                 <p className="mt-1 text-[11px] text-admin-text-muted">{item.hint}</p>
               </Link>
             ))}
+          </div>
+        </div>
+
+        <div className="admin-card p-6 border-t-2 border-t-admin-accent">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-accent">Agent runtime</p>
+              <p className="text-xs text-admin-text-muted mt-1">What agents are doing now (from OpenClaw runtime state).</p>
+            </div>
+            <Link href="/admin/openclaw" className="text-xs font-black uppercase tracking-[0.16em] text-admin-accent hover:underline">Open full runtime</Link>
+          </div>
+          <div className="grid gap-3 md:grid-cols-4">
+            <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Mode</p>
+              <p className="mt-1 text-sm font-bold text-admin-text">{openclawSnapshot.mode === 'filesystem' ? 'Live feed' : 'Placeholder'}</p>
+            </div>
+            <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Running</p>
+              <p className="mt-1 text-sm font-bold text-admin-text">{openclawSnapshot.runningCount}</p>
+            </div>
+            <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Queued</p>
+              <p className="mt-1 text-sm font-bold text-admin-text">{openclawSnapshot.queuedCount}</p>
+            </div>
+            <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Completed</p>
+              <p className="mt-1 text-sm font-bold text-admin-text">{openclawSnapshot.completedCount}</p>
+            </div>
           </div>
         </div>
 
