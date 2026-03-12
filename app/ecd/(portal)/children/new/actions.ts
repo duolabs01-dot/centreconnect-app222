@@ -562,27 +562,16 @@ export async function extractExistingChildrenFromPhotoAction(
       documentType: 'register',
     })
 
-    const aiResult = await extractStructuredDocumentWithGemini({
-      file,
-      documentType: 'register',
-    })
-
-    const ocrNames = ocrResult.success && ocrResult.extraction ? parseRegisterNames(ocrResult.extraction) : []
-    const aiNames = aiResult.success && aiResult.extraction ? parseRegisterNames(aiResult.extraction) : []
-
-    const extractionPayload =
-      (aiNames.length >= ocrNames.length ? aiResult.extraction : ocrResult.extraction) ??
-      aiResult.extraction ??
-      ocrResult.extraction
+    const extractionPayload = ocrResult.success ? ocrResult.extraction : null
 
     if (!extractionPayload) {
       return {
         success: false,
-        message: 'Could not extract readable names from this photo. Try a clearer image, then use CSV if needed.',
+        message: 'Could not extract readable names from this photo. Use CSV import if this page is urgent.',
       }
     }
 
-    const names = [...(aiNames.length >= ocrNames.length ? aiNames : ocrNames)]
+    const names = parseRegisterNames(extractionPayload)
     if (names.length === 0) {
       return {
         success: false,

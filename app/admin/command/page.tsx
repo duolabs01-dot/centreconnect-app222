@@ -69,10 +69,14 @@ export default async function AdminDashboardPage() {
   let unreadOwnerNotifications = 0
   let webhookFailures = 0
   let staleParents = 0
+  let supportStale24h = 0
+  let supportStale72h = 0
 
   try {
     const activeStatuses = ['active', 'trial', 'past_due']
-    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff, supportTickets, ownerNotifs, webhookRows, parentRelRows] = await Promise.all([
+    const stale24hIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const stale72hIso = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()
+    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff, supportTickets, ownerNotifs, webhookRows, parentRelRows, support24h, support72h] = await Promise.all([
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses).gte('created_at', thirtyDaysAgo.toISOString()),
@@ -86,6 +90,8 @@ export default async function AdminDashboardPage() {
       admin.from('owner_notification_logs').select('id', { count: 'exact', head: true }).eq('read_state', 'unread'),
       admin.from('webhook_events').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
       admin.from('parent_reliability_watch').select('id', { count: 'exact', head: true }).eq('status', 'stale'),
+      admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress', 'waiting_response']).lt('created_at', stale24hIso),
+      admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress', 'waiting_response']).lt('created_at', stale72hIso),
     ])
 
     activeCentreCount = centres.count ?? 0
@@ -99,6 +105,8 @@ export default async function AdminDashboardPage() {
     unreadOwnerNotifications = ownerNotifs.count ?? 0
     webhookFailures = webhookRows.count ?? 0
     staleParents = parentRelRows.count ?? 0
+    supportStale24h = support24h.count ?? 0
+    supportStale72h = support72h.count ?? 0
 
     const regionRows = centresProv.data ?? []
     const provinceCounts = regionRows.reduce<Record<string, number>>((acc, row) => {
@@ -185,6 +193,35 @@ export default async function AdminDashboardPage() {
                 <p className="mt-1 text-[11px] text-admin-text-muted">{item.hint}</p>
               </Link>
             ))}
+          </div>
+        </div>
+
+        <div className="admin-card p-6 border-t-2 border-t-rose-500/80">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-300">SLA + escalation</p>
+              <p className="text-xs text-admin-text-muted mt-1">A queue without an SLA is just noise. Escalate overdue items quickly.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Link href="/admin/support?status=open" className="rounded-2xl border border-admin-border bg-admin-bg p-4 hover:border-amber-400/60 transition-colors">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Open &gt; 24h</p>
+              <p className="mt-2 text-2xl font-black text-amber-300">{supportStale24h}</p>
+              <p className="mt-1 text-xs text-admin-text-muted">Review and assign owner now</p>
+            </Link>
+            <Link href="/admin/support?status=open" className="rounded-2xl border border-admin-border bg-admin-bg p-4 hover:border-rose-400/60 transition-colors">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Open &gt; 72h</p>
+              <p className="mt-2 text-2xl font-black text-rose-300">{supportStale72h}</p>
+              <p className="mt-1 text-xs text-admin-text-muted">Escalate with runbook</p>
+            </Link>
+            <div className="rounded-2xl border border-admin-border bg-admin-bg p-4">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-admin-text-muted">Escalation actions</p>
+              <div className="mt-3 flex flex-col gap-2">
+                <Link href="/admin/runbooks/payment-incidents" className="text-xs font-bold text-admin-accent hover:underline">Open payment incident runbook</Link>
+                <Link href="/admin/parent-reliability" className="text-xs font-bold text-admin-accent hover:underline">Open parent reliability triage</Link>
+                <Link href="/admin/webhook-failures" className="text-xs font-bold text-admin-accent hover:underline">Open webhook replay queue</Link>
+              </div>
+            </div>
           </div>
         </div>
 

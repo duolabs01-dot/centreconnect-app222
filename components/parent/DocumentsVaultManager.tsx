@@ -57,6 +57,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
   const [docType, setDocType] = useState('parent_id')
   const [expiryDate, setExpiryDate] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [fileInputKey, setFileInputKey] = useState(0)
 
   async function createAuditEntry(
     action: AuditAction,
@@ -134,6 +135,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
       setDocuments((prev) => [data as ParentDocument, ...prev])
       await createAuditEntry('upload', ready.userId, data.id, data.file_name)
       setFile(null)
+      setFileInputKey((prev) => prev + 1)
       setExpiryDate('')
       toast.success('Document uploaded')
     } catch (error: unknown) {
@@ -238,6 +240,7 @@ export function DocumentsVaultManager({ initialDocuments, initialAuditLog }: Pro
                 <Label className="text-xs font-bold text-slate-900 ml-1">File Selection</Label>
                 <div className="relative group">
                   <Input 
+                    key={fileInputKey}
                     type="file" 
                     className="h-14 rounded-2xl bg-slate-50 border-slate-100 font-bold px-4 pt-3.5 file:hidden cursor-pointer"
                     onChange={(e) => setFile(e.target.files?.[0] ?? null)} 

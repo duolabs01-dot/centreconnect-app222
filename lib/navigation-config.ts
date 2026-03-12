@@ -1,6 +1,5 @@
 import {
   Home,
-  Search,
   ClipboardList,
   User,
   UserCheck,
@@ -14,8 +13,8 @@ import { type NavItem } from '@/components/layout/bottom-nav'
 
 export const PARENT_NAV_ITEMS: NavItem[] = [
   { href: '/parent/dashboard', label: 'Home', icon: Home },
-  { href: '/parent/discover', label: 'Discover', icon: Search },
   { href: '/parent/applications', label: 'Apply', icon: ClipboardList },
+  { href: '/parent/notifications', label: 'Updates', icon: ShieldCheck },
   { href: '/parent/profile', label: 'Profile', icon: User },
 ]
 

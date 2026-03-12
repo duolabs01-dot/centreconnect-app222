@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
-  extractStructuredDocumentWithGemini,
   extractWithTesseract,
   uploadPhotoForAiExtraction,
 } from '@/lib/ai/document-extraction-service'
@@ -831,23 +830,13 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
       }
     }
 
-    const aiExtraction = await extractStructuredDocumentWithGemini({
-      file,
-      documentType: 'register',
-    })
     const ocrExtraction = await extractWithTesseract({
       file,
       documentType: 'register',
     })
 
-    const aiPayload = aiExtraction.success ? aiExtraction.extraction : null
-    const ocrPayload = ocrExtraction.success ? ocrExtraction.extraction : null
-
-    const aiNames = aiPayload ? parseExtractedNames(aiPayload) : []
-    const ocrNames = ocrPayload ? parseExtractedNames(ocrPayload) : []
-
-    const extractedPayload = (aiNames.length >= ocrNames.length ? aiPayload : ocrPayload) ?? aiPayload ?? ocrPayload
-    const names = aiNames.length >= ocrNames.length ? aiNames : ocrNames
+    const extractedPayload = ocrExtraction.success ? ocrExtraction.extraction : null
+    const names = extractedPayload ? parseExtractedNames(extractedPayload) : []
 
     const extractedDate =
       normalizeAttendanceImportDate(extractedPayload ? fieldAsString(extractedPayload, 'record_date') : undefined) ??
