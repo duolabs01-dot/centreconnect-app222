@@ -371,9 +371,22 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
   const lastName = getFieldString(extraction, 'last_name')
   const mergedSingle = [firstName, lastName].filter(Boolean).join(' ').trim()
 
+  const banned = new Set(['present', 'absent', 'late', 'sick', 'attendance', 'register', 'date', 'class', 'total'])
+
   const all = [...fromArray, ...fromString, mergedSingle]
-    .map((name) => name.replace(/\s+/g, ' ').trim())
+    .map((name) => name.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim())
+    .map((name) => name.replace(/^\d+[.)\-:\s]+/, '').trim())
     .filter((name) => name.length >= 2)
+    .filter((name) => {
+      const parts = name.split(' ').filter(Boolean)
+      if (parts.length < 2 || parts.length > 5) return false
+      return parts.every((part) => {
+        const normalized = part.replace(/[^A-Za-z'\-]/g, '')
+        if (!normalized) return false
+        if (banned.has(normalized.toLowerCase())) return false
+        return /^[A-Za-z][A-Za-z'\-]+$/.test(normalized)
+      })
+    })
 
   const unique: string[] = []
   const seen = new Set<string>()
@@ -543,19 +556,36 @@ export async function extractExistingChildrenFromPhotoAction(
 
   const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
-  const extractionResult = await extractWithTesseract({
+  let extractionResult = await extractWithTesseract({
     file,
     documentType: 'register',
   })
 
   if (!extractionResult.success || !extractionResult.extraction) {
-    return {
-      success: false,
-      message: extractionResult.message,
+    const rescue = await extractStructuredDocumentWithGemini({
+      file,
+      documentType: 'register',
+    })
+
+    if (rescue.success && rescue.extraction) {
+      extractionResult = rescue
+    } else {
+      return {
+        success: false,
+        message: `${extractionResult.message} If this keeps failing, use CSV import for typed lists.`,
+      }
     }
   }
 
-  const names = parseRegisterNames(extractionResult.extraction)
+  const extractionPayload = extractionResult.extraction
+  if (!extractionPayload) {
+    return {
+      success: false,
+      message: 'Could not extract readable data from this photo. Try CSV import for typed lists.',
+    }
+  }
+
+  const names = parseRegisterNames(extractionPayload)
   if (names.length === 0) {
     return {
       success: false,
@@ -564,12 +594,12 @@ export async function extractExistingChildrenFromPhotoAction(
   }
 
   const suggestedStartDate =
-    normalizeDateString(getFieldString(extractionResult.extraction, 'record_date')) ??
+    normalizeDateString(getFieldString(extractionPayload, 'record_date')) ??
     fallbackStartDate ??
     new Date().toISOString().slice(0, 10)
   const confidence =
-    getFieldConfidence(extractionResult.extraction, 'full_name') ??
-    getFieldConfidence(extractionResult.extraction, 'first_name') ??
+    getFieldConfidence(extractionPayload, 'full_name') ??
+    getFieldConfidence(extractionPayload, 'first_name') ??
     65
 
   const drafts: ExistingChildBulkDraft[] = names.map((name) => ({
@@ -582,7 +612,7 @@ export async function extractExistingChildrenFromPhotoAction(
     success: true,
     message: `Extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
     drafts,
-    summary: extractionResult.extraction.summary,
+    summary: extractionPayload.summary,
   }
 }
 

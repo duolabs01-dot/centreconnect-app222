@@ -260,10 +260,17 @@ export async function extractWithTesseract(input: {
   }
 }
 
+function toTitleCaseName(value: string) {
+  return value
+    .split(' ')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
 function extractRegisterNamesFromText(text: string) {
   const normalizedLines = text
     .split('\n')
-    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .map((line) => line.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim())
     .filter(Boolean)
 
   const ignoredWords = new Set([
@@ -284,33 +291,38 @@ function extractRegisterNamesFromText(text: string) {
     'guardian',
     'notes',
     'total',
+    'male',
+    'female',
+    'boy',
+    'girl',
   ])
 
   const candidates: string[] = []
   for (const line of normalizedLines) {
     const cleaned = line
-      .replace(/^[\d\W_]+/, '')
-      .replace(/[\d\W_]+$/, '')
+      .replace(/^\d+[.)\-:\s]+/, '')
+      .replace(/^[\W_]+/, '')
+      .replace(/[\W_]+$/, '')
       .replace(/\s+/g, ' ')
       .trim()
 
     if (!cleaned) continue
-    if (cleaned.length < 3 || cleaned.length > 70) continue
+    if (cleaned.length < 3 || cleaned.length > 90) continue
 
     const words = cleaned.split(' ').filter(Boolean)
-    if (words.length < 2 || words.length > 4) continue
+    if (words.length < 2 || words.length > 5) continue
 
-    const alphaWords = words.filter((word) => /^[A-Za-z][A-Za-z'\-]*$/.test(word))
-    if (alphaWords.length !== words.length) continue
+    const normalizedWords = words.map((word) => word.replace(/[^A-Za-z'\-]/g, '')).filter(Boolean)
+    if (normalizedWords.length < 2) continue
 
-    const looksLikeName = words.every((word) => {
+    const looksLikeName = normalizedWords.every((word) => {
       const lower = word.toLowerCase()
       if (ignoredWords.has(lower)) return false
-      return /^[A-Z][a-z'\-]+$/.test(word)
+      return /^[A-Za-z][A-Za-z'\-]{1,}$/.test(word)
     })
 
     if (!looksLikeName) continue
-    candidates.push(words.join(' '))
+    candidates.push(toTitleCaseName(normalizedWords.join(' ')))
   }
 
   const unique: string[] = []

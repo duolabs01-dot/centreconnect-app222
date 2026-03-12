@@ -453,7 +453,7 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
           <CardHeader>
             <CardTitle className="text-2xl text-white">Pilot and founding-centre board</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
-              Only Bajabulile Day Care Centre and Sakhisizwe Day Care Centre count as truly onboarded ECD partners. Every other centre row in the system is demo/test only.
+              Only Bajabulile Day Care Centre and Sakhisizwe Day Care Centre are currently onboarded and active. Other centre rows are prospect/lead records gathered online and not yet using CentreConnect.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 xl:grid-cols-3">
@@ -463,7 +463,7 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
             <div className={`${INNER_PANEL_CLASS} p-5`}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300">Demo-only rows</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-300">Prospect centres not yet onboarded</p>
                   <p className="mt-2 text-xl font-semibold text-white">
                     {snapshot.pilotBoard.demoTesterCount === null ? 'Unknown' : snapshot.pilotBoard.demoTesterCount}
                   </p>
@@ -508,7 +508,7 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
           <CardHeader>
             <CardTitle className="text-2xl text-white">Founding notes</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
-              These notes keep the strategic layer honest when other admin tables or dashboards drift toward demo data or incomplete signals.
+              These notes keep the strategic layer honest when other admin tables or dashboards blur active partners with prospect records or incomplete signals.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

@@ -438,7 +438,7 @@ export async function getCompanyHqSnapshot(input?: {
     },
     {
       id: 'demo-testers',
-      label: 'Demo-only centre rows',
+      label: 'Prospect centres not yet onboarded',
       value:
         aiSnapshot.founderTruth.demoTesterCentreCount === null
           ? 'Unknown'
@@ -477,7 +477,7 @@ export async function getCompanyHqSnapshot(input?: {
       mission: 'Pick the bottleneck closest to real partner value, activation, and eventual payment readiness.',
       currentFocus:
         ceoBrief?.headline ??
-        'Run the company from the two real founding partners, not from demo rows.',
+        'Run the company from active partner centres, and track prospect rows separately until onboarding is complete.',
       href: '/admin/ai-os/ceo',
       hrefLabel: 'Open CEO brief',
       sourceLabel: 'AI Company OS founder brief',
@@ -520,7 +520,7 @@ export async function getCompanyHqSnapshot(input?: {
       id: 'growth',
       label: 'Growth',
       owner: 'Founder, with AI OS advisory',
-      mission: 'Turn real demand into trustworthy applications without letting demo rows distort the funnel story.',
+      mission: 'Turn real demand into trustworthy applications without letting not-yet-onboarded prospect rows distort the funnel story.',
       currentFocus:
         growthBrief?.headline ??
         'Demand exists, but the funnel still needs one careful repair at a time.',
@@ -891,7 +891,7 @@ export async function getCompanyHqSnapshot(input?: {
       tone: 'critical',
       owner: 'Founder / CEO',
       evidence: aiSnapshot.founderTruth.revenueSummary,
-      nextMove: 'Keep demo billing artifacts out of the founder narrative until a real founding centre is actually billed.',
+      nextMove: 'Keep prospect/test billing artifacts out of the founder narrative until active partner centres are actually billed.',
       sourceLabel: 'Founder truth + admin audit docs',
       href: '/admin/revenue',
     },
@@ -941,7 +941,7 @@ export async function getCompanyHqSnapshot(input?: {
       stage: 'Pilot truth, not scale theatre',
       topBottleneck:
         ceoBrief?.headline ??
-        'Run the founder lane from the two real partner centres, not from demo rows.',
+        'Run the founder lane from active partner centres, not from not-yet-onboarded prospect rows.',
       thisWeekFocus:
         topFocusItem?.summary ??
         'Keep Bajabulile and Sakhisizwe as the only real founder lane, and remove friction that blocks daily usage.',
