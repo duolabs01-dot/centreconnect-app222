@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { z } from 'zod'
 import Tesseract from 'tesseract.js'
+import sharp from 'sharp'
 import { ATTENDANCE_IMPORT_MAX_FILE_BYTES, ATTENDANCE_IMPORT_MAX_FILE_MB } from '@/lib/attendance/imports'
 
 export const AI_DOCUMENT_TYPES = [
@@ -219,24 +220,69 @@ export async function extractWithTesseract(input: {
 }): Promise<AiExtractionResult> {
   try {
     const bytes = Buffer.from(await input.file.arrayBuffer())
-    const base64 = bytes.toString('base64')
     const mimeType = input.file.type || 'image/jpeg'
 
-    const result = await Tesseract.recognize(`data:${mimeType};base64,${base64}`, 'eng', {
-      logger: () => {},
-    })
+    const variantBuffers: Array<{ label: string; bytes: Buffer }> = [{ label: 'original', bytes }]
 
-    const text = result.data.text
-    if (!text || text.trim().length < 5) {
+    try {
+      const enhanced = await sharp(bytes)
+        .rotate()
+        .grayscale()
+        .normalize()
+        .modulate({ brightness: 1.12, saturation: 0 })
+        .sharpen()
+        .resize({ width: 2200, withoutEnlargement: false })
+        .jpeg({ quality: 96 })
+        .toBuffer()
+      variantBuffers.push({ label: 'enhanced', bytes: enhanced })
+    } catch {
+      // Ignore image preprocessing failure and continue with original bytes.
+    }
+
+    let best: {
+      label: string
+      text: string
+      fields: Partial<Record<AiFieldKey, AiFieldSuggestion>>
+      score: number
+    } | null = null
+
+    for (const variant of variantBuffers) {
+      const base64 = variant.bytes.toString('base64')
+      const result = await Tesseract.recognize(`data:${mimeType};base64,${base64}`, 'eng', {
+        logger: () => {},
+      })
+
+      const text = result.data.text?.trim() ?? ''
+      if (text.length < 5) continue
+
+      const fields = extractFieldsFromText(text, input.documentType)
+      const textWords = text.split(/\s+/).length
+      const registerNames = Array.isArray(fields.full_name?.value)
+        ? (fields.full_name?.value as string[]).length
+        : typeof fields.full_name?.value === 'string'
+        ? 1
+        : 0
+
+      const score = Object.keys(fields).length * 10 + textWords + registerNames * 25
+
+      if (!best || score > best.score) {
+        best = {
+          label: variant.label,
+          text,
+          fields,
+          score,
+        }
+      }
+    }
+
+    if (!best) {
       return {
         success: false,
         message: 'No text detected in image.',
       }
     }
 
-    const extractedFields = extractFieldsFromText(text, input.documentType)
-
-    if (Object.keys(extractedFields).length === 0) {
+    if (Object.keys(best.fields).length === 0) {
       return {
         success: false,
         message: 'Could not extract structured fields from text.',
@@ -245,11 +291,11 @@ export async function extractWithTesseract(input: {
 
     return {
       success: true,
-      message: 'Text extracted via OCR.',
+      message: best.label === 'enhanced' ? 'Text extracted via OCR (enhanced scan).' : 'Text extracted via OCR.',
       extraction: {
         documentType: input.documentType,
-        fields: extractedFields,
-        summary: `OCR extracted ${text.split(/\s+/).length} words from document.`,
+        fields: best.fields,
+        summary: `OCR extracted ${best.text.split(/\s+/).length} words from document (${best.label}).`,
       },
     }
   } catch (error) {
