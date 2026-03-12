@@ -92,7 +92,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ThemeProvider>
                 <ThemeRouteSync />
                 <FooterConditionalRenderer>
-                  {children}
+                  <div className="app-shell-transition">{children}</div>
                 </FooterConditionalRenderer>
                 <SonnerToaster position="top-right" richColors />
                 <Analytics />

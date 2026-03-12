@@ -92,6 +92,28 @@
 
 /* Custom styles specific to CentreConnect */
 
+/* Global motion + transitions */
+.app-shell-transition {
+  animation: appShellFadeIn 220ms ease-out;
+}
+
+@keyframes appShellFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell-transition {
+    animation: none !important;
+  }
+}
+
 /* Platform Admin Dark Theme (Isolated) */
 .platform-admin-dark-theme {
   background-color: #04070D;

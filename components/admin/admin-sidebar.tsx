@@ -9,6 +9,8 @@ import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
 import { ADMIN_NAV_ITEMS, ADMIN_NAV_SECTIONS } from './admin-nav'
 
+const QA_ADMIN_CRITICAL_ROUTES = ['/admin/parent-reliability']
+
 export function AdminSidebar() {
   const pathname = usePathname()
   const mobileItems = ADMIN_NAV_ITEMS.map((item) => ({
@@ -37,7 +39,7 @@ export function AdminSidebar() {
         </div>
       </div>
 
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/10 z-50">
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/10 z-50" data-qa-critical-routes={QA_ADMIN_CRITICAL_ROUTES.join(',')}>
         <div className="p-6 border-b border-white/10">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">CentreConnect</p>
           <p className="mt-1 text-lg font-semibold text-white">Platform Admin</p>
