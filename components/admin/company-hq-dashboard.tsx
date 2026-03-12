@@ -244,6 +244,38 @@ function ReadinessCard({ item }: { item: CompanyHqReadinessItem }) {
 }
 
 export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }) {
+  const doneItems = snapshot.backlog.find((bucket) => bucket.id === 'done')?.items ?? []
+  const topNowItems = snapshot.roadmap.find((bucket) => bucket.id === 'now')?.items ?? []
+
+  const accountabilityRows = snapshot.hierarchy.map((role) => {
+    const assigned = topNowItems.find((item) => item.owner?.toLowerCase().includes(role.label.toLowerCase().split('/')[0].trim().toLowerCase()))
+    const defaultDeliverable = role.hrefLabel ?? 'Open role surface'
+    const lastOutput = doneItems[0]?.title ?? 'No recent completed output tracked yet'
+
+    const blockedReason =
+      role.id === 'founder-ceo'
+        ? 'Founder bandwidth is split across strategic + execution lanes.'
+        : role.id === 'cto'
+        ? 'Reliability work still mixed with founder ops context and support pressure.'
+        : role.id === 'ops'
+        ? 'Ops lane still too manual and founder-assisted for daily closure.'
+        : role.id === 'growth'
+        ? 'Demand quality depends on stronger conversion and centre outcome joins.'
+        : role.id === 'automation-openclaw'
+        ? 'OpenClaw is read-only visibility, not autonomous control yet.'
+        : 'Role still depends on founder-driven closure.'
+
+    return {
+      role: role.label,
+      owner: role.owner,
+      queue: assigned?.title ?? 'No explicit now-queue item assigned',
+      lastOutput,
+      blockedReason,
+      nextDeliverable: defaultDeliverable,
+      href: role.href ?? '/admin/hq',
+    }
+  })
+
   return (
     <AdminPageLayout
       title="Company HQ"
@@ -312,7 +344,7 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
           </CardHeader>
         </Card>
 
-        <Card className={PANEL_CLASS}>
+        <Card id="task-router" className={PANEL_CLASS}>
           <CardHeader>
             <CardTitle className="text-xl text-white">Where do I do this?</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
@@ -325,6 +357,42 @@ export function CompanyHqDashboard({ snapshot }: { snapshot: CompanyHqSnapshot }
                 <p className="text-sm font-semibold text-white">{item.task}</p>
                 <div className="mt-3">
                   <SmallAction href={item.href} label={item.label} />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className={PANEL_CLASS}>
+          <CardHeader>
+            <CardTitle className="text-xl text-white">Role Accountability Board</CardTitle>
+            <CardDescription className="text-sm leading-6 text-slate-400">
+              If a role is not shipping, it should be obvious here. This board keeps ownership, queue, and blockage visible.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {accountabilityRows.map((row) => (
+              <div key={row.role} className={`${INNER_PANEL_CLASS} p-4`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-base font-semibold text-white">{row.role}</p>
+                    <p className="text-xs text-slate-500">{row.owner}</p>
+                  </div>
+                  <SmallAction href={row.href} label={row.nextDeliverable} />
+                </div>
+                <div className="mt-3 grid gap-3 md:grid-cols-3">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Owned queue</p>
+                    <p className="mt-1 text-sm text-slate-200">{row.queue}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Last completed output</p>
+                    <p className="mt-1 text-sm text-slate-200">{row.lastOutput}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Blocked reason</p>
+                    <p className="mt-1 text-sm text-amber-200">{row.blockedReason}</p>
+                  </div>
                 </div>
               </div>
             ))}
