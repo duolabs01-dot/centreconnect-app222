@@ -19,7 +19,6 @@ import {
   type CentreCoordinateSource,
 } from '@/lib/geo/centre-location-metadata'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
-import { createClient } from '@/lib/supabase/client'
 
 type DiscoverCentre = {
   id: string
@@ -118,7 +117,6 @@ function formatDistance(meters: number) {
 }
 
 export default function ParentDiscoverClient() {
-  const supabase = useMemo(() => createClient(), [])
   const [query, setQuery] = useState('')
   const [centres, setCentres] = useState<DiscoverCentre[]>(FALLBACK_CENTRES)
   const [loading, setLoading] = useState(true)
@@ -131,61 +129,76 @@ export default function ParentDiscoverClient() {
     let mounted = true
 
     const loadCentres = async () => {
-      const { data } = await supabase
-        .from('public_ecd_centres')
-        .select('id,slug,name,tagline,suburb,city,cover_image_url,logo_url,monthly_fee_min,monthly_fee_max,age_group_pricing,latitude,longitude,contact_whatsapp,contact_phone,phone,is_registered,is_claimed')
-        .order('is_registered', { ascending: false })
-        .order('name', { ascending: true })
-        .limit(24)
+      try {
+        const response = await fetch('/api/directory/search', { cache: 'no-store' })
+        const payload = response.ok ? await response.json() : null
+        const apiCentres = Array.isArray(payload?.centres) ? payload.centres : []
 
-      if (!mounted) return
+        if (!mounted) return
 
-      if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map((centre) => {
-          const resolvedCoordinates = resolveCentreCoordinates({
-            latitude: centre.latitude,
-            longitude: centre.longitude,
-            slug: centre.slug ?? null,
-            suburb: centre.suburb ?? null,
-            city: centre.city ?? null,
-          })
+        if (apiCentres.length > 0) {
+          const mapped = apiCentres.map((centre: Record<string, unknown>) => {
+            const resolvedCoordinates = resolveCentreCoordinates({
+              latitude: (centre.latitude as number | null | undefined) ?? null,
+              longitude: (centre.longitude as number | null | undefined) ?? null,
+              slug: (centre.slug as string | null | undefined) ?? null,
+              suburb: (centre.suburb as string | null | undefined) ?? null,
+              city: (centre.city as string | null | undefined) ?? null,
+            })
 
-          return {
-            id: centre.id,
-            slug: centre.slug ?? undefined,
-            name: centre.name ?? 'Creche',
-            tagline: centre.tagline ?? undefined,
-            city: centre.city ?? undefined,
-            suburb: centre.suburb ?? undefined,
-            cover_image_url: centre.cover_image_url ?? undefined,
-            logo_url: centre.logo_url ?? undefined,
-            feesLabel: formatFees(centre.monthly_fee_min, centre.monthly_fee_max),
-            age_groups: toAgeGroups(centre.age_group_pricing),
-            rating: 4.8,
-            latitude: resolvedCoordinates.latitude,
-            longitude: resolvedCoordinates.longitude,
-            coordinateSource: resolvedCoordinates.source,
-            coordinateConfidence: defaultConfidenceForSource(resolvedCoordinates.source),
-            contact_whatsapp: centre.contact_whatsapp ?? null,
-            contact_phone: centre.contact_phone ?? null,
-            phone: centre.phone ?? null,
-            is_claimed: Boolean(centre.is_claimed),
-            is_registered: Boolean(centre.is_registered),
+            return {
+              id: String(centre.id ?? ''),
+              slug: (centre.slug as string | null | undefined) ?? undefined,
+              name: String(centre.name ?? 'Creche'),
+              tagline: (centre.tagline as string | null | undefined) ?? undefined,
+              city: (centre.city as string | null | undefined) ?? undefined,
+              suburb: (centre.suburb as string | null | undefined) ?? undefined,
+              cover_image_url: (centre.cover_image_url as string | null | undefined) ?? undefined,
+              logo_url: (centre.logo_url as string | null | undefined) ?? undefined,
+              feesLabel: formatFees(
+                (centre.monthly_fee_min as number | null | undefined) ?? null,
+                (centre.monthly_fee_max as number | null | undefined) ?? null
+              ),
+              age_groups: Array.isArray(centre.age_groups)
+                ? (centre.age_groups as string[])
+                : ['0-2', '2-4', '5-6'],
+              rating: 4.8,
+              latitude: resolvedCoordinates.latitude,
+              longitude: resolvedCoordinates.longitude,
+              coordinateSource: resolvedCoordinates.source,
+              coordinateConfidence: defaultConfidenceForSource(resolvedCoordinates.source),
+              contact_whatsapp: (centre.contact_whatsapp as string | null | undefined) ?? null,
+              contact_phone: (centre.contact_phone as string | null | undefined) ?? null,
+              phone: (centre.phone as string | null | undefined) ?? null,
+              is_claimed: Boolean(centre.is_claimed),
+              is_registered: Boolean(centre.is_registered),
+            }
+          }) as DiscoverCentre[]
+          setCentres(mapped)
+
+          const savedFromApi = apiCentres
+            .filter((centre: Record<string, unknown>) => Boolean(centre.is_saved))
+            .map((centre: Record<string, unknown>) => String(centre.id ?? ''))
+            .filter(Boolean)
+          if (savedFromApi.length > 0) {
+            setSavedCentreIds(new Set(savedFromApi))
           }
-        }) as DiscoverCentre[]
-        setCentres(mapped)
-      } else {
+        } else {
+          setCentres(FALLBACK_CENTRES)
+        }
+      } catch {
+        if (!mounted) return
         setCentres(FALLBACK_CENTRES)
+      } finally {
+        if (mounted) setLoading(false)
       }
-
-      setLoading(false)
     }
 
     void loadCentres()
     return () => {
       mounted = false
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -255,14 +268,15 @@ export default function ParentDiscoverClient() {
         return {
           ...centre,
           distanceMeters,
-          distanceLabel:
-            locationMode === 'device' && isTrustedDistanceSource(centre.coordinateSource ?? null, centre.coordinateConfidence ?? null)
-              ? formatDistance(distanceMeters) ?? undefined
-              : undefined,
+          distanceLabel: Number.isFinite(distanceMeters)
+            ? `${formatDistance(distanceMeters) ?? ''}${
+                !isTrustedDistanceSource(centre.coordinateSource ?? null, centre.coordinateConfidence ?? null) ? ' (approx)' : ''
+              }`.trim()
+            : undefined,
         }
       })
       .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
-  }, [centres, location, locationMode])
+  }, [centres, location])
 
   const suburbOptions = useMemo(() => {
     return Array.from(
@@ -288,6 +302,10 @@ export default function ParentDiscoverClient() {
         (centre.city ?? '').toLowerCase().includes(needle)
     )
   }, [centresWithDistance, query, selectedSuburb])
+
+  const featuredCentres = filteredCentres.slice(0, 2)
+  const featuredCentreIds = new Set(featuredCentres.map((centre) => centre.id))
+  const listCentres = filteredCentres.filter((centre) => !featuredCentreIds.has(centre.id))
 
   return (
     <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
@@ -348,7 +366,7 @@ export default function ParentDiscoverClient() {
           <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Start here</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {filteredCentres.slice(0, 2).map((centre) => {
+              {featuredCentres.map((centre) => {
                 const hasRealCover = typeof centre.cover_image_url === 'string' && centre.cover_image_url.trim().length > 0
                 const heroSrc = hasRealCover
                   ? centre.cover_image_url!.trim()
@@ -445,7 +463,7 @@ export default function ParentDiscoverClient() {
           </section>
         ) : (
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredCentres.map((centre) => (
+            {listCentres.map((centre) => (
               <CentreCard key={centre.id} {...centre} viewerRole="parent_user" isSaved={savedCentreIds.has(centre.id)} />
             ))}
           </section>

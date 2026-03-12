@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -283,7 +284,18 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             </div>
           ) : null}
 
-          <div className="parent-page-content">{children}</div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              className="parent-page-content"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
 
         </Container>
       </main>

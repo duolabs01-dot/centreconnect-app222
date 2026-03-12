@@ -239,6 +239,9 @@ export default async function ForCentresPage() {
 
       <Section id="plans" className="py-10 md:py-12" containerClassName="cc-section">
         <div className="mb-6 space-y-2">
+          <Badge className="w-fit border-amber-200 bg-amber-50 text-amber-800 shadow-none hover:bg-amber-50">
+            Pilot programme: onboarding fee waived until end of next month 🎉
+          </Badge>
           <Badge className="w-fit border-cyan-200 bg-cyan-50 text-cyan-800 shadow-none hover:bg-cyan-50">
             Simple pricing ✨
           </Badge>
@@ -415,6 +418,18 @@ export default async function ForCentresPage() {
             ))}
           </div>
         )}
+      </Section>
+
+      <Section className="pt-2" containerClassName="cc-section">
+        <Card className="rounded-[1.75rem] border-slate-200/80 bg-white/95 shadow-[var(--shadow-elevation-2)]">
+          <CardContent className="space-y-3 p-6 sm:p-7">
+            <Badge variant="outline" className="w-fit border-slate-200 bg-slate-50 text-slate-700 shadow-none">Founder note</Badge>
+            <p className="text-sm leading-7 text-slate-700">
+              &quot;I started CentreConnect because centre owners deserve tools that feel calm and practical, not enterprise complexity. During our pilot period, we’ll help you set up personally and waive onboarding fees so you can test real value before committing long-term.&quot; 
+            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">— Founder, CentreConnect</p>
+          </CardContent>
+        </Card>
       </Section>
 
       <Section className="pb-14 pt-6 md:pb-16" containerClassName="cc-section">

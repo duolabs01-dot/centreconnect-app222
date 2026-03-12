@@ -29,8 +29,11 @@ export default function CentreIntroPage() {
         <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-cyan-500/10 blur-[100px]" />
         
         <Container className="relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400 mb-8 border border-white/10 backdrop-blur-md">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400 mb-3 border border-white/10 backdrop-blur-md">
             For ECD Owners & Principals
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-amber-400/15 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200 mb-8 border border-amber-200/30 backdrop-blur-md">
+            Pilot offer: onboarding fee waived until end of next month
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-4xl font-black leading-[1.05] tracking-tighter sm:text-6xl lg:text-7xl">
             Take the weight off your shoulders. <br/>
