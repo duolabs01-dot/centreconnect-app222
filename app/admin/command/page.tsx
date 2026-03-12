@@ -8,7 +8,8 @@ import { NeuralMap } from '@/components/cc-admin/NeuralMap'
 import { LiveSessionsCounter } from '@/components/cc-admin/LiveSessionsCounter'
 import { SystemHealthWidget } from '@/components/cc-admin/SystemHealthWidget'
 import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
-import { Building2, Users, Activity, TrendingUp, Globe, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { Building2, Users, Activity, TrendingUp, Globe, Zap, AlertTriangle, LifeBuoy, BellDot, ArrowRight } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,10 +63,14 @@ export default async function AdminDashboardPage() {
   let totalParents = 0
   let totalStaff = 0
   let realRegionalData: ProvinceScore[] = SA_PROVINCES.map(p => ({ ...p }))
+  let openSupportTickets = 0
+  let unreadOwnerNotifications = 0
+  let webhookFailures = 0
+  let staleParents = 0
 
   try {
     const activeStatuses = ['active', 'trial', 'past_due']
-    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff] = await Promise.all([
+    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff, supportTickets, ownerNotifs, webhookRows, parentRelRows] = await Promise.all([
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses).gte('created_at', thirtyDaysAgo.toISOString()),
@@ -75,6 +80,10 @@ export default async function AdminDashboardPage() {
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'ecd_admin'),
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).eq('role', 'parent_user'),
       admin.from('user_profiles').select('id', { count: 'exact', head: true }).in('role', ['ecd_staff', 'ecd_supervisor']),
+      admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress', 'waiting_response']),
+      admin.from('owner_notification_logs').select('id', { count: 'exact', head: true }).eq('read_state', 'unread'),
+      admin.from('webhook_events').select('id', { count: 'exact', head: true }).eq('status', 'failed'),
+      admin.from('parent_reliability_watch').select('id', { count: 'exact', head: true }).eq('status', 'stale'),
     ])
 
     activeCentreCount = centres.count ?? 0
@@ -84,6 +93,10 @@ export default async function AdminDashboardPage() {
     totalAdmins = admins.count ?? 0
     totalParents = parents.count ?? 0
     totalStaff = staff.count ?? 0
+    openSupportTickets = supportTickets.count ?? 0
+    unreadOwnerNotifications = ownerNotifs.count ?? 0
+    webhookFailures = webhookRows.count ?? 0
+    staleParents = parentRelRows.count ?? 0
 
     const regionRows = centresProv.data ?? []
     const provinceCounts = regionRows.reduce<Record<string, number>>((acc, row) => {
@@ -120,6 +133,57 @@ export default async function AdminDashboardPage() {
           <AdminStatCard label="Platform MRR" value={mrrFormatted} icon={<TrendingUp className="w-4 h-4" />} trend="up" change={`${revenueGrowth.toFixed(1)}% projection`} />
           <AdminStatCard label="Active Operatives" value={(totalAdmins + totalParents).toLocaleString()} icon={<Users className="w-4 h-4" />} />
           <AdminStatCard label="Pending Apps" value={pendingApplicationCount.toLocaleString()} icon={<Activity className="w-4 h-4" />} trend="neutral" change="Live queue" />
+        </div>
+
+        <div className="admin-card p-6 border-t-2 border-t-admin-warning">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-admin-warning">Action now</p>
+              <p className="text-xs text-admin-text-muted mt-1">No guessing. These are the live queues that need founder/operator attention.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: 'Support queue',
+                value: openSupportTickets,
+                href: '/admin/support',
+                hint: 'Open and waiting support tickets',
+                icon: LifeBuoy,
+              },
+              {
+                label: 'Parent reliability stale',
+                value: staleParents,
+                href: '/admin/parent-reliability',
+                hint: 'Parent flows needing intervention',
+                icon: AlertTriangle,
+              },
+              {
+                label: 'Unread owner notifications',
+                value: unreadOwnerNotifications,
+                href: '/admin/tenants',
+                hint: 'Owner updates not yet reviewed',
+                icon: BellDot,
+              },
+              {
+                label: 'Webhook failures',
+                value: webhookFailures,
+                href: '/admin/webhook-failures',
+                hint: 'Events needing replay or triage',
+                icon: Activity,
+              },
+            ].map((item) => (
+              <Link key={item.label} href={item.href} className="rounded-2xl border border-admin-border bg-admin-bg p-4 hover:border-admin-accent/60 transition-colors">
+                <div className="flex items-center justify-between gap-3">
+                  <item.icon className="w-4 h-4 text-admin-accent" />
+                  <ArrowRight className="w-4 h-4 text-admin-text-muted" />
+                </div>
+                <p className="mt-3 text-2xl font-black text-admin-text">{item.value}</p>
+                <p className="mt-1 text-xs font-bold text-admin-text">{item.label}</p>
+                <p className="mt-1 text-[11px] text-admin-text-muted">{item.hint}</p>
+              </Link>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
