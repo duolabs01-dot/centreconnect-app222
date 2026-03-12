@@ -453,6 +453,12 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
       return
     }
 
+    const maxUploadMb = 18
+    if (bulkFile.size > maxUploadMb * 1024 * 1024) {
+      toast.error(`Image is too large (${Math.round(bulkFile.size / (1024 * 1024))}MB). Please use an image under ${maxUploadMb}MB.`)
+      return
+    }
+
     startBulkExtractTransition(async () => {
       try {
         const formData = new FormData()
@@ -471,7 +477,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
         setBulkSummary(result.summary ?? '')
         toast.success(result.message)
       } catch {
-        toast.error('We could not read this photo right now. Try CSV import or a clearer image.')
+        toast.error('Upload failed before extraction. Try a smaller image, then CSV import if urgent.')
       }
     })
   }
