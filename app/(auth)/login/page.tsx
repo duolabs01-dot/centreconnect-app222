@@ -23,8 +23,8 @@ import { buildAuthCallbackRedirect } from '@/lib/auth/onboarding-links'
 import { triggerConfetti } from '@/lib/ui/confetti'
 
 const fieldClassName =
-  'h-12 rounded-xl border-[#D9D8CF] bg-[#FFFCF8] text-[15px] shadow-none placeholder:text-slate-400 focus-visible:border-[#0D9488] focus-visible:ring-[#0D9488]/20'
-const labelClassName = 'text-sm font-medium text-[#33423E]'
+  'h-12 rounded-xl border-border bg-background text-[15px] shadow-none placeholder:text-slate-400 focus-visible:border-primary focus-visible:ring-primary/20'
+const labelClassName = 'text-sm font-medium text-foreground'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -177,9 +177,9 @@ export default function LoginPage() {
       title="Welcome back"
       description="Sign in to see saved creches, applications, and your child details in one place."
       headerNote={
-        <div className="rounded-2xl border border-[#E6DDD2] bg-[#FFFCF8] px-4 py-3 text-sm leading-6 text-[#5F6D69]">
+        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
           No account is needed to browse. Create one only when you want to apply or save progress.
-          <Link href="/directory" className="ml-1 font-semibold text-[#0D9488] hover:underline">
+          <Link href="/directory" className="ml-1 font-semibold text-primary hover:underline">
             Browse the directory first
           </Link>
           .
@@ -206,14 +206,14 @@ export default function LoginPage() {
       ]}
       supportFootnote={
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0D9488]">New here?</p>
-          <p className="text-sm leading-6 text-[#5F6D69]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">New here?</p>
+          <p className="text-sm leading-6 text-muted-foreground">
             Create a parent account when you want to save your family details and apply faster.
           </p>
           <Button
             variant="outline"
             asChild
-            className="h-11 rounded-xl border-[#DED2C5] bg-white text-[#22312E] hover:bg-[#F8F3EC]"
+            className="h-11 rounded-xl border-border bg-white text-foreground hover:bg-muted"
           >
             <Link href={registerHref()}>Create a parent account</Link>
           </Button>
@@ -294,7 +294,7 @@ export default function LoginPage() {
                 <Label htmlFor="password" className={labelClassName}>
                   Password
                 </Label>
-                <Link href="/forgot-password" className="text-sm font-medium text-[#0D9488] hover:underline">
+                <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -332,7 +332,7 @@ export default function LoginPage() {
 
           <div className="relative my-6 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E8DDD0]" />
+              <div className="w-full border-t border-border" />
             </div>
             <span className="relative bg-white px-3 text-xs font-medium text-slate-500">or continue with</span>
           </div>
@@ -340,7 +340,7 @@ export default function LoginPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full rounded-xl border-[#DED2C5] bg-white text-[#22312E] hover:bg-[#F8F3EC]"
+            className="h-12 w-full rounded-xl border-border bg-white text-foreground hover:bg-muted"
             onClick={() => void handleGoogleSignIn()}
             disabled={loading}
             loading={googleLoading}
@@ -369,9 +369,9 @@ export default function LoginPage() {
         </div>
       }
       footer={
-        <p className="text-sm text-[#5F6D69]">
+        <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href={registerHref()} className="font-semibold text-[#0D9488] hover:underline">
+          <Link href={registerHref()} className="font-semibold text-primary hover:underline">
             Create your account
           </Link>
         </p>
@@ -379,3 +379,4 @@ export default function LoginPage() {
     />
   )
 }
+

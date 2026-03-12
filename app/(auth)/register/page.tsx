@@ -15,8 +15,8 @@ import { buildAuthCallbackRedirect } from '@/lib/auth/onboarding-links'
 
 const TERMS_VERSION = '2026-02-19'
 const fieldClassName =
-  'h-12 rounded-xl border-[#D9D8CF] bg-[#FFFCF8] text-[15px] shadow-none placeholder:text-slate-400 focus-visible:border-[#0D9488] focus-visible:ring-[#0D9488]/20'
-const labelClassName = 'text-sm font-medium text-[#33423E]'
+  'h-12 rounded-xl border-border bg-background text-[15px] shadow-none placeholder:text-slate-400 focus-visible:border-primary focus-visible:ring-primary/20'
+const labelClassName = 'text-sm font-medium text-foreground'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -160,7 +160,7 @@ export default function RegisterPage() {
       title="Create your family account"
       description="Save your details once so you can apply to trusted creches faster when you are ready."
       headerNote={
-        <div className="rounded-2xl border border-[#E6DDD2] bg-[#FFFCF8] px-4 py-3 text-sm leading-6 text-[#5F6D69]">
+        <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
           Browse first if you prefer. Create an account only when you want to save child details, documents, or an application.
         </div>
       }
@@ -185,8 +185,8 @@ export default function RegisterPage() {
       ]}
       supportFootnote={
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0D9488]">What happens next</p>
-          <ol className="space-y-2 text-sm leading-6 text-[#5F6D69]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">What happens next</p>
+          <ol className="space-y-2 text-sm leading-6 text-muted-foreground">
             <li>1. Create your account.</li>
             <li>2. Confirm your email.</li>
             <li>3. Sign in and finish any details you need before you apply.</li>
@@ -308,18 +308,18 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#E6DDD2] bg-[#FFFCF8] px-4 py-4">
+            <div className="rounded-2xl border border-border bg-background px-4 py-4">
               <label htmlFor="acceptTerms" className="flex items-start gap-3">
                 <input
                   id="acceptTerms"
                   type="checkbox"
                   checked={acceptedTerms}
                   onChange={(event) => setAcceptedTerms(event.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-[#0D9488] focus:ring-[#0D9488]"
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-primary focus:ring-[#0D9488]"
                 />
-                <span className="text-sm leading-6 text-[#5F6D69]">
+                <span className="text-sm leading-6 text-muted-foreground">
                   I agree to the{' '}
-                  <Link href="/terms" target="_blank" className="font-semibold text-[#0D9488] underline underline-offset-2">
+                  <Link href="/terms" target="_blank" className="font-semibold text-primary underline underline-offset-2">
                     Terms of Use
                   </Link>
                   .
@@ -340,7 +340,7 @@ export default function RegisterPage() {
 
           <div className="relative my-6 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E8DDD0]" />
+              <div className="w-full border-t border-border" />
             </div>
             <span className="relative bg-white px-3 text-xs font-medium text-slate-500">or continue with</span>
           </div>
@@ -348,7 +348,7 @@ export default function RegisterPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-12 w-full rounded-xl border-[#DED2C5] bg-white text-[#22312E] hover:bg-[#F8F3EC]"
+            className="h-12 w-full rounded-xl border-border bg-white text-foreground hover:bg-muted"
             onClick={() => void handleGoogleSignUp()}
             disabled={loading || !acceptedTerms}
             loading={googleLoading}
@@ -377,9 +377,9 @@ export default function RegisterPage() {
         </div>
       }
       footer={
-        <p className="text-sm text-[#5F6D69]">
+        <p className="text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link href={loginHref()} className="font-semibold text-[#0D9488] hover:underline">
+          <Link href={loginHref()} className="font-semibold text-primary hover:underline">
             Sign in
           </Link>
         </p>
@@ -387,3 +387,4 @@ export default function RegisterPage() {
     />
   )
 }
+
