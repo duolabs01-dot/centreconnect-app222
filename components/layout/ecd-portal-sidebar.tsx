@@ -9,12 +9,14 @@ import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { MobileNavMenu } from './mobile-nav-menu'
-import { Sparkles } from 'lucide-react'
+import { Lock, Sparkles } from 'lucide-react'
+import { getInternalTierLabel, toInternalTier, type InternalTier } from '@/lib/billing/plans'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
   roleLabel?: string
   userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
+  subscriptionTier?: string | null
   attentionBadges?: Partial<Record<string, number>>
 }
 
@@ -29,8 +31,8 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
 // === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
   daily_ops: 'Daily Ops',
-  admin: 'Admin',
-  grow: 'Grow',
+  admin: 'People & Records',
+  grow: 'Admissions & Growth',
   settings: 'Settings',
 }
 
@@ -59,6 +61,7 @@ export function EcdPortalSidebar({
   userEmail,
   roleLabel = 'ECD Portal',
   userRole = null,
+  subscriptionTier = null,
   attentionBadges = {},
 }: EcdPortalSidebarProps) {
   const pathname = usePathname()
@@ -97,7 +100,11 @@ export function EcdPortalSidebar({
     }
   }, [pathname])
 
-  const visibleNav = useMemo(
+  const tier = toInternalTier(subscriptionTier, 'basic')
+  const tierLabel = getInternalTierLabel(tier)
+  const tierRank: Record<InternalTier, number> = { basic: 1, standard: 2, premium: 3 }
+
+  const roleEligibleNav = useMemo(
     () =>
       ECD_DASHBOARD_NAV.filter((item) => {
         if (userRole === 'ecd_admin') return true
@@ -105,6 +112,14 @@ export function EcdPortalSidebar({
         return !item.adminOnly
       }),
     [userRole]
+  )
+
+  const lockedByTier = roleEligibleNav.filter(
+    (item) => item.minTier && tierRank[tier] < tierRank[item.minTier]
+  )
+
+  const visibleNav = roleEligibleNav.filter(
+    (item) => !item.minTier || tierRank[tier] >= tierRank[item.minTier]
   )
 
   const settingsItem = visibleNav.find((item) => item.group === 'settings' || item.href === '/ecd/profile') ?? null
@@ -226,6 +241,9 @@ export function EcdPortalSidebar({
           <div className="mt-3 inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
           </div>
+          <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
+            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Plan: {tierLabel}</p>
+          </div>
         </div>
         <nav className="mt-2 space-y-2" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
@@ -258,6 +276,29 @@ export function EcdPortalSidebar({
                 {GROUP_LABELS.settings}
               </p>
               {renderNavItem(settingsItem)}
+            </Fragment>
+          ) : null}
+
+          {lockedByTier.length > 0 ? (
+            <Fragment>
+              <div className="my-4 px-4">
+                <div className="h-px w-full bg-border" />
+              </div>
+              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
+                Upgrade to unlock
+              </p>
+              {lockedByTier.map((item) => (
+                <div key={item.href} className="group relative flex items-center gap-3 rounded-3xl border border-border bg-slate-50 px-4 py-3 opacity-85">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+                    <item.icon className="h-4 w-4 shrink-0" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold tracking-tight text-slate-700">{item.label}</p>
+                    <p className="text-[10px] font-semibold text-slate-500">Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'}</p>
+                  </div>
+                  <Lock className="h-4 w-4 text-slate-500" />
+                </div>
+              ))}
             </Fragment>
           ) : null}
         </nav>

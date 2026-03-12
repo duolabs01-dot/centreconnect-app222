@@ -14,6 +14,7 @@ import {
   LineChart,
   type LucideIcon,
 } from 'lucide-react'
+import type { InternalTier } from '@/lib/billing/plans'
 
 export type EcdNavItem = {
   href: string
@@ -23,6 +24,7 @@ export type EcdNavItem = {
   comingSoon?: boolean
   adminOnly?: boolean
   supervisorAllowed?: boolean
+  minTier?: InternalTier
 }
 
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
@@ -33,19 +35,17 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/daily-reports', label: 'Daily Reports', icon: Zap, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/calendar', label: 'Calendar', icon: CalendarDays, group: 'daily_ops', supervisorAllowed: true },
 
-  // ADMIN
+  // PEOPLE & RECORDS
   { href: '/ecd/children', label: 'Children', icon: Users, group: 'admin', supervisorAllowed: true },
   { href: '/ecd/billing', label: 'Billing & Payments', icon: CreditCard, group: 'admin', adminOnly: true },
-  { href: '/ecd/financials', label: 'Financials', icon: LineChart, group: 'admin', adminOnly: true },
-  { href: '/ecd/compliance', label: 'Compliance', icon: FileText, group: 'admin', adminOnly: true },
-  { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'admin', supervisorAllowed: true },
-  { href: '/ecd/dsd-export', label: 'DSD Export', icon: FileText, group: 'admin', adminOnly: true },
+  { href: '/ecd/financials', label: 'Financials', icon: LineChart, group: 'admin', adminOnly: true, minTier: 'standard' },
+  { href: '/ecd/compliance', label: 'Compliance', icon: FileText, group: 'admin', adminOnly: true, minTier: 'standard' },
+  { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'admin', supervisorAllowed: true, minTier: 'standard' },
 
-  // GROW
-  { href: '/ecd/website', label: 'Website Builder', icon: Globe, group: 'grow', adminOnly: true },
+  // ADMISSIONS & GROWTH
   { href: '/ecd/applications', label: 'Admissions', icon: ClipboardList, group: 'grow', supervisorAllowed: true },
   { href: '/ecd/communications', label: 'Parent Comms', icon: MessagesSquare, group: 'grow', supervisorAllowed: true },
-  { href: '/ecd/whatsapp-alerts', label: 'WhatsApp Alerts', icon: Zap, group: 'grow', adminOnly: true },
+  { href: '/ecd/website', label: 'Website Builder', icon: Globe, group: 'grow', adminOnly: true, minTier: 'standard' },
 
   // SETTINGS
   { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'settings' },

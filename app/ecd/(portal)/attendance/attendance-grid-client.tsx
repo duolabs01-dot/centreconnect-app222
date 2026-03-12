@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -239,6 +240,27 @@ export function AttendanceGridClient({
             <Printer className="h-4 w-4" />
             Export for DSD
           </Button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 no-print">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Reliable fallback</p>
+            <h2 className="mt-1 text-sm font-bold text-slate-900">This attendance register is the dependable manual path</h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+              If a paper register photo is blurry, messy, or misses names, keep working here. You can also switch to
+              the import tools for one clear photo or a typed CSV, then come back here to confirm the result.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-white font-black text-slate-700">
+              <Link href="/ecd/children/new#bulk-existing-children">Bulk add children</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-white font-black text-slate-700">
+              <Link href="/ecd/attendance">Use manual attendance</Link>
+            </Button>
+          </div>
         </div>
       </div>
 

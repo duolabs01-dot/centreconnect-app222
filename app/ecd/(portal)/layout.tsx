@@ -73,6 +73,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     unreadEcdNotificationsCount,
     pendingTransportCount,
     complianceOutstandingCount,
+    subscriptionTier,
   ] = await Promise.all([
     admin
       .from('applications')
@@ -111,6 +112,12 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       .eq('ecd_id', ecdId)
       .in('status', ['missing', 'expired'])
       .then(({ count, error }) => (error ? 0 : count ?? 0)),
+    admin
+      .from('subscriptions')
+      .select('tier')
+      .eq('ecd_id', ecdId)
+      .maybeSingle()
+      .then(({ data }) => data?.tier ?? null),
   ])
 
   const attentionBadges: Partial<Record<string, number>> = {
@@ -128,6 +135,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         userEmail={user.email ?? null}
         roleLabel={roleLabel}
         userRole={role}
+        subscriptionTier={subscriptionTier}
         attentionBadges={attentionBadges}
       />
       <main
