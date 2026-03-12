@@ -54,7 +54,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   website: 'Website',
   'whatsapp-alerts': 'WhatsApp Alerts',
   'parent-invoicing': 'Parent Invoicing',
-  'ai-upload': 'AI Upload',
+  'ai-upload': 'Attendance Import',
   'for-centres': 'For Centres',
   legal: 'Legal',
   privacy: 'Privacy',

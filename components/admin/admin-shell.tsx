@@ -37,7 +37,7 @@ export function AdminShell({ children, className }: AdminShellProps) {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 {showBreadcrumbs ? (
                   <AppBreadcrumbs
-                    rootHref="/admin/dashboard"
+                    rootHref="/admin/hq"
                     rootLabel="Admin"
                     tone="dark"
                     className={getBreadcrumbClassName('admin')}

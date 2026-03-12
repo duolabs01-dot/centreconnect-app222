@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
-import { Sparkles, Upload, CheckCircle2 } from 'lucide-react'
+import Link from 'next/link'
+import { Sparkles, CheckCircle2, FileWarning, ClipboardCheck } from 'lucide-react'
+import {
+  ATTENDANCE_IMPORT_GUIDANCE,
+  ATTENDANCE_IMPORT_LIMITATIONS,
+  ATTENDANCE_IMPORT_METHODS,
+} from '@/lib/attendance/imports'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { RegisterImportClient } from './register-import-client'
 
 export const metadata: Metadata = {
-  title: 'AI Register Import - CentreConnect',
-  description: 'Digitize paper attendance registers with AI extraction and quick attendance import.',
+  title: 'Attendance Import - CentreConnect',
+  description: 'Backfill attendance carefully with photo review, CSV import, and a clear manual fallback.',
 }
 
 type RegisterImportRow = {
@@ -82,47 +88,105 @@ export default async function AiUploadPage() {
           <div>
             <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">
               <Sparkles className="h-3 w-3" />
-              Pilot Digitization
+              Beta Attendance Import
             </p>
-            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">AI Register Import</h1>
+            <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Attendance Import</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              Move old paper attendance registers into CentreConnect quickly. Upload photos, review AI suggestions,
-              then import into attendance.
+              Backfill old attendance carefully. Use one clear page photo at a time for paper registers, or upload a
+              CSV when the names are already typed. If anything looks wrong, finish the day in the attendance register
+              instead.
             </p>
           </div>
-          <div className="rounded-2xl border border-teal-100 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700">
-            Works with AI extraction
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            Review every suggestion before saving
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 1</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">Upload register photos</p>
-            <p className="mt-1 text-xs text-slate-600">Capture from phone or scan from paper books.</p>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[1.3fr_0.9fr]">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 1</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">Choose photo or CSV</p>
+              <p className="mt-1 text-xs text-slate-600">Use one clear page photo, or one CSV file with typed attendance rows.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 2</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">Preview and review</p>
+              <p className="mt-1 text-xs text-slate-600">Check spelling, dates, statuses, and child links before saving.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+              <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 3</p>
+              <p className="mt-1 text-sm font-semibold text-slate-800">Recover cleanly</p>
+              <p className="mt-1 text-xs text-slate-600">If AI fails, switch to CSV or mark it manually in the register view.</p>
+            </div>
           </div>
+
           <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 2</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">Review extracted names</p>
-            <p className="mt-1 text-xs text-slate-600">Map each result to an existing child or create draft.</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Step 3</p>
-            <p className="mt-1 text-sm font-semibold text-slate-800">Import attendance</p>
-            <p className="mt-1 text-xs text-slate-600">One-click save to attendance history.</p>
+            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Manual fallback</p>
+            <p className="mt-1 text-sm font-semibold text-slate-800">Keep the real work moving</p>
+            <p className="mt-1 text-xs text-slate-600">
+              Mama Bajabulile should never get stuck because a photo is messy. CSV and the attendance register are the
+              reliable backup paths.
+            </p>
+            <Link
+              href="/ecd/attendance"
+              className="mt-3 inline-flex h-10 items-center rounded-3xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+            >
+              Open attendance register
+            </Link>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
-            <Upload className="h-3 w-3 text-teal-600" /> Photo upload
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
-            <Sparkles className="h-3 w-3 text-teal-600" /> AI extraction
-          </span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5">
-            <CheckCircle2 className="h-3 w-3 text-teal-600" /> Attendance import
-          </span>
+        <div className="mt-5 grid gap-3 lg:grid-cols-[1.1fr_1fr]">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-slate-500">
+              <ClipboardCheck className="h-4 w-4 text-teal-600" />
+              Best Results
+            </div>
+            <ul className="mt-3 space-y-2 text-sm text-slate-700">
+              {ATTENDANCE_IMPORT_GUIDANCE.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-amber-800">
+              <FileWarning className="h-4 w-4" />
+              Not Supported Yet
+            </div>
+            <ul className="mt-3 space-y-2 text-sm text-amber-900">
+              {ATTENDANCE_IMPORT_LIMITATIONS.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-600" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {ATTENDANCE_IMPORT_METHODS.map((method) => (
+            <div key={method.id} className="rounded-2xl border border-slate-200 bg-white px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-bold text-slate-900">{method.label}</p>
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                    method.availability === 'beta'
+                      ? 'bg-teal-50 text-teal-700'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {method.availability}
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-600">{method.description}</p>
+            </div>
+          ))}
         </div>
       </header>
 

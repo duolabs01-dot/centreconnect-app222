@@ -246,7 +246,7 @@ export default async function CentrePosterPage({
               </div>
 
               <div className="max-w-2xl space-y-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-teal-100">Street-facing poster</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-teal-100">Print-ready gate poster</p>
                 <h2 className="text-4xl font-black leading-tight tracking-tight print:text-[34px]">
                   Scan to learn more about {centreName}.
                 </h2>
@@ -263,8 +263,8 @@ export default async function CentrePosterPage({
                     alt={`Large QR code for ${centreName}`}
                     width={640}
                     height={640}
-                    className="mx-auto h-[74vw] w-[74vw] max-h-[640px] max-w-[640px] print:h-[560px] print:w-[560px]"
-                    sizes="(max-width: 768px) 74vw, 640px"
+                    className="mx-auto h-[70vw] w-[70vw] max-h-[640px] max-w-[640px] print:h-[560px] print:w-[560px]"
+                    sizes="(max-width: 768px) 70vw, 640px"
                     unoptimized
                   />
                 </div>

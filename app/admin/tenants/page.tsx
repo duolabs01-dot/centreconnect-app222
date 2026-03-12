@@ -5,7 +5,7 @@ import { AdminTenantsOnboarding } from '@/components/admin/admin-tenants-onboard
 import {
   AdminTenantInviteTracking,
   type AdminTenantInviteLog,
-  } from '@/components/admin/admin-tenant-invite-tracking'
+} from '@/components/admin/admin-tenant-invite-tracking'
 import { AdminTenantsTable, type AdminTenantTableRow } from '@/components/admin/admin-tenants-table'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -61,6 +61,123 @@ function extractAgeFee(ageGroupPricing: any, key: string) {
   const cents = Number(bucket.monthly_fee_cents ?? bucket.monthlyFeeCents ?? 0)
   if (!Number.isFinite(cents) || cents <= 0) return ''
   return String(Math.round(cents / 100))
+}
+
+type PilotPriorityAction = {
+  centreId: string
+  centreName: string
+  status: AdminTenantTableRow['status']
+  isPilotCentre: boolean
+  actionLabel: string
+  detail: string
+  href: string
+  hrefLabel: string
+  tone: 'rose' | 'amber' | 'cyan' | 'emerald'
+  truthNote: string
+}
+
+function pilotToneClass(tone: PilotPriorityAction['tone']) {
+  if (tone === 'rose') return 'border-rose-500/30 bg-rose-950/30'
+  if (tone === 'amber') return 'border-amber-500/30 bg-amber-950/20'
+  if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-950/20'
+  return 'border-cyan-500/30 bg-cyan-950/20'
+}
+
+function pilotToneBadgeClass(tone: PilotPriorityAction['tone']) {
+  if (tone === 'rose') return 'border-rose-500/30 bg-rose-500/10 text-rose-200'
+  if (tone === 'amber') return 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+  if (tone === 'emerald') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200'
+  return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-200'
+}
+
+function buildPilotPriorityAction(
+  tenant: AdminTenantTableRow,
+  latestOwnerInvite: AdminTenantInviteLog | null
+): PilotPriorityAction {
+  const isPilotCentre = /bajabulile|sakhisizwe/i.test(tenant.name)
+  const latestInviteState = latestOwnerInvite?.status?.toUpperCase() ?? 'NO OWNER INVITE YET'
+
+  if (latestOwnerInvite?.status === 'failed') {
+    return {
+      centreId: tenant.id,
+      centreName: tenant.name,
+      status: tenant.status,
+      isPilotCentre,
+      actionLabel: 'Repair the owner invite before the next onboarding call',
+      detail: 'The latest owner invite failed. Fix delivery first so the centre is not asked to repeat a broken step.',
+      href: `/admin/tenants/${tenant.id}#invite`,
+      hrefLabel: 'Fix invite',
+      tone: 'rose',
+      truthNote: `Truth source: latest owner invite is ${latestInviteState}.`,
+    }
+  }
+
+  if (tenant.status === 'Unclaimed') {
+    const detail =
+      tenant.ownerEmail === '-'
+        ? 'Owner contact details still look incomplete. Clean those up before you resend access.'
+        : latestOwnerInvite?.status === 'opened'
+        ? 'The owner invite was opened but there is no claim yet. Follow up while they are on the same phone so the setup finishes.'
+        : latestOwnerInvite?.status === 'sent'
+        ? 'The owner invite went out but has not been claimed yet. Follow up before you send another message.'
+        : 'No owner claim is recorded yet. Send or resend the owner path before the onboarding session starts.'
+
+    return {
+      centreId: tenant.id,
+      centreName: tenant.name,
+      status: tenant.status,
+      isPilotCentre,
+      actionLabel: 'Get the owner access path completed',
+      detail,
+      href: latestOwnerInvite ? '/admin/invites' : `/admin/tenants/${tenant.id}`,
+      hrefLabel: latestOwnerInvite ? 'Open invite log' : 'Open centre',
+      tone: 'amber',
+      truthNote: `Truth source: latest owner invite is ${latestInviteState}.`,
+    }
+  }
+
+  if (!tenant.logoUrl || !tenant.coverImageUrl) {
+    return {
+      centreId: tenant.id,
+      centreName: tenant.name,
+      status: tenant.status,
+      isPilotCentre,
+      actionLabel: 'Finish the basic centre profile',
+      detail: 'Logo or cover image is still missing, so the profile and welcome materials still look unfinished.',
+      href: `/admin/tenants/${tenant.id}`,
+      hrefLabel: 'Finish profile',
+      tone: 'cyan',
+      truthNote: 'Truth source: centre branding fields are still incomplete.',
+    }
+  }
+
+  if (!tenant.isActive) {
+    return {
+      centreId: tenant.id,
+      centreName: tenant.name,
+      status: tenant.status,
+      isPilotCentre,
+      actionLabel: 'Review go-live readiness with the centre',
+      detail: 'The centre has owner access, but the workspace is still inactive. Confirm setup basics before you tell them they are live.',
+      href: `/admin/tenants/${tenant.id}`,
+      hrefLabel: 'Review readiness',
+      tone: 'cyan',
+      truthNote: 'Truth source: the centre record is still inactive.',
+    }
+  }
+
+  return {
+    centreId: tenant.id,
+    centreName: tenant.name,
+    status: tenant.status,
+    isPilotCentre,
+    actionLabel: 'Support first-week usage, not more setup',
+    detail: 'The centre is live. If register photos fail, use the new attendance CSV/manual fallback instead of blocking the day.',
+    href: `/admin/tenants/${tenant.id}`,
+    hrefLabel: 'Open centre',
+    tone: 'emerald',
+    truthNote: 'Truth source: the centre is live and the attendance fallback is already shipped in the ECD flow.',
+  }
 }
 
 export default async function AdminTenantsPage() {
@@ -278,6 +395,11 @@ export default async function AdminTenantsPage() {
     createdAt: log.created_at,
     eventKey: log.event_key ?? null,
   })) as AdminTenantInviteLog[]
+  const latestOwnerInviteByCentre = new Map<string, AdminTenantInviteLog>()
+  inviteLogs.forEach((log) => {
+    if (!log.centreId || log.eventType !== 'owner_invite' || latestOwnerInviteByCentre.has(log.centreId)) return
+    latestOwnerInviteByCentre.set(log.centreId, log)
+  })
   const inviteDomainHealth = assertInviteDomainHealth()
   const latestOwnerEmailInvite = inviteLogs.find((log) => log.eventType === 'owner_invite' && log.channel === 'email')
   const latestFailedOwnerInvite = inviteLogs.find(
@@ -295,7 +417,28 @@ export default async function AdminTenantsPage() {
   const missingBrandingCount = tenants.filter((tenant) => !tenant.logoUrl || !tenant.coverImageUrl).length
   const failedInviteCount = inviteLogs.filter((log) => log.status === 'failed').length
   const pilotPriorityCentres = tenants
-    .filter((tenant) => /bajabulile|sakhisizwe/i.test(tenant.name) || tenant.status !== 'Claimed')
+    .filter(
+      (tenant) =>
+        /bajabulile|sakhisizwe/i.test(tenant.name) ||
+        tenant.status !== 'Claimed' ||
+        !tenant.logoUrl ||
+        !tenant.coverImageUrl ||
+        !tenant.isActive
+    )
+    .map((tenant) => buildPilotPriorityAction(tenant, latestOwnerInviteByCentre.get(tenant.id) ?? null))
+    .sort((left, right) => {
+      if (left.isPilotCentre !== right.isPilotCentre) return left.isPilotCentre ? -1 : 1
+      const toneRank: Record<PilotPriorityAction['tone'], number> = {
+        rose: 0,
+        amber: 1,
+        cyan: 2,
+        emerald: 3,
+      }
+      if (toneRank[left.tone] !== toneRank[right.tone]) {
+        return toneRank[left.tone] - toneRank[right.tone]
+      }
+      return left.centreName.localeCompare(right.centreName)
+    })
     .slice(0, 5)
 
   return (
@@ -303,10 +446,10 @@ export default async function AdminTenantsPage() {
       <section className="rounded-3xl border border-cyan-500/30 bg-cyan-950/20 p-5 shadow-[0_20px_60px_rgba(6,182,212,0.18)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Today&apos;s Action Queue</p>
-            <h2 className="mt-1 text-2xl font-black text-white">Today&apos;s centre actions</h2>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-200">Pilot readiness</p>
+            <h2 className="mt-1 text-2xl font-black text-white">Pilot centre next actions</h2>
             <p className="mt-1 max-w-3xl text-sm text-cyan-50/90">
-              The centres that need attention first so you can unblock onboarding quickly.
+              The founder actions most likely to unblock real onboarding today. This section stays grounded in live invite and profile truth, not payment guesses.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -338,15 +481,46 @@ export default async function AdminTenantsPage() {
           </div>
         </div>
         <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/60 p-4">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-300">Priority centres</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-300">Priority centres</p>
+              <p className="mt-1 text-sm text-slate-400">
+                Attendance CSV/manual fallback is already live for first-week support if photo register import fails.
+              </p>
+            </div>
+          </div>
           {pilotPriorityCentres.length === 0 ? (
             <p className="mt-2 text-sm text-slate-300">No priority centres pending right now.</p>
           ) : (
-            <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+            <ul className="mt-4 grid gap-3 xl:grid-cols-2">
               {pilotPriorityCentres.map((centre) => (
-                <li key={centre.id} className="rounded-xl border border-slate-700 bg-slate-900/70 px-3 py-2 text-sm text-white">
-                  <span className="font-semibold">{centre.name}</span>
-                  <span className="ml-2 text-xs uppercase tracking-[0.08em] text-cyan-300">{centre.status}</span>
+                <li key={centre.centreId} className={`rounded-2xl border p-4 ${pilotToneClass(centre.tone)}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="max-w-xl">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-semibold text-white">{centre.centreName}</span>
+                        {centre.isPilotCentre ? (
+                          <span className="inline-flex items-center rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200">
+                            Pilot centre
+                          </span>
+                        ) : null}
+                        <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] ${pilotToneBadgeClass(centre.tone)}`}>
+                          {centre.status}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm font-semibold text-white">{centre.actionLabel}</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-300">{centre.detail}</p>
+                    </div>
+                    <Link href={centre.href}>
+                      <Button
+                        variant="outline"
+                        className="border-white/10 bg-black/20 text-slate-100 hover:bg-white/10 hover:text-white"
+                      >
+                        {centre.hrefLabel}
+                      </Button>
+                    </Link>
+                  </div>
+                  <p className="mt-3 text-[11px] text-slate-400">{centre.truthNote}</p>
                 </li>
               ))}
             </ul>
@@ -366,15 +540,15 @@ export default async function AdminTenantsPage() {
           <AdminTenantsOnboarding existingCentres={existingCentres} />
         </div>
         <div className="flex justify-end">
-        <Link href="/admin/tenants/bin">
-          <Button
-            className="inline-flex items-center justify-center rounded-full border border-slate-800 bg-slate-950 px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(2,6,23,0.6)] transition hover:border-slate-300 hover:bg-slate-900/80 hover:shadow-[0_20px_60px_rgba(15,118,110,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-            variant="outline"
-          >
-            View deleted centres
-          </Button>
-        </Link>
-      </div>
+          <Link href="/admin/tenants/bin">
+            <Button
+              className="inline-flex items-center justify-center rounded-full border border-slate-800 bg-slate-950 px-5 py-2 text-sm font-semibold text-white shadow-[0_18px_45px_rgba(2,6,23,0.6)] transition hover:border-slate-300 hover:bg-slate-900/80 hover:shadow-[0_20px_60px_rgba(15,118,110,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              variant="outline"
+            >
+              View deleted centres
+            </Button>
+          </Link>
+        </div>
       </section>
 
       <section className="space-y-4">

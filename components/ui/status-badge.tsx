@@ -1,27 +1,37 @@
+import { Badge } from '@/components/ui/badge'
 import { formatStatusBadgeLabel, toStatusBadgeStatus, type StatusBadgeStatus } from '@/lib/status-badge'
+import { cn } from '@/lib/utils'
 
 interface StatusBadgeProps {
-  status: string | null | undefined;
+  status: string | null | undefined
+  label?: string
+  className?: string
 }
 
 const STATUS_STYLES: Record<StatusBadgeStatus, string> = {
-  paid: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  pending: 'bg-amber-100 text-amber-700 border-amber-200',
-  overdue: 'bg-rose-100 text-rose-700 border-rose-200',
-  draft: 'bg-slate-100 text-slate-700 border-slate-200',
-};
+  active: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+  complete: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+  draft: 'border-slate-200 bg-slate-100 text-slate-700',
+  issue: 'border-rose-200 bg-rose-50 text-rose-700',
+  waiting: 'border-amber-200 bg-amber-50 text-amber-800',
+}
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const tone = toStatusBadgeStatus(status)
-  const label = formatStatusBadgeLabel(status)
+  const resolvedLabel = label ?? formatStatusBadgeLabel(status)
 
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-3.5 py-1.5 text-xs font-semibold shadow-sm ${STATUS_STYLES[tone]}`}
+    <Badge
+      variant="outline"
+      className={cn(
+        'inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold shadow-none',
+        STATUS_STYLES[tone],
+        className
+      )}
     >
-      {label}
-    </span>
-  );
+      {resolvedLabel}
+    </Badge>
+  )
 }
 
 export type { StatusBadgeStatus }

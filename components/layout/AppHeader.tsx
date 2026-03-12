@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Container } from './container'
-import { BrandMark } from '@/components/cc-admin/BrandMark'
+import { BrandMark } from '@/components/ecd/BrandMark'
 
 type HeaderLink = {
   href: string
