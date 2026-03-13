@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -47,6 +48,39 @@ function isDirectMessage(item: NotificationItem) {
     title.startsWith('message from ') ||
     title.startsWith('direct message')
   )
+}
+
+function getNotificationType(item: NotificationItem): 'action' | 'message' | 'info' {
+  const templateKey = (item.template_key ?? '').trim().toLowerCase()
+  if (
+    templateKey.includes('application') ||
+    templateKey.includes('offer') ||
+    templateKey.includes('pickup') ||
+    templateKey.includes('document')
+  ) {
+    return 'action'
+  }
+
+  if (isDirectMessage(item)) return 'message'
+  return 'info'
+}
+
+function getActionCta(item: NotificationItem): { label: string; href: string } | null {
+  const type = getNotificationType(item)
+  if (type === 'info') return null
+
+  if (type === 'action') {
+    const templateKey = (item.template_key ?? '').trim().toLowerCase()
+    if (templateKey.includes('application')) {
+      return { label: 'Review', href: '/parent/applications' }
+    }
+    return { label: 'Review', href: '/parent/applications' }
+  }
+
+  const centre = normalizeCentre(item.ecd_centres)
+  const whatsappHref = toWhatsappHref(centre.contactWhatsapp ?? centre.contactPhone, item.message)
+  if (!whatsappHref) return null
+  return { label: 'Reply on WhatsApp', href: whatsappHref }
 }
 
 export function NotificationsInbox({
@@ -124,11 +158,7 @@ export function NotificationsInbox({
       const templateKey = (item.template_key ?? '').trim().toLowerCase()
       const title = item.title.trim().toLowerCase()
 
-      const isMessage =
-        templateKey === 'parent_message' ||
-        title.startsWith('message to ') ||
-        title.startsWith('message from ') ||
-        title.startsWith('direct message')
+      const isMessage = getNotificationType(item) === 'message'
       const isAnnouncement =
         templateKey === 'announcement' ||
         templateKey === 'open_day_invite' ||
@@ -228,20 +258,25 @@ export function NotificationsInbox({
           <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-blue-200 bg-blue-50/40'}`}>
             {(() => {
               const centre = normalizeCentre(item.ecd_centres)
-              const whatsappHref = toWhatsappHref(centre.contactWhatsapp ?? centre.contactPhone, item.message)
-              const direct = isDirectMessage(item)
+              const type = getNotificationType(item)
+              const cta = getActionCta(item)
               return (
                 <>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.title}
-                        {direct ? (
-                          <span className="ml-2 inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-700">
-                            Direct
+                      <div className="flex items-center gap-2">
+                        {type === 'action' ? (
+                          <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                            Action needed
                           </span>
                         ) : null}
-                      </p>
+                        {type === 'message' ? (
+                          <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-700">
+                            Message
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm font-semibold text-slate-900">{item.title}</p>
                       <p className="mt-1 text-xs text-slate-600">
                         {centre.name} | {formatDate(item.created_at)}
                       </p>
@@ -253,24 +288,22 @@ export function NotificationsInbox({
                     ) : null}
                   </div>
                   <p className="mt-3 text-sm text-slate-700">{item.message}</p>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {cta ? (
+                    <div className="mt-2">
+                      <a
+                        href={cta.href}
+                        target={cta.href.startsWith('http') ? '_blank' : undefined}
+                        rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:text-teal-800"
+                      >
+                        {cta.label}
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  ) : null}
+                  <div className="mt-3">
                     <Button type="button" size="sm" variant="outline" onClick={() => void copyMessage(item.message)}>
                       Copy message
-                    </Button>
-                    <Button type="button" size="sm" variant="outline" asChild>
-                      <a
-                        href={whatsappHref ?? '#'}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(event) => {
-                          if (!whatsappHref) {
-                            event.preventDefault()
-                            toast('WhatsApp link unavailable')
-                          }
-                        }}
-                      >
-                        {direct ? 'Reply on WhatsApp' : 'Open WhatsApp Link'}
-                      </a>
                     </Button>
                   </div>
                 </>
