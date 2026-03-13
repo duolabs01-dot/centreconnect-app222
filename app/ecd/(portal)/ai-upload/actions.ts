@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
-  extractWithTesseract,
+  extractStructuredDocumentWithGemini,
   uploadPhotoForAiExtraction,
 } from '@/lib/ai/document-extraction-service'
 import {
@@ -856,7 +856,7 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
       }
     }
 
-    const ocrExtraction = await extractWithTesseract({
+    const ocrExtraction = await extractStructuredDocumentWithGemini({
       file,
       documentType: 'register',
     })
