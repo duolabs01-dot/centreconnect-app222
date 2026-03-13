@@ -590,7 +590,6 @@ export async function extractExistingChildrenFromPhotoAction(
     const extractionResult = await extractStructuredDocumentWithGemini({
       file,
       documentType: 'register',
-      disableOcrFallback: true,
     })
 
     const extractionPayload = extractionResult?.success ? extractionResult.extraction : null

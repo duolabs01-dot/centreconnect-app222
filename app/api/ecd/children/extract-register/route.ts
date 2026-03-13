@@ -156,7 +156,6 @@ export async function POST(request: Request) {
       extractStructuredDocumentWithGemini({
         file,
         documentType: 'register',
-        disableOcrFallback: true,
       }),
       rejectAfter(30000, 'Gemini extraction timed out after 30 seconds.'),
     ])

@@ -3,8 +3,6 @@ import fs from 'fs/promises'
 import os from 'os'
 import path from 'path'
 import { z } from 'zod'
-import Tesseract from 'tesseract.js'
-import sharp from 'sharp'
 import { GoogleGenAI, createPartFromUri, createUserContent } from '@google/genai'
 import { ATTENDANCE_IMPORT_MAX_FILE_BYTES, ATTENDANCE_IMPORT_MAX_FILE_MB } from '@/lib/attendance/imports'
 
@@ -230,19 +228,6 @@ function buildPrompt(documentType: AiDocumentType) {
   return basePrompt.join('\n')
 }
 
-function readGeminiText(response: unknown) {
-  const payload = response as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-  }
-
-  return (
-    payload.candidates?.[0]?.content?.parts
-      ?.map((part) => part.text ?? '')
-      .join('\n')
-      .trim() ?? ''
-  )
-}
-
 export function isSupportedAiDocumentType(value: string): value is AiDocumentType {
   return aiDocumentTypeSet.has(value)
 }
@@ -286,267 +271,12 @@ export async function uploadPhotoForAiExtraction(input: {
   }
 }
 
-export async function extractWithTesseract(input: {
-  file: File
-  documentType: AiDocumentType
-}): Promise<AiExtractionResult> {
-  try {
-    const bytes = Buffer.from(await input.file.arrayBuffer())
-    const mimeType = input.file.type || 'image/jpeg'
-
-    const variantBuffers: Array<{ label: string; bytes: Buffer }> = []
-    const includeOriginal = input.documentType !== 'register'
-
-    if (includeOriginal) {
-      variantBuffers.push({ label: 'original', bytes })
-    }
-
-    try {
-      const enhanced = await sharp(bytes)
-        .rotate()
-        .grayscale()
-        .normalize()
-        .modulate({ brightness: 1.12, saturation: 0 })
-        .sharpen()
-        .resize({ width: 2200, withoutEnlargement: false })
-        .jpeg({ quality: 96 })
-        .toBuffer()
-      variantBuffers.push({ label: 'enhanced', bytes: enhanced })
-    } catch {
-      if (!includeOriginal) {
-        variantBuffers.push({ label: 'original', bytes })
-      }
-    }
-
-    if (variantBuffers.length === 0) {
-      variantBuffers.push({ label: 'original', bytes })
-    }
-
-    let best: {
-      label: string
-      text: string
-      fields: Partial<Record<AiFieldKey, AiFieldSuggestion>>
-      score: number
-    } | null = null
-
-    for (const variant of variantBuffers) {
-      const base64 = variant.bytes.toString('base64')
-      const result = await Tesseract.recognize(`data:${mimeType};base64,${base64}`, 'eng', {
-        logger: () => {},
-      })
-
-      const text = result.data.text?.trim() ?? ''
-      if (text.length < 5) continue
-
-      const fields = extractFieldsFromText(text, input.documentType)
-      const textWords = text.split(/\s+/).length
-      const registerNames = Array.isArray(fields.full_name?.value)
-        ? (fields.full_name?.value as string[]).length
-        : typeof fields.full_name?.value === 'string'
-        ? 1
-        : 0
-
-      const score = Object.keys(fields).length * 10 + textWords + registerNames * 25
-
-      if (!best || score > best.score) {
-        best = {
-          label: variant.label,
-          text,
-          fields,
-          score,
-        }
-      }
-    }
-
-    if (!best) {
-      return {
-        success: false,
-        message: 'No text detected in image.',
-      }
-    }
-
-    if (Object.keys(best.fields).length === 0) {
-      return {
-        success: false,
-        message: 'Could not extract structured fields from text.',
-      }
-    }
-
-    return {
-      success: true,
-      message: best.label === 'enhanced' ? 'Text extracted via OCR (enhanced scan).' : 'Text extracted via OCR.',
-      extraction: {
-        documentType: input.documentType,
-        fields: best.fields,
-        summary: `OCR extracted ${best.text.split(/\s+/).length} words from document (${best.label}).`,
-      },
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: `OCR extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    }
-  }
-}
-
-function toTitleCaseName(value: string) {
-  return value
-    .split(' ')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(' ')
-}
-
-function extractRegisterNamesFromText(text: string) {
-  const normalizedLines = text
-    .split('\n')
-    .map((line) => line.replace(/[|•·]/g, ' ').replace(/\s+/g, ' ').trim())
-    .filter(Boolean)
-
-  const ignoredWords = new Set([
-    'present',
-    'absent',
-    'late',
-    'sick',
-    'yes',
-    'no',
-    'register',
-    'attendance',
-    'date',
-    'class',
-    'grade',
-    'time',
-    'signature',
-    'teacher',
-    'guardian',
-    'notes',
-    'total',
-    'male',
-    'female',
-    'boy',
-    'girl',
-  ])
-
-  const candidates: string[] = []
-  for (const line of normalizedLines) {
-    const cleaned = line
-      .replace(/^\d+[.)\-:\s]+/, '')
-      .replace(/^[\W_]+/, '')
-      .replace(/[\W_]+$/, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-
-    if (!cleaned) continue
-    if (cleaned.length < 3 || cleaned.length > 90) continue
-
-    const words = cleaned.split(' ').filter(Boolean)
-    if (words.length < 2 || words.length > 5) continue
-
-    const normalizedWords = words.map((word) => word.replace(/[^A-Za-z'\-]/g, '')).filter(Boolean)
-    if (normalizedWords.length < 2) continue
-
-    const looksLikeName = normalizedWords.every((word) => {
-      const lower = word.toLowerCase()
-      if (ignoredWords.has(lower)) return false
-      return /^[A-Za-z][A-Za-z'\-]{1,}$/.test(word)
-    })
-
-    if (!looksLikeName) continue
-    candidates.push(toTitleCaseName(normalizedWords.join(' ')))
-  }
-
-  const unique: string[] = []
-  const seen = new Set<string>()
-  for (const name of candidates) {
-    const key = name.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    unique.push(name)
-  }
-
-  return unique.slice(0, 40)
-}
-
-function extractRecordDateFromText(text: string) {
-  const isoLike = text.match(/\b(\d{4}[\/-]\d{1,2}[\/-]\d{1,2})\b/)
-  if (isoLike) {
-    const [year, month, day] = isoLike[1].split(/[\/-]/)
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
-  }
-
-  const dayFirst = text.match(/\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})\b/)
-  if (dayFirst) {
-    const day = dayFirst[1].padStart(2, '0')
-    const month = dayFirst[2].padStart(2, '0')
-    const year = dayFirst[3].length === 2 ? `20${dayFirst[3]}` : dayFirst[3]
-    return `${year}-${month}-${day}`
-  }
-
-  return null
-}
-
-function extractFieldsFromText(
-  text: string,
-  documentType: AiDocumentType
-): Partial<Record<AiFieldKey, AiFieldSuggestion>> {
-  const fields: Partial<Record<AiFieldKey, AiFieldSuggestion>> = {}
-  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean)
-
-  const nameMatch = text.match(/(?:name|first.?name|full.?name)[:\s]+([a-zA-Z]+)/i)
-  if (nameMatch) {
-    fields.first_name = { value: nameMatch[1], confidence: 50 }
-  }
-
-  const surnameMatch = text.match(/(?:surname|last.?name|family.?name)[:\s]+([a-zA-Z]+)/i)
-  if (surnameMatch) {
-    fields.last_name = { value: surnameMatch[1], confidence: 50 }
-  }
-
-  const dobMatch = text.match(/(\d{4}[-\/]\d{2}[-\/]\d{2})/)
-  if (dobMatch) {
-    fields.date_of_birth = { value: dobMatch[1], confidence: 60 }
-  }
-
-  const docNumMatch = text.match(/(?:number|id|ref|registration)[:\s]*([A-Z0-9]{5,})/i)
-  if (docNumMatch) {
-    fields.document_number = { value: docNumMatch[1], confidence: 40 }
-  }
-
-  const dateMatch = text.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})/)
-  if (dateMatch) {
-    fields.record_date = { value: dateMatch[1], confidence: 40 }
-  }
-
-  const notes = lines.slice(0, 3).join(' ').slice(0, 200)
-  if (notes) {
-    fields.notes = { value: notes, confidence: 30 }
-  }
-
-  if (documentType === 'register') {
-    const names = extractRegisterNamesFromText(text)
-    if (names.length > 0) {
-      fields.full_name = { value: names, confidence: 65 }
-    }
-
-    const recordDate = extractRecordDateFromText(text)
-    if (recordDate) {
-      fields.record_date = { value: recordDate, confidence: 55 }
-    }
-  }
-
-  return fields
-}
-
 export async function extractStructuredDocumentWithGemini(input: {
   file: File
   documentType: AiDocumentType
-  disableOcrFallback?: boolean
 }): Promise<AiExtractionResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim()
-  const shouldFallbackToOcr = !input.disableOcrFallback
   if (!apiKey) {
-    if (shouldFallbackToOcr) {
-      return await extractWithTesseract(input)
-    }
     return {
       success: false,
       message: 'AI extraction is not configured.',
@@ -564,15 +294,6 @@ export async function extractStructuredDocumentWithGemini(input: {
   try {
     const rawText = await runGeminiSdkExtraction(input, apiKey)
     if (!rawText) {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI returned an empty response. We used a basic document scan instead.',
-          }
-        }
-      }
       return {
         success: false,
         message: 'AI extraction returned an empty payload.',
@@ -581,15 +302,6 @@ export async function extractStructuredDocumentWithGemini(input: {
 
     const jsonText = extractFirstJsonObject(rawText)
     if (!jsonText) {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI response format was invalid. We used a basic document scan instead.',
-          }
-        }
-      }
       return {
         success: false,
         message: 'AI extraction did not return valid JSON.',
@@ -600,15 +312,6 @@ export async function extractStructuredDocumentWithGemini(input: {
     try {
       parsedJson = JSON.parse(jsonText)
     } catch {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI JSON could not be parsed. We used a basic document scan instead.',
-          }
-        }
-      }
       return {
         success: false,
         message: 'Failed to parse AI extraction JSON.',
@@ -617,15 +320,6 @@ export async function extractStructuredDocumentWithGemini(input: {
 
     const parsed = geminiResponseSchema.safeParse(parsedJson)
     if (!parsed.success) {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI response schema was unexpected. We used a basic document scan instead.',
-          }
-        }
-      }
       return {
         success: false,
         message: 'AI extraction response schema did not match expected format.',
@@ -648,15 +342,6 @@ export async function extractStructuredDocumentWithGemini(input: {
     }
 
     if (Object.keys(fields).length === 0) {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI could not confidently extract fields. We used a basic document scan instead.',
-          }
-        }
-      }
       return {
         success: false,
         message: 'AI could not confidently extract structured fields from this image.',
@@ -673,15 +358,6 @@ export async function extractStructuredDocumentWithGemini(input: {
       },
     }
   } catch (error) {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI timed out. We used a basic document scan instead.',
-        }
-      }
-    }
     return {
       success: false,
       message: `AI extraction request failed before response: ${error instanceof Error ? error.message : 'Unknown error'}`,
