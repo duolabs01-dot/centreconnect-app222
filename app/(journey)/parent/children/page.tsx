@@ -44,8 +44,8 @@ export default async function ParentChildrenPage() {
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-slate-900">Child Profiles</h1>
-                <p className="text-sm text-slate-500 font-medium">Manage your children&apos;s enrolment identities.</p>
+                <h1 className="text-3xl font-black tracking-tight text-slate-900">Family profiles</h1>
+                <p className="text-sm text-slate-500 font-medium">Manage enrolment identities in one place.</p>
               </div>
             </div>
             <Button size="lg" asChild className="h-14 rounded-2xl font-black px-8 shadow-float bg-slate-900 text-white hover:bg-slate-800">

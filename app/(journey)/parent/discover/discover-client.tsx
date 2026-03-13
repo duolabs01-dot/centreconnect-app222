@@ -311,7 +311,7 @@ export default function ParentDiscoverClient() {
     <div className="min-h-screen overflow-x-hidden overflow-y-auto bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="space-y-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Parent discovery</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Nearby centres</p>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 md:text-4xl">Find a creche you can feel good about</h1>
           <p className="max-w-2xl text-sm text-slate-600">
             Browse nearby creches, save the ones you love, and open a full profile before you apply.

@@ -200,8 +200,8 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     return (
       <div className="bg-surface-secondary px-4 pt-4 min-h-screen">
         <header className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Application Journey</h1>
-          <p className="mt-1 text-sm text-slate-600">Track each child, each status change, and your best next move from one clear timeline.</p>
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Your journey</h1>
+          <p className="mt-1 text-sm text-slate-600">Track each child, every status change, and your best next move from one clear timeline.</p>
         </header>
 
         {hasApplications ? (
@@ -230,8 +230,8 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
 
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-800">Children</h2>
-                <p className="text-xs text-muted-foreground">Choose a child to focus this journey.</p>
+                <h2 className="text-lg font-semibold text-slate-800">Focus</h2>
+                <p className="text-xs text-muted-foreground">Choose whose journey to view.</p>
               </div>
               <p className="text-sm text-slate-500">
                 Showing {filteredApplications.length} application{filteredApplications.length === 1 ? '' : 's'}
