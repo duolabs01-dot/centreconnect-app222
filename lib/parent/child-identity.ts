@@ -81,7 +81,7 @@ export async function verifyChildIdentityNotDuplicate(identityId: string, ecdAdm
     .update({
       verified_by_ecd: true,
       ecd_verified_at: new Date().toISOString(),
-      ecd_verified_by: ecdAdminId,
+      ecd_verified_by_id: ecdAdminId,
     })
     .eq('id', identityId)
 

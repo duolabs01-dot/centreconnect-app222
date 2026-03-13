@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS child_identities (
   original_application_id UUID REFERENCES applications(id) ON DELETE SET NULL,
   
   match_count INT DEFAULT 1,             -- How many similar records found
-  verified_by_ecd BOOLEAN DEFAULT FALSE, -- ECD confirmed this is not a duplicate
+  verified_by_ecd BOOLEAN DEFAULT FALSE,  -- ECD confirmed this is not a duplicate
   ecd_verified_at TIMESTAMPTZ,
-  ecd_verified_by UUID REFERENCES ecd_admins(user_id) ON DELETE SET NULL,
+  ecd_verified_by_id UUID REFERENCES ecd_admins(id) ON DELETE SET NULL,
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS family_link_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   
   ecd_id UUID NOT NULL REFERENCES ecd_centres(id) ON DELETE CASCADE,
-  requested_by_ecd_admin_id UUID REFERENCES ecd_admins(user_id) ON DELETE SET NULL,
+  requested_by_ecd_admin_id UUID REFERENCES ecd_admins(id) ON DELETE SET NULL,
   
   parent_a_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   parent_b_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
