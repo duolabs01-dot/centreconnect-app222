@@ -5,7 +5,6 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import {
   extractStructuredDocumentWithGemini,
-  extractWithTesseract,
   isSupportedAiDocumentType,
   uploadPhotoForAiExtraction,
   type AiExtractionPayload,
@@ -588,17 +587,19 @@ export async function extractExistingChildrenFromPhotoAction(
 
     const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
-    const ocrResult = await extractWithTesseract({
+    const extractionResult = await extractStructuredDocumentWithGemini({
       file,
       documentType: 'register',
     })
 
-    const extractionPayload = ocrResult.success ? ocrResult.extraction : null
+    const extractionPayload = extractionResult.success ? extractionResult.extraction : null
 
     if (!extractionPayload) {
       return {
         success: false,
-        message: 'Could not extract readable names from this photo. Use CSV import if this page is urgent.',
+        message:
+          extractionResult.message ||
+          'Could not extract readable names from this photo. Use CSV import if this page is urgent.',
       }
     }
 
@@ -629,7 +630,7 @@ export async function extractExistingChildrenFromPhotoAction(
       success: true,
       message: `Extracted ${drafts.length} child name${drafts.length === 1 ? '' : 's'}. Review and save.`,
       drafts,
-      summary: extractionPayload.summary,
+      summary: extractionPayload.summary || extractionResult.message,
     }
   } catch {
     return {
