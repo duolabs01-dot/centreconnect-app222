@@ -17,6 +17,7 @@ type ComposerProps = {
   centreName: string
   templates: Template[]
   recipients: Array<{ parentId: string; label: string }>
+  centreParticipantIds: string[]
   initialRecipientParentId?: string | null
   initialContextType?: 'application' | 'pickup' | 'general'
   initialContextId?: string | null
@@ -30,6 +31,7 @@ export function CommunicationsComposer({
   centreName,
   templates,
   recipients,
+  centreParticipantIds,
   initialRecipientParentId = null,
   initialContextType = 'general',
   initialContextId = null,
@@ -164,27 +166,33 @@ export function CommunicationsComposer({
       })
       if (notificationError) throw notificationError
 
-      const { data: existingThread } = await supabase
+      let existingThreadQuery = supabase
         .from('message_threads')
         .select('id')
         .eq('ecd_id', ecdId)
         .eq('context_type', initialContextType)
-        .eq('context_id', initialContextId)
         .contains('participant_ids', [user.id, recipientParentId])
         .order('created_at', { ascending: false })
         .limit(1)
-        .maybeSingle()
+
+      existingThreadQuery =
+        initialContextId
+          ? existingThreadQuery.eq('context_id', initialContextId)
+          : existingThreadQuery.is('context_id', null)
+
+      const { data: existingThread } = await existingThreadQuery.maybeSingle()
 
       let threadId = existingThread?.id ?? null
 
       if (!threadId) {
+        const participantIds = Array.from(new Set([...centreParticipantIds, recipientParentId])).filter(Boolean)
         const { data: thread, error: threadError } = await supabase
           .from('message_threads')
           .insert({
             ecd_id: ecdId,
             context_type: initialContextType,
             context_id: initialContextId,
-            participant_ids: [user.id, recipientParentId],
+            participant_ids: participantIds,
           })
           .select('id')
           .single()
