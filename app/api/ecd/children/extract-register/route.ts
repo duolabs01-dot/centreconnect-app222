@@ -15,6 +15,12 @@ type ExistingChildBulkDraft = {
   confidence?: number
 }
 
+function rejectAfter(ms: number, reason: string) {
+  return new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(reason)), ms)
+  })
+}
+
 function formatErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error) {
     const message = error.message.trim()
@@ -149,17 +155,23 @@ export async function POST(request: Request) {
     let extractionResult = null
     try {
       stage = 'gemini-extraction'
-      extractionResult = await extractStructuredDocumentWithGemini({
-        file,
-        documentType: 'register',
-      })
+      extractionResult = await Promise.race([
+        extractStructuredDocumentWithGemini({
+          file,
+          documentType: 'register',
+        }),
+        rejectAfter(30000, 'Document extraction timed out after 30 seconds.'),
+      ])
     } catch (error) {
       console.error('[children] register Gemini extraction route failed', { error })
       stage = 'tesseract-fallback'
-      extractionResult = await extractWithTesseract({
-        file,
-        documentType: 'register',
-      })
+      extractionResult = await Promise.race([
+        extractWithTesseract({
+          file,
+          documentType: 'register',
+        }),
+        rejectAfter(30000, 'Backup OCR timed out after 30 seconds.'),
+      ])
     }
 
     stage = 'parse-extraction'

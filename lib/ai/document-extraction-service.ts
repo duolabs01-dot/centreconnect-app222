@@ -471,34 +471,50 @@ export async function extractStructuredDocumentWithGemini(input: {
   }
 
   const mimeType = input.file.type || 'image/jpeg'
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [
-              { text: buildPrompt(input.documentType) },
-              {
-                inlineData: {
-                  mimeType,
-                  data: bytes.toString('base64'),
+  let response: Response
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: buildPrompt(input.documentType) },
+                {
+                  inlineData: {
+                    mimeType,
+                    data: bytes.toString('base64'),
+                  },
                 },
-              },
-            ],
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.1,
+            topP: 0.8,
+            maxOutputTokens: 1600,
           },
-        ],
-        generationConfig: {
-          temperature: 0.1,
-          topP: 0.8,
-          maxOutputTokens: 1600,
-        },
-      }),
+        }),
+        signal: AbortSignal.timeout(15000),
+      }
+    )
+  } catch (error) {
+    const fallback = await extractWithTesseract(input)
+    if (fallback.success) {
+      return {
+        ...fallback,
+        message: 'AI timed out. We used a basic document scan instead.',
+      }
     }
-  )
+    return {
+      success: false,
+      message: `AI extraction request failed before response: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    }
+  }
 
   if (!response.ok) {
     const details = await response.text()
@@ -623,4 +639,3 @@ export async function extractStructuredDocumentWithGemini(input: {
     },
   }
 }
-
