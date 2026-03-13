@@ -466,20 +466,25 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
           formData.set('default_start_date', form.enrollment_start_date)
         }
 
-        const response = await fetch('/api/ecd/children/extract-register', {
+        const endpoint = new URL('/api/ecd/children/extract-register', window.location.origin).toString()
+        const response = await fetch(endpoint, {
           method: 'POST',
           body: formData,
+          headers: {
+            Accept: 'application/json',
+          },
         })
 
-        const result = (await response.json()) as {
+        const raw = await response.text()
+        const result = (raw ? JSON.parse(raw) : null) as {
           success?: boolean
           message?: string
           drafts?: ExistingChildBulkDraft[]
           summary?: string
         }
 
-        if (!result || !result.success || !result.drafts) {
-          toast.error(result?.message ?? 'Extraction returned no result. Refresh once, then try again.')
+        if (!response.ok || !result || !result.success || !result.drafts) {
+          toast.error(result?.message ?? `Extraction request failed (${response.status}).`)
           return
         }
 
