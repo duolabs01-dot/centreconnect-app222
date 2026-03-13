@@ -199,7 +199,7 @@ export async function POST(request: Request) {
           documentType: 'register',
         }),
       ]),
-      rejectAfter(30000, 'Document extraction timed out after 30 seconds.'),
+      rejectAfter(60000, 'Document extraction timed out after 60 seconds.'),
     ])
 
     if (geminiOutcome.status === 'rejected') {

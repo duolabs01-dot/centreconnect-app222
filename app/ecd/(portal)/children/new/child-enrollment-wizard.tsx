@@ -512,7 +512,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
 
         const endpoint = new URL('/api/ecd/children/extract-register', window.location.origin).toString()
         const controller = new AbortController()
-        timeoutId = window.setTimeout(() => controller.abort(), 45000)
+        timeoutId = window.setTimeout(() => controller.abort(), 75000)
         const response = await fetch(endpoint, {
           method: 'POST',
           body: formData,
@@ -542,7 +542,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
         console.error('[children] bulk register extraction client failure', { error })
         const message =
           error instanceof DOMException && error.name === 'AbortError'
-            ? 'Extraction timed out after 45 seconds. Try a clearer image or use CSV import if urgent.'
+            ? 'Extraction timed out after 75 seconds. Try again once, then use CSV import if urgent.'
             : error instanceof Error && error.message
             ? error.message
             : 'Extraction request failed before a response. Refresh once, then try again.'
