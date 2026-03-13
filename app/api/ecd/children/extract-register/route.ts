@@ -135,40 +135,6 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
   return unique.slice(0, 200)
 }
 
-function getRegisterNameCount(result: {
-  success?: boolean
-  extraction?: AiExtractionPayload
-} | null | undefined) {
-  if (!result?.success || !result.extraction) return 0
-  return parseRegisterNames(result.extraction).length
-}
-
-function pickPreferredExtractionResult(
-  geminiResult: {
-    success?: boolean
-    extraction?: AiExtractionPayload
-    message?: string
-  } | null,
-  tesseractResult: {
-    success?: boolean
-    extraction?: AiExtractionPayload
-    message?: string
-  } | null
-) {
-  const geminiNameCount = getRegisterNameCount(geminiResult)
-  const tesseractNameCount = getRegisterNameCount(tesseractResult)
-
-  if (geminiNameCount > 0 && geminiNameCount >= tesseractNameCount) {
-    return geminiResult
-  }
-
-  if (tesseractNameCount > 0) {
-    return tesseractResult
-  }
-
-  return geminiResult ?? tesseractResult
-}
-
 export async function POST(request: Request) {
   let stage = 'session'
   try {
@@ -186,37 +152,34 @@ export async function POST(request: Request) {
 
     const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
-    stage = 'parallel-extraction'
-    const [geminiOutcome, tesseractOutcome] = await Promise.race([
-      Promise.allSettled([
-        extractStructuredDocumentWithGemini({
-          file,
-          documentType: 'register',
-          disableOcrFallback: true,
-        }),
+    stage = 'gemini-extraction'
+    let extractionResult = await Promise.race([
+      extractStructuredDocumentWithGemini({
+        file,
+        documentType: 'register',
+        disableOcrFallback: true,
+      }),
+      rejectAfter(20000, 'AI extraction timed out after 20 seconds.'),
+    ])
+
+    let extractionPayload = extractionResult?.success ? extractionResult.extraction : null
+    let names = extractionPayload ? parseRegisterNames(extractionPayload) : []
+
+    if (!extractionPayload || names.length === 0) {
+      stage = 'tesseract-fallback'
+      extractionResult = await Promise.race([
         extractWithTesseract({
           file,
           documentType: 'register',
         }),
-      ]),
-      rejectAfter(60000, 'Document extraction timed out after 60 seconds.'),
-    ])
+        rejectAfter(60000, 'Backup OCR timed out after 60 seconds.'),
+      ])
 
-    if (geminiOutcome.status === 'rejected') {
-      console.error('[children] register Gemini extraction route failed', { error: geminiOutcome.reason })
+      extractionPayload = extractionResult?.success ? extractionResult.extraction : null
+      names = extractionPayload ? parseRegisterNames(extractionPayload) : []
     }
-
-    if (tesseractOutcome.status === 'rejected') {
-      console.error('[children] register Tesseract extraction route failed', { error: tesseractOutcome.reason })
-    }
-
-    const extractionResult = pickPreferredExtractionResult(
-      geminiOutcome.status === 'fulfilled' ? geminiOutcome.value : null,
-      tesseractOutcome.status === 'fulfilled' ? tesseractOutcome.value : null
-    )
 
     stage = 'parse-extraction'
-    const extractionPayload = extractionResult?.success ? extractionResult.extraction : null
     if (!extractionPayload) {
       return NextResponse.json(
         {
@@ -230,7 +193,6 @@ export async function POST(request: Request) {
     }
 
     stage = 'parse-names'
-    const names = parseRegisterNames(extractionPayload)
     if (names.length === 0) {
       return NextResponse.json(
         {
