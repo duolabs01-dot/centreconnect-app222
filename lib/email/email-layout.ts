@@ -41,24 +41,24 @@ export function renderBaseEmailLayout(input: BaseEmailInput) {
   const themes = {
     ecd: {
       primary: '#0d9488',
-      bg: 'linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%)',
-      header: 'linear-gradient(135deg, #0f766e 0%, #14b8a6 55%, #22d3ee 100%)',
+      bg: 'linear-gradient(180deg, #faf8f4 0%, #ffffff 100%)',
+      header: 'linear-gradient(135deg, #1a2e1f 0%, #0d9488 100%)',
       chipBg: 'rgba(255,255,255,0.18)',
       chipText: '#ecfeff',
       label: 'CRECHE PORTAL',
     },
     parent: {
-      primary: '#0891b2',
-      bg: 'linear-gradient(180deg, #f0f9ff 0%, #ffffff 100%)',
-      header: 'linear-gradient(135deg, #0f766e 0%, #0891b2 52%, #38bdf8 100%)',
+      primary: '#0d9488',
+      bg: 'linear-gradient(180deg, #faf8f4 0%, #ffffff 100%)',
+      header: 'linear-gradient(135deg, #1a2e1f 0%, #0d9488 100%)',
       chipBg: 'rgba(255,255,255,0.18)',
-      chipText: '#e0f2fe',
+      chipText: '#ecfeff',
       label: 'PARENT PORTAL',
     },
     admin: {
-      primary: '#0f172a',
-      bg: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
-      header: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%)',
+      primary: '#1a2e1f',
+      bg: 'linear-gradient(180deg, #faf8f4 0%, #ffffff 100%)',
+      header: 'linear-gradient(135deg, #1a2e1f 0%, #0d9488 100%)',
       chipBg: 'rgba(255,255,255,0.14)',
       chipText: '#e2e8f0',
       label: 'PLATFORM ADMIN',
@@ -129,7 +129,7 @@ export function renderBaseEmailLayout(input: BaseEmailInput) {
               <div style="margin-top:32px;padding:18px 18px 0;border-top:1px solid #e2e8f0;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);border-radius:20px;">
                 <p style="margin:0 0 10px;font-size:11px;font-weight:800;color:#64748b;letter-spacing:0.14em;text-transform:uppercase;">Need help?</p>
                 <p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:#475569;">
-                  Reply to this email or contact the CentreConnect team at
+                  Questions? Reply to this email or WhatsApp us. You can also reach the CentreConnect team at
                   <a href="mailto:${escapeHtml(supportEmail)}" style="color:${activeTheme.primary};text-decoration:none;font-weight:800;">${escapeHtml(supportEmail)}</a>.
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">
@@ -145,7 +145,7 @@ export function renderBaseEmailLayout(input: BaseEmailInput) {
           <tr>
             <td class="content-pad" style="padding:0 32px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
-                Built with care in South Africa for families, creches, and communities.<br/>
+                CentreConnect — serving Alexandra and Johannesburg.<br/>
                 &copy; 2026 CentreConnect.
               </p>
             </td>

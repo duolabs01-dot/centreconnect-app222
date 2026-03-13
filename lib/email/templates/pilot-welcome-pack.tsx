@@ -544,6 +544,14 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       Welcome to CentreConnect for <strong>${input.centreName}</strong>.
       This guide shows you, in simple English, what the product helps you do and what to start with first.
     </p>
+    <table role="presentation" width="100%" style="border:1px solid ${BRAND.warmBorder};border-radius:14px;background:${BRAND.warm};margin:0 0 14px;">
+      <tr>
+        <td style="padding:12px 14px;">
+          <p style="margin:0;font-size:12px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#9A3412;">Pilot offer</p>
+          <p style="margin:4px 0 0;font-size:13px;line-height:1.6;color:${BRAND.body};">Onboarding + first month free until end of April.</p>
+        </td>
+      </tr>
+    </table>
     <p style="margin:0 0 16px;font-size:13px;line-height:1.65;color:rgb(51,65,85);">
       Because your child’s centre already uses CentreConnect, you can now see attendance, daily notes, pickup safety checks, and document requests right from your phone — no more chasing the same chats on WhatsApp.
     </p>

@@ -23,8 +23,8 @@ function escapeHtml(value: string) {
 }
 
 export function renderOwnerInviteEmail(input: OwnerInviteTemplateInput) {
-  const subject = 'Your CentreConnect account is ready'
-  const primaryActionLabel = input.primaryActionLabel?.trim() || 'Open my workspace'
+  const subject = `${input.centreName} is ready on CentreConnect`
+  const primaryActionLabel = input.primaryActionLabel?.trim() || 'Set up your centre'
 
   const htmlContent = `
     <p style="margin: 0 0 18px; font-size: 16px; font-weight: 500; color: #334155;">

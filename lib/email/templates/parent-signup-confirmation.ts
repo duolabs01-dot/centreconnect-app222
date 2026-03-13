@@ -19,12 +19,13 @@ function escapeHtml(value: string) {
 }
 
 export function renderParentSignupConfirmationEmail(input: ParentSignupConfirmationEmailInput) {
-  const subject = 'Confirm your CentreConnect account 🚀'
+  const subject = "You're in — welcome to CentreConnect"
   const appBaseUrl = (input.appBaseUrl ?? 'https://centerconnect.co.za').replace(/\/$/, '')
+  const firstName = (input.recipientName || 'there').trim().split(/\s+/)[0] || 'there'
   
   const htmlContent = `
     <p style="margin: 0 0 24px; font-size: 16px; font-weight: 500; color: #334155;">
-      Thanks for joining CentreConnect! We're excited to help you find the best care for your little one.
+      Hi ${escapeHtml(firstName)}, welcome to CentreConnect! We're excited to help you find the best care for your little one.
     </p>
     
     <p style="margin: 0 0 32px; font-size: 15px; color: #475569;">
@@ -32,7 +33,7 @@ export function renderParentSignupConfirmationEmail(input: ParentSignupConfirmat
     </p>
 
     <a href="${escapeHtml(input.confirmationLink)}" style="display: inline-block; background: #0891b2; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 16px; font-weight: 900; font-size: 16px; box-shadow: 0 10px 15px -3px rgba(8, 145, 178, 0.2);">
-      Confirm Email & Activate
+      See creches near you
     </a>
 
     <div style="margin-top: 40px; padding: 24px; background: #f0f9ff; border-radius: 20px; border: 1px solid #e0f2fe;">
