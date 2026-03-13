@@ -192,6 +192,7 @@ export async function POST(request: Request) {
         extractStructuredDocumentWithGemini({
           file,
           documentType: 'register',
+          disableOcrFallback: true,
         }),
         extractWithTesseract({
           file,

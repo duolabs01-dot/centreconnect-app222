@@ -222,7 +222,12 @@ export async function extractWithTesseract(input: {
     const bytes = Buffer.from(await input.file.arrayBuffer())
     const mimeType = input.file.type || 'image/jpeg'
 
-    const variantBuffers: Array<{ label: string; bytes: Buffer }> = [{ label: 'original', bytes }]
+    const variantBuffers: Array<{ label: string; bytes: Buffer }> = []
+    const includeOriginal = input.documentType !== 'register'
+
+    if (includeOriginal) {
+      variantBuffers.push({ label: 'original', bytes })
+    }
 
     try {
       const enhanced = await sharp(bytes)
@@ -236,7 +241,13 @@ export async function extractWithTesseract(input: {
         .toBuffer()
       variantBuffers.push({ label: 'enhanced', bytes: enhanced })
     } catch {
-      // Ignore image preprocessing failure and continue with original bytes.
+      if (!includeOriginal) {
+        variantBuffers.push({ label: 'original', bytes })
+      }
+    }
+
+    if (variantBuffers.length === 0) {
+      variantBuffers.push({ label: 'original', bytes })
     }
 
     let best: {
@@ -456,10 +467,18 @@ function extractFieldsFromText(
 export async function extractStructuredDocumentWithGemini(input: {
   file: File
   documentType: AiDocumentType
+  disableOcrFallback?: boolean
 }): Promise<AiExtractionResult> {
   const apiKey = process.env.GEMINI_API_KEY?.trim()
+  const shouldFallbackToOcr = !input.disableOcrFallback
   if (!apiKey) {
-    return await extractWithTesseract(input)
+    if (shouldFallbackToOcr) {
+      return await extractWithTesseract(input)
+    }
+    return {
+      success: false,
+      message: 'AI extraction is not configured.',
+    }
   }
 
   const bytes = Buffer.from(await input.file.arrayBuffer())
@@ -503,11 +522,13 @@ export async function extractStructuredDocumentWithGemini(input: {
       }
     )
   } catch (error) {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI timed out. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI timed out. We used a basic document scan instead.',
+        }
       }
     }
     return {
@@ -521,14 +542,19 @@ export async function extractStructuredDocumentWithGemini(input: {
     const status = response.status
     
     if (status === 429 || details.includes('quota') || details.includes('rate limit')) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI is busy. We tried a basic document scan instead.',
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI is busy. We tried a basic document scan instead.',
+          }
         }
       }
-      return fallback
+      return {
+        success: false,
+        message: `AI extraction request failed (${status}): ${details.slice(0, 220)}`,
+      }
     }
     
     return {
@@ -540,11 +566,13 @@ export async function extractStructuredDocumentWithGemini(input: {
   const rawPayload = (await response.json()) as unknown
   const rawText = readGeminiText(rawPayload)
   if (!rawText) {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI returned an empty response. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI returned an empty response. We used a basic document scan instead.',
+        }
       }
     }
     return {
@@ -555,11 +583,13 @@ export async function extractStructuredDocumentWithGemini(input: {
 
   const jsonText = extractFirstJsonObject(rawText)
   if (!jsonText) {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI response format was invalid. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI response format was invalid. We used a basic document scan instead.',
+        }
       }
     }
     return {
@@ -572,11 +602,13 @@ export async function extractStructuredDocumentWithGemini(input: {
   try {
     parsedJson = JSON.parse(jsonText)
   } catch {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI JSON could not be parsed. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI JSON could not be parsed. We used a basic document scan instead.',
+        }
       }
     }
     return {
@@ -587,11 +619,13 @@ export async function extractStructuredDocumentWithGemini(input: {
 
   const parsed = geminiResponseSchema.safeParse(parsedJson)
   if (!parsed.success) {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI response schema was unexpected. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI response schema was unexpected. We used a basic document scan instead.',
+        }
       }
     }
     return {
@@ -616,11 +650,13 @@ export async function extractStructuredDocumentWithGemini(input: {
   }
 
   if (Object.keys(fields).length === 0) {
-    const fallback = await extractWithTesseract(input)
-    if (fallback.success) {
-      return {
-        ...fallback,
-        message: 'AI could not confidently extract fields. We used a basic document scan instead.',
+    if (shouldFallbackToOcr) {
+      const fallback = await extractWithTesseract(input)
+      if (fallback.success) {
+        return {
+          ...fallback,
+          message: 'AI could not confidently extract fields. We used a basic document scan instead.',
+        }
       }
     }
     return {
