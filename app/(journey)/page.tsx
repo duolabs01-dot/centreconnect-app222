@@ -63,8 +63,31 @@ export default async function HomePage({
       redirect('/ecd/dashboard')
     }
     if (role === 'parent_user') {
-      redirect('/parent/dashboard')
+      const hasEnrolledChild = await checkParentEnrollment(supabase, user.id)
+      if (hasEnrolledChild) {
+        redirect('/parent/dashboard')
+      } else {
+        redirect('/parent/discover')
+      }
     }
+  }
+
+  async function checkParentEnrollment(supabase: Awaited<ReturnType<typeof createClient>>, parentId: string) {
+    const [{ data: children }, { data: applications }] = await Promise.all([
+      supabase
+        .from('children')
+        .select('id,enrollment_status')
+        .eq('parent_id', parentId)
+        .in('enrollment_status', ['active', 'enrolled'])
+        .limit(1),
+      supabase
+        .from('applications')
+        .select('id,status')
+        .eq('parent_id', parentId)
+        .eq('status', 'enrolled')
+        .limit(1),
+    ])
+    return (children && children.length > 0) || (applications && applications.length > 0)
   }
 
   let activeCentres: HomeActiveCentre[] = shouldUseDemoCentreData()
