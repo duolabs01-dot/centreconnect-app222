@@ -468,8 +468,8 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
         }
 
         const result = await extractExistingChildrenFromPhotoAction(formData)
-        if (!result.success || !result.drafts) {
-          toast.error(result.message)
+        if (!result || !result.success || !result.drafts) {
+          toast.error(result?.message ?? 'Extraction returned no result. Refresh once, then try again.')
           return
         }
 

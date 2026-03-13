@@ -172,8 +172,12 @@ type SessionOptions = {
   cached?: boolean
 }
 
+export async function getEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession | null> {
+  return options.cached === false ? await resolveEcdPortalSession() : await getEcdPortalSessionCached()
+}
+
 export async function requireEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession> {
-  const session = options.cached === false ? await resolveEcdPortalSession() : await getEcdPortalSessionCached()
+  const session = await getEcdPortalSession(options)
   if (!session) {
     redirect('/ecd/login')
   }

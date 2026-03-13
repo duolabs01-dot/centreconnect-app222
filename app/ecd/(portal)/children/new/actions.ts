@@ -15,7 +15,7 @@ import {
   createOrResendParentLinkRequest,
   type ParentLinkRequestSummary,
 } from '@/lib/ecd/parent-link-requests'
-import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { getEcdPortalSession, requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 const childDocumentTypeSchema = z.enum(['birth_certificate', 'medical_card', 'immunization_record'])
 type ChildDocumentType = z.infer<typeof childDocumentTypeSchema>
@@ -576,8 +576,8 @@ export async function extractExistingChildrenFromPhotoAction(
   formData: FormData
 ): Promise<ExtractExistingChildrenFromPhotoResult> {
   try {
-    const session = await requireEcdPortalSession({ cached: false })
-    if (!session.ecdId) {
+    const session = await getEcdPortalSession({ cached: false })
+    if (!session?.ecdId) {
       return { success: false, message: 'ECD session not found.' }
     }
 
