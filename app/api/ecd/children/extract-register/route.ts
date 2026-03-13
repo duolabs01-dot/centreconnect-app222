@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 
 import {
   extractStructuredDocumentWithGemini,
-  extractWithTesseract,
   type AiExtractionPayload,
   type AiFieldKey,
 } from '@/lib/ai/document-extraction-service'
@@ -153,40 +152,24 @@ export async function POST(request: Request) {
     const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
     stage = 'gemini-extraction'
-    let extractionResult = await Promise.race([
+    const extractionResult = await Promise.race([
       extractStructuredDocumentWithGemini({
         file,
         documentType: 'register',
         disableOcrFallback: true,
       }),
-      rejectAfter(20000, 'AI extraction timed out after 20 seconds.'),
+      rejectAfter(30000, 'Gemini extraction timed out after 30 seconds.'),
     ])
 
-    let extractionPayload = extractionResult?.success ? extractionResult.extraction : null
-    let names = extractionPayload ? parseRegisterNames(extractionPayload) : []
-
-    if (!extractionPayload || names.length === 0) {
-      stage = 'tesseract-fallback'
-      extractionResult = await Promise.race([
-        extractWithTesseract({
-          file,
-          documentType: 'register',
-        }),
-        rejectAfter(60000, 'Backup OCR timed out after 60 seconds.'),
-      ])
-
-      extractionPayload = extractionResult?.success ? extractionResult.extraction : null
-      names = extractionPayload ? parseRegisterNames(extractionPayload) : []
-    }
+    const extractionPayload = extractionResult?.success ? extractionResult.extraction : null
+    const names = extractionPayload ? parseRegisterNames(extractionPayload) : []
 
     stage = 'parse-extraction'
     if (!extractionPayload) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            extractionResult?.message ||
-            'Could not extract readable names from this photo. Use CSV import if this page is urgent.',
+          message: extractionResult?.message || 'Gemini could not extract readable names from this photo.',
         },
         { status: 200 }
       )

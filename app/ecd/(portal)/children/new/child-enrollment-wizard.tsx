@@ -647,7 +647,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
             Bulk Add Existing Children
           </CardTitle>
           <CardDescription className="text-slate-600">
-            AI-first register extraction with Gemini, with local OCR fallback if AI is unavailable. Upload a clear register photo, review names, set start dates, then create profiles.
+            Gemini-only register extraction. Upload a clear register photo, review names, set start dates, then create profiles.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
