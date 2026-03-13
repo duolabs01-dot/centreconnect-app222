@@ -476,8 +476,13 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
         setBulkDrafts(result.drafts)
         setBulkSummary(result.summary ?? '')
         toast.success(result.message)
-      } catch {
-        toast.error('Upload failed before extraction. Try a smaller image, then CSV import if urgent.')
+      } catch (error) {
+        console.error('[children] bulk register extraction client failure', { error })
+        const message =
+          error instanceof Error && error.message
+            ? error.message
+            : 'Extraction request failed before a response. Refresh once, then try again.'
+        toast.error(message)
       }
     })
   }

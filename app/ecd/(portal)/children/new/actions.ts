@@ -643,7 +643,8 @@ export async function extractExistingChildrenFromPhotoAction(
       drafts,
       summary: extractionPayload.summary || extractionResult.message,
     }
-  } catch {
+  } catch (error) {
+    console.error('[children] extractExistingChildrenFromPhotoAction failed', { error })
     return {
       success: false,
       message: 'Extraction failed unexpectedly. Try again with a clearer image, or use CSV import for urgent capture.',
