@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { readSupabasePublicEnv } from '@/lib/supabase/env'
 import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
 import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
+import { checkChildIdentityDuplicates, recordChildIdentity } from '@/lib/parent/child-identity'
 
 const schema = z.object({
   ecd_id: z.string().uuid(),
@@ -81,11 +82,27 @@ export async function submitApplicationAction(input: unknown) {
     return { error: 'Child not found' }
   }
 
-  const { data: centrePricing } = await db
+  const { data: centrePricing, data: centreData } = await db
     .from('ecd_centres')
-    .select('age_group_pricing,monthly_fee_min')
+    .select('age_group_pricing,monthly_fee_min,suburb')
     .eq('id', parsed.data.ecd_id)
     .maybeSingle()
+
+  // Check for potential duplicate child at this ECD (name+DOB+gender or name+2 other fields)
+  const childIdentityMatches = await checkChildIdentityDuplicates(
+    parsed.data.ecd_id,
+    {
+      first_name: child.first_name,
+      last_name: child.last_name,
+      date_of_birth: child.date_of_birth,
+      gender: child.gender ?? '',
+      suburb: centreData?.suburb ?? '',
+    },
+    user.id
+  )
+
+  const hasPotentialDuplicate = childIdentityMatches.length > 0
+  const significantMatchFields = childIdentityMatches[0]?.match_fields ?? []
 
   const resolvedFee = resolveAgeGroupFeeForDateOfBirth({
     dateOfBirth: child.date_of_birth,
@@ -114,6 +131,16 @@ export async function submitApplicationAction(input: unknown) {
       existingApplicationStatus: duplicate.status ?? null,
     }
   }
+
+  // Store potential duplicate info for warning (but allow submission)
+  const potentialDuplicateInfo = hasPotentialDuplicate
+    ? {
+        hasPotentialDuplicate: true,
+        matchFields: significantMatchFields,
+        existingIdentityId: childIdentityMatches[0]?.identity_id,
+        existingApplicationId: childIdentityMatches[0]?.original_application_id,
+      }
+    : null
 
   let applicationId: string | null = null
   let insertError: { code?: string; message?: string } | null = null
@@ -156,6 +183,23 @@ export async function submitApplicationAction(input: unknown) {
       return { error: 'Your session expired. Please sign in again and retry.' }
     }
     return { error: 'Could not submit application. Please try again.' }
+  }
+
+  // Record child identity fingerprint for duplicate detection
+  if (applicationId) {
+    await recordChildIdentity(
+      parsed.data.ecd_id,
+      {
+        first_name: child.first_name,
+        last_name: child.last_name,
+        date_of_birth: child.date_of_birth,
+        gender: child.gender ?? '',
+        suburb: centreData?.suburb ?? '',
+      },
+      user.id,
+      child.id,
+      applicationId
+    )
   }
 
   // Notify ECD team immediately when a new application lands.
@@ -227,6 +271,7 @@ export async function submitApplicationAction(input: unknown) {
     missingDocuments: documentChecklist.missingLabels,
     uploadedDocumentsCount: documentChecklist.uploadedCount,
     totalRequiredDocuments: documentChecklist.totalRequired,
+    potentialDuplicate: potentialDuplicateInfo,
   }
 }
 

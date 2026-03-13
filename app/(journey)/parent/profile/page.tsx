@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { ParentProfileHub } from '@/components/parent/ParentProfileEditor'
 import { createClient } from '@/lib/supabase/server'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
+import { getParentProgress } from '@/lib/parent/progress'
 
 export const metadata: Metadata = {
   title: 'Parent Profile Hub | CentreConnect',
@@ -45,17 +46,13 @@ export default async function ParentProfilePage() {
     const userEmail = user.email ?? 'No email'
     const avatarUrl = userProfile?.avatar_url?.trim() ?? ''
 
-    const [parentProfileResult, childrenCountResult, enrolledChildrenCountResult] = await Promise.all([
-      supabase
-        .from('parents')
-        .select(
-          'guardian_relationship,emergency_contact_name,emergency_contact_phone,notifications_application_updates,notifications_reminders'
-        )
-        .eq('id', user.id)
-        .maybeSingle(),
-      supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id),
-      supabase.from('applications').select('id', { count: 'exact', head: true }).eq('parent_id', user.id).eq('status', 'enrolled'),
-    ])
+    const parentProfileResult = await supabase
+      .from('parents')
+      .select(
+        'guardian_relationship,emergency_contact_name,emergency_contact_phone,notifications_application_updates,notifications_reminders'
+      )
+      .eq('id', user.id)
+      .maybeSingle()
 
     const parentProfile = (parentProfileResult.error ? null : parentProfileResult.data) as
       | {
@@ -67,8 +64,8 @@ export default async function ParentProfilePage() {
         }
       | null
 
-    const childCount = childrenCountResult.count ?? 0
-    const enrolledChildCount = enrolledChildrenCountResult.count ?? 0
+    // Use unified progress function
+    const progress = await getParentProgress(user.id)
 
     return (
       <div className="bg-surface-secondary px-4 pt-4 min-h-screen">
@@ -83,8 +80,11 @@ export default async function ParentProfilePage() {
             emergency_contact_phone: parentProfile?.emergency_contact_phone?.trim() ?? '',
             notifications_application_updates: parentProfile?.notifications_application_updates ?? true,
             notifications_reminders: parentProfile?.notifications_reminders ?? true,
-            child_count: childCount,
-            enrolled_child_count: enrolledChildCount,
+            child_count: progress.childrenCount,
+            enrolled_child_count: progress.enrolledCount,
+            // New unified fields
+            profile_completeness: progress.profileCompleteness,
+            next_action: progress.nextAction,
           }}
         />
       </div>

@@ -54,6 +54,13 @@ type ParentProfileHubInitial = {
   notifications_reminders: boolean
   child_count: number
   enrolled_child_count: number
+  profile_completeness?: number
+  next_action?: {
+    type: string
+    title: string
+    description: string
+    href: string
+  }
 }
 
 function initialsFromName(name: string) {
@@ -81,7 +88,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     return () => setVisible(true)
   }, [sheetOpen, setVisible])
 
-  const completionPct = Math.round(([
+  const completionPct = initial.profile_completeness ?? Math.round(([
     profile.full_name, 
     profile.phone, 
     profile.guardian_relationship, 
