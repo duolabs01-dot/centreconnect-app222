@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Compass, Heart, Scale, Sparkles } from 'lucide-react'
+import { ArrowRight, Compass, Heart, Scale, Sparkles } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
@@ -102,6 +102,7 @@ export default async function ParentShortlistPage() {
   }
 
   const compareHref = '/parent/compare'
+  const compareSavedHref = centres.length >= 2 ? `/parent/compare?centres=${centres.map((centre) => centre.id).join(',')}` : compareHref
 
   return (
     <div className="min-h-screen bg-surface-secondary px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-4">
@@ -135,7 +136,7 @@ export default async function ParentShortlistPage() {
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Button asChild className="min-h-[48px] rounded-2xl bg-cyan-600 px-5 text-sm font-semibold hover:bg-cyan-700">
-              <Link href={compareHref}>
+              <Link href={compareSavedHref}>
                 <Scale className="mr-2 h-4 w-4" />
                 Compare saved creches
               </Link>
@@ -170,33 +171,42 @@ export default async function ParentShortlistPage() {
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {centres.map((centre) => {
                 const existingApplication = existingApplications.get(centre.id)
+                const isClaimed = claimedCentreIds.has(centre.id)
+                const applyHref = `/apply/${centre.slug ?? centre.id}`
                 return (
-                  <CentreCard
-                    key={centre.id}
-                    id={centre.id}
-                    slug={centre.slug ?? undefined}
-                    name={centre.name?.trim() || 'Creche'}
-                    tagline={centre.tagline}
-                    suburb={centre.suburb ?? undefined}
-                    city={centre.city ?? undefined}
-                    age_groups={centre.age_groups ?? []}
-                    is_registered={Boolean(claimedCentreIds.has(centre.id) && centre.is_registered)}
-                    logo_url={centre.logo_url ?? undefined}
-                    cover_image_url={centre.cover_image_url ?? undefined}
-                    fees_display_mode={centre.fees_display_mode}
-                    monthly_fee_min={centre.monthly_fee_min}
-                    monthly_fee_max={centre.monthly_fee_max}
-                    registration_fee={centre.registration_fee}
-                    subsidy_accepted={Boolean(centre.subsidy_accepted)}
-                    contact_whatsapp={centre.contact_whatsapp}
-                    contact_phone={centre.contact_phone}
-                    phone={centre.phone}
-                    is_claimed={claimedCentreIds.has(centre.id)}
-                    existingApplicationId={existingApplication?.id ?? null}
-                    existingApplicationStatus={existingApplication?.status ?? null}
-                    viewerRole="parent_user"
-                    isSaved
-                  />
+                  <div key={centre.id} className="space-y-2">
+                    <CentreCard
+                      id={centre.id}
+                      slug={centre.slug ?? undefined}
+                      name={centre.name?.trim() || 'Creche'}
+                      tagline={centre.tagline}
+                      suburb={centre.suburb ?? undefined}
+                      city={centre.city ?? undefined}
+                      age_groups={centre.age_groups ?? []}
+                      is_registered={Boolean(isClaimed && centre.is_registered)}
+                      logo_url={centre.logo_url ?? undefined}
+                      cover_image_url={centre.cover_image_url ?? undefined}
+                      fees_display_mode={centre.fees_display_mode}
+                      monthly_fee_min={centre.monthly_fee_min}
+                      monthly_fee_max={centre.monthly_fee_max}
+                      registration_fee={centre.registration_fee}
+                      subsidy_accepted={Boolean(centre.subsidy_accepted)}
+                      contact_whatsapp={centre.contact_whatsapp}
+                      contact_phone={centre.contact_phone}
+                      phone={centre.phone}
+                      is_claimed={isClaimed}
+                      existingApplicationId={existingApplication?.id ?? null}
+                      existingApplicationStatus={existingApplication?.status ?? null}
+                      viewerRole="parent_user"
+                      isSaved
+                    />
+                    {isClaimed ? (
+                      <Link href={applyHref} className="inline-flex items-center gap-1 text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+                        Apply to this centre
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    ) : null}
+                  </div>
                 )
               })}
             </section>
@@ -224,6 +234,17 @@ export default async function ParentShortlistPage() {
           </>
         )}
       </div>
+
+      {centres.length >= 2 ? (
+        <div className="fixed inset-x-0 z-40 px-4" style={{ bottom: 'calc(env(safe-area-inset-bottom) + 5rem)' }}>
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 rounded-2xl border border-cyan-100 bg-amber-50 px-4 py-3 shadow-lg">
+            <p className="text-sm font-semibold text-slate-800">{centres.length} saved — ready to compare?</p>
+            <Button asChild className="min-h-[40px] rounded-xl bg-cyan-600 px-4 text-sm font-semibold text-white hover:bg-cyan-700">
+              <Link href={compareSavedHref}>Compare saved</Link>
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

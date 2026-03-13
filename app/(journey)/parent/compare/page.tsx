@@ -216,9 +216,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
-                      <Button asChild variant="outline" className="min-h-[44px] flex-1 rounded-2xl text-sm font-semibold">
-                        <Link href={centre.slug ? `/apply/${centre.slug}` : '/directory'}>Apply</Link>
-                      </Button>
+                      {isClaimed ? (
+                        <Button asChild variant="outline" className="min-h-[44px] flex-1 rounded-2xl text-sm font-semibold">
+                          <Link href={`/apply/${centre.slug ?? centre.id}`}>Apply</Link>
+                        </Button>
+                      ) : null}
                     </div>
                   </SurfaceCard>
                 )
@@ -282,6 +284,23 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                         </Link>
                       </TableCell>
                     ))}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="px-5 py-4 font-medium text-slate-700">Apply</TableCell>
+                    {orderedCentres.map((centre) => {
+                      const isClaimed = claimedCentreIds.has(centre.id)
+                      return (
+                        <TableCell key={centre.id} className="px-5 py-4">
+                          {isClaimed ? (
+                            <Button asChild className="h-10 w-full rounded-xl bg-cyan-600 text-sm font-semibold text-white hover:bg-cyan-700">
+                              <Link href={`/apply/${centre.slug ?? centre.id}`}>Apply</Link>
+                            </Button>
+                          ) : (
+                            <span className="text-xs font-medium text-slate-400">Not available</span>
+                          )}
+                        </TableCell>
+                      )
+                    })}
                   </TableRow>
                 </TableBody>
               </Table>
