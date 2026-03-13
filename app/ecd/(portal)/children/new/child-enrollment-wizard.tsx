@@ -136,6 +136,48 @@ function arrayToCsv(value?: string[]) {
   return value && value.length > 0 ? value.join(', ') : ''
 }
 
+async function compressImageForBulkExtract(file: File) {
+  if (!file.type.startsWith('image/')) return file
+
+  const objectUrl = URL.createObjectURL(file)
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image()
+      nextImage.onload = () => resolve(nextImage)
+      nextImage.onerror = () => reject(new Error('Could not read image for upload optimization.'))
+      nextImage.src = objectUrl
+    })
+
+    const maxDimension = 1600
+    const scale = Math.min(1, maxDimension / Math.max(image.width, image.height))
+    const width = Math.max(1, Math.round(image.width * scale))
+    const height = Math.max(1, Math.round(image.height * scale))
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const context = canvas.getContext('2d')
+    if (!context) return file
+
+    context.drawImage(image, 0, 0, width, height)
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.82)
+    })
+
+    if (!blob || blob.size >= file.size) return file
+
+    const baseName = file.name.replace(/\.[^/.]+$/, '')
+    return new File([blob], `${baseName}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: file.lastModified,
+    })
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
 function mergeAiSuggestions(
   current: GeminiExtractionResult['prefill'],
   incoming: GeminiExtractionResult['prefill']
@@ -460,8 +502,9 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
 
     startBulkExtractTransition(async () => {
       try {
+        const uploadFile = await compressImageForBulkExtract(bulkFile)
         const formData = new FormData()
-        formData.set('file', bulkFile)
+        formData.set('file', uploadFile)
         if (form.enrollment_start_date) {
           formData.set('default_start_date', form.enrollment_start_date)
         }
