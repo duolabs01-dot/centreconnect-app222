@@ -56,15 +56,15 @@ const centreMoments = [
 
 const parentTrustChecks = [
   {
-    title: 'No account needed to browse',
-    body: 'Browse first. Create an account only when you want to apply.',
+    title: 'Browse without signing up',
+    body: 'Create an account only when you want to apply. Everything else is open.',
   },
   {
-    title: 'Clear next step on every centre',
+    title: "You'll always know what to do next",
     body: 'Apply online on CentreConnect centres. Call or WhatsApp public listings.',
   },
   {
-    title: 'Safety stays visible',
+    title: 'Pickup stays in your pocket',
     body: 'Pickup codes and collection updates stay clear after your child joins.',
   },
 ] as const
@@ -195,11 +195,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-[#1E2C28] sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Find a creche you trust. Act today.
+                  Find a creche near you. See everything first.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#5D6966] sm:text-[18px] sm:leading-8">
-                  See fees, ages, and next steps before you call, message, or apply.
+                  Browse fees, ages, and hours. Apply or contact in one tap. No account needed to start.
                 </p>
 
                 <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
@@ -554,7 +554,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-white sm:text-[3rem] sm:leading-[1]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                Ready to look? Start with the directory.
+                Ready to look? Start here.
               </h2>
               <p className="mt-4 max-w-2xl text-[15px] leading-7 text-teal-50 sm:text-[17px] sm:leading-8">
                 Browse first, then create an account only when you want to apply.
@@ -568,7 +568,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 asChild
               >
                 <Link href="/directory">
-                  <span>Directory</span>
+                  <span>Find creches near me</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
