@@ -15,6 +15,18 @@ type ExistingChildBulkDraft = {
   confidence?: number
 }
 
+function formatErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) {
+    const message = error.message.trim()
+    return message || fallback
+  }
+  if (typeof error === 'string') {
+    const message = error.trim()
+    return message || fallback
+  }
+  return fallback
+}
+
 function normalizeDateString(raw: string | undefined) {
   if (!raw) return undefined
   const value = raw.trim()
@@ -118,12 +130,14 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
 }
 
 export async function POST(request: Request) {
+  let stage = 'session'
   try {
     const session = await getEcdPortalSession({ cached: false })
     if (!session?.ecdId) {
       return NextResponse.json({ success: false, message: 'ECD session not found.' }, { status: 401 })
     }
 
+    stage = 'form-data'
     const formData = await request.formData()
     const file = formData.get('file')
     if (!(file instanceof File)) {
@@ -134,18 +148,21 @@ export async function POST(request: Request) {
 
     let extractionResult = null
     try {
+      stage = 'gemini-extraction'
       extractionResult = await extractStructuredDocumentWithGemini({
         file,
         documentType: 'register',
       })
     } catch (error) {
       console.error('[children] register Gemini extraction route failed', { error })
+      stage = 'tesseract-fallback'
       extractionResult = await extractWithTesseract({
         file,
         documentType: 'register',
       })
     }
 
+    stage = 'parse-extraction'
     const extractionPayload = extractionResult?.success ? extractionResult.extraction : null
     if (!extractionPayload) {
       return NextResponse.json(
@@ -159,6 +176,7 @@ export async function POST(request: Request) {
       )
     }
 
+    stage = 'parse-names'
     const names = parseRegisterNames(extractionPayload)
     if (names.length === 0) {
       return NextResponse.json(
@@ -170,6 +188,7 @@ export async function POST(request: Request) {
       )
     }
 
+    stage = 'build-response'
     const suggestedStartDate =
       normalizeDateString(getFieldString(extractionPayload, 'record_date')) ??
       fallbackStartDate ??
@@ -192,11 +211,12 @@ export async function POST(request: Request) {
       summary: extractionPayload.summary || extractionResult?.message,
     })
   } catch (error) {
-    console.error('[children] extract-register route failed', { error })
+    const detail = formatErrorMessage(error, 'Unknown route error')
+    console.error('[children] extract-register route failed', { stage, error })
     return NextResponse.json(
       {
         success: false,
-        message: 'Extraction failed unexpectedly. Try again with a clearer image, or use CSV import for urgent capture.',
+        message: `Extraction failed during ${stage}: ${detail}`,
       },
       { status: 500 }
     )
