@@ -13,7 +13,6 @@ import { cn } from '@/lib/utils'
 import {
   bulkCreateExistingChildrenAction,
   extractChildDocumentWithGeminiAction,
-  extractExistingChildrenFromPhotoAction,
   saveTempChildProfileAndInviteParentAction,
   type ExistingChildBulkDraft,
   type GeminiExtractionResult,
@@ -467,7 +466,18 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
           formData.set('default_start_date', form.enrollment_start_date)
         }
 
-        const result = await extractExistingChildrenFromPhotoAction(formData)
+        const response = await fetch('/api/ecd/children/extract-register', {
+          method: 'POST',
+          body: formData,
+        })
+
+        const result = (await response.json()) as {
+          success?: boolean
+          message?: string
+          drafts?: ExistingChildBulkDraft[]
+          summary?: string
+        }
+
         if (!result || !result.success || !result.drafts) {
           toast.error(result?.message ?? 'Extraction returned no result. Refresh once, then try again.')
           return
