@@ -1,7 +1,10 @@
 import { randomUUID } from 'crypto'
+import fs from 'fs/promises'
+import path from 'path'
 import { z } from 'zod'
 import Tesseract from 'tesseract.js'
 import sharp from 'sharp'
+import { GoogleGenAI, createPartFromUri, createUserContent } from '@google/genai'
 import { ATTENDANCE_IMPORT_MAX_FILE_BYTES, ATTENDANCE_IMPORT_MAX_FILE_MB } from '@/lib/attendance/imports'
 
 export const AI_DOCUMENT_TYPES = [
@@ -96,6 +99,73 @@ const geminiResponseSchema = z
       .optional(),
   })
   .passthrough()
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash'
+
+function getGeminiClient(apiKey: string) {
+  return new GoogleGenAI({ apiKey })
+}
+
+function getFileState(file: { state?: string | { name?: string } } | null | undefined) {
+  if (!file?.state) return null
+  return typeof file.state === 'string' ? file.state : file.state.name ?? null
+}
+
+function getTempUploadPath(file: File) {
+  const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+  return path.join(process.cwd(), 'tmp', 'gemini-uploads', `${Date.now()}-${randomUUID()}.${extension}`)
+}
+
+async function waitForGeminiFileActive(filesService: any, name: string) {
+  let uploaded = await filesService.get({ name })
+  while (getFileState(uploaded) !== 'ACTIVE') {
+    if (getFileState(uploaded) === 'FAILED') {
+      throw new Error(`Gemini file ${name} failed to activate.`)
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    uploaded = await filesService.get({ name })
+  }
+  return uploaded
+}
+
+async function runGeminiSdkExtraction(input: { file: File; documentType: AiDocumentType }, apiKey: string) {
+  const client = getGeminiClient(apiKey)
+  const mimeType = input.file.type || 'image/jpeg'
+  const tempPath = getTempUploadPath(input.file)
+
+  await fs.mkdir(path.dirname(tempPath), { recursive: true })
+  await fs.writeFile(tempPath, Buffer.from(await input.file.arrayBuffer()))
+
+  try {
+    const uploaded = await client.files.upload({
+      file: tempPath,
+      config: { mimeType },
+    })
+
+    if (!uploaded.name) {
+      throw new Error('Gemini upload did not return a file name.')
+    }
+
+    const readyFile =
+      getFileState(uploaded as { state?: string | { name?: string } }) === 'ACTIVE'
+        ? uploaded
+        : await waitForGeminiFileActive(client.files, uploaded.name)
+
+    const response = await client.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [
+        createUserContent([
+          buildPrompt(input.documentType),
+          createPartFromUri(readyFile.uri, readyFile.mimeType ?? mimeType),
+        ]),
+      ],
+    })
+
+    return response.text?.trim() ?? ''
+  } finally {
+    await fs.unlink(tempPath).catch(() => {})
+  }
+}
 
 function normalizeConfidence(input: unknown) {
   const value = typeof input === 'number' ? input : Number.NaN
@@ -489,38 +559,117 @@ export async function extractStructuredDocumentWithGemini(input: {
     }
   }
 
-  const mimeType = input.file.type || 'image/jpeg'
-  let response: Response
   try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: buildPrompt(input.documentType) },
-                {
-                  inlineData: {
-                    mimeType,
-                    data: bytes.toString('base64'),
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.1,
-            topP: 0.8,
-            maxOutputTokens: 1600,
-          },
-        }),
-        signal: AbortSignal.timeout(15000),
+    const rawText = await runGeminiSdkExtraction(input, apiKey)
+    if (!rawText) {
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI returned an empty response. We used a basic document scan instead.',
+          }
+        }
       }
-    )
+      return {
+        success: false,
+        message: 'AI extraction returned an empty payload.',
+      }
+    }
+
+    const jsonText = extractFirstJsonObject(rawText)
+    if (!jsonText) {
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI response format was invalid. We used a basic document scan instead.',
+          }
+        }
+      }
+      return {
+        success: false,
+        message: 'AI extraction did not return valid JSON.',
+      }
+    }
+
+    let parsedJson: unknown
+    try {
+      parsedJson = JSON.parse(jsonText)
+    } catch {
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI JSON could not be parsed. We used a basic document scan instead.',
+          }
+        }
+      }
+      return {
+        success: false,
+        message: 'Failed to parse AI extraction JSON.',
+      }
+    }
+
+    const parsed = geminiResponseSchema.safeParse(parsedJson)
+    if (!parsed.success) {
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI response schema was unexpected. We used a basic document scan instead.',
+          }
+        }
+      }
+      return {
+        success: false,
+        message: 'AI extraction response schema did not match expected format.',
+      }
+    }
+
+    const allowedKeys = new Set<string>(AI_FIELD_KEYS)
+    const fields: Partial<Record<AiFieldKey, AiFieldSuggestion>> = {}
+
+    for (const [key, entry] of Object.entries(parsed.data.fields ?? {})) {
+      if (!allowedKeys.has(key)) continue
+
+      const normalizedValue = normalizeFieldValue(entry.value)
+      if (!normalizedValue) continue
+
+      fields[key as AiFieldKey] = {
+        value: normalizedValue,
+        confidence: normalizeConfidence(entry.confidence),
+      }
+    }
+
+    if (Object.keys(fields).length === 0) {
+      if (shouldFallbackToOcr) {
+        const fallback = await extractWithTesseract(input)
+        if (fallback.success) {
+          return {
+            ...fallback,
+            message: 'AI could not confidently extract fields. We used a basic document scan instead.',
+          }
+        }
+      }
+      return {
+        success: false,
+        message: 'AI could not confidently extract structured fields from this image.',
+      }
+    }
+
+    return {
+      success: true,
+      message: 'AI extraction complete.',
+      extraction: {
+        documentType: input.documentType,
+        fields,
+        summary: parsed.data.summary?.trim() || undefined,
+      },
+    }
   } catch (error) {
     if (shouldFallbackToOcr) {
       const fallback = await extractWithTesseract(input)
@@ -535,143 +684,5 @@ export async function extractStructuredDocumentWithGemini(input: {
       success: false,
       message: `AI extraction request failed before response: ${error instanceof Error ? error.message : 'Unknown error'}`,
     }
-  }
-
-  if (!response.ok) {
-    const details = await response.text()
-    const status = response.status
-    
-    if (status === 429 || details.includes('quota') || details.includes('rate limit')) {
-      if (shouldFallbackToOcr) {
-        const fallback = await extractWithTesseract(input)
-        if (fallback.success) {
-          return {
-            ...fallback,
-            message: 'AI is busy. We tried a basic document scan instead.',
-          }
-        }
-      }
-      return {
-        success: false,
-        message: `AI extraction request failed (${status}): ${details.slice(0, 220)}`,
-      }
-    }
-    
-    return {
-      success: false,
-      message: `AI extraction request failed (${status}): ${details.slice(0, 220)}`,
-    }
-  }
-
-  const rawPayload = (await response.json()) as unknown
-  const rawText = readGeminiText(rawPayload)
-  if (!rawText) {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI returned an empty response. We used a basic document scan instead.',
-        }
-      }
-    }
-    return {
-      success: false,
-      message: 'AI extraction returned an empty payload.',
-    }
-  }
-
-  const jsonText = extractFirstJsonObject(rawText)
-  if (!jsonText) {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI response format was invalid. We used a basic document scan instead.',
-        }
-      }
-    }
-    return {
-      success: false,
-      message: 'AI extraction did not return valid JSON.',
-    }
-  }
-
-  let parsedJson: unknown
-  try {
-    parsedJson = JSON.parse(jsonText)
-  } catch {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI JSON could not be parsed. We used a basic document scan instead.',
-        }
-      }
-    }
-    return {
-      success: false,
-      message: 'Failed to parse AI extraction JSON.',
-    }
-  }
-
-  const parsed = geminiResponseSchema.safeParse(parsedJson)
-  if (!parsed.success) {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI response schema was unexpected. We used a basic document scan instead.',
-        }
-      }
-    }
-    return {
-      success: false,
-      message: 'AI extraction response schema did not match expected format.',
-    }
-  }
-
-  const allowedKeys = new Set<string>(AI_FIELD_KEYS)
-  const fields: Partial<Record<AiFieldKey, AiFieldSuggestion>> = {}
-
-  for (const [key, entry] of Object.entries(parsed.data.fields ?? {})) {
-    if (!allowedKeys.has(key)) continue
-
-    const normalizedValue = normalizeFieldValue(entry.value)
-    if (!normalizedValue) continue
-
-    fields[key as AiFieldKey] = {
-      value: normalizedValue,
-      confidence: normalizeConfidence(entry.confidence),
-    }
-  }
-
-  if (Object.keys(fields).length === 0) {
-    if (shouldFallbackToOcr) {
-      const fallback = await extractWithTesseract(input)
-      if (fallback.success) {
-        return {
-          ...fallback,
-          message: 'AI could not confidently extract fields. We used a basic document scan instead.',
-        }
-      }
-    }
-    return {
-      success: false,
-      message: 'AI could not confidently extract structured fields from this image.',
-    }
-  }
-
-  return {
-    success: true,
-    message: 'AI extraction complete.',
-    extraction: {
-      documentType: input.documentType,
-      fields,
-      summary: parsed.data.summary?.trim() || undefined,
-    },
   }
 }
