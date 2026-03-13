@@ -65,22 +65,19 @@ function getNotificationType(item: NotificationItem): 'action' | 'message' | 'in
   return 'info'
 }
 
-function getActionCta(item: NotificationItem): { label: string; href: string } | null {
+function getActionCta(
+  item: NotificationItem,
+  centre: ReturnType<typeof normalizeCentre>
+): { label: string; href: string } | null {
   const type = getNotificationType(item)
-  if (type === 'info') return null
-
-  if (type === 'action') {
-    const templateKey = (item.template_key ?? '').trim().toLowerCase()
-    if (templateKey.includes('application')) {
-      return { label: 'Review', href: '/parent/applications' }
+  if (type === 'action') return { label: 'Review', href: '/parent/applications' }
+  if (type === 'message' && centre.contactWhatsapp) {
+    return {
+      label: 'Reply on WhatsApp',
+      href: toWhatsappHref(centre.contactWhatsapp, `Hi, following up on: ${item.title}`) ?? '#',
     }
-    return { label: 'Review', href: '/parent/applications' }
   }
-
-  const centre = normalizeCentre(item.ecd_centres)
-  const whatsappHref = toWhatsappHref(centre.contactWhatsapp ?? centre.contactPhone, item.message)
-  if (!whatsappHref) return null
-  return { label: 'Reply on WhatsApp', href: whatsappHref }
+  return null
 }
 
 export function NotificationsInbox({
@@ -259,19 +256,19 @@ export function NotificationsInbox({
             {(() => {
               const centre = normalizeCentre(item.ecd_centres)
               const type = getNotificationType(item)
-              const cta = getActionCta(item)
+              const cta = getActionCta(item, centre)
               return (
                 <>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
                         {type === 'action' ? (
-                          <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                          <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
                             Action needed
                           </span>
                         ) : null}
                         {type === 'message' ? (
-                          <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-teal-700">
+                          <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700">
                             Message
                           </span>
                         ) : null}
@@ -294,10 +291,10 @@ export function NotificationsInbox({
                         href={cta.href}
                         target={cta.href.startsWith('http') ? '_blank' : undefined}
                         rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
-                        className="inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:text-teal-800"
+                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal-700"
                       >
                         {cta.label}
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <ArrowRight className="h-3 w-3" />
                       </a>
                     </div>
                   ) : null}
