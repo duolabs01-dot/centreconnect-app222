@@ -33,14 +33,13 @@ export default function CentreIntroPage() {
             For ECD Owners & Principals
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-400/15 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200 mb-8 border border-amber-200/30 backdrop-blur-md">
-            Pilot offer: onboarding fee waived until end of next month
+            Pilot offer: onboarding + first month free until end of April
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-4xl font-black leading-[1.05] tracking-tighter sm:text-6xl lg:text-7xl">
-            Take the weight off your shoulders. <br/>
-            <span className="text-cyan-400">Run your creche from your phone.</span>
+            Stop running your creche on WhatsApp and paper.
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-lg font-medium text-slate-300 sm:text-xl leading-relaxed">
-            Stop chasing papers and WhatsApp messages. CentreConnect is built for South African centres to manage admissions, attendance, and safety in one simple place.
+            Every morning: chase parents for fees. Chase teachers for registers. Chase yourself for time. CentreConnect was built by someone who watched this happen in Alexandra — and decided to fix it.
           </p>
         </Container>
       </section>
@@ -50,27 +49,27 @@ export default function CentreIntroPage() {
           {/* Content Side */}
           <div className="space-y-8">
             <div className="rounded-[2.5rem] bg-white p-8 shadow-xl border border-slate-50">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">Why principals and MaGogos choose CentreConnect</h2>
+              <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-6">What changes in the first week</h2>
               
               <div className="space-y-6">
                 {[
                   {
-                    title: "No more WhatsApp chaos",
+                    title: "Parents applying by WhatsApp? Done.",
                     desc: "Parents apply online and upload their docs directly. You see everything in one clean office view.",
                     icon: MessageCircle,
                     color: "text-cyan-600",
                     bg: "bg-cyan-50"
                   },
                   {
-                    title: "DSD Compliance made easy",
-                    desc: "Mark your daily register in seconds. We count the totals and make your DSD reports ready to print.",
+                    title: "Chasing attendance registers?",
+                    desc: "Mark who's in from your phone. No paper. No catch-up.",
                     icon: ShieldCheck,
                     color: "text-emerald-600",
                     bg: "bg-emerald-50"
                   },
                   {
-                    title: "Safety at your gate",
-                    desc: "Use secure QR codes to verify every pickup. Keep your children safe and your staff calm.",
+                    title: "Applications buried in your inbox?",
+                    desc: "Every new application goes to one place. You decide. Parents get notified automatically.",
                     icon: Zap,
                     color: "text-amber-600",
                     bg: "bg-amber-50"
