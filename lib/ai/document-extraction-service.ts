@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
 import fs from 'fs/promises'
+import os from 'os'
 import path from 'path'
 import { z } from 'zod'
 import Tesseract from 'tesseract.js'
@@ -113,7 +114,8 @@ function getFileState(file: { state?: string | { name?: string } } | null | unde
 
 function getTempUploadPath(file: File) {
   const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  return path.join(process.cwd(), 'tmp', 'gemini-uploads', `${Date.now()}-${randomUUID()}.${extension}`)
+  const tempRoot = process.env.TMPDIR || process.env.TEMP || process.env.TMP || os.tmpdir()
+  return path.resolve(tempRoot, 'centreconnect', 'gemini-uploads', `${Date.now()}-${randomUUID()}.${extension}`)
 }
 
 async function waitForGeminiFileActive(filesService: any, name: string) {
