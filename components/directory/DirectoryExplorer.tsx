@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Baby, MapPin, Search, ShieldCheck, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check } from 'lucide-react'
+import { Baby, MapPin, Search, ShieldCheck, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check, X, Clock, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre
 import { isTrustedDistanceSource } from '@/lib/geo/centre-location-metadata'
 import type { DirectoryCentre } from '@/types/directory-centre'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
+import { useRecentSearches } from '@/lib/hooks/use-recent-searches'
 import {
   Sheet,
   SheetContent,
@@ -124,6 +125,11 @@ export default function DirectoryExplorer({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [geoStatus, setGeoStatus] = useState<'idle' | 'pending' | 'granted' | 'denied'>('idle')
 
+  // Autocomplete state
+  const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const { recentSearches, recentSuburbs, addRecentSearch, addRecentSuburb, clearRecentSearches, clearRecentSuburbs } = useRecentSearches()
+  const inputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     if (userLocation || geoStatus === 'granted') return
 
@@ -189,6 +195,20 @@ export default function DirectoryExplorer({
     const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300)
     return () => clearTimeout(timeout)
   }, [search])
+
+  // Save to recent searches when search is performed
+  useEffect(() => {
+    if (debouncedSearch && debouncedSearch.length >= 2) {
+      addRecentSearch(debouncedSearch)
+    }
+  }, [debouncedSearch, addRecentSearch])
+
+  // Save suburb when selected
+  useEffect(() => {
+    if (selectedSuburb) {
+      addRecentSuburb(selectedSuburb)
+    }
+  }, [selectedSuburb, addRecentSuburb])
 
   useEffect(() => {
     const params = new URLSearchParams()
@@ -259,15 +279,94 @@ export default function DirectoryExplorer({
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8682]" />
             <Input
+              ref={inputRef}
               type="text"
               placeholder="Search centre or suburb..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value)
                 setCurrentPage(1)
+                setShowAutocomplete(true)
               }}
+              onFocus={() => setShowAutocomplete(true)}
+              onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
               className="h-14 rounded-[1.4rem] border-[#E4D9CC] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] pl-11 pr-4 text-base font-medium text-[#22312E] shadow-[0_10px_24px_rgba(31,44,39,0.05)] focus-visible:border-[#0D9488] focus-visible:ring-2 focus-visible:ring-[#0D9488]/10"
             />
+            
+            {/* Autocomplete Dropdown */}
+            <AnimatePresence>
+              {showAutocomplete && (recentSearches.length > 0 || recentSuburbs.length > 0) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl border border-[#E4D9CC] bg-white shadow-lg"
+                >
+                  {recentSearches.length > 0 && (
+                    <div className="p-2">
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#7C8682]">
+                          <Clock className="h-3 w-3" />
+                          Recent Searches
+                        </div>
+                        <button
+                          onClick={clearRecentSearches}
+                          className="text-xs text-[#7C8682] hover:text-[#0D9488]"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      {recentSearches.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setSearch(s)
+                            setCurrentPage(1)
+                            setShowAutocomplete(false)
+                          }}
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0]"
+                        >
+                          <Search className="h-4 w-4 text-[#7C8682]" />
+                          <span className="text-[#22312E]">{s}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {recentSuburbs.length > 0 && (
+                    <div className="border-t border-[#E4D9CC] p-2">
+                      <div className="flex items-center justify-between px-3 py-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#7C8682]">
+                          <MapPin className="h-3 w-3" />
+                          Recent Areas
+                        </div>
+                        <button
+                          onClick={clearRecentSuburbs}
+                          className="text-xs text-[#7C8682] hover:text-[#0D9488]"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                      {recentSuburbs.map((suburb, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setSelectedSuburb(suburb)
+                            addRecentSuburb(suburb)
+                            setCurrentPage(1)
+                            setShowAutocomplete(false)
+                          }}
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0]"
+                        >
+                          <MapPin className="h-4 w-4 text-[#7C8682]" />
+                          <span className="text-[#22312E]">{suburb}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>

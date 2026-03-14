@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Bell, BellOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -80,6 +80,21 @@ function getActionCta(
   return null
 }
 
+function getDateGroup(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  const thisWeekStart = new Date(today.getTime() - today.getDay() * 24 * 60 * 60 * 1000)
+  
+  const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+  
+  if (itemDate.getTime() >= today.getTime()) return 'Today'
+  if (itemDate.getTime() >= yesterday.getTime()) return 'Yesterday'
+  if (itemDate.getTime() >= thisWeekStart.getTime()) return 'This Week'
+  return 'Older'
+}
+
 export function NotificationsInbox({
   initialItems,
   parentId,
@@ -90,6 +105,7 @@ export function NotificationsInbox({
   const supabase = useMemo(() => createClient(), [])
   const [items, setItems] = useState(initialItems)
   const [activeTab, setActiveTab] = useState<InboxTab>('All')
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const seenRealtimeIdsRef = useRef(new Set(initialItems.map((item) => item.id)))
 
   useEffect(() => {
@@ -150,33 +166,47 @@ export function NotificationsInbox({
   }, [parentId, supabase])
 
   const filteredItems = useMemo(() => {
-    if (activeTab === 'All') return items
-    return items.filter((item) => {
-      const templateKey = (item.template_key ?? '').trim().toLowerCase()
-      const title = item.title.trim().toLowerCase()
+    let filtered = items
+    if (showUnreadOnly) {
+      filtered = items.filter((item) => !item.is_read)
+    } else if (activeTab !== 'All') {
+      filtered = items.filter((item) => {
+        const templateKey = (item.template_key ?? '').trim().toLowerCase()
+        const title = item.title.trim().toLowerCase()
 
-      const isMessage = getNotificationType(item) === 'message'
-      const isAnnouncement =
-        templateKey === 'announcement' ||
-        templateKey === 'open_day_invite' ||
-        templateKey === 'spot_available' ||
-        templateKey.endsWith('_notice') ||
-        templateKey.endsWith('_invite') ||
-        templateKey === 'daily_report_nudge' ||
-        templateKey === 'report_card_ready' ||
-        title.includes('announcement') ||
-        title.includes('open day') ||
-        title.includes('invite') ||
-        title.includes('spot available')
-      const isUpdate = !isMessage && !isAnnouncement
+        const isMessage = getNotificationType(item) === 'message'
+        const isAnnouncement =
+          templateKey === 'announcement' ||
+          templateKey === 'open_day_invite' ||
+          templateKey === 'spot_available' ||
+          templateKey.endsWith('_notice') ||
+          templateKey.endsWith('_invite') ||
+          templateKey === 'daily_report_nudge' ||
+          templateKey === 'report_card_ready' ||
+          title.includes('announcement') ||
+          title.includes('open day') ||
+          title.includes('invite') ||
+          title.includes('spot available')
+        const isUpdate = !isMessage && !isAnnouncement
 
-      if (activeTab === 'Messages') return isMessage
-      if (activeTab === 'Announcements') return isAnnouncement
-      return isUpdate
+        if (activeTab === 'Messages') return isMessage
+        if (activeTab === 'Announcements') return isAnnouncement
+        return isUpdate
+      })
+    }
+    
+    // Group by date
+    const groups: Record<string, NotificationItem[]> = {}
+    filtered.forEach((item) => {
+      const group = getDateGroup(item.created_at)
+      if (!groups[group]) groups[group] = []
+      groups[group].push(item)
     })
-  }, [activeTab, items])
+    return groups
+  }, [activeTab, items, showUnreadOnly])
 
-  const unreadCount = useMemo(() => filteredItems.filter((item) => !item.is_read).length, [filteredItems])
+  const unreadCount = useMemo(() => items.filter((item) => !item.is_read).length, [items])
+  const groupedItems = filteredItems as Record<string, NotificationItem[]>
 
   async function markRead(notificationId: string) {
     const { error } = await supabase
@@ -229,15 +259,27 @@ export function NotificationsInbox({
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">
-          {unreadCount} unread notification{unreadCount === 1 ? '' : 's'} {activeTab === 'All' ? 'in inbox' : `in ${activeTab.toLowerCase()}`}
-        </p>
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-slate-600">
+            {unreadCount} unread notification{unreadCount === 1 ? '' : 's'} {activeTab === 'All' ? 'in inbox' : `in ${activeTab.toLowerCase()}`}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+            className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+              showUnreadOnly ? 'bg-cyan-100 text-cyan-700' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {showUnreadOnly ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+            {showUnreadOnly ? 'Showing unread' : 'Unread only'}
+          </button>
+        </div>
         <Button type="button" variant="outline" size="sm" onClick={markAllRead}>
           Mark all read
         </Button>
       </div>
 
-      {filteredItems.length === 0 ? (
+      {Object.keys(groupedItems).length === 0 ? (
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
           <p className="text-sm font-semibold text-slate-900">No {activeTab === 'All' ? 'updates' : activeTab.toLowerCase()} yet</p>
           <p className="mt-1 text-sm text-slate-600">Apply to crèches and switch on preferences to get proactive updates here.</p>
@@ -251,63 +293,73 @@ export function NotificationsInbox({
           </div>
         </div>
       ) : (
-        filteredItems.map((item) => (
-          <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-blue-200 bg-blue-50/40'}`}>
-            {(() => {
-              const centre = normalizeCentre(item.ecd_centres)
-              const type = getNotificationType(item)
-              const cta = getActionCta(item, centre)
-              return (
-                <>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        {type === 'action' ? (
-                          <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                            Action needed
-                          </span>
-                        ) : null}
-                        {type === 'message' ? (
-                          <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700">
-                            Message
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{item.title}</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {centre.name} | {formatDate(item.created_at)}
-                      </p>
-                    </div>
-                    {!item.is_read ? (
-                      <Button type="button" size="sm" variant="outline" onClick={() => void markRead(item.id)}>
-                        Mark read
-                      </Button>
-                    ) : null}
+        <div className="space-y-6">
+          {Object.entries(groupedItems).map(([group, groupItems]) => (
+            <div key={group}>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{group}</p>
+              <div className="space-y-3">
+                {groupItems.map((item) => (
+                  <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-blue-200 bg-blue-50/40'}`}>
+                    {(() => {
+                      const centre = normalizeCentre(item.ecd_centres)
+                      const type = getNotificationType(item)
+                      const cta = getActionCta(item, centre)
+                      return (
+                        <>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                {type === 'action' ? (
+                                  <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                                    Action needed
+                                  </span>
+                                ) : null}
+                                {type === 'message' ? (
+                                  <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700">
+                                    Message
+                                  </span>
+                                ) : null}
+                                {!item.is_read && <span className="h-2 w-2 rounded-full bg-cyan-500" />}
+                              </div>
+                              <p className={`mt-1 text-sm font-semibold text-slate-900 ${!item.is_read ? 'font-bold' : ''}`}>{item.title}</p>
+                              <p className="mt-1 text-xs text-slate-600">
+                                {centre.name} | {formatDate(item.created_at)}
+                              </p>
+                            </div>
+                            {!item.is_read ? (
+                              <Button type="button" size="sm" variant="outline" onClick={() => void markRead(item.id)}>
+                                Mark read
+                              </Button>
+                            ) : null}
+                          </div>
+                          <p className="mt-3 text-sm text-slate-700">{item.message}</p>
+                          {cta ? (
+                            <div className="mt-2">
+                              <a
+                                href={cta.href}
+                                target={cta.href.startsWith('http') ? '_blank' : undefined}
+                                rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
+                                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal-700"
+                              >
+                                {cta.label}
+                                <ArrowRight className="h-3 w-3" />
+                              </a>
+                            </div>
+                          ) : null}
+                          <div className="mt-3">
+                            <Button type="button" size="sm" variant="outline" onClick={() => void copyMessage(item.message)}>
+                              Copy message
+                            </Button>
+                          </div>
+                        </>
+                      )
+                    })()}
                   </div>
-                  <p className="mt-3 text-sm text-slate-700">{item.message}</p>
-                  {cta ? (
-                    <div className="mt-2">
-                      <a
-                        href={cta.href}
-                        target={cta.href.startsWith('http') ? '_blank' : undefined}
-                        rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
-                        className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal-700"
-                      >
-                        {cta.label}
-                        <ArrowRight className="h-3 w-3" />
-                      </a>
-                    </div>
-                  ) : null}
-                  <div className="mt-3">
-                    <Button type="button" size="sm" variant="outline" onClick={() => void copyMessage(item.message)}>
-                      Copy message
-                    </Button>
-                  </div>
-                </>
-              )
-            })()}
-          </div>
-        ))
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
