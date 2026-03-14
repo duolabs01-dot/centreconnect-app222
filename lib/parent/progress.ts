@@ -19,6 +19,7 @@ export type ParentProgress = {
   hasPhone: boolean
   hasRelationship: boolean
   hasEmergencyContact: boolean
+  hasAvatar: boolean
   hasAllRequiredProfileFields: boolean
   
   // Document completeness
@@ -69,7 +70,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     { count: enrolledCount },
     { data: documents },
   ] = await Promise.all([
-    supabase.from('user_profiles').select('full_name,phone').eq('id', userId).maybeSingle(),
+    supabase.from('user_profiles').select('full_name,phone,avatar_url').eq('id', userId).maybeSingle(),
     supabase.from('parents').select('guardian_relationship,emergency_contact_name,emergency_contact_phone').eq('id', userId).maybeSingle(),
     supabase.from('children').select('id,enrollment_status').eq('parent_id', userId),
     supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', userId),
@@ -99,13 +100,21 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     parentProfile?.emergency_contact_name?.trim() && 
     parentProfile?.emergency_contact_phone?.trim()
   )
-  const hasAllRequiredProfileFields = hasName && hasPhone && hasRelationship && hasEmergencyContact
+  const hasAvatar = Boolean(userProfile?.avatar_url?.trim())
+  const hasAllRequiredProfileFields = hasName && hasPhone && hasRelationship && hasEmergencyContact && hasAvatar
 
   // Document checklist
   const documentChecklist = evaluateApplicationDocumentChecklist((documents ?? []).map((d: any) => d.doc_type))
   const documentsCount = documentChecklist.uploadedCount
   const requiredDocumentsCount = documentChecklist.totalRequired
   const hasAllRequiredDocuments = documentChecklist.missingCodes.length === 0
+
+  // Profile completeness (5 profile fields + documents)
+  const profileFieldsComplete = [hasName, hasPhone, hasRelationship, hasEmergencyContact, hasAvatar].filter(Boolean).length
+  const profileCompleteness = Math.round(
+    ((profileFieldsComplete / 5) * 70) + 
+    ((documentsCount / Math.max(requiredDocumentsCount, 1)) * 30)
+  )
 
   // Check for expiring documents (30, 7, 1 days)
   const today = new Date()
@@ -124,13 +133,6 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
 
   const urgentExpiring = expiringDocuments.filter(d => d.daysUntilExpiry <= 7)
   const upcomingExpiring = expiringDocuments.filter(d => d.daysUntilExpiry > 7 && d.daysUntilExpiry <= 30)
-
-  // Profile completeness (4 profile fields + documents)
-  const profileFieldsComplete = [hasName, hasPhone, hasRelationship, hasEmergencyContact].filter(Boolean).length
-  const profileCompleteness = Math.round(
-    ((profileFieldsComplete / 4) * 70) + 
-    ((documentsCount / Math.max(requiredDocumentsCount, 1)) * 30)
-  )
 
   // Home state
   const homeState = deriveParentHomeState({
@@ -151,6 +153,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
       { key: 'phone', label: 'phone number', complete: hasPhone },
       { key: 'relationship', label: 'relationship to child', complete: hasRelationship },
       { key: 'emergency', label: 'emergency contact', complete: hasEmergencyContact },
+      { key: 'avatar', label: 'profile photo', complete: hasAvatar },
     ].filter(f => !f.complete).map(f => f.label),
     urgentExpiringDocs: urgentExpiring.length,
   })
@@ -165,6 +168,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     hasPhone,
     hasRelationship,
     hasEmergencyContact,
+    hasAvatar,
     hasAllRequiredProfileFields,
     documentsCount,
     requiredDocumentsCount,
