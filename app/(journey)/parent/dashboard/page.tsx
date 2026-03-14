@@ -20,6 +20,7 @@ import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { formatDate } from '@/lib/utils'
 import { deriveParentHomeState, type ParentHomeState } from '@/lib/parent/home-state'
+import { getParentProgress } from '@/lib/parent/progress'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 
 export const metadata: Metadata = {
@@ -274,6 +275,9 @@ export default async function ParentDashboardPage() {
       hasEnrolledChild: enrolledChildren.length > 0 || Boolean(enrolledApplication),
     })
 
+    // Get unified parent progress for next action
+    const progress = user ? await getParentProgress(user.id) : null
+
     const enrolledChildIds = Array.from(
       new Set([
         ...enrolledChildren.map((child) => child.id),
@@ -388,6 +392,27 @@ export default async function ParentDashboardPage() {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
         <div className="cc-stack">
+          {/* Next Action Card - Always show the most important next step */}
+          {progress?.nextAction && (
+            <SurfaceCard className="relative overflow-hidden border-2 border-cyan-200 bg-gradient-to-r from-cyan-50 to-white p-5">
+              <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-cyan-100/50 to-transparent" />
+              <div className="relative flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-cyan-600">Your next step</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{progress.nextAction.title}</p>
+                  <p className="mt-1 text-sm text-slate-600">{progress.nextAction.description}</p>
+                </div>
+                <Link
+                  href={progress.nextAction.href}
+                  className="shrink-0 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                >
+                  Do it
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </SurfaceCard>
+          )}
+
           {homeState === 'discover' ? (
             <div className="cc-stack">
               <SurfaceCard className="relative overflow-hidden border border-border bg-gradient-to-b from-muted/40 to-background p-6 sm:p-7">

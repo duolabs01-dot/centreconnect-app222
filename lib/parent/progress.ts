@@ -26,6 +26,23 @@ export type ParentProgress = {
   requiredDocumentsCount: number
   hasAllRequiredDocuments: boolean
   
+  // Document expiry alerts
+  expiringDocuments: Array<{
+    docType: string
+    expiryDate: string
+    daysUntilExpiry: number
+  }>
+  urgentExpiringDocuments: Array<{
+    docType: string
+    expiryDate: string
+    daysUntilExpiry: number
+  }>
+  upcomingExpiringDocuments: Array<{
+    docType: string
+    expiryDate: string
+    daysUntilExpiry: number
+  }>
+  
   // Derived
   profileCompleteness: number
   homeState: ParentHomeState
@@ -33,7 +50,7 @@ export type ParentProgress = {
 }
 
 export type ParentNextAction = {
-  type: 'add_first_child' | 'browse_creches' | 'check_application' | 'complete_profile' | 'upload_documents' | 'view_updates'
+  type: 'add_first_child' | 'browse_creches' | 'check_application' | 'complete_profile' | 'upload_documents' | 'view_updates' | 'renew_documents'
   title: string
   description: string
   href: string
@@ -90,6 +107,24 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
   const requiredDocumentsCount = documentChecklist.totalRequired
   const hasAllRequiredDocuments = documentChecklist.missingCodes.length === 0
 
+  // Check for expiring documents (30, 7, 1 days)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const expiringDocuments = (documents ?? []).filter((d: any) => {
+    if (!d.expiry_date) return false
+    const expiryDate = new Date(d.expiry_date)
+    expiryDate.setHours(0, 0, 0, 0)
+    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntilExpiry <= 30 && daysUntilExpiry >= 0
+  }).map((d: any) => ({
+    docType: d.doc_type,
+    expiryDate: d.expiry_date,
+    daysUntilExpiry: Math.ceil((new Date(d.expiry_date).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  }))
+
+  const urgentExpiring = expiringDocuments.filter(d => d.daysUntilExpiry <= 7)
+  const upcomingExpiring = expiringDocuments.filter(d => d.daysUntilExpiry > 7 && d.daysUntilExpiry <= 30)
+
   // Profile completeness (4 profile fields + documents)
   const profileFieldsComplete = [hasName, hasPhone, hasRelationship, hasEmergencyContact].filter(Boolean).length
   const profileCompleteness = Math.round(
@@ -117,6 +152,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
       { key: 'relationship', label: 'relationship to child', complete: hasRelationship },
       { key: 'emergency', label: 'emergency contact', complete: hasEmergencyContact },
     ].filter(f => !f.complete).map(f => f.label),
+    urgentExpiringDocs: urgentExpiring.length,
   })
 
   return {
@@ -133,6 +169,9 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     documentsCount,
     requiredDocumentsCount,
     hasAllRequiredDocuments,
+    expiringDocuments,
+    urgentExpiringDocuments: urgentExpiring,
+    upcomingExpiringDocuments: upcomingExpiring,
     profileCompleteness,
     homeState,
     nextAction,
@@ -147,7 +186,18 @@ function calculateNextAction(input: {
   hasAllRequiredDocuments: boolean
   missingDocuments: number
   missingProfileFields: string[]
+  urgentExpiringDocs?: number
 }): ParentNextAction {
+  // Priority 0: Urgent document expiry (within 7 days) - always show this first
+  if (input.urgentExpiringDocs && input.urgentExpiringDocs > 0) {
+    return {
+      type: 'renew_documents',
+      title: 'Documents expiring soon!',
+      description: `${input.urgentExpiringDocs} document${input.urgentExpiringDocs > 1 ? 's will' : ' will'} expire within 7 days. Renew now to avoid issues.`,
+      href: '/parent/profile/documents',
+    }
+  }
+
   // Priority 1: No children yet
   if (!input.hasChildren) {
     return {
