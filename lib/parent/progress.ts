@@ -75,7 +75,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', userId),
     supabase.from('applications').select('id,status').eq('parent_id', userId),
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('parent_id', userId).eq('status', 'enrolled'),
-    supabase.from('parent_documents').select('doc_type').eq('parent_id', userId).limit(80),
+    supabase.from('parent_documents').select('doc_type,expiry_date').eq('parent_id', userId).limit(80),
   ])
 
   // Calculate child counts
