@@ -16,6 +16,10 @@ export function isTurnstileEnabled() {
 export async function verifyTurnstileToken(input: { token: string; remoteIp?: string | null }) {
   const secret = getTurnstileSecretKey()
   if (!secret) {
+    // Warn in production but allow bypass (intended for dev)
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('[turnstile] WARNING: TURNSTILE_SECRET_KEY not set - CAPTCHA disabled in production!')
+    }
     return { ok: true as const, skipped: true as const }
   }
 

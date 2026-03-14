@@ -145,5 +145,13 @@ async function enforceUpstashRateLimit(input: RateLimitInput): Promise<RateLimit
 export async function enforceRateLimit(input: RateLimitInput): Promise<RateLimitResult> {
   const distributed = await enforceUpstashRateLimit(input)
   if (distributed) return distributed
+  
+  // In serverless, in-memory doesn't work - fail closed instead
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    console.error('[rate-limit] Upstash failed - rejecting request in production')
+    return { ok: false, remaining: 0, retryAfterSec: 60 }
+  }
+  
+  // Only use in-memory in development
   return enforceInMemoryRateLimit(input)
 }

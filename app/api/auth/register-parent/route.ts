@@ -10,6 +10,7 @@ import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { renderParentSignupConfirmationEmail } from '@/lib/email/templates/parent-signup-confirmation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { enforceRateLimit } from '@/lib/security/rate-limit'
 
 const TERMS_VERSION_MAX_LENGTH = 40
 
@@ -38,6 +39,20 @@ function isAlreadyRegisteredError(message?: string | null) {
 }
 
 export async function POST(request: Request) {
+  // Rate limit: 5 registrations per IP per minute
+  const rateLimit = await enforceRateLimit({
+    scope: 'register-parent',
+    key: request.headers.get('x-forwarded-for') || 'unknown',
+    max: 5,
+    windowMs: 60000,
+  })
+  if (!rateLimit.ok) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSec) } }
+    )
+  }
+
   const payload = await request.json().catch(() => null)
   const parsed = registerParentSchema.safeParse(payload)
   if (!parsed.success) {
