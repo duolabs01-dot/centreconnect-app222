@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -21,7 +21,9 @@ import {
   BadgeCheck,
   CheckCircle2,
   Edit3,
-  Sparkles
+  Sparkles,
+  Camera,
+  Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -82,6 +84,8 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
   const [editValue, setEditValue] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setVisible(!sheetOpen)
@@ -92,8 +96,9 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
     profile.full_name, 
     profile.phone, 
     profile.guardian_relationship, 
-    profile.emergency_contact_name
-  ].filter(Boolean).length / 4) * 100)
+    profile.emergency_contact_name,
+    profile.avatar_url
+  ].filter(Boolean).length / 5) * 100)
 
   async function handleSignOut() {
     if (isSigningOut) return
@@ -148,6 +153,58 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       toast.error(message)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleAvatarUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be smaller than 2MB')
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const ready = await ensureParentReady(supabase)
+      if (!ready.ok) throw new Error(ready.error)
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${ready.userId}/avatar.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName)
+
+      if (!urlData?.publicUrl) throw new Error('Could not get avatar URL')
+
+      const { error: updateError } = await supabase
+        .from('user_profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', ready.userId)
+
+      if (updateError) throw updateError
+
+      setProfile(prev => ({ ...prev, avatar_url: urlData.publicUrl }))
+      toast.success('Profile photo updated')
+      router.refresh()
+    } catch (error: unknown) {
+      const message = toFriendlyClientError(error, 'Failed to upload photo')
+      toast.error(message)
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
@@ -253,11 +310,28 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-cyan-500/10 transition-colors" />
         
         <div className="flex items-center gap-5 relative z-10">
-          <div className="h-20 w-20 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-2xl font-black text-white shadow-float ring-4 ring-white relative">
-            {profile.avatar_url ? (
+          <div 
+            className="h-20 w-20 overflow-hidden rounded-[2rem] bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-2xl font-black text-white shadow-float ring-4 ring-white relative cursor-pointer group/avatar"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {isUploadingAvatar ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : profile.avatar_url ? (
               <Image src={profile.avatar_url} alt="Profile" fill className="h-full w-full object-cover" />
-            ) : initialsFromName(profile.full_name)}
+            ) : (
+              initialsFromName(profile.full_name)
+            )}
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity rounded-[2rem]">
+              <Camera className="h-8 w-8 text-white" />
+            </div>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <p className="text-xl font-black text-slate-900 truncate tracking-tight">{profile.full_name || 'Parent'}</p>

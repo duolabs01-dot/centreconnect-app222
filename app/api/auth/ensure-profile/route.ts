@@ -50,6 +50,16 @@ export async function POST(request: NextRequest) {
     const fullName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? fallbackName(user.email)
     const phone = user.user_metadata?.phone ?? null
     const username = user.user_metadata?.username ?? generateUsernameFromId(user.id)
+    
+    let avatarUrl: string | null = user.user_metadata?.avatar_url ?? null
+    if (!avatarUrl && user.identities) {
+      for (const identity of user.identities) {
+        if (identity.identity_data?.avatar_url) {
+          avatarUrl = identity.identity_data.avatar_url
+          break
+        }
+      }
+    }
 
     const admin = createAdminClient()
 
@@ -82,6 +92,7 @@ export async function POST(request: NextRequest) {
         full_name: fullName,
         phone,
         username: usernameToPersist,
+        avatar_url: avatarUrl,
       },
       { onConflict: 'id' }
     )

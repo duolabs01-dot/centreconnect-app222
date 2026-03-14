@@ -250,7 +250,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
       message: `Invite sent for ${childLabel}. Share via WhatsApp if needed.`,
       parent_phone: inviterProfile?.phone ?? null,
       is_read: false,
-    }).catch(() => null)
+    }).catch((err) => console.error('Failed to create co-parent notification:', err))
 
     const { data: centre } = await supabase
       .from('ecd_centres')
@@ -272,7 +272,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
       email_subject: `[CentreConnect] Co-parent invite sent`,
       email_body: `<p>${inviterName} sent a co-parent invite for <strong>${childLabel}</strong> at ${centreName}.</p>`,
       is_read: false,
-    }).catch(() => null)
+    }).catch((err) => console.error('Failed to send ECD notification:', err))
   }
 
   return {
