@@ -5,20 +5,18 @@ import {
   BellRing,
   CalendarCheck2,
   ClipboardList,
-  Clock3,
-  Mail,
-  ShieldCheck,
   UserPlus2,
   Users,
 } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { OnboardingChecklistCard, TrialStatusBanner } from '@/components/ecd/trial-status-banner'
+import { FeatureBanner } from '@/components/ui/feature-banner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { formatDate, getJohannesburgGreeting } from '@/lib/utils'
+import { formatDate, getJohannesburgGreeting, cn } from '@/lib/utils'
 
 export const revalidate = 30
 
@@ -234,7 +232,7 @@ export default async function EcdDashboardPage() {
   return (
     <EcdOsShell
       title={`${centre?.name ?? 'Your Crèche'} Dashboard`}
-      description="Today-first dashboard for attendance, admissions, family follow-up, and DSD readiness."
+      description="Your daily command centre — attendance, admissions, and family connection at a glance."
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
@@ -246,65 +244,77 @@ export default async function EcdDashboardPage() {
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-700">{nowJhb}</p>
               <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{centre?.name ?? 'Your creche'}</h1>
               <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-                Start with what matters right now: who is in today, which applications need your attention, which families still need linking, and whether your DSD pack is ready.
+                Here is what needs your attention today. Everything else — we have covered.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { label: 'Attendance today', value: snapshot.attendance_today_count ?? 0 },
-                { label: 'Admissions waiting', value: pendingCount },
-                { label: 'Unread updates', value: unreadNotifications },
-                { label: 'Family follow-up', value: familyFollowUps },
+                { label: 'Children here today', value: snapshot.attendance_today_count ?? 0, icon: '✓', subtext: 'marked in' },
+                { label: 'Applications', value: pendingCount, icon: pendingCount > 0 ? '!' : '—', subtext: 'waiting for review', urgent: pendingCount > 0 },
+                { label: 'Messages', value: unreadNotifications, icon: unreadNotifications > 0 ? '●' : '—', subtext: 'unread', urgent: unreadNotifications > 0 },
+                { label: 'Family links', value: familyFollowUps, icon: familyFollowUps > 0 ? '→' : '✓', subtext: familyFollowUps > 0 ? 'need connecting' : 'all connected' },
               ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-white bg-white/90 p-4 shadow-sm">
+                <div key={item.label} className={cn(
+                  'rounded-2xl border p-4 shadow-sm transition-all',
+                  item.urgent 
+                    ? 'border-amber-200 bg-amber-50/70' 
+                    : 'border-white bg-white/90'
+                )}>
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
-                  <p className="mt-2 text-3xl font-black text-slate-900">{item.value}</p>
+                  <div className="mt-1 flex items-baseline gap-2">
+                    <span className={cn('text-3xl font-black', item.urgent ? 'text-amber-700' : 'text-slate-900')}>
+                      {item.value}
+                    </span>
+                    <span className="text-xs font-medium text-slate-400">{item.subtext}</span>
+                  </div>
                 </div>
               ))}
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <Button asChild className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-700">
-                <Link href="/ecd/attendance">Open attendance</Link>
+                <Link href="/ecd/attendance">Take attendance</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                <Link href="/ecd/applications">Open admissions</Link>
+                <Link href="/ecd/applications">Review applications</Link>
               </Button>
               <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                <Link href="/ecd/dsd-export">Open DSD pack</Link>
+                <Link href="/ecd/dsd-export">DSD pack</Link>
               </Button>
             </div>
           </CardContent>
         </Card>
+
+        <FeatureBanner context="ecd" />
 
         <div className="grid gap-4 xl:grid-cols-2">
           <Card className="rounded-[1.8rem] border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
                 <CalendarCheck2 className="h-5 w-5 text-cyan-600" />
-                Today at the creche
+                Today's rhythm
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Marked in</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Checked in</p>
                   <p className="mt-2 text-2xl font-black text-slate-900">{snapshot.attendance_today_count ?? 0}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Picked up</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Collected</p>
                   <p className="mt-2 text-2xl font-black text-slate-900">{snapshot.picked_up_today_count ?? 0}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Active pickup codes</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Pickup codes</p>
                   <p className="mt-2 text-2xl font-black text-slate-900">{snapshot.active_pickup_codes_count ?? 0}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button asChild className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-700">
-                  <Link href="/ecd/attendance">Mark attendance</Link>
+                  <Link href="/ecd/attendance">Take attendance</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                  <Link href="/ecd/pickup">Pickup and collection</Link>
+                  <Link href="/ecd/pickup">Collection</Link>
                 </Button>
                 <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
                   <Link href="/ecd/daily-reports">Daily updates</Link>
@@ -317,16 +327,16 @@ export default async function EcdDashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
                 <ClipboardList className="h-5 w-5 text-cyan-600" />
-                Admissions next
+                New applications
               </CardTitle>
               <Link href="/ecd/applications" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-                Open admissions
+                View all
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
               {pendingRows.length > 0 ? pendingRows.map((row) => <PendingApplicationItem key={row.id} row={row} />) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  No applications need review right now. New family applications will appear here first.
+                  No new applications waiting. When families apply, they appear here.
                 </div>
               )}
             </CardContent>
@@ -336,10 +346,10 @@ export default async function EcdDashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
                 <UserPlus2 className="h-5 w-5 text-cyan-600" />
-                Family follow-up
+                Family connections
               </CardTitle>
               <Link href="/ecd/children" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-                Open child roster
+                All children
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -355,40 +365,43 @@ export default async function EcdDashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between gap-3">
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
                 <BellRing className="h-5 w-5 text-cyan-600" />
-                Parent updates and compliance
+                Messages & compliance
               </CardTitle>
               <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline" className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                  <Link href="/ecd/announcements">Announcements</Link>
+                  <Link href="/ecd/announcements">Announce</Link>
                 </Button>
                 <Button asChild variant="outline" className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                  <Link href="/ecd/dsd-export">DSD pack</Link>
+                  <Link href="/ecd/compliance">Compliance</Link>
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Unread updates</p>
+                <div className={cn(
+                  'rounded-2xl border p-4',
+                  unreadNotifications > 0 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'
+                )}>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Unread messages</p>
                   <p className="mt-2 text-2xl font-black text-slate-900">{unreadNotifications}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Compliance needs attention</p>
+                <div className={cn(
+                  'rounded-2xl border p-4',
+                  complianceNeedsAttention > 0 ? 'border-amber-200 bg-amber-50' : 'border-slate-200 bg-slate-50'
+                )}>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Documents needed</p>
                   <p className="mt-2 text-2xl font-black text-slate-900">{complianceNeedsAttention}</p>
-                  <p className="mt-1 text-xs text-slate-500">{verifiedDocs} verified documents on file</p>
+                  <p className="mt-1 text-xs text-slate-500">{verifiedDocs} on file</p>
                 </div>
               </div>
               {unreadRows.length > 0 ? unreadRows.map((row) => <NotificationItem key={row.id} row={row} />) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  No unread parent-facing updates right now. This is where new replies and announcement reminders should feel easy to scan.
+                  All caught up. No unread messages.
                 </div>
               )}
               <div className="flex flex-wrap gap-2">
                 <Button asChild className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-700">
-                  <Link href="/ecd/compliance">Open compliance toolkit</Link>
-                </Button>
-                <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                  <Link href="/ecd/communications">Open communications</Link>
+                  <Link href="/ecd/communications">View messages</Link>
                 </Button>
               </div>
             </CardContent>
@@ -404,27 +417,31 @@ export default async function EcdDashboardPage() {
           }}
         />
 
-        <div className="grid gap-4 xl:grid-cols-[1fr_1fr_1fr]">
+        <div className="grid gap-4 lg:grid-cols-3">
           <ProfileCompleteness items={profileItems} />
           <OnboardingChecklistCard items={onboardingChecklistItems} />
           <Card className="rounded-3xl border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
                 <Users className="h-5 w-5 text-cyan-600" />
-                Operational basics
+                Your creche at a glance
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-slate-600">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Children on record</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">{childrenCount}</p>
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="font-medium text-slate-700">Children enrolled</p>
+                <p className="text-2xl font-black text-slate-900">{childrenCount}</p>
               </div>
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Staff accounts</p>
-                <p className="mt-2 text-2xl font-black text-slate-900">{staffCount}</p>
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="font-medium text-slate-700">Team members</p>
+                <p className="text-2xl font-black text-slate-900">{staffCount}</p>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="font-medium text-slate-700">Documents verified</p>
+                <p className="text-2xl font-black text-slate-900">{verifiedDocs}</p>
               </div>
               <Link href="/ecd/website" className="inline-flex items-center gap-2 font-semibold text-cyan-700 hover:text-cyan-800">
-                Keep improving your public page
+                Your public page
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </CardContent>

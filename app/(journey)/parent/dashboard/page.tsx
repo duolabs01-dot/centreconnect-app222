@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { SurfaceCard } from '@/components/ui/surface-card'
+import { FeatureBanner } from '@/components/ui/feature-banner'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
@@ -605,6 +606,8 @@ export default async function ParentDashboardPage() {
                   </div>
                 </div>
               </SurfaceCard>
+
+              <FeatureBanner context="parent" />
 
               <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
                 <SurfaceCard className="p-5">
