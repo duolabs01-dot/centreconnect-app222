@@ -14,6 +14,7 @@ type ReadinessAction = {
 const ACTIONS_BY_MISSING_CODE: Record<string, ReadinessAction> = {
   parent_name: { key: 'profile', label: 'Complete profile details', href: '/parent/profile' },
   parent_phone: { key: 'profile', label: 'Complete profile details', href: '/parent/profile' },
+  parent_avatar: { key: 'avatar', label: 'Add profile photo', href: '/parent/profile' },
   guardian_relationship: { key: 'profile', label: 'Complete profile details', href: '/parent/profile' },
   emergency_contact_name: { key: 'emergency', label: 'Add emergency contact', href: '/parent/profile/emergency' },
   emergency_contact_phone: { key: 'emergency', label: 'Add emergency contact', href: '/parent/profile/emergency' },
@@ -47,7 +48,7 @@ export async function ProfileReadinessCard() {
   const [profileResult, parentResult, docsResult, childrenCountResult] = await Promise.all([
     supabase
       .from('user_profiles')
-      .select('full_name,phone')
+      .select('full_name,phone,avatar_url')
       .eq('id', user.id)
       .maybeSingle(),
     supabase
@@ -63,6 +64,7 @@ export async function ProfileReadinessCard() {
     parent: {
       fullName: profileResult.data?.full_name,
       phone: profileResult.data?.phone,
+      avatarUrl: profileResult.data?.avatar_url,
       guardianRelationship: parentResult.data?.guardian_relationship,
       emergencyContactName: parentResult.data?.emergency_contact_name,
       emergencyContactPhone: parentResult.data?.emergency_contact_phone,

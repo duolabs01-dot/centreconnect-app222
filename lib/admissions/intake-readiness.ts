@@ -3,6 +3,7 @@ type NullableString = string | null | undefined
 export type ParentIntakeSnapshot = {
   fullName?: NullableString
   phone?: NullableString
+  avatarUrl?: NullableString
   guardianRelationship?: NullableString
   emergencyContactName?: NullableString
   emergencyContactPhone?: NullableString
@@ -74,6 +75,7 @@ export function evaluateParentIntakeReadiness(input: {
   const checks = [
     { code: 'parent_name', label: 'Full name', ok: hasText(input.parent.fullName) },
     { code: 'parent_phone', label: 'Phone number', ok: hasText(input.parent.phone) },
+    { code: 'parent_avatar', label: 'Profile photo', ok: hasText(input.parent.avatarUrl) },
     {
       code: 'guardian_relationship',
       label: 'Guardian role (for example: mother, father, aunt)',
