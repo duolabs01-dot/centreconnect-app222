@@ -53,6 +53,17 @@ export async function ensureParentReady(
     return { ok: false, error: 'Please sign in again before continuing.' }
   }
 
+  // Surgical check first to avoid heavy bootstrap/upsert if everything is already ready
+  const { data: existingParent } = await supabase
+    .from('parents')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (existingParent) {
+    return { ok: true, userId: user.id }
+  }
+
   const bootstrap = await ensureProfileBootstrap()
   if (!bootstrap.ok) {
     return { ok: false, error: bootstrap.error || 'Could not prepare your account.' }

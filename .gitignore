@@ -13,6 +13,13 @@ node_modules/
 tmp-*.log
 tmp-*.mjs
 .next-dev-eperm.flag
+lib/**/*.js
+lib/**/*.map
+components/**/*.js
+components/**/*.map
+app/**/*.js
+app/**/*.map
+!**/node_modules/**
 
 # Audit and temp files
 tmp-*.txt

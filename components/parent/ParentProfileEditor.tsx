@@ -165,8 +165,8 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
       return
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image must be smaller than 2MB')
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be smaller than 5MB')
       return
     }
 

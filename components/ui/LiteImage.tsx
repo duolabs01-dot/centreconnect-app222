@@ -1,21 +1,34 @@
 'use client'
 
 import Image, { ImageProps } from 'next/image';
-import { useLiteMode } from '@/lib/context/LiteModeProvider'; // Adjust path as necessary
+import { useState } from 'react';
+import { useLiteMode } from '@/lib/context/LiteModeProvider';
 
 interface LiteImageProps extends ImageProps {
-  // You can add custom props here if needed, or just extend ImageProps
+  fallbackSrc?: string;
 }
 
-export function LiteImage(props: LiteImageProps) {
+export function LiteImage({ fallbackSrc, ...props }: LiteImageProps) {
   const { isLiteMode } = useLiteMode();
+  const [error, setError] = useState(false);
 
-  // If priority is set, always use default quality or provided quality, not lite mode quality
   const effectiveQuality = props.priority
-    ? props.quality // If priority is set, use provided quality or default Next.js quality
+    ? props.quality 
     : isLiteMode
-      ? 30 // Lower quality for lite mode
-      : props.quality ?? 75; // Default to 75 if not specified and not in lite mode
+      ? 30 
+      : props.quality ?? 75;
 
-  return <Image {...props} alt={props.alt} quality={effectiveQuality} />;
+  // If there's an error and no fallback, we return a transparent pixel to avoid "broken image" icon
+  // or a provided fallbackSrc
+  const src = error ? (fallbackSrc ?? "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7") : props.src;
+
+  return (
+    <Image 
+      {...props} 
+      src={src}
+      alt={props.alt} 
+      quality={effectiveQuality} 
+      onError={() => setError(true)}
+    />
+  );
 }

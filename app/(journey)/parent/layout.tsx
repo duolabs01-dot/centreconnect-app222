@@ -26,6 +26,7 @@ export default async function ParentAuthLayout({ children }: { children: React.R
     redirect('/login?error=unauthorized')
   }
 
+  // Only perform profile upsert if it's missing or incomplete
   if (!existingProfile || !existingProfile.role) {
     const fallbackName =
       typeof user.user_metadata?.full_name === 'string'
@@ -47,11 +48,20 @@ export default async function ParentAuthLayout({ children }: { children: React.R
     )
   }
 
-  const { error: parentBootstrapError } = await supabase
+  // Check if parent record exists before upserting
+  const { data: existingParent } = await supabase
     .from('parents')
-    .upsert({ id: user.id }, { onConflict: 'id' })
-  if (parentBootstrapError) {
-    console.error('[parent/layout] Failed to ensure parent record:', parentBootstrapError)
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!existingParent) {
+    const { error: parentBootstrapError } = await supabase
+      .from('parents')
+      .upsert({ id: user.id }, { onConflict: 'id' })
+    if (parentBootstrapError) {
+      console.error('[parent/layout] Failed to ensure parent record:', parentBootstrapError)
+    }
   }
 
   return <div className="animate-in fade-in duration-200">{children}</div>

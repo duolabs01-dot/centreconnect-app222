@@ -87,29 +87,49 @@ export async function resolveProvisionRole(
 ): Promise<ResolveProvisionRoleResult> {
   const normalizedEmail = (input.email ?? '').trim().toLowerCase()
   const roleFromMetadata = parseRole(input.metadataRole)
-  const roleFromExisting =
-    parseRole(input.existingProfileRole) ??
-    (await (async () => {
-      const { data } = await input.adminClient
-        .from('user_profiles')
-        .select('role')
-        .eq('id', input.userId)
-        .maybeSingle()
-      return parseRole(data?.role)
-    })())
 
-  const { data: membershipRows } = await input.adminClient
-    .from('ecd_admins')
-    .select('ecd_id,role,invited_at')
-    .eq('user_id', input.userId)
-    .order('invited_at', { ascending: false })
-    .limit(20)
+  // 1. Fetch all necessary signals in parallel
+  const [profileResult, membershipResult, inviteByAuthResult, inviteByEmailResult] = await Promise.all([
+    // Profile check
+    input.existingProfileRole 
+      ? Promise.resolve({ data: { role: input.existingProfileRole } })
+      : input.adminClient.from('user_profiles').select('role').eq('id', input.userId).maybeSingle(),
+    
+    // Memberships
+    input.adminClient
+      .from('ecd_admins')
+      .select('ecd_id,role,invited_at')
+      .eq('user_id', input.userId)
+      .order('invited_at', { ascending: false })
+      .limit(20),
 
+    // Invitations by user ID
+    input.adminClient
+      .from('ecd_admin_invitations')
+      .select('ecd_id,role,invited_at')
+      .eq('auth_user_id', input.userId)
+      .order('invited_at', { ascending: false })
+      .limit(20),
+
+    // Invitations by email
+    normalizedEmail
+      ? input.adminClient
+          .from('ecd_admin_invitations')
+          .select('ecd_id,role,invited_at')
+          .eq('email', normalizedEmail)
+          .order('invited_at', { ascending: false })
+          .limit(20)
+      : Promise.resolve({ data: [] })
+  ])
+
+  const roleFromExisting = parseRole(profileResult.data?.role)
+  
+  const membershipRows = membershipResult.data ?? []
   const membershipRole =
-    (membershipRows ?? [])
+    membershipRows
       .map((row) => parseEcdRole(row.role))
       .find((role): role is EcdRole => Boolean(role)) ?? null
-  const membershipEcdIds = uniq((membershipRows ?? []).map((row) => row.ecd_id))
+  const membershipEcdIds = uniq(membershipRows.map((row) => row.ecd_id))
 
   if (membershipRole) {
     return {
@@ -122,23 +142,7 @@ export async function resolveProvisionRole(
     }
   }
 
-  const { data: invitationByAuthUser } = await input.adminClient
-    .from('ecd_admin_invitations')
-    .select('ecd_id,role,invited_at')
-    .eq('auth_user_id', input.userId)
-    .order('invited_at', { ascending: false })
-    .limit(20)
-
-  const { data: invitationByEmail } = normalizedEmail
-    ? await input.adminClient
-        .from('ecd_admin_invitations')
-        .select('ecd_id,role,invited_at')
-        .eq('email', normalizedEmail)
-        .order('invited_at', { ascending: false })
-        .limit(20)
-    : { data: [] as Array<{ ecd_id: string | null; role: string | null; invited_at: string | null }> }
-
-  const invitationRows = [...(invitationByAuthUser ?? []), ...(invitationByEmail ?? [])]
+  const invitationRows = [...(inviteByAuthResult.data ?? []), ...(inviteByEmailResult.data ?? [])]
   const invitationRole =
     invitationRows
       .map((row) => parseEcdRole(row.role))
