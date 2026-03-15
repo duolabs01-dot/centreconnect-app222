@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getParentProgress } from '@/lib/parent/progress'
 import { ParentAppShell } from '@/components/layout/parent-app-shell'
 import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { ParentLayoutProvider } from '@/components/layout/parent-layout-provider'
@@ -73,28 +74,17 @@ export default async function JourneyLayout({ children }: { children: React.Reac
   const verificationStatus = parentDetails.data?.id_verification_status?.trim().toLowerCase() ?? ''
   const isVerified = verificationStatus === 'verified'
   
-  const readiness = evaluateParentIntakeReadiness({
-    parent: {
-      fullName: profile?.full_name,
-      phone: profile?.phone,
-      guardianRelationship: parentDetails.data?.guardian_relationship,
-      emergencyContactName: parentDetails.data?.emergency_contact_name,
-      emergencyContactPhone: parentDetails.data?.emergency_contact_phone,
-      idVerificationStatus: parentDetails.data?.id_verification_status,
-    },
-    docTypes: (parentDocs.data ?? []).map((item) => item.doc_type),
-    hasAtLeastOneChild: (childrenCount.count ?? 0) > 0,
-  })
+  const progress = await getParentProgress(user.id)
 
   const parentLayoutData = {
     userName: profile?.full_name?.trim() || user.email?.split('@')[0] || 'Parent',
     avatarUrl: profile?.avatar_url,
     isVerified: isVerified,
-    profileNudge: readiness.ready
+    profileNudge: progress.profileCompleteness === 100
       ? null
       : {
-          completionPct: readiness.completionPct,
-          missing: readiness.missing.slice(0, 4),
+          completionPct: progress.profileCompleteness,
+          missing: progress.nextAction.missingProfileFields.slice(0, 4),
         },
     userId: user.id,
   }

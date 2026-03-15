@@ -18,10 +18,9 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 import { FeatureBanner } from '@/components/ui/feature-banner'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
-import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
+import { getParentProgress } from '@/lib/parent/progress'
 import { formatDate } from '@/lib/utils'
 import { deriveParentHomeState, type ParentHomeState } from '@/lib/parent/home-state'
-import { getParentProgress } from '@/lib/parent/progress'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 
 export const metadata: Metadata = {
@@ -207,19 +206,6 @@ export default async function ParentDashboardPage() {
 
     const parentName = profileResult.data?.full_name?.trim() || 'Parent'
     const parentFirstName = parentName.split(' ')[0] || 'there'
-
-    const readiness = evaluateParentIntakeReadiness({
-      parent: {
-        fullName: parentName,
-        phone: profileResult.data?.phone ?? null,
-        guardianRelationship: parentProfileResult.data?.guardian_relationship ?? null,
-        emergencyContactName: parentProfileResult.data?.emergency_contact_name ?? null,
-        emergencyContactPhone: parentProfileResult.data?.emergency_contact_phone ?? null,
-        idVerificationStatus: parentProfileResult.data?.id_verification_status ?? null,
-      },
-      docTypes: (parentDocsResult.data ?? []).map((item) => item.doc_type),
-      hasAtLeastOneChild: (childrenResult.data ?? []).length > 0,
-    })
 
     const childRows = ((childrenResult.data ?? []) as Array<{
       id: string
@@ -447,7 +433,7 @@ export default async function ParentDashboardPage() {
                     </Link>
                   </div>
 
-                  <ReadinessHighlights missing={readiness.missing} />
+                  <ReadinessHighlights missing={progress?.nextAction.missingProfileFields ?? []} />
                 </div>
               </SurfaceCard>
 
@@ -528,7 +514,7 @@ export default async function ParentDashboardPage() {
                       ) : null}
                     </div>
                   ) : null}
-                  <ReadinessHighlights missing={readiness.missing} />
+                  <ReadinessHighlights missing={progress?.nextAction.missingProfileFields ?? []} />
                 </SurfaceCard>
 
                 <div className="space-y-4">
