@@ -55,6 +55,7 @@ export type ParentNextAction = {
   title: string
   description: string
   href: string
+  missingProfileFields: string[]
 }
 
 export async function getParentProgress(userId: string): Promise<ParentProgress> {
@@ -192,6 +193,8 @@ function calculateNextAction(input: {
   missingProfileFields: string[]
   urgentExpiringDocs?: number
 }): ParentNextAction {
+  const base = { missingProfileFields: input.missingProfileFields }
+  
   // Priority 0: Urgent document expiry (within 7 days) - always show this first
   if (input.urgentExpiringDocs && input.urgentExpiringDocs > 0) {
     return {
@@ -199,6 +202,7 @@ function calculateNextAction(input: {
       title: 'Documents expiring soon!',
       description: `${input.urgentExpiringDocs} document${input.urgentExpiringDocs > 1 ? 's will' : ' will'} expire within 7 days. Renew now to avoid issues.`,
       href: '/parent/profile/documents',
+      ...base,
     }
   }
 
@@ -209,6 +213,7 @@ function calculateNextAction(input: {
       title: 'Add your first child',
       description: 'Register your child to start applying to trusted creches.',
       href: '/parent/children/new',
+      ...base,
     }
   }
 
@@ -220,6 +225,7 @@ function calculateNextAction(input: {
         title: 'Complete your profile',
         description: `Add ${input.missingProfileFields.join(', ')} to receive updates from the creche.`,
         href: '/parent/profile',
+        ...base,
       }
     }
     return {
@@ -227,6 +233,7 @@ function calculateNextAction(input: {
       title: "View today's updates",
       description: 'Check in on your enrolled child\'s activities and reports.',
       href: '/parent/dashboard',
+      ...base,
     }
   }
 
@@ -238,6 +245,7 @@ function calculateNextAction(input: {
         title: 'Upload remaining documents',
         description: `${input.missingDocuments} document${input.missingDocuments > 1 ? 's' : ''} needed to complete your application${input.hasPendingApplications ? 's' : ''}.`,
         href: '/parent/profile/documents',
+        ...base,
       }
     }
     return {
@@ -245,6 +253,7 @@ function calculateNextAction(input: {
       title: 'Check your application status',
       description: 'See what\'s happening with your creche applications.',
       href: '/parent/applications',
+      ...base,
     }
   }
 
@@ -255,6 +264,7 @@ function calculateNextAction(input: {
       title: 'Complete your profile',
       description: `Add ${input.missingProfileFields.join(', ')} before applying.`,
       href: '/parent/profile',
+      ...base,
     }
   }
 
@@ -264,5 +274,6 @@ function calculateNextAction(input: {
     title: 'Find creches near you',
     description: 'Browse trusted creches and start your application.',
     href: '/parent/discover',
+    ...base,
   }
 }
