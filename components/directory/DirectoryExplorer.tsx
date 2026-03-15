@@ -309,26 +309,30 @@ export default function DirectoryExplorer({
                           <Clock className="h-3 w-3" />
                           Recent Searches
                         </div>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={clearRecentSearches}
-                          className="text-xs text-[#7C8682] hover:text-[#0D9488]"
+                          className="text-xs text-[#7C8682] hover:text-[#0D9488] h-auto p-0"
                         >
                           Clear
-                        </button>
+                        </Button>
                       </div>
                       {recentSearches.map((s, i) => (
-                        <button
+                        <Button
                           key={i}
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setSearch(s)
                             setCurrentPage(1)
                             setShowAutocomplete(false)
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0]"
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0] justify-start h-auto normal-case font-normal"
                         >
                           <Search className="h-4 w-4 text-[#7C8682]" />
                           <span className="text-[#22312E]">{s}</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
@@ -340,27 +344,31 @@ export default function DirectoryExplorer({
                           <MapPin className="h-3 w-3" />
                           Recent Areas
                         </div>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           onClick={clearRecentSuburbs}
-                          className="text-xs text-[#7C8682] hover:text-[#0D9488]"
+                          className="text-xs text-[#7C8682] hover:text-[#0D9488] h-auto p-0"
                         >
                           Clear
-                        </button>
+                        </Button>
                       </div>
                       {recentSuburbs.map((suburb, i) => (
-                        <button
+                        <Button
                           key={i}
+                          variant="ghost"
+                          size="sm"
                           onClick={() => {
                             setSelectedSuburb(suburb)
                             addRecentSuburb(suburb)
                             setCurrentPage(1)
                             setShowAutocomplete(false)
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0]"
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0] justify-start h-auto normal-case font-normal"
                         >
                           <MapPin className="h-4 w-4 text-[#7C8682]" />
                           <span className="text-[#22312E]">{suburb}</span>
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   )}
