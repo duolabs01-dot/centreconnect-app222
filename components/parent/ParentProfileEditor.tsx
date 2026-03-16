@@ -56,6 +56,7 @@ type ParentProfileHubInitial = {
   notifications_reminders: boolean
   child_count: number
   enrolled_child_count: number
+  saved_centres_count?: number
   profile_completeness?: number
   next_action?: {
     type: string
@@ -261,7 +262,7 @@ export function ParentProfileHub({ initial }: { initial: ParentProfileHubInitial
         },
         {
           label: 'Saved centres',
-          value: 'Your shortlist',
+          value: `${profile.saved_centres_count ?? 0} saved creches`,
           icon: Heart,
           href: '/parent/shortlist',
         },

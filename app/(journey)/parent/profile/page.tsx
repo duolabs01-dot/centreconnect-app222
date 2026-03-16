@@ -82,6 +82,7 @@ export default async function ParentProfilePage() {
             notifications_reminders: parentProfile?.notifications_reminders ?? true,
             child_count: progress.childrenCount,
             enrolled_child_count: progress.enrolledCount,
+            saved_centres_count: progress.savedCentresCount,
             // New unified fields
             profile_completeness: progress.profileCompleteness,
             next_action: progress.nextAction,

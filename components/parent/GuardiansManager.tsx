@@ -10,8 +10,20 @@ import { Button } from '@/components/ui/button'
 import { AddGuardianSheet } from '@/components/parent/guardians/AddGuardianSheet'
 import { sendCoParentInviteAction } from '@/lib/actions/guardians/send-invite'
 import { requestCoParentDocumentUploadAction } from '@/lib/actions/guardians/request-document-upload'
+import { removeGuardianAction } from '@/lib/actions/guardians/remove-guardian'
 import { Input } from '@/components/ui/input'
-import { Mail, Link2, CheckCircle2, Clock, UserCheck, MessageCircle, Share2 } from 'lucide-react'
+import { Mail, Link2, CheckCircle2, Clock, UserCheck, MessageCircle, Share2, Trash2 } from 'lucide-react'
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '@/components/ui/alert-dialog'
 
 export type GuardianChild = {
   id: string
@@ -223,6 +235,7 @@ export function GuardiansManager({ childList }: Props) {
   const [requestMessage, setRequestMessage] = useState('')
   const [requestWhatsappHref, setRequestWhatsappHref] = useState<string | null>(null)
   const [isRequestPending, startRequestTransition] = useTransition()
+  const [isDeleting, setIsDeleting] = useState<string | null>(null)
 
   const selectedChildName = useMemo(() => {
     const child = childList.find((item) => item.id === selectedChildId)
@@ -343,6 +356,23 @@ export function GuardiansManager({ childList }: Props) {
     })
   }
 
+  async function handleRemoveGuardian(id: string) {
+    setIsDeleting(id)
+    try {
+      const result = await removeGuardianAction(id)
+      if (result.success) {
+        toast.success(result.message)
+        void loadGuardians()
+      } else {
+        toast.error(result.error)
+      }
+    } catch (err) {
+      toast.error('Failed to remove co-parent')
+    } finally {
+      setIsDeleting(null)
+    }
+  }
+
   return (
     <div className="space-y-5 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-[var(--shadow-elevation-1)]">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -414,11 +444,48 @@ export function GuardiansManager({ childList }: Props) {
                 </div>
               </div>
 
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                {guardian.can_view_applications ? <span className="text-[11px] text-slate-500">Applications enabled</span> : null}
-                {guardian.can_pickup ? <span className="text-[11px] text-slate-500">Pickup enabled</span> : null}
-                {guardian.can_receive_announcements ? <span className="text-[11px] text-slate-500">Announcements enabled</span> : null}
-                {guardian.can_generate_pickup_code ? <span className="text-[11px] text-slate-500">Pickup code enabled</span> : null}
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {guardian.can_view_applications ? <span className="text-[11px] text-slate-500">Applications enabled</span> : null}
+                  {guardian.can_pickup ? <span className="text-[11px] text-slate-500">Pickup enabled</span> : null}
+                  {guardian.can_receive_announcements ? <span className="text-[11px] text-slate-500">Announcements enabled</span> : null}
+                  {guardian.can_generate_pickup_code ? <span className="text-[11px] text-slate-500">Pickup code enabled</span> : null}
+                </div>
+
+                {canAddCoParent && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button 
+                        className="flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-rose-600 transition-colors"
+                        disabled={isDeleting === guardian.id}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        {isDeleting === guardian.id ? 'Removing...' : 'Remove'}
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-[2.5rem] p-8">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-900">
+                          Remove {guardian.full_name || 'co-parent'}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-base text-slate-600">
+                          This will remove their access to {selectedChildName}. They will no longer be able to view applications, receive updates, or generate pickup codes.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="mt-6 gap-3">
+                        <AlertDialogCancel className="h-12 rounded-2xl border-slate-200 font-bold text-slate-600">
+                          Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={() => handleRemoveGuardian(guardian.id)}
+                          className="h-12 rounded-2xl bg-rose-600 font-bold text-white hover:bg-rose-700"
+                        >
+                          Remove access
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
               </div>
 
               {openInvitePanelId === guardian.id ? (

@@ -9,6 +9,7 @@ export type ParentProgress = {
   childrenCount: number
   enrolledCount: number
   pendingApplicationsCount: number
+  savedCentresCount: number
   
   // Application states
   hasEnrolledChild: boolean
@@ -70,6 +71,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     { data: applications },
     { count: enrolledCount },
     { data: documents },
+    { count: savedCentresCount },
   ] = await Promise.all([
     supabase.from('user_profiles').select('full_name,phone,avatar_url').eq('id', userId).maybeSingle(),
     supabase.from('parents').select('guardian_relationship,emergency_contact_name,emergency_contact_phone').eq('id', userId).maybeSingle(),
@@ -78,6 +80,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     supabase.from('applications').select('id,status').eq('parent_id', userId),
     supabase.from('applications').select('id', { count: 'exact', head: true }).eq('parent_id', userId).eq('status', 'enrolled'),
     supabase.from('parent_documents').select('doc_type,expiry_date').eq('parent_id', userId).limit(80),
+    supabase.from('parent_shortlists').select('id', { count: 'exact', head: true }).eq('parent_id', userId),
   ])
 
   // Calculate child counts
@@ -163,6 +166,7 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
     childrenCount: actualChildrenCount,
     enrolledCount: actualEnrolledCount,
     pendingApplicationsCount: pendingApplications.length,
+    savedCentresCount: savedCentresCount ?? 0,
     hasEnrolledChild,
     hasPendingApplications,
     hasName,
