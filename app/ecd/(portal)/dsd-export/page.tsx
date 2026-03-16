@@ -51,8 +51,8 @@ export default async function DsdExportPage({
 
   return (
     <EcdOsShell
-      title="DSD Export"
-      description="Printable register pack and CSV exports from your real enrolled-child, attendance, and compliance data."
+      title="DOE & DSD Reports"
+      description="Official DOE Monthly Returns and printable DSD register packs generated from your live CentreConnect data."
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
@@ -62,12 +62,12 @@ export default async function DsdExportPage({
           <CardHeader className="space-y-4">
             <div className="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
               <ShieldCheck className="h-3.5 w-3.5" />
-              DSD pack
+              DOE / DSD official reports
             </div>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="space-y-2">
                 <CardTitle className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                  Print-ready records for {data.centreName}
+                  {data.monthLabel} {data.selectedYear} Returns: {data.centreName}
                 </CardTitle>
                 <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
                   Everything here comes from your live CentreConnect data: enrolled children, monthly attendance, and compliance documents. Choose the month, print the pack, or export the CSV files you need.
@@ -115,42 +115,65 @@ export default async function DsdExportPage({
           </CardHeader>
         </Card>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card className="rounded-[1.6rem] border-slate-200 shadow-sm">
-            <CardContent className="p-5">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Enrolled children</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{data.children.length}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-[1.6rem] border-slate-200 shadow-sm">
-            <CardContent className="p-5">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Attendance days reported</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{data.attendanceDaysReported}</p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-[1.6rem] border-slate-200 shadow-sm">
-            <CardContent className="p-5">
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Verified compliance docs</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{data.verifiedDocs}/{data.compliance.length || 0}</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="hidden print:block">
-          <div className="border-b-2 border-slate-900 pb-4">
-            <h1 className="text-2xl font-black text-slate-900">DSD compliance pack</h1>
-            <p className="text-sm text-slate-600">Centre: {data.centreName}</p>
-            <p className="text-sm text-slate-600">Registration number: {data.registrationNumber ?? '--'}</p>
-            <p className="text-sm text-slate-600">Month: {data.monthLabel} {data.selectedYear}</p>
-            <p className="text-sm text-slate-600">Generated: {formatDate(data.generatedAt)}</p>
-          </div>
-        </div>
+        {/* DOE Statistics Card */}
+        <Card className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden print:border-0 print:shadow-none">
+          <CardHeader className="bg-slate-50 border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
+              <FileCheck2 className="h-5 w-5 text-cyan-600" />
+              DOE Monthly Return Summary: {data.monthLabel} {data.selectedYear}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="bg-white">
+                    <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Age group</th>
+                    <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Male</th>
+                    <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Female</th>
+                    <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100 bg-slate-50/50 font-black text-slate-900">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {[
+                    { label: 'Under 1 Year', stats: data.doeStats.byAge.under1 },
+                    { label: '1 - 2 Years', stats: data.doeStats.byAge.age1to2 },
+                    { label: '2 - 3 Years', stats: data.doeStats.byAge.age2to3 },
+                    { label: '3 - 4 Years', stats: data.doeStats.byAge.age3to4 },
+                    { label: '4 - 5 Years', stats: data.doeStats.byAge.age4to5 },
+                    { label: '5 - 6 Years', stats: data.doeStats.byAge.age5to6 },
+                    { label: 'Over 6 Years', stats: data.doeStats.byAge.over6 },
+                  ].map((row) => (
+                    <tr key={row.label} className="hover:bg-slate-50/30 transition-colors">
+                      <td className="px-6 py-4 font-bold text-slate-900">{row.label}</td>
+                      <td className="px-6 py-4 text-center text-slate-700 font-medium">{row.stats.m}</td>
+                      <td className="px-6 py-4 text-center text-slate-700 font-medium">{row.stats.f}</td>
+                      <td className="px-6 py-4 text-center bg-slate-50/30 font-black text-cyan-700">{row.stats.m + row.stats.f}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-slate-900 text-white font-black uppercase tracking-wider">
+                    <td className="px-6 py-4">Total Children</td>
+                    <td className="px-6 py-4 text-center">{data.doeStats.totalMale}</td>
+                    <td className="px-6 py-4 text-center">{data.doeStats.totalFemale}</td>
+                    <td className="px-6 py-4 text-center text-cyan-400">{data.doeStats.totalChildren}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="p-6 bg-cyan-50/30 border-t border-cyan-100">
+              <p className="text-xs leading-relaxed text-cyan-800">
+                <strong>Note:</strong> This table is formatted exactly as required for the Department of Education (DOE) monthly statistical return. 
+                Data is calculated based on each child's date of birth and gender as of {formatDate(new Date().toISOString())}.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="rounded-[2rem] border-slate-200 shadow-sm print:border-0 print:shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">
               <Users className="h-5 w-5 text-cyan-600" />
-              Enrolment register
+              DSD Monthly Enrolment Report
             </CardTitle>
           </CardHeader>
           <CardContent>

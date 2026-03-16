@@ -40,6 +40,21 @@ export type DsdComplianceItem = {
   notes: string | null
 }
 
+export type DoeMonthlyStats = {
+  totalChildren: number
+  byAge: {
+    under1: { m: number; f: number }
+    age1to2: { m: number; f: number }
+    age2to3: { m: number; f: number }
+    age3to4: { m: number; f: number }
+    age4to5: { m: number; f: number }
+    age5to6: { m: number; f: number }
+    over6: { m: number; f: number }
+  }
+  totalMale: number
+  totalFemale: number
+}
+
 export type DsdExportData = {
   centreName: string
   registrationNumber: string | null
@@ -52,6 +67,7 @@ export type DsdExportData = {
   attendanceDaysReported: number
   compliance: DsdComplianceItem[]
   verifiedDocs: number
+  doeStats: DoeMonthlyStats
 }
 
 const MONTHS = [
@@ -97,6 +113,70 @@ export function getDsdMonthOptions() {
     months: MONTHS,
     years: [now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1],
   }
+}
+
+export function getDoeMonthlyReturnData(children: DsdEnrolledChild[]): DoeMonthlyStats {
+  const stats: DoeMonthlyStats = {
+    totalChildren: children.length,
+    byAge: {
+      under1: { m: 0, f: 0 },
+      age1to2: { m: 0, f: 0 },
+      age2to3: { m: 0, f: 0 },
+      age3to4: { m: 0, f: 0 },
+      age4to5: { m: 0, f: 0 },
+      age5to6: { m: 0, f: 0 },
+      over6: { m: 0, f: 0 },
+    },
+    totalMale: 0,
+    totalFemale: 0,
+  }
+
+  const now = new Date()
+
+  for (const child of children) {
+    if (!child.dateOfBirth) continue
+
+    const dob = new Date(child.dateOfBirth)
+    if (Number.isNaN(dob.getTime())) continue
+
+    let age = now.getFullYear() - dob.getFullYear()
+    const m = now.getMonth() - dob.getMonth()
+    if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
+      age--
+    }
+
+    const gender = (child.gender || '').toLowerCase()
+    const isMale = gender === 'male' || gender === 'm'
+    const isFemale = gender === 'female' || gender === 'f'
+
+    if (isMale) stats.totalMale++
+    if (isFemale) stats.totalFemale++
+
+    if (age < 1) {
+      if (isMale) stats.byAge.under1.m++
+      if (isFemale) stats.byAge.under1.f++
+    } else if (age < 2) {
+      if (isMale) stats.byAge.age1to2.m++
+      if (isFemale) stats.byAge.age1to2.f++
+    } else if (age < 3) {
+      if (isMale) stats.byAge.age2to3.m++
+      if (isFemale) stats.byAge.age2to3.f++
+    } else if (age < 4) {
+      if (isMale) stats.byAge.age3to4.m++
+      if (isFemale) stats.byAge.age3to4.f++
+    } else if (age < 5) {
+      if (isMale) stats.byAge.age4to5.m++
+      if (isFemale) stats.byAge.age4to5.f++
+    } else if (age < 6) {
+      if (isMale) stats.byAge.age5to6.m++
+      if (isFemale) stats.byAge.age5to6.f++
+    } else {
+      if (isMale) stats.byAge.over6.m++
+      if (isFemale) stats.byAge.over6.f++
+    }
+  }
+
+  return stats
 }
 
 export async function getDsdExportData(input: {
@@ -228,6 +308,7 @@ export async function getDsdExportData(input: {
     attendanceDaysReported: uniqueAttendanceDays.size,
     compliance,
     verifiedDocs: compliance.filter((item) => item.status === 'verified').length,
+    doeStats: getDoeMonthlyReturnData(children),
   }
 }
 

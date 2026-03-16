@@ -22,6 +22,7 @@ import {
   validateAttendanceImportFile,
 } from '@/lib/attendance/imports'
 import { requireEcdPortalSession, type EcdPortalSession } from '@/lib/ecd/portal-session'
+import { checkChildIdentityDuplicates, recordChildIdentity } from '@/lib/parent/child-identity'
 
 const extractSchema = z.object({
   attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
@@ -34,6 +35,7 @@ const importSchema = z.object({
   selected_name: z.string().max(240).optional(),
   attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
   create_child_if_missing: z.boolean().default(false),
+  check_duplicates: z.boolean().default(true),
   notes: z.string().max(2000).optional(),
 })
 
@@ -90,6 +92,7 @@ export type RegisterImportActionResult = {
   message: string
   item?: ImportRow
   attendanceHref?: string
+  duplicates?: any[]
 }
 
 export type AttendanceCsvPreviewRow = z.infer<typeof csvPreviewRowSchema>
@@ -953,6 +956,7 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
     selected_name: String(formData.get('selected_name') ?? '').trim(),
     attendance_date: String(formData.get('attendance_date') ?? '').trim(),
     create_child_if_missing: String(formData.get('create_child_if_missing') ?? '') === 'on',
+    check_duplicates: formData.get('check_duplicates') !== 'off',
     notes: String(formData.get('notes') ?? '').trim(),
   })
 
@@ -984,12 +988,39 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
     (parsed.data.selected_name ?? '').trim() ||
     (Array.isArray(importRow.extracted_names) ? String(importRow.extracted_names[0] ?? '').trim() : '')
 
+  const attendanceDate =
+    normalizeAttendanceImportDate(parsed.data.attendance_date) ??
+    (importRow.extracted_date ? String(importRow.extracted_date) : null) ??
+    new Date().toISOString().slice(0, 10)
+  const attendanceHref = buildAttendanceBoardHref(attendanceDate)
+  const importNotes = parsed.data.notes?.trim() || importRow.notes || null
+
   if (!childId && parsed.data.create_child_if_missing) {
     if (!selectedName) {
       return { success: false, message: 'No child name available to create a profile.' }
     }
 
     const split = splitNameForChild(selectedName)
+
+    if (parsed.data.check_duplicates) {
+      const duplicates = await checkChildIdentityDuplicates(session.ecdId, {
+        first_name: split.firstName,
+        last_name: split.lastName,
+        date_of_birth: attendanceDate, // Fallback to attendance date for fingerprinting if DOB unknown
+        gender: 'unknown',
+        suburb: 'unknown',
+      })
+
+      if (duplicates.length > 0) {
+        return {
+          success: false,
+          message: 'Potential duplicate children found. Please review or link to an existing child.',
+          duplicates,
+          attendanceHref,
+        }
+      }
+    }
+
     const { data: createdChild, error: createChildError } = await session.supabase
       .from('children')
       .insert({
@@ -1010,6 +1041,21 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
     }
 
     childId = createdChild.id
+
+    // Record the identity to prevent future duplicates
+    await recordChildIdentity(
+      session.ecdId,
+      {
+        first_name: split.firstName,
+        last_name: split.lastName,
+        date_of_birth: attendanceDate,
+        gender: 'unknown',
+        suburb: 'unknown',
+      },
+      '00000000-0000-0000-0000-000000000000', // System placeholder for parent-less manual records
+      childId,
+      '00000000-0000-0000-0000-000000000000' // System placeholder
+    )
   }
 
   if (!childId) {
@@ -1026,13 +1072,6 @@ export async function importRegisterEntryAction(formData: FormData): Promise<Reg
   if (childMatchError || !childMatch?.id) {
     return { success: false, message: 'Selected child is not linked to this centre.' }
   }
-
-  const attendanceDate =
-    normalizeAttendanceImportDate(parsed.data.attendance_date) ??
-    (importRow.extracted_date ? String(importRow.extracted_date) : null) ??
-    new Date().toISOString().slice(0, 10)
-  const attendanceHref = buildAttendanceBoardHref(attendanceDate)
-  const importNotes = parsed.data.notes?.trim() || importRow.notes || null
 
   const attendanceRecord = await upsertAttendanceRecord(session, {
     childId,

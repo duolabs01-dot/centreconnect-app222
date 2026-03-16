@@ -40,6 +40,8 @@ type ImportFormState = {
   attendanceDate: string
   notes: string
   createChildIfMissing: boolean
+  duplicates: any[]
+  bypassDuplicates: boolean
 }
 
 type InlineIssueState = {
@@ -144,6 +146,8 @@ export function RegisterImportClient({
       attendanceDate: item.extracted_date ?? bulkDate,
       notes: item.notes ?? '',
       createChildIfMissing: false,
+      duplicates: [],
+      bypassDuplicates: false,
     }
   }
 
@@ -301,9 +305,18 @@ export function RegisterImportClient({
       if (state.createChildIfMissing) {
         formData.set('create_child_if_missing', 'on')
       }
+      if (state.bypassDuplicates) {
+        formData.set('check_duplicates', 'off')
+      }
 
       const result = await importRegisterEntryAction(formData)
       if (!result.success || !result.item) {
+        if (result.duplicates && result.duplicates.length > 0) {
+          setState(item.id, { duplicates: result.duplicates })
+          toast.warning(result.message)
+          return
+        }
+
         setLastIssue({
           message: result.message,
           guidance: [...ATTENDANCE_IMPORT_FALLBACK_STEPS],
@@ -553,6 +566,48 @@ export function RegisterImportClient({
                     />
                     Create a child profile if this child is not in CentreConnect yet
                   </label>
+
+                  {state.duplicates.length > 0 && !isImported && (
+                    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-sm font-bold text-amber-900">Possible duplicate children found</p>
+                      <p className="mt-1 text-xs text-amber-800">
+                        We found children with a similar name or details. If this is the same child, please link to them instead of creating a new profile.
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {state.duplicates.map((dup: any) => (
+                          <div key={dup.identity_id} className="flex items-center justify-between rounded-xl bg-white p-3 border border-amber-100 shadow-sm">
+                            <div className="text-xs">
+                              <p className="font-bold text-slate-900">{state.selectedName} (Match)</p>
+                              <p className="text-slate-500">Matches on: {dup.match_fields.join(', ')}</p>
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 rounded-2xl border-teal-200 text-teal-700 hover:bg-teal-50"
+                              onClick={() => {
+                                setState(item.id, { 
+                                  selectedChildId: dup.original_child_id, 
+                                  createChildIfMissing: false,
+                                  duplicates: [] 
+                                })
+                              }}
+                            >
+                              Link to this child
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                      <label className="mt-3 flex items-center gap-2 text-xs font-medium text-amber-900">
+                        <input
+                          type="checkbox"
+                          checked={state.bypassDuplicates}
+                          onChange={(event) => setState(item.id, { bypassDuplicates: event.target.checked })}
+                        />
+                        I've reviewed these matches and want to create a new profile anyway
+                      </label>
+                    </div>
+                  )}
                 </>
               )}
 
