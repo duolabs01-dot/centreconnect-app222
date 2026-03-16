@@ -4,7 +4,7 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
-import { createJobAction, toggleJobPublishAction, updateJobApplicationStatusAction } from './actions'
+import { createJobAction, toggleJobPublishAction, updateJobApplicationStatusAction, updateStaffRecordAction } from './actions'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 
 export const metadata: Metadata = {
@@ -156,6 +156,8 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
         ? 'Job visibility updated.'
         : successParam === 'application-updated'
           ? 'Applicant status updated.'
+          : successParam === 'staff-updated'
+            ? 'Staff record updated successfully.'
         : null
 
   const errorMessage =
@@ -287,14 +289,34 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                       <p className="text-sm font-semibold text-foreground">{staff.first_name} {staff.surname}</p>
                       <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{staff.role}</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.is_trained ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
-                        {staff.is_trained ? 'Trained' : 'Untrained'}
-                      </span>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.is_computer_literate ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
-                        {staff.is_computer_literate ? 'Excel Literate' : 'Basic'}
-                      </span>
-                    </div>
+                    
+                    <form action={updateStaffRecordAction} className="flex flex-wrap items-center gap-4">
+                      <input type="hidden" name="staff_id" value={staff.id} />
+                      
+                      <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-600 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          name="is_trained" 
+                          defaultChecked={staff.is_trained}
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                        />
+                        Trained
+                      </label>
+
+                      <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-600 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          name="is_computer_literate" 
+                          defaultChecked={staff.is_computer_literate}
+                          className="h-3.5 w-3.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+                        />
+                        Excel Literate
+                      </label>
+
+                      <Button type="submit" size="sm" variant="outline" className="h-7 rounded-xl border-slate-200 px-3 text-[10px] font-bold uppercase tracking-wider hover:bg-teal-50 hover:text-teal-700">
+                        Update
+                      </Button>
+                    </form>
                   </div>
                 ))}
               </div>

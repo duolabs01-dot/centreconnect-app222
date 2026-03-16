@@ -63,7 +63,17 @@ export async function GET(request: NextRequest) {
   } else if (kind === 'staff') {
     filename = `doe-staff-${selectedYear}-${String(selectedMonth).padStart(2, '0')}.csv`
     rows = [
-      ['First Name', 'Surname', 'Role', 'Trained', 'Computer Literate'].map(csvEscape).join(','),
+      ['ECD CENTRE MONTHLY STAFF RETURN'].map(csvEscape).join(','),
+      ['Centre', data.centreName].map(csvEscape).join(','),
+      ['EMIS', data.emisNumber ?? '--'].map(csvEscape).join(','),
+      ['Month', data.monthLabel, 'Year', selectedYear].map(csvEscape).join(','),
+      '',
+      ['SUMMARY OF PRACTITIONERS'].map(csvEscape).join(','),
+      ['Total Staff', data.staff.length].map(csvEscape).join(','),
+      ['Trained Staff', data.staff.filter(s => s.isTrained).length].map(csvEscape).join(','),
+      ['Untrained Staff', data.staff.filter(s => !s.isTrained).length].map(csvEscape).join(','),
+      '',
+      ['First Name', 'Surname', 'Role', 'Trained', 'Excel Literate'].map(csvEscape).join(','),
       ...data.staff.map((s) => [
         s.firstName,
         s.surname,

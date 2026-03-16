@@ -172,3 +172,31 @@ export async function updateJobApplicationStatusAction(formData: FormData) {
   revalidatePath('/ecd/employment')
   redirect('/ecd/employment?success=application-updated')
 }
+
+export async function updateStaffRecordAction(formData: FormData) {
+  const { supabase, ecdId } = await requireEcdPortalSession({ cached: false })
+
+  const staffId = String(formData.get('staff_id') ?? '').trim()
+  const isTrained = formData.get('is_trained') === 'on'
+  const isComputerLiterate = formData.get('is_computer_literate') === 'on'
+
+  if (!staffId) redirect('/ecd/employment?error=update-failed')
+
+  const { error } = await supabase
+    .from('ecd_staff')
+    .update({
+      is_trained: isTrained,
+      is_computer_literate: isComputerLiterate,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', staffId)
+    .eq('ecd_id', ecdId)
+
+  if (error) {
+    console.error('Staff update error:', error)
+    redirect('/ecd/employment?error=update-failed')
+  }
+
+  revalidatePath('/ecd/employment')
+  redirect('/ecd/employment?success=staff-updated')
+}
