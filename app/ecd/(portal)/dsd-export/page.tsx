@@ -163,7 +163,7 @@ export default async function DsdExportPage({
             <div className="p-6 bg-cyan-50/30 border-t border-cyan-100">
               <p className="text-xs leading-relaxed text-cyan-800">
                 <strong>Note:</strong> This table is formatted exactly as required for the Department of Education (DOE) monthly statistical return. 
-                Data is calculated based on each child's date of birth and gender as of {formatDate(new Date().toISOString())}.
+                Data is calculated based on each child&apos;s date of birth and gender as of {formatDate(new Date().toISOString())}.
               </p>
             </div>
           </CardContent>

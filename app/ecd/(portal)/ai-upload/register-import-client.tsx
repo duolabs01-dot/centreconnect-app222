@@ -604,7 +604,7 @@ export function RegisterImportClient({
                           checked={state.bypassDuplicates}
                           onChange={(event) => setState(item.id, { bypassDuplicates: event.target.checked })}
                         />
-                        I've reviewed these matches and want to create a new profile anyway
+                        I&apos;ve reviewed these matches and want to create a new profile anyway
                       </label>
                     </div>
                   )}
