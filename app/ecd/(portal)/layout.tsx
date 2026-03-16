@@ -99,6 +99,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       .select('id', { count: 'exact', head: true })
       .eq('ecd_id', ecdId)
       .eq('is_read', false)
+      .contains('metadata', { kind: 'parent_message' })
       .then(({ count, error }) => (error ? 0 : count ?? 0)),
     admin
       .from('transport_enquiries')

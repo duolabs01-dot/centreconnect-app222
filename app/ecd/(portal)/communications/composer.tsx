@@ -18,6 +18,7 @@ type ComposerProps = {
   templates: Template[]
   recipients: Array<{ parentId: string; label: string }>
   centreParticipantIds: string[]
+  allowedModes?: Array<'broadcast' | 'direct'>
   initialRecipientParentId?: string | null
   initialContextType?: 'application' | 'pickup' | 'general'
   initialContextId?: string | null
@@ -32,6 +33,7 @@ export function CommunicationsComposer({
   templates,
   recipients,
   centreParticipantIds,
+  allowedModes = ['broadcast', 'direct'],
   initialRecipientParentId = null,
   initialContextType = 'general',
   initialContextId = null,
@@ -60,6 +62,7 @@ export function CommunicationsComposer({
     () => templates.find((template) => template.template_key === selectedKey) ?? null,
     [templates, selectedKey]
   )
+  const activeMode = allowedModes.length === 1 ? allowedModes[0] : mode
 
   const resolvedBody = selectedTemplate ? renderTemplate(selectedTemplate.body, { centreName }) : customMessage.trim()
   const finalMessage = customMessage.trim() || resolvedBody
@@ -223,12 +226,16 @@ export function CommunicationsComposer({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" size="sm" variant={mode === 'broadcast' ? 'default' : 'outline'} onClick={() => setMode('broadcast')}>
-          Broadcast
-        </Button>
-        <Button type="button" size="sm" variant={mode === 'direct' ? 'default' : 'outline'} onClick={() => setMode('direct')}>
-          Direct
-        </Button>
+        {allowedModes.includes('broadcast') ? (
+          <Button type="button" size="sm" variant={activeMode === 'broadcast' ? 'default' : 'outline'} onClick={() => setMode('broadcast')}>
+            Broadcast
+          </Button>
+        ) : null}
+        {allowedModes.includes('direct') ? (
+          <Button type="button" size="sm" variant={activeMode === 'direct' ? 'default' : 'outline'} onClick={() => setMode('direct')}>
+            Direct
+          </Button>
+        ) : null}
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
@@ -253,7 +260,7 @@ export function CommunicationsComposer({
           <p className="mt-1 text-xs text-slate-400">Use templates first for faster, clearer communication.</p>
         </div>
 
-        {mode === 'broadcast' ? (
+        {activeMode === 'broadcast' ? (
           <div>
             <label className="text-sm font-medium text-foreground">Audience</label>
             <select
@@ -301,7 +308,7 @@ export function CommunicationsComposer({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {mode === 'broadcast' ? (
+        {activeMode === 'broadcast' ? (
           <Button type="button" onClick={sendInApp} disabled={sending}>
             {sending ? 'Sending...' : 'Broadcast to Parents'}
           </Button>

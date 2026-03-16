@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { triggerFirstTimeConfetti } from '@/lib/ui/confetti'
+import { fetchManualChildAction, completeManualChildProfileAction } from './actions'
 
 const childSchema = z.object({
   first_name: z.string().min(1, 'First name is required'),
@@ -40,13 +41,18 @@ function parseListField(value: string | undefined) {
   return entries.length > 0 ? entries : null
 }
 
-export default function NewChildPage() {
+function NewChildForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const manualChildId = searchParams.get('manualChildId')
   const supabase = createClient()
   const [submitting, setSubmitting] = useState(false)
+  const [loadingChild, setLoadingChild] = useState(Boolean(manualChildId))
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<ChildFormValues>({
     resolver: zodResolver(childSchema),
@@ -60,6 +66,38 @@ export default function NewChildPage() {
       special_needs: '',
     },
   })
+
+  useEffect(() => {
+    async function fetchManualChild() {
+      if (!manualChildId) return
+      
+      try {
+        const result = await fetchManualChildAction(manualChildId)
+        if (!result.success || !result.child) {
+          toast.error(result.message || 'Could not find the child profile.')
+          return
+        }
+
+        const data = result.child
+        setValue('first_name', data.first_name || '')
+        setValue('last_name', data.last_name || '')
+        if (data.date_of_birth) {
+          setValue('date_of_birth', data.date_of_birth)
+        }
+        setValue('gender', data.gender || '')
+        setValue('allergies', Array.isArray(data.allergies) ? data.allergies.join(', ') : '')
+        setValue('medical_conditions', Array.isArray(data.medical_conditions) ? data.medical_conditions.join(', ') : '')
+        setValue('special_needs', data.special_needs || '')
+      } catch (err) {
+        console.error('Fetch error:', err)
+        toast.error('An unexpected error occurred while fetching the profile.')
+      } finally {
+        setLoadingChild(false)
+      }
+    }
+
+    fetchManualChild()
+  }, [manualChildId, setValue])
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitting(true)
@@ -77,31 +115,46 @@ export default function NewChildPage() {
         return
       }
 
-      const { error: insertError } = await supabase.from('children').insert({
-        parent_id: ready.userId,
-        ...values,
-        allergies: parseListField(values.allergies),
-        medical_conditions: parseListField(values.medical_conditions),
-        special_needs: values.special_needs || null,
-      })
+      if (manualChildId) {
+        // Complete existing child profile using server action
+        const result = await completeManualChildProfileAction({
+          childId: manualChildId,
+          ...values,
+          allergies: values.allergies || null,
+          medical_conditions: values.medical_conditions || null,
+          special_needs: values.special_needs || null,
+        })
 
-      if (insertError) {
-        throw insertError
+        if (!result.success) {
+          throw new Error(result.message)
+        }
+      } else {
+        // Create new child profile
+        const { error: insertError } = await supabase.from('children').insert({
+          parent_id: ready.userId,
+          ...values,
+          allergies: parseListField(values.allergies),
+          medical_conditions: parseListField(values.medical_conditions),
+          special_needs: values.special_needs || null,
+        })
+
+        if (insertError) throw insertError
       }
 
-      toast.success('Child added successfully')
+      toast.success(manualChildId ? 'Profile completed!' : 'Child added successfully')
       void trackAnalyticsEvent({
-        eventType: 'parent_record_created',
+        eventType: manualChildId ? 'parent_record_updated' : 'parent_record_created',
         actorRole: 'parent_user',
         path: '/parent/children/new',
         metadata: {
           entity: 'child_profile',
+          manualChildId,
         },
       })
       triggerFirstTimeConfetti('parent-first-child', 'child')
       router.push('/parent/children')
     } catch (error: unknown) {
-      const message = toFriendlyClientError(error, 'Failed to add child')
+      const message = toFriendlyClientError(error, manualChildId ? 'Failed to complete profile' : 'Failed to add child')
       reportParentSubmitFailure({
         route: '/parent/children/new',
         form: 'child_profile_create',
@@ -114,12 +167,24 @@ export default function NewChildPage() {
     }
   })
 
+  if (loadingChild) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent"></div>
+      </div>
+    )
+  }
+
   return (
     <main className="mx-auto w-full max-w-3xl pb-6">
       <Card className="border-slate-200">
         <CardHeader>
-          <CardTitle>Add Child</CardTitle>
-          <CardDescription>Create a child profile to start applying to crèches.</CardDescription>
+          <CardTitle>{manualChildId ? 'Complete Child Profile' : 'Add Child'}</CardTitle>
+          <CardDescription>
+            {manualChildId 
+              ? 'A centre has started this profile for you. Please review and complete the details.'
+              : 'Create a child profile to start applying to crèches.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
@@ -160,11 +225,11 @@ export default function NewChildPage() {
 
             <div className="space-y-2">
               <Label htmlFor="allergies">Allergies (optional)</Label>
-              <Textarea id="allergies" {...register('allergies')} />
+              <Textarea id="allergies" {...register('allergies')} placeholder="Peanuts, Egg, etc. (comma separated)" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="medical_conditions">Medical Conditions (optional)</Label>
-              <Textarea id="medical_conditions" {...register('medical_conditions')} />
+              <Textarea id="medical_conditions" {...register('medical_conditions')} placeholder="Asthma, Diabetes, etc. (comma separated)" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="special_needs">Special Needs (optional)</Label>
@@ -173,7 +238,7 @@ export default function NewChildPage() {
 
             <div className="flex gap-2 pt-2">
               <Button type="submit" disabled={submitting}>
-                {submitting ? 'Saving...' : 'Save Child'}
+                {submitting ? 'Saving...' : (manualChildId ? 'Complete Profile' : 'Save Child')}
               </Button>
               <Button variant="outline" asChild>
                 <Link href="/parent/children">Cancel</Link>
@@ -183,5 +248,17 @@ export default function NewChildPage() {
         </CardContent>
       </Card>
     </main>
+  )
+}
+
+export default function NewChildPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent"></div>
+      </div>
+    }>
+      <NewChildForm />
+    </Suspense>
   )
 }

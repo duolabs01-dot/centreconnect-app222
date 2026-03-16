@@ -13,6 +13,7 @@ export async function markEcdNotificationsReadAction() {
     .update({ is_read: true })
     .eq('ecd_id', ecdId)
     .eq('is_read', false)
+    .contains('metadata', { kind: 'parent_message' })
 
   revalidatePath('/ecd/communications')
   revalidatePath('/ecd/dashboard')
