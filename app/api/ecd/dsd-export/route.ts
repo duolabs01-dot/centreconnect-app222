@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       ['EMIS', data.emisNumber ?? '--'].map(csvEscape).join(','),
       ['Reg', data.registrationNumber ?? '--'].map(csvEscape).join(','),
       ['Month', data.monthLabel, 'Year', selectedYear].map(csvEscape).join(','),
-      [],
+      '',
       ['Child name', 'Date of birth', 'Age', 'Gender', 'Class', 'Income Category', 'Disabled', 'Disability Notes', 'Start date', 'Parent', 'Phone'].map(csvEscape).join(','),
       ...data.children.map((child) => [
         child.childName,

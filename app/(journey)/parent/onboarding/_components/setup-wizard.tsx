@@ -99,6 +99,7 @@ export function SetupWizard() {
     }
     
     loadAndSync()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Save draft to localStorage whenever formData changes
@@ -165,7 +166,8 @@ export function SetupWizard() {
       }
     }, 30000)
     return () => clearInterval(timer)
-  }, [hasUnsavedChanges, saveDraftToServer])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnsavedChanges])
 
   async function handleComplete() {
     if (!validateStep(3)) return
