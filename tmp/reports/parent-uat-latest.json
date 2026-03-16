@@ -1,9 +1,9 @@
 {
   "suite": "parent-portal-hard-pass-smoke",
   "status": "pass",
-  "startedAt": "2026-03-08T12:34:25.317Z",
-  "finishedAt": "2026-03-08T12:34:25.349Z",
-  "durationMs": 32,
+  "startedAt": "2026-03-12T15:50:47.181Z",
+  "finishedAt": "2026-03-12T15:50:47.209Z",
+  "durationMs": 28,
   "summary": {
     "total": 16,
     "passed": 16,

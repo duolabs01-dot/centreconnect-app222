@@ -1,0 +1,79 @@
+{
+  "suite": "parent-portal-hard-pass-smoke",
+  "status": "fail",
+  "startedAt": "2026-03-12T11:52:24.167Z",
+  "finishedAt": "2026-03-12T11:52:24.203Z",
+  "durationMs": 36,
+  "summary": {
+    "total": 16,
+    "passed": 15,
+    "failed": 1
+  },
+  "checks": [
+    {
+      "name": "Parent route matrix files exist",
+      "status": "pass"
+    },
+    {
+      "name": "Critical parent actions are still present",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use readiness bootstrap",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use friendly error mapping",
+      "status": "pass"
+    },
+    {
+      "name": "Parent submit-failure telemetry is wired for key parent forms",
+      "status": "pass"
+    },
+    {
+      "name": "Parent dashboard readiness card is wired with completion and CTA links",
+      "status": "pass"
+    },
+    {
+      "name": "Admin parent reliability monitor is platform-admin guarded with trend and recent failure views",
+      "status": "fail",
+      "message": "The input did not match the regular expression /\\/admin\\/parent-reliability/. Input:\n\n\"'use client'\\n\" +\n  '\\n' +\n  \"import React from 'react'\\n\" +\n  \"import Link from 'next/link'\\n\" +\n  \"import { usePathname } from 'next/navigation'\\n\" +\n  \"import { Building2, LifeBuoy, Settings, Sparkles } from 'lucide-react'\\n\" +\n  \"import { cn } from '@/lib/utils'\\n\" +\n  \"import { SignOutButton } from '@/components/cc-admin/SignOutButton'\\n\" +\n  \"import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'\\n\" +\n  \"import { ADMIN_NAV_ITEMS, ADMIN_NAV_SECTIONS } from './admin-nav'\\n\" +\n  '\\n' +\n  'export function AdminSidebar() {\\n' +\n  '  const pathname = usePathname()\\n' +\n  '  const mobileItems = ADMIN_NAV_ITEMS.map((item) => ({\\n' +\n  '    ...item,\\n' +\n  '    icon:\\n' +\n  \"      item.href === '/admin/tenants'\\n\" +\n  '        ? Building2\\n' +\n  \"        : item.href === '/admin/support'\\n\" +\n  '        ? LifeBuoy\\n' +\n  '        : Sparkles,\\n' +\n  \"    group: 'core',\\n\" +\n  '  }))\\n' +\n  '\\n' +\n  '  return (\\n' +\n  '    <>\\n' +\n  '      <div className=\"md:hidden fixed top-0 inset-x-0 h-16 bg-[#080B13]/85 backdrop-blur-md border-b border-white/10 z-40 px-4 flex items-center justify-between\">\\n' +\n  '        <div className=\"flex items-center gap-3\">\\n' +\n  '          <MobileNavMenu items={mobileItems} type=\"admin\" roleLabel=\"Platform Admin\" userRole=\"platform_admin\" />\\n' +\n  '          <div className=\"h-8 w-8 rounded-lg bg-teal-600/90 flex items-center justify-center text-white\">\\n' +\n  '            <Sparkles className=\"w-4 h-4\" />\\n' +\n  '          </div>\\n' +\n  '          <div>\\n' +\n  '            <p className=\"text-[10px] font-black uppercase tracking-[0.2em] text-teal-300/90 leading-none\">CentreConnect</p>\\n' +\n  '            <p className=\"text-[10px] text-slate-300\">Platform Admin</p>\\n' +\n  '          </div>\\n' +\n  '        </div>\\n' +\n  '      </div>\\n' +\n  '\\n' +\n  '      <aside className=\"hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/10 z-50\">\\n' +\n  '        <div className=\"p-6 border-b border-white/10\">\\n' +\n  '          <p className=\"text-[10px] font-black uppercase tracking-[0.2em] text-teal-300\">CentreConnect</p>\\n' +\n  '          <p className=\"mt-1 text-lg font-semibold text-white\">Platform Admin</p>\\n' +\n  '          <p className=\"mt-1 text-xs text-slate-400\">One place to run company, product, and operations.</p>\\n' +\n  '        </div>\\n' +\n  '\\n' +\n  '        <div className=\"flex-1 overflow-y-auto px-4 py-5 space-y-5\">\\n' +\n  '          {ADMIN_NAV_SECTIONS.map((section) => (\\n' +\n  '            <section key={section.id} className=\"space-y-2\">\\n' +\n  '              <p className=\"px-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500\">{section.label}</p>\\n' +\n  '              <nav className=\"space-y-1.5\">\\n' +\n  '                {section.items.map((item) => {\\n' +\n  '                  const isActive = pathname === item.href\\n' +\n  '                  return (\\n' +\n  '                    <Link\\n' +\n  '                      key={item.href}\\n' +\n  '                      href={item.href}\\n' +\n  '                      className={cn(\\n' +\n  \"                        'flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',\\n\" +\n  '                        isActive\\n' +\n  \"                          ? 'bg-teal-500/15 text-teal-200 border border-teal-500/30'\\n\" +\n  \"                          : 'text-slate-300 border border-transparent hover:bg-white/5 hover:text-white'\\n\" +\n  '                      )}\\n' +\n  '                    >\\n' +\n  '                      {item.label}\\n' +\n  '                    </Link>\\n' +\n  '                  )\\n' +\n  '                })}\\n' +\n  '              </nav>\\n' +\n  '            </section>\\n' +\n  '          ))}\\n' +\n  '        </div>\\n' +\n  '\\n' +\n  '        <div className=\"p-4 border-t border-white/10\">\\n' +\n  '          <div className=\"rounded-xl border border-amber-500/30 bg-amber-500/10 p-3\">\\n' +\n  '            <p className=\"text-[10px] font-black uppercase tracking-[0.15em] text-amber-200\">Current pilot truth</p>\\n' +\n  '            <p className=\"mt-1 text-xs text-amber-100\">2 real centres: Bajabulile + Sakhisizwe</p>\\n' +\n  '          </div>\\n' +\n  '          <div className=\"mt-3 flex items-center justify-between\">\\n' +\n  '            <button className=\"p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors\" aria-label=\"Settings\">\\n' +\n  '              <Settings className=\"w-5 h-5\" />\\n' +\n  '            </button>\\n' +\n  '            <SignOutButton\\n' +\n  '              redirectTo=\"/\"\\n' +\n  '              variant=\"ghost\"\\n' +\n  '              className=\"h-9 rounded-lg px-3 text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300\"\\n' +\n  '            />\\n' +\n  '          </div>\\n' +\n  '        </div>\\n' +\n  '      </aside>\\n' +\n  '    </>\\n' +\n  '  )\\n' +\n  '}\\n'\n"
+    },
+    {
+      "name": "Admin dashboard parent audience surfaces reliability severity card with deep-link",
+      "status": "pass"
+    },
+    {
+      "name": "Child create path normalizes list fields for array DB columns",
+      "status": "pass"
+    },
+    {
+      "name": "Parent layout guardrails ensure parent bootstrap on entry",
+      "status": "pass"
+    },
+    {
+      "name": "Browser Supabase client remains singleton",
+      "status": "pass"
+    },
+    {
+      "name": "Bottom nav parent IA remains de-crowded",
+      "status": "pass"
+    },
+    {
+      "name": "Landing journey strip is non-overlapping and public shell keeps brand header",
+      "status": "pass"
+    },
+    {
+      "name": "Parent signup confirmation email template keeps inline-safe styling",
+      "status": "pass"
+    },
+    {
+      "name": "Scoreboard tracks parent UAT matrix/live-smoke progression and next active task",
+      "status": "pass"
+    },
+    {
+      "name": "Parent live smoke command and script are wired",
+      "status": "pass"
+    }
+  ]
+}

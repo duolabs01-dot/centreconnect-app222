@@ -1,0 +1,127 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - generic [ref=e9]:
+      - link "CentreConnect logo CentreConnect" [ref=e10] [cursor=pointer]:
+        - /url: /
+        - img "CentreConnect logo" [ref=e11]
+        - generic [ref=e13]: CentreConnect
+      - generic [ref=e15]:
+        - link "Browse creches" [ref=e16] [cursor=pointer]:
+          - /url: /directory
+        - link "Back home" [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img
+          - text: Back home
+    - generic [ref=e18]:
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e21]: Parent account
+          - heading "Start simple and stay in control" [level=2] [ref=e22]
+          - paragraph [ref=e23]: CentreConnect helps you keep family details ready, apply faster, and follow what happens next without repeat admin.
+        - generic [ref=e24]:
+          - generic [ref=e26]:
+            - img [ref=e28]
+            - generic [ref=e32]:
+              - paragraph [ref=e33]: Save child details once
+              - paragraph [ref=e34]: Reuse the basics across multiple creche applications instead of typing them again each time.
+          - generic [ref=e36]:
+            - img [ref=e38]
+            - generic [ref=e41]:
+              - paragraph [ref=e42]: Track each application clearly
+              - paragraph [ref=e43]: See which creche you contacted, what was sent, and what still needs attention.
+          - generic [ref=e45]:
+            - img [ref=e47]
+            - generic [ref=e50]:
+              - paragraph [ref=e51]: Keep family information secure
+              - paragraph [ref=e52]: Your account keeps pickup, contact, and child details inside one protected place.
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: What happens next
+          - list [ref=e56]:
+            - listitem [ref=e57]: 1. Create your account.
+            - listitem [ref=e58]: 2. Confirm your email.
+            - listitem [ref=e59]: 3. Sign in and finish any details you need before you apply.
+      - generic [ref=e61]:
+        - generic [ref=e63]:
+          - paragraph [ref=e66]: Parent account
+          - generic [ref=e67]:
+            - heading "Create your family account" [level=1] [ref=e68]
+            - paragraph [ref=e69]: Save your details once so you can apply to trusted creches faster when you are ready.
+          - generic [ref=e71]: Browse first if you prefer. Create an account only when you want to save child details, documents, or an application.
+        - generic [ref=e73]:
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - text: First name
+                - textbox "First name" [ref=e77]:
+                  - /placeholder: Nomvula
+                  - text: Test
+              - generic [ref=e78]:
+                - text: Surname
+                - textbox "Surname" [ref=e79]:
+                  - /placeholder: Mokoena
+                  - text: Parent_1773529148804
+            - generic [ref=e80]:
+              - text: Email address
+              - textbox "Email address" [ref=e81]:
+                - /placeholder: name@domain.com
+                - text: test_parent_1773529148804@example.com
+            - generic [ref=e82]:
+              - text: Phone number
+              - textbox "Phone number" [ref=e83]:
+                - /placeholder: +27...
+                - text: "0721234567"
+              - paragraph [ref=e84]: We use this only for account help and important application updates.
+            - generic [ref=e85]:
+              - text: Password
+              - generic [ref=e86]:
+                - textbox "Password" [ref=e87]: TestPassword123!
+                - button [ref=e88] [cursor=pointer]:
+                  - img
+            - generic [ref=e89]:
+              - text: Confirm password
+              - generic [ref=e90]:
+                - textbox "Confirm password" [ref=e91]: TestPassword123!
+                - button [ref=e92] [cursor=pointer]:
+                  - img
+            - generic [ref=e94]:
+              - checkbox "I agree to the Terms of Use." [checked] [ref=e95]
+              - generic [ref=e96]:
+                - text: I agree to the
+                - link "Terms of Use" [ref=e97] [cursor=pointer]:
+                  - /url: /terms
+                - text: .
+            - button "Create account" [ref=e98] [cursor=pointer]
+          - generic [ref=e99]: or continue with
+          - button "Continue with Google" [ref=e102] [cursor=pointer]:
+            - img
+            - text: Continue with Google
+        - paragraph [ref=e104]:
+          - text: Already have an account?
+          - link "Sign in" [ref=e105] [cursor=pointer]:
+            - /url: /login
+  - contentinfo [ref=e106]:
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - paragraph [ref=e109]: CentreConnect
+        - paragraph [ref=e110]: "POPIA-ready platform controls: consent-aware workflows, role-based access, audit trails, and secure data handling. Final compliance also depends on each centre's internal policies and operational practices."
+      - generic [ref=e111]:
+        - link "Browse Centres" [ref=e112] [cursor=pointer]:
+          - /url: /directory
+        - link "For ECD Centres" [ref=e113] [cursor=pointer]:
+          - /url: /for-centres
+        - link "Trust Center" [ref=e114] [cursor=pointer]:
+          - /url: /legal
+        - link "Privacy" [ref=e115] [cursor=pointer]:
+          - /url: /privacy
+        - link "POPIA and Security" [ref=e116] [cursor=pointer]:
+          - /url: /popia-security
+        - link "Terms" [ref=e117] [cursor=pointer]:
+          - /url: /terms
+        - generic [ref=e118]: (c) 2026 CentreConnect. All rights reserved.
+        - generic [ref=e119]: v1.0.0
+  - region "Notifications alt+T"
+  - alert [ref=e120]
+```

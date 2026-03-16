@@ -1,8 +1,8 @@
 Suite: parent-portal-hard-pass-smoke
 Status: PASS
-Started: 2026-03-08T12:34:25.317Z
-Finished: 2026-03-08T12:34:25.349Z
-DurationMs: 32
+Started: 2026-03-12T15:50:47.181Z
+Finished: 2026-03-12T15:50:47.209Z
+DurationMs: 28
 TotalChecks: 16
 Passed: 16
 Failed: 0

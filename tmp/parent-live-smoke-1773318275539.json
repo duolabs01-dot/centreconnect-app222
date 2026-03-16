@@ -1,0 +1,16 @@
+{
+  "mode": "live",
+  "startedAt": "2026-03-12T12:24:30.074Z",
+  "checks": {
+    "createParentAuthUser": "passed",
+    "parentCanCreateChild": "passed",
+    "parentCanCreateEmergencyContact": "passed",
+    "cleanup": "passed"
+  },
+  "metadata": {
+    "testEmail": "uat-parent-1773318270074-4zs7ih@example.com"
+  },
+  "failures": [],
+  "endedAt": "2026-03-12T12:24:35.539Z",
+  "success": true
+}
