@@ -139,6 +139,13 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
   const applicationRows = (jobApplications ?? []) as JobApplicationRow[]
   const teamMembers = (teamMembersResult.data ?? []) as TeamMemberRow[]
 
+  const { data: ecdStaff } = await supabase
+    .from('ecd_staff')
+    .select('id,first_name,surname,role,is_trained,is_computer_literate')
+    .eq('ecd_id', ecdId)
+    .order('surname', { ascending: true })
+    .limit(100)
+
   const publishedCount = jobRows.filter((job) => job.is_published).length
   const draftCount = Math.max(jobRows.length - publishedCount, 0)
 
@@ -261,6 +268,40 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                 <Link href="/ecd/team-plans">Open weekly staff plan</Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* DOE / DSD Practitioner Records */}
+        <Card className={PANEL_CLASS}>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Practitioner & Staff Records (DOE Format)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(!ecdStaff || ecdStaff.length === 0) ? (
+              <p className="text-sm text-slate-500">No official practitioner records found. These are required for DOE monthly returns.</p>
+            ) : (
+              <div className="divide-y divide-border rounded-2xl border border-border">
+                {ecdStaff.map((staff) => (
+                  <div key={staff.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                    <div className="min-w-[200px]">
+                      <p className="text-sm font-semibold text-foreground">{staff.first_name} {staff.surname}</p>
+                      <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{staff.role}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.is_trained ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
+                        {staff.is_trained ? 'Trained' : 'Untrained'}
+                      </span>
+                      <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.is_computer_literate ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
+                        {staff.is_computer_literate ? 'Excel Literate' : 'Basic'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              These records are automatically included in your official DSD/DOE Monthly Report exports.
+            </p>
           </CardContent>
         </Card>
 
