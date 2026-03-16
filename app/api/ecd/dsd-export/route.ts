@@ -60,16 +60,36 @@ export async function GET(request: NextRequest) {
         item.notes ?? '',
       ].map(csvEscape).join(',')),
     ]
-  } else {
+  } else if (kind === 'staff') {
+    filename = `doe-staff-${selectedYear}-${String(selectedMonth).padStart(2, '0')}.csv`
     rows = [
-      ['Child name', 'Date of birth', 'Age', 'Gender', 'Class', 'Age group', 'Start date', 'Parent', 'Phone'].map(csvEscape).join(','),
+      ['First Name', 'Surname', 'Role', 'Trained', 'Computer Literate'].map(csvEscape).join(','),
+      ...data.staff.map((s) => [
+        s.firstName,
+        s.surname,
+        s.role,
+        s.isTrained ? 'Yes' : 'No',
+        s.isComputerLiterate ? 'Yes' : 'No',
+      ].map(csvEscape).join(',')),
+    ]
+  } else {
+    // Full enrolment export with income categories and disability
+    rows = [
+      ['Centre', data.centreName].map(csvEscape).join(','),
+      ['EMIS', data.emisNumber ?? '--'].map(csvEscape).join(','),
+      ['Reg', data.registrationNumber ?? '--'].map(csvEscape).join(','),
+      ['Month', data.monthLabel, 'Year', selectedYear].map(csvEscape).join(','),
+      [],
+      ['Child name', 'Date of birth', 'Age', 'Gender', 'Class', 'Income Category', 'Disabled', 'Disability Notes', 'Start date', 'Parent', 'Phone'].map(csvEscape).join(','),
       ...data.children.map((child) => [
         child.childName,
         child.dateOfBirth ?? '',
         child.ageLabel,
         child.gender ?? '',
         child.className ?? '--',
-        child.ageGroup ?? '--',
+        child.parentIncomeCategory,
+        child.isDisabled ? 'Yes' : 'No',
+        child.disabilityDescription,
         child.startDate ?? '',
         child.parentName,
         child.parentPhone,

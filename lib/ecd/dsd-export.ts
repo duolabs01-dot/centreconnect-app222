@@ -18,6 +18,9 @@ export type DsdEnrolledChild = {
   startDate: string | null
   parentName: string
   parentPhone: string
+  parentIncomeCategory: string
+  isDisabled: boolean
+  disabilityDescription: string
 }
 
 export type DsdAttendanceSummary = {
@@ -55,9 +58,26 @@ export type DoeMonthlyStats = {
   totalFemale: number
 }
 
+export type DsdStaffRecord = {
+  id: string
+  firstName: string
+  surname: string
+  role: string
+  isTrained: boolean
+  isComputerLiterate: boolean
+}
+
 export type DsdExportData = {
   centreName: string
   registrationNumber: string | null
+  emisNumber: string | null
+  approvedCapacityPartialCare: number | null
+  approvedCapacitySla: number | null
+  ward: string | null
+  district: string | null
+  primaryContactName: string | null
+  primaryContactPhone: string | null
+  primaryContactEmail: string | null
   selectedMonth: number
   selectedYear: number
   generatedAt: string
@@ -68,6 +88,7 @@ export type DsdExportData = {
   compliance: DsdComplianceItem[]
   verifiedDocs: number
   doeStats: DoeMonthlyStats
+  staff: DsdStaffRecord[]
 }
 
 const MONTHS = [
@@ -131,14 +152,13 @@ export function getDoeMonthlyReturnData(children: DsdEnrolledChild[]): DoeMonthl
     totalFemale: 0,
   }
 
-  const now = new Date()
-
   for (const child of children) {
     if (!child.dateOfBirth) continue
 
     const dob = new Date(child.dateOfBirth)
     if (Number.isNaN(dob.getTime())) continue
 
+    const now = new Date()
     let age = now.getFullYear() - dob.getFullYear()
     const m = now.getMonth() - dob.getMonth()
     if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) {
@@ -188,15 +208,15 @@ export async function getDsdExportData(input: {
   const { supabase, ecdId, selectedMonth, selectedYear } = input
   const { startDate, endDate } = getMonthWindow(selectedYear, selectedMonth)
 
-  const [{ data: centre }, { data: enrolledApplications }, { data: complianceRows }] = await Promise.all([
+  const [{ data: centre }, { data: enrolledApplications }, { data: complianceRows }, { data: staffRows }] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('name,registration_number')
+      .select('name,registration_number,emis_number,approved_capacity_partial_care,approved_capacity_sla,ward,district,primary_contact_name,primary_contact_phone,primary_contact_email')
       .eq('id', ecdId)
       .maybeSingle(),
     supabase
       .from('applications')
-      .select('id,child_id,parent_id,start_date,children(id,first_name,last_name,date_of_birth,gender,class_id),parents(alt_phone,user_profiles(full_name,phone))')
+      .select('id,child_id,parent_id,start_date,children(id,first_name,last_name,date_of_birth,gender,class_id,parent_income_category,is_disabled,disability_description),parents(alt_phone,user_profiles(full_name,phone))')
       .eq('ecd_id', ecdId)
       .eq('status', 'enrolled')
       .order('submitted_at', { ascending: true }),
@@ -205,6 +225,11 @@ export async function getDsdExportData(input: {
       .select('id,document_type,label,status,expires_at,file_url,notes')
       .eq('ecd_id', ecdId)
       .order('label', { ascending: true }),
+    supabase
+      .from('ecd_staff')
+      .select('id,first_name,surname,role,is_trained,is_computer_literate')
+      .eq('ecd_id', ecdId)
+      .order('surname', { ascending: true }),
   ])
 
   const applicationRows = (enrolledApplications ?? []) as Array<Record<string, unknown>>
@@ -256,6 +281,9 @@ export async function getDsdExportData(input: {
       startDate: normalizeText(row.start_date as string | null, '') || null,
       parentName: normalizeText(parentProfile?.full_name as string | null, 'Parent not linked yet'),
       parentPhone: normalizeText((parentProfile?.phone as string | null) ?? (parent?.alt_phone as string | null), '--'),
+      parentIncomeCategory: normalizeText(child?.parent_income_category as string | null, 'Other'),
+      isDisabled: Boolean(child?.is_disabled),
+      disabilityDescription: normalizeText(child?.disability_description as string | null, ''),
     }
   }).sort((a, b) => a.childName.localeCompare(b.childName))
 
@@ -299,6 +327,14 @@ export async function getDsdExportData(input: {
   return {
     centreName: centre?.name?.trim() || 'Your creche',
     registrationNumber: centre?.registration_number?.trim() || null,
+    emisNumber: centre?.emis_number?.trim() || null,
+    approvedCapacityPartialCare: centre?.approved_capacity_partial_care || null,
+    approvedCapacitySla: centre?.approved_capacity_sla || null,
+    ward: centre?.ward?.trim() || null,
+    district: centre?.district?.trim() || null,
+    primaryContactName: centre?.primary_contact_name?.trim() || null,
+    primaryContactPhone: centre?.primary_contact_phone?.trim() || null,
+    primaryContactEmail: centre?.primary_contact_email?.trim() || null,
     selectedMonth,
     selectedYear,
     generatedAt: new Date().toISOString(),
@@ -309,6 +345,14 @@ export async function getDsdExportData(input: {
     compliance,
     verifiedDocs: compliance.filter((item) => item.status === 'verified').length,
     doeStats: getDoeMonthlyReturnData(children),
+    staff: ((staffRows ?? []) as any[]).map(row => ({
+      id: String(row.id),
+      firstName: String(row.first_name),
+      surname: String(row.surname),
+      role: String(row.role),
+      isTrained: Boolean(row.is_trained),
+      isComputerLiterate: Boolean(row.is_computer_literate),
+    })),
   }
 }
 
