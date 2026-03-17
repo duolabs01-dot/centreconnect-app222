@@ -153,12 +153,12 @@ export function EcdPortalSidebar({
 
     if (item.comingSoon) {
       return (
-        <div key={item.href} className="group relative flex items-center gap-3 rounded-3xl border border-border bg-slate-50 px-4 py-3" aria-disabled="true">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+        <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50 px-3.5 py-2" aria-disabled="true">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
             <item.icon className="h-4 w-4 shrink-0" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold tracking-tight text-slate-700">{item.label}</p>
+            <p className="truncate text-[13px] font-bold tracking-tight text-slate-700">{item.label}</p>
           </div>
           <span className="inline-flex items-center rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500">
             Soon
@@ -179,7 +179,7 @@ export function EcdPortalSidebar({
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 rounded-3xl px-4 py-3 text-sm font-bold tracking-tight transition-colors duration-200',
+          'group relative flex items-center gap-2.5 rounded-2xl px-3.5 py-2 text-[13px] font-bold tracking-tight transition-colors duration-200',
           active
             ? 'border border-teal-200 bg-teal-50/90 text-teal-900 shadow-sm'
             : 'border border-transparent text-slate-700 hover:border-teal-100 hover:bg-teal-50/60 hover:text-teal-800'
@@ -188,7 +188,7 @@ export function EcdPortalSidebar({
       >
         <div
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-2xl transition-colors',
+            'flex h-8 w-8 items-center justify-center rounded-xl transition-colors',
             active
               ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'
               : 'bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-700'
@@ -288,12 +288,12 @@ export function EcdPortalSidebar({
                 Upgrade to unlock
               </p>
               {lockedByTier.map((item) => (
-                <div key={item.href} className="group relative flex items-center gap-3 rounded-3xl border border-border bg-slate-50 px-4 py-3 opacity-85">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+                <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50 px-3.5 py-2 opacity-85">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
                     <item.icon className="h-4 w-4 shrink-0" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold tracking-tight text-slate-700">{item.label}</p>
+                    <p className="truncate text-[13px] font-bold tracking-tight text-slate-700">{item.label}</p>
                     <p className="text-[10px] font-semibold text-slate-500">Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'}</p>
                   </div>
                   <Lock className="h-4 w-4 text-slate-500" />
