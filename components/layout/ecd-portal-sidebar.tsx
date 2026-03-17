@@ -250,7 +250,7 @@ export function EcdPortalSidebar({
         <nav className="mt-2 space-y-2" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
             <Fragment key={bucket.group}>
-              <p className="mb-2 mt-6 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
+              <p className="mb-2 mt-4 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
                 {GROUP_LABELS[bucket.group]}
               </p>
               {bucket.items.map((item) => renderNavItem(item))}
