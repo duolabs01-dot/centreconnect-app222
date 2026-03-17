@@ -238,16 +238,14 @@ export function EcdPortalSidebar({
         ref={desktopScrollRef}
         className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
-        <div className="px-4 mb-8">
+        <div className="px-4 mb-3">
           <BrandMark compact className="brightness-100" />
-          <div className="mt-3 inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
-          </div>
-          <div className="mt-2 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Plan: {tierLabel}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Plan: {tierLabel}</span>
           </div>
         </div>
-        <nav className="mt-2 space-y-2" aria-label="ECD portal navigation">
+        <nav className="mt-1 space-y-1.5" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
             <Fragment key={bucket.group}>
               <p className="mb-2 mt-4 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">

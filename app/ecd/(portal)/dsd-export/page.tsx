@@ -10,7 +10,7 @@ import { DsdPrintButton } from './print-button'
 
 export const metadata: Metadata = {
   title: 'DOE Monthly Report | CentreConnect',
-  description: 'Official DOE Monthly Reporting Template — Places of Care (Crèches) generated from CentreConnect data.',
+  description: 'Official DOE Monthly Report — Places of Care (Crèches) generated from CentreConnect data.',
 }
 
 function normalizeMonth(value: string | undefined, fallback: number) {
@@ -97,20 +97,34 @@ export default async function DsdExportPage({
   return (
     <EcdOsShell
       title="DOE Monthly Report"
-      description="Official Department of Education Monthly Reporting Template — Places of Care (Crèches)"
+      description="Official Department of Education Monthly Report — Places of Care (Crèches)"
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          body, html { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .ecd-premium-shell, .ecd-premium-shell > aside { display: none !important; }
+          .ecd-premium-shell > main { margin-left: 0 !important; overflow: visible !important; }
+          .ecd-page-shell { padding: 0 !important; }
+          .print-hide { display: none !important; }
+          .print-page-break { page-break-before: always; }
+          table { page-break-inside: auto; }
+          tr { page-break-inside: avoid; page-break-after: auto; }
+          thead { display: table-header-group; }
+          @page { margin: 12mm 10mm; size: A4; }
+        }
+      ` }} />
       <div className="space-y-6 pb-10">
 
-        {/* ── Controls Bar ── */}
-        <Card className="rounded-[2rem] border-slate-200 bg-gradient-to-br from-cyan-50 to-white shadow-sm">
+        {/* ── Controls Bar (hidden when printing) ── */}
+        <Card className="rounded-[2rem] border-slate-200 bg-gradient-to-br from-cyan-50 to-white shadow-sm print-hide">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-cyan-600" />
-                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">DOE Monthly Reporting Template</span>
+                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">DOE Monthly Report</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 <DsdPrintButton />
@@ -154,7 +168,7 @@ export default async function DsdExportPage({
             </div>
             <div className="flex-1 text-center">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Department of Education</p>
-              <p className="text-lg font-black uppercase tracking-[0.1em] text-slate-900">Monthly Reporting Template</p>
+              <p className="text-lg font-black uppercase tracking-[0.1em] text-slate-900">Monthly Report</p>
               <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-600">Programme: Places of Care (Crèches)</p>
             </div>
           </div>
@@ -270,7 +284,7 @@ export default async function DsdExportPage({
         {/* ══════════════════════════════════════════════════════════════════
             SECTION 2 — Classification of Income per Beneficiaries (pages 2/3)
         ══════════════════════════════════════════════════════════════════ */}
-        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+        <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
           <CardHeader className="border-b border-slate-200 bg-slate-900 py-3">
             <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
               <Users className="h-4 w-4 text-cyan-400" />
@@ -344,7 +358,7 @@ export default async function DsdExportPage({
         {/* ══════════════════════════════════════════════════════════════════
             SECTION 3 — Attendance Register Summary (Annexure A)
         ══════════════════════════════════════════════════════════════════ */}
-        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+        <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
           <CardHeader className="border-b border-slate-200 bg-slate-800 py-3">
             <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
               <FileCheck2 className="h-4 w-4 text-cyan-400" />
@@ -401,7 +415,7 @@ export default async function DsdExportPage({
         {/* ══════════════════════════════════════════════════════════════════
             SECTION 4 — Breakdown of Staff & Management (page 6 of PDF)
         ══════════════════════════════════════════════════════════════════ */}
-        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+        <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
           <CardHeader className="border-b border-slate-200 bg-slate-900 py-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
@@ -562,7 +576,7 @@ export default async function DsdExportPage({
         </div>
 
         {/* ── Footer ── */}
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400 print-hide">
           <ShieldCheck className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5 text-cyan-500" />
           Generated by CentreConnect · Official DOE/DSD Monthly Return · {data.centreName} · {defaults.months[selectedMonth - 1]} {selectedYear}
         </div>

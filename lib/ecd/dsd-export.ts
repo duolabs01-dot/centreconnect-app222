@@ -221,7 +221,7 @@ export async function getDsdExportData(input: {
   const { supabase, ecdId, selectedMonth, selectedYear } = input
   const { startDate, endDate } = getMonthWindow(selectedYear, selectedMonth)
 
-  const [{ data: centre }, { data: enrolledApplications }, { data: complianceRows }, { data: staffRows }] = await Promise.all([
+  const [{ data: centre }, { data: enrolledApplications }, { data: directChildren }, { data: complianceRows }, { data: staffRows }] = await Promise.all([
     supabase
       .from('ecd_centres')
       .select('name,registration_number,emis_number,npo_reg,dsd_reg_number,address_line1,address_line2,province,approved_capacity_partial_care,approved_capacity_sla,ward,district,primary_contact_name,primary_contact_phone,primary_contact_email,contact_phone,contact_email')
@@ -233,6 +233,12 @@ export async function getDsdExportData(input: {
       .eq('ecd_id', ecdId)
       .eq('status', 'enrolled')
       .order('submitted_at', { ascending: true }),
+    supabase
+      .from('children')
+      .select('id,first_name,last_name,date_of_birth,gender,class_id,parent_income_category,is_disabled,disability_description,enrollment_start_date,enrollment_status,parent_id')
+      .eq('ecd_id', ecdId)
+      .in('enrollment_status', ['active', 'pending_parent'])
+      .order('last_name', { ascending: true }),
     supabase
       .from('compliance_documents')
       .select('id,document_type,label,status,expires_at,file_url,notes')
@@ -246,12 +252,19 @@ export async function getDsdExportData(input: {
   ])
 
   const applicationRows = (enrolledApplications ?? []) as Array<Record<string, unknown>>
+  const directChildRows = (directChildren ?? []) as Array<Record<string, unknown>>
+  const useApplications = applicationRows.length > 0
+
+  const allChildIds = useApplications
+    ? applicationRows.map((row) => String(row.child_id ?? (normalizeOne(row.children as any) as any)?.id ?? ''))
+    : directChildRows.map((row) => String(row.id))
+
   const classIds = Array.from(
     new Set(
-      applicationRows
-        .map((row) => normalizeOne(row.children as any))
-        .map((child) => normalizeText((child as Record<string, unknown> | null)?.class_id as string | null, ''))
-        .filter(Boolean)
+      (useApplications
+        ? applicationRows.map((row) => normalizeOne(row.children as any)).map((child) => normalizeText((child as Record<string, unknown> | null)?.class_id as string | null, ''))
+        : directChildRows.map((row) => normalizeText(row.class_id as string | null, ''))
+      ).filter(Boolean)
     )
   )
 
@@ -259,7 +272,7 @@ export async function getDsdExportData(input: {
     classIds.length > 0
       ? supabase.from('ecd_classes').select('id,name,age_group').in('id', classIds)
       : Promise.resolve({ data: [] }),
-    applicationRows.length > 0
+    allChildIds.length > 0
       ? supabase
           .from('attendance_records')
           .select('child_id,date,status')
@@ -276,29 +289,56 @@ export async function getDsdExportData(input: {
     ])
   )
 
-  const children: DsdEnrolledChild[] = applicationRows.map((row) => {
-    const child = normalizeOne(row.children as any) as Record<string, unknown> | null
-    const parent = normalizeOne(row.parents as any) as Record<string, unknown> | null
-    const parentProfile = normalizeOne((parent?.user_profiles ?? null) as any) as Record<string, unknown> | null
-    const classId = normalizeText((child?.class_id as string | null) ?? null, '')
-    const classMeta = classId ? classMap.get(classId) : null
-    return {
-      applicationId: String(row.id),
-      childId: String(row.child_id ?? child?.id ?? ''),
-      childName: `${normalizeText(child?.first_name as string | null)} ${normalizeText(child?.last_name as string | null)}`.trim() || 'Child',
-      dateOfBirth: normalizeText(child?.date_of_birth as string | null, '') || null,
-      ageLabel: formatAgeLabel(normalizeText(child?.date_of_birth as string | null, '') || null),
-      gender: normalizeText(child?.gender as string | null, '') || null,
-      className: classMeta?.name?.trim() || null,
-      ageGroup: classMeta?.age_group?.trim() || null,
-      startDate: normalizeText(row.start_date as string | null, '') || null,
-      parentName: normalizeText(parentProfile?.full_name as string | null, 'Parent not linked yet'),
-      parentPhone: normalizeText((parentProfile?.phone as string | null) ?? (parent?.alt_phone as string | null), '--'),
-      parentIncomeCategory: normalizeText(child?.parent_income_category as string | null, 'Other'),
-      isDisabled: Boolean(child?.is_disabled),
-      disabilityDescription: normalizeText(child?.disability_description as string | null, ''),
-    }
-  }).sort((a, b) => a.childName.localeCompare(b.childName))
+  let children: DsdEnrolledChild[]
+
+  if (useApplications) {
+    children = applicationRows.map((row) => {
+      const child = normalizeOne(row.children as any) as Record<string, unknown> | null
+      const parent = normalizeOne(row.parents as any) as Record<string, unknown> | null
+      const parentProfile = normalizeOne((parent?.user_profiles ?? null) as any) as Record<string, unknown> | null
+      const classId = normalizeText((child?.class_id as string | null) ?? null, '')
+      const classMeta = classId ? classMap.get(classId) : null
+      return {
+        applicationId: String(row.id),
+        childId: String(row.child_id ?? child?.id ?? ''),
+        childName: `${normalizeText(child?.first_name as string | null)} ${normalizeText(child?.last_name as string | null)}`.trim() || 'Child',
+        dateOfBirth: normalizeText(child?.date_of_birth as string | null, '') || null,
+        ageLabel: formatAgeLabel(normalizeText(child?.date_of_birth as string | null, '') || null),
+        gender: normalizeText(child?.gender as string | null, '') || null,
+        className: classMeta?.name?.trim() || null,
+        ageGroup: classMeta?.age_group?.trim() || null,
+        startDate: normalizeText(row.start_date as string | null, '') || null,
+        parentName: normalizeText(parentProfile?.full_name as string | null, 'Parent not linked yet'),
+        parentPhone: normalizeText((parentProfile?.phone as string | null) ?? (parent?.alt_phone as string | null), '--'),
+        parentIncomeCategory: normalizeText(child?.parent_income_category as string | null, 'Other'),
+        isDisabled: Boolean(child?.is_disabled),
+        disabilityDescription: normalizeText(child?.disability_description as string | null, ''),
+      }
+    })
+  } else {
+    children = directChildRows.map((row) => {
+      const classId = normalizeText(row.class_id as string | null, '')
+      const classMeta = classId ? classMap.get(classId) : null
+      return {
+        applicationId: '',
+        childId: String(row.id),
+        childName: `${normalizeText(row.first_name as string | null)} ${normalizeText(row.last_name as string | null)}`.trim() || 'Child',
+        dateOfBirth: normalizeText(row.date_of_birth as string | null, '') || null,
+        ageLabel: formatAgeLabel(normalizeText(row.date_of_birth as string | null, '') || null),
+        gender: normalizeText(row.gender as string | null, '') || null,
+        className: classMeta?.name?.trim() || null,
+        ageGroup: classMeta?.age_group?.trim() || null,
+        startDate: normalizeText(row.enrollment_start_date as string | null, '') || null,
+        parentName: 'Parent not linked yet',
+        parentPhone: '--',
+        parentIncomeCategory: normalizeText(row.parent_income_category as string | null, 'Other'),
+        isDisabled: Boolean(row.is_disabled),
+        disabilityDescription: normalizeText(row.disability_description as string | null, ''),
+      }
+    })
+  }
+
+  children.sort((a, b) => a.childName.localeCompare(b.childName))
 
   const attendanceByChild = new Map<string, DsdAttendanceSummary>()
   const uniqueAttendanceDays = new Set<string>()
