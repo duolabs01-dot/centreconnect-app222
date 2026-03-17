@@ -1,7 +1,11 @@
+import * as dotenv from 'dotenv'
 import { createClient } from '@supabase/supabase-js'
 
+dotenv.config()
+
 const supabaseUrl = 'https://upaezyiijeqkjepppzze.supabase.co'
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYWV6eWlpamVxa2plcHBwenplIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTIxODQ5OCwiZXhwIjoyMDg2Nzk0NDk4fQ.qMsLAhm4zbPYGu4RVnk-CcwuYA8wSR-Gze4jiG_6ahM'
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+if (!serviceRoleKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required. Set it in .env before running this script.')
 
 const supabase = createClient(supabaseUrl, serviceRoleKey, {
   db: { schema: 'public' }
