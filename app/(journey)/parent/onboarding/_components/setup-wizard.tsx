@@ -108,6 +108,15 @@ export function SetupWizard() {
     setHasUnsavedChanges(true)
   }, [formData])
 
+  const saveDraftToServer = useCallback(async () => {
+    if (!isOnline) return
+    
+    const result = await syncToServer(formData)
+    if (result.ok) {
+      setHasUnsavedChanges(false)
+    }
+  }, [formData, isOnline, syncToServer])
+
   // Monitor online status
   useEffect(() => {
     const handleOnline = () => {
@@ -148,15 +157,6 @@ export function SetupWizard() {
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
-
-  const saveDraftToServer = useCallback(async () => {
-    if (!isOnline) return
-    
-    const result = await syncToServer(formData)
-    if (result.ok) {
-      setHasUnsavedChanges(false)
-    }
-  }, [formData, isOnline, syncToServer])
 
   // Auto-sync every 30 seconds if there are changes
   useEffect(() => {
