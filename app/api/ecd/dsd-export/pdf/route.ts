@@ -86,9 +86,10 @@ export async function GET(request: NextRequest) {
                       'July', 'August', 'September', 'October', 'November', 'December']
     const filename = `DOE-Monthly-Report-${monthNames[selectedMonth - 1]}-${selectedYear}-${data.centreName.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`
 
-    const pdfBlob = new Blob([pdf])
+    const pdfBytes = new Uint8Array(pdf.byteLength)
+    pdfBytes.set(pdf)
 
-    return new NextResponse(pdfBlob, {
+    return new NextResponse(pdfBytes, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`
