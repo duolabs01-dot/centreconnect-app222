@@ -71,7 +71,7 @@ export function PwaInstallCard() {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    if ('serviceWorker' in navigator) {
+    if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
       void navigator.serviceWorker.register('/sw.js').catch(() => {
         // Silent fail: install UX still works where possible.
       })

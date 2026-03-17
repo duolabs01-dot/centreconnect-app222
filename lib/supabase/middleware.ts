@@ -65,10 +65,10 @@ export async function updateSession(request: NextRequest) {
   if (!hasSupabaseSessionCookie) {
     clearRoleCache(response, request)
     if (protectedArea || isActivationPage) {
-      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
-      const nextPath = `${pathname}${request.nextUrl.search}`
-      loginUrl.searchParams.set('next', nextPath)
-      return finish(NextResponse.redirect(loginUrl), 'anon-protected-redirect')
+      return finish(
+        NextResponse.redirect(buildLoginUrl(request, protectedArea ?? 'parent', `${pathname}${request.nextUrl.search}`)),
+        'anon-protected-redirect'
+      )
     }
     return finish(response, 'anon-pass')
   }
@@ -77,9 +77,10 @@ export async function updateSession(request: NextRequest) {
   if (!userResult) {
     clearRoleCache(response, request)
     if (protectedArea || isActivationPage) {
-      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
-      loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
-      return finish(NextResponse.redirect(loginUrl), 'user-timeout-protected-redirect')
+      return finish(
+        NextResponse.redirect(buildLoginUrl(request, protectedArea ?? 'parent', `${pathname}${request.nextUrl.search}`)),
+        'user-timeout-protected-redirect'
+      )
     }
     return finish(response, 'user-timeout-public-pass')
   }
@@ -91,10 +92,10 @@ export async function updateSession(request: NextRequest) {
   if (!user) {
     clearRoleCache(response, request)
     if (protectedArea || isActivationPage) {
-      const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
-      const nextPath = `${pathname}${request.nextUrl.search}`
-      loginUrl.searchParams.set('next', nextPath)
-      return finish(NextResponse.redirect(loginUrl), 'no-user-protected-redirect')
+      return finish(
+        NextResponse.redirect(buildLoginUrl(request, protectedArea ?? 'parent', `${pathname}${request.nextUrl.search}`)),
+        'no-user-protected-redirect'
+      )
     }
     return finish(response, 'no-user-pass')
   }
@@ -110,9 +111,10 @@ export async function updateSession(request: NextRequest) {
     if (!authStateLookup) {
       clearRoleCache(response, request)
       if (protectedArea || isActivationPage) {
-        const loginUrl = new URL(getLoginPath(protectedArea ?? 'parent'), request.url)
-        loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
-        return finish(NextResponse.redirect(loginUrl), 'activation-check-timeout-redirect')
+        return finish(
+          NextResponse.redirect(buildLoginUrl(request, protectedArea ?? 'parent', `${pathname}${request.nextUrl.search}`)),
+          'activation-check-timeout-redirect'
+        )
       }
       return finish(response, 'activation-check-timeout-pass')
     }
@@ -156,9 +158,10 @@ export async function updateSession(request: NextRequest) {
     if (!roleLookup) {
       clearRoleCache(response, request)
       if (protectedArea) {
-        const loginUrl = new URL(getLoginPath(protectedArea), request.url)
-        loginUrl.searchParams.set('next', `${pathname}${request.nextUrl.search}`)
-        return finish(NextResponse.redirect(loginUrl), 'role-timeout-protected-redirect')
+        return finish(
+          NextResponse.redirect(buildLoginUrl(request, protectedArea, `${pathname}${request.nextUrl.search}`)),
+          'role-timeout-protected-redirect'
+        )
       }
       return finish(response, 'role-timeout-pass')
     }
@@ -206,7 +209,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (protectedArea && !role) {
-    const loginUrl = new URL(getLoginPath(protectedArea), request.url)
+    const loginUrl = buildLoginUrl(request, protectedArea, `${pathname}${request.nextUrl.search}`)
     loginUrl.searchParams.set('error', 'complete-profile')
     return finish(NextResponse.redirect(loginUrl), 'protected-no-role-redirect')
   }
@@ -242,13 +245,22 @@ function isRoleAllowed(area: ProtectedArea, role: UserRole): boolean {
 }
 
 function getDashboardPath(role: UserRole | null): string {
-  if (role === 'platform_admin') return '/admin/command'
+  if (role === 'platform_admin') return '/admin/dashboard'
   if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
   return '/parent/dashboard'
 }
 
 function getLoginPath(area: ProtectedArea): string {
   return area === 'ecd' ? '/ecd/login' : '/login'
+}
+
+function buildLoginUrl(request: NextRequest, area: ProtectedArea, nextPath: string) {
+  const loginUrl = new URL(getLoginPath(area), request.url)
+  loginUrl.searchParams.set('next', nextPath)
+  if (area === 'admin') {
+    loginUrl.searchParams.set('persona', 'admin')
+  }
+  return loginUrl
 }
 
 async function getUserAuthState(

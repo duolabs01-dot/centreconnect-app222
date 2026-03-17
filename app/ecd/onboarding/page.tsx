@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -54,6 +55,8 @@ export default function EcdOnboardingPage() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [loadingCentre, setLoadingCentre] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [loadIssue, setLoadIssue] = useState<{ title: string; detail: string } | null>(null)
 
   const [ecdId, setEcdId] = useState<string | null>(null)
   const [slug, setSlug] = useState<string>('')
@@ -74,6 +77,8 @@ export default function EcdOnboardingPage() {
     let active = true
 
     async function bootstrap() {
+      setLoadingCentre(true)
+      setLoadIssue(null)
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -95,6 +100,11 @@ export default function EcdOnboardingPage() {
 
       if (error || !membership) {
         toast.error('Unable to load centre onboarding profile.')
+        setLoadIssue({
+          title: 'We could not open your centre setup yet.',
+          detail:
+            'Your account is signed in, but we could not find the centre workspace linked to it. Try again now. If this keeps happening, sign in again or contact support.',
+        })
         setLoadingCentre(false)
         return
       }
@@ -103,6 +113,11 @@ export default function EcdOnboardingPage() {
       const centre = normalizeOne(typedMembership.ecd_centres)
       if (!centre) {
         toast.error('No centre profile found.')
+        setLoadIssue({
+          title: 'Your centre profile is still missing.',
+          detail:
+            'We found your membership, but the centre record is not ready yet. Retry now or contact support so we can finish the setup for you.',
+        })
         setLoadingCentre(false)
         return
       }
@@ -128,7 +143,7 @@ export default function EcdOnboardingPage() {
     return () => {
       active = false
     }
-  }, [router, supabase])
+  }, [loadAttempt, router, supabase])
 
   function setField<K extends keyof FormDataState>(key: K, value: FormDataState[K]) {
     setFormData((prev) => ({ ...prev, [key]: value }))
@@ -237,6 +252,39 @@ export default function EcdOnboardingPage() {
       <div className="min-h-screen bg-slate-50 px-4 py-8">
         <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm text-slate-600">Loading onboarding...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadIssue) {
+    return (
+      <div className="min-h-screen bg-slate-50 px-4 py-8">
+        <div className="mx-auto max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-[var(--shadow-elevation-2)]">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">CentreConnect</p>
+          <h1 className="mt-4 text-2xl font-bold text-slate-900">{loadIssue.title}</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-600">{loadIssue.detail}</p>
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => setLoadAttempt((current) => current + 1)}
+              className="w-full rounded-2xl bg-cyan-600 px-4 py-3 text-sm font-semibold text-white hover:bg-cyan-700"
+            >
+              Try again
+            </button>
+            <Link
+              href="/ecd/login"
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Back to login
+            </Link>
+            <a
+              href="mailto:admin@centerconnect.co.za"
+              className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Contact support
+            </a>
+          </div>
         </div>
       </div>
     )

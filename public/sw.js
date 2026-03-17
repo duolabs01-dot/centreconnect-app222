@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cc-v8-icons';
+const CACHE_NAME = 'cc-v9-auth-fresh';
 const OFFLINE_URL = '/offline';
 
 const ASSETS = [
@@ -21,27 +21,38 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => Promise.all(
-      keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
     ))
   );
   self.clients.claim();
 });
 
-// Advanced PWA Strategy:
-// - Network-first for page navigations (prevents stale portal shells after deploy)
-// - Cache-first for static assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip non-GET and API calls
   if (request.method !== 'GET' || url.pathname.startsWith('/api/')) return;
 
-  const isPortal = url.pathname.startsWith('/parent') || url.pathname.startsWith('/ecd') || url.pathname.startsWith('/directory');
+  const isPortal =
+    url.pathname.startsWith('/parent') ||
+    url.pathname.startsWith('/ecd') ||
+    url.pathname.startsWith('/directory') ||
+    url.pathname.startsWith('/admin');
   const isNavigation = request.mode === 'navigate' || request.destination === 'document';
+  const isAuthPage =
+    url.pathname === '/login' ||
+    url.pathname === '/register' ||
+    url.pathname === '/ecd/login' ||
+    url.pathname === '/account/activate';
+  const isNextScript = request.destination === 'script' || url.pathname.includes('/_next/static/');
 
-  // Always prefer fresh HTML for navigations and portal routes.
-  // This avoids desktop/mobile mismatch where an old cached shell persists.
+  if (isAuthPage && isNavigation) {
+    event.respondWith(
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
+
   if (isPortal || isNavigation) {
     event.respondWith(
       caches.open(CACHE_NAME).then((cache) =>
@@ -58,14 +69,26 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets (images, fonts, styles)
-  const isAsset = ['image', 'font', 'style', 'script'].includes(request.destination) || 
-                  url.pathname.includes('/_next/static/');
+  if (isNextScript) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then((cache) =>
+        fetch(request)
+          .then((networkResponse) => {
+            cache.put(request, networkResponse.clone());
+            return networkResponse;
+          })
+          .catch(() => cache.match(request))
+      )
+    );
+    return;
+  }
+
+  const isAsset = ['image', 'font', 'style'].includes(request.destination);
 
   if (isAsset) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        return cached || fetch(request).then((response) => {
+      caches.match(request).then((cachedResponse) => {
+        return cachedResponse || fetch(request).then((response) => {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
@@ -75,7 +98,6 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Listen for messages to clear cache (e.g., on sign out)
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     caches.delete(CACHE_NAME);
