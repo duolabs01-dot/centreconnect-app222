@@ -127,7 +127,7 @@ export function SetupWizard() {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [formData])
+  }, [saveDraftToServer])
 
   const validateStep = (stepIndex: number) => {
     const newErrors: Partial<Record<keyof OnboardingData, string>> = {}
