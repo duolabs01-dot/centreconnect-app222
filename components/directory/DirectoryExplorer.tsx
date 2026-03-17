@@ -100,7 +100,7 @@ function buildMapsLink(centre: DirectoryCentre) {
   if (hasCoords) {
     return `https://www.google.com/maps?q=${centre.latitude},${centre.longitude}`
   }
-  const parts = [centre.name, centre.address, centre.suburb, centre.city].filter((value) => typeof value === 'string' && value.trim().length > 0)
+   const parts = [centre.name, centre.suburb, centre.city].filter((value) => typeof value === 'string' && value.trim().length > 0)
   if (parts.length === 0) return null
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parts.join(' '))}`
 }

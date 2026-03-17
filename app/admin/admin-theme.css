@@ -41,7 +41,7 @@
     background-image:
       radial-gradient(circle at 0% 0%, rgba(138, 43, 226, 0.12) 0%, transparent 40%),
       radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
-      url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='rgb(11,14,20)'/%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.08)'/%3E%3Crect width='1' height='1' x='2' y='2' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E\");
+       url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%224%22 height=%224%22%3E%3Crect width=%224%22 height=%224%22 fill=%22rgb(11,14,20)%22/%3E%3Crect width=%221%22 height=%221%22 fill=%22rgba(255,255,255,0.08)%22/%3E%3Crect width=%221%22 height=%221%22 x=%222%22 y=%222%22 fill=%22rgba(255,255,255,0.05)%22/%3E%3C/svg%3E');
     color: rgb(226, 232, 240);
     font-family: var(--font-admin);
   }
