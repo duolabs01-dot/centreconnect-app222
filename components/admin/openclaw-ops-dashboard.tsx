@@ -33,8 +33,8 @@ import type {
   OpenClawWorkItem,
 } from '@/lib/ai/openclaw-ops/types'
 
-const PANEL_CLASS = 'border-white/10 bg-[#080B13] text-slate-50 shadow-none'
-const MUTED_PANEL_CLASS = 'border-white/10 bg-[#0B1220] text-slate-50 shadow-none'
+const PANEL_CLASS = 'border-white/10 bg-[var(--cyber-bg)] text-slate-50 shadow-none'
+const MUTED_PANEL_CLASS = 'border-white/10 bg-[var(--cyber-card)] text-slate-50 shadow-none'
 
 const CAPABILITY_STYLES: Record<OpenClawCapability['status'], string> = {
   live: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-200',
@@ -415,7 +415,7 @@ export function OpenClawOpsDashboard({ snapshot }: { snapshot: OpenClawOpsSnapsh
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="h-auto rounded-2xl bg-[#0B1220] p-1">
+          <TabsList className="h-auto rounded-2xl bg-[var(--cyber-card)] p-1">
             <TabsTrigger
               value="overview"
               className="rounded-2xl px-4 py-2 text-slate-300 data-[state=active]:bg-white data-[state=active]:text-slate-900"

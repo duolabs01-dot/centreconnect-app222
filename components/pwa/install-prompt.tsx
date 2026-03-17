@@ -46,7 +46,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-24 left-4 right-4 z-[60] animate-in slide-in-from-bottom-8 duration-500 md:left-auto md:right-8 md:w-96">
-      <ModernCard className="border-t-4 border-t-[#065A82] shadow-float relative">
+      <ModernCard className="border-t-4 border-t-cyan-700 shadow-float relative">
         <button 
           onClick={handleDismiss}
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
@@ -55,7 +55,7 @@ export function InstallPrompt() {
         </button>
         
         <div className="flex items-center gap-4 mb-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#065A82]/10 flex items-center justify-center text-[#065A82]">
+          <div className="h-12 w-12 rounded-2xl bg-cyan-700/10 flex items-center justify-center text-cyan-700">
             <Download className="h-6 w-6" />
           </div>
           <div>
@@ -64,7 +64,7 @@ export function InstallPrompt() {
           </div>
         </div>
 
-        <Button onClick={handleInstall} className="w-full h-11 rounded-xl bg-[#065A82] font-bold text-white shadow-lg">
+        <Button onClick={handleInstall} className="w-full h-11 rounded-xl bg-cyan-700 font-bold text-white shadow-lg">
           Install Now
         </Button>
       </ModernCard>

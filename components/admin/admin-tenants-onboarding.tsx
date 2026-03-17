@@ -537,7 +537,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
     return (
       <>
         <div className="space-y-8">
-          <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#050b1a] via-[#071326] to-[#04111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.16)]">
+          <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[var(--cyber-card)] via-[var(--cyber-card)] to-[var(--cyber-card)] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.16)]">
             <div className="flex flex-wrap items-center gap-3">
               <Badge className="border-cyan-400/30 bg-cyan-500/15 text-cyan-200">Setup Email Sent</Badge>
               <Badge className="border-emerald-400/30 bg-emerald-500/15 text-emerald-200">Success</Badge>
@@ -664,7 +664,7 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
   return (
     <>
       <div className="space-y-8">
-        <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.14)]">
+        <header className="rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-[var(--cyber-card)] via-[var(--cyber-card)] to-[var(--cyber-card)] p-8 shadow-[0_24px_80px_rgba(2,132,199,0.14)]">
           <div className="flex flex-wrap items-center gap-3">
             <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">CC Admin</Badge>
             <Badge className="border-slate-700 bg-slate-900 text-slate-300">Dark Onboarding</Badge>

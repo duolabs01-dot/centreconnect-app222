@@ -26,7 +26,7 @@ export function AdminSidebar() {
 
   return (
     <>
-      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-[#080B13]/85 backdrop-blur-md border-b border-white/10 z-40 px-4 flex items-center justify-between">
+      <div className="md:hidden fixed top-0 inset-x-0 h-16 bg-[var(--cyber-bg)]/85 backdrop-blur-md border-b border-white/10 z-40 px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <MobileNavMenu items={mobileItems} type="admin" roleLabel="Platform Admin" userRole="platform_admin" />
           <div className="h-8 w-8 rounded-lg bg-teal-600/90 flex items-center justify-center text-white">
@@ -39,7 +39,7 @@ export function AdminSidebar() {
         </div>
       </div>
 
-      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[#080B13] border-r border-white/10 z-50" data-qa-critical-routes={QA_ADMIN_CRITICAL_ROUTES.join(',')}>
+      <aside className="hidden md:flex fixed inset-y-0 left-0 w-72 flex-col bg-[var(--cyber-bg)] border-r border-white/10 z-50" data-qa-critical-routes={QA_ADMIN_CRITICAL_ROUTES.join(',')}>
         <div className="p-6 border-b border-white/10">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">CentreConnect</p>
           <p className="mt-1 text-lg font-semibold text-white">Platform Admin</p>

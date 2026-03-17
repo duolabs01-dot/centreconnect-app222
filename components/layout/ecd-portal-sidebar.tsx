@@ -320,7 +320,7 @@ export function EcdPortalSidebar({
               href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-[#25D366] py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>💬</span>
               WhatsApp Mandla

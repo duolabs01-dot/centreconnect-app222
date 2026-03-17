@@ -15,7 +15,7 @@ import type {
   AiCompanySignalMode,
 } from '@/lib/ai/company-os/types'
 
-const PANEL_CLASS = 'border-white/10 bg-[#080B13] text-white shadow-2xl'
+const PANEL_CLASS = 'border-white/10 bg-[var(--cyber-bg)] text-white shadow-2xl'
 const INNER_PANEL_CLASS = 'rounded-2xl border border-white/10 bg-black/20'
 
 const STATUS_STYLES = {

@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-const PANEL_CLASS = 'border-white/10 bg-[#080B13] text-slate-50 shadow-none'
+const PANEL_CLASS = 'border-white/10 bg-[var(--cyber-bg)] text-slate-50 shadow-none'
 const INNER_PANEL_CLASS = 'rounded-[1.5rem] border border-white/10 bg-black/20'
 
 const TONE_STYLES: Record<CompanyHqTone, string> = {

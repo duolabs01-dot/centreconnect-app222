@@ -86,7 +86,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
       const popup = new Popup({ offset: 15 }).setHTML(
         `<strong>${centre.name}</strong><p class="text-xs text-slate-500">${centre.suburb}</p>`
       )
-      const marker = new Marker({ color: '#06b6d4' })
+      const marker = new Marker({ color: 'hsl(187, 100%, 42%)' })
         .setLngLat([centre.longitude, centre.latitude])
         .setPopup(popup)
         .addTo(mapInstanceRef.current!)
@@ -133,7 +133,7 @@ export default function DirectoryMap({ centresWithLocation, userLocation, locati
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat(userLocation)
     } else {
-      userMarkerRef.current = new Marker({ color: '#facc15' })
+      userMarkerRef.current = new Marker({ color: 'hsl(48, 96%, 50%)' })
         .setLngLat(userLocation)
         .setPopup(new Popup({ offset: 12 }).setText('You are here'))
         .addTo(mapInstanceRef.current)

@@ -27,7 +27,7 @@ export function AdminKpiCard({ label, value, trend, sparklineData, className, ac
 
   return (
     <div className={cn(
-      "tile transform-gpu [will-change:transform] relative bg-[#0D121D] border border-white/5 rounded-3xl p-6 sm:p-8 hover:bg-[#121824] transition-transform duration-200 group overflow-hidden shadow-2xl shadow-black/40",
+      "tile transform-gpu [will-change:transform] relative bg-[var(--cyber-card)] border border-white/5 rounded-3xl p-6 sm:p-8 hover:bg-[var(--cyber-card)] transition-transform duration-200 group overflow-hidden shadow-2xl shadow-black/40",
       className
     )}>
       {/* Background glow overlay */}
@@ -64,7 +64,7 @@ export function AdminKpiCard({ label, value, trend, sparklineData, className, ac
             data={sparklineData} 
             width={140} 
             height={40} 
-            color={isUp ? "#06B6D4" : "#F43F5E"} 
+            color={isUp ? "var(--cyber-cyan)" : "var(--cyber-rose)"} 
           />
         </div>
         

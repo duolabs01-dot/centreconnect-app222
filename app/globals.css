@@ -38,6 +38,16 @@
     --radius: 0.75rem;
 
     --shadow-elevation-1: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+
+    --chart-teal: 167 66% 46%;
+    --chart-rose: 350 79% 58%;
+    --chart-cyan: 187 100% 42%;
+    --chart-slate: 217 19% 77%;
+    --pipeline-cyan: 187 100% 42%;
+    --pipeline-cyan-light: 189 91% 60%;
+    --pipeline-orange: 25 95% 53%;
+    --pipeline-green: 142 71% 45%;
+    --pipeline-red: 0 84% 60%;
     --shadow-elevation-2: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-elevation-3: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-elevation-4: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);

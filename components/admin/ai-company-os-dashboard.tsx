@@ -32,7 +32,7 @@ import type {
   AiCompanyWorkflowSection,
 } from '@/lib/ai/company-os/types'
 
-const PANEL_CLASS = 'border-white/10 bg-[#080B13] text-white shadow-2xl'
+const PANEL_CLASS = 'border-white/10 bg-[var(--cyber-bg)] text-white shadow-2xl'
 const INNER_PANEL_CLASS = 'rounded-2xl border border-white/10 bg-black/20'
 
 const STATUS_STYLES: Record<AiCompanyStatusLevel, string> = {
@@ -647,7 +647,7 @@ export function AiCompanyOsDashboard({
       </section>
 
       <Tabs defaultValue="rhythm" className="space-y-6">
-        <TabsList className="grid h-auto w-full grid-cols-3 rounded-[1.5rem] border border-white/10 bg-[#080B13] p-1">
+        <TabsList className="grid h-auto w-full grid-cols-3 rounded-[1.5rem] border border-white/10 bg-[var(--cyber-bg)] p-1">
           <TabsTrigger
             value="rhythm"
             className="rounded-[1.25rem] px-4 py-2.5 text-sm font-semibold text-slate-400 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-none"

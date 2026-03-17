@@ -17,7 +17,7 @@ export function PremiumVerifiedBadge({
   return (
     <Badge
       className={cn(
-        'inline-flex items-center gap-1.5 border border-[#E7DDD1] bg-[#FFF8DA] text-[#6C4700] shadow-none',
+        'inline-flex items-center gap-1.5 border border-stone-200 bg-yellow-50 text-amber-800 shadow-none',
         compact ? 'px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]' : 'px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em]',
         className
       )}

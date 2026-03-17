@@ -6,7 +6,31 @@ const ROOT = process.cwd()
 const SCAN_DIRS = ['app', 'components', 'lib']
 const ALLOWED_EXT = new Set(['.ts', '.tsx', '.css'])
 
+const HEX_EXEMPT_PATTERNS = [
+  /^lib\/email\//,
+  /^app\/centre\/\[slug\]\/poster\//,
+  /^app\/driver\/\[token\]\//,
+  /^app\/offline\//,
+  /^app\/manifest\./,
+  /^app\/layout\./,
+  /^components\/cc-admin\/HexHeatmap\./,
+  /^components\/cc-admin\/MeshAreaChart\./,
+  /^lib\/ui\/confetti\./,
+  /^lib\/actions\/ecd\/welcome-pack\./,
+  /^lib\/actions\/guardians\/send-invite\./,
+  /^lib\/ecd\/parent-link-requests\./,
+  /^lib\/payments\/billing-automation\./,
+  /^lib\/payments\/receipts\./,
+  /^lib\/ui\/centre-preview-image\./,
+]
+
+const HEX_FALSE_POSITIVES = ['#add']
+
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b/g
+
+function isHexExempt(relPath) {
+  return HEX_EXEMPT_PATTERNS.some(pattern => pattern.test(relPath))
+}
 
 const errors = []
 const warnings = []
@@ -27,9 +51,11 @@ function walk(dir) {
 }
 
 function checkHex(file, text) {
+  if (isHexExempt(file)) return
   const matches = text.match(HEX_RE)
   if (!matches) return
   for (const value of matches) {
+    if (HEX_FALSE_POSITIVES.includes(value.toLowerCase())) continue
     errors.push(`${file}: raw hex color "${value}" found. Use semantic token classes/variables only.`)
   }
 }

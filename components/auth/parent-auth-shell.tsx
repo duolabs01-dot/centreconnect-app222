@@ -75,7 +75,7 @@ export function ParentAuthShell({
         <div className="grid flex-1 gap-8 py-6 lg:grid-cols-[minmax(0,1fr)_440px] lg:items-center lg:gap-12 lg:py-10">
           <div className="order-2 space-y-6 lg:order-1">
             <div className="max-w-xl">
-              <div className="inline-flex items-center rounded-full border border-[#E5D9CC] bg-white/90 px-4 py-2 text-xs font-semibold text-primary shadow-[0_10px_24px_rgba(31,44,39,0.06)]">
+              <div className="inline-flex items-center rounded-full border border-stone-200 bg-white/90 px-4 py-2 text-xs font-semibold text-primary shadow-[0_10px_24px_rgba(31,44,39,0.06)]">
                 Parent account
               </div>
               <h2 className="mt-5 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
@@ -90,7 +90,7 @@ export function ParentAuthShell({
               {highlights.map(({ icon: Icon, title: highlightTitle, description: highlightDescription }) => (
                 <div
                   key={highlightTitle}
-                  className="rounded-2xl border border-[#E7DDD1] bg-white/88 p-4 shadow-[0_12px_32px_rgba(34,49,46,0.05)]"
+                  className="rounded-2xl border border-stone-200 bg-white/88 p-4 shadow-[0_12px_32px_rgba(34,49,46,0.05)]"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted/30 text-primary">
@@ -112,14 +112,14 @@ export function ParentAuthShell({
             ) : null}
           </div>
 
-          <Card className="order-1 border-[#E7DDD1] bg-white/95 shadow-[0_24px_60px_rgba(34,49,46,0.10)] lg:order-2">
+          <Card className="order-1 border-stone-200 bg-white/95 shadow-[0_24px_60px_rgba(34,49,46,0.10)] lg:order-2">
             <CardContent className="p-5 sm:p-7">
               <PageHeader tone="parent" eyebrow={eyebrow} title={title} description={description}>
                 {headerNote}
               </PageHeader>
 
               <div className="mt-6">{form}</div>
-              <div className="mt-6 border-t border-[#EEE3D7] pt-5">{footer}</div>
+              <div className="mt-6 border-t border-stone-200 pt-5">{footer}</div>
             </CardContent>
           </Card>
         </div>

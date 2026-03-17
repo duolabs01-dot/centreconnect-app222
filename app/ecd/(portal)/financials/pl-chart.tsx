@@ -42,7 +42,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
   const minPl = Math.min(...plValues, 0)
   const maxPl = Math.max(...plValues, 0)
   const plSpan = Math.max(1, maxPl - minPl)
-  const plStroke = plValues[plValues.length - 1] >= 0 ? '#14b8a6' : '#f43f5e'
+  const plStroke = plValues[plValues.length - 1] >= 0 ? 'hsl(var(--chart-teal))' : 'hsl(var(--chart-rose))'
 
   const polylinePoints = snapshots
     .map((item, index) => {
@@ -110,7 +110,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
                 width={barW}
                 height={revenueHeight}
                 rx={2}
-                fill="#0e7490"
+                fill="hsl(var(--chart-cyan))"
               />
               <rect
                 x={expensesX}
@@ -118,9 +118,9 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
                 width={barW}
                 height={expensesHeight}
                 rx={2}
-                fill="#f43f5e"
+                fill="hsl(var(--chart-rose))"
               />
-              <text x={labelX} y={labelY} textAnchor="middle" fontSize="10" fill="#cbd5f5">
+              <text x={labelX} y={labelY} textAnchor="middle" fontSize="10" fill="hsl(var(--chart-slate))">
                 {monthLabel(item.period_month)}
               </text>
             </g>
@@ -133,7 +133,7 @@ export function PlChart({ snapshots }: { snapshots: Snapshot[] }) {
           const centreX = leftPad + index * slotW + slotW * 0.5
           const pl = toNumber(item.revenue_total) - toNumber(item.expenses_total)
           const y = topPad + chartH - ((pl - minPl) / plSpan) * chartH
-          const dotFill = pl >= 0 ? '#14b8a6' : '#f43f5e'
+          const dotFill = pl >= 0 ? 'hsl(var(--chart-teal))' : 'hsl(var(--chart-rose))'
           return <circle key={`pl-${item.period_month}-${index}`} cx={centreX} cy={y} r="3.1" fill={dotFill} />
         })}
       </svg>

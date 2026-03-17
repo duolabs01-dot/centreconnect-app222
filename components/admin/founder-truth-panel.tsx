@@ -36,7 +36,7 @@ export function FounderTruthPanel({
     truth.demoTesterCentreCount === null ? 'Any extras' : truth.demoTesterCentreCount.toLocaleString()
 
   return (
-    <Card className="border-white/10 bg-[#080B13] text-white shadow-2xl">
+    <Card className="border-white/10 bg-[var(--cyber-bg)] text-white shadow-2xl">
       <CardHeader className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge

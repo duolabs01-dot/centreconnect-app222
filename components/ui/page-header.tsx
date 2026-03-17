@@ -21,10 +21,10 @@ const TONE_STYLES: Record<
     description: 'text-slate-600',
   },
   parent: {
-    accent: 'bg-[#0D9488]',
-    eyebrow: 'text-[#0D9488]',
-    title: 'text-[#1F2D29]',
-    description: 'text-[#5F6D69]',
+    accent: 'bg-teal-600',
+    eyebrow: 'text-teal-600',
+    title: 'text-stone-800',
+    description: 'text-stone-600',
   },
   admin: {
     accent: 'bg-cyan-400',

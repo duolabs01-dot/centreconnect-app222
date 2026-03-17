@@ -283,7 +283,7 @@ export function CentreDiscoveryFlow() {
                 onClick={() => selectHelp(true)}
                 className="h-16 rounded-2xl border-2 border-slate-100 justify-start px-6 text-base font-bold hover:border-cyan-500 hover:bg-cyan-50"
               >
-                <MessageCircle className="mr-3 h-5 w-5 text-[#25D366]" />
+                <MessageCircle className="mr-3 h-5 w-5 text-emerald-500" />
                 Yes, I&apos;d like a hand
               </Button>
               <Button
@@ -360,7 +360,7 @@ export function CentreDiscoveryFlow() {
                 </Button>
                 
                 {data.wantsPersonalHelp && (
-                  <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white text-[#25D366] font-black hover:bg-emerald-50">
+                  <Button asChild variant="outline" className="h-14 rounded-2xl border-2 border-slate-100 bg-white text-emerald-500 font-black hover:bg-emerald-50">
                     <Link href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20just%20finished%20the%20discovery%20questions%20and%20I%20need%20help%20setting%20up%20my%20creche.">
                       <MessageCircle className="mr-2 h-5 w-5 fill-current" />
                       Help me on WhatsApp

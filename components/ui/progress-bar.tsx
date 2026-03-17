@@ -17,11 +17,11 @@ export function ProgressBar({ value, label, subLabel, className }: ProgressBarPr
           <p className="text-sm font-bold text-slate-900">{label}</p>
           {subLabel && <p className="text-xs font-medium text-slate-500">{subLabel}</p>}
         </div>
-        <p className="text-sm font-black text-[#065A82]">{percentage}%</p>
+        <p className="text-sm font-black text-cyan-700">{percentage}%</p>
       </div>
       <div className="h-3 w-full rounded-full bg-slate-100 overflow-hidden border border-slate-50">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-[#065A82] to-[#0A84FF] transition-all duration-1000 ease-out"
+          className="h-full rounded-full bg-gradient-to-r from-cyan-700 to-blue-500 transition-all duration-1000 ease-out"
           style={{ width: `${percentage}%` }}
         />
       </div>

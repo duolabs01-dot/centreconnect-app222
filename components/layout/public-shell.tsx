@@ -20,8 +20,8 @@ export function PublicShell({ children }: PublicShellProps) {
   const showBreadcrumbs = shouldShowBreadcrumbs(pathname, 'public')
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#FAF8F4] text-foreground">
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#EADFD2] bg-[#FFFDF9]/92 shadow-[0_6px_20px_rgba(34,49,46,0.06)] backdrop-blur-2xl">
+    <div className="min-h-screen overflow-x-hidden bg-stone-50 text-foreground">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-stone-200 bg-stone-50/92 shadow-[0_6px_20px_rgba(34,49,46,0.06)] backdrop-blur-2xl">
         <Container className="flex min-h-[68px] items-center justify-between gap-3 py-2 sm:min-h-[72px] sm:py-3">
           <div className="flex items-center gap-3">
             <BrandMark href="/" compact className="shrink-0" />
@@ -43,7 +43,7 @@ export function PublicShell({ children }: PublicShellProps) {
           </div>
         </Container>
         <div className="mx-auto mt-1 hidden max-w-6xl justify-center sm:flex">
-          <div className="h-1 w-36 rounded-full bg-gradient-to-r from-[#D4935A] via-teal-400 to-teal-600 shadow-[0_0_12px_rgba(13,148,136,0.18)]" />
+          <div className="h-1 w-36 rounded-full bg-gradient-to-r from-amber-600 via-teal-400 to-teal-600 shadow-[0_0_12px_rgba(13,148,136,0.18)]" />
         </div>
       </header>
       <div className="h-[84px] sm:h-[88px]" aria-hidden />

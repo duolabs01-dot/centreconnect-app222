@@ -20,7 +20,7 @@ export function AdminShell({ children, className }: AdminShellProps) {
 
   return (
     <AdminAudienceProvider>
-      <div className="flex min-h-screen bg-[#04070D] text-slate-200 selection:bg-cyan-500/30">
+      <div className="flex min-h-screen bg-[var(--cyber-bg)] text-slate-200 selection:bg-cyan-500/30">
         <AdminSidebar />
 
         <main

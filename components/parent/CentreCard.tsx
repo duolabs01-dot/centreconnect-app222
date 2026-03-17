@@ -125,10 +125,10 @@ function CompactMetaItem({
   value: string
 }) {
   return (
-    <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-[#E7DDD1] bg-[#FFFCF7] px-2.5 py-1.5 text-[#22312E]">
-      <Icon className="h-3.5 w-3.5 shrink-0 text-[#D4935A]" />
-      <span className="text-[10px] font-medium text-[#7B827E]">{label}</span>
-      <span className="truncate text-[12px] font-semibold leading-4 text-[#22312E]">{value}</span>
+    <div className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1.5 text-stone-800">
+      <Icon className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+      <span className="text-[10px] font-medium text-stone-500">{label}</span>
+      <span className="truncate text-[12px] font-semibold leading-4 text-stone-800">{value}</span>
     </div>
   )
 }
@@ -243,8 +243,8 @@ export function CentreCard({
     >
       <Card
         className={cn(
-          'relative flex h-full flex-col overflow-hidden rounded-[2rem] border bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]',
-          isFeatured ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-[#E8DDD0]'
+          'relative flex h-full flex-col overflow-hidden rounded-[2rem] border bg-stone-50 shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]',
+          isFeatured ? 'border-amber-400 ring-1 ring-amber-400/20' : 'border-stone-200'
         )}
       >
         <div className="absolute right-4 top-4 z-20">
@@ -252,7 +252,7 @@ export function CentreCard({
         </div>
 
         <Link href={detailHref} className="flex flex-1 flex-col focus-visible:outline-none">
-          <div className="relative aspect-[16/5.9] overflow-hidden bg-[#F4ECE2]">
+          <div className="relative aspect-[16/5.9] overflow-hidden bg-stone-100">
             <Image
               src={heroImageSrc}
               alt={usesPreviewImage ? `${name} preview image` : name}
@@ -279,19 +279,19 @@ export function CentreCard({
                   />
                 </div>
               ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white bg-[#F5EFE6] text-base font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white bg-stone-100 text-base font-black text-teal-600 shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
                   {name.charAt(0)}
                 </div>
               )}
 
               <div className="min-w-0 flex-1 pt-0.5">
                 <h3
-                  className="line-clamp-2 text-[1rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E] sm:text-[1.05rem]"
+                  className="line-clamp-2 text-[1rem] font-bold leading-[1.12] tracking-[-0.02em] text-stone-800 sm:text-[1.05rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
                   {name}
                 </h3>
-                <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7B827E]">
+                <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-stone-500">
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">{locationSummary}</span>
                 </p>
@@ -299,7 +299,7 @@ export function CentreCard({
             </div>
 
             <div className="flex flex-wrap gap-1.5">
-              {isOnCentreConnect ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+              {isOnCentreConnect ? <PremiumVerifiedBadge compact className="border-amber-200 bg-yellow-50 text-amber-800" /> : null}
               {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
               {showRecommendedChip ? (
                 <Badge className="flex items-center gap-1 border-amber-100 bg-amber-50/70 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-amber-700/90 shadow-none">
@@ -317,11 +317,11 @@ export function CentreCard({
                 </Badge>
               ) : null}
               {is_claimed ? (
-                <Badge className="border border-[#DCEEE8] bg-[#F4FBF8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#0D9488] shadow-none">
+                <Badge className="border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-teal-700 shadow-none">
                   Apply now
                 </Badge>
               ) : (
-                <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#6A7672] shadow-none">
+                <Badge className="border border-stone-200 bg-stone-50 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-stone-600 shadow-none">
                   Public listing
                 </Badge>
               )}
@@ -333,19 +333,19 @@ export function CentreCard({
               ))}
             </div>
 
-            <p className="text-[12px] leading-5 text-[#4E5D59]">
+            <p className="text-[12px] leading-5 text-stone-600">
               {is_claimed ? 'Apply online or message the creche in the app.' : 'Call or WhatsApp the creche if you want to act now.'}
             </p>
           </CardContent>
         </Link>
 
-        <CardFooter className="flex flex-col items-stretch gap-2.5 border-t border-[#E8DDD0] px-4 pb-4 pt-3">
+        <CardFooter className="flex flex-col items-stretch gap-2.5 border-t border-stone-200 px-4 pb-4 pt-3">
           {is_claimed ? (
             <>
               <Button
                 type="button"
                 onClick={handleApply}
-                className="h-12 rounded-2xl bg-[#0D9488] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95"
+                className="h-12 rounded-2xl bg-teal-600 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-teal-700 active:scale-95"
               >
                 <span>{primaryLabel}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -355,7 +355,7 @@ export function CentreCard({
                 centreName={name}
                 templates={inquiryTemplates}
                 triggerLabel="Message creche"
-                triggerClassName="h-11 rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] transition-all hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                triggerClassName="h-11 rounded-2xl border-emerald-200 bg-white text-sm font-semibold text-emerald-800 transition-all hover:border-emerald-300 hover:bg-emerald-50"
                 title={`Message ${name}`}
                 description="Send a quick question without leaving the directory. Replies stay inside CentreConnect so your next step stays clear."
               />
@@ -363,7 +363,7 @@ export function CentreCard({
                 <Button
                   asChild
                   variant="outline"
-                  className="h-10 rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
+                  className="h-10 rounded-2xl border-stone-300 bg-white text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50"
                 >
                   <Link href={mapLink} target="_blank" rel="noreferrer">
                     <MapPin className="mr-1.5 h-4 w-4" /> Open in Maps
@@ -379,7 +379,7 @@ export function CentreCard({
               <Button
                 asChild
                 type="button"
-                className="h-12 rounded-2xl bg-[#1F4B42] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,75,66,0.18)] transition-all hover:bg-[#193D36] active:scale-95"
+                className="h-12 rounded-2xl bg-emerald-800 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(31,75,66,0.18)] transition-all hover:bg-emerald-900 active:scale-95"
               >
                 <Link href={publicPrimaryHref} target={publicPrimaryHref === detailHref ? undefined : '_blank'} rel={publicPrimaryHref === detailHref ? undefined : 'noopener noreferrer'}>
                   {publicPrimaryLabel}
@@ -390,7 +390,7 @@ export function CentreCard({
                 asChild
                 type="button"
                 variant="outline"
-                className="h-11 rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
+                className="h-11 rounded-2xl border-stone-300 bg-white text-sm font-semibold text-stone-600 transition-all hover:bg-stone-50"
               >
                 <Link href={publicSecondaryHref} target={publicSecondaryHref === detailHref ? undefined : '_blank'} rel={publicSecondaryHref === detailHref ? undefined : 'noopener noreferrer'}>
                   {publicSecondaryLabel === 'Call creche' ? <Phone className="h-4 w-4" /> : null}
@@ -401,18 +401,18 @@ export function CentreCard({
                 <Button
                   asChild
                   variant="ghost"
-                  className="h-10 rounded-2xl text-sm font-semibold text-[#4E5D59] transition-all hover:text-[#0D9488]"
+                  className="h-10 rounded-2xl text-sm font-semibold text-stone-600 transition-all hover:text-teal-600"
                 >
                   <Link href={mapLink} target="_blank" rel="noreferrer">
                     <MapPin className="mr-1.5 h-4 w-4" /> Open in Maps
                   </Link>
                 </Button>
               ) : null}
-              <p className="text-center text-[11px] font-medium leading-5 text-[#7B827E]">
+              <p className="text-center text-[11px] font-medium leading-5 text-stone-500">
                 Public listing only. Contact the creche directly for space and next steps.
               </p>
               {showClaimLink ? (
-                <Link href={claimHref!} className="text-center text-[11px] font-semibold leading-5 text-[#0D9488] hover:underline">
+                <Link href={claimHref!} className="text-center text-[11px] font-semibold leading-5 text-teal-600 hover:underline">
                   Do you run this creche? Claim it
                 </Link>
               ) : null}

@@ -30,8 +30,8 @@ import {
 const DirectoryMap = dynamic(() => import('./DirectoryMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-96 animate-pulse-slow items-center justify-center rounded-[2rem] border border-[#E6DDD1] bg-[#FFFDF9]">
-      <p className="text-sm font-medium text-[#7C8682]">Loading map...</p>
+    <div className="flex h-96 animate-pulse-slow items-center justify-center rounded-[2rem] border border-stone-200 bg-stone-50">
+      <p className="text-sm font-medium text-[stone-500]">Loading map...</p>
     </div>
   ),
 })
@@ -284,11 +284,11 @@ export default function DirectoryExplorer({
   }
 
   return (
-    <div className="cc-stack overflow-x-clip text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
-      <div className="sticky top-[84px] z-[60] mx-0 rounded-[1.7rem] border border-[#E8DDD0] bg-[#FFFDF9]/95 p-3 shadow-[0_12px_32px_rgba(31,44,39,0.06)] backdrop-blur-xl sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
+    <div className="cc-stack overflow-x-clip text-stone-800" style={{ fontFamily: 'var(--font-display)' }}>
+      <div className="sticky top-[84px] z-[60] mx-0 rounded-[1.7rem] border border-stone-200 bg-stone-50/95 p-3 shadow-[0_12px_32px_rgba(31,44,39,0.06)] backdrop-blur-xl sm:static sm:bg-transparent sm:p-0 sm:shadow-none">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8682]" />
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[stone-500]" />
             <Input
               ref={inputRef}
               type="text"
@@ -301,7 +301,7 @@ export default function DirectoryExplorer({
               }}
               onFocus={() => setShowAutocomplete(true)}
               onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
-              className="h-14 rounded-[1.4rem] border-[#E4D9CC] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] pl-11 pr-4 text-base font-medium text-[#22312E] shadow-[0_10px_24px_rgba(31,44,39,0.05)] focus-visible:border-[#0D9488] focus-visible:ring-2 focus-visible:ring-[#0D9488]/10"
+              className="h-14 rounded-[1.4rem] border-stone-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] pl-11 pr-4 text-base font-medium text-stone-800 shadow-[0_10px_24px_rgba(31,44,39,0.05)] focus-visible:border-teal-600 focus-visible:ring-2 focus-visible:ring-teal-600/10"
             />
             
             {/* Autocomplete Dropdown */}
@@ -311,12 +311,12 @@ export default function DirectoryExplorer({
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl border border-[#E4D9CC] bg-white shadow-lg"
+                  className="absolute top-full left-0 right-0 z-50 mt-2 rounded-2xl border border-stone-300 bg-white shadow-lg"
                 >
                   {recentSearches.length > 0 && (
                     <div className="p-2">
                       <div className="flex items-center justify-between px-3 py-2">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#7C8682]">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[stone-500]">
                           <Clock className="h-3 w-3" />
                           Recent Searches
                         </div>
@@ -324,7 +324,7 @@ export default function DirectoryExplorer({
                           variant="ghost"
                           size="sm"
                           onClick={clearRecentSearches}
-                          className="text-xs text-[#7C8682] hover:text-[#0D9488] h-auto p-0"
+                          className="text-xs text-[stone-500] hover:text-teal-600 h-auto p-0"
                         >
                           Clear
                         </Button>
@@ -339,19 +339,19 @@ export default function DirectoryExplorer({
                             setCurrentPage(1)
                             setShowAutocomplete(false)
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0] justify-start h-auto normal-case font-normal"
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[stone-100] justify-start h-auto normal-case font-normal"
                         >
-                          <Search className="h-4 w-4 text-[#7C8682]" />
-                          <span className="text-[#22312E]">{s}</span>
+                          <Search className="h-4 w-4 text-[stone-500]" />
+                          <span className="text-stone-800">{s}</span>
                         </Button>
                       ))}
                     </div>
                   )}
                   
                   {recentSuburbs.length > 0 && (
-                    <div className="border-t border-[#E4D9CC] p-2">
+                    <div className="border-t border-stone-300 p-2">
                       <div className="flex items-center justify-between px-3 py-2">
-                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#7C8682]">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[stone-500]">
                           <MapPin className="h-3 w-3" />
                           Recent Areas
                         </div>
@@ -359,7 +359,7 @@ export default function DirectoryExplorer({
                           variant="ghost"
                           size="sm"
                           onClick={clearRecentSuburbs}
-                          className="text-xs text-[#7C8682] hover:text-[#0D9488] h-auto p-0"
+                          className="text-xs text-[stone-500] hover:text-teal-600 h-auto p-0"
                         >
                           Clear
                         </Button>
@@ -375,10 +375,10 @@ export default function DirectoryExplorer({
                             setCurrentPage(1)
                             setShowAutocomplete(false)
                           }}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[#F5F5F0] justify-start h-auto normal-case font-normal"
+                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left hover:bg-[stone-100] justify-start h-auto normal-case font-normal"
                         >
-                          <MapPin className="h-4 w-4 text-[#7C8682]" />
-                          <span className="text-[#22312E]">{suburb}</span>
+                          <MapPin className="h-4 w-4 text-[stone-500]" />
+                          <span className="text-stone-800">{suburb}</span>
                         </Button>
                       ))}
                     </div>
@@ -394,25 +394,25 @@ export default function DirectoryExplorer({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-14 w-14 rounded-[1.4rem] border-[#E4D9CC] bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] text-[#5B6966] shadow-[0_10px_24px_rgba(31,44,39,0.05)] transition-all hover:border-[#0D9488] hover:text-[#0D9488] active:scale-90"
+                className="h-14 w-14 rounded-[1.4rem] border-stone-300 bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFCF7_100%)] text-stone-600 shadow-[0_10px_24px_rgba(31,44,39,0.05)] transition-all hover:border-teal-600 hover:text-teal-600 active:scale-90"
               >
                 <SlidersHorizontal className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="bottom" className="rounded-t-[2.5rem] border-t-0 bg-[#FFFDF9] px-6 pb-12 pt-8 shadow-[0_-20px_50px_rgba(0,0,0,0.08)]">
+            <SheetContent side="bottom" className="rounded-t-[2.5rem] border-t-0 bg-stone-50 px-6 pb-12 pt-8 shadow-[0_-20px_50px_rgba(0,0,0,0.08)]">
               <SheetHeader className="mb-8">
-                <SheetTitle className="text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-display)' }}>
+                <SheetTitle className="text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-stone-800" style={{ fontFamily: 'var(--font-display)' }}>
                   Refine results
                 </SheetTitle>
               </SheetHeader>
 
               <div className="grid gap-8 sm:grid-cols-2">
                 <div className="space-y-3">
-                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Location</label>
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[stone-500]">Location</label>
                   <select
                     value={selectedSuburb}
                     onChange={(e) => setSelectedSuburb(e.target.value)}
-                    className="cc-native-field h-14 w-full rounded-2xl border border-[#DDD5C8] bg-white px-4 text-base font-medium text-[#22312E] outline-none focus:border-[#0D9488]"
+                    className="cc-native-field h-14 w-full rounded-2xl border border-stone-300 bg-white px-4 text-base font-medium text-stone-800 outline-none focus:border-teal-600"
                   >
                     <option value="">All Johannesburg Areas</option>
                     {suburbs.map((suburb) => (
@@ -424,7 +424,7 @@ export default function DirectoryExplorer({
                 </div>
 
                 <div className="space-y-3">
-                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Monthly Budget</label>
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[stone-500]">Monthly Budget</label>
                   <div className="grid grid-cols-2 gap-2">
                     {FEE_OPTIONS.map((option) => (
                       <Button
@@ -435,8 +435,8 @@ export default function DirectoryExplorer({
                         className={cn(
                           'h-12 rounded-2xl px-4 text-sm font-semibold transition-all',
                           selectedFee === option.value
-                            ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
-                            : 'border-[#E6DDD1] bg-white text-[#5B6966] hover:bg-[#FAF8F4]'
+                            ? 'border-teal-600 bg-teal-50 text-teal-600 hover:bg-teal-100'
+                            : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
                         )}
                       >
                         {option.label}
@@ -446,7 +446,7 @@ export default function DirectoryExplorer({
                 </div>
 
                 <div className="space-y-3 sm:col-span-2">
-                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#7C8682]">Child&apos;s Age Group</label>
+                  <label className="ml-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[stone-500]">Child&apos;s Age Group</label>
                   <div className="flex flex-wrap gap-2">
                     {['All', ...ageGroups].map((age) => (
                       <Button
@@ -457,8 +457,8 @@ export default function DirectoryExplorer({
                         className={cn(
                           'h-11 rounded-2xl px-5 text-sm font-semibold transition-all',
                           (age === 'All' ? !selectedAge : selectedAge === age)
-                            ? 'border-[#0D9488] bg-[#0D9488] text-white hover:bg-[#0B857A] shadow-[0_12px_24px_rgba(13,148,136,0.18)]'
-                            : 'border-[#E6DDD1] bg-white text-[#5B6966] hover:bg-[#FAF8F4]'
+                            ? 'border-teal-600 bg-[teal-600] text-white hover:bg-[teal-700] shadow-[0_12px_24px_rgba(13,148,136,0.18)]'
+                            : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
                         )}
                       >
                         {age.replace(/(\d+)([my])/g, '$1$2 old')}
@@ -468,18 +468,18 @@ export default function DirectoryExplorer({
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="flex h-16 w-full cursor-pointer items-center justify-between rounded-2xl border border-[#E6DDD1] bg-white px-5 transition-colors hover:bg-[#FAF8F4]">
+                  <label className="flex h-16 w-full cursor-pointer items-center justify-between rounded-2xl border border-stone-200 bg-white px-5 transition-colors hover:bg-stone-50">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FDF0E6]">
-                        <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50">
+                        <Check className="h-4 w-4 stroke-[3] text-amber-600" />
                       </div>
-                      <span className="text-sm font-semibold text-[#22312E]">DSD registered</span>
+                      <span className="text-sm font-semibold text-stone-800">DSD registered</span>
                     </div>
                     <input
                       type="checkbox"
                       checked={selectedRegistered === 'true'}
                       onChange={(e) => setSelectedRegistered(e.target.checked ? 'true' : '')}
-                      className="h-6 w-6 rounded-lg border-[#DDD5C8] text-[#0D9488] focus:ring-[#0D9488]"
+                      className="h-6 w-6 rounded-lg border-stone-300 text-teal-600 focus:ring-[teal-600]"
                     />
                   </label>
                 </div>
@@ -489,12 +489,12 @@ export default function DirectoryExplorer({
                 <Button
                   variant="outline"
                   onClick={resetFilters}
-                  className="h-14 flex-1 rounded-2xl border-[#DDD5C8] bg-white font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                  className="h-14 flex-1 rounded-2xl border-stone-300 bg-white font-semibold text-stone-500 hover:bg-stone-50"
                 >
                   Reset all
                 </Button>
                 <SheetClose asChild>
-                  <Button className="h-14 flex-1 rounded-2xl bg-[#0D9488] font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[#0B857A]">
+                  <Button className="h-14 flex-1 rounded-2xl bg-[teal-600] font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[teal-700]">
                     Apply filters
                   </Button>
                 </SheetClose>
@@ -511,15 +511,15 @@ export default function DirectoryExplorer({
             className={cn(
               'h-10 shrink-0 rounded-full px-4 text-xs font-semibold tracking-[0.08em] transition-all',
               viewMode === 'map'
-                ? 'border-[#0D9488] bg-[#0D9488] text-white hover:bg-[#0B857A]'
-                : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
+                ? 'border-teal-600 bg-[teal-600] text-white hover:bg-[teal-700]'
+                : 'border-stone-300 bg-white text-stone-600 hover:border-teal-600 hover:text-teal-600'
             )}
           >
             {viewMode === 'list' ? <MapIcon className="h-3.5 w-3.5" /> : <LayoutGrid className="h-3.5 w-3.5" />}
             {viewMode === 'list' ? 'Map View' : 'List View'}
           </Button>
 
-          <div className="mx-1 h-8 w-px shrink-0 self-center bg-[#E6DDD1]" />
+          <div className="mx-1 h-8 w-px shrink-0 self-center bg-stone-200" />
 
           {quickFilters.map((filter) => {
             const Icon = filter.icon
@@ -532,8 +532,8 @@ export default function DirectoryExplorer({
                 className={cn(
                   'h-10 shrink-0 whitespace-nowrap rounded-full px-4 text-xs font-medium transition-all',
                   filter.active
-                    ? 'border-[#0D9488] bg-[#EAF6F2] text-[#0D9488] hover:bg-[#DDF2EC]'
-                    : 'border-[#DDD5C8] bg-white text-[#5B6966] hover:border-[#0D9488] hover:text-[#0D9488]'
+                    ? 'border-teal-600 bg-teal-50 text-teal-600 hover:bg-teal-100'
+                    : 'border-stone-300 bg-white text-stone-600 hover:border-teal-600 hover:text-teal-600'
                 )}
               >
                 <Icon className="mr-1.5 h-3.5 w-3.5" />
@@ -545,21 +545,21 @@ export default function DirectoryExplorer({
       </div>
 
       <div className="relative mt-2 min-h-[500px]">
-        <div className="mb-4 rounded-[1.5rem] border border-[#E7DDD1] bg-[#FFFDF9] px-4 py-4 shadow-[0_10px_24px_rgba(31,44,39,0.04)] sm:px-5">
+        <div className="mb-4 rounded-[1.5rem] border border-stone-200 bg-stone-50 px-4 py-4 shadow-[0_10px_24px_rgba(31,44,39,0.04)] sm:px-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Results</p>
-              <p className="mt-1 text-sm font-semibold text-[#22312E]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">Results</p>
+              <p className="mt-1 text-sm font-semibold text-stone-800">
                 {totalResults} {totalResults === 1 ? 'centre' : 'centres'} to compare
               </p>
-              <p className="mt-1 text-xs leading-5 text-[#66736F]">
+              <p className="mt-1 text-xs leading-5 text-stone-600">
                 Creches on CentreConnect let you apply online. Public listings show direct contact options.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-semibold text-[#1F4B42]">Apply online</span>
-              <span className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-semibold text-[#1F4B42]">Message in app</span>
-              <span className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[11px] font-semibold text-[#22312E]">Call or WhatsApp</span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">Apply online</span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">Message in app</span>
+              <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold text-stone-800">Call or WhatsApp</span>
             </div>
           </div>
         </div>
@@ -569,10 +569,10 @@ export default function DirectoryExplorer({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-x-0 top-0 z-10 flex h-full justify-center rounded-3xl bg-[#FAF8F4]/60 py-12 backdrop-blur-[2px]"
+              className="absolute inset-x-0 top-0 z-10 flex h-full justify-center rounded-3xl bg-stone-50/60 py-12 backdrop-blur-[2px]"
             >
-              <div className="flex h-12 items-center gap-3 rounded-full bg-[#FFFDF9] px-6 text-sm font-semibold text-[#22312E] shadow-[0_12px_24px_rgba(31,44,39,0.08)]">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0D9488] border-t-transparent" />
+              <div className="flex h-12 items-center gap-3 rounded-full bg-stone-50 px-6 text-sm font-semibold text-stone-800 shadow-[0_12px_24px_rgba(31,44,39,0.08)]">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />
                 Finding results...
               </div>
             </motion.div>
@@ -582,14 +582,14 @@ export default function DirectoryExplorer({
         {viewMode === 'map' ? (
           <div className="animate-in fade-in zoom-in-95 duration-500">
             <div className="mb-4 flex items-center justify-between px-1">
-              <p className="text-xs font-medium text-[#7B827E]">
+              <p className="text-xs font-medium text-stone-500">
                 {geoStatus === 'granted' ? 'Showing centres near your location' : 'Showing centres in this area'}
               </p>
               <Button
                 type="button"
                 variant="ghost"
                 onClick={activateMapView}
-                className="h-8 rounded-2xl px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0D9488] hover:bg-[#EAF6F2] hover:text-[#0B857A]"
+                className="h-8 rounded-2xl px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-600 hover:bg-teal-50 hover:text-[teal-700]"
               >
                 Update my location
               </Button>
@@ -609,19 +609,19 @@ export default function DirectoryExplorer({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center px-6 py-24 text-center"
               >
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#FFFDF9] shadow-[0_10px_24px_rgba(31,44,39,0.05)]">
-                  <Search className="h-10 w-10 text-[#B1BAB6]" />
+                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-stone-50 shadow-[0_10px_24px_rgba(31,44,39,0.05)]">
+                  <Search className="h-10 w-10 text-stone-400" />
                 </div>
-                <h3 className="text-[1.7rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-[#1F2D29]" style={{ fontFamily: 'var(--font-display)' }}>
+                <h3 className="text-[1.7rem] font-extrabold leading-[1.08] tracking-[-0.02em] text-stone-800" style={{ fontFamily: 'var(--font-display)' }}>
                   No creches matched that search.
                 </h3>
-                <p className="mt-2 max-w-xs text-base font-medium text-[#66736F]">
+                <p className="mt-2 max-w-xs text-base font-medium text-stone-600">
                   Try another suburb, remove a filter, or search by centre name.
                 </p>
                 <Button
                   variant="outline"
                   onClick={resetFilters}
-                  className="mt-8 h-14 rounded-2xl border-[#DDD5C8] bg-white px-8 font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                  className="mt-8 h-14 rounded-2xl border-stone-300 bg-white px-8 font-semibold text-stone-500 hover:bg-stone-50"
                 >
                   Clear all filters
                 </Button>
@@ -655,9 +655,9 @@ export default function DirectoryExplorer({
             )}
 
             {totalPages > 1 && (
-              <div className="mt-16 flex items-center justify-between border-t border-[#E6DDD1] pt-8">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7B827E]">
-                  Page <span className="text-[#22312E]">{currentPage}</span> of {totalPages}
+              <div className="mt-16 flex items-center justify-between border-t border-stone-200 pt-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-stone-500">
+                  Page <span className="text-stone-800">{currentPage}</span> of {totalPages}
                 </p>
                 <div className="flex gap-3">
                   <Button
@@ -665,7 +665,7 @@ export default function DirectoryExplorer({
                     variant="outline"
                     disabled={currentPage === 1}
                     onClick={() => setCurrentPage((page) => page - 1)}
-                    className="h-12 rounded-2xl border-[#DDD5C8] bg-white px-6 text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4] active:scale-95 disabled:opacity-30"
+                    className="h-12 rounded-2xl border-stone-300 bg-white px-6 text-sm font-semibold text-stone-500 transition-all hover:bg-stone-50 active:scale-95 disabled:opacity-30"
                   >
                     Previous
                   </Button>
@@ -673,7 +673,7 @@ export default function DirectoryExplorer({
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={() => setCurrentPage((page) => page + 1)}
-                    className="h-12 rounded-2xl bg-[#0D9488] px-8 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[#0B857A] active:scale-95 disabled:opacity-30"
+                    className="h-12 rounded-2xl bg-[teal-600] px-8 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] transition-all hover:bg-[teal-700] active:scale-95 disabled:opacity-30"
                   >
                     Next page
                   </Button>
@@ -689,29 +689,29 @@ export default function DirectoryExplorer({
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative mt-16 overflow-hidden rounded-[2.2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-6 shadow-[0_20px_50px_rgba(31,44,39,0.06)] sm:mt-20 sm:p-10"
+          className="relative mt-16 overflow-hidden rounded-[2.2rem] border border-stone-200 bg-stone-50 p-6 shadow-[0_20px_50px_rgba(31,44,39,0.06)] sm:mt-20 sm:p-10"
         >
           <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_right,rgba(212,147,90,0.16),transparent_32%),radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_40%)]" />
 
           <div className="relative z-10 grid gap-8 md:grid-cols-2 md:items-center md:gap-12">
             <div>
-              <div className="inline-flex items-center rounded-full border border-[#E2D4C1] bg-[#FDF0E6] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#B47642]">
+              <div className="inline-flex items-center rounded-full border border-stone-200 bg-orange-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-700">
                 Parent profile
               </div>
               <h3
-                className="mb-4 mt-5 text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#1F2D29] sm:text-[2.55rem]"
+                className="mb-4 mt-5 text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-stone-800 sm:text-[2.55rem]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 Found one you like? Apply in minutes.
               </h3>
-              <p className="mb-8 max-w-md text-[15px] font-medium leading-7 text-[#5F6C68] sm:text-[17px]">
+              <p className="mb-8 max-w-md text-[15px] font-medium leading-7 text-stone-600 sm:text-[17px]">
                 Create an account only when you want to apply. Then keep your documents, replies, and next steps in one place.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <Button
                   asChild
                   size="lg"
-                  className="h-14 rounded-[1.1rem] bg-[#0D9488] px-7 text-base font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[#0B857A]"
+                  className="h-14 rounded-[1.1rem] bg-[teal-600] px-7 text-base font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.18)] hover:bg-[teal-700]"
                 >
                   <Link href="/register?next=%2Fdirectory">Create account</Link>
                 </Button>
@@ -719,7 +719,7 @@ export default function DirectoryExplorer({
                   asChild
                   variant="outline"
                   size="lg"
-                  className="h-14 rounded-[1.1rem] border-[#DDD5C8] bg-white px-7 text-base font-semibold text-[#4E5D59] hover:bg-[#FAF8F4]"
+                  className="h-14 rounded-[1.1rem] border-stone-300 bg-white px-7 text-base font-semibold text-stone-500 hover:bg-stone-50"
                 >
                   <Link href="/login?next=%2Fdirectory">Sign in</Link>
                 </Button>
@@ -732,13 +732,13 @@ export default function DirectoryExplorer({
                 { label: 'Stay in control', desc: 'See who replied, what is still missing, and what to do next.' },
                 { label: 'Feel safer', desc: 'Pickup verification and live updates keep the day clearer for you.' },
               ].map((feature) => (
-                <div key={feature.label} className="flex items-start gap-4 rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 transition-transform hover:-translate-y-0.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDF0E6]">
-                    <Check className="h-4 w-4 stroke-[3] text-[#D4935A]" />
+                <div key={feature.label} className="flex items-start gap-4 rounded-[1.5rem] border border-stone-200 bg-white p-5 transition-transform hover:-translate-y-0.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-50">
+                    <Check className="h-4 w-4 stroke-[3] text-amber-600" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-base font-semibold leading-tight text-[#22312E]">{feature.label}</p>
-                    <p className="text-sm font-medium leading-relaxed text-[#66736F]">{feature.desc}</p>
+                    <p className="text-base font-semibold leading-tight text-stone-800">{feature.label}</p>
+                    <p className="text-sm font-medium leading-relaxed text-stone-600">{feature.desc}</p>
                   </div>
                 </div>
               ))}
