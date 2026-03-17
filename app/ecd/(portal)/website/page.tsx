@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -11,6 +10,8 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { cn } from '@/lib/utils'
+import { WebsiteActionButton } from './website-action-button'
+import { WebsiteMediaInput } from './website-media-input'
 import { filterWebsiteSectionsByTier, getAllowedWebsiteSections, type WebsiteSectionKey } from '@/lib/billing/entitlements'
 import { toInternalTier } from '@/lib/billing/plans'
 import {
@@ -659,88 +660,44 @@ export default async function EcdWebsitePage({
 
               <div id="brand-media" className="scroll-mt-28 rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Brand media</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  Upload your best photos here. Nothing goes live until you save your draft, and you can publish when you are happy.
+                </p>
                 <div className="mt-3 grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label htmlFor="logo_file" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Logo image
-                    </label>
-                    {centre?.logo_url ? (
-                      <Image
-                        src={centre.logo_url}
-                        alt="Current centre logo"
-                        width={96}
-                        height={96}
-                        className="h-20 w-20 rounded-2xl border border-slate-200 object-cover bg-white"
-                      />
-                    ) : (
-                      <p className="text-xs text-slate-500">No logo uploaded yet.</p>
-                    )}
-                    <input
-                      id="logo_file"
-                      name="logo_file"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
-                    />
-                    <p className="text-xs text-slate-500">Shows on directory cards, admissions pages, and jobs pages.</p>
-                  </div>
+                  <WebsiteMediaInput
+                    id="logo_file"
+                    name="logo_file"
+                    label="Logo image"
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                    currentImages={centre?.logo_url ? [centre.logo_url] : []}
+                    emptyLabel="No logo uploaded yet."
+                    description="Shows on directory cards, admissions pages, and jobs pages."
+                    previewClassName="h-20 w-20"
+                  />
 
-                  <div className="space-y-2">
-                    <label htmlFor="hero_file" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Hero image
-                    </label>
-                    {centre?.cover_image_url ? (
-                      <Image
-                        src={centre.cover_image_url}
-                        alt="Current hero image"
-                        width={384}
-                        height={144}
-                        className="h-24 w-full rounded-2xl border border-slate-200 object-cover bg-white"
-                      />
-                    ) : (
-                      <p className="text-xs text-slate-500">No hero image uploaded yet.</p>
-                    )}
-                    <input
-                      id="hero_file"
-                      name="hero_file"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
-                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
-                    />
-                    <p className="text-xs text-slate-500">Used as the public page hero and listing cover image.</p>
-                  </div>
+                  <WebsiteMediaInput
+                    id="hero_file"
+                    name="hero_file"
+                    label="Hero image"
+                    accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                    currentImages={centre?.cover_image_url ? [centre.cover_image_url] : []}
+                    emptyLabel="No hero image uploaded yet."
+                    description="Used as the public page hero and listing cover image."
+                    previewClassName="h-24 w-full"
+                  />
 
-                  <div className="space-y-2 md:col-span-2">
-                    <label htmlFor="gallery_files" className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Gallery pictures
-                    </label>
-                    {existingGalleryUrls.length > 0 ? (
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                        {existingGalleryUrls.slice(0, 8).map((url) => (
-                          <Image
-                            key={url}
-                            src={url}
-                            alt="Gallery preview"
-                            width={180}
-                            height={120}
-                            className="h-20 w-full rounded-xl border border-slate-200 object-cover bg-white"
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-slate-500">No gallery pictures uploaded yet.</p>
-                    )}
-                    <input
+                  <div className="md:col-span-2">
+                    <WebsiteMediaInput
                       id="gallery_files"
                       name="gallery_files"
-                      type="file"
+                      label="Gallery pictures"
                       accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                       multiple
-                      className="cc-native-field h-12 rounded-2xl py-2 file:mr-3 file:rounded-xl file:border-0 file:bg-teal-600 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+                      currentImages={existingGalleryUrls.slice(0, 8)}
+                      emptyLabel="No gallery pictures uploaded yet."
+                      description={`Add new gallery pictures anytime. We keep up to ${MAX_GALLERY_IMAGES} most recent unique images.`}
+                      previewClassName="h-20"
                     />
-                    <p className="text-xs text-slate-500">
-                      Add new gallery pictures anytime. We keep up to {MAX_GALLERY_IMAGES} most recent unique images.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -841,7 +798,12 @@ export default async function EcdWebsitePage({
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Save Draft</Button>
+                <WebsiteActionButton
+                  pendingLabel="Saving draft..."
+                  className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors"
+                >
+                  Save Draft
+                </WebsiteActionButton>
                 {centre?.slug ? (
                   <Button type="button" variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
                     <a href={`/c/${centre.slug}?preview=1`} target="_blank" rel="noreferrer">
@@ -850,6 +812,9 @@ export default async function EcdWebsitePage({
                   </Button>
                 ) : null}
               </div>
+              <p className="text-xs text-slate-500">
+                Save Draft updates your private version first. Use Preview Public Page to check it, then publish when ready.
+              </p>
             </form>
           </CardContent>
         </Card>
@@ -874,14 +839,14 @@ export default async function EcdWebsitePage({
 
               <form action={setWebsitePublished}>
                 <input type="hidden" name="next_published" value={centre?.is_active ? 'false' : 'true'} />
-                <Button
-                  type="submit"
+                <WebsiteActionButton
+                  pendingLabel={centre?.is_active ? 'Unpublishing...' : 'Publishing...'}
                   variant={centre?.is_active ? 'outline' : 'default'}
                   className={cn("w-full h-12 rounded-2xl font-bold transition-colors shadow-sm", 
                     !centre?.is_active && "bg-teal-600 hover:bg-teal-700 text-white")}
                 >
                   {centre?.is_active ? 'Unpublish Website' : 'Publish Website'}
-                </Button>
+                </WebsiteActionButton>
               </form>
             </CardContent>
           </Card>
@@ -906,7 +871,12 @@ export default async function EcdWebsitePage({
                   className="cc-native-field h-auto min-h-24 py-3 rounded-2xl text-sm leading-relaxed"
                   placeholder="What should this website achieve for your crèche?"
                 />
-                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-colors">Send Request</Button>
+                <WebsiteActionButton
+                  pendingLabel="Sending request..."
+                  className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm transition-colors"
+                >
+                  Send Request
+                </WebsiteActionButton>
               </form>
             </CardContent>
           </Card>

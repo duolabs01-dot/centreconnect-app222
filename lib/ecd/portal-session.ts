@@ -88,6 +88,17 @@ async function tryRepairEcdMembership(input: {
       ecdIdToLink = centreByEmail?.id ?? null
     }
 
+    if (!ecdIdToLink && input.role === 'ecd_admin') {
+      const { data: centreByOwner } = await admin
+        .from('ecd_centres')
+        .select('id')
+        .eq('owner_id', input.userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      ecdIdToLink = centreByOwner?.id ?? null
+    }
+
     if (!ecdIdToLink) {
       return
     }

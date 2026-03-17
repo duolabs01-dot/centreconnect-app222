@@ -229,6 +229,41 @@ export default async function EcdDashboardPage() {
     { id: 'publish', label: 'Publish your creche page', done: Boolean(centre?.is_active), href: '/ecd/website' },
   ]
 
+  const startHereActions = [
+    pendingCount > 0
+      ? {
+          title: 'Review new applications',
+          detail: `${pendingCount} ${pendingCount === 1 ? 'application is' : 'applications are'} waiting for you.`,
+          href: '/ecd/applications',
+          tone: 'border-amber-200 bg-amber-50/80',
+        }
+      : null,
+    !centre?.logo_url || !centre?.cover_image_url
+      ? {
+          title: 'Finish your website photos',
+          detail: 'Add your logo and hero image so parents trust your page faster.',
+          href: '/ecd/website#brand-media',
+          tone: 'border-teal-200 bg-teal-50/80',
+        }
+      : null,
+    (snapshot.attendance_today_count ?? 0) === 0
+      ? {
+          title: 'Take attendance',
+          detail: 'Start the day by marking who is in class.',
+          href: '/ecd/attendance',
+          tone: 'border-cyan-200 bg-cyan-50/80',
+        }
+      : null,
+    unreadNotifications > 0
+      ? {
+          title: 'Check unread messages',
+          detail: `${unreadNotifications} message${unreadNotifications === 1 ? '' : 's'} still need attention.`,
+          href: '/ecd/communications',
+          tone: 'border-slate-200 bg-white/90',
+        }
+      : null,
+  ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
+
   return (
     <EcdOsShell
       title={`${centre?.name ?? 'Your Crèche'} Dashboard`}
@@ -281,6 +316,32 @@ export default async function EcdDashboardPage() {
                 <Link href="/ecd/dsd-export">DSD pack</Link>
               </Button>
             </div>
+            {startHereActions.length > 0 ? (
+              <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Start here today</p>
+                <p className="mt-1 text-sm text-slate-600">The fastest next steps for running your crèche well today.</p>
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                  {startHereActions.map((action) => (
+                    <Link
+                      key={action.title}
+                      href={action.href}
+                      className={cn(
+                        'group rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+                        action.tone
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-black text-slate-900">{action.title}</p>
+                          <p className="mt-1 text-sm leading-6 text-slate-600">{action.detail}</p>
+                        </div>
+                        <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-slate-500 transition-transform group-hover:translate-x-0.5" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
