@@ -126,6 +126,15 @@ function normalizeMissingDocuments(value: unknown) {
   return value.map((entry) => String(entry).trim()).filter(Boolean)
 }
 
+function phoneHref(value: string | null | undefined) {
+  const digits = (value ?? '').replace(/\D+/g, '')
+  if (digits.length < 8) return null
+  return {
+    tel: `tel:${digits}`,
+    whatsapp: `https://wa.me/${digits}?text=${encodeURIComponent('Hi, saw your application on CentreConnect and would like to chat.')}`,
+  }
+}
+
 type IntakeBlockedApplication = {
   application: ApplicationRow
   missing: string[]
@@ -229,6 +238,9 @@ function renderApplicationList(applications: ApplicationRow[]) {
           const parentProfile = normalizeOne(parent?.user_profiles ?? null)
           const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
           const parentName = parentProfile?.full_name ?? 'Unknown parent'
+          const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
+          const phoneLinks = phoneHref(parentPhone)
+          const missingDocs = normalizeMissingDocuments(application.missing_documents)
           return (
             <Card key={application.id} className="p-5 shadow-sm border-slate-100 bg-white rounded-3xl">
               <div className="flex items-start justify-between gap-4">
@@ -237,8 +249,17 @@ function renderApplicationList(applications: ApplicationRow[]) {
                   <p className="mt-1 text-xs text-slate-500">
                     {parentName} - {formatDate(application.submitted_at)}
                   </p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusBadge status={application.status} />
+                    {missingDocs.length > 0 ? (
+                      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                        Missing docs ({missingDocs.length})
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                        Docs ready
+                      </span>
+                    )}
                   </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-9 w-9 p-0 text-slate-400 hover:text-teal-600 hover:bg-teal-50" asChild>
@@ -247,7 +268,15 @@ function renderApplicationList(applications: ApplicationRow[]) {
                   </Link>
                 </Button>
               </div>
-              <div className="mt-4 flex justify-end border-t border-slate-50 pt-4">
+              <div className="mt-4 flex flex-wrap justify-between gap-3 border-t border-slate-50 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" className="h-10 rounded-2xl" asChild disabled={!phoneLinks?.tel}>
+                    <a href={phoneLinks?.tel ?? '#'} aria-disabled={!phoneLinks?.tel}>Call</a>
+                  </Button>
+                  <Button size="sm" variant="outline" className="h-10 rounded-2xl" asChild disabled={!phoneLinks?.whatsapp}>
+                    <a href={phoneLinks?.whatsapp ?? '#'} target="_blank" rel="noreferrer" aria-disabled={!phoneLinks?.whatsapp}>WhatsApp</a>
+                  </Button>
+                </div>
                 <Button size="sm" className="h-10 rounded-2xl bg-teal-600 px-4 font-bold text-white hover:bg-teal-700" asChild>
                   <Link href={applicationDetailsHref(application)} prefetch={false}>Open Application</Link>
                 </Button>
@@ -264,6 +293,7 @@ function renderApplicationList(applications: ApplicationRow[]) {
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">No.</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Child</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Parent</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Docs</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Status</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Date</TableHead>
               <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 h-12 pr-6">Actions</TableHead>
@@ -276,17 +306,37 @@ function renderApplicationList(applications: ApplicationRow[]) {
               const parentProfile = normalizeOne(parent?.user_profiles ?? null)
               const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
               const parentName = parentProfile?.full_name ?? 'Unknown parent'
+              const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
+              const phoneLinks = phoneHref(parentPhone)
+              const missingDocs = normalizeMissingDocuments(application.missing_documents)
               return (
                 <TableRow key={application.id} className="border-slate-100 hover:bg-slate-50/50 transition-colors group">
                   <TableCell className="font-bold text-slate-400 group-hover:text-teal-600 transition-colors pl-6">{application.application_number}</TableCell>
                   <TableCell className="font-bold text-slate-900">{childName}</TableCell>
                   <TableCell className="text-slate-600">{parentName}</TableCell>
+                  <TableCell className="text-slate-600">
+                    {missingDocs.length > 0 ? (
+                      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                        Missing {missingDocs.length}
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700">
+                        Ready
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <StatusBadge status={application.status} />
                   </TableCell>
                   <TableCell className="text-slate-500 text-xs">{formatDate(application.submitted_at)}</TableCell>
                   <TableCell className="text-right pr-6">
-                    <div className="flex items-center justify-end">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button size="sm" variant="outline" className="h-9 rounded-2xl px-3 font-semibold" asChild disabled={!phoneLinks?.tel}>
+                        <a href={phoneLinks?.tel ?? '#'} aria-disabled={!phoneLinks?.tel}>Call</a>
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-9 rounded-2xl px-3 font-semibold" asChild disabled={!phoneLinks?.whatsapp}>
+                        <a href={phoneLinks?.whatsapp ?? '#'} target="_blank" rel="noreferrer" aria-disabled={!phoneLinks?.whatsapp}>WhatsApp</a>
+                      </Button>
                       <Button size="sm" variant="ghost" className="h-9 rounded-2xl px-4 font-bold text-slate-500 hover:bg-teal-50 hover:text-teal-700" asChild>
                         <Link href={applicationDetailsHref(application)} prefetch={false}>Open</Link>
                       </Button>

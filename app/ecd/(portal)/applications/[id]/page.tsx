@@ -136,6 +136,15 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? value[0] ?? null : value
 }
 
+function phoneHref(value: string | null | undefined) {
+  const digits = (value ?? '').replace(/\D+/g, '')
+  if (digits.length < 8) return null
+  return {
+    tel: `tel:${digits}`,
+    whatsapp: `https://wa.me/${digits}?text=${encodeURIComponent('Hi, saw your application on CentreConnect and would like to chat.')}`,
+  }
+}
+
 const parseTextArray = (value: unknown) => (Array.isArray(value) ? value.map((v) => String(v).trim()).filter(Boolean) : [])
 const parseMissingDocuments = (value: unknown) => parseTextArray(value)
 
@@ -281,6 +290,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
   const centreName = centreResult.data?.name ?? 'Your creche'
   const contactName = dossier.primaryParent.fullName
   const contactPhone = dossier.primaryParent.phone ?? dossier.primaryParent.alternatePhone ?? parentPhone ?? null
+  const contactLinks = phoneHref(contactPhone)
   const templates = (templatesResult.data ?? []) as Template[]
   const history = (historyResult.data ?? []) as HistoryItem[]
   const requestHistory =
@@ -372,19 +382,27 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
               <p><span className="font-bold text-slate-800">Decision:</span> {application.decided_at ? formatDate(application.decided_at) : 'Pending'}</p>
               <p><span className="font-bold text-slate-800">Offer accepted:</span> {application.offer_accepted_at ? formatDate(application.offer_accepted_at) : 'No'}</p>
             </div>
+            <div className="flex flex-wrap gap-2">
+              {missingLabels.length > 0 ? (
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
+                  Missing docs: {missingLabels.slice(0, 3).join(', ')}{missingLabels.length > 3 ? '…' : ''}
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">
+                  Docs ready
+                </span>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-2">
               <SendReminderButton applicationId={application.id} />
-              {contactPhone ? (
-                <Button asChild variant="outline" className="h-11 rounded-2xl">
-                  <a href={`tel:${contactPhone}`}>Call parent</a>
-                </Button>
-              ) : (
-                <Button variant="outline" className="h-11 rounded-2xl" disabled>
-                  Call parent
-                </Button>
-              )}
+              <Button asChild variant="outline" className="h-11 rounded-2xl" disabled={!contactLinks?.tel}>
+                <a href={contactLinks?.tel ?? '#'} aria-disabled={!contactLinks?.tel}>Call parent</a>
+              </Button>
+              <Button asChild variant="outline" className="h-11 rounded-2xl" disabled={!contactLinks?.whatsapp}>
+                <a href={contactLinks?.whatsapp ?? '#'} target="_blank" rel="noreferrer" aria-disabled={!contactLinks?.whatsapp}>WhatsApp</a>
+              </Button>
               {communicationsHref ? (
                 <Button asChild variant="outline" className="h-11 rounded-2xl">
                   <Link prefetch={false} href={communicationsHref}>

@@ -425,13 +425,28 @@ export default async function AdminDashboardPage() {
               Open revenue
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
+            {failedInvites > 0 ? (
+              <Link
+                href="/admin/invites?status=failed&autoRetry=1"
+                className="inline-flex h-11 items-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-5 text-xs font-black uppercase tracking-[0.18em] text-rose-100 transition-colors hover:bg-rose-500/20"
+              >
+                Retry failed invites
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : null}
           </div>
         </div>
       </header>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <AdminKpiCard label="Live centres" value={`${liveCentres}/${totalCentres}`} sparklineData={[Math.max(totalCentres - liveCentres, 0), liveCentres, totalCentres]} />
-        <AdminKpiCard label="Parents on CentreConnect" value={totalParents} sparklineData={[Math.max(totalParents - newParents, 0), newParents, totalParents]} />
+        <AdminKpiCard
+          label="Parents on CentreConnect"
+          value={totalParents}
+          sparklineData={[Math.max(totalParents - newParents, 0), newParents, totalParents]}
+          deltaLabel={`${newParents} new this week`}
+          deltaTone={newParents > 0 ? 'up' : 'neutral'}
+        />
         <AdminKpiCard label="Paid revenue" value={money(paidRevenueCents)} sparklineData={[Math.max(paidRevenueCents / 200, 1), Math.max(paidRevenueCents / 150, 1), Math.max(paidRevenueCents / 100, 1)]} />
         <AdminKpiCard label="Open support tickets" value={openSupport} sparklineData={[Math.max(openSupport - 2, 0), Math.max(openSupport - 1, 0), openSupport]} />
       </div>

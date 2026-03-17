@@ -58,6 +58,7 @@ interface CentreCardProps {
   viewerRole?: string | null
   isSaved?: boolean
   onApply?: () => void
+  mapLink?: string
 }
 
 function formatAgeSummary(ageGroups: string[] | null | undefined) {
@@ -160,6 +161,7 @@ export function CentreCard({
   isSaved = false,
   name,
   onApply,
+  mapLink,
 }: CentreCardProps) {
   const router = useRouter()
 
@@ -222,7 +224,9 @@ export function CentreCard({
       : []),
   ]
   const showRecommendedChip = !isVerifiedForParents && isFeatured
-  const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
+  const showPilotChip = !isVerifiedForParents && !isFeatured && isPilot
+  const hasExistingApplication = Boolean(existingApplicationId)
+
   const inquiryTemplates = [
     { label: 'Ask about space', message: `Hi ${name}, do you still have space for my child?` },
     { label: 'Ask about fees', message: `Hi ${name}, please share your fees and what is included.` },
@@ -306,7 +310,12 @@ export function CentreCard({
                 <Badge className="border border-cyan-200 bg-cyan-50/80 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-cyan-700 shadow-none">
                   Pilot Partner
                 </Badge>
-              ) : null}
+              ) : null}
+              {hasExistingApplication ? (
+                <Badge className="border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold tracking-[0.08em] text-emerald-700 shadow-none">
+                  Applied
+                </Badge>
+              ) : null}
               {is_claimed ? (
                 <Badge className="border border-[#DCEEE8] bg-[#F4FBF8] px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-[#0D9488] shadow-none">
                   Apply now
@@ -350,6 +359,17 @@ export function CentreCard({
                 title={`Message ${name}`}
                 description="Send a quick question without leaving the directory. Replies stay inside CentreConnect so your next step stays clear."
               />
+              {mapLink ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="h-10 rounded-2xl border-[#DDD5C8] bg-white text-sm font-semibold text-[#4E5D59] transition-all hover:bg-[#FAF8F4]"
+                >
+                  <Link href={mapLink} target="_blank" rel="noreferrer">
+                    <MapPin className="mr-1.5 h-4 w-4" /> Open in Maps
+                  </Link>
+                </Button>
+              ) : null}
 
             </>
           ) : null}
@@ -377,6 +397,17 @@ export function CentreCard({
                   {publicSecondaryLabel}
                 </Link>
               </Button>
+              {mapLink ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="h-10 rounded-2xl text-sm font-semibold text-[#4E5D59] transition-all hover:text-[#0D9488]"
+                >
+                  <Link href={mapLink} target="_blank" rel="noreferrer">
+                    <MapPin className="mr-1.5 h-4 w-4" /> Open in Maps
+                  </Link>
+                </Button>
+              ) : null}
               <p className="text-center text-[11px] font-medium leading-5 text-[#7B827E]">
                 Public listing only. Contact the creche directly for space and next steps.
               </p>

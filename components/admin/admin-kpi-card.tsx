@@ -12,11 +12,19 @@ interface AdminKpiCardProps {
   sparklineData: number[]
   className?: string
   accent?: 'cyan' | 'teal' | 'rose' | 'emerald'
+  deltaLabel?: string
+  deltaTone?: 'up' | 'down' | 'neutral'
 }
 
-export function AdminKpiCard({ label, value, trend, sparklineData, className, accent = 'cyan' }: AdminKpiCardProps) {
+export function AdminKpiCard({ label, value, trend, sparklineData, className, accent = 'cyan', deltaLabel, deltaTone = 'neutral' }: AdminKpiCardProps) {
   const isUp = trend && trend > 0
-  
+  const deltaClass = deltaTone === 'up'
+    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+    : deltaTone === 'down'
+      ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+      : 'bg-slate-700/30 text-slate-200 border-white/10'
+  const deltaIcon = deltaTone === 'up' ? <TrendingUp className="w-3 h-3" /> : deltaTone === 'down' ? <TrendingDown className="w-3 h-3" /> : <Activity className="w-3 h-3" />
+
   return (
     <div className={cn(
       "tile transform-gpu [will-change:transform] relative bg-[#0D121D] border border-white/5 rounded-3xl p-6 sm:p-8 hover:bg-[#121824] transition-transform duration-200 group overflow-hidden shadow-2xl shadow-black/40",
@@ -37,6 +45,12 @@ export function AdminKpiCard({ label, value, trend, sparklineData, className, ac
           <h3 className="text-3xl font-black text-white mt-2 tracking-tighter sm:text-4xl">
             {value}
           </h3>
+          {deltaLabel ? (
+            <div className={cn('inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]', deltaClass)}>
+              {deltaIcon}
+              <span className="truncate">{deltaLabel}</span>
+            </div>
+          ) : null}
         </div>
         <button className="rounded-lg bg-white/5 p-1.5 text-slate-600 transition-colors duration-200 hover:bg-white/10 hover:text-white">
           <MoreHorizontal className="w-4 h-4" />

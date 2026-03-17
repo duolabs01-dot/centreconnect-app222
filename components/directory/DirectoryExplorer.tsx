@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import CentreCard from '@/components/parent/CentreCard'
+
 import { cn } from '@/lib/utils'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { isTrustedDistanceSource } from '@/lib/geo/centre-location-metadata'
@@ -92,6 +93,16 @@ function formatDistanceLabel(distanceMeters: number | null) {
   const km = distanceMeters / 1000
   if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m away`
   return `${km.toFixed(1)} km away`
+}
+
+function buildMapsLink(centre: DirectoryCentre) {
+  const hasCoords = typeof centre.latitude === 'number' && typeof centre.longitude === 'number'
+  if (hasCoords) {
+    return `https://www.google.com/maps?q=${centre.latitude},${centre.longitude}`
+  }
+  const parts = [centre.name, centre.address, centre.suburb, centre.city].filter((value) => typeof value === 'string' && value.trim().length > 0)
+  if (parts.length === 0) return null
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(parts.join(' '))}`
 }
 
 export default function DirectoryExplorer({
@@ -635,6 +646,8 @@ export default function DirectoryExplorer({
                       cover_image_url={centre.cover_image_url ?? undefined}
                       distanceLabel={exactUserLocation && isTrustedDistanceSource(centre.coordinate_source ?? null, centre.coordinate_confidence ?? null) ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
                       viewerRole={viewerRole}
+                      isSaved={centre.is_saved ?? false}
+                      mapLink={buildMapsLink(centre) ?? undefined}
                     />
                   </motion.div>
                 ))}

@@ -105,7 +105,8 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
   if (profile?.role !== 'platform_admin') redirect('/login')
 
   const selectedChannel = normalizeInviteChannel(queryValue(searchParams?.channel))
-  const selectedStatus = normalizeInviteStatus(queryValue(searchParams?.status))
+  const autoRetry = queryValue(searchParams?.autoRetry) === '1'
+  const selectedStatus = autoRetry ? 'failed' : normalizeInviteStatus(queryValue(searchParams?.status))
   const selectedEventType = normalizeInviteEventType(queryValue(searchParams?.event))
   const selectedCentreId = queryValue(searchParams?.centre)
   const searchTerm = sanitizeSearchTerm(queryValue(searchParams?.q))
@@ -162,6 +163,12 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
       roleLabel="Platform Admin"
       wide
     >
+      {autoRetry ? (
+        <div className="mb-4 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          Auto-filtered to failed invites. Re-run the send from your provider or re-issue invites in CentreConnect after fixing credentials.
+        </div>
+      ) : null}
+
       <section className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <CyberCard accent="cyan" glow className="p-5">
           <div className="flex items-start justify-between">
