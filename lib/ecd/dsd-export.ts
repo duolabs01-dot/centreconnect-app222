@@ -62,15 +62,28 @@ export type DsdStaffRecord = {
   id: string
   firstName: string
   surname: string
+  idNumber: string | null
   role: string
+  gender: string | null
+  race: string | null
+  isDisabled: boolean
+  disabilityDescription: string | null
   isTrained: boolean
+  trainingDescription: string | null
   isComputerLiterate: boolean
+  isSubsidized: boolean
+  monthlySalary: number | null
 }
 
 export type DsdExportData = {
   centreName: string
   registrationNumber: string | null
   emisNumber: string | null
+  npoReg: string | null
+  dsdRegNumber: string | null
+  addressLine1: string | null
+  addressLine2: string | null
+  province: string | null
   approvedCapacityPartialCare: number | null
   approvedCapacitySla: number | null
   ward: string | null
@@ -211,7 +224,7 @@ export async function getDsdExportData(input: {
   const [{ data: centre }, { data: enrolledApplications }, { data: complianceRows }, { data: staffRows }] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('name,registration_number,emis_number,approved_capacity_partial_care,approved_capacity_sla,ward,district,primary_contact_name,primary_contact_phone,primary_contact_email')
+      .select('name,registration_number,emis_number,npo_reg,dsd_reg_number,address_line1,address_line2,province,approved_capacity_partial_care,approved_capacity_sla,ward,district,primary_contact_name,primary_contact_phone,primary_contact_email,contact_phone,contact_email')
       .eq('id', ecdId)
       .maybeSingle(),
     supabase
@@ -227,7 +240,7 @@ export async function getDsdExportData(input: {
       .order('label', { ascending: true }),
     supabase
       .from('ecd_staff')
-      .select('id,first_name,surname,role,is_trained,is_computer_literate')
+      .select('id,first_name,surname,id_number,role,gender,race,is_disabled,disability_description,is_trained,training_description,is_computer_literate,is_subsidized,monthly_salary')
       .eq('ecd_id', ecdId)
       .order('surname', { ascending: true }),
   ])
@@ -328,13 +341,18 @@ export async function getDsdExportData(input: {
     centreName: centre?.name?.trim() || 'Your creche',
     registrationNumber: centre?.registration_number?.trim() || null,
     emisNumber: centre?.emis_number?.trim() || null,
+    npoReg: centre?.npo_reg?.trim() || null,
+    dsdRegNumber: centre?.dsd_reg_number?.trim() || null,
+    addressLine1: centre?.address_line1?.trim() || null,
+    addressLine2: centre?.address_line2?.trim() || null,
+    province: centre?.province?.trim() || null,
     approvedCapacityPartialCare: centre?.approved_capacity_partial_care || null,
     approvedCapacitySla: centre?.approved_capacity_sla || null,
     ward: centre?.ward?.trim() || null,
     district: centre?.district?.trim() || null,
     primaryContactName: centre?.primary_contact_name?.trim() || null,
-    primaryContactPhone: centre?.primary_contact_phone?.trim() || null,
-    primaryContactEmail: centre?.primary_contact_email?.trim() || null,
+    primaryContactPhone: (centre?.primary_contact_phone ?? centre?.contact_phone)?.trim() || null,
+    primaryContactEmail: (centre?.primary_contact_email ?? centre?.contact_email)?.trim() || null,
     selectedMonth,
     selectedYear,
     generatedAt: new Date().toISOString(),
@@ -349,9 +367,17 @@ export async function getDsdExportData(input: {
       id: String(row.id),
       firstName: String(row.first_name),
       surname: String(row.surname),
+      idNumber: normalizeText(row.id_number as string | null, '') || null,
       role: String(row.role),
+      gender: normalizeText(row.gender as string | null, '') || null,
+      race: normalizeText(row.race as string | null, '') || null,
+      isDisabled: Boolean(row.is_disabled),
+      disabilityDescription: normalizeText(row.disability_description as string | null, '') || null,
       isTrained: Boolean(row.is_trained),
+      trainingDescription: normalizeText(row.training_description as string | null, '') || null,
       isComputerLiterate: Boolean(row.is_computer_literate),
+      isSubsidized: Boolean(row.is_subsidized),
+      monthlySalary: row.monthly_salary ? Number(row.monthly_salary) : null,
     })),
   }
 }

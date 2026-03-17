@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, MapPin } from 'lucide-react'
+import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, Printer } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,33 +9,47 @@ import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
 import { DsdPrintButton } from './print-button'
 
 export const metadata: Metadata = {
-  title: 'DSD Export | CentreConnect',
-  description: 'Printable DSD pack and CSV exports for enrolment, attendance, and compliance.',
+  title: 'DOE Monthly Report | CentreConnect',
+  description: 'Official DOE Monthly Reporting Template — Places of Care (Crèches) generated from CentreConnect data.',
 }
 
 function normalizeMonth(value: string | undefined, fallback: number) {
-  const next = Number.parseInt(String(value ?? ''), 10)
-  return Number.isFinite(next) && next >= 1 && next <= 12 ? next : fallback
+  const n = Number.parseInt(String(value ?? ''), 10)
+  return Number.isFinite(n) && n >= 1 && n <= 12 ? n : fallback
 }
 
 function normalizeYear(value: string | undefined, fallback: number) {
-  const next = Number.parseInt(String(value ?? ''), 10)
-  return Number.isFinite(next) && next >= fallback - 2 && next <= fallback + 2 ? next : fallback
+  const n = Number.parseInt(String(value ?? ''), 10)
+  return Number.isFinite(n) && n >= fallback - 2 && n <= fallback + 2 ? n : fallback
 }
 
-function formatDate(value: string | null | undefined) {
+function doeDate(value: string | null | undefined) {
   if (!value) return '--'
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return value
+  return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`
 }
 
-function statusChipClass(status: string) {
-  if (status === 'verified') return 'border-emerald-200 bg-emerald-50 text-emerald-800'
-  if (status === 'uploaded') return 'border-amber-200 bg-amber-50 text-amber-800'
-  if (status === 'expired') return 'border-rose-200 bg-rose-50 text-rose-800'
-  return 'border-slate-200 bg-slate-50 text-slate-700'
+function calcAge(dob: string | null | undefined, atYear: number, atMonth: number): number | null {
+  if (!dob) return null
+  const d = new Date(dob)
+  if (Number.isNaN(d.getTime())) return null
+  let age = atYear - d.getFullYear()
+  const mDiff = atMonth - (d.getMonth() + 1)
+  if (mDiff < 0 || (mDiff === 0)) age--
+  return age >= 0 ? age : 0
 }
+
+function genderInitial(gender: string | null | undefined) {
+  const g = (gender ?? '').toLowerCase()
+  if (g === 'male' || g === 'm') return 'M'
+  if (g === 'female' || g === 'f') return 'F'
+  return '--'
+}
+
+const TH = 'border border-slate-400 px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-wide bg-slate-100 text-slate-800'
+const TD = 'border border-slate-300 px-2 py-1.5 text-[11px] text-center text-slate-700'
+const TDL = 'border border-slate-300 px-2 py-1.5 text-[11px] text-left text-slate-700'
 
 export default async function DsdExportPage({
   searchParams,
@@ -49,381 +63,509 @@ export default async function DsdExportPage({
   const data = await getDsdExportData({ supabase, ecdId, selectedMonth, selectedYear })
   const monthParam = `month=${selectedMonth}&year=${selectedYear}`
 
-  const incomeStats = {
-    total: data.children.length,
-    r3500: data.children.filter(c => c.parentIncomeCategory === 'R0-R3500').length,
-    r4500: data.children.filter(c => c.parentIncomeCategory === 'R0-R4500').length,
-    other: data.children.filter(c => c.parentIncomeCategory === 'Other').length,
-  }
+  const total = data.children.length
+  const r3500 = data.children.filter(c => c.parentIncomeCategory === 'R0-R3500').length
+  const r4500 = data.children.filter(c => c.parentIncomeCategory === 'R0-R4500').length
+  const otherIncome = data.children.filter(c => c.parentIncomeCategory === 'Other').length
+
+  const newAdmissions = data.children.filter(c => {
+    if (!c.startDate) return false
+    const d = new Date(c.startDate)
+    return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth
+  })
+  const newR3500 = newAdmissions.filter(c => c.parentIncomeCategory === 'R0-R3500').length
+  const newR4500 = newAdmissions.filter(c => c.parentIncomeCategory === 'R0-R4500').length
+  const newOther = newAdmissions.filter(c => !['R0-R3500','R0-R4500'].includes(c.parentIncomeCategory)).length
+
+  const trainedCount = data.staff.filter(s => s.isTrained).length
+  const disabledCount = data.children.filter(c => c.isDisabled).length
+  const practitionersEmployed = data.staff.filter(s =>
+    s.role.toLowerCase().includes('practitioner') || s.role.toLowerCase().includes('teacher')
+  ).length
+  const computerLiterateCount = data.staff.filter(s => s.isComputerLiterate).length
+
+  const practitioners = data.staff.filter(s =>
+    s.role.toLowerCase().includes('practitioner') || s.role.toLowerCase().includes('teacher')
+  )
+
+  const childrenSorted = [...data.children].sort((a, b) => {
+    const lastA = a.childName.split(' ').slice(-1)[0] ?? ''
+    const lastB = b.childName.split(' ').slice(-1)[0] ?? ''
+    return lastA.localeCompare(lastB)
+  })
 
   return (
     <EcdOsShell
-      title="DOE & DSD Reports"
-      description="Official DOE Monthly Returns and printable DSD register packs generated from your live CentreConnect data."
+      title="DOE Monthly Report"
+      description="Official Department of Education Monthly Reporting Template — Places of Care (Crèches)"
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
-      <div className="space-y-6 overflow-x-hidden pb-8">
-        {/* Centre Details & Registration Header */}
-        <Card className="rounded-[2rem] border-slate-200 bg-[linear-gradient(135deg,#f0fdfa_0%,#ffffff_65%,#f8fafc_100%)] shadow-sm">
-          <CardHeader className="space-y-4">
+      <div className="space-y-6 pb-10">
+
+        {/* ── Controls Bar ── */}
+        <Card className="rounded-[2rem] border-slate-200 bg-gradient-to-br from-cyan-50 to-white shadow-sm">
+          <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">
-                <Building2 className="h-3.5 w-3.5" />
-                DOE / DSD Monthly Reporting Template
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-cyan-600" />
+                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">DOE Monthly Reporting Template</span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <DsdPrintButton />
-                <Button asChild className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-700">
-                  <Link href={`/api/ecd/dsd-export?kind=enrolment&${monthParam}`}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Full Export (CSV)
+                <Button asChild size="sm" className="rounded-2xl bg-cyan-600 text-white hover:bg-cyan-700 text-xs font-bold">
+                  <Link href={`/api/ecd/dsd-export?kind=enrolment&${monthParam}`} prefetch={false}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" />Enrolment CSV
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-2xl text-xs font-bold">
+                  <Link href={`/api/ecd/dsd-export?kind=staff&${monthParam}`} prefetch={false}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" />Staff CSV
+                  </Link>
+                </Button>
+                <Button asChild size="sm" variant="outline" className="rounded-2xl text-xs font-bold">
+                  <Link href={`/api/ecd/dsd-export?kind=attendance&${monthParam}`} prefetch={false}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" />Attendance CSV
                   </Link>
                 </Button>
               </div>
             </div>
-
-            <div className="grid gap-6 lg:grid-cols-2">
-              <div className="space-y-2">
-                <CardTitle className="text-3xl font-black tracking-tight text-slate-900">
-                  {data.centreName}
-                </CardTitle>
-                <div className="flex flex-wrap gap-4 text-sm font-bold text-slate-500">
-                  <span className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4 text-slate-400" />
-                    Ward {data.ward || '--'} | {data.district || 'Johannesburg East'}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 text-slate-400" />
-                    Reg: {data.registrationNumber || '--'}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <FileCheck2 className="h-4 w-4 text-slate-400" />
-                    EMIS: {data.emisNumber || '--'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="rounded-2xl bg-white p-4 border border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black uppercase text-slate-400">Partial Care Cap</p>
-                  <p className="mt-1 text-xl font-black text-slate-900">{data.approvedCapacityPartialCare || '--'}</p>
-                </div>
-                <div className="rounded-2xl bg-white p-4 border border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black uppercase text-slate-400">SLA Capacity</p>
-                  <p className="mt-1 text-xl font-black text-slate-900">{data.approvedCapacitySla || '--'}</p>
-                </div>
-                <div className="rounded-2xl bg-white p-4 border border-slate-100 shadow-sm">
-                  <p className="text-[10px] font-black uppercase text-slate-400">Total Beneficiaries</p>
-                  <p className="mt-1 text-xl font-black text-cyan-600">{data.children.length}</p>
-                </div>
-              </div>
-            </div>
-
-            <form className="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center">
-              <div className="flex items-center gap-2 pr-4 border-r border-slate-100">
-                <select
-                  name="month"
-                  defaultValue={String(selectedMonth)}
-                  className="cc-native-field h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700"
-                >
-                  {defaults.months.map((month, index) => (
-                    <option key={month} value={index + 1}>{month}</option>
-                  ))}
-                </select>
-                <select
-                  name="year"
-                  defaultValue={String(selectedYear)}
-                  className="cc-native-field h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700"
-                >
-                  {defaults.years.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-                <Button type="submit" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-50">
-                  Update view
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button asChild variant="ghost" className="rounded-xl text-xs font-bold text-slate-500 hover:text-cyan-600">
-                  <Link href={`/api/ecd/dsd-export?kind=attendance&${monthParam}`} prefetch={false}>Attendance CSV</Link>
-                </Button>
-                <Button asChild variant="ghost" className="rounded-xl text-xs font-bold text-slate-500 hover:text-cyan-600">
-                  <Link href={`/api/ecd/dsd-export?kind=compliance&${monthParam}`} prefetch={false}>Compliance CSV</Link>
-                </Button>
-                <Button asChild variant="ghost" className="rounded-xl text-xs font-bold text-slate-500 hover:text-cyan-600">
-                  <Link href={`/api/ecd/dsd-export?kind=staff&${monthParam}`} prefetch={false}>Staff CSV</Link>
-                </Button>
-              </div>
+            <form className="mt-4 flex flex-wrap items-center gap-2">
+              <select name="month" defaultValue={String(selectedMonth)} className="cc-native-field h-10 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700">
+                {defaults.months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+              </select>
+              <select name="year" defaultValue={String(selectedYear)} className="cc-native-field h-10 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700">
+                {defaults.years.map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+              <Button type="submit" size="sm" variant="outline" className="rounded-2xl font-bold">Update</Button>
             </form>
-          </CardHeader>
+          </CardContent>
         </Card>
 
-        {/* DOE Statistics & Beneficiary Summary Row */}
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* DOE Stats Table */}
-          <Card className="rounded-[2rem] border-slate-200 shadow-sm lg:col-span-8 overflow-hidden print:border-0 print:shadow-none">
-            <CardHeader className="bg-slate-50 border-b border-slate-100">
-              <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900 uppercase tracking-tight">
-                <FileCheck2 className="h-5 w-5 text-cyan-600" />
-                Monthly Return Summary (DOE Format)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+        {/* ══════════════════════════════════════════════════════════════════
+            SECTION 1 — DOE Cover Page (matches page 1 of PDF exactly)
+        ══════════════════════════════════════════════════════════════════ */}
+        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none print:border print:shadow-none">
+          {/* Official DOE Header */}
+          <div className="border-b-2 border-slate-300 bg-white px-6 py-4 flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-slate-300 bg-slate-50">
+              <span className="text-[9px] font-black text-center leading-tight text-slate-600 uppercase">Gauteng<br/>Province</span>
+            </div>
+            <div className="flex-1 text-center">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Department of Education</p>
+              <p className="text-lg font-black uppercase tracking-[0.1em] text-slate-900">Monthly Reporting Template</p>
+              <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-600">Programme: Places of Care (Crèches)</p>
+            </div>
+          </div>
+
+          <CardContent className="p-6 space-y-4">
+            {/* Centre Details Grid */}
+            <div className="grid gap-2">
+              {[
+                ['Month & Year', `${defaults.months[selectedMonth - 1]} ${selectedYear}`],
+                ['Name of ECD', data.centreName],
+                ['Physical Address', [data.addressLine1, data.addressLine2].filter(Boolean).join(', ') || '--'],
+                ['Province / District', `${data.province || 'Gauteng'} — ${data.district || '--'}`],
+                ['Ward', data.ward || '--'],
+                ['Contact Details + E-mail', [data.primaryContactPhone, data.primaryContactEmail].filter(Boolean).join(' / ') || '--'],
+                ['EMIS Number', data.emisNumber || '--'],
+                ['NPO / DSD Reg No', data.npoReg || data.dsdRegNumber || '--'],
+              ].map(([label, value]) => (
+                <div key={label} className="flex gap-4 border-b border-slate-100 py-1.5">
+                  <span className="w-52 shrink-0 text-[11px] font-black uppercase tracking-wide text-slate-500">{label}</span>
+                  <span className="text-sm font-semibold text-slate-900">{value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Approved Capacity Boxes */}
+            <div className="flex flex-wrap gap-3 pt-2">
+              {[
+                { label: 'Approved Children (Partial Care Certificate)', value: data.approvedCapacityPartialCare ?? '--' },
+                { label: 'Approved Children per SLA', value: data.approvedCapacitySla ?? '--' },
+                { label: 'Children Claimed for the Month', value: total },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex-1 min-w-[160px] rounded-2xl border-2 border-slate-300 bg-white p-4 text-center shadow-sm">
+                  <p className="text-[9px] font-black uppercase leading-tight text-slate-500">{label}</p>
+                  <p className="mt-2 text-3xl font-black text-slate-900">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Places of Care Table */}
+            <div>
+              <div className="mb-1 rounded-t-xl bg-slate-900 px-4 py-2">
+                <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white">Places of Care (Crèche)</p>
+              </div>
+              <div className="overflow-x-auto rounded-b-xl border border-slate-300">
+                <table className="min-w-full text-[11px]">
                   <thead>
-                    <tr className="bg-white">
-                      <th className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Age group</th>
-                      <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Male</th>
-                      <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">Female</th>
-                      <th className="px-6 py-4 text-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100 bg-slate-50/50 font-black text-slate-900">Total</th>
+                    <tr className="bg-slate-100">
+                      <th className={TH} rowSpan={2}>Total</th>
+                      <th className={`${TH} border-l-2`} colSpan={3}>Total Number of Beneficiaries</th>
+                      <th className={`${TH} border-l-2`} colSpan={3}>New Admissions During Month</th>
+                      <th className={`${TH} border-l-2`} colSpan={3}>Discharges During Month</th>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      {['1 Parent R0-R3500','2 Parent R0-R4500','Other'].map(h => <th key={h} className={TH}>{h}</th>)}
+                      {['1 Parent R0-R3500','2 Parent R0-R4500','Other'].map(h => <th key={`n${h}`} className={TH}>{h}</th>)}
+                      {['1 Parent R0-R3500','2 Parent R0-R4500','Other'].map(h => <th key={`d${h}`} className={TH}>{h}</th>)}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {[
-                      { label: 'Under 1 Year', stats: data.doeStats.byAge.under1 },
-                      { label: '1 - 2 Years', stats: data.doeStats.byAge.age1to2 },
-                      { label: '2 - 3 Years', stats: data.doeStats.byAge.age2to3 },
-                      { label: '3 - 4 Years', stats: data.doeStats.byAge.age3to4 },
-                      { label: '4 - 5 Years', stats: data.doeStats.byAge.age4to5 },
-                      { label: '5 - 6 Years', stats: data.doeStats.byAge.age5to6 },
-                      { label: 'Over 6 Years', stats: data.doeStats.byAge.over6 },
-                    ].map((row) => (
-                      <tr key={row.label} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-4 font-bold text-slate-900">{row.label}</td>
-                        <td className="px-6 py-4 text-center text-slate-700 font-medium">{row.stats.m}</td>
-                        <td className="px-6 py-4 text-center text-slate-700 font-medium">{row.stats.f}</td>
-                        <td className="px-6 py-4 text-center bg-slate-50/30 font-black text-cyan-700">{row.stats.m + row.stats.f}</td>
-                      </tr>
-                    ))}
-                    <tr className="bg-slate-900 text-white font-black uppercase tracking-wider">
-                      <td className="px-6 py-4">Total Children</td>
-                      <td className="px-6 py-4 text-center">{data.doeStats.totalMale}</td>
-                      <td className="px-6 py-4 text-center">{data.doeStats.totalFemale}</td>
-                      <td className="px-6 py-4 text-center text-cyan-400">{data.doeStats.totalChildren}</td>
+                  <tbody>
+                    <tr className="bg-white">
+                      <td className={`${TD} font-black text-lg text-slate-900`}>{total}</td>
+                      <td className={TD}>{r3500}</td>
+                      <td className={TD}>{r4500}</td>
+                      <td className={TD}>{otherIncome}</td>
+                      <td className={TD}>{newR3500}</td>
+                      <td className={TD}>{newR4500}</td>
+                      <td className={TD}>{newOther}</td>
+                      <td className={TD}>0</td>
+                      <td className={TD}>0</td>
+                      <td className={TD}>0</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Places of Care Income Summary */}
-          <Card className="rounded-[2rem] border-slate-200 shadow-sm lg:col-span-4 overflow-hidden">
-            <CardHeader className="bg-slate-50 border-b border-slate-100">
-              <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tight">Income Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-600">1 Parent (R0-R3500)</span>
-                  <span className="text-lg font-black text-slate-900">{incomeStats.r3500}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${(incomeStats.r3500 / (incomeStats.total || 1)) * 100}%` }} />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-600">2 Parents (R0-R4500)</span>
-                  <span className="text-lg font-black text-slate-900">{incomeStats.r4500}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-cyan-500 rounded-full" style={{ width: `${(incomeStats.r4500 / (incomeStats.total || 1)) * 100}%` }} />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold text-slate-600">Other / Private</span>
-                  <span className="text-lg font-black text-slate-900">{incomeStats.other}</span>
-                </div>
-                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-slate-300 rounded-full" style={{ width: `${(incomeStats.other / (incomeStats.total || 1)) * 100}%` }} />
-                </div>
+            {/* Other Relevant Information */}
+            <div>
+              <div className="mb-1 rounded-t-xl bg-slate-800 px-4 py-2">
+                <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white">Other Relevant Information</p>
               </div>
-
-              <div className="rounded-2xl bg-cyan-50 p-4 border border-cyan-100">
-                <p className="text-[10px] font-black uppercase text-cyan-700">Total Beneficiaries</p>
-                <p className="mt-1 text-2xl font-black text-cyan-900">{incomeStats.total}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Staff & Practitioners Card */}
-        <Card className="rounded-[2rem] border-slate-200 shadow-sm overflow-hidden">
-          <CardHeader className="bg-slate-50 border-b border-slate-100 flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900 uppercase tracking-tight">
-              <Briefcase className="h-5 w-5 text-cyan-600" />
-              Staff & Practitioners
-            </CardTitle>
-            <div className="flex gap-4">
-              <div className="text-right">
-                <p className="text-[10px] font-black uppercase text-slate-400">Total Employed</p>
-                <p className="text-sm font-black text-slate-900">{data.staff.length}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black uppercase text-slate-400">Trained</p>
-                <p className="text-sm font-black text-slate-900">{data.staff.filter(s => s.isTrained).length}</p>
+              <div className="overflow-x-auto rounded-b-xl border border-slate-300">
+                <table className="min-w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className={`${TH} w-10`}>No.</th>
+                      <th className={`${TH} text-left`}>Description</th>
+                      <th className={TH}>Total for Current Month</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {[
+                      ['1', 'No. of ECD Practitioners that received training', trainedCount],
+                      ['2', 'No. of ECD Volunteers that received training', 0],
+                      ['3', 'No. of Children with Disabilities', disabledCount],
+                      ['4', 'No. of ECD Practitioners Employed', practitionersEmployed],
+                      ['5', 'No. of computers in an NPO', 1],
+                      ['6', 'No. of Staff who are computer literate (Excel)', computerLiterateCount],
+                    ].map(([no, desc, val]) => (
+                      <tr key={String(no)} className="hover:bg-slate-50">
+                        <td className={TD}>{no}</td>
+                        <td className={TDL}>{desc}</td>
+                        <td className={`${TD} font-black text-slate-900`}>{val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            SECTION 2 — Classification of Income per Beneficiaries (pages 2/3)
+        ══════════════════════════════════════════════════════════════════ */}
+        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+          <CardHeader className="border-b border-slate-200 bg-slate-900 py-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+              <Users className="h-4 w-4 text-cyan-400" />
+              Classification of Income per Beneficiaries — Summary of Beneficiaries, Partial Care Facility (Crèches)
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-white">
-                  <tr>
-                    {['Name', 'Surname', 'Role', 'ID Number', 'Training Status', 'Digital Literacy'].map((label) => (
-                      <th key={label} className="px-6 py-4 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">{label}</th>
-                    ))}
+              <table className="min-w-full text-[11px]">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className={TH}>No.</th>
+                    <th className={`${TH} text-left min-w-[160px]`}>Surname &amp; Initial / Full Name</th>
+                    <th className={TH}>Date of Birth</th>
+                    <th className={TH}>Age</th>
+                    <th className={TH}>M</th>
+                    <th className={TH}>F</th>
+                    <th className={TH}>Race B</th>
+                    <th className={TH}>Disabled</th>
+                    <th className={TH}>R0-R3500<br/>(1 Parent)</th>
+                    <th className={TH}>R0-R4500<br/>(2 Parent)</th>
+                    <th className={TH}>Other</th>
+                    <th className={TH}>Days<br/>Attendance</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {data.staff.length > 0 ? (
-                    data.staff.map((staff) => (
-                      <tr key={staff.id} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-6 py-4 font-bold text-slate-900">{staff.firstName}</td>
-                        <td className="px-6 py-4 font-bold text-slate-900">{staff.surname}</td>
-                        <td className="px-6 py-4 text-slate-600">{staff.role}</td>
-                        <td className="px-6 py-4 text-slate-500 font-mono">{staff.id.split('-')[0]}</td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.isTrained ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
-                            {staff.isTrained ? 'Trained' : 'Untrained'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${staff.isComputerLiterate ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' : 'bg-slate-50 text-slate-500 border border-slate-100'}`}>
-                            {staff.isComputerLiterate ? 'Excel Literate' : 'Basic'}
-                          </span>
-                        </td>
+                  {childrenSorted.map((child, idx) => {
+                    const att = data.attendanceByChild.get(child.childId)
+                    const age = calcAge(child.dateOfBirth, selectedYear, selectedMonth)
+                    const gi = genderInitial(child.gender)
+                    const parts = child.childName.split(' ')
+                    const surname = parts.slice(-1)[0] ?? ''
+                    const given = parts.slice(0, -1).join(' ')
+                    const initial = given ? given[0]?.toUpperCase() + '.' : ''
+                    const displayName = given ? `${surname}, ${given}` : `${surname} ${initial}`
+                    return (
+                      <tr key={child.childId} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <td className={TD}>{idx + 1}</td>
+                        <td className={`${TDL} font-semibold`}>{displayName}</td>
+                        <td className={TD}>{doeDate(child.dateOfBirth)}</td>
+                        <td className={TD}>{age ?? '--'}</td>
+                        <td className={TD}>{gi === 'M' ? '✓' : ''}</td>
+                        <td className={TD}>{gi === 'F' ? '✓' : ''}</td>
+                        <td className={TD}>B</td>
+                        <td className={TD}>{child.isDisabled ? 'Yes' : 'No'}</td>
+                        <td className={TD}>{child.parentIncomeCategory === 'R0-R3500' ? '✓' : ''}</td>
+                        <td className={TD}>{child.parentIncomeCategory === 'R0-R4500' ? '✓' : ''}</td>
+                        <td className={TD}>{child.parentIncomeCategory === 'Other' ? '✓' : ''}</td>
+                        <td className={`${TD} font-bold`}>{att?.present ?? 0}</td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-slate-500 font-medium">No staff records found for this centre.</td>
-                    </tr>
-                  )}
+                    )
+                  })}
+                  {/* Totals row */}
+                  <tr className="bg-slate-900 text-white font-black text-xs">
+                    <td className={TD} colSpan={4}>TOTAL</td>
+                    <td className={TD}>{data.doeStats.totalMale}</td>
+                    <td className={TD}>{data.doeStats.totalFemale}</td>
+                    <td className={TD}>{total}</td>
+                    <td className={TD}>{disabledCount}</td>
+                    <td className={TD}>{r3500}</td>
+                    <td className={TD}>{r4500}</td>
+                    <td className={TD}>{otherIncome}</td>
+                    <td className={TD}>{Array.from(data.attendanceByChild.values()).reduce((s, a) => s + (a.present ?? 0), 0)}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
           </CardContent>
         </Card>
 
-        {/* Enrolment & Attendance Cards */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Detailed Enrolment */}
-          <Card className="rounded-[2rem] border-slate-200 shadow-sm print:border-0 print:shadow-none">
-            <CardHeader className="bg-slate-50 border-b border-slate-100">
-              <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900 uppercase tracking-tight">
-                <Users className="h-5 w-5 text-cyan-600" />
-                DSD Enrolment Report
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-white">
-                    <tr>
-                      {['Child', 'Age', 'Income Cat', 'Status'].map((label) => (
-                        <th key={label} className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">{label}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.children.map((child) => (
-                      <tr key={child.childId} className="hover:bg-slate-50/30 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-slate-900">
-                          {child.childName}
-                          <p className="text-[10px] text-slate-400 font-normal">{formatDate(child.dateOfBirth)}</p>
-                        </td>
-                        <td className="px-4 py-3 text-slate-700">{child.ageLabel}</td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex rounded-lg bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-600">
-                            {child.parentIncomeCategory}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {child.isDisabled ? (
-                            <span className="text-rose-600 font-black text-[10px] uppercase">Disability</span>
-                          ) : (
-                            <span className="text-slate-400 text-[10px] uppercase font-bold">Normal</span>
-                          )}
+        {/* ══════════════════════════════════════════════════════════════════
+            SECTION 3 — Attendance Register Summary (Annexure A)
+        ══════════════════════════════════════════════════════════════════ */}
+        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+          <CardHeader className="border-b border-slate-200 bg-slate-800 py-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+              <FileCheck2 className="h-4 w-4 text-cyan-400" />
+              Attendance Register — Annexure A ({defaults.months[selectedMonth - 1]} {selectedYear})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-[11px]">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className={TH}>No.</th>
+                    <th className={`${TH} text-left min-w-[160px]`}>Surname &amp; Initials</th>
+                    <th className={TH}>Age (Yr/Mo)</th>
+                    <th className={TH}>Days Present</th>
+                    <th className={TH}>Days Absent</th>
+                    <th className={TH}>Total Days</th>
+                    <th className={TH}>Attendance %</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {childrenSorted.map((child, idx) => {
+                    const att = data.attendanceByChild.get(child.childId)
+                    const age = calcAge(child.dateOfBirth, selectedYear, selectedMonth)
+                    const parts = child.childName.split(' ')
+                    const surname = parts.slice(-1)[0] ?? ''
+                    const given = parts.slice(0, -1).join(' ')
+                    const initial = given ? given[0]?.toUpperCase() + '.' : ''
+                    return (
+                      <tr key={child.childId} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <td className={TD}>{idx + 1}</td>
+                        <td className={TDL}>{surname} {initial}</td>
+                        <td className={TD}>{age != null ? age : '--'}</td>
+                        <td className={`${TD} font-bold text-emerald-700`}>{att?.present ?? 0}</td>
+                        <td className={`${TD} text-rose-600`}>{att?.absent ?? 0}</td>
+                        <td className={TD}>{data.attendanceDaysReported}</td>
+                        <td className={`${TD} font-black text-slate-900`}>
+                          {att && att.totalRecorded > 0 ? `${att.attendanceRate}%` : '--'}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {data.attendanceDaysReported === 0 && (
+              <p className="px-6 py-4 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">
+                No attendance records found for this period. Import from the Attendance Register.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            SECTION 4 — Breakdown of Staff & Management (page 6 of PDF)
+        ══════════════════════════════════════════════════════════════════ */}
+        <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+          <CardHeader className="border-b border-slate-200 bg-slate-900 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+                <Briefcase className="h-4 w-4 text-cyan-400" />
+                Breakdown of Staff &amp; Management (Excl. Board Members) — Summary of Permanent Staff
+              </CardTitle>
+              <div className="flex gap-4 text-right">
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-400">Total Staff</p>
+                  <p className="text-sm font-black text-white">{data.staff.length}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-black uppercase text-slate-400">Trained</p>
+                  <p className="text-sm font-black text-cyan-400">{trainedCount}</p>
+                </div>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-[11px]">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className={TH}>No.</th>
+                    <th className={`${TH} text-left min-w-[180px]`}>Surname &amp; Initials / Full Name</th>
+                    <th className={TH}>ID Number</th>
+                    <th className={TH}>Gender<br/>M/F</th>
+                    <th className={TH}>Race<br/>B/W/C/I/A</th>
+                    <th className={TH}>Disabled<br/>Yes/No</th>
+                    <th className={`${TH} min-w-[140px]`}>Designation</th>
+                    <th className={TH}>Training<br/>Received</th>
+                    <th className={`${TH} min-w-[120px]`}>Specify Training</th>
+                    <th className={TH}>Subsidised<br/>Yes/No</th>
+                    <th className={TH}>Gross Monthly<br/>Salary</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {data.staff.length > 0 ? data.staff.map((s, idx) => (
+                    <tr key={s.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                      <td className={TD}>{idx + 1}</td>
+                      <td className={TDL}><span className="font-semibold">{s.firstName} {s.surname}</span></td>
+                      <td className={`${TD} font-mono tracking-wider`}>{s.idNumber || '--'}</td>
+                      <td className={TD}>{s.gender || '--'}</td>
+                      <td className={TD}>{s.race || 'B'}</td>
+                      <td className={TD}>{s.isDisabled ? 'Yes' : 'No'}</td>
+                      <td className={TDL}>{s.role}</td>
+                      <td className={TD}>{s.isTrained ? 'Yes' : 'No'}</td>
+                      <td className={TDL}>{s.trainingDescription || '--'}</td>
+                      <td className={TD}>{s.isSubsidized ? 'Yes' : 'No'}</td>
+                      <td className={`${TD} font-bold`}>
+                        {s.monthlySalary ? `R ${s.monthlySalary.toLocaleString('en-ZA', { minimumFractionDigits: 2 })}` : '--'}
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={11} className="px-4 py-6 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">
+                        No staff records. Run the staff sync script to populate.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {data.primaryContactName && (
+              <div className="border-t border-slate-200 px-6 py-3 text-[11px] text-slate-600">
+                <span className="font-black uppercase tracking-widest mr-2">Compiled by:</span>
+                {data.primaryContactName}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            SECTION 5 — Grand Total of Beneficiaries (page 11 of PDF)
+        ══════════════════════════════════════════════════════════════════ */}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-white">
+                Grand Total of Beneficiaries
+              </CardTitle>
+              <p className="text-[10px] text-slate-400">{data.npoReg ? `DSD Reg No: ${data.npoReg}` : data.centreName}</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <table className="min-w-full text-[11px]">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className={TH}>No.</th>
+                    <th className={`${TH} text-left`}>Beneficiaries Category</th>
+                    <th className={TH}>Total Number</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="bg-white">
+                    <td className={TD}>1</td>
+                    <td className={TDL}>Boys</td>
+                    <td className={`${TD} font-black text-slate-900 text-base`}>{data.doeStats.totalMale}</td>
+                  </tr>
+                  <tr className="bg-slate-50">
+                    <td className={TD}>2</td>
+                    <td className={TDL}>Girls</td>
+                    <td className={`${TD} font-black text-slate-900 text-base`}>{data.doeStats.totalFemale}</td>
+                  </tr>
+                  <tr className="bg-slate-900 text-white font-black text-xs">
+                    <td className={TD} colSpan={2}>TOTAL</td>
+                    <td className={`${TD} text-cyan-400 text-base font-black`}>{data.doeStats.totalChildren}</td>
+                  </tr>
+                </tbody>
+              </table>
+              {data.primaryContactName && (
+                <div className="px-4 py-3 border-t border-slate-200 text-[11px] text-slate-600">
+                  <span className="font-black uppercase mr-2">Compiled by:</span>{data.primaryContactName}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Attendance Summary */}
-          <Card className="rounded-[2rem] border-slate-200 shadow-sm print:border-0 print:shadow-none">
-            <CardHeader className="bg-slate-50 border-b border-slate-100">
-              <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900 uppercase tracking-tight">
-                <FileCheck2 className="h-5 w-5 text-cyan-600" />
-                Attendance Summary
+          {/* ── Practitioners List (DSD format, page 8 of PDF) ── */}
+          <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
+            <CardHeader className="border-b border-slate-200 bg-slate-800 py-3">
+              <CardTitle className="text-sm font-black uppercase tracking-widest text-white">
+                Teachers / Practitioners List
               </CardTitle>
+              <p className="text-[10px] text-slate-400">
+                {data.centreName} — {data.npoReg ? `DSD Reg No: ${data.npoReg}` : 'DSD Format'}
+              </p>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-white">
-                    <tr>
-                      {['Child', 'Present', 'Rate'].map((label) => (
-                        <th key={label} className="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 border-b border-slate-100">{label}</th>
-                      ))}
+              <table className="min-w-full text-[11px]">
+                <thead>
+                  <tr className="bg-slate-100">
+                    <th className={TH}>No.</th>
+                    <th className={`${TH} text-left`}>Full Name and Surname</th>
+                    <th className={TH}>ID Number</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {practitioners.length > 0 ? practitioners.map((p, i) => (
+                    <tr key={p.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className={TD}>{i + 1}</td>
+                      <td className={TDL}>{p.firstName} {p.surname}</td>
+                      <td className={`${TD} font-mono`}>{p.idNumber || '--'}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data.children.map((child) => {
-                      const attendance = data.attendanceByChild.get(child.childId)
-                      return (
-                        <tr key={child.childId} className="hover:bg-slate-50/30 transition-colors">
-                          <td className="px-4 py-3 font-semibold text-slate-900">{child.childName}</td>
-                          <td className="px-4 py-3 text-slate-700">{attendance?.present ?? 0} days</td>
-                          <td className="px-4 py-3 font-black text-cyan-700">{attendance?.attendanceRate ?? 0}%</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                  )) : (
+                    <tr>
+                      <td colSpan={3} className="py-6 text-center text-[11px] text-slate-400 font-bold uppercase">No practitioners found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              {data.primaryContactName && (
+                <div className="px-4 py-3 border-t border-slate-200 text-[11px] text-slate-600">
+                  <span className="font-black uppercase mr-2">Compiled by:</span>{data.primaryContactName}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Compliance Footer */}
-        <Card className="rounded-[2rem] border-slate-200 shadow-sm print:border-0 print:shadow-none bg-slate-900 text-white overflow-hidden">
-          <CardHeader className="border-b border-slate-800">
-            <CardTitle className="flex items-center gap-2 text-lg font-black uppercase tracking-tight">
-              <ShieldCheck className="h-5 w-5 text-cyan-400" />
-              Compliance Snapshot
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.compliance.length > 0 ? (
-              data.compliance.slice(0, 6).map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-800/50 p-4">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold">{item.label}</p>
-                    <p className="text-[10px] text-slate-400">Exp: {formatDate(item.expiresAt)}</p>
-                  </div>
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${item.status === 'verified' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                    {item.status}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-slate-800 bg-slate-800/50 p-4 text-xs text-slate-400 text-center col-span-full">
-                No official compliance documents are currently indexed for this centre.
-              </div>
-            )}
-          </CardContent>
-          <div className="px-6 py-4 bg-slate-950/50 text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center border-t border-slate-800">
-            Generated by CentreConnect for Official DOE/DSD Monthly Return Submission
-          </div>
-        </Card>
+        {/* ── Footer ── */}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          <ShieldCheck className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5 text-cyan-500" />
+          Generated by CentreConnect · Official DOE/DSD Monthly Return · {data.centreName} · {defaults.months[selectedMonth - 1]} {selectedYear}
+        </div>
       </div>
     </EcdOsShell>
   )

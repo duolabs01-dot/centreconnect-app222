@@ -61,49 +61,80 @@ export async function GET(request: NextRequest) {
       ].map(csvEscape).join(',')),
     ]
   } else if (kind === 'staff') {
+    // DOE Breakdown of Staff & Management — matches page 6 of Monthly Report PDF
     filename = `doe-staff-${selectedYear}-${String(selectedMonth).padStart(2, '0')}.csv`
+    const npoLine = data.npoReg ? `NPO/DSD Reg: ${data.npoReg}` : (data.dsdRegNumber ?? '--')
     rows = [
-      ['ECD CENTRE MONTHLY STAFF RETURN'].map(csvEscape).join(','),
+      ['DOE MONTHLY REPORT — BREAKDOWN OF STAFF & MANAGEMENT'].map(csvEscape).join(','),
       ['Centre', data.centreName].map(csvEscape).join(','),
-      ['EMIS', data.emisNumber ?? '--'].map(csvEscape).join(','),
-      ['Month', data.monthLabel, 'Year', selectedYear].map(csvEscape).join(','),
+      ['EMIS', data.emisNumber ?? '--', 'NPO/DSD Reg', npoLine].map(csvEscape).join(','),
+      ['Address', [data.addressLine1, data.addressLine2].filter(Boolean).join(', ') || '--'].map(csvEscape).join(','),
+      ['Province', data.province ?? 'Gauteng', 'District', data.district ?? '--', 'Ward', data.ward ?? '--'].map(csvEscape).join(','),
+      ['Contact', data.primaryContactPhone ?? '--', 'Email', data.primaryContactEmail ?? '--'].map(csvEscape).join(','),
+      ['Compiled by', data.primaryContactName ?? '--', 'Month', data.monthLabel, 'Year', String(selectedYear)].map(csvEscape).join(','),
       '',
-      ['SUMMARY OF PRACTITIONERS'].map(csvEscape).join(','),
-      ['Total Staff', data.staff.length].map(csvEscape).join(','),
-      ['Trained Staff', data.staff.filter(s => s.isTrained).length].map(csvEscape).join(','),
-      ['Untrained Staff', data.staff.filter(s => !s.isTrained).length].map(csvEscape).join(','),
+      ['SUMMARY'].map(csvEscape).join(','),
+      ['Total Staff', data.staff.length, 'Trained', data.staff.filter(s => s.isTrained).length, 'Computer Literate', data.staff.filter(s => s.isComputerLiterate).length].map(csvEscape).join(','),
       '',
-      ['First Name', 'Surname', 'Role', 'Trained', 'Excel Literate'].map(csvEscape).join(','),
-      ...data.staff.map((s) => [
-        s.firstName,
-        s.surname,
+      ['No.', 'Surname & Initials / Full Name', 'ID Number', 'Gender (M/F)', 'Race (B/W/C/I/A)', 'Disabled (Yes/No)', 'Disability Details', 'Designation', 'Training Received (Yes/No)', 'Training Specify', 'Subsidised (Yes/No)', 'Gross Monthly Salary'].map(csvEscape).join(','),
+      ...data.staff.map((s, i) => [
+        i + 1,
+        `${s.firstName} ${s.surname}`,
+        s.idNumber ?? '--',
+        s.gender ?? '--',
+        s.race ?? 'B',
+        s.isDisabled ? 'Yes' : 'No',
+        s.disabilityDescription ?? '',
         s.role,
         s.isTrained ? 'Yes' : 'No',
-        s.isComputerLiterate ? 'Yes' : 'No',
+        s.trainingDescription ?? '--',
+        s.isSubsidized ? 'Yes' : 'No',
+        s.monthlySalary ? `R${s.monthlySalary.toFixed(2)}` : '--',
       ].map(csvEscape).join(',')),
     ]
   } else {
-    // Full enrolment export with income categories and disability
+    // Full enrolment export — Classification of Income per Beneficiaries (matches pages 2/3 of PDF)
+    const npoLine = data.npoReg ? `NPO/DSD Reg: ${data.npoReg}` : (data.dsdRegNumber ?? '--')
     rows = [
+      ['DOE MONTHLY REPORT — CLASSIFICATION OF INCOME PER BENEFICIARIES'].map(csvEscape).join(','),
       ['Centre', data.centreName].map(csvEscape).join(','),
-      ['EMIS', data.emisNumber ?? '--'].map(csvEscape).join(','),
-      ['Reg', data.registrationNumber ?? '--'].map(csvEscape).join(','),
-      ['Month', data.monthLabel, 'Year', selectedYear].map(csvEscape).join(','),
+      ['EMIS', data.emisNumber ?? '--', 'NPO/DSD Reg', npoLine].map(csvEscape).join(','),
+      ['Address', [data.addressLine1, data.addressLine2].filter(Boolean).join(', ') || '--'].map(csvEscape).join(','),
+      ['Month', data.monthLabel, 'Year', String(selectedYear), 'Total Children', data.children.length].map(csvEscape).join(','),
       '',
-      ['Child name', 'Date of birth', 'Age', 'Gender', 'Class', 'Income Category', 'Disabled', 'Disability Notes', 'Start date', 'Parent', 'Phone'].map(csvEscape).join(','),
-      ...data.children.map((child) => [
-        child.childName,
-        child.dateOfBirth ?? '',
-        child.ageLabel,
-        child.gender ?? '',
-        child.className ?? '--',
-        child.parentIncomeCategory,
-        child.isDisabled ? 'Yes' : 'No',
-        child.disabilityDescription,
-        child.startDate ?? '',
-        child.parentName,
-        child.parentPhone,
-      ].map(csvEscape).join(',')),
+      ['INCOME SUMMARY'].map(csvEscape).join(','),
+      ['1 Parent R0-R3500', data.children.filter(c => c.parentIncomeCategory === 'R0-R3500').length,
+       '2 Parent R0-R4500', data.children.filter(c => c.parentIncomeCategory === 'R0-R4500').length,
+       'Other', data.children.filter(c => c.parentIncomeCategory === 'Other').length].map(csvEscape).join(','),
+      ['Boys', data.doeStats.totalMale, 'Girls', data.doeStats.totalFemale, 'Total', data.doeStats.totalChildren].map(csvEscape).join(','),
+      '',
+      ['No.', 'Surname & Initial / Full Name', 'Date of Birth', 'Age', 'Gender (M/F)', 'Race', 'Disabled', 'Disability Notes', 'R0-R3500 (1 Parent)', 'R0-R4500 (2 Parent)', 'Other', 'Days Attendance', 'Class', 'Parent / Guardian', 'Contact', 'Start Date'].map(csvEscape).join(','),
+      ...data.children.map((child, i) => {
+        const attendance = data.attendanceByChild.get(child.childId)
+        const parts = child.childName.split(' ')
+        const surname = parts.slice(-1)[0] ?? ''
+        const given = parts.slice(0, -1).join(' ')
+        const gi = (child.gender ?? '').toLowerCase()
+        const gLabel = gi === 'male' || gi === 'm' ? 'M' : gi === 'female' || gi === 'f' ? 'F' : '--'
+        return [
+          i + 1,
+          given ? `${surname}, ${given}` : surname,
+          child.dateOfBirth ?? '',
+          child.ageLabel,
+          gLabel,
+          'B',
+          child.isDisabled ? 'Yes' : 'No',
+          child.disabilityDescription ?? '',
+          child.parentIncomeCategory === 'R0-R3500' ? '✓' : '',
+          child.parentIncomeCategory === 'R0-R4500' ? '✓' : '',
+          child.parentIncomeCategory === 'Other' ? '✓' : '',
+          attendance?.present ?? 0,
+          child.className ?? '--',
+          child.parentName,
+          child.parentPhone,
+          child.startDate ?? '',
+        ].map(csvEscape).join(',')
+      }),
     ]
   }
 

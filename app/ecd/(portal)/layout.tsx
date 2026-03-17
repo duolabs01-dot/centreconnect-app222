@@ -27,22 +27,26 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
 
   const { data: centreWithOnboarding, error: centreWithOnboardingError } = await admin
     .from('ecd_centres')
-    .select('id, owner_id, onboarding_complete')
+    .select('id, name, owner_id, onboarding_complete, primary_contact_name')
     .eq('id', ecdId)
     .maybeSingle()
 
   let centre = centreWithOnboarding as {
     id: string
+    name?: string | null
     owner_id?: string | null
     onboarding_complete?: boolean | null
+    primary_contact_name?: string | null
   } | null
 
   if (!centre && centreWithOnboardingError) {
     const { data: centreFallback } = await admin.from('ecd_centres').select('id').eq('id', ecdId).maybeSingle()
     centre = centreFallback as {
       id: string
+      name?: string | null
       owner_id?: string | null
       onboarding_complete?: boolean | null
+      primary_contact_name?: string | null
     } | null
   }
 
@@ -53,13 +57,14 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
   const onboardingComplete =
     typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : true
   const isOwner = role === 'ecd_admin' && centre.owner_id === user.id
+  const ownerDisplayName = centre?.primary_contact_name?.trim() || null
   const roleLabel =
     role === 'ecd_staff'
       ? 'Staff Member'
       : role === 'ecd_supervisor'
         ? 'Supervisor'
         : isOwner
-          ? 'Owner'
+          ? (ownerDisplayName ?? 'Crèche Owner')
           : 'ECD Admin'
 
   if (!onboardingComplete) {
@@ -138,6 +143,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         userRole={role}
         subscriptionTier={subscriptionTier}
         attentionBadges={attentionBadges}
+        centreName={centre?.name?.trim() ?? null}
       />
       <main
         id="ecd-portal-main-scroll"

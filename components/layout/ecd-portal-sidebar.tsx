@@ -18,6 +18,7 @@ type EcdPortalSidebarProps = {
   userRole?: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor' | null
   subscriptionTier?: string | null
   attentionBadges?: Partial<Record<string, number>>
+  centreName?: string | null
 }
 
 type EcdNavGroup = NonNullable<EcdNavItem['group']>
@@ -63,6 +64,7 @@ export function EcdPortalSidebar({
   userRole = null,
   subscriptionTier = null,
   attentionBadges = {},
+  centreName = null,
 }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   useAppNavLock()
@@ -304,8 +306,14 @@ export function EcdPortalSidebar({
         </nav>
         <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
           <div className="flex flex-col gap-1">
+            {centreName && (
+              <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
+            )}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{userEmail ?? 'Unknown'}</p>
+            <p className="truncate text-sm font-bold text-foreground">{roleLabel !== 'ECD Portal' && roleLabel !== 'Crèche Owner' && roleLabel !== 'ECD Admin' && roleLabel !== 'Staff Member' && roleLabel !== 'Supervisor' ? roleLabel : (userEmail ?? 'Unknown')}</p>
+            {roleLabel !== 'ECD Portal' && roleLabel !== 'ECD Admin' && roleLabel !== 'Staff Member' && roleLabel !== 'Supervisor' && roleLabel !== 'Crèche Owner' && (
+              <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
+            )}
           </div>
 
           <div className="space-y-2 pt-2">

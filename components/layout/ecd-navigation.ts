@@ -12,6 +12,8 @@ import {
   MessagesSquare,
   FileText,
   LineChart,
+  FileCheck,
+  Briefcase,
   type LucideIcon,
 } from 'lucide-react'
 import type { InternalTier } from '@/lib/billing/plans'
@@ -37,6 +39,8 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
 
   // PEOPLE & RECORDS
   { href: '/ecd/children', label: 'Children', icon: Users, group: 'admin', supervisorAllowed: true },
+  { href: '/ecd/employment', label: 'Employment', icon: Briefcase, group: 'admin', supervisorAllowed: true },
+  { href: '/ecd/dsd-export', label: 'DOE Monthly Report', icon: FileCheck, group: 'admin', supervisorAllowed: true },
   { href: '/ecd/billing', label: 'Billing & Payments', icon: CreditCard, group: 'admin', adminOnly: true },
   { href: '/ecd/financials', label: 'Financials', icon: LineChart, group: 'admin', adminOnly: true, minTier: 'standard' },
   { href: '/ecd/compliance', label: 'Compliance', icon: FileText, group: 'admin', adminOnly: true, minTier: 'standard' },

@@ -3,9 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = 'https://upaezyiijeqkjepppzze.supabase.co'
 const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYWV6eWlpamVxa2plcHBwenplIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTIxODQ5OCwiZXhwIjoyMDg2Nzk0NDk4fQ.qMsLAhm4zbPYGu4RVnk-CcwuYA8wSR-Gze4jiG_6ahM'
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
-  db: { schema: 'public' }
-})
+const supabase = createClient(supabaseUrl, serviceRoleKey)
 
 const bajabulileId = 'f580f125-81ed-412a-8d25-f187605a6a69'
 
@@ -28,8 +26,8 @@ const correctStaff = [
     monthly_salary: 4000.00,
   },
   {
-    first_name: 'Engel Khansani',
-    surname: 'Mabaso',
+    first_name: 'Engel',
+    surname: 'Khansani Mabaso',
     id_number: '0012080203081',
     role: 'Practitioner/ECD Teacher',
     gender: 'F',
@@ -37,7 +35,7 @@ const correctStaff = [
     is_disabled: false,
     disability_description: null,
     is_trained: true,
-    training_description: 'Grade 12',
+    training_description: 'Basic ECD Training',
     is_computer_literate: false,
     is_subsidized: true,
     monthly_salary: 1600.00,
@@ -52,85 +50,86 @@ const correctStaff = [
     is_disabled: false,
     disability_description: null,
     is_trained: true,
-    training_description: 'Grade 12',
+    training_description: 'Basic ECD Training',
     is_computer_literate: false,
     is_subsidized: true,
     monthly_salary: 1600.00,
   },
   {
-    first_name: 'Sarah Nomula',
-    surname: 'Ngwenya',
+    first_name: 'Sarah',
+    surname: 'Nomula Ngwenya',
     id_number: '7111080637089',
     role: 'Chief/Cook',
     gender: 'F',
     race: 'B',
     is_disabled: false,
     disability_description: null,
-    is_trained: true,
-    training_description: 'Basic ECD Training',
+    is_trained: false,
+    training_description: null,
     is_computer_literate: false,
     is_subsidized: true,
     monthly_salary: 2000.00,
   },
 ]
 
-async function syncBajabulileStaff() {
-  console.log('=== Syncing Bajabulile Day Care Centre Staff ===')
-
-  // Step 1: Wipe ALL existing staff for this centre to start clean
+async function syncStaff() {
+  console.log('Deleting all existing staff for Bajabulile...')
   const { error: deleteError } = await supabase
     .from('ecd_staff')
     .delete()
     .eq('ecd_id', bajabulileId)
 
   if (deleteError) {
-    console.error('Error clearing old staff records:', deleteError)
-    process.exit(1)
+    console.error('Error deleting existing staff:', deleteError)
+    return
   }
-  console.log('Cleared existing staff records.')
 
-  // Step 2: Insert the 4 correct staff members
+  console.log('Inserting correct 4 staff members...')
   for (const staff of correctStaff) {
-    const { error } = await supabase.from('ecd_staff').insert({
-      ecd_id: bajabulileId,
-      ...staff,
-    })
+    const { error } = await supabase
+      .from('ecd_staff')
+      .insert({
+        ecd_id: bajabulileId,
+        ...staff,
+      })
+
     if (error) {
-      console.error(`Failed to insert ${staff.first_name} ${staff.surname}:`, error.message)
+      console.error(`Error inserting staff ${staff.first_name} ${staff.surname}:`, error)
     } else {
-      console.log(`Inserted: ${staff.first_name} ${staff.surname} (${staff.role})`)
+      console.log(`✓ Inserted: ${staff.first_name} ${staff.surname} (${staff.role})`)
     }
   }
 
-  // Step 3: Update centre metadata from cover page of Monthly Report
+  // Update centre metadata from page 1 of PDF
+  console.log('Updating centre metadata...')
   const { error: centreError } = await supabase
     .from('ecd_centres')
     .update({
-      primary_contact_name: 'Bajabulile Agnes Nong',
-      primary_contact_phone: '074 359 2237',
-      primary_contact_email: 'nongagnes@gmail.com',
-      contact_phone: '074 359 2237',
-      contact_email: 'nongagnes@gmail.com',
       emis_number: '700900442',
       npo_reg: '169-623',
-      dsd_reg_number: '169-623 NPO',
-      address_line1: 'No 6187 Aldo Mogano Street',
-      address_line2: 'Far East Bank, Alexandra, Johannesburg, 2090',
-      ward: '105',
-      district: 'Johannesburg East',
+      dsd_reg_number: null,
+      address_line1: '3902 Ext 7 Jabulani',
+      address_line2: 'Soweto',
       province: 'Gauteng',
-      approved_capacity_partial_care: 32,
-      approved_capacity_sla: 15,
+      ward: '52',
+      district: 'Johannesburg East',
+      primary_contact_name: 'Bajabulile Agnes Nong',
+      primary_contact_phone: '083 822 0557',
+      primary_contact_email: null,
+      contact_phone: '083 822 0557',
+      contact_email: null,
+      approved_capacity_partial_care: 30,
+      approved_capacity_sla: 30,
     })
     .eq('id', bajabulileId)
 
   if (centreError) {
-    console.error('Error updating centre metadata:', centreError.message)
+    console.error('Error updating centre metadata:', centreError)
   } else {
-    console.log('Centre metadata updated successfully.')
+    console.log('✓ Updated centre metadata')
   }
 
-  console.log('=== Staff sync complete: 4 staff members inserted ===')
+  console.log('Staff sync complete!')
 }
 
-syncBajabulileStaff().catch(console.error)
+syncStaff().catch(console.error)
