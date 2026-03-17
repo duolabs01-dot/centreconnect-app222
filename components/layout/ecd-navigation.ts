@@ -14,6 +14,7 @@ import {
   LineChart,
   FileCheck,
   Briefcase,
+  ListChecks,
   type LucideIcon,
 } from 'lucide-react'
 import type { InternalTier } from '@/lib/billing/plans'
@@ -36,6 +37,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   { href: '/ecd/pickup', label: 'Pickup', icon: ShieldCheck, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/daily-reports', label: 'Daily Reports', icon: Zap, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/calendar', label: 'Calendar', icon: CalendarDays, group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/team-plans', label: 'Staff Plan', icon: ListChecks, group: 'daily_ops', supervisorAllowed: true },
 
   // PEOPLE & RECORDS
   { href: '/ecd/children', label: 'Children', icon: Users, group: 'admin', supervisorAllowed: true },
