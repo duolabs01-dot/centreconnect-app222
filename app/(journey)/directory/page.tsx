@@ -312,54 +312,42 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   return (
     <Container>
       <div
-        className="space-y-6 pb-20 text-[#22312E]"
-        style={{
-          fontFamily: 'var(--font-display)',
-          ['--teal' as string]: '#0D9488',
-          ['--amber' as string]: '#D4935A',
-          ['--amber-light' as string]: '#FDF0E6',
-          ['--cream' as string]: '#FAF8F4',
-          ['--warm-white' as string]: '#FFFDF9',
-        }}
+        className="space-y-6 pb-20 text-slate-900"
+        style={{ fontFamily: 'var(--font-display)' }}
       >
-        <header className="rounded-[2rem] border border-[#E8DDD0] bg-[var(--warm-white)] px-5 py-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:px-8 sm:py-6">
+        <header className="rounded-[2rem] border border-border bg-card px-5 py-5 shadow-[0_18px_40px_rgba(31,44,39,0.05)] sm:px-8 sm:py-6">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
               <div
-                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] sm:text-[13px]"
-                style={{
-                  backgroundColor: 'var(--amber-light)',
-                  borderColor: 'rgba(212,147,90,0.28)',
-                  color: 'var(--amber)',
-                }}
+                className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[12px] font-semibold uppercase tracking-[0.18em] text-amber-700 sm:text-[13px]"
               >
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{effectiveSuburb ? `${effectiveSuburb} directory` : 'Johannesburg directory'}</span>
               </div>
               <h1
-                className="mt-4 max-w-[13ch] text-[2rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-[#1F2D29] sm:max-w-none sm:text-[2.8rem]"
+                className="mt-4 max-w-[13ch] text-[2rem] font-extrabold leading-[1.05] tracking-[-0.03em] text-slate-950 sm:max-w-none sm:text-[2.8rem]"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 Find the right creche faster.
               </h1>
-              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[#5F6C68] sm:text-[16px] sm:leading-7">
+              <p className="mt-3 max-w-2xl text-[15px] leading-7 text-slate-600 sm:text-[16px] sm:leading-7">
                 {effectiveSuburb
                   ? `See creches in ${effectiveSuburb}, check fees, ages, and next steps fast, then apply or contact the creche.`
                   : 'Check fees, ages, and next steps fast, then apply online or contact the creche directly.'}
               </p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3 lg:w-[26rem]">
-              <div className="rounded-[1.25rem] border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">CentreConnect</p>
-                <p className="mt-1 text-sm font-semibold text-[#1F4B42]">Apply online</p>
+              <div className="rounded-[1.25rem] border border-emerald-100 bg-emerald-50/60 px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">CentreConnect</p>
+                <p className="mt-1 text-sm font-semibold text-emerald-900">Apply online</p>
               </div>
-              <div className="rounded-[1.25rem] border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">CentreConnect</p>
-                <p className="mt-1 text-sm font-semibold text-[#1F4B42]">Message in app</p>
+              <div className="rounded-[1.25rem] border border-emerald-100 bg-emerald-50/60 px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">CentreConnect</p>
+                <p className="mt-1 text-sm font-semibold text-emerald-900">Message in app</p>
               </div>
-              <div className="rounded-[1.25rem] border border-[#E7DDD1] bg-white px-3 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672]">Public listing</p>
-                <p className="mt-1 text-sm font-semibold text-[#22312E]">Call or WhatsApp</p>
+              <div className="rounded-[1.25rem] border border-border bg-background px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Public listing</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">Call or WhatsApp</p>
               </div>
             </div>
           </div>

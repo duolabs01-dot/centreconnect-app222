@@ -203,11 +203,11 @@ function normalizeCentreCopy(value: string | null | undefined) {
 function SectionHeading({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
   return (
     <div className="space-y-2">
-      {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A86C3A]">{eyebrow}</p> : null}
-      <h2 className="text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E] sm:text-[2.25rem]" style={{ fontFamily: 'var(--font-display)' }}>
+      {eyebrow ? <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">{eyebrow}</p> : null}
+      <h2 className="text-[1.95rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-950 sm:text-[2.25rem]" style={{ fontFamily: 'var(--font-display)' }}>
         {title}
       </h2>
-      {description ? <p className="max-w-2xl text-sm leading-7 text-[#5F6C68] sm:text-base">{description}</p> : null}
+      {description ? <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">{description}</p> : null}
     </div>
   )
 }
@@ -222,14 +222,14 @@ function QuickFact({
   value: string
 }) {
   return (
-    <div className="rounded-[1.6rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_8px_24px_rgba(31,44,39,0.04)]">
+    <div className="rounded-[1.6rem] border border-border bg-background p-4 shadow-[0_8px_24px_rgba(31,44,39,0.04)]">
       <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{label}</p>
-          <p className="mt-1 text-sm font-semibold leading-6 text-[#22312E]">{value}</p>
+          <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">{label}</p>
+          <p className="mt-1 text-sm font-semibold leading-6 text-slate-900">{value}</p>
         </div>
       </div>
     </div>
@@ -246,13 +246,13 @@ function InfoRow({
   value: string
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-[1.3rem] border border-[#E7DDD1] bg-white p-4">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FAF8F4] text-[#0D9488]">
+    <div className="flex items-start gap-3 rounded-[1.3rem] border border-border bg-white p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-muted text-teal-700">
         <Icon className="h-4 w-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">{label}</p>
-        <p className="mt-1 text-sm font-semibold leading-6 text-[#22312E]">{value}</p>
+        <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">{label}</p>
+        <p className="mt-1 text-sm font-semibold leading-6 text-slate-900">{value}</p>
       </div>
     </div>
   )
@@ -280,19 +280,19 @@ export function CentreClient({
 
   if (!centre) {
     return (
-      <main className="min-h-screen bg-[#FAF8F4] py-10 sm:py-16">
+      <main className="min-h-screen bg-surface-secondary py-10 sm:py-16">
         <Container className="max-w-2xl">
-          <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-6 text-center shadow-[0_14px_34px_rgba(31,44,39,0.05)] sm:p-8">
-            <h1 className="text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+          <div className="rounded-[2rem] border border-border bg-background p-6 text-center shadow-[0_14px_34px_rgba(31,44,39,0.05)] sm:p-8">
+            <h1 className="text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
               Centre profile unavailable
             </h1>
-            <p className="mt-4 text-sm leading-7 text-[#5F6C68]">
+            <p className="mt-4 text-sm leading-7 text-slate-600">
               We could not load this centre right now. Please return to the directory and try again.
             </p>
             <div className="mt-6">
               <Link
                 href="/directory"
-                className="inline-flex h-11 items-center justify-center rounded-2xl bg-[#0D9488] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.16)]"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_14px_28px_rgba(13,148,136,0.16)]"
               >
                 Back to directory
               </Link>
@@ -448,23 +448,23 @@ export function CentreClient({
   ]
 
   return (
-    <main className="min-h-screen bg-[#FAF8F4] pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
+    <main className="min-h-screen bg-surface-secondary pb-[calc(8rem+env(safe-area-inset-bottom))] lg:pb-16">
       <Container className="space-y-8 py-6 sm:py-8 lg:space-y-10">
         <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
-          <div className="rounded-[2.4rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_20px_48px_rgba(31,44,39,0.06)] sm:p-6">
+          <div className="rounded-[2.4rem] border border-border bg-background p-5 shadow-[0_20px_48px_rgba(31,44,39,0.06)] sm:p-6">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge className="rounded-full border border-[#E7DDD1] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+              <Badge className="rounded-full border border-border bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-none">
                 Centre profile
               </Badge>
               {isClaimed ? <PremiumVerifiedBadge  /> : null}
-              {isVerifiedForParents ? <GovernmentRegisteredBadge /> : null}
+              {isVerifiedForParents ? <GovernmentRegisteredBadge /> : null}
               {showExactLocationBadge ? (
                 <Badge className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700 shadow-none">
                   Exact location
                 </Badge>
               ) : null}
               {!isClaimed ? (
-                <Badge className="rounded-full border border-[#DDD5C8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#6A7672] shadow-none">
+                <Badge className="rounded-full border border-border bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500 shadow-none">
                   Public listing
                 </Badge>
               ) : null}
@@ -472,27 +472,27 @@ export function CentreClient({
 
             <div className="mt-5 flex items-start gap-4">
               {centreLogo ? (
-                <div className="h-16 w-16 overflow-hidden rounded-[1.5rem] border border-[#E7DDD1] bg-white shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
+                <div className="h-16 w-16 overflow-hidden rounded-[1.5rem] border border-border bg-white shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
                   <Image src={centreLogo} alt={`${centre.name} logo`} width={64} height={64} className="h-full w-full object-cover" unoptimized />
                 </div>
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-[#E7DDD1] bg-[#F5EFE6] text-xl font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
+                <div className="flex h-16 w-16 items-center justify-center rounded-[1.5rem] border border-border bg-muted text-xl font-black text-teal-700 shadow-[0_10px_24px_rgba(31,44,39,0.10)]">
                   {centreInitial}
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <h1 className="text-[2rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-[#22312E] sm:text-[2.8rem]" style={{ fontFamily: 'var(--font-display)' }}>
+                <h1 className="text-[2rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-slate-950 sm:text-[2.8rem]" style={{ fontFamily: 'var(--font-display)' }}>
                   {centre.name}
                 </h1>
-                <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#7B827E]">
+                <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                   <MapPin className="h-3.5 w-3.5" />
                   {locationLabel || 'Johannesburg'}
                 </p>
-                {presentationTagline ? <p className="mt-3 text-base leading-7 text-[#5F6C68] sm:text-[17px]">{presentationTagline}</p> : null}
+                {presentationTagline ? <p className="mt-3 text-base leading-7 text-slate-600 sm:text-[17px]">{presentationTagline}</p> : null}
               </div>
             </div>
 
-            <p className="mt-5 text-sm leading-7 text-[#5F6C68] sm:text-base">
+            <p className="mt-5 text-sm leading-7 text-slate-600 sm:text-base">
               {isClaimed
                 ? 'Fees, ages, and hours first. Apply or message when you are ready.'
                 : 'Fees, ages, and contact details first. Call or WhatsApp if you want to move today.'}
@@ -506,7 +506,7 @@ export function CentreClient({
 
             <div className="mt-5 flex flex-wrap gap-2">
               {(isClaimed ? claimedFoldPromises : ['Compare fast', 'Contact directly']).map((item) => (
-                <span key={item} className="rounded-full border border-[#E7DDD1] bg-white px-3 py-2 text-[11px] font-semibold text-[#315A51] shadow-none">
+                <span key={item} className="rounded-full border border-border bg-white px-3 py-2 text-[11px] font-semibold text-emerald-900 shadow-none">
                   {item}
                 </span>
               ))}
@@ -530,7 +530,7 @@ export function CentreClient({
                     centreName={centre.name}
                     templates={inquiryTemplates}
                     triggerLabel="Message centre"
-                    triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                    triggerClassName="h-12 w-full justify-center rounded-2xl border-emerald-200 bg-white text-sm font-semibold text-emerald-900 hover:border-emerald-300 hover:bg-emerald-50/40"
                     title={`Ask ${centre.name} a quick question`}
                     description="Your message goes straight to the centre inbox in CentreConnect, so replies and next steps stay in one place."
                   />
@@ -542,7 +542,7 @@ export function CentreClient({
                       href={whatsappHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0D9488] px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(13,148,136,0.16)]"
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[0_14px_28px_rgba(13,148,136,0.16)]"
                     >
                       <MessageCircle className="h-4 w-4" />
                       WhatsApp centre
@@ -551,7 +551,7 @@ export function CentreClient({
                   {phoneHref ? (
                     <Link
                       href={phoneHref}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-[#DDD5C8] bg-white px-5 text-sm font-semibold text-[#22312E]"
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-white px-5 text-sm font-semibold text-slate-900"
                     >
                       <Phone className="h-4 w-4" />
                       Call centre
@@ -562,10 +562,10 @@ export function CentreClient({
             </div>
 
             {showUnclaimedDisclaimer ? (
-              <div className="mt-5 rounded-[1.6rem] border border-[#E7D6A8] bg-[#FFF7E7] p-4">
-                <p className="text-sm leading-6 text-[#6C4700]">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
+              <div className="mt-5 rounded-[1.6rem] border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm leading-6 text-amber-950">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
                 {showClaimLink ? (
-                  <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
+                  <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:underline">
                     Do you run this creche? Claim it <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : null}
@@ -573,19 +573,19 @@ export function CentreClient({
             ) : null}
           </div>
 
-          <div className="overflow-hidden rounded-[2.4rem] border border-[#E7DDD1] bg-white shadow-[0_20px_48px_rgba(31,44,39,0.07)]">
+          <div className="overflow-hidden rounded-[2.4rem] border border-border bg-white shadow-[0_20px_48px_rgba(31,44,39,0.07)]">
             <div className="relative aspect-[16/11] sm:aspect-[16/10]">
               <Image src={heroImage} alt={centre.name} fill className="object-cover" priority quality={90} unoptimized />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#10211D]/45 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
               <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
-                <Badge className="rounded-full border border-white/60 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#22312E] shadow-none backdrop-blur-sm">
+                <Badge className="rounded-full border border-white/60 bg-white/85 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-900 shadow-none backdrop-blur-sm">
                   {hasRealCoverImage ? 'Real centre photo' : 'Preview image'}
                 </Badge>
               </div>
             </div>
-            <div className="border-t border-[#E7DDD1] p-4 sm:p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Centre photo</p>
-              <p className="mt-2 text-sm leading-6 text-[#5F6C68]">
+            <div className="border-t border-border p-4 sm:p-5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Centre photo</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 See the centre before you visit or contact them.
               </p>
             </div>
@@ -595,14 +595,14 @@ export function CentreClient({
         <section className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_22rem] lg:items-start">
           <div className="space-y-6">
             {showAbout && !isClaimed ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+              <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger creche profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
-                <p className="mt-5 whitespace-pre-line text-sm leading-8 text-[#4E5D59] sm:text-base">{aboutCopy}</p>
+                <p className="mt-5 whitespace-pre-line text-sm leading-8 text-slate-700 sm:text-base">{aboutCopy}</p>
               </section>
             ) : null}
 
             {showPrograms ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+              <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading
                   eyebrow={isClaimed ? 'What parents should know first' : 'Curriculum and daily rhythm'}
                   title={isClaimed ? 'The basics that help you decide' : 'What children do here'}
@@ -614,15 +614,15 @@ export function CentreClient({
                     return (
                       <div
                         key={`${program.title}-${index}`}
-                        className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]"
+                        className="rounded-[1.5rem] border border-border bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]"
                       >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FDF0E6] text-[#D4935A]">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
                           <Icon className="h-5 w-5" />
                         </div>
-                        <h3 className="mt-4 text-[1.35rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+                        <h3 className="mt-4 text-[1.35rem] leading-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
                           {program.title}
                         </h3>
-                        <p className="mt-3 text-sm leading-7 text-[#5F6C68]">{program.description}</p>
+                        <p className="mt-3 text-sm leading-7 text-slate-600">{program.description}</p>
                       </div>
                     )
                   })}
@@ -631,11 +631,11 @@ export function CentreClient({
             ) : null}
 
             {showGallery ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+              <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="Photos" title="Photos parents can scan quickly" description="A short visual look at the space before you decide whether to apply or send a question." />
                 <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {galleryPreviewUrls.map((url, index) => (
-                    <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.6rem] border border-[#E7DDD1] bg-white">
+                    <div key={`${url}-${index}`} className="overflow-hidden rounded-[1.6rem] border border-border bg-white">
                       <Image
                         src={url}
                         alt={`${centre.name} gallery image ${index + 1}`}
@@ -650,38 +650,38 @@ export function CentreClient({
               </section>
             ) : null}
 
-            <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+            <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
               <SectionHeading
                 eyebrow="Classes and care"
                 title="How the day is organised"
                 description={isClaimed ? undefined : 'A simple look at the class setup before you contact the centre.'}
               />
               <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
-                  <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Aftercare</p>
-                  <p className="mt-2 text-lg font-semibold text-[#22312E]">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">{aftercare.available ? 'Helpful if you collect later in the day.' : 'Plan for normal collection times.'}</p>
+                <div className="rounded-[1.5rem] border border-border bg-white p-5">
+                  <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Aftercare</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{aftercare.available ? `Available until ${aftercare.endTime ?? '17:30'}` : 'Not offered'}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{aftercare.available ? 'Helpful if you collect later in the day.' : 'Plan for normal collection times.'}</p>
                 </div>
-                <div className="rounded-[1.5rem] border border-[#E7DDD1] bg-white p-5">
-                  <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Classes</p>
-                  <p className="mt-2 text-lg font-semibold text-[#22312E]">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-[#5F6C68]">Ask the centre which class fits your child best.</p>
+                <div className="rounded-[1.5rem] border border-border bg-white p-5">
+                  <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Classes</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Ask the centre which class fits your child best.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
                 {visibleClassrooms.length > 0 ? visibleClassrooms.map((room, index) => (
-                  <div key={`${room.id ?? index}-${room.name}`} className={`rounded-[1.5rem] border p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)] ${isClaimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#FFFFFF_0%,#F8FCFB_100%)]' : 'border-[#E7DDD1] bg-white'}`}>
+                  <div key={`${room.id ?? index}-${room.name}`} className={`rounded-[1.5rem] border p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)] ${isClaimed ? 'border-emerald-100 bg-gradient-to-b from-white to-emerald-50/40' : 'border-border bg-white'}`}>
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Class {String.fromCharCode(65 + index)}</p>
-                      {isClaimed ? <span className="rounded-full border border-[#DCEEE8] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#1F4B42]">Parents can picture this group quickly</span> : null}
+                      <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Class {String.fromCharCode(65 + index)}</p>
+                      {isClaimed ? <span className="rounded-full border border-emerald-100 bg-white px-2.5 py-1 text-[10px] font-semibold text-emerald-900">Parents can picture this group quickly</span> : null}
                     </div>
-                    <h3 className="mt-3 text-[1.25rem] leading-tight text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
-                    <p className="mt-2 text-sm font-semibold text-[#0D9488]">{room.age_group?.trim() || 'All ages'}</p>
-                    <p className="mt-3 text-sm leading-6 text-[#5F6C68]">{classEmphasis[index] ?? 'A caring, age-matched space designed to help children feel secure, curious, and ready for the rhythm of the day.'}</p>
-                    {room.practitioner_name?.trim() ? <p className="mt-3 text-sm leading-6 text-[#5F6C68]">Led by {room.practitioner_name.trim()}</p> : null}
+                    <h3 className="mt-3 text-[1.25rem] leading-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
+                    <p className="mt-2 text-sm font-semibold text-teal-700">{room.age_group?.trim() || 'All ages'}</p>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{classEmphasis[index] ?? 'A caring, age-matched space designed to help children feel secure, curious, and ready for the rhythm of the day.'}</p>
+                    {room.practitioner_name?.trim() ? <p className="mt-3 text-sm leading-6 text-slate-600">Led by {room.practitioner_name.trim()}</p> : null}
                   </div>
                 )) : (
-                  <div className="rounded-[1.5rem] border border-dashed border-[#D7CEC2] bg-[#FFFCF7] p-5 text-sm leading-6 text-[#5F6C68] sm:col-span-3">
+                  <div className="rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/40 p-5 text-sm leading-6 text-slate-600 sm:col-span-3">
                     Classes are not listed yet. Send a quick question if you need help with placement.
                   </div>
                 )}
@@ -689,7 +689,7 @@ export function CentreClient({
             </section>
 
             {showPracticalSection ? (
-              <section className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+              <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'The final details most parents want before they apply.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <InfoRow icon={MapPin} label="Address" value={fallbackAddressLabel} />
@@ -707,12 +707,12 @@ export function CentreClient({
 
           <aside className="hidden space-y-5 lg:block">
             <div className="sticky top-24 space-y-5">
-              <div className="rounded-[2rem] border border-[#E7DDD1] bg-[#FFFDF9] p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
-                <p className="text-[10px] font-semibold tracking-[0.08em] text-[#7B827E]">Next step</p>
-                <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-[#22312E]" style={{ fontFamily: 'var(--font-display)' }}>
+              <div className="rounded-[2rem] border border-border bg-background p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
+                <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Next step</p>
+                <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
                   {isClaimed ? 'Ready to act?' : 'Keep this creche close'}
                 </h3>
-                <p className="mt-3 text-sm leading-7 text-[#5F6C68]">
+                <p className="mt-3 text-sm leading-7 text-slate-600">
                   {isClaimed
                     ? 'Apply online or send one quick message.'
                     : 'Check the details, then use WhatsApp or phone if you want to act today.'}
@@ -723,40 +723,40 @@ export function CentreClient({
                     ? ['Apply online', 'Message in app', 'Updates stay together']
                     : ['Public listing', 'Call or WhatsApp', 'Apply later when live']
                   ).map((item) => (
-                    <span key={item} className="rounded-full border border-[#DCEEE8] bg-[#F4FBF8] px-3 py-1 text-[11px] font-medium text-[#315A51]">
+                    <span key={item} className="rounded-full border border-emerald-100 bg-emerald-50/60 px-3 py-1 text-[11px] font-medium text-emerald-900">
                       {item}
                     </span>
                   ))}
                 </div>
 
-                <div className="mt-5 rounded-[1.3rem] border border-[#E7DDD1] bg-white p-4">
-                  <p className={`flex items-center gap-2 text-sm font-semibold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-[#7B827E]'}`}>
+                <div className="mt-5 rounded-[1.3rem] border border-border bg-white p-4">
+                  <p className={`flex items-center gap-2 text-sm font-semibold ${operationalStatus.isOnline ? 'text-emerald-700' : 'text-slate-500'}`}>
                     <Circle className="h-3 w-3" fill="currentColor" strokeWidth={0} />
                     {operationalStatus.label}
                   </p>
-                  <p className="mt-1 text-sm text-[#5F6C68]">{operationalStatus.schedule}</p>
-                  <p className="mt-2 text-xs text-[#6A7672]">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
+                  <p className="mt-1 text-sm text-slate-600">{operationalStatus.schedule}</p>
+                  <p className="mt-2 text-xs text-slate-500">Registration fee: {registrationFeeLabel} | Ages: {ageGroupsLabel}</p>
                 </div>
 
 
                 {showPilotTrustInfo ? (
-                  <div className="mt-5 rounded-[1.5rem] border border-[#E7D6A8] bg-[linear-gradient(135deg,#FFF9E8_0%,#FFF2D2_100%)] p-4">
+                  <div className="mt-5 rounded-[1.5rem] border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100/60 p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       {isClaimed ? <PremiumVerifiedBadge compact  /> : null}
                       {isVerifiedForParents ? <GovernmentRegisteredBadge compact /> : null}
                       {!isVerifiedForParents ? (
-                        <Badge className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8F6200] shadow-none">
+                        <Badge className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-900 shadow-none">
                           {isClaimed ? 'Preview image' : 'Not yet on CentreConnect'}
                         </Badge>
                       ) : null}
                     </div>
-                    <p className="mt-3 text-sm leading-6 text-[#6C4700]">
+                    <p className="mt-3 text-sm leading-6 text-amber-950">
                       Creches on CentreConnect let parents do more straight away: apply online, send a message in the app, and follow what happens next with less confusion.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {pilotBadges.map((badge) => (
-                          <span key={badge} className="rounded-full border border-[#E7D6A8] bg-white px-3 py-1 text-[11px] font-medium text-[#6C4700]">
+                          <span key={badge} className="rounded-full border border-amber-200 bg-white px-3 py-1 text-[11px] font-medium text-amber-950">
                             {badge}
                           </span>
                         ))}
@@ -766,12 +766,12 @@ export function CentreClient({
                 ) : null}
 
                 {!isClaimed ? (
-                  <div className="mt-5 rounded-[1.4rem] border border-[#E7DDD1] bg-white p-4">
-                    <p className="text-sm leading-6 text-[#5F6C68]">
+                  <div className="mt-5 rounded-[1.4rem] border border-border bg-white p-4">
+                    <p className="text-sm leading-6 text-slate-600">
                       Online applications are not open yet. If you want to act now, use the centre phone or WhatsApp details on this page.
                     </p>
                   {showClaimLink ? (
-                    <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#0D9488] hover:underline">
+                    <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:underline">
                       Do you run this creche? Claim it <ArrowRight className="h-4 w-4" />
                     </Link>
                   ) : null}
@@ -798,20 +798,20 @@ export function CentreClient({
                       centreName={centre.name}
                       templates={inquiryTemplates}
                       triggerLabel="Message centre"
-                      triggerClassName="h-12 w-full justify-center rounded-2xl border-[#CDE7E0] bg-white text-sm font-semibold text-[#1F4B42] hover:border-[#A7D8CC] hover:bg-[#F7FCFA]"
+                      triggerClassName="h-12 w-full justify-center rounded-2xl border-emerald-200 bg-white text-sm font-semibold text-emerald-900 hover:border-emerald-300 hover:bg-emerald-50/40"
                       title={`Ask ${centre.name} a quick question`}
                       description="Your message goes straight to the centre inbox in CentreConnect, so replies and next steps stay in one place."
                     />
                   ) : (
-                    <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
-                      <p className="text-sm font-semibold text-[#22312E]">Profile details only for now</p>
-                      <p className="mt-1 text-xs leading-5 text-[#6A7672]">Messaging opens when the creche joins CentreConnect.</p>
+                    <div className="rounded-[1.3rem] border border-border bg-white px-4 py-3">
+                      <p className="text-sm font-semibold text-slate-900">Profile details only for now</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">Messaging opens when the creche joins CentreConnect.</p>
                     </div>
                   )}
-                  <div className="flex items-center justify-between rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
+                  <div className="flex items-center justify-between rounded-[1.3rem] border border-border bg-white px-4 py-3">
                     <div>
-                      <p className="text-sm font-semibold text-[#22312E]">Save this centre</p>
-                      <p className="text-xs text-[#6A7672]">Keep it in your shortlist while you compare your options.</p>
+                      <p className="text-sm font-semibold text-slate-900">Save this centre</p>
+                      <p className="text-xs text-slate-500">Keep it in your shortlist while you compare your options.</p>
                     </div>
                     <SaveCentreButton centreId={centre.id} initialSaved={isSaved} />
                   </div>

@@ -107,7 +107,7 @@ export default async function ParentShortlistPage() {
   return (
     <div className="min-h-screen bg-surface-secondary px-4 pb-[calc(7.5rem+env(safe-area-inset-bottom))] pt-4">
       <div className="cc-stack">
-        <SurfaceCard className="border border-[#D9ECE7] bg-[linear-gradient(180deg,#F6FCFA_0%,#FFFFFF_100%)] p-6 sm:p-7">
+        <SurfaceCard className="border border-emerald-100 bg-gradient-to-b from-emerald-50/40 to-background p-6 sm:p-7">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-black uppercase tracking-[0.18em] text-cyan-700">Saved creches</p>
@@ -127,8 +127,8 @@ export default async function ParentShortlistPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-700">Saved now</p>
                 <p className="mt-1 text-lg font-semibold text-slate-900">{centres.length} {centres.length === 1 ? 'creche' : 'creches'}</p>
               </div>
-              <div className="rounded-[1.3rem] border border-[#E7DDD1] bg-white px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7B827E]">Best next move</p>
+              <div className="rounded-[1.3rem] border border-border bg-white px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Best next move</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900">Compare your top options</p>
               </div>
             </div>

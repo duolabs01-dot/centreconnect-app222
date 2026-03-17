@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import puppeteer from 'puppeteer'
 
-const supabaseUrl = 'https://upaezyiijeqkjepppzze.supabase.co'
-const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwYWV6eWlpamVxa2plcHBwenplIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTIxODQ5OCwiZXhwIjoyMDg2Nzk0NDk4fQ.qMsLAhm4zbPYGu4RVnk-CcwuYA8wSR-Gze4jiG_6ahM'
+import { requireSupabaseAdminEnv } from '@/lib/supabase/env'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,6 +31,7 @@ export async function GET(request: NextRequest) {
     // In production, extract from JWT token
     const ecdId = 'f580f125-81ed-412a-8d25-f187605a6a69'
 
+    const { supabaseUrl, serviceRoleKey } = requireSupabaseAdminEnv('dsd-export-pdf')
     const supabase = createClient(supabaseUrl, serviceRoleKey)
     
     // Get the report data
@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: `
-        <div style="font-size: 10px; text-align: center; width: 100%; color: #666;">
+        <div style="font-size: 10px; text-align: center; width: 100%; color: rgb(102,102,102);">
           Department of Education - Monthly Report
         </div>
       `,
       footerTemplate: `
-        <div style="font-size: 10px; text-align: center; width: 100%; color: #666;">
+        <div style="font-size: 10px; text-align: center; width: 100%; color: rgb(102,102,102);">
           Page <span class="pageNumber"></span> of <span class="totalPages"></span>
         </div>
       `
@@ -127,7 +127,7 @@ function generateReportHTML(data: any, month: number, year: number): string {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
           font-size: 11px; 
           line-height: 1.4; 
-          color: #1e293b;
+          color: rgb(30,41,59);
           margin: 0;
           padding: 0;
         }
@@ -140,7 +140,7 @@ function generateReportHTML(data: any, month: number, year: number): string {
           font-weight: bold; 
           margin-bottom: 10px; 
           padding: 8px; 
-          background: #1e293b; 
+          background: rgb(30,41,59); 
           color: white; 
           text-align: center;
         }
@@ -151,7 +151,7 @@ function generateReportHTML(data: any, month: number, year: number): string {
         .boxes { display: flex; gap: 10px; margin: 15px 0; }
         .box { 
           flex: 1; 
-          border: 2px solid #1e293b; 
+          border: 2px solid rgb(30,41,59); 
           padding: 15px; 
           text-align: center; 
         }
@@ -159,14 +159,14 @@ function generateReportHTML(data: any, month: number, year: number): string {
         .box-value { font-size: 24px; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
         th, td { 
-          border: 1px solid #cbd5e1; 
+          border: 1px solid rgb(203,213,225); 
           padding: 6px; 
           text-align: center; 
           font-size: 10px;
         }
-        th { background: #f1f5f9; font-weight: bold; }
+        th { background: rgb(241,245,249); font-weight: bold; }
         td.text-left { text-align: left; }
-        .total-row { background: #1e293b; color: white; font-weight: bold; }
+        .total-row { background: rgb(30,41,59); color: white; font-weight: bold; }
         .page-break { page-break-before: always; }
       </style>
     </head>
@@ -394,7 +394,7 @@ function generateReportHTML(data: any, month: number, year: number): string {
               <td class="text-left">Girls</td>
               <td style="font-size: 16px; font-weight: bold;">${data.doeStats.totalFemale}</td>
             </tr>
-            <tr style="background: #1e293b; color: white; font-weight: bold;">
+            <tr style="background: rgb(30,41,59); color: white; font-weight: bold;">
               <td colspan="2">TOTAL</td>
               <td style="font-size: 16px; font-weight: bold;">${data.doeStats.totalChildren}</td>
             </tr>

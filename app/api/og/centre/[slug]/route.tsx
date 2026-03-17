@@ -37,23 +37,23 @@ export async function GET(
             flexDirection: 'column',
             alignItems: 'flex-start',
             justifyContent: 'flex-end',
-            backgroundColor: '#0f172a',
-            backgroundImage: 'linear-gradient(to bottom right, #0f172a, #1e293b)',
+            backgroundColor: 'rgb(15,23,42)',
+            backgroundImage: 'linear-gradient(to bottom right, rgb(15,23,42), rgb(30,41,59))',
             padding: '80px',
             fontFamily: 'sans-serif',
           }}
         >
           {/* Subtle Accent */}
-          <div style={{ position: 'absolute', top: -100, right: -100, width: 600, height: 600, borderRadius: '50%', backgroundColor: '#0ea5e9', opacity: 0.1, filter: 'blur(100px)' }} />
+          <div style={{ position: 'absolute', top: -100, right: -100, width: 600, height: 600, borderRadius: '50%', backgroundColor: 'rgb(14,165,233)', opacity: 0.1, filter: 'blur(100px)' }} />
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-            <div style={{ backgroundColor: '#0ea5e9', padding: '12px 24px', borderRadius: '100px', display: 'flex' }}>
+            <div style={{ backgroundColor: 'rgb(14,165,233)', padding: '12px 24px', borderRadius: '100px', display: 'flex' }}>
               <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 CentreConnect Verified
               </span>
             </div>
             {centre.is_registered && (
-              <div style={{ backgroundColor: '#10b981', padding: '12px 24px', borderRadius: '100px', display: 'flex' }}>
+              <div style={{ backgroundColor: 'rgb(16,185,129)', padding: '12px 24px', borderRadius: '100px', display: 'flex' }}>
                 <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>DSD Registered</span>
               </div>
             )}
@@ -65,13 +65,13 @@ export async function GET(
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '40px' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#94a3b8', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>Location</span>
+              <span style={{ color: 'rgb(148,163,184)', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>Location</span>
               <span style={{ color: 'white', fontSize: '48px', fontWeight: 'bold' }}>{centre.suburb}, {centre.city}</span>
             </div>
-            <div style={{ width: '2px', height: '80px', backgroundColor: '#334155' }} />
+            <div style={{ width: '2px', height: '80px', backgroundColor: 'rgb(51,65,85)' }} />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ color: '#94a3b8', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Fee</span>
-              <span style={{ color: '#38bdf8', fontSize: '48px', fontWeight: 'bold' }}>{feesLabel}</span>
+              <span style={{ color: 'rgb(148,163,184)', fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px' }}>Monthly Fee</span>
+              <span style={{ color: 'rgb(56,189,248)', fontSize: '48px', fontWeight: 'bold' }}>{feesLabel}</span>
             </div>
           </div>
         </div>

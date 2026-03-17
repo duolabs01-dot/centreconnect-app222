@@ -137,7 +137,9 @@ export async function updateSession(request: NextRequest) {
     return finish(response, 'public-authenticated-pass')
   }
 
-  const cachedRole = isAuthRoute || isActivationPage || activationGuardEnabled ? null : getCachedRole(request, user.id)
+  // Role caching is safe on non-auth routes. We avoid cache usage on auth/activation routes
+  // so redirects always reflect the latest DB role + activation state.
+  const cachedRole = isAuthRoute || isActivationPage ? null : getCachedRole(request, user.id)
   let role: UserRole | null = authStateFromDb?.role ?? cachedRole
 
   if (cachedRole === 'parent_user' && protectedArea === 'parent') {

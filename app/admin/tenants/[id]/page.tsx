@@ -158,7 +158,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
       wide
     >
       <div className="space-y-6 pb-10">
-        <Card className="border-cyan-500/20 bg-gradient-to-br from-[#040913] via-[#061021] to-[#03111f]">
+        <Card className="border-cyan-500/20 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
           <CardHeader className="gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-cyan-500/30 bg-cyan-500/15 text-cyan-200">Centre workspace</Badge>

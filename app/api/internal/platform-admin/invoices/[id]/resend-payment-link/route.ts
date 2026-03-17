@@ -82,13 +82,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const subject = `Payment link for invoice ${invoice.invoice_number}`
   const amount = formatAmount(Number(invoice.total ?? 0))
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5;">
+    <div style="font-family: Arial, sans-serif; color: rgb(15,23,42); line-height: 1.5;">
       <h2 style="margin: 0 0 10px 0;">Invoice payment link</h2>
       <p>Hi ${centre?.name?.trim() || 'there'},</p>
       <p>Your payment link has been re-issued for invoice <strong>${invoice.invoice_number}</strong>.</p>
       <p><strong>Amount:</strong> ${amount}</p>
       <p><strong>Reference:</strong> ${reference ?? '-'}</p>
-      <p><a href="${paymentUrl}" style="display:inline-block;padding:10px 16px;background:#0d9488;color:#fff;border-radius:8px;text-decoration:none;">Pay now</a></p>
+      <p><a href="${paymentUrl}" style="display:inline-block;padding:10px 16px;background:rgb(13,148,136);color:rgb(255,255,255);border-radius:8px;text-decoration:none;">Pay now</a></p>
       <p>If the button does not open, copy this URL:</p>
       <p>${paymentUrl}</p>
     </div>

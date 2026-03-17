@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { getParentProgress } from '@/lib/parent/progress'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { cn } from '@/lib/utils'
+import { evaluateParentIntakeReadiness } from '@/lib/admissions/intake-readiness'
 
 type ReadinessAction = {
   key: string
@@ -12,11 +12,15 @@ type ReadinessAction = {
 }
 
 const ACTIONS_BY_MISSING_CODE: Record<string, ReadinessAction> = {
-  name: { key: 'profile', label: 'Add your name', href: '/parent/profile' },
-  phone: { key: 'profile', label: 'Add phone number', href: '/parent/profile' },
-  avatar: { key: 'avatar', label: 'Add profile photo', href: '/parent/profile' },
-  relationship: { key: 'profile', label: 'Add relationship', href: '/parent/profile' },
-  emergency: { key: 'emergency', label: 'Add emergency contact', href: '/parent/profile/emergency' },
+  parent_name: { key: 'profile', label: 'Add your name', href: '/parent/profile' },
+  parent_phone: { key: 'profile', label: 'Add phone number', href: '/parent/profile' },
+  parent_avatar: { key: 'avatar', label: 'Add profile photo', href: '/parent/profile' },
+  guardian_relationship: { key: 'relationship', label: 'Add relationship', href: '/parent/profile' },
+  emergency_contact_name: { key: 'emergency', label: 'Add emergency contact', href: '/parent/profile/emergency' },
+  emergency_contact_phone: { key: 'emergency', label: 'Add emergency contact', href: '/parent/profile/emergency' },
+  id_document: { key: 'documents', label: 'Upload parent ID', href: '/parent/profile/documents' },
+  child_document: { key: 'documents', label: 'Upload child documents', href: '/parent/profile/documents' },
+  child_profile: { key: 'child', label: 'Add a child', href: '/parent/children/new' },
 }
 
 function mapReadinessActions(missingFields: string[]): ReadinessAction[] {
@@ -25,13 +29,6 @@ function mapReadinessActions(missingFields: string[]): ReadinessAction[] {
 
   for (const field of missingFields) {
     let action = ACTIONS_BY_MISSING_CODE[field]
-    if (!action) {
-      if (field.includes('document')) {
-        action = { key: 'documents', label: 'Upload documents', href: '/parent/profile/documents' }
-      } else if (field.includes('child')) {
-        action = { key: 'child', label: 'Add a child', href: '/parent/children/new' }
-      }
-    }
     if (!action || seen.has(action.key)) continue
     seen.add(action.key)
     actions.push(action)
@@ -48,9 +45,32 @@ export async function ProfileReadinessCard() {
 
   if (!user) return null
 
-  const progress = await getParentProgress(user.id)
-  
-  const missingFields = progress.nextAction.missingProfileFields
+  const [profileResult, parentResult, docsResult, childCountResult] = await Promise.all([
+    supabase.from('user_profiles').select('full_name,phone,avatar_url').eq('id', user.id).maybeSingle(),
+    supabase
+      .from('parents')
+      .select('guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status')
+      .eq('id', user.id)
+      .maybeSingle(),
+    supabase.from('parent_documents').select('doc_type').eq('parent_id', user.id).limit(120),
+    supabase.from('children').select('id', { count: 'exact', head: true }).eq('parent_id', user.id),
+  ])
+
+  const readiness = evaluateParentIntakeReadiness({
+    parent: {
+      fullName: profileResult.data?.full_name,
+      phone: profileResult.data?.phone,
+      avatarUrl: profileResult.data?.avatar_url,
+      guardianRelationship: parentResult.data?.guardian_relationship,
+      emergencyContactName: parentResult.data?.emergency_contact_name,
+      emergencyContactPhone: parentResult.data?.emergency_contact_phone,
+      idVerificationStatus: parentResult.data?.id_verification_status,
+    },
+    docTypes: (docsResult.data ?? []).map((doc) => doc.doc_type),
+    hasAtLeastOneChild: (childCountResult.count ?? 0) > 0,
+  })
+
+  const missingFields = readiness.missingCodes
   const actions = mapReadinessActions(missingFields)
 
   return (
@@ -63,13 +83,13 @@ export async function ProfileReadinessCard() {
         <div
           className={cn(
             'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-black',
-            progress.profileCompleteness === 100
+            readiness.completionPct === 100
               ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
               : 'border-amber-200 bg-amber-50 text-amber-700'
           )}
         >
-          {progress.profileCompleteness === 100 ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
-          {progress.profileCompleteness}% complete
+          {readiness.completionPct === 100 ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+          {readiness.completionPct}% complete
         </div>
       </div>
 
@@ -77,9 +97,9 @@ export async function ProfileReadinessCard() {
         <div
           className={cn(
             'h-full rounded-full transition-all duration-500',
-            progress.profileCompleteness === 100 ? 'bg-emerald-500' : 'bg-cyan-600'
+            readiness.completionPct === 100 ? 'bg-emerald-500' : 'bg-cyan-600'
           )}
-          style={{ width: `${progress.profileCompleteness}%` }}
+          style={{ width: `${readiness.completionPct}%` }}
         />
       </div>
 

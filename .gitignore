@@ -27,3 +27,7 @@ tmp-*.txt
 *manifest*.txt
 hardcoded_colors.txt
 all_ts_files.txt
+
+# Local test reports (keep out of commits)
+tmp/reports/*-latest.*
+tmp/reports/*.txt

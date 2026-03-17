@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="admin-root platform-admin-dark-theme min-h-screen bg-[#04070D] text-slate-100">
+    <div className="admin-root platform-admin-dark-theme min-h-screen bg-slate-950 text-slate-100">
       <CommandPalette />
       <AdminShell>
         <div className="animate-in fade-in duration-200">{children}</div>

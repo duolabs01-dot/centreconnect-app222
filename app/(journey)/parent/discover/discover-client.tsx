@@ -381,9 +381,9 @@ export default function ParentDiscoverClient() {
                   <Link
                     key={centre.id}
                     href={detailHref}
-                    className="group overflow-hidden rounded-[1.6rem] border border-[#E8DDD0] bg-[#FFFDF9] shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]"
+                    className="group overflow-hidden rounded-[1.6rem] border border-border bg-background shadow-[0_10px_28px_rgba(31,44,39,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(31,44,39,0.08)]"
                   >
-                    <div className="relative aspect-[16/5.9] overflow-hidden bg-[#F4ECE2]">
+                    <div className="relative aspect-[16/5.9] overflow-hidden bg-amber-50/40">
                       <Image
                         src={heroSrc}
                         alt={hasRealCover ? centre.name : `${centre.name} preview image`}
@@ -400,13 +400,13 @@ export default function ParentDiscoverClient() {
                             <Image src={logoSrc} alt={`${centre.name} logo`} width={44} height={44} className="h-full w-full object-cover" sizes="44px" unoptimized />
                           </div>
                         ) : (
-                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white bg-[#F5EFE6] text-sm font-black text-[#0D9488] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white bg-amber-50/70 text-sm font-black text-[var(--teal)] shadow-[0_10px_24px_rgba(31,44,39,0.12)]">
                             {centre.name.charAt(0)}
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="line-clamp-2 text-[0.98rem] font-bold leading-[1.12] tracking-[-0.02em] text-[#22312E]">{centre.name}</p>
-                          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-[#7B827E]">
+                          <p className="line-clamp-2 text-[0.98rem] font-bold leading-[1.12] tracking-[-0.02em] text-slate-950">{centre.name}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-500">
                             <MapPin className="h-3.5 w-3.5" />
                             <span className="truncate">{locationLabel}</span>
                           </p>
@@ -414,7 +414,7 @@ export default function ParentDiscoverClient() {
                       </div>
 
                       <div className="flex flex-wrap gap-1.5">
-                        {isVerified ? <PremiumVerifiedBadge compact className="border-[#F3E3B3] bg-[#FFF8DA] text-[#6C4700]" /> : null}
+                        {isVerified ? <PremiumVerifiedBadge compact className="border-amber-200 bg-amber-50 text-amber-950" /> : null}
                         {isRegistered ? <GovernmentRegisteredBadge compact /> : null}
                         {centre.distanceLabel ? (
                           <Badge className="border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-cyan-700 shadow-none">
@@ -423,17 +423,17 @@ export default function ParentDiscoverClient() {
                           </Badge>
                         ) : null}
                         {!centre.is_claimed ? (
-                          <Badge className="border border-[#E7DDD1] bg-[#FAF8F4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#6A7672] shadow-none">
+                          <Badge className="border border-border bg-muted px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 shadow-none">
                             Public listing
                           </Badge>
                         ) : null}
                       </div>
 
-                      <div className={`rounded-[1.05rem] border px-3 py-2 ${centre.is_claimed ? 'border-[#DCEEE8] bg-[linear-gradient(180deg,#F8FCFB_0%,#EEF8F5_100%)]' : 'border-[#E7DDD1] bg-[#FAF8F4]'}`}>
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#6A7672]">
+                      <div className={`rounded-[1.05rem] border px-3 py-2 ${centre.is_claimed ? 'border-emerald-100 bg-gradient-to-b from-emerald-50/70 to-emerald-100/40' : 'border-border bg-muted'}`}>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                           {centre.is_claimed ? 'Why parents love this' : 'Why it is still worth saving'}
                         </p>
-                        <p className="mt-1 text-[12px] leading-5 text-[#4E5D59]">
+                        <p className="mt-1 text-[12px] leading-5 text-slate-600">
                           {centre.is_claimed
                             ? 'Apply, message, and keep the parent journey calm and organised in one place.'
                             : 'Compare fees, ages, and location now, then contact the creche directly if you want to move today.'}

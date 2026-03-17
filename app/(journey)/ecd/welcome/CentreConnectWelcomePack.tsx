@@ -120,9 +120,9 @@ const SCENARIOS: Scenario[] = [
     ],
     ctaLabel: 'Open applications',
     ctaHref: '/ecd/pipeline',
-    color: '#0F766E',
-    bg: '#F0FDFA',
-    border: '#CCFBF1',
+    color: 'rgb(15,118,110)',
+    bg: 'rgb(240,253,250)',
+    border: 'rgb(204,251,241)',
   },
   {
     id: 'children',
@@ -143,9 +143,9 @@ const SCENARIOS: Scenario[] = [
     ],
     ctaLabel: 'Open child records',
     ctaHref: '/ecd/children/new',
-    color: '#6D28D9',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    color: 'rgb(109,40,217)',
+    bg: 'rgb(245,243,255)',
+    border: 'rgb(221,214,254)',
   },
   {
     id: 'attendance',
@@ -166,9 +166,9 @@ const SCENARIOS: Scenario[] = [
     ],
     ctaLabel: 'Open attendance',
     ctaHref: '/ecd/attendance',
-    color: '#0369A1',
-    bg: '#F0F9FF',
-    border: '#BAE6FD',
+    color: 'rgb(3,105,161)',
+    bg: 'rgb(240,249,255)',
+    border: 'rgb(186,230,253)',
   },
   {
     id: 'pickup',
@@ -189,9 +189,9 @@ const SCENARIOS: Scenario[] = [
     ],
     ctaLabel: 'Open safe pickup',
     ctaHref: '/ecd/pickup',
-    color: '#B45309',
-    bg: '#FFFBEB',
-    border: '#FDE68A',
+    color: 'rgb(180,83,9)',
+    bg: 'rgb(255,251,235)',
+    border: 'rgb(253,230,138)',
   },
   {
     id: 'profile',
@@ -212,9 +212,9 @@ const SCENARIOS: Scenario[] = [
     ],
     ctaLabel: 'Open centre profile',
     ctaHref: '/ecd/website',
-    color: '#0F766E',
-    bg: '#F0FDF4',
-    border: '#BBF7D0',
+    color: 'rgb(15,118,110)',
+    bg: 'rgb(240,253,244)',
+    border: 'rgb(187,247,208)',
   },
 ]
 
@@ -998,10 +998,10 @@ export default function CentreConnectWelcomePack() {
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f3f8f8_100%)] pb-16 selection:bg-cyan-100 selection:text-cyan-900">
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-emerald-50/30 pb-16 selection:bg-cyan-100 selection:text-cyan-900">
         <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
           <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-            <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#0f766e_0%,#14b8a6_100%)] p-5 text-white sm:p-7">
+            <div className="border-b border-slate-100 bg-gradient-to-br from-teal-700 to-teal-400 p-5 text-white sm:p-7">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em]">
                   Welcome pack preview
@@ -1143,7 +1143,7 @@ export default function CentreConnectWelcomePack() {
                     </p>
                   </div>
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button asChild className="h-11 rounded-2xl bg-[#25D366] text-sm font-black text-white hover:bg-[#1faa52]">
+                    <Button asChild className="h-11 rounded-2xl bg-emerald-500 text-sm font-black text-white hover:bg-emerald-600">
                       <Link href={supportWhatsappHref}>
                         <MessageCircle className="mr-2 h-4 w-4" />
                         WhatsApp Mandla
@@ -1228,10 +1228,10 @@ export default function CentreConnectWelcomePack() {
     )
   }
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#f3f8f8_100%)] pb-16 selection:bg-cyan-100 selection:text-cyan-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-emerald-50/30 pb-16 selection:bg-cyan-100 selection:text-cyan-900">
       <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
         <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-100 bg-[linear-gradient(135deg,#0f766e_0%,#14b8a6_100%)] p-5 text-white sm:p-7">
+          <div className="border-b border-slate-100 bg-gradient-to-br from-teal-700 to-teal-400 p-5 text-white sm:p-7">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[11px] font-black uppercase tracking-[0.24em]">
                 Welcome pack live
@@ -1430,7 +1430,7 @@ export default function CentreConnectWelcomePack() {
                     <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
                       Reply on WhatsApp if you want help with setup, staff training, or explaining CentreConnect to your team.
                     </p>
-                    <Button asChild className="mt-4 h-11 rounded-2xl bg-[#25D366] text-sm font-black text-white hover:bg-[#1faa52]">
+                    <Button asChild className="mt-4 h-11 rounded-2xl bg-emerald-500 text-sm font-black text-white hover:bg-emerald-600">
                       <Link href={supportWhatsappHref}>
                         <MessageCircle className="mr-2 h-4 w-4" />
                         WhatsApp Mandla

@@ -3,12 +3,12 @@
 
 .admin-shell {
   /* Admin palette (cyber-noir). */
-  --cyber-cyan:   #00F2FF;
-  --cyber-violet: #8A2BE2;
-  --cyber-green:  #00FF94;
-  --cyber-amber:  #FFB800;
-  --cyber-rose:   #FF4466;
-  --cyber-bg:     #0B0E14;
+  --cyber-cyan:   rgb(0, 242, 255);
+  --cyber-violet: rgb(138, 43, 226);
+  --cyber-green:  rgb(0, 255, 148);
+  --cyber-amber:  rgb(255, 184, 0);
+  --cyber-rose:   rgb(255, 68, 102);
+  --cyber-bg:     rgb(11, 14, 20);
   --cyber-card:   rgba(17, 21, 32, 0.72);
   --cyber-border: rgba(255, 255, 255, 0.08);
 
@@ -41,8 +41,8 @@
     background-image:
       radial-gradient(circle at 0% 0%, rgba(138, 43, 226, 0.12) 0%, transparent 40%),
       radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%230B0E14'/%3E%3Crect width='1' height='1' fill='%23ffffff08'/%3E%3Crect width='1' height='1' x='2' y='2' fill='%23ffffff05'/%3E%3C/svg%3E");
-    color: #E2E8F0;
+      url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='rgb(11,14,20)'/%3E%3Crect width='1' height='1' fill='rgba(255,255,255,0.08)'/%3E%3Crect width='1' height='1' x='2' y='2' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E\");
+    color: rgb(226, 232, 240);
     font-family: var(--font-admin);
   }
 /* Typography */

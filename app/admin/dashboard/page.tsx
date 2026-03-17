@@ -185,7 +185,7 @@ function SectionCard({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl">
+    <section className="rounded-[2rem] border border-white/5 bg-slate-950/60 p-6 shadow-2xl">
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex items-center gap-2 text-cyan-300">{icon}</div>
@@ -394,7 +394,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8 pb-20">
-      <header className="rounded-[2rem] border border-white/5 bg-[#080B13] p-6 shadow-2xl lg:p-8">
+      <header className="rounded-[2rem] border border-white/5 bg-slate-950/60 p-6 shadow-2xl lg:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[11px] font-black uppercase tracking-[0.2em] text-cyan-300">Founder overview</p>

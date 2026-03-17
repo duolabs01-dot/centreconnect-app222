@@ -185,15 +185,15 @@ export default async function AdminAnalyticsPage() {
         <CyberCard className="p-5 lg:col-span-2">
           <p className="mb-3 font-orbitron text-[9px] uppercase tracking-widest text-cyber-cyan">30-Day Activity Trend</p>
           <svg viewBox="0 0 600 120" className="h-32 w-full">
-            <line x1="0" y1="90" x2="600" y2="90" stroke="#334155" strokeWidth="0.5" />
-            <line x1="0" y1="70" x2="600" y2="70" stroke="#334155" strokeWidth="0.5" />
-            <line x1="0" y1="50" x2="600" y2="50" stroke="#334155" strokeWidth="0.5" />
-            <polyline points={trendPoints} fill="none" stroke="#06B6D4" strokeWidth="2" />
+            <line x1="0" y1="90" x2="600" y2="90" stroke="rgb(51,65,85)" strokeWidth="0.5" />
+            <line x1="0" y1="70" x2="600" y2="70" stroke="rgb(51,65,85)" strokeWidth="0.5" />
+            <line x1="0" y1="50" x2="600" y2="50" stroke="rgb(51,65,85)" strokeWidth="0.5" />
+            <polyline points={trendPoints} fill="none" stroke="rgb(6,182,212)" strokeWidth="2" />
             {days30.map((day, index) => {
               const totalForDay = Object.values(dailyCounts[day] ?? {}).reduce((sum, value) => sum + value, 0)
               const x = (index / 29) * 560 + 20
               const y = 100 - (totalForDay / maxDaily) * 80
-              return <circle key={day} cx={x} cy={y} r="1.8" fill="#06B6D4" />
+              return <circle key={day} cx={x} cy={y} r="1.8" fill="rgb(6,182,212)" />
             })}
           </svg>
         </CyberCard>
