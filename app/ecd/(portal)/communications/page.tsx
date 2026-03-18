@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone } from 'lucide-react'
+import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone, BellRing } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { markEcdNotificationsReadAction } from './actions'
 import { CommunicationsComposer } from './composer'
 import { DirectMessagePanel } from './direct-message-panel'
 
@@ -52,15 +53,23 @@ type ProfileRow = {
 
 type ApplicationRow = {
   parent_id: string | null
-  children: Record<string, unknown> | null
-  parents: Record<string, unknown> | null
+  children: Array<{ first_name: string | null; last_name: string | null }> | null
+  parents: Array<{ user_profiles: Array<{ full_name: string | null }> }> | null
 }
 
 type ChildRow = {
   parent_id: string | null
   first_name: string | null
   last_name: string | null
-  parents: Record<string, unknown> | null
+  parents: Array<{ user_profiles: Array<{ full_name: string | null }> }> | null
+}
+
+type EcdNotificationRow = {
+  id: string
+  title: string | null
+  message: string | null
+  created_at: string
+  metadata: Record<string, unknown> | null
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -100,6 +109,7 @@ export default async function EcdCommunicationsPage({
   const [
     centreResult,
     templatesResult,
+    unreadNotificationsResult,
     centreParticipantsResult,
     recentThreadsResult,
     applicationRecipientsResult,
@@ -112,6 +122,14 @@ export default async function EcdCommunicationsPage({
       .select('template_key,title,body')
       .eq('is_active', true)
       .order('title', { ascending: true }),
+    admin
+      .from('ecd_notifications')
+      .select('id,title,message,created_at,metadata')
+      .eq('ecd_id', ecdId)
+      .eq('is_read', false)
+      .contains('metadata', { kind: 'parent_message' })
+      .order('created_at', { ascending: false })
+      .limit(20),
     admin.from('ecd_admins').select('user_id').eq('ecd_id', ecdId),
     admin
       .from('message_threads')
@@ -143,6 +161,7 @@ export default async function EcdCommunicationsPage({
 
   const centreName = centreResult.data?.name?.trim() || 'Your crèche'
   const templates = ((templatesResult.data ?? []) as Template[]) ?? []
+  const unreadNotifications = (unreadNotificationsResult.data ?? []) as EcdNotificationRow[]
   const centreParticipantIds = Array.from(
     new Set((centreParticipantsResult.data ?? []).map((row) => String(row.user_id)).filter(Boolean))
   )
@@ -310,6 +329,22 @@ export default async function EcdCommunicationsPage({
               Announcements
             </TabsTrigger>
           </TabsList>
+
+          {unreadNotifications.length > 0 && (
+            <div className="mt-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <BellRing className="h-5 w-5 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-900">
+                  {unreadNotifications.length} new parent message{unreadNotifications.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <form action={markEcdNotificationsReadAction}>
+                <Button type="submit" variant="outline" size="sm" className="rounded-xl border-amber-200 text-amber-700 hover:bg-amber-100">
+                  Mark as seen
+                </Button>
+              </form>
+            </div>
+          )}
 
           <TabsContent value="messages" className="mt-6 space-y-4">
             <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
