@@ -14,7 +14,7 @@ const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   financials: 'standard',
   compliance: 'standard',
   'report-cards': 'standard',
-  'website-builder': 'standard',
+  'website-builder': 'basic',
 }
 
 async function getCurrentTier(supabase: SupabaseClient, ecdId: string) {
@@ -55,3 +55,4 @@ export async function requireEcdFeatureAccess(args: {
   }
   return access
 }
+

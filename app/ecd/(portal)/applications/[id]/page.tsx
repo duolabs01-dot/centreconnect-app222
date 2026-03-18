@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { AlertCircle, FileText, History, UserRound } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -227,12 +226,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
 
   if (!application) {
     return (
-      <EcdOsShell
-        title="Application Details"
-        description="Review full child enrollment details and take quick action."
-        roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-        userEmail={user.email ?? 'Unknown email'}
-      >
+      <>
         <div className="mx-auto max-w-2xl py-8">
           <Card className="rounded-3xl border-amber-200 bg-amber-50 shadow-sm">
             <CardHeader>
@@ -248,7 +242,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
             </CardContent>
           </Card>
         </div>
-      </EcdOsShell>
+      </>
     )
   }
 
@@ -359,12 +353,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
     : null
 
   return (
-    <EcdOsShell
-      title="Application Details"
-      description="Review full child enrollment details and take quick action."
-      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <div className="space-y-5 pb-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/ecd/applications" prefetch={false} className="text-sm font-semibold text-teal-700 hover:text-teal-800">
@@ -574,6 +563,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
           </aside>
         </div>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+

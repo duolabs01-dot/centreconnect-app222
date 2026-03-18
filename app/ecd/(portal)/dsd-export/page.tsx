@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, Printer, ArrowLeft, Loader2, ArrowRight } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -96,13 +95,7 @@ export default async function DsdExportPage({
   })
 
   return (
-    <EcdOsShell
-      title="DOE Monthly Report"
-      description="Official Department of Education Monthly Report — Places of Care (Crèches)"
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           body, html { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -594,6 +587,7 @@ export default async function DsdExportPage({
           </div>
         </div>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+

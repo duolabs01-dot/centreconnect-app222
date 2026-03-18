@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { Calendar, CalendarDays, Clock3, MessageSquare, Sparkles } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { EcdIosCalendarView, type EcdCalendarFeedItem } from '@/components/ecd/ecd-ios-calendar-view'
@@ -598,13 +597,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
   const parentCalendarHref = '/parent/calendar'
 
   return (
-    <EcdOsShell
-      title="Calendar & Automation"
-      description="Simple daily planning with clear automation controls for parent communication."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-6">
         <section className="rounded-3xl border border-teal-100 bg-teal-50/70 p-4 sm:p-5">
           <p className="text-[10px] font-black uppercase tracking-[0.22em] text-teal-700">Planning Studio</p>
@@ -898,6 +891,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
           </Card>
         </section>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+

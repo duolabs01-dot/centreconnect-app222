@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { AttendanceGridClient } from './attendance-grid-client'
@@ -63,12 +62,7 @@ export default async function EcdAttendancePage({
     .lte('date', endDate)
 
   return (
-    <EcdOsShell
-      title="Attendance Register"
-      description="Monthly DSD-compliant register"
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : 'Staff'}
-      userEmail={user.email ?? ''}
-    >
+    <>
       <AttendanceRealtimeBridge ecdId={ecdId} />
       <AttendanceGridClient
         ecdId={ecdId}
@@ -82,6 +76,7 @@ export default async function EcdAttendancePage({
         selectedYear={selectedYear}
         staffId={user.id}
       />
-    </EcdOsShell>
+    </>
   )
 }
+

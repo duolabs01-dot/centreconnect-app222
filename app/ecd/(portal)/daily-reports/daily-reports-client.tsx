@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useCallback, useMemo, useState, useTransition } from 'react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -390,13 +389,7 @@ export function DailyReportsClient({
   }
 
   return (
-    <EcdOsShell
-      title="Daily Reports"
-      description="Smart reporting for large classes. Search fast, expand once, publish with confidence."
-      roleLabel={userRoleLabel}
-      userEmail={userEmail}
-      userRole={userRole}
-    >
+    <>
       <div className="space-y-6">
         <section className="hidden lg:flex lg:items-end lg:justify-between">
           <div className="space-y-1">
@@ -748,6 +741,7 @@ export function DailyReportsClient({
           </Card>
         ) : null}
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+

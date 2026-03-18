@@ -1,5 +1,4 @@
-﻿import type { Metadata } from 'next'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
+import type { Metadata } from 'next'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { PickupVerifyClient } from './pickup-verify-client'
 
@@ -12,13 +11,7 @@ export default async function EcdPickupPage() {
   const { user, ecdId, role } = await requireEcdPortalSession()
 
   return (
-    <EcdOsShell
-      title="Pickup Verification"
-      description="Verify a parent's pickup code before releasing a child."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-4">
         <section>
           <h1 className="text-2xl font-bold text-slate-900">Pickup Verification</h1>
@@ -28,9 +21,10 @@ export default async function EcdPickupPage() {
         </section>
         <PickupVerifyClient ecdId={ecdId} />
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

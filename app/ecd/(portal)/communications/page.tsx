@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone, BellRing, Search } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -329,14 +328,7 @@ export default async function EcdCommunicationsPage({
   const unreadCount = filteredThreadSummaries.filter(t => !t.isOutgoing).length
 
   return (
-    <EcdOsShell
-      title="Messages"
-      description="Direct messages with parents and centre-wide announcements."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
-      <section className="space-y-6">
+    <section className="space-y-6">
         <Tabs defaultValue={activeTab} className="w-full">
           <TabsList className="grid w-full max-w-lg grid-cols-3 rounded-2xl bg-slate-100 p-1">
             <TabsTrigger value="messages" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
@@ -469,6 +461,7 @@ export default async function EcdCommunicationsPage({
                   recipientLabel={selectedRecipientLabel}
                   contextType={selectedContextType}
                   contextId={selectedContextId}
+                  threadId={selectedThread?.id ?? null}
                   messages={selectedMessages}
                 />
               ) : (
@@ -614,7 +607,6 @@ export default async function EcdCommunicationsPage({
             </Card>
           </TabsContent>
         </Tabs>
-      </section>
-    </EcdOsShell>
+    </section>
   )
 }

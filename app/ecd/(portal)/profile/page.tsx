@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
@@ -458,14 +457,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
   }
 
   return (
-    <EcdOsShell
-      title="Settings"
-      description="Update crèche, account, and operational settings from one place."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
-      <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+    <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
             <CardTitle className="text-base font-bold">Crèche Readiness</CardTitle>
@@ -874,7 +866,6 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           <DangerZoneClient action={requestCancellation} />
         </div>
       </section>
-    </EcdOsShell>
   )
 }
 

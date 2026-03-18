@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Send } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,6 +16,7 @@ type DirectMessagePanelProps = {
   recipientLabel: string
   contextType: 'application' | 'pickup' | 'general'
   contextId: string | null
+  threadId: string | null
   messages: Array<{
     id: string
     body: string
@@ -44,12 +45,32 @@ export function DirectMessagePanel({
   recipientLabel,
   contextType,
   contextId,
+  threadId,
   messages,
 }: DirectMessagePanelProps) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+
+  useEffect(() => {
+    if (!threadId) return
+
+    const channel = supabase
+      .channel(`messages:${threadId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `thread_id=eq.${threadId}` },
+        () => {
+          router.refresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [router, supabase, threadId])
 
   async function sendMessage() {
     const body = draft.trim()

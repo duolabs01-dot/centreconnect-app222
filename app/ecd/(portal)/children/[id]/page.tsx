@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CalendarDays, HeartPulse, ShieldCheck, UserRound } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ParentDossierCards } from '@/components/ecd/parent-dossier-cards'
 import { ParentLinkRequestCard } from '@/components/ecd/parent-link-request-card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -76,13 +75,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
 
   if (!child) {
     return (
-      <EcdOsShell
-        title="Child Record"
-        description="Open the family contact view without losing your place in the children roster."
-        roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-        userEmail={user.email ?? 'Unknown email'}
-        userRole={role}
-      >
+      <>
         <div className="mx-auto max-w-2xl py-8">
           <Card className="rounded-3xl border-amber-200 bg-amber-50 shadow-sm">
             <CardHeader>
@@ -96,7 +89,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
             </CardContent>
           </Card>
         </div>
-      </EcdOsShell>
+      </>
     )
   }
 
@@ -121,13 +114,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
     : null
 
   return (
-    <EcdOsShell
-      title="Child Record"
-      description="Keep the child profile, family contact details, and relevant documents together."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-5 pb-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Link href="/ecd/children" prefetch={false} className="text-sm font-semibold text-teal-700 hover:text-teal-800">
@@ -233,9 +220,10 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
           </aside>
         </div>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

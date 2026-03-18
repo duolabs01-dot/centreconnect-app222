@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { Button } from '@/components/ui/button'
 import { ChildEnrollmentWizard } from './child-enrollment-wizard'
@@ -71,13 +70,7 @@ export default async function EcdAddChildWizardPage() {
   })
 
   return (
-    <EcdOsShell
-      title="Add Children"
-      description="Move the first 5 children from the paper register to CentreConnect in minutes."
-      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <section className="mx-auto w-full max-w-7xl space-y-6 px-1 py-2 sm:py-3">
         <div id="quick-add" className="space-y-4 rounded-[2rem] border-2 border-teal-200 bg-teal-50 p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -111,6 +104,7 @@ export default async function EcdAddChildWizardPage() {
           <ChildEnrollmentWizard centreName={centreName} classes={classes} />
         </div>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+

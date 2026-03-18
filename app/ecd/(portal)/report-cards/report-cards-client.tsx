@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from 'react'
 import { toast } from 'sonner'
 import { ArrowLeft, CheckCircle2, Clock3, FileText, Plus, Send, Star, Trash2 } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -330,13 +329,7 @@ export function ReportCardsClient({
   }
 
   return (
-    <EcdOsShell
-      title="Report Cards"
-      description="Create and publish child progress reports for families."
-      roleLabel={userRoleLabel}
-      userEmail={userEmail}
-      userRole={userRole}
-    >
+    <>
       <section className="space-y-6">
         {view === 'list' ? (
           <>
@@ -610,6 +603,7 @@ export function ReportCardsClient({
           </>
         ) : null}
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+

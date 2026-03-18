@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -136,12 +135,7 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
   const announcements = data ?? []
 
   return (
-    <EcdOsShell
-      title="Announcements"
-      description="This page is for creating and publishing announcements quickly."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <section className="space-y-6">
         <AnnouncementComposer
           ecdId={ecdId}
@@ -222,9 +216,10 @@ export default async function EcdAnnouncementsPage({ searchParams }: Announcemen
           </CardContent>
         </Card>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

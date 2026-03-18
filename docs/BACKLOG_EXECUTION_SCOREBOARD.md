@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-18 (design audit cleared, ECD nav simplified, automated code gate green; live pilot data still blocking expansion)
+Last updated: 2026-03-18 (cleanup sprint code gate green; manual pilot activation still deferred to founder follow-up)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -8,32 +8,34 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Snapshot
 
-- Objective: Clear the final production-readiness gate for the 20-creche pilot expansion.
-- Current bottleneck: Sakhisizwe still has `onboarding_complete = false` with `child_count = 0`, and the authenticated realtime/browser checks still need staging verification.
-- Active lane: `pilot expansion readiness`
+- Objective: Keep the release gate green while the founder finishes the remaining live pilot activation work.
+- Current bottleneck: Sakhisizwe activation and the authenticated staging/manual checks still require founder-driven follow-up outside this shell.
+- Active lane: `parent verification continuity`
 
 ## Now
 
-- [ACTIVE] `BL-PILOT-020` `platform` Fix Sakhisizwe activation through product surfaces and rerun the live pilot-centre readiness check.
-  - Why: Code is green, but the pilot cannot honestly expand while one named pilot centre is incomplete in live data.
+- [ACTIVE] `BL-PARENT-030` `parent` Keep the parent UAT lane and scoreboard state current after cross-portal cleanup work.
+  - Why: `npm run test:parent-uat` is a hard gate, and the scoreboard must continue the verified parent reliability sequence through the latest active task.
   - Definition of done:
-    - Sakhisizwe shows `is_active = true`, `onboarding_complete = true`, `child_count > 0`, and `admin_count > 0`.
-    - Re-run the pilot-centre readiness query and record the passing result.
-    - Re-check the admin dashboard pilot cards after the data fix.
+    - `npm run test:parent-uat` passes on the current branch.
+    - The scoreboard retains the parent reliability progression through `BL-PARENT-030` and `BL-PARENT-031`.
+    - Latest parent audit artifacts remain available in `tmp/reports/`.
   - Validation:
-    - read-only pilot-centre readiness query or Supabase SQL editor
-    - authenticated admin dashboard verification
-  - Est: 1-2h
+    - `npm run test:parent-uat`
+    - `tmp/reports/parent-uat-latest.json`
+    - `tmp/reports/parent-uat-latest.txt`
+  - Est: 0.5h
 
 ## Next
 
-- [READY] `BL-PILOT-021` `platform` Run authenticated staging realtime checks for ECD admissions, parent applications, parent notifications, and pilot admin cards.
+- [READY] `BL-PARENT-031` `parent` Run the authenticated parent create live smoke once founder-owned sessions are available and record the result beside the scripted UAT artifacts.
 
 ## Blocked
 
-- `BL-PILOT-021` Authenticated manual flows are blocked in this shell until founder/admin, ECD, and parent staging sessions are available.
+- `BL-PILOT-020` Founder will complete Sakhisizwe onboarding on 2026-03-19; live pilot readiness stays blocked until that product-side activation is finished and rechecked.
+  - Unblock: finish Sakhisizwe setup in the product, then rerun the live pilot-centre readiness query.
+- `BL-PILOT-021` Authenticated staging/manual flows are blocked in this shell until founder/admin, ECD, and parent sessions are available.
   - Unblock: sign into local or staging with the required roles and execute the Gate 3 checklist end-to-end.
-
 ## Done This Week
 
 - [DONE] `BL-UX-012` Cleared final design audit warnings, added visible dialog close controls, normalized semantic color tokens, moved `/ecd/sessions` out of primary ECD nav, and corrected the April 2026 pilot-offer copy.

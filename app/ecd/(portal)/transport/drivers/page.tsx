@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -133,13 +132,7 @@ export default async function EcdTransportDriversPage() {
   const drivers = (data ?? []) as DriverRow[]
 
   return (
-    <EcdOsShell
-      title="Drivers"
-      description="Manage transport drivers and route links."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -306,9 +299,10 @@ export default async function EcdTransportDriversPage() {
           </div>
         )}
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

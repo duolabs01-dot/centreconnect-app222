@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
@@ -531,13 +530,7 @@ export default async function EcdWebsitePage({
   }
 
   return (
-    <EcdOsShell
-      title="Website"
-      description="Build your page, publish when ready, and request custom website setup."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       {statusMeta ? (
         <div
           className={cn(
@@ -882,7 +875,8 @@ export default async function EcdWebsitePage({
           </Card>
         </div>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 

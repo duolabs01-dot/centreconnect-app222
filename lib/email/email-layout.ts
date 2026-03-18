@@ -37,6 +37,7 @@ export function renderBaseEmailLayout(input: BaseEmailInput) {
   const logoUrl = input.logoUrl?.trim() || `${appUrl}/centreconnect-logo-email.png`
   const supportEmail = (input.supportEmail ?? 'admin@centerconnect.co.za').trim() || 'admin@centerconnect.co.za'
   const firstName = resolveFirstName(input.recipientName)
+  const currentYear = new Date().getFullYear()
 
   const themes = {
     ecd: {
@@ -146,7 +147,7 @@ export function renderBaseEmailLayout(input: BaseEmailInput) {
             <td class="content-pad" style="padding:0 32px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.6;">
                 CentreConnect — serving Alexandra and Johannesburg.<br/>
-                &copy; 2026 CentreConnect.
+                &copy; ${currentYear} CentreConnect.
               </p>
             </td>
           </tr>
@@ -169,7 +170,7 @@ Privacy: ${appUrl}/privacy
 POPIA & Security: ${appUrl}/popia-security
 
 Built with care in South Africa for families, creches, and communities.
-(c) 2026 CentreConnect
+© ${currentYear} CentreConnect
   `.trim()
 
   return { html, text }

@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -88,12 +87,7 @@ export default async function EcdBillingPage() {
   const netWorth = pnl.assets - pnl.liabilities
 
   return (
-    <EcdOsShell
-      title="Billing"
-      description="Plan details, invoices, and subscription actions in one place."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <section className="space-y-6">
         {role === 'ecd_admin' && (
           <MonthlyInvoicesCard 
@@ -410,8 +404,9 @@ export default async function EcdBillingPage() {
           </CardContent>
         </Card>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 

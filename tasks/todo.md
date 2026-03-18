@@ -1,5 +1,61 @@
 # CentreConnect — Active Tasks
 
+## Session Plan - 2026-03-18 Cleanup & Copyright Sprint
+- Task: Restore the ECD portal shell, widen website access to all tiers, finish copyright cleanup, and rerun the full verification gate.
+- Why now: The redundant ECD page shell is breaking portal navigation, and this sprint closes the remaining product polish and legal-surface gaps before pilot growth.
+- Definition of done:
+  - No `app/ecd/(portal)` page imports or renders `EcdOsShell`.
+  - `website-builder` minimum tier is `basic`, ECD primary nav stays at 8 items, and Sessions remains accessible from Settings.
+  - Communications refreshes on new ECD notification inserts without a manual page reload, with any larger thread-id refactor deferred explicitly if needed.
+  - Reset-centres migration is created but not executed, with preserved pilot centres documented.
+  - Copyright copy uses `©`, email year is dynamic, and the legal page shows enterprise number `K2026225576`.
+  - `tasks/todo.md` and `tasks/lessons.md` reflect the real outcomes of this sprint.
+  - `npm run lint`, `npm run audit:design`, `npm run build`, and `npm run test:parent-uat` all exit 0.
+- Files to touch:
+  - the 25 listed `app/ecd/(portal)` files still using `EcdOsShell`
+  - `lib/ecd/feature-gates.ts`
+  - `app/ecd/(portal)/communications/page.tsx`
+  - `app/ecd/(portal)/communications/direct-message-panel.tsx`
+  - `app/ecd/(portal)/communications/composer.tsx`
+  - `supabase/migrations/20260318_reset_test_centres.sql`
+  - `components/layout/global-desktop-footer.tsx`
+  - `components/layout/global-mobile-legal-strip.tsx`
+  - `lib/email/email-layout.ts`
+  - `app/legal/page.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+  - `BACKLOG.md` only if new deferred work appears
+- Validation commands:
+  - `Get-ChildItem -Path app\ecd\(portal) -Recurse -Include *.tsx | Select-String -Pattern EcdOsShell`
+  - `Select-String -Path components/layout/ecd-navigation.ts -Pattern 'href:'`
+  - `Select-String -Path lib/ecd/feature-gates.ts -Pattern 'website-builder'`
+  - `npm run lint`
+  - `npm run audit:design`
+  - `npm run build`
+  - `npm run test:parent-uat`
+- Commit message: `fix: restore ecd portal shell and complete legal cleanup`
+- Execution steps:
+  1. Remove `EcdOsShell` from the affected ECD portal pages and recheck portal/sidebar expectations.
+  2. Update website feature gating, verify Sessions stays in Settings only, and wire the smallest safe communications realtime refresh.
+  3. Create the non-executed centre-reset migration, verify the two-session ECD admin guard, and clean up copyright/legal surfaces.
+  4. Re-run lint, audit, build, parent UAT, then update task and lesson state to match the actual outcome.
+## Cleanup & Copyright Sprint Results - 2026-03-18
+- [x] Task 1: Removed `EcdOsShell` from all 25 targeted ECD portal pages so the portal layout owns the sidebar again.
+- [x] Task 2: Changed `website-builder` access to `basic`; ECD primary nav was already compliant at 8 items with no Sessions item.
+- [x] Task 3: Kept Sessions accessible from ECD Settings/Profile and removed the redundant shell wrapper from the profile page.
+- [x] Task 4: Wired communications realtime refresh for thread inserts and ECD notification inserts, while keeping `Tabs defaultValue={activeTab}`.
+- [x] Task 5: Created `supabase/migrations/20260318_reset_test_centres.sql` for founder review only; not executed in this session.
+- [x] Task 6: Verified ECD admin multi-session remains active (`maxSessions = 2` in `lib/session-guard.ts`, enforced from `middleware.ts`).
+- [x] Task 7: Replaced user-visible `(c)` footer copy with `©`, made email copyright year dynamic, and added enterprise number `K2026225576` to `/legal`.
+- [x] Task 8: Verified ECD nav business rules stay clean (`comingSoon = 0`, no primary-nav tier locks, parent nav routes exist, admin primary nav definition remains 6 items).
+- [x] Task 9: Final automated gate passed in sequence: `npm run lint`, `npm run audit:design`, `npm run build`, `npm run test:parent-uat`.
+- [x] Multi-session: ECD admin allowed 2 sessions (maxSessions=2 in session-guard.ts)
+  Note: Revert path - change maxSessions to 1 and push. Migration is additive only.
+
+## Remaining Manual Follow-up
+- [ ] Founder review and execute `supabase/migrations/20260318_reset_test_centres.sql` if the centre reset is still desired.
+- [ ] Founder completes Sakhisizwe onboarding on 2026-03-19, then rerun the live pilot-centre readiness query.
+- [ ] Run the authenticated staging/manual Gate 3 checks once founder/admin, ECD, and parent sessions are available.
 ## Session Plan - 2026-03-18 Production Readiness Sprint
 - Task: Clear the remaining production-readiness blockers by fixing design audit warnings/errors, reducing ECD primary nav to 8 items, and running the final production gate.
 - Why now: This is a pilot-blocking quality and reliability pass immediately before 20-creche expansion.

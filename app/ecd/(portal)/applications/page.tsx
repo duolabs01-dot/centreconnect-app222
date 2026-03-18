@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -628,12 +627,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
   const focusedParentProfile = normalizeOne(focusedParent?.user_profiles ?? null)
 
   return (
-    <EcdOsShell
-      title="Admissions Inbox"
-      description="Prioritize pending reviews and approved offers awaiting parent acceptance."
-      roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <ApplicationsRealtimeBridge ecdId={ecdId} />
       <section className="mb-8 flex items-center justify-between">
         <div className="space-y-1">
@@ -901,9 +895,10 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           </div>
         </section>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

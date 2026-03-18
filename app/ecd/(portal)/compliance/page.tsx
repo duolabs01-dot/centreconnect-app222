@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -129,12 +128,7 @@ export default async function EcdCompliancePage() {
   const score = totalDocs > 0 ? Math.round((doneDocs / totalDocs) * 100) : 0
 
   return (
-    <EcdOsShell
-      title="Compliance Toolkit"
-      description="Track required documents and staff clearances in one place."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <div className="flex justify-end mb-4 no-print">
         <Button variant="outline" onClick={() => window.print()}>
           <Printer className="mr-2 h-4 w-4" />
@@ -284,9 +278,10 @@ export default async function EcdCompliancePage() {
           </p>
         </footer>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

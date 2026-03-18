@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -65,13 +64,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
   const tickets = data ?? []
 
   return (
-    <EcdOsShell
-      title="Support"
-      description="Track support requests and follow-ups."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <Card className="mb-6 border-border bg-card/80 text-foreground">
         <CardHeader>
           <CardTitle>Create Support Ticket</CardTitle>
@@ -178,9 +171,10 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
           <p>Usability: confirm staff can complete top tasks without training in under 3 minutes.</p>
         </CardContent>
       </Card>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

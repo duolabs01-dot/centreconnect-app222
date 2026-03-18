@@ -18,7 +18,7 @@ export function GlobalMobileLegalStrip() {
         <Link href="/terms" className="hover:text-slate-900 hover:underline">
           Terms
         </Link>
-        <span className="text-slate-500">(c) {currentYear} CentreConnect</span>
+        <span className="text-slate-500">© {currentYear} CentreConnect</span>
       </div>
       <p className="mt-1 text-center text-[10px] font-mono text-slate-400">
         v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
@@ -174,13 +173,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
             : null
 
   return (
-    <EcdOsShell
-      title="Employment"
-      description="Publish jobs in seconds and keep your hiring pipeline active."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <section className="space-y-6 pb-6">
         {successMessage ? (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
@@ -520,6 +513,7 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
           </div>
         ) : null}
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+

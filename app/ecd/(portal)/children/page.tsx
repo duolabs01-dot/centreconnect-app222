@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getLatestParentLinkRequestsByChildIds } from '@/lib/ecd/parent-link-requests'
 import { ChildrenRosterClient } from './children-roster-client'
@@ -114,19 +113,14 @@ export default async function EcdChildrenRosterPage() {
   })
 
   return (
-    <EcdOsShell
-      title="Children"
-      description="Manage child details, parent links, and attendance from one calm screen."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <section className="mx-auto w-full max-w-7xl space-y-6 px-1 py-2 sm:py-3">
         <ChildrenRosterClient centreName={centreName} classes={classes} initialChildren={children} />
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

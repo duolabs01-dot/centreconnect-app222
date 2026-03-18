@@ -8,7 +8,6 @@ import {
   UserPlus2,
   Users,
 } from 'lucide-react'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { OnboardingChecklistCard, TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { FeatureBanner } from '@/components/ui/feature-banner'
@@ -272,13 +271,7 @@ export default async function EcdDashboardPage() {
     ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
 
   return (
-    <EcdOsShell
-      title={`${centre?.name ?? 'Your Crèche'} Dashboard`}
-      description="Your daily command centre — attendance, admissions, and family connection at a glance."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-6 pb-10">
         <Card className="rounded-[2.2rem] border-slate-200 bg-[linear-gradient(135deg,#f0fdfa_0%,#ffffff_62%,#f8fafc_100%)] shadow-sm">
           <CardContent className="space-y-5 p-6 sm:p-7">
@@ -516,6 +509,7 @@ export default async function EcdDashboardPage() {
           </Card>
         </div>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+

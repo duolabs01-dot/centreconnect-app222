@@ -1,5 +1,4 @@
-﻿import type { Metadata } from 'next'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
+import type { Metadata } from 'next'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { FinancialEntryClient } from './financial-entry-client'
@@ -83,15 +82,7 @@ export default async function EcdFinancialsPage({ searchParams }: FinancialsPage
     }
 
   return (
-    <EcdOsShell
-      title="Financial Intelligence"
-      description="Track monthly P&L, manage line items, and monitor 6-month trends."
-      roleLabel={
-        role === 'ecd_admin' ? 'Centre Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'
-      }
-      userEmail={user.email ?? ''}
-      userRole={role}
-    >
+    <>
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-6 sm:px-6 lg:px-8">
         <header className="space-y-2">
           <p className="font-orbitron text-[11px] uppercase tracking-[0.6em] text-cyber-cyan">
@@ -113,7 +104,8 @@ export default async function EcdFinancialsPage({ searchParams }: FinancialsPage
           <PlChart snapshots={snapshots} />
         </div>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 

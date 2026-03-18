@@ -13,6 +13,7 @@ export default function LegalPage() {
       <p className="mt-2 text-sm text-slate-600">
         Central access to privacy, POPIA and security information, and platform use terms.
       </p>
+      <p className="mt-2 text-sm text-slate-600">CentreConnect - Enterprise Number K2026225576</p>
 
       <section className="mt-8 grid gap-4 sm:grid-cols-2">
         <Link href="/privacy" className="rounded-xl border border-slate-200 bg-white p-5 hover:border-slate-300">

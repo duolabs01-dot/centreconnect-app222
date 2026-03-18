@@ -1,6 +1,7 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -41,7 +42,8 @@ export function CommunicationsComposer({
   initialAudience = 'all',
   initialMode = 'broadcast',
 }: ComposerProps) {
-  const supabase = createClient()
+  const router = useRouter()
+  const supabase = useMemo(() => createClient(), [])
   const [selectedKey, setSelectedKey] = useState(
     initialTemplateKey && templates.some((template) => template.template_key === initialTemplateKey)
       ? initialTemplateKey
@@ -85,6 +87,23 @@ export function CommunicationsComposer({
       setQuickTip(tips[0])
     }
   }, [])
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`ecd_notifications:${ecdId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'ecd_notifications', filter: `ecd_id=eq.${ecdId}` },
+        () => {
+          router.refresh()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [ecdId, router, supabase])
 
   async function copyMessage() {
     if (!finalMessage) return

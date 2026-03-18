@@ -1,7 +1,6 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import { revalidatePath } from 'next/cache'
 import { randomUUID } from 'crypto'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -199,12 +198,7 @@ export default async function EcdMarketplacePage() {
   )
 
   return (
-    <EcdOsShell
-      title="Marketplace"
-      description="See what your package already includes and request add-ons only where needed."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-    >
+    <>
       <section className="space-y-6">
         <Card className="border-teal-100 bg-gradient-to-r from-teal-50/50 to-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader>
@@ -381,9 +375,10 @@ export default async function EcdMarketplacePage() {
           </CardContent>
         </Card>
       </section>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 

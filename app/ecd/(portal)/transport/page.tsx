@@ -1,10 +1,9 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn, formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { StatusBadge } from "@/components/ui/status-badge"
 export const metadata: Metadata = {
   title: 'Transport Desk | CentreConnect',
@@ -58,13 +57,7 @@ export default async function EcdTransportPage() {
   const recentEnquiries = enquiries.slice(0, 6)
 
   return (
-    <EcdOsShell
-      title="Transport Desk"
-      description="Shipments, routes, and driver enquiries."
-      roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
-      userEmail={user.email ?? 'Unknown email'}
-      userRole={role}
-    >
+    <>
       <div className="space-y-6">
         <Card className="bg-white border border-slate-100 shadow-sm rounded-3xl overflow-hidden text-slate-900">
           <CardHeader className="bg-slate-50/50">
@@ -168,9 +161,10 @@ export default async function EcdTransportPage() {
           </CardContent>
         </Card>
       </div>
-    </EcdOsShell>
+    </>
   )
 }
+
 
 
 
