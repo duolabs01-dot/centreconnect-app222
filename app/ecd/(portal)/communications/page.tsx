@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone, BellRing } from 'lucide-react'
+import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone, BellRing, Search } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -82,6 +82,12 @@ function normalizeText(value: string | null | undefined, fallback: string) {
   return next || fallback
 }
 
+function formatContextLabel(contextType: string | null) {
+  if (contextType === 'application') return 'Application'
+  if (contextType === 'pickup') return 'Pickup'
+  return 'General'
+}
+
 function buildConversationHref(parentId: string, contextType: SupportedContextType, contextId: string | null) {
   const params = new URLSearchParams({
     recipient: parentId,
@@ -94,7 +100,7 @@ function buildConversationHref(parentId: string, contextType: SupportedContextTy
 export default async function EcdCommunicationsPage({
   searchParams,
 }: {
-  searchParams?: { recipient?: string; contextType?: string; contextId?: string; tab?: string }
+  searchParams?: { recipient?: string; contextType?: string; contextId?: string; tab?: string; q?: string }
 }) {
   const { user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
@@ -104,7 +110,8 @@ export default async function EcdCommunicationsPage({
     ? (searchParams.contextType as SupportedContextType)
     : 'general'
   const requestedContextId = String(searchParams?.contextId ?? '').trim() || null
-  const activeTab = searchParams?.tab === 'announcements' ? 'announcements' : 'messages'
+  const activeTab = searchParams?.tab === 'announcements' ? 'announcements' : searchParams?.tab === 'sent' ? 'sent' : 'messages'
+  const searchQuery = String(searchParams?.q ?? '').trim().toLowerCase()
 
   const [
     centreResult,
@@ -115,6 +122,7 @@ export default async function EcdCommunicationsPage({
     applicationRecipientsResult,
     childRecipientsResult,
     outboxMessagesResult,
+    announcementsHistoryResult,
   ] = await Promise.all([
     admin.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
     admin
@@ -157,6 +165,12 @@ export default async function EcdCommunicationsPage({
       .eq('sender_id', user.id)
       .order('created_at', { ascending: false })
       .limit(50),
+    admin
+      .from('parent_notifications')
+      .select('id,title,message,created_at,parent_id')
+      .eq('ecd_id', ecdId)
+      .order('created_at', { ascending: false })
+      .limit(30),
   ])
 
   const centreName = centreResult.data?.name?.trim() || 'Your crèche'
@@ -252,6 +266,13 @@ export default async function EcdCommunicationsPage({
     }
   })
 
+  const filteredThreadSummaries = searchQuery
+    ? threadSummaries.filter(t => 
+        t.parentLabel.toLowerCase().includes(searchQuery) ||
+        t.preview.toLowerCase().includes(searchQuery)
+      )
+    : threadSummaries
+
   const outboxSummaries = outboxMessages.map((msg) => {
     const parentLabel = normalizeText(parentProfiles.get(msg.sender_id)?.full_name ?? null, 'Parent')
     return {
@@ -262,6 +283,13 @@ export default async function EcdCommunicationsPage({
       recipientLabel: parentLabel,
     }
   })
+
+  const filteredOutbox = searchQuery
+    ? outboxSummaries.filter(o => 
+        o.recipientLabel.toLowerCase().includes(searchQuery) ||
+        o.body.toLowerCase().includes(searchQuery)
+      )
+    : outboxSummaries
 
   const selectedThread =
     requestedParentId
@@ -298,7 +326,7 @@ export default async function EcdCommunicationsPage({
     senderLabel: centreParticipantIds.includes(message.sender_id) ? centreName : selectedRecipientLabel,
   }))
 
-  const unreadCount = threadSummaries.filter(t => !t.isOutgoing).length
+  const unreadCount = filteredThreadSummaries.filter(t => !t.isOutgoing).length
 
   return (
     <EcdOsShell
@@ -330,6 +358,33 @@ export default async function EcdCommunicationsPage({
             </TabsTrigger>
           </TabsList>
 
+          <div className="mt-4">
+            <form method="GET" className="flex gap-2">
+              <input type="hidden" name="tab" value={activeTab} />
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  name="q"
+                  defaultValue={searchQuery}
+                  placeholder="Search conversations..."
+                  className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                />
+              </div>
+              <Button type="submit" variant="outline" className="rounded-xl border-slate-200">
+                Search
+              </Button>
+              {searchQuery && (
+                <Link
+                  href={`/ecd/communications?tab=${activeTab}`}
+                  className="flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  Clear
+                </Link>
+              )}
+            </form>
+          </div>
+
           {unreadNotifications.length > 0 && (
             <div className="mt-4 flex items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
               <div className="flex items-center gap-3">
@@ -359,12 +414,12 @@ export default async function EcdCommunicationsPage({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2 pt-4">
-                  {threadSummaries.length === 0 ? (
+                  {filteredThreadSummaries.length === 0 ? (
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                       No conversations yet. Parents will message you here.
                     </div>
                   ) : (
-                    threadSummaries.map((thread) => {
+                    filteredThreadSummaries.map((thread) => {
                       const active = selectedRecipientParentId === thread.parentId
                       return (
                         <Link
@@ -379,8 +434,12 @@ export default async function EcdCommunicationsPage({
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-bold text-slate-900">{thread.parentLabel}</p>
-                              <p className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
-                                {formatDate(thread.createdAt)}
+                              <p className="mt-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-600">
+                                  {formatContextLabel(thread.contextType)}
+                                </span>
+                                <span>·</span>
+                                <span>{formatDate(thread.createdAt)}</span>
                               </p>
                             </div>
                             {thread.isOutgoing ? (
@@ -443,7 +502,7 @@ export default async function EcdCommunicationsPage({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {outboxSummaries.map((msg) => (
+                    {filteredOutbox.map((msg) => (
                       <div
                         key={msg.id}
                         className="rounded-2xl border border-slate-200 bg-white p-4"
@@ -465,7 +524,7 @@ export default async function EcdCommunicationsPage({
             </Card>
           </TabsContent>
 
-          <TabsContent value="announcements" className="mt-6">
+          <TabsContent value="announcements" className="mt-6 space-y-6">
             <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
               <CardHeader className="bg-slate-50/50">
                 <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
@@ -486,6 +545,71 @@ export default async function EcdCommunicationsPage({
                   allowedModes={['broadcast']}
                   initialMode="broadcast"
                 />
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <CardHeader className="bg-slate-50/50">
+                <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <Send className="h-4 w-4 text-teal-600" />
+                  Announcement History
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-600">
+                  Recent announcements sent to parents.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {(() => {
+                  const announcements = (announcementsHistoryResult.data ?? []) as Array<{ id: string; title: string | null; message: string | null; created_at: string; parent_id: string }>
+                  const groupedByTitle = new Map<string, { count: number; firstDate: string; title: string; message: string | null }>()
+                  
+                  for (const row of announcements) {
+                    const key = row.title ?? 'Update'
+                    const existing = groupedByTitle.get(key)
+                    if (existing) {
+                      existing.count++
+                    } else {
+                      groupedByTitle.set(key, {
+                        count: 1,
+                        firstDate: row.created_at,
+                        title: row.title ?? 'Update',
+                        message: row.message,
+                      })
+                    }
+                  }
+                  
+                  const history = Array.from(groupedByTitle.values()).sort((a, b) => 
+                    new Date(b.firstDate).getTime() - new Date(a.firstDate).getTime()
+                  ).slice(0, 10)
+
+                  if (history.length === 0) {
+                    return (
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                        No announcements sent yet.
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {history.map((item, idx) => (
+                        <div key={idx} className="rounded-2xl border border-slate-200 bg-white p-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-bold text-slate-900">{item.title}</p>
+                              <p className="mt-1 text-[11px] font-semibold uppercase tracking-widest text-slate-500">
+                                {formatDate(item.firstDate)} · {item.count} recipient{item.count !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          </div>
+                          {item.message && (
+                            <p className="mt-3 text-sm leading-6 text-slate-600 line-clamp-2">{item.message}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
