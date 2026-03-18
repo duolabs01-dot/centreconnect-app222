@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { MessageSquare, Send, ArrowDown, ArrowUp } from 'lucide-react'
+import { MessageSquare, Send, ArrowDown, ArrowUp, Megaphone } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,12 +8,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { markEcdNotificationsReadAction } from './actions'
+import { CommunicationsComposer } from './composer'
 import { DirectMessagePanel } from './direct-message-panel'
 
 export const metadata: Metadata = {
   title: 'Messages - CentreConnect',
-  description: 'Direct messages with parents - inbox and outbox.',
+  description: 'Direct messages with parents and centre-wide announcements.',
+}
+
+type Template = {
+  template_key: string
+  title: string
+  body: string
+}
+
+type Recipient = {
+  parentId: string
+  label: string
 }
 
 type SupportedContextType = 'application' | 'pickup' | 'general'
@@ -39,12 +50,22 @@ type ProfileRow = {
   full_name: string | null
 }
 
-type ParentNotificationRow = {
-  id: string
-  parent_id: string
-  title: string | null
-  message: string | null
-  created_at: string
+type ApplicationRow = {
+  parent_id: string | null
+  children: Record<string, unknown> | null
+  parents: Record<string, unknown> | null
+}
+
+type ChildRow = {
+  parent_id: string | null
+  first_name: string | null
+  last_name: string | null
+  parents: Record<string, unknown> | null
+}
+
+function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null
+  return Array.isArray(value) ? value[0] ?? null : value
 }
 
 function normalizeText(value: string | null | undefined, fallback: string) {
@@ -64,7 +85,7 @@ function buildConversationHref(parentId: string, contextType: SupportedContextTy
 export default async function EcdCommunicationsPage({
   searchParams,
 }: {
-  searchParams?: { recipient?: string; contextType?: string; contextId?: string }
+  searchParams?: { recipient?: string; contextType?: string; contextId?: string; tab?: string }
 }) {
   const { user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
@@ -74,14 +95,23 @@ export default async function EcdCommunicationsPage({
     ? (searchParams.contextType as SupportedContextType)
     : 'general'
   const requestedContextId = String(searchParams?.contextId ?? '').trim() || null
+  const activeTab = searchParams?.tab === 'announcements' ? 'announcements' : 'messages'
 
   const [
     centreResult,
+    templatesResult,
     centreParticipantsResult,
     recentThreadsResult,
+    applicationRecipientsResult,
+    childRecipientsResult,
     outboxMessagesResult,
   ] = await Promise.all([
     admin.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle(),
+    admin
+      .from('communication_templates')
+      .select('template_key,title,body')
+      .eq('is_active', true)
+      .order('title', { ascending: true }),
     admin.from('ecd_admins').select('user_id').eq('ecd_id', ecdId),
     admin
       .from('message_threads')
@@ -89,6 +119,20 @@ export default async function EcdCommunicationsPage({
       .eq('ecd_id', ecdId)
       .order('created_at', { ascending: false })
       .limit(50),
+    admin
+      .from('applications')
+      .select('parent_id, children(first_name,last_name), parents(user_profiles(full_name))')
+      .eq('ecd_id', ecdId)
+      .not('parent_id', 'is', null)
+      .order('submitted_at', { ascending: false })
+      .limit(200),
+    admin
+      .from('children')
+      .select('parent_id, first_name, last_name, parents(user_profiles(full_name))')
+      .eq('ecd_id', ecdId)
+      .not('parent_id', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(200),
     admin
       .from('messages')
       .select('id,thread_id,sender_id,body,created_at')
@@ -98,6 +142,7 @@ export default async function EcdCommunicationsPage({
   ])
 
   const centreName = centreResult.data?.name?.trim() || 'Your crèche'
+  const templates = ((templatesResult.data ?? []) as Template[]) ?? []
   const centreParticipantIds = Array.from(
     new Set((centreParticipantsResult.data ?? []).map((row) => String(row.user_id)).filter(Boolean))
   )
@@ -105,6 +150,35 @@ export default async function EcdCommunicationsPage({
     (thread.participant_ids ?? []).some((participantId) => !centreParticipantIds.includes(participantId))
   )
   const outboxMessages = (outboxMessagesResult.data ?? []) as MessageRow[]
+
+  const recipientsByParent = new Map<string, Recipient>()
+
+  for (const row of (applicationRecipientsResult.data ?? []) as ApplicationRow[]) {
+    const parentId = String(row.parent_id ?? '').trim()
+    if (!parentId || recipientsByParent.has(parentId)) continue
+    const child = normalizeOne(row.children)
+    const parent = normalizeOne(row.parents)
+    const profile = normalizeOne(parent?.user_profiles ?? null)
+    const childName = `${normalizeText(child?.first_name, '')} ${normalizeText(child?.last_name, '')}`.trim()
+    recipientsByParent.set(parentId, {
+      parentId,
+      label: `${normalizeText(profile?.full_name, 'Parent')}${childName ? ` (${childName})` : ''}`,
+    })
+  }
+
+  for (const row of (childRecipientsResult.data ?? []) as ChildRow[]) {
+    const parentId = String(row.parent_id ?? '').trim()
+    if (!parentId || recipientsByParent.has(parentId)) continue
+    const parent = normalizeOne(row.parents)
+    const profile = normalizeOne(parent?.user_profiles ?? null)
+    const childName = `${normalizeText(row.first_name, '')} ${normalizeText(row.last_name, '')}`.trim()
+    recipientsByParent.set(parentId, {
+      parentId,
+      label: `${normalizeText(profile?.full_name, 'Parent')}${childName ? ` (${childName})` : ''}`,
+    })
+  }
+
+  const recipients = Array.from(recipientsByParent.values())
 
   const threadIds = recentThreads.map((thread) => thread.id)
   const latestMessagesResult =
@@ -205,33 +279,39 @@ export default async function EcdCommunicationsPage({
     senderLabel: centreParticipantIds.includes(message.sender_id) ? centreName : selectedRecipientLabel,
   }))
 
+  const unreadCount = threadSummaries.filter(t => !t.isOutgoing).length
+
   return (
     <EcdOsShell
       title="Messages"
-      description="Direct messages with parents - inbox and outbox."
+      description="Direct messages with parents and centre-wide announcements."
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
       userRole={role}
     >
       <section className="space-y-6">
-        <Tabs defaultValue="inbox" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 rounded-2xl bg-slate-100 p-1">
-            <TabsTrigger value="inbox" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <Tabs defaultValue={activeTab} className="w-full">
+          <TabsList className="grid w-full max-w-lg grid-cols-3 rounded-2xl bg-slate-100 p-1">
+            <TabsTrigger value="messages" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <ArrowDown className="h-4 w-4" />
               Inbox
-              {threadSummaries.filter(t => !t.isOutgoing).length > 0 && (
+              {unreadCount > 0 && (
                 <span className="ml-1 rounded-full bg-teal-600 px-2 py-0.5 text-xs text-white">
-                  {threadSummaries.filter(t => !t.isOutgoing).length}
+                  {unreadCount}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="outbox" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsTrigger value="sent" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <ArrowUp className="h-4 w-4" />
-              Outbox
+              Sent
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="rounded-xl gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <Megaphone className="h-4 w-4" />
+              Announcements
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="inbox" className="mt-6 space-y-4">
+          <TabsContent value="messages" className="mt-6 space-y-4">
             <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
               <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
                 <CardHeader className="bg-slate-50/50">
@@ -240,7 +320,7 @@ export default async function EcdCommunicationsPage({
                     Conversations
                   </CardTitle>
                   <CardDescription className="text-sm text-slate-600">
-                    Select a conversation to read and reply.
+                    Direct messages with parents.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2 pt-4">
@@ -254,7 +334,7 @@ export default async function EcdCommunicationsPage({
                       return (
                         <Link
                           key={thread.id}
-                          href={thread.href ?? '/ecd/communications'}
+                          href={thread.href ?? '/ecd/communications?tab=messages'}
                           className={
                             active
                               ? 'block rounded-2xl border border-teal-200 bg-teal-50 p-4 shadow-sm'
@@ -274,7 +354,7 @@ export default async function EcdCommunicationsPage({
                               </span>
                             ) : (
                               <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-amber-700">
-                                Received
+                                New
                               </span>
                             )}
                           </div>
@@ -310,7 +390,7 @@ export default async function EcdCommunicationsPage({
             </div>
           </TabsContent>
 
-          <TabsContent value="outbox" className="mt-6">
+          <TabsContent value="sent" className="mt-6">
             <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
               <CardHeader className="bg-slate-50/50">
                 <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
@@ -346,6 +426,31 @@ export default async function EcdCommunicationsPage({
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="announcements" className="mt-6">
+            <Card className="rounded-3xl border border-slate-100 bg-white shadow-sm">
+              <CardHeader className="bg-slate-50/50">
+                <CardTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <Megaphone className="h-4 w-4 text-cyan-600" />
+                  Centre Announcements
+                </CardTitle>
+                <CardDescription className="text-sm text-slate-600">
+                  Send updates to all parents or specific groups.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <CommunicationsComposer
+                  ecdId={ecdId}
+                  centreName={centreName}
+                  templates={templates}
+                  recipients={recipients}
+                  centreParticipantIds={centreParticipantIds}
+                  allowedModes={['broadcast']}
+                  initialMode="broadcast"
+                />
               </CardContent>
             </Card>
           </TabsContent>

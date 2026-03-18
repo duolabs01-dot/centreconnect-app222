@@ -124,7 +124,6 @@ export function CommunicationsComposer({
       const payload = parentIds.map((parentId) => ({
         parent_id: parentId,
         ecd_id: ecdId,
-        template_key: selectedTemplate?.template_key ?? null,
         title: `${centreName}: ${selectedTemplate?.title ?? 'Crèche update'}`,
         message: professionalMessage,
       }))
