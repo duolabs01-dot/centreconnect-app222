@@ -31,10 +31,10 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
 
 // === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_ops: 'Daily Ops',
-  admin: 'People & Records',
-  grow: 'Admissions & Growth',
-  settings: 'Settings',
+  daily_ops: '',
+  admin: '',
+  grow: '',
+  settings: '',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'

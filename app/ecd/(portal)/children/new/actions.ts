@@ -203,6 +203,7 @@ export type SendParentLinkForExistingChildResult = {
   whatsappHref?: string
   parentOnboardingUrl?: string
   request?: ParentLinkRequestSummary
+  existingParentDetected?: boolean
 }
 
 function getAppUrl() {
@@ -909,6 +910,7 @@ export async function sendParentLinkForExistingChildAction(
     whatsappHref: result.whatsappHref ?? undefined,
     parentOnboardingUrl: result.accessLink ?? undefined,
     request: result.request,
+    existingParentDetected: result.existingParentDetected,
   }
 }
 export async function saveTempChildProfileAndInviteParentAction(

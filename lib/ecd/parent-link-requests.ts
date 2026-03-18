@@ -4,7 +4,7 @@ import { createHash, randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildAuthCallbackRedirect, generateMagicFirstAccessLink, normalizeAppUrl } from '@/lib/auth/onboarding-links'
-import { queueEmail } from '@/lib/communications/emails'
+import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { renderBaseEmailLayout } from '@/lib/email/email-layout'
 import { enqueueParentWelcomeSequence } from '@/lib/notifications/parent-welcome-sequence'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
@@ -53,6 +53,7 @@ type CreateParentLinkRequestResult = {
   request?: ParentLinkRequestSummary
   whatsappHref?: string | null
   accessLink?: string | null
+  existingParentDetected?: boolean
 }
 
 type AcceptParentLinkRequestResult = {
@@ -126,20 +127,26 @@ function normalizeEmergencyContacts(raw: unknown) {
 }
 
 async function findExistingAuthUserIdByEmail(admin: ReturnType<typeof createAdminClient>, email: string) {
-  const { data, error } = await admin
-    .schema('auth')
-    .from('users')
-    .select('id,email')
-    .ilike('email', email)
-    .limit(1)
-    .maybeSingle()
+  const normalizedEmail = email.trim().toLowerCase()
+  
+  const magicResult = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email: normalizedEmail,
+    options: { redirectTo: '/' },
+  })
+  
+  if (!magicResult.error && magicResult.data?.user?.id) {
+    return magicResult.data.user.id
+  }
 
-  if (!error && data?.id) return data.id
+  if (magicResult.error?.message && !magicResult.error.message.includes('user not found')) {
+    console.warn('[findExistingAuthUserIdByEmail] generateLink error:', magicResult.error.message)
+  }
 
   const usersResult = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
   if (!usersResult.error) {
     const match = usersResult.data.users.find(
-      (user) => String(user.email ?? '').trim().toLowerCase() === email
+      (user) => String(user.email ?? '').trim().toLowerCase() === normalizedEmail
     )
     if (match?.id) return match.id
   }
@@ -415,13 +422,13 @@ export async function createOrResendParentLinkRequest(
     emailMode,
   })
 
-  const emailQueueResult = await queueEmail(
-    parentEmail,
-    emailMode === 'link_profile'
+  const emailDeliveryResult = await deliverTransactionalEmail({
+    to: parentEmail,
+    subject: emailMode === 'link_profile'
       ? `${centreName} is ready to connect ${childName} on CentreConnect`
       : `${centreName} invited you to CentreConnect for ${childName}`,
-    emailPayload.html
-  )
+    html: emailPayload.html,
+  })
 
   await admin.from('audit_logs').insert({
     user_id: input.requestedByUserId,
@@ -433,7 +440,8 @@ export async function createOrResendParentLinkRequest(
       parent_email: parentEmail,
       parent_phone: parentPhone,
       email_mode: emailMode,
-      queue_success: emailQueueResult.success,
+      email_delivery_status: emailDeliveryResult.status,
+      email_delivery_message: emailDeliveryResult.deliveryMessage,
       access_link_mode: accessLinkResult.mode,
     },
   })
@@ -446,7 +454,7 @@ export async function createOrResendParentLinkRequest(
     ok: true,
     message:
       emailMode === 'link_profile'
-        ? 'Family link emailed. The parent can now confirm their profile and start receiving updates.'
+        ? 'Parent detected! Family link emailed. They can now confirm their profile and start receiving updates.'
         : 'Invitation emailed. The parent can now join CentreConnect and link this child profile.',
     request: toSummary(inserted as unknown as Record<string, unknown>),
     whatsappHref: buildWhatsappHref({
@@ -457,6 +465,7 @@ export async function createOrResendParentLinkRequest(
       accessLink: accessLinkResult.link,
     }),
     accessLink: accessLinkResult.link,
+    existingParentDetected: emailMode === 'link_profile',
   }
 }
 

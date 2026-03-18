@@ -1,4 +1,6 @@
 ﻿import type { Metadata } from 'next'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -240,18 +242,21 @@ export default async function EcdBillingPage() {
           </CardContent>
         </Card>
 
+        {role === 'ecd_admin' && (
+          <Button variant="outline" asChild className="w-full sm:w-fit border-slate-200 text-slate-700 font-bold h-11 px-8 rounded-2xl">
+            <Link href="/ecd/financials">Financials Overview <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+        )}
+
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Business Snapshot (P&L)</CardTitle>
+            <CardTitle className="text-base font-bold">Financial Overview</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6 pt-6">
-            <p className="text-sm font-medium text-slate-500">
-              Keep monthly financials updated to track profitability and operational health.
-            </p>
+          <CardContent className="pt-6 space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-2xl border border-cyan-100 bg-cyan-50/50 p-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-cyan-600">Revenue</p>
-                <p className="mt-1 text-xl font-black text-cyan-900">R{pnl.revenue.toLocaleString()}</p>
+              <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Revenue</p>
+                <p className="mt-1 text-xl font-black text-emerald-900">R{pnl.revenue.toLocaleString()}</p>
               </div>
               <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-rose-600">Expenses</p>
@@ -266,7 +271,7 @@ export default async function EcdBillingPage() {
                 <p className="mt-1 text-xl font-black text-violet-900">R{netWorth.toLocaleString()}</p>
               </div>
             </div>
-            <form action={saveFinancialSnapshotAction} className="grid gap-4 lg:grid-cols-2 pt-4">
+            <form action={saveFinancialSnapshotAction} className="grid gap-4 lg:grid-cols-2">
               <label className="space-y-1.5">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Month</span>
                 <input type="date" name="period_month" className="cc-native-field h-12 rounded-2xl" defaultValue={currentMonth} />

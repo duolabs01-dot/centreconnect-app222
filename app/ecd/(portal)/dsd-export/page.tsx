@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, Printer, ArrowLeft, Loader2 } from 'lucide-react'
+import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, Printer, ArrowLeft, Loader2, ArrowRight } from 'lucide-react'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -143,6 +143,20 @@ export default async function DsdExportPage({
             </form>
           </CardContent>
         </Card>
+
+        <div className="flex flex-wrap gap-2 print-hide">
+          <Button variant="outline" asChild className="rounded-2xl font-bold border-slate-200 text-slate-600">
+            <Link href="/ecd/report-cards">Report Cards <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+          <Button variant="outline" asChild className="rounded-2xl font-bold border-slate-200 text-slate-600">
+            <Link href="/ecd/financials">Financials <ArrowRight className="ml-2 h-4 w-4" /></Link>
+          </Button>
+          {role === 'ecd_admin' && (
+            <Button variant="outline" asChild className="rounded-2xl font-bold border-slate-200 text-slate-600">
+              <Link href="/ecd/billing">Billing <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+          )}
+        </div>
 
         {/* ══════════════════════════════════════════════════════════════════
             SECTION 1 — DOE Cover Page (matches page 1 of PDF exactly)

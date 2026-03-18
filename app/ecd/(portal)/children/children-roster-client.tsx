@@ -333,17 +333,19 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
             </CardDescription>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{centreName}</p>
           </div>
-          <div className="flex flex-col gap-3 sm:w-auto sm:min-w-[230px]">
-            <Button asChild className="rounded-2xl bg-teal-600 font-black text-white hover:bg-teal-700">
-              <Link href="/ecd/children/new#quick-add">Add Children</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50">
-              <Link href="/ecd/children/new#full-child-profile">
-                <span>Detailed form</span>
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
+           <div className="flex flex-col gap-3 sm:w-auto sm:min-w-[230px]">
+             <Button asChild className="rounded-2xl bg-teal-600 font-black text-white hover:bg-teal-700">
+               <Link href="/ecd/children/new#quick-add">Add Children</Link>
+             </Button>
+              <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50">
+                <Link href="/ecd/children/new#full-child-profile">
+                  <span>Detailed form</span>
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 hover:bg-slate-50">
+                <Link href="/ecd/employment">Employment →</Link>
+              </Button>
+           </div>
         </CardHeader>
       </Card>
 

@@ -31,28 +31,27 @@ export type EcdNavItem = {
 }
 
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
-  // DAILY OPS
-  { href: '/ecd/dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/attendance', label: 'Attendance', icon: UserCheck, group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/pickup', label: 'Pickup', icon: ShieldCheck, group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: Zap, group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/calendar', label: 'Calendar', icon: CalendarDays, group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/team-plans', label: 'Staff Plan', icon: ListChecks, group: 'daily_ops', supervisorAllowed: true },
+  // 1 — HOME
+  { href: '/ecd/dashboard',     label: 'Home',       icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
 
-  // PEOPLE & RECORDS
-  { href: '/ecd/children', label: 'Children', icon: Users, group: 'admin', supervisorAllowed: true },
-  { href: '/ecd/employment', label: 'Employment', icon: Briefcase, group: 'admin', supervisorAllowed: true },
-  { href: '/ecd/dsd-export', label: 'DOE Report', icon: FileCheck, group: 'admin', supervisorAllowed: true },
-  { href: '/ecd/billing', label: 'Billing', icon: CreditCard, group: 'admin', adminOnly: true },
-  { href: '/ecd/financials', label: 'Financials', icon: LineChart, group: 'admin', adminOnly: true, minTier: 'standard' },
-  { href: '/ecd/compliance', label: 'Compliance', icon: FileText, group: 'admin', adminOnly: true, minTier: 'standard' },
-  { href: '/ecd/report-cards', label: 'Report Cards', icon: FileText, group: 'admin', supervisorAllowed: true, minTier: 'standard' },
+  // 2 — CHILDREN (replaces Children + DOE Report + Report Cards)
+  { href: '/ecd/children',      label: 'Children',   icon: Users,           group: 'daily_ops', supervisorAllowed: true },
 
-  // ADMISSIONS & GROWTH
-  { href: '/ecd/applications', label: 'Admissions', icon: ClipboardList, group: 'grow', supervisorAllowed: true },
-  { href: '/ecd/communications', label: 'Messages', icon: MessagesSquare, group: 'grow', supervisorAllowed: true },
-  { href: '/ecd/website', label: 'Website', icon: Globe, group: 'grow', adminOnly: true, minTier: 'standard' },
+  // 3 — ATTENDANCE (replaces Attendance + Pickup as primary; pickup accessible from attendance)
+  { href: '/ecd/attendance',    label: 'Attendance', icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
 
-  // SETTINGS
-  { href: '/ecd/profile', label: 'Settings', icon: Settings2, group: 'settings' },
+  // 4 — REPORTS (replaces Daily Reports + Report Cards)
+  { href: '/ecd/daily-reports', label: 'Reports',    icon: Zap,             group: 'daily_ops', supervisorAllowed: true },
+
+  // 5 — ADMISSIONS (replaces Applications/Pipeline + Messages)
+  { href: '/ecd/applications',  label: 'Admissions', icon: ClipboardList,   group: 'grow',      supervisorAllowed: true },
+
+  // 6 — MESSAGES
+  { href: '/ecd/communications',label: 'Messages',   icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true },
+
+  // 7 — ADMIN (replaces Employment + Billing + Financials + Compliance + Calendar + Website)
+  { href: '/ecd/profile',       label: 'Admin',      icon: Settings2,       group: 'settings',  adminOnly: true },
+
+  // 8 — DOE EXPORT (highly visible for compliance — keep top-level)
+  { href: '/ecd/dsd-export',    label: 'DOE Export', icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
 ]

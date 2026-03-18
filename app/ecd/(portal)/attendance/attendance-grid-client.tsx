@@ -230,17 +230,20 @@ export function AttendanceGridClient({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          {isPending && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-          <Button 
-            onClick={() => window.print()}
-            variant="outline"
-            className="rounded-xl font-black gap-2 border-2 border-slate-100"
-          >
-            <Printer className="h-4 w-4" />
-            Export for DSD
-          </Button>
-        </div>
+         <div className="flex items-center gap-2">
+           {isPending && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
+           <Button 
+             onClick={() => window.print()}
+             variant="outline"
+             className="rounded-xl font-black gap-2 border-2 border-slate-100"
+           >
+             <Printer className="h-4 w-4" />
+             Export for DSD
+           </Button>
+           <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-white font-black text-slate-700">
+             <Link href="/ecd/pickup">Pickup codes →</Link>
+           </Button>
+         </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 no-print">

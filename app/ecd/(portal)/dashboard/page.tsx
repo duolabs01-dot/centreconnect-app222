@@ -229,40 +229,47 @@ export default async function EcdDashboardPage() {
     { id: 'publish', label: 'Publish your creche page', done: Boolean(centre?.is_active), href: '/ecd/website' },
   ]
 
-  const startHereActions = [
-    pendingCount > 0
-      ? {
-          title: 'Review new applications',
-          detail: `${pendingCount} ${pendingCount === 1 ? 'application is' : 'applications are'} waiting for you.`,
-          href: '/ecd/applications',
-          tone: 'border-amber-200 bg-amber-50/80',
-        }
-      : null,
-    !centre?.logo_url || !centre?.cover_image_url
-      ? {
-          title: 'Finish your website photos',
-          detail: 'Add your logo and hero image so parents trust your page faster.',
-          href: '/ecd/website#brand-media',
-          tone: 'border-teal-200 bg-teal-50/80',
-        }
-      : null,
-    (snapshot.attendance_today_count ?? 0) === 0
-      ? {
-          title: 'Take attendance',
-          detail: 'Start the day by marking who is in class.',
-          href: '/ecd/attendance',
-          tone: 'border-cyan-200 bg-cyan-50/80',
-        }
-      : null,
-    unreadNotifications > 0
-      ? {
-          title: 'Check unread messages',
-          detail: `${unreadNotifications} message${unreadNotifications === 1 ? '' : 's'} still need attention.`,
-          href: '/ecd/communications',
-          tone: 'border-slate-200 bg-white/90',
-        }
-      : null,
-  ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
+    const startHereActions = [
+      pendingCount > 0
+        ? {
+            title: 'Review new applications',
+            detail: `${pendingCount} ${pendingCount === 1 ? 'application is' : 'applications are'} waiting for you.`,
+            href: '/ecd/applications',
+            tone: 'border-amber-200 bg-amber-50/80',
+          }
+        : null,
+      !centre?.logo_url || !centre?.cover_image_url
+        ? {
+            title: 'Finish your website photos',
+            detail: 'Add your logo and hero image so parents trust your page faster.',
+            href: '/ecd/website#brand-media',
+            tone: 'border-teal-200 bg-teal-50/80',
+          }
+        : null,
+      (snapshot.attendance_today_count ?? 0) === 0
+        ? {
+            title: 'Take attendance',
+            detail: 'Start the day by marking who is in class.',
+            href: '/ecd/attendance',
+            tone: 'border-cyan-200 bg-cyan-50/80',
+          }
+        : null,
+      unreadNotifications > 0
+        ? {
+            title: 'Check unread messages',
+            detail: `${unreadNotifications} message${unreadNotifications === 1 ? '' : 's'} still need attention.`,
+            href: '/ecd/communications',
+            tone: 'border-slate-200 bg-white/90',
+          }
+        : null,
+      // Always show calendar quick action
+      {
+        title: 'View calendar',
+        detail: 'See your centre\'s events and schedule.',
+        href: '/ecd/calendar',
+        tone: 'border-purple-200 bg-purple-50/80',
+      },
+    ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
 
   return (
     <EcdOsShell
