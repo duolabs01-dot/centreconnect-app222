@@ -1,19 +1,19 @@
 /* app/admin/admin-theme.css */
-/* Isolated Cyber-Noir Design System */
+/* Isolated CentreConnect Admin Design System — Brand-aligned dark theme */
 
 .admin-shell {
-  /* Admin palette (cyber-noir). */
-  --cyber-cyan:   rgb(0, 242, 255);
-  --cyber-violet: rgb(138, 43, 226);
-  --cyber-green:  rgb(0, 255, 148);
+  /* Admin palette — dark background with brand teal/amber accents */
+  --cyber-cyan:   rgb(13, 148, 136);   /* brand teal — replaces arbitrary cyan neon */
+  --cyber-violet: rgb(212, 147, 90);   /* brand amber — replaces arbitrary violet */
+  --cyber-green:  rgb(0, 255, 148);    /* kept for positive states */
   --cyber-amber:  rgb(255, 184, 0);
-  --cyber-rose:   rgb(255, 68, 102);
+  --cyber-rose:   rgb(255, 68, 102);   /* kept for destructive states */
   --cyber-bg:     rgb(11, 14, 20);
   --cyber-card:   rgba(17, 21, 32, 0.72);
   --cyber-border: rgba(255, 255, 255, 0.08);
 
-  --cyber-cyan-rgb: 0, 242, 255;
-  --cyber-violet-rgb: 138, 43, 226;
+  --cyber-cyan-rgb: 13, 148, 136;
+  --cyber-violet-rgb: 212, 147, 90;
   --cyber-green-rgb: 0, 255, 148;
   --cyber-amber-rgb: 255, 184, 0;
   --cyber-rose-rgb: 255, 68, 102;
@@ -25,22 +25,22 @@
   --card-foreground: 210 24% 92%;
   --popover: 224 30% 12%;
   --popover-foreground: 210 24% 92%;
-  --primary: 185 100% 50%;
+  --primary: 173 83% 29%;
   --primary-foreground: 222 47% 12%;
   --secondary: 223 18% 17%;
   --secondary-foreground: 210 20% 90%;
   --muted: 223 18% 17%;
   --muted-foreground: 215 16% 70%;
-  --accent: 270 76% 53%;
+  --accent: 28 56% 59%;
   --accent-foreground: 0 0% 100%;
   --border: 220 14% 22%;
   --input: 220 14% 22%;
-  --ring: 185 100% 50%;
+  --ring: 173 83% 29%;
 
     background-color: var(--cyber-bg);
     background-image:
-      radial-gradient(circle at 0% 0%, rgba(138, 43, 226, 0.12) 0%, transparent 40%),
-      radial-gradient(circle at 100% 100%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
+      radial-gradient(circle at 0% 0%, rgba(212, 147, 90, 0.10) 0%, transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(13, 148, 136, 0.08) 0%, transparent 40%),
        url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%224%22 height=%224%22%3E%3Crect width=%224%22 height=%224%22 fill=%22rgb(11,14,20)%22/%3E%3Crect width=%221%22 height=%221%22 fill=%22rgba(255,255,255,0.08)%22/%3E%3Crect width=%221%22 height=%221%22 x=%222%22 y=%222%22 fill=%22rgba(255,255,255,0.05)%22/%3E%3C/svg%3E');
     color: rgb(226, 232, 240);
     font-family: var(--font-admin);
@@ -52,11 +52,11 @@
   letter-spacing: 0.15em;
   color: white;
   text-shadow: 
-    0 0 10px rgba(0, 242, 255, 0.5),
-    0 0 20px rgba(0, 242, 255, 0.2);
+    0 0 10px rgba(13, 148, 136, 0.5),
+    0 0 20px rgba(13, 148, 136, 0.2);
 }
 
-/* Glassmorphic Cyber Cards */
+/* Glassmorphic Cards */
 .cyber-card {
   background: var(--cyber-card);
   border: 1px solid var(--cyber-border);
@@ -77,17 +77,17 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(13, 148, 136, 0.4), transparent);
 }
 
 .cyber-card-glow-cyan {
   box-shadow: 0 10px 15px rgba(var(--cyber-cyan-rgb), 0.12);
-  border-color: rgba(0, 242, 255, 0.2);
+  border-color: rgba(13, 148, 136, 0.2);
 }
 
 .cyber-card-glow-violet {
   box-shadow: 0 10px 15px rgba(var(--cyber-violet-rgb), 0.12);
-  border-color: rgba(138, 43, 226, 0.2);
+  border-color: rgba(212, 147, 90, 0.2);
 }
 
 /* Animated Scanline Effect */
@@ -101,7 +101,7 @@
   background: linear-gradient(
     to bottom,
     transparent 50%,
-    rgba(0, 242, 255, 0.02) 50%
+    rgba(13, 148, 136, 0.02) 50%
   );
   background-size: 100% 4px;
   pointer-events: none;

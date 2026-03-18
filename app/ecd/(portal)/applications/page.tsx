@@ -15,6 +15,7 @@ import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-read
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { cn } from '@/lib/utils'
 import { Search, Filter, ChevronLeft, ChevronRight, FileText, ShieldAlert, Info } from 'lucide-react'
+import { ApplicationsRealtimeBridge } from './applications-realtime-bridge'
 
 export const revalidate = 30
 
@@ -46,57 +47,57 @@ type ApplicationRow = {
   parent_message: string | null
   admin_notes: string | null
   children:
-    | {
-        first_name: string
-        last_name: string
-        date_of_birth: string | null
-        gender: string | null
-      }
-    | Array<{
-        first_name: string
-        last_name: string
-        date_of_birth: string | null
-        gender: string | null
-      }>
-    | null
+  | {
+    first_name: string
+    last_name: string
+    date_of_birth: string | null
+    gender: string | null
+  }
+  | Array<{
+    first_name: string
+    last_name: string
+    date_of_birth: string | null
+    gender: string | null
+  }>
+  | null
   parents:
+  | {
+    id: string
+    alt_phone: string | null
+    guardian_relationship: string | null
+    emergency_contact_name: string | null
+    emergency_contact_phone: string | null
+    id_verification_status: string | null
+    user_profiles:
     | {
-        id: string
-        alt_phone: string | null
-        guardian_relationship: string | null
-        emergency_contact_name: string | null
-        emergency_contact_phone: string | null
-        id_verification_status: string | null
-        user_profiles:
-          | {
-              full_name: string
-              phone: string | null
-            }
-          | Array<{
-              full_name: string
-              phone: string | null
-            }>
-          | null
-      }
+      full_name: string
+      phone: string | null
+    }
     | Array<{
-        id: string
-        alt_phone: string | null
-        guardian_relationship: string | null
-        emergency_contact_name: string | null
-        emergency_contact_phone: string | null
-        id_verification_status: string | null
-        user_profiles:
-          | {
-              full_name: string
-              phone: string | null
-            }
-          | Array<{
-              full_name: string
-              phone: string | null
-            }>
-          | null
-      }>
+      full_name: string
+      phone: string | null
+    }>
     | null
+  }
+  | Array<{
+    id: string
+    alt_phone: string | null
+    guardian_relationship: string | null
+    emergency_contact_name: string | null
+    emergency_contact_phone: string | null
+    id_verification_status: string | null
+    user_profiles:
+    | {
+      full_name: string
+      phone: string | null
+    }
+    | Array<{
+      full_name: string
+      phone: string | null
+    }>
+    | null
+  }>
+  | null
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -378,11 +379,11 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
   const allowIncompleteApplications = centre?.allow_incomplete_applications ?? true
   const selectedTab: TabKey =
     searchParams?.tab === 'awaiting_offer_response' ||
-    searchParams?.tab === 'approved' ||
-    searchParams?.tab === 'enrolled' ||
-    searchParams?.tab === 'waitlisted' ||
-    searchParams?.tab === 'rejected' ||
-    searchParams?.tab === 'withdrawn'
+      searchParams?.tab === 'approved' ||
+      searchParams?.tab === 'enrolled' ||
+      searchParams?.tab === 'waitlisted' ||
+      searchParams?.tab === 'rejected' ||
+      searchParams?.tab === 'withdrawn'
       ? searchParams.tab
       : 'pending'
 
@@ -633,6 +634,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
       roleLabel={role === 'ecd_admin' ? 'Creche Admin' : role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'}
       userEmail={user.email ?? 'Unknown email'}
     >
+      <ApplicationsRealtimeBridge ecdId={ecdId} />
       <section className="mb-8 flex items-center justify-between">
         <div className="space-y-1">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-600">{centre?.name ?? 'Admissions'}</p>
@@ -721,8 +723,8 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                   href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
                   className={cn(
                     "px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors",
-                    selectedTab === tab.key 
-                      ? "bg-white text-teal-700 shadow-sm border border-slate-100" 
+                    selectedTab === tab.key
+                      ? "bg-white text-teal-700 shadow-sm border border-slate-100"
                       : "text-slate-500 hover:text-slate-900"
                   )}
                 >
@@ -845,9 +847,9 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                       <div className="mt-2"><StatusBadge status={focusedApplication.status} /></div>
                     </div>
                   </div>
-                  
+
                   <div className="h-px bg-slate-100" />
-                  
+
                   <div className="grid grid-cols-2 gap-8">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
@@ -875,7 +877,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="w-full md:w-80 bg-slate-50/50 border-l border-slate-50 p-8">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Internal Notes</p>
                   <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm min-h-[120px]">

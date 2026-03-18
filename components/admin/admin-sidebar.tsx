@@ -7,7 +7,7 @@ import { Building2, LifeBuoy, Settings, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutButton } from '@/components/cc-admin/SignOutButton'
 import { MobileNavMenu } from '@/components/layout/mobile-nav-menu'
-import { ADMIN_NAV_ITEMS, ADMIN_NAV_SECTIONS } from './admin-nav'
+import { ADMIN_NAV_ITEMS } from './admin-nav'
 
 const QA_ADMIN_CRITICAL_ROUTES = ['/admin/parent-reliability']
 
@@ -16,11 +16,12 @@ export function AdminSidebar() {
   const mobileItems = ADMIN_NAV_ITEMS.map((item) => ({
     ...item,
     icon:
-      item.href === '/admin/tenants'
+      item.icon ??
+      (item.href === '/admin/tenants'
         ? Building2
         : item.href === '/admin/support'
-        ? LifeBuoy
-        : Sparkles,
+          ? LifeBuoy
+          : Sparkles),
     group: 'core',
   }))
 
@@ -46,31 +47,26 @@ export function AdminSidebar() {
           <p className="mt-1 text-xs text-slate-400">One place to run company, product, and operations.</p>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-5">
-          {ADMIN_NAV_SECTIONS.map((section) => (
-            <section key={section.id} className="space-y-2">
-              <p className="px-3 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">{section.label}</p>
-              <nav className="space-y-1.5">
-                {section.items.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
-                        isActive
-                          ? 'bg-teal-500/15 text-teal-200 border border-teal-500/30'
-                          : 'text-slate-300 border border-transparent hover:bg-white/5 hover:text-white'
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  )
-                })}
-              </nav>
-            </section>
-          ))}
+        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5">
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const isActive = pathname === item.href
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
+                  isActive
+                    ? 'bg-teal-500/15 text-teal-200 border border-teal-500/30'
+                    : 'text-slate-300 border border-transparent hover:bg-white/5 hover:text-white'
+                )}
+              >
+                {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                {item.label}
+              </Link>
+            )
+          })}
         </div>
 
         <div className="p-4 border-t border-white/10">

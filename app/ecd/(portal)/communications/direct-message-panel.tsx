@@ -73,7 +73,6 @@ export function DirectMessagePanel({
         parent_id: recipientParentId,
         ecd_id: ecdId,
         application_id: contextType === 'application' ? contextId : null,
-        template_key: 'parent_message',
         title: `Message from ${centreName}`,
         message: professionalMessage,
       })

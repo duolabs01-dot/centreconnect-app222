@@ -81,3 +81,23 @@ Three portals:
 **Mama Bajabulile (ECD Owner)** — 47, Alexandra, runs a 35-child crèche alone with 1 helper. Uses WhatsApp and a paper register. Skeptical of technology. Doesn't have time to read instructions. Needs to trust before she tries.
 
 **You (Platform Admin)** — Solo founder, no money, every decision matters. Needs clarity, speed, and zero wasted effort.
+
+## Available Skills
+
+Reference these skill files from `cc-agents/cc-agents/skills/` before working in their domain:
+
+| Skill | File | When to Use |
+|-------|------|-------------|
+| Codex Fullstack | `codex-fullstack.md` | Full-stack development patterns |
+| Community Growth | `community-growth.md` | Community building and engagement |
+| Compliance & Legal | `compliance-legal.md` | Legal, compliance, POPIA |
+| Debug Detective | `debug-detective.md` | Debugging and troubleshooting |
+| ECD Onboarding Specialist | `ecd-onboarding-specialist.md` | Centre onboarding flows |
+| Funding Application | `funding-application.md` | Grant and funding applications |
+| Parent Acquisition | `parent-acquisition.md` | Parent growth and acquisition |
+| Revenue Engine | `revenue-engine.md` | Billing, payments, revenue |
+| Solo Founder | `solo-founder.md` | Solo founder operations |
+| **Production Security** | `production-security.md` | POPIA, secrets, git hygiene, incident response |
+| **Realtime Data Flows** | `realtime-data-flows.md` | Supabase Realtime patterns, channel scoping |
+| **Simplification Sprint** | `simplification-sprint.md` | UI complexity reduction, nav budgets, fold rule |
+| **Pilot Activation** | `pilot-activation.md` | Activation funnel, metrics, churn prevention |

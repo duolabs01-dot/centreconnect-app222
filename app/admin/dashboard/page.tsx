@@ -10,6 +10,7 @@ import {
   HeartHandshake,
   LifeBuoy,
   ShieldCheck,
+  Wrench,
 } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
@@ -17,6 +18,8 @@ import { getCompanyHqSnapshot } from '@/lib/admin/company-hq'
 import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
+import { ADMIN_ADVANCED_ITEMS } from '@/components/admin/admin-nav'
+import { AdminRealtimePulse } from '@/components/admin/AdminRealtimePulse'
 import {
   Table,
   TableBody,
@@ -205,6 +208,72 @@ function SectionCard({
   )
 }
 
+function PilotStatusCard({
+  partners,
+}: {
+  partners: Array<{
+    id: string
+    name: string
+    matched: boolean
+    portalStatus: string
+    activitySummary: string
+    city: string
+  }>
+}) {
+  const pilotTarget = 20
+  const activeCentres = partners.filter((p) => p.matched).length
+  const payingCentres = 0 // Pre-revenue — zero paying centres during pilot
+
+  return (
+    <section className="rounded-[2rem] border border-white/5 bg-slate-950/60 p-6 shadow-2xl">
+      <div className="mb-5">
+        <p className="text-[11px] font-black uppercase tracking-[0.2em] text-teal-300">Pilot Status</p>
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-white">Founding Centres</h2>
+        <p className="mt-1 text-sm text-slate-400">The first thing you see every morning. Are our pilot centres active?</p>
+      </div>
+
+      <div className="space-y-3">
+        {partners.map((partner) => {
+          const isActive = partner.matched && partner.portalStatus.includes('complete')
+          return (
+            <div key={partner.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-bold text-white">{partner.name}</p>
+                  <p className="text-xs text-slate-400">{partner.city}</p>
+                </div>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${isActive
+                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                    : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                    }`}
+                >
+                  {isActive ? '🟢 Active' : '🟡 Inactive'}
+                </span>
+              </div>
+              <p className="mt-2 text-xs text-slate-400">{partner.activitySummary}</p>
+              <p className="mt-1 text-[11px] text-slate-500">{partner.portalStatus}</p>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Pilot progress</p>
+            <p className="mt-1 text-lg font-black text-white">{activeCentres} / {pilotTarget} target</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">Paying</p>
+            <p className="mt-1 text-lg font-black text-white">{payingCentres} / {pilotTarget} pilot</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export default async function AdminDashboardPage() {
   const admin = createAdminClient()
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
@@ -280,8 +349,8 @@ export default async function AdminDashboardPage() {
       detail: !inviteDomainHealth.ok
         ? `${inviteDomainHealth.message} Fix this before you widen live onboarding.`
         : failedInvites > 0
-        ? `${failedInvites} centre invite records still failed, but the domain path is healthy. Repair follow-through before the next onboarding call.`
-        : 'Invite domains and callback links look safe for live owner onboarding today.',
+          ? `${failedInvites} centre invite records still failed, but the domain path is healthy. Repair follow-through before the next onboarding call.`
+          : 'Invite domains and callback links look safe for live owner onboarding today.',
       href: '/admin/invites',
       hrefLabel: 'Open invite health',
       tone: !inviteDomainHealth.ok ? 'rose' : failedInvites > 0 ? 'amber' : 'emerald',
@@ -394,6 +463,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8 pb-20">
+      <AdminRealtimePulse />
       <header className="rounded-[2rem] border border-white/5 bg-slate-950/60 p-6 shadow-2xl lg:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -455,11 +525,22 @@ export default async function AdminDashboardPage() {
         This page uses live admin counts plus already-shipped product capabilities. It does not guess future conversions or mark unpaid work as revenue.
       </div>
 
+      <PilotStatusCard
+        partners={companyHqSnapshot.pilotBoard.foundingPartners.map((p) => ({
+          id: p.id,
+          name: p.name,
+          matched: p.matched,
+          portalStatus: p.portalStatus,
+          activitySummary: p.activitySummary,
+          city: p.city,
+        }))}
+      />
+
       <SectionCard
         title="Company hierarchy"
         description="Visible ownership so you can see who owns what without opening a separate page."
-        href="/admin/hq"
-        hrefLabel="Open Company HQ"
+        href="/admin/dashboard"
+        hrefLabel="Company overview"
         icon={<Building2 className="h-4 w-4" />}
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -476,7 +557,7 @@ export default async function AdminDashboardPage() {
       <SectionCard
         title="Plans (Now + Next)"
         description="The working plan is pinned here so it is impossible to lose track."
-        href="/admin/hq#task-router"
+        href="/admin/dashboard#task-router"
         hrefLabel="Open full planning board"
         icon={<ShieldCheck className="h-4 w-4" />}
       >
@@ -801,6 +882,27 @@ export default async function AdminDashboardPage() {
             <Link key={item.href} href={item.href} className="rounded-2xl border border-white/10 bg-black/20 p-4 transition-colors hover:bg-white/5">
               <p className="text-sm font-black text-white">{item.label}</p>
               <p className="mt-2 text-sm text-slate-400">{item.copy}</p>
+            </Link>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Advanced tools"
+        description="Specialised admin pages for analytics, auditing, AI ops, and system monitoring. Not needed daily — drill in when you need depth."
+        href="/admin/dashboard"
+        hrefLabel="Stay on overview"
+        icon={<Wrench className="h-4 w-4" />}
+      >
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {ADMIN_ADVANCED_ITEMS.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-2xl border border-white/10 bg-black/20 p-4 transition-colors hover:bg-white/5"
+            >
+              <p className="text-sm font-black text-white">{item.label}</p>
+              <p className="mt-2 text-xs text-slate-400">Open {item.label.toLowerCase()} →</p>
             </Link>
           ))}
         </div>

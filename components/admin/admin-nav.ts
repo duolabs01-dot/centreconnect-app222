@@ -1,57 +1,58 @@
+import {
+  Building2,
+  CreditCard,
+  LayoutDashboard,
+  LifeBuoy,
+  Terminal,
+  Users,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
 export type AdminNavItem = {
   href: string
   label: string
+  icon?: LucideIcon
 }
 
 export type AdminNavSection = {
-  id: 'home' | 'operations' | 'finance' | 'system'
+  id: 'core' | 'advanced'
   label: string
   items: AdminNavItem[]
 }
 
-export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
-  {
-    id: 'home',
-    label: 'Start here',
-    items: [
-      { label: 'Company HQ', href: '/admin/hq' },
-      { label: 'Home Dashboard', href: '/admin/dashboard' },
-      { label: 'Centres', href: '/admin/tenants' },
-      { label: 'Support', href: '/admin/support' },
-    ],
-  },
-  {
-    id: 'operations',
-    label: 'Operations',
-    items: [
-      { label: 'Users', href: '/admin/users' },
-      { label: 'Invites', href: '/admin/invites' },
-      { label: 'Parent Reliability', href: '/admin/parent-reliability' },
-      { label: 'Analytics', href: '/admin/analytics' },
-    ],
-  },
-  {
-    id: 'finance',
-    label: 'Revenue',
-    items: [
-      { label: 'Revenue', href: '/admin/revenue' },
-      { label: 'Operations Queue', href: '/admin/command' },
-    ],
-  },
-  {
-    id: 'system',
-    label: 'System & AI',
-    items: [
-      { label: 'AI Company OS', href: '/admin/ai-os' },
-      { label: 'OpenClaw Ops', href: '/admin/openclaw' },
-      { label: 'Webhook Failures', href: '/admin/webhook-failures' },
-      { label: 'Audit Trail', href: '/admin/audit-trail' },
-      { label: 'Payment Runbook', href: '/admin/runbooks/payment-incidents' },
-    ],
-  },
+/** Primary nav — 6 items covering 90% of daily use */
+export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
+  { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/tenants', label: 'Centres', icon: Building2 },
+  { href: '/admin/users', label: 'Users', icon: Users },
+  { href: '/admin/revenue', label: 'Revenue', icon: CreditCard },
+  { href: '/admin/support', label: 'Support', icon: LifeBuoy },
+  { href: '/admin/command', label: 'Command', icon: Terminal },
 ]
 
-export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV_SECTIONS.flatMap((section) => section.items)
+/** Advanced tools — accessible via Overview dashboard drill-down, not primary nav */
+export const ADMIN_ADVANCED_ITEMS: AdminNavItem[] = [
+  { href: '/admin/analytics', label: 'Analytics' },
+  { href: '/admin/invites', label: 'Invites' },
+  { href: '/admin/parent-reliability', label: 'Parent Reliability' },
+  { href: '/admin/ai-os', label: 'AI Company OS' },
+  { href: '/admin/openclaw', label: 'OpenClaw Ops' },
+  { href: '/admin/webhook-failures', label: 'Webhook Failures' },
+  { href: '/admin/audit-trail', label: 'Audit Trail' },
+  { href: '/admin/runbooks/payment-incidents', label: 'Payment Runbook' },
+]
+
+/**
+ * Sections used by sidebar — now a single flat "core" section.
+ * Advanced pages are linked from the Overview dashboard instead.
+ */
+export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
+  {
+    id: 'core',
+    label: 'Navigation',
+    items: ADMIN_NAV_ITEMS,
+  },
+]
 
 export const ADMIN_TASK_ROUTER: Array<{ task: string; href: string; label: string }> = [
   { task: 'Onboard a centre', href: '/admin/tenants', label: 'Open Centres' },

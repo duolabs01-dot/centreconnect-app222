@@ -163,7 +163,6 @@ export function CommunicationsComposer({
         parent_id: recipientParentId,
         ecd_id: ecdId,
         application_id: initialContextType === 'application' ? initialContextId : null,
-        template_key: 'parent_message',
         title: notificationTitle,
         message: professionalMessage,
       })

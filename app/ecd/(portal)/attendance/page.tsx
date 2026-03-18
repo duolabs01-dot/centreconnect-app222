@@ -3,6 +3,7 @@ import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { AttendanceGridClient } from './attendance-grid-client'
+import { AttendanceRealtimeBridge } from '@/components/ecd/AttendanceRealtimeBridge'
 
 export const revalidate = 0 // Disable cache for attendance to ensure real-time updates
 
@@ -18,7 +19,7 @@ export default async function EcdAttendancePage({
 }) {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const now = getJohannesburgNowParts()
-  
+
   const selectedYear = searchParams.year ? parseInt(searchParams.year) : now.year
   const selectedMonth = searchParams.month ? parseInt(searchParams.month) : now.month
   const selectedClassId = searchParams.classId || null
@@ -68,7 +69,8 @@ export default async function EcdAttendancePage({
       roleLabel={role === 'ecd_admin' ? 'Crèche Admin' : 'Staff'}
       userEmail={user.email ?? ''}
     >
-      <AttendanceGridClient 
+      <AttendanceRealtimeBridge ecdId={ecdId} />
+      <AttendanceGridClient
         ecdId={ecdId}
         centreName={centre?.name ?? ''}
         registrationNumber={centre?.registration_number ?? ''}
