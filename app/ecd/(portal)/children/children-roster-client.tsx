@@ -197,6 +197,27 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
   const linkedChildrenCount = children.filter((child) => Boolean(child.parentId)).length
   const needsParentCount = totalChildren - linkedChildrenCount
 
+  const ageGroupCounts = useMemo(() => {
+    const counts: Record<string, number> = { 'Baby': 0, 'Toddler': 0, 'Preschool': 0, 'School': 0, 'Unknown': 0 }
+    const now = new Date()
+    
+    children.forEach(child => {
+      if (!child.dateOfBirth) {
+        counts['Unknown']++
+        return
+      }
+      const dob = new Date(child.dateOfBirth)
+      const ageMonths = (now.getFullYear() - dob.getFullYear()) * 12 + (now.getMonth() - dob.getMonth())
+      
+      if (ageMonths < 18) counts['Baby']++
+      else if (ageMonths < 36) counts['Toddler']++
+      else if (ageMonths < 72) counts['Preschool']++
+      else counts['School']++
+    })
+    
+    return Object.entries(counts).filter(([, count]) => count > 0).map(([label, count]) => ({ label, count }))
+  }, [children])
+
   const filteredChildren = useMemo(() => {
     const normalizedQuery = deferredSearchQuery.trim().toLowerCase()
 
@@ -361,6 +382,11 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
             <div className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800">
               {needsParentCount} need parent
             </div>
+            {ageGroupCounts.map(({ label, count }) => (
+              <div key={label} className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-800">
+                {count} {label}
+              </div>
+            ))}
           </div>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full lg:max-w-md">
