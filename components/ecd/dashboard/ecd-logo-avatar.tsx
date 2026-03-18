@@ -2,11 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { Camera, PencilLine } from 'lucide-react'
+import { Camera, PencilLine, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -64,7 +65,14 @@ export function EcdLogoAvatar({ centreName, logoUrl, updateHref, className }: Ec
           </button>
         </DialogTrigger>
 
-        <DialogContent className="max-w-md border-slate-200 bg-white p-6 sm:rounded-3xl">
+        <DialogContent className="relative max-w-md border-slate-200 bg-white p-6 sm:rounded-3xl [&>button]:hidden">
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader className="space-y-2">
             <DialogTitle className="text-slate-900">Centre logo</DialogTitle>
             <DialogDescription className="text-sm leading-relaxed text-slate-600">

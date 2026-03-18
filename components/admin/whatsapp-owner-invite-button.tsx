@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -101,7 +103,14 @@ export function WhatsAppOwnerInviteButton({ centreId, centreName, ownerEmail, ow
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="relative max-w-2xl [&>button]:hidden">
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader>
             <DialogTitle>WhatsApp message ready</DialogTitle>
           </DialogHeader>

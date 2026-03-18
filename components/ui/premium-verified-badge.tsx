@@ -37,7 +37,7 @@ export function GovernmentRegisteredBadge({
   return (
     <Badge
       className={cn(
-        'inline-flex items-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-700 shadow-none',
+        'inline-flex items-center gap-1.5 border border-primary/20 bg-primary/5 text-primary shadow-none',
         compact ? 'px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]' : 'px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em]',
         className
       )}

@@ -111,7 +111,7 @@ export default async function EcdSupportPage({ searchParams }: SupportPageProps)
           <div className="mb-4 flex gap-2">
             <Link
               href="/ecd/support?status=open"
-              className={`rounded-2xl px-3 py-2 text-sm font-medium ${statusFilter === 'open' ? 'bg-blue-700 text-blue-50' : 'bg-blue-50 text-blue-800'}`}
+              className={`rounded-2xl px-3 py-2 text-sm font-medium ${statusFilter === 'open' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}
             >
               Open
             </Link>

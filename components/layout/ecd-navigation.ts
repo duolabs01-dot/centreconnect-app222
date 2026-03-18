@@ -19,8 +19,7 @@ import {
 } from 'lucide-react'
 import type { InternalTier } from '@/lib/billing/plans'
 
-export type EcdNavItem = {
-  href: string
+export type EcdNavItem = Record<'href', string> & {
   label: string
   icon: LucideIcon
   group?: 'daily_ops' | 'admin' | 'grow' | 'settings'
@@ -55,3 +54,5 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   // 8 — DOE EXPORT (highly visible for compliance — keep top-level)
   { href: '/ecd/dsd-export',    label: 'DOE Export', icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
 ]
+
+

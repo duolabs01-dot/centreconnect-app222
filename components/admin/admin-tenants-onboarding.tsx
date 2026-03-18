@@ -18,13 +18,14 @@ import {
   Sparkles,
   UploadCloud,
   Users,
+  X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -496,7 +497,14 @@ export function AdminTenantsOnboarding({ existingCentres }: { existingCentres: E
         }
       }}
     >
-      <DialogContent className="border-cyan-500/30 bg-slate-950 text-slate-100">
+      <DialogContent className="relative border-cyan-500/30 bg-slate-950 text-slate-100 [&>button]:hidden">
+        <div className="absolute right-4 top-4 z-10">
+          <DialogClose asChild>
+            <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100">
+              <X className="h-4 w-4" />
+            </button>
+          </DialogClose>
+        </div>
         <DialogHeader>
           <DialogTitle className="text-cyan-200">Confirm Migration</DialogTitle>
           <DialogDescription className="text-slate-300">

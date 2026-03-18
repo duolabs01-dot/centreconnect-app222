@@ -701,8 +701,8 @@ function FilterChip({
           : 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
         : tone === 'blue'
           ? active
-            ? 'bg-blue-700 text-blue-50'
-            : 'border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100'
+            ? 'bg-primary text-primary-foreground'
+            : 'border border-primary/20 bg-primary/5 text-primary hover:bg-primary/10'
           : active
             ? 'bg-cyan-600 text-cyan-50'
             : 'border border-slate-200 bg-white text-slate-600 hover:border-cyan-300 hover:text-cyan-700'

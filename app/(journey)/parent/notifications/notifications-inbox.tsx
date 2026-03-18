@@ -299,7 +299,7 @@ export function NotificationsInbox({
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{group}</p>
               <div className="space-y-3">
                 {groupItems.map((item) => (
-                  <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-blue-200 bg-blue-50/40'}`}>
+                  <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-primary/20 bg-primary/5'}`}>
                     {(() => {
                       const centre = normalizeCentre(item.ecd_centres)
                       const type = getNotificationType(item)

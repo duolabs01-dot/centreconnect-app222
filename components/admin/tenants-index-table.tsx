@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/cc-admin/Table'
 import { Button } from '@/components/cc-admin/Button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { adminTheme } from '@/lib/admin-theme'
 import { cn } from '@/lib/utils'
-import { CheckCircle2, AlertTriangle, AlertCircle, Clock, XCircle, Search } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, AlertCircle, Clock, XCircle, Search, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ROOT_DOMAIN } from '@/lib/config'
 
@@ -701,7 +701,14 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           }
         }}
       >
-        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
+        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90", "relative [&>button]:hidden")}>
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader>
             <DialogTitle className={adminTheme.cardTitle}>Create Tenant</DialogTitle>
             <DialogDescription className="text-slate-300">
@@ -889,7 +896,14 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           }
         }}
       >
-        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
+        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90", "relative [&>button]:hidden")}>
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader>
             <DialogTitle className={adminTheme.cardTitle}>Confirm Existing Account Migration</DialogTitle>
             <DialogDescription className="text-slate-300">
@@ -972,7 +986,14 @@ export function TenantsIndexTable({ tenants }: TenantsIndexTableProps) {
           if (!open) setInviteTenant(null)
         }}
       >
-        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90")}>
+        <DialogContent className={cn(adminTheme.card, "bg-slate-900/90", "relative [&>button]:hidden")}>
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader>
             <DialogTitle className={adminTheme.cardTitle}>Invite Team Member</DialogTitle>
             <DialogDescription className="text-slate-300">

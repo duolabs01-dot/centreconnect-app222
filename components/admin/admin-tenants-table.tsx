@@ -17,7 +17,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -33,6 +33,7 @@ import {
   type OperatingDayKey,
 } from '@/lib/time/centre-operating-schedule'
 import { type CentreClassroomDraft } from '@/lib/ecd/centre-public-profile'
+import { X } from 'lucide-react'
 import type { CentreCoordinateConfidence, CentreCoordinateSource } from '@/lib/geo/centre-location-metadata'
 
 type FeeDisplayMode = 'exact' | 'range' | 'contact'
@@ -1162,7 +1163,14 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       </div>
 
       <Dialog open={editOpen} onOpenChange={handleDialogOpenChange}>
-        <DialogContent className="max-h-[92vh] overflow-y-auto border-cyan-500/30 bg-slate-950 text-slate-100 sm:max-w-5xl">
+        <DialogContent className="relative max-h-[92vh] overflow-y-auto border-cyan-500/30 bg-slate-950 text-slate-100 sm:max-w-5xl [&>button]:hidden">
+          <div className="absolute right-4 top-4 z-10">
+            <DialogClose asChild>
+              <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-100">
+                <X className="h-4 w-4" />
+              </button>
+            </DialogClose>
+          </div>
           <DialogHeader>
             <DialogTitle className="text-cyan-200">Edit Tenant</DialogTitle>
             <DialogDescription className="text-slate-300">

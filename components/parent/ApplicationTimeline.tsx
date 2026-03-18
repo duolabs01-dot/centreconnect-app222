@@ -40,8 +40,8 @@ const STATUS_CONFIG: Record<AppStatus, StatusConfig> = {
     label: 'Application submitted',
     description: 'Your application has been received by the centre.',
     icon: CheckCircle2,
-    iconTone: 'text-blue-600',
-    surfaceTone: 'border-blue-200 bg-blue-50',
+    iconTone: 'text-primary',
+    surfaceTone: 'border-primary/20 bg-primary/5',
   },
   in_review: {
     label: 'In review',

@@ -12,7 +12,7 @@ import { sendCoParentInviteAction } from '@/lib/actions/guardians/send-invite'
 import { requestCoParentDocumentUploadAction } from '@/lib/actions/guardians/request-document-upload'
 import { removeGuardianAction } from '@/lib/actions/guardians/remove-guardian'
 import { Input } from '@/components/ui/input'
-import { Mail, Link2, CheckCircle2, Clock, UserCheck, MessageCircle, Share2, Trash2 } from 'lucide-react'
+import { Mail, Link2, CheckCircle2, Clock, UserCheck, MessageCircle, Share2, Trash2, X } from 'lucide-react'
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -463,7 +463,14 @@ export function GuardiansManager({ childList }: Props) {
                         {isDeleting === guardian.id ? 'Removing...' : 'Remove'}
                       </button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent className="rounded-[2.5rem] p-8">
+                    <AlertDialogContent className="relative rounded-[2.5rem] p-8">
+                      <div className="absolute right-4 top-4 z-10">
+                        <AlertDialogCancel asChild>
+                          <button type="button" aria-label="Close dialog" className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                            <X className="h-4 w-4" />
+                          </button>
+                        </AlertDialogCancel>
+                      </div>
                       <AlertDialogHeader>
                         <AlertDialogTitle className="text-2xl font-black tracking-tight text-slate-900">
                           Remove {guardian.full_name || 'co-parent'}?

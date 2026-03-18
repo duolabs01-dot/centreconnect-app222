@@ -1,10 +1,11 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { EcdOsShell } from '@/components/layout/ecd-os-shell'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { updateNotificationPreferencesAction } from '@/lib/actions/settings/update-notification-preferences'
@@ -660,6 +661,22 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 Save Account
               </Button>
             </form>
+            <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security</p>
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-slate-900">Device sessions</p>
+                  <p className="text-xs text-slate-500">Review where this account is signed in.</p>
+                </div>
+                <Link
+                  href="/ecd/sessions"
+                  className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-teal-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-teal-700"
+                >
+                  Open sessions
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
             {centre?.updated_at ? (
               <p className="mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                 Last crèche update: {new Date(centre.updated_at).toLocaleString()}

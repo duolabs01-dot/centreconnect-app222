@@ -83,7 +83,7 @@ function statusClass(status: InviteStatus) {
   if (status === 'claimed') return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
   if (status === 'clicked') return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
   if (status === 'opened') return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
-  if (status === 'delivered') return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+  if (status === 'delivered') return 'border-primary/30 bg-primary/10 text-primary'
   if (status === 'queued') return 'border-slate-500/30 bg-slate-500/10 text-slate-300'
   if (status === 'failed') return 'border-rose-500/30 bg-rose-500/10 text-rose-300'
   return 'border-amber-500/30 bg-amber-500/10 text-amber-300'

@@ -3,10 +3,11 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { MailPlus } from 'lucide-react'
+import { MailPlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -149,6 +150,15 @@ export function SendOwnerInviteButton({
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
+          <DialogClose asChild>
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute right-4 top-4 rounded-full p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </DialogClose>
           <DialogHeader>
             <DialogTitle>WhatsApp link ready</DialogTitle>
           </DialogHeader>
@@ -180,3 +190,5 @@ export function SendOwnerInviteButton({
     </div>
   )
 }
+
+

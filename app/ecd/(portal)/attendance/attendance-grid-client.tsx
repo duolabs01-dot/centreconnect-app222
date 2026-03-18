@@ -331,7 +331,7 @@ export function AttendanceGridClient({
                           status === 'present' && "bg-emerald-50 text-emerald-700",
                           status === 'absent' && "bg-rose-50 text-rose-700",
                           status === 'sick' && "bg-amber-50 text-amber-700",
-                          status === 'late' && "bg-blue-50 text-blue-700"
+                          status === 'late' && "bg-primary/10 text-primary"
                         )}
                       >
                         {isSaving ? (

@@ -715,7 +715,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-11 rounded-2xl border-red-200 bg-white px-3 text-red-600 hover:bg-red-50"
+                      className="h-11 rounded-2xl border-destructive/20 bg-background px-3 text-destructive hover:bg-destructive/5"
                       onClick={() => removeBulkDraft(index)}
                     >
                       Remove

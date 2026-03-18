@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { enforceEcdAdminDeviceLimit } from '@/lib/middleware-ecd-device-limit'
 import { ROOT_DOMAIN } from '@/lib/config'
 
 const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'admin', 'api'])
@@ -30,7 +31,23 @@ export async function middleware(request: NextRequest) {
     return NextResponse.rewrite(rewriteUrl)
   }
 
-  return await updateSession(request)
+  // Run main session middleware first
+  const mainResponse = await updateSession(request)
+  // If main middleware issued a redirect, respect it
+  if (mainResponse.status >= 300 && mainResponse.status < 400) {
+    return mainResponse
+  }
+
+  // Enforce ECD Admin device limit only for ECD routes
+  if (pathname.startsWith('/ecd')) {
+    const limitResponse = await enforceEcdAdminDeviceLimit(request)
+    // If device-limit guard issues a redirect (e.g., session revoked), respect it
+    if (limitResponse.status >= 300 && limitResponse.status < 400) {
+      return limitResponse
+    }
+  }
+
+  return mainResponse
 }
 
 export const config = {

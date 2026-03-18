@@ -1,6 +1,6 @@
 # Backlog Execution Scoreboard
 
-Last updated: 2026-03-08 (ECD onboarding clarity + founder visibility shipped; parent reliability export still active)
+Last updated: 2026-03-18 (design audit cleared, ECD nav simplified, automated code gate green; live pilot data still blocking expansion)
 Owner: Founder
 
 This file is the live execution board for orchestrated Codex sessions.
@@ -8,34 +8,35 @@ Rule: keep exactly one `Now` item active until its definition of done is met.
 
 ## Snapshot
 
-- Objective: Unblock parent portal reliability and restore trust-critical UX/copy.
-- Current bottleneck: Triage is faster in-console, but filtered incidents still need export-ready handoff for outside follow-up.
-- Active lane: `parent reliability + copy quality`
+- Objective: Clear the final production-readiness gate for the 20-creche pilot expansion.
+- Current bottleneck: Sakhisizwe still has `onboarding_complete = false` with `child_count = 0`, and the authenticated realtime/browser checks still need staging verification.
+- Active lane: `pilot expansion readiness`
 
 ## Now
 
-- [ACTIVE] `BL-PARENT-030` `parent` Add filtered incident CSV export from reliability console.
-  - Why: Admin triage now has direct drill-ins, but handoff to external responders still requires manual copy/paste.
+- [ACTIVE] `BL-PILOT-020` `platform` Fix Sakhisizwe activation through product surfaces and rerun the live pilot-centre readiness check.
+  - Why: Code is green, but the pilot cannot honestly expand while one named pilot centre is incomplete in live data.
   - Definition of done:
-    - Add export CTA that downloads filtered recent failures as CSV.
-    - Ensure exported rows respect selected `window`, `route`, and `failureType` filters.
-    - Keep existing latest-incident CTA, hotspot/table drill-ins, filter chips, summary CTAs, and trend delta behavior intact.
+    - Sakhisizwe shows `is_active = true`, `onboarding_complete = true`, `child_count > 0`, and `admin_count > 0`.
+    - Re-run the pilot-centre readiness query and record the passing result.
+    - Re-check the admin dashboard pilot cards after the data fix.
   - Validation:
-    - `npm.cmd run -s test:parent-uat`
-    - `npm.cmd run -s lint`
-    - `npm.cmd run -s build`
-  - Est: 2-3h
+    - read-only pilot-centre readiness query or Supabase SQL editor
+    - authenticated admin dashboard verification
+  - Est: 1-2h
 
 ## Next
 
-- [READY] `BL-PARENT-031` `parent` Define after `BL-PARENT-030` completion.
+- [READY] `BL-PILOT-021` `platform` Run authenticated staging realtime checks for ECD admissions, parent applications, parent notifications, and pilot admin cards.
 
 ## Blocked
 
-- `BL-PARENT-008` Live-run execution blocked in current sandbox (`EACCES` outbound fetch restriction).
-  - Unblock: run `npm run uat:parent:create:live` from unrestricted environment (or CI runner with network egress).
+- `BL-PILOT-021` Authenticated manual flows are blocked in this shell until founder/admin, ECD, and parent staging sessions are available.
+  - Unblock: sign into local or staging with the required roles and execute the Gate 3 checklist end-to-end.
 
 ## Done This Week
+
+- [DONE] `BL-UX-012` Cleared final design audit warnings, added visible dialog close controls, normalized semantic color tokens, moved `/ecd/sessions` out of primary ECD nav, and corrected the April 2026 pilot-offer copy.
 
 - [DONE] `BL-PARENT-006` Parent hard-pass blockers fixed: Supabase browser singleton, parent bootstrap/upsert guardrails, child creation array-field fix, emergency/doc/profile mutation hardening, bottom-nav de-crowding, landing overlap fix, brand header restore, and parent signup confirmation email CSS refresh.
 - [DONE] `BL-PARENT-007` Scripted parent UAT smoke matrix shipped (`tests/qa/parent-portal-hard-pass-smoke.test.mjs`) and wired via `npm run test:parent-uat`.

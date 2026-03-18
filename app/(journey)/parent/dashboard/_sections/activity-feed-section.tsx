@@ -58,7 +58,7 @@ export async function ActivityFeedSection() {
               key={activity.id}
               className="flex gap-4 rounded-lg border border-slate-200 bg-white p-4"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                 {activity.newStatus === 'approved' ? 'OK' : 'UPD'}
               </div>
               <div className="min-w-0 flex-1">

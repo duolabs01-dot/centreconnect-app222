@@ -33,7 +33,7 @@ export default function CentreIntroPage() {
             For ECD Owners & Principals
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-400/15 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-amber-200 mb-8 border border-amber-200/30 backdrop-blur-md">
-            Pilot offer: onboarding + first month free until end of April
+            Pilot offer: Onboarding fee waived + first month free until end of April 2026
           </div>
           <h1 className="mx-auto max-w-4xl font-display text-4xl font-black leading-[1.05] tracking-tighter sm:text-6xl lg:text-7xl">
             Stop running your creche on WhatsApp and paper.
@@ -136,3 +136,4 @@ export default function CentreIntroPage() {
     </main>
   )
 }
+
