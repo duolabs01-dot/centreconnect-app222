@@ -1,7 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { deriveParentHomeState, type ParentHomeState } from '@/lib/parent/home-state'
+import {
+  deriveParentHomeState,
+  hasEnrolledChildStatus,
+  hasPendingParentApplicationStatus,
+  isEnrolledApplicationStatus,
+  type ParentHomeState,
+} from '@/lib/parent/home-state'
 import { evaluateApplicationDocumentChecklist } from '@/lib/admissions/application-documents'
 
 export type ParentProgress = {
@@ -86,14 +92,16 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
   // Calculate child counts
   const actualChildrenCount = childrenCount ?? children?.length ?? 0
   const actualEnrolledCount = enrolledCount ?? 0
-  const enrolledChildren = (children ?? []).filter(
-    (c: any) => c.enrollment_status === 'enrolled' || c.enrollment_status === 'active'
+  const enrolledChildren = (children ?? []).filter((child: any) => hasEnrolledChildStatus(child.enrollment_status))
+  const enrolledApplications = (applications ?? []).filter((application: any) =>
+    isEnrolledApplicationStatus(application.status)
   )
-  const hasEnrolledChild = (enrolledChildren.length > 0) || (actualEnrolledCount > 0)
+  const hasEnrolledChild = enrolledChildren.length > 0 || enrolledApplications.length > 0 || actualEnrolledCount > 0
 
   // Application states
-  const pendingApplicationStatuses = new Set(['submitted', 'in_review', 'partial', 'draft', 'awaiting_documents', 'offer_sent', 'offer_pending', 'approved'])
-  const pendingApplications = (applications ?? []).filter((a: any) => pendingApplicationStatuses.has(a.status))
+  const pendingApplications = (applications ?? []).filter((application: any) =>
+    hasPendingParentApplicationStatus(application.status)
+  )
   const hasPendingApplications = pendingApplications.length > 0
 
   // Profile fields
@@ -281,3 +289,4 @@ function calculateNextAction(input: {
     ...base,
   }
 }
+

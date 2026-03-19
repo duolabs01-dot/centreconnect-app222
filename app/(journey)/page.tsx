@@ -4,6 +4,12 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
+import {
+  deriveParentEntryPath,
+  hasEnrolledChildStatus,
+  hasPendingParentApplicationStatus,
+  isEnrolledApplicationStatus,
+} from '@/lib/parent/home-state'
 
 export const revalidate = 3600
 
@@ -63,31 +69,34 @@ export default async function HomePage({
       redirect('/ecd/dashboard')
     }
     if (role === 'parent_user') {
-      const hasEnrolledChild = await checkParentEnrollment(supabase, user.id)
-      if (hasEnrolledChild) {
-        redirect('/parent/dashboard')
-      } else {
-        redirect('/parent/discover')
-      }
+      const parentEntryPath = await getParentEntryPath(supabase, user.id)
+      redirect(parentEntryPath)
     }
   }
 
-  async function checkParentEnrollment(supabase: Awaited<ReturnType<typeof createClient>>, parentId: string) {
+  async function getParentEntryPath(supabase: Awaited<ReturnType<typeof createClient>>, parentId: string) {
     const [{ data: children }, { data: applications }] = await Promise.all([
-      supabase
-        .from('children')
-        .select('id,enrollment_status')
-        .eq('parent_id', parentId)
-        .in('enrollment_status', ['active', 'enrolled'])
-        .limit(1),
-      supabase
-        .from('applications')
-        .select('id,status')
-        .eq('parent_id', parentId)
-        .eq('status', 'enrolled')
-        .limit(1),
+      supabase.from('children').select('id,enrollment_status').eq('parent_id', parentId),
+      supabase.from('applications').select('id,status').eq('parent_id', parentId),
     ])
-    return (children && children.length > 0) || (applications && applications.length > 0)
+
+    const hasChildren = (children?.length ?? 0) > 0
+    const hasEnrolledChild =
+      (children ?? []).some((child: { enrollment_status?: string | null }) =>
+        hasEnrolledChildStatus(child.enrollment_status)
+      ) ||
+      (applications ?? []).some((application: { status?: string | null }) =>
+        isEnrolledApplicationStatus(application.status)
+      )
+    const hasPendingApplications = (applications ?? []).some((application: { status?: string | null }) =>
+      hasPendingParentApplicationStatus(application.status)
+    )
+
+    return deriveParentEntryPath({
+      hasChildren,
+      hasPendingApplications,
+      hasEnrolledChild,
+    })
   }
 
   let activeCentres: HomeActiveCentre[] = shouldUseDemoCentreData()
@@ -152,3 +161,4 @@ export default async function HomePage({
 
   return <HomeClientPage activeCentres={activeCentres} />
 }
+

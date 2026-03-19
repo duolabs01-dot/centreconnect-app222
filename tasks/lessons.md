@@ -77,3 +77,12 @@
 - LESSON: Route-level security middleware that breaks ECD navigation is worse than temporarily relaxing that one control.
   RULE: If a production guard blocks core portal navigation, gate it behind an explicit env flag and restore the product first.
   PREVENTION: Roll out device/session-limit enforcement behind a feature flag with browser regression coverage for login, dashboard, and first-click navigation.
+
+## 2026-03-19
+- LESSON: Parent entry routing cannot assume one child, one centre, or one household state.
+  RULE: Parent redirects must be derived from the household state (`hasChildren`, `hasPendingApplications`, `hasEnrolledChild`), not a single enrolled yes/no check.
+  PREVENTION: Keep one shared parent home-state helper and reuse it in `/`, auth redirects, and progress/dashboard logic so mixed families stay consistent.
+
+- LESSON: Parent dashboard copy that says "your child" or "your creche" becomes misleading as soon as a family has multiple active journeys.
+  RULE: Parent home should stay household-first, with child-level detail living in Applications and child pages.
+  PREVENTION: Add a compact household summary instead of inventing a new selector every time a family spans multiple children or creches.

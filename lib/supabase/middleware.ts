@@ -258,7 +258,7 @@ function isRoleAllowed(area: ProtectedArea, role: UserRole): boolean {
 function getDashboardPath(role: UserRole | null): string {
   if (role === 'platform_admin') return '/admin/dashboard'
   if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
-  return '/parent/dashboard'
+  return '/'
 }
 
 function getLoginPath(area: ProtectedArea): string {

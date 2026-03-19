@@ -145,5 +145,6 @@ export function isEcdRole(role: unknown): role is 'ecd_admin' | 'ecd_staff' | 'e
 export function destinationForRole(role: AuthRole | null | undefined) {
   if (role === 'platform_admin') return '/admin/dashboard'
   if (role === 'ecd_admin' || role === 'ecd_staff' || role === 'ecd_supervisor') return '/ecd/dashboard'
-  return '/parent/dashboard'
+  return '/'
 }
+

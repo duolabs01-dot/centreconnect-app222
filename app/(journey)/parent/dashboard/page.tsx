@@ -20,7 +20,13 @@ import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { getParentProgress } from '@/lib/parent/progress'
 import { formatDate } from '@/lib/utils'
-import { deriveParentHomeState, type ParentHomeState } from '@/lib/parent/home-state'
+import {
+  deriveParentHomeState,
+  hasEnrolledChildStatus,
+  hasPendingParentApplicationStatus,
+  isEnrolledApplicationStatus,
+  type ParentHomeState,
+} from '@/lib/parent/home-state'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
 
 export const metadata: Metadata = {
@@ -239,22 +245,10 @@ export default async function ParentDashboardPage() {
       } satisfies DashboardApplication
     })
 
-    const pendingApplicationStatuses = new Set([
-      'submitted',
-      'in_review',
-      'partial',
-      'draft',
-      'offer_made',
-      'offer_sent',
-      'offer_pending',
-      'awaiting_documents',
-      'accepted',
-    ])
-    const enrolledChildStatuses = new Set(['active', 'enrolled'])
-    const activeApplications = applications.filter((application) => pendingApplicationStatuses.has(application.status))
-    const enrolledApplication = applications.find((application) => application.status === 'enrolled') ?? null
+    const activeApplications = applications.filter((application) => hasPendingParentApplicationStatus(application.status))
+    const enrolledApplication = applications.find((application) => isEnrolledApplicationStatus(application.status)) ?? null
     const enrolledChildren = childRows.filter(
-      (child) => Boolean(child.ecdId) && enrolledChildStatuses.has(child.enrollmentStatus)
+      (child) => Boolean(child.ecdId) && hasEnrolledChildStatus(child.enrollmentStatus)
     )
     const enrolledPrimaryChild = enrolledChildren[0] ?? null
     const homeState: ParentHomeState = deriveParentHomeState({
@@ -269,7 +263,7 @@ export default async function ParentDashboardPage() {
       new Set([
         ...enrolledChildren.map((child) => child.id),
         ...applications
-          .filter((application) => application.status === 'enrolled')
+          .filter((application) => isEnrolledApplicationStatus(application.status))
           .map((application) => application.childId)
           .filter((value): value is string => Boolean(value)),
       ])
@@ -278,7 +272,7 @@ export default async function ParentDashboardPage() {
       new Set([
         ...enrolledChildren.map((child) => child.ecdId).filter((value): value is string => Boolean(value)),
         ...applications
-          .filter((application) => application.status === 'enrolled')
+          .filter((application) => isEnrolledApplicationStatus(application.status))
           .map((application) => application.ecdId)
           .filter((value): value is string => Boolean(value)),
       ])
@@ -363,18 +357,63 @@ export default async function ParentDashboardPage() {
       childRows[0]?.displayName ||
       applications[0]?.childName ||
       'your child'
+    const householdChildCount = childRows.length
+    const enrolledChildCount = enrolledChildIds.length
+    const activeApplicationCount = activeApplications.length
+    const householdCentreCount = Array.from(
+      new Set([
+        ...enrolledCentreIds,
+        ...activeApplications
+          .map((application) => application.ecdId)
+          .filter((value): value is string => Boolean(value)),
+      ])
+    ).length
+    const hasMultipleChildren = householdChildCount > 1
+    const hasMixedHousehold = enrolledChildCount > 0 && activeApplicationCount > 0
+    const hasMultipleEnrolledChildren = enrolledChildCount > 1
+    const hasMultipleCentres = householdCentreCount > 1
+    const showHouseholdSummary = hasMultipleChildren || hasMixedHousehold || hasMultipleCentres
 
     const latestPendingApplication = activeApplications[0] ?? null
     const enrolledCentreMeta =
       (enrolledApplication?.ecdId ? enrolledCentreMap.get(enrolledApplication.ecdId) : null) ??
       (enrolledPrimaryChild?.ecdId ? enrolledCentreMap.get(enrolledPrimaryChild.ecdId) : null) ??
       null
-    const pickupHref = enrolledApplication ? `/parent/applications/${enrolledApplication.id}#pickup-code-section` : '/parent/children'
-    const centreInfoHref = enrolledApplication?.centreSlug
-      ? `/c/${enrolledApplication.centreSlug}`
-      : enrolledCentreMeta?.slug
-        ? `/c/${enrolledCentreMeta.slug}`
-        : '/parent/discover'
+    const pickupHref =
+      hasMultipleEnrolledChildren || hasMultipleCentres
+        ? '/parent/applications'
+        : enrolledApplication
+          ? `/parent/applications/${enrolledApplication.id}#pickup-code-section`
+          : '/parent/children'
+    const pickupLabel = hasMultipleEnrolledChildren || hasMultipleCentres ? 'Open pickup codes' : 'Open pickup code'
+    const centreInfoHref =
+      hasMultipleCentres
+        ? '/parent/applications'
+        : enrolledApplication?.centreSlug
+          ? `/c/${enrolledApplication.centreSlug}`
+          : enrolledCentreMeta?.slug
+            ? `/c/${enrolledCentreMeta.slug}`
+            : '/parent/discover'
+    const centreInfoLabel = hasMultipleCentres ? 'View centres' : 'Creche info'
+    const enrolledHeroTitle = hasMultipleEnrolledChildren
+      ? 'Family home'
+      : `Today with ${enrolledApplication?.childName ?? enrolledPrimaryChild?.displayName ?? 'your child'}`
+    const enrolledHeroDescription = hasMixedHousehold
+      ? `You have ${enrolledChildCount} enrolled child${enrolledChildCount === 1 ? '' : 'ren'} and ${activeApplicationCount} application${activeApplicationCount === 1 ? '' : 's'} still moving. Use this home for live care updates, then open Applications for the rest.`
+      : hasMultipleCentres
+        ? `Your children are linked to ${householdCentreCount} creche${householdCentreCount === 1 ? '' : 's'}. Daily updates, messages, pickup, and reminders still stay organised together here.`
+        : hasMultipleEnrolledChildren
+          ? 'Stay close to each enrolled child from one family home. Daily updates, messages, pickup, and reminders stay organised together.'
+          : `You are no longer here to search first. Your main job now is staying close to ${enrolledApplication?.centreName ?? enrolledCentreMeta?.name ?? 'your creche'} through daily updates, messages, pickup, and important reminders.`
+    const householdSummaryText = hasMixedHousehold
+      ? 'One family can have more than one journey at once. Enrolled children stay on the dashboard, while applications still in progress stay easy to open from one place.'
+      : hasMultipleCentres
+        ? 'Your family is connected to more than one creche. CentreConnect keeps each child attached to the right centre without making you switch accounts.'
+        : activeApplicationCount > 0
+          ? 'Each child keeps their own journey, and Applications lets you switch focus whenever you need more detail.'
+          : 'Each child keeps their own profile, and you can manage the family from one home without switching accounts.'
+    const householdSummaryLinkHref = activeApplicationCount > 0 ? '/parent/applications' : '/parent/children'
+    const householdSummaryLinkLabel = activeApplicationCount > 0 ? 'Open applications' : 'Manage children'
 
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
@@ -399,6 +438,41 @@ export default async function ParentDashboardPage() {
               </div>
             </SurfaceCard>
           )}
+
+          {showHouseholdSummary ? (
+            <SurfaceCard className="border border-border bg-white p-5">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <Building2 className="h-4 w-4 text-cyan-600" />
+                    <p className="text-sm font-bold">Family at a glance</p>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{householdSummaryText}</p>
+                </div>
+                <div className="shrink-0">
+                  <QuickLink href={householdSummaryLinkHref} label={householdSummaryLinkLabel} />
+                </div>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Children</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{householdChildCount}</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">Enrolled</p>
+                  <p className="mt-1 text-lg font-bold text-emerald-900">{enrolledChildCount}</p>
+                </div>
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-700">Applying</p>
+                  <p className="mt-1 text-lg font-bold text-amber-900">{activeApplicationCount}</p>
+                </div>
+                <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700">Creches</p>
+                  <p className="mt-1 text-lg font-bold text-cyan-900">{householdCentreCount}</p>
+                </div>
+              </div>
+            </SurfaceCard>
+          ) : null}
 
           {homeState === 'discover' ? (
             <div className="cc-stack">
@@ -558,8 +632,8 @@ export default async function ParentDashboardPage() {
                   </div>
                   <SectionHeading
                     eyebrow={`Welcome back, ${parentFirstName}`}
-                    title={`Today with ${enrolledApplication?.childName ?? enrolledPrimaryChild?.displayName ?? 'your child'}`}
-                    description={`You are no longer here to search first. Your main job now is staying close to ${enrolledApplication?.centreName ?? enrolledCentreMeta?.name ?? 'your creche'} through daily updates, messages, pickup, and important reminders.`}
+                    title={enrolledHeroTitle}
+                    description={enrolledHeroDescription}
                   />
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                     <Link
@@ -646,7 +720,7 @@ export default async function ParentDashboardPage() {
                     </div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       {unreadNotifications.length > 0
-                        ? `${unreadNotifications.length} unread message${unreadNotifications.length === 1 ? '' : 's'} or announcement${unreadNotifications.length === 1 ? '' : 's'} from your creche.`
+                        ? `${unreadNotifications.length} unread message${unreadNotifications.length === 1 ? '' : 's'} or announcement${unreadNotifications.length === 1 ? '' : 's'} from your creche${hasMultipleCentres ? 's' : ''}.`
                         : 'No unread updates right now. New messages and announcements will show here first.'}
                     </p>
                     {notifications[0] ? (
@@ -667,7 +741,7 @@ export default async function ParentDashboardPage() {
                   <SurfaceCard className="p-5">
                     <div className="flex items-center gap-2 text-slate-900">
                       <CalendarDays className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">Next at your creche</h2>
+                      <h2 className="text-base font-bold">{hasMultipleCentres ? 'Next across your creches' : 'Next at your creche'}</h2>
                     </div>
                     {nextEvent ? (
                       <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
@@ -682,7 +756,7 @@ export default async function ParentDashboardPage() {
                     )}
                     <div className="mt-4 flex flex-wrap gap-2">
                       <QuickLink href="/parent/calendar" label="Open calendar" />
-                      <QuickLink href={centreInfoHref} label="Creche info" />
+                      <QuickLink href={centreInfoHref} label={centreInfoLabel} />
                     </div>
                   </SurfaceCard>
 
@@ -692,10 +766,10 @@ export default async function ParentDashboardPage() {
                       <h2 className="text-base font-bold">Collection and safety</h2>
                     </div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Pickup codes and family permissions stay connected to your enrolled child, so collection stays calm and clear.
+                      Pickup codes and family permissions stay connected to each enrolled child, so collection stays calm and clear.
                     </p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href={pickupHref} label="Open pickup code" />
+                      <QuickLink href={pickupHref} label={pickupLabel} />
                       <QuickLink href="/parent/profile/guardians" label="Manage caregivers" />
                     </div>
                   </SurfaceCard>
@@ -710,3 +784,5 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
+

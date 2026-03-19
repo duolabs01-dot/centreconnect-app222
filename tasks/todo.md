@@ -1,5 +1,41 @@
 # CentreConnect — Active Tasks
 
+## Session Plan - 2026-03-19 Parent Multi-Child Home Logic
+- Task: Make the parent entry flow and dashboard handle multiple children, mixed enrolment, and multiple ECDs without adding a new selector flow.
+- Why now: Parents can already have more than one child and more than one application, but the current entry logic still treats the household like a single yes/no enrolment case.
+- Definition of done:
+  - Parent entry routing uses the full household state instead of only checking for any enrolled child.
+  - Parents with enrolled children still land in the parent home, pending-only households land where the next action is clearer, and families with no children yet are not dropped into the wrong place.
+  - Parent dashboard copy stays accurate when a household has multiple children, mixed statuses, or children linked to different ECDs.
+  - npm run lint, npm run build, and npm run test:parent-uat all pass.
+- Files to touch:
+  - app/(journey)/page.tsx
+  - app/(journey)/parent/dashboard/page.tsx
+  - lib/parent/home-state.ts
+  - lib/auth/client-auth.ts
+  - lib/supabase/middleware.ts
+  - tasks/todo.md
+  - tasks/lessons.md
+- Validation commands:
+  - npm run lint
+  - npm run build
+  - npm run test:parent-uat
+- Commit message: fix: simplify parent multi-child routing
+- Execution steps:
+  1. Define one household-level routing rule that works for enrolled, pending, discover, and first-child cases.
+  2. Reuse that rule for authenticated parent entry points so login and / stay consistent.
+  3. Update parent dashboard copy/summary to reflect multiple children and multiple ECDs without adding new navigation complexity.
+  4. Re-run verification, record lessons, then commit and push the shipping fix.
+
+## Parent Multi-Child Home Logic Results - 2026-03-19
+- [x] Replaced the binary parent entry redirect with one shared household-state rule: enrolled households go to `/parent/dashboard`, pending-only households go to `/parent/applications`, households with children but no applications go to `/parent/discover`, and first-time households go to `/parent/children/new`.
+- [x] Updated parent auth and middleware defaults so parent sign-in lands on `/`, letting the server choose the right household route consistently.
+- [x] Updated the parent dashboard copy and summary so multiple children, mixed enrolment, and multiple creches stay accurate without adding a new selector flow.
+- [x] Shared parent home-state helpers now keep landing redirects, dashboard state, and progress calculations aligned.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run audit:design` PASS.
+- [x] Verification: `npm run build` PASS.
+- [x] Verification: `npm run test:parent-uat` PASS.
 ## Session Plan - 2026-03-19 Live ECD Buttons + Landing Redirect Audit
 - Task: Verify the live ECD button failure and landing-page redirect report, then ship the smallest confirmed fix only.
 - Why now: Production ECD sign-in is landing on the dashboard with React/RSC navigation errors, which leaves client links unresponsive after login.
@@ -195,4 +231,5 @@
 
 ## Backlog
 See BACKLOG.md
+
 
