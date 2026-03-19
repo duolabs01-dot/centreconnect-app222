@@ -15,6 +15,8 @@ import { readCentreLocationMetadata, writeCentreLocationMetadata, type CentreLoc
 import { geocodeAddressWithPelias } from '@/lib/geo/pelias'
 import { DangerZoneClient } from './danger-zone-client'
 import { InviteStaffForm } from '@/components/ecd/invite-staff-form'
+import { OfficialStaffRecordsCard } from '@/components/ecd/official-staff-records-card'
+import { syncPortalMemberToStaffRecord } from '@/lib/ecd/staff-sync'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
@@ -25,6 +27,18 @@ type ProfilePageProps = {
   searchParams?: {
     staffError?: string
   }
+}
+
+type OfficialStaffRecord = {
+  id: string
+  firstName: string
+  surname: string
+  role: string
+  isTrained: boolean
+  isComputerLiterate: boolean
+  isSubsidized: boolean
+  trainingDescription: string | null
+  monthlySalary: number | null
 }
 
 export default async function EcdProfilePage({ searchParams }: ProfilePageProps) {
@@ -61,6 +75,13 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .order('invited_at', { ascending: false })
     .limit(20)
 
+  const { data: ecdStaffRows } = await supabase
+    .from('ecd_staff')
+    .select('id,first_name,surname,role,is_trained,is_computer_literate,is_subsidized,training_description,monthly_salary')
+    .eq('ecd_id', ecdId)
+    .order('surname', { ascending: true })
+    .limit(100)
+
   const [{ data: subscription }, { data: paymentMethod }] = await Promise.all([
     supabase
       .from('subscriptions')
@@ -87,6 +108,18 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     ageGroup: String(row.age_group ?? ''),
     practitionerName: String(row.practitioner_name ?? ''),
   }))
+
+  const officialStaffRecords = (ecdStaffRows ?? []).map((row: any) => ({
+    id: String(row.id),
+    firstName: String(row.first_name ?? ''),
+    surname: String(row.surname ?? ''),
+    role: String(row.role ?? 'Practitioner'),
+    isTrained: Boolean(row.is_trained),
+    isComputerLiterate: Boolean(row.is_computer_literate),
+    isSubsidized: Boolean(row.is_subsidized),
+    trainingDescription: row.training_description ? String(row.training_description) : null,
+    monthlySalary: row.monthly_salary != null ? Number(row.monthly_salary) : null,
+  })) as OfficialStaffRecord[]
 
   const checks = [
     { label: 'Crèche description', done: Boolean(centre?.description) },
@@ -374,6 +407,24 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
 
     await session.supabase.from('user_profiles').update({ role: nextRole }).eq('id', staffUserId)
 
+    const { data: targetProfile } = await session.supabase
+      .from('user_profiles')
+      .select('full_name')
+      .eq('id', staffUserId)
+      .maybeSingle()
+
+    if (targetProfile?.full_name) {
+      const syncResult = await syncPortalMemberToStaffRecord({
+        db: session.supabase,
+        ecdId: session.ecdId,
+        fullName: targetProfile.full_name,
+        role: nextRole as 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff',
+      })
+      if (!syncResult.ok) {
+        console.warn('[ecd/profile] Failed to sync official staff record after role change:', syncResult.error)
+      }
+    }
+
     revalidatePath('/ecd/profile')
     revalidatePath('/ecd/dashboard')
     revalidatePath('/ecd/applications')
@@ -449,6 +500,111 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
       .eq('role', 'ecd_supervisor')
 
     revalidatePath('/ecd/profile')
+  }
+
+  async function saveOfficialStaffRecord(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') {
+      redirect('/ecd/profile?staffError=Only%20centre%20admins%20can%20manage%20employee%20records.')
+    }
+
+    const staffId = String(formData.get('staff_id') ?? '').trim()
+    const firstName = String(formData.get('first_name') ?? '').trim()
+    const surname = String(formData.get('surname') ?? '').trim()
+    const roleValue = String(formData.get('role') ?? 'Practitioner').trim() || 'Practitioner'
+    const trainingDescription = String(formData.get('training_description') ?? '').trim() || null
+    const monthlySalaryRaw = String(formData.get('monthly_salary') ?? '').trim()
+    const monthlySalary = monthlySalaryRaw ? Number(monthlySalaryRaw) : null
+
+    if (!firstName || !surname) {
+      redirect('/ecd/profile?staffError=Employee%20first%20name%20and%20surname%20are%20required.')
+    }
+    if (monthlySalaryRaw && !Number.isFinite(monthlySalary)) {
+      redirect('/ecd/profile?staffError=Monthly%20salary%20must%20be%20a%20valid%20number.')
+    }
+
+    const payload = {
+      first_name: firstName,
+      surname,
+      role: roleValue,
+      training_description: trainingDescription,
+      is_trained: formData.get('is_trained') === 'on',
+      is_computer_literate: formData.get('is_computer_literate') === 'on',
+      is_subsidized: formData.get('is_subsidized') === 'on',
+      monthly_salary: monthlySalary,
+      updated_at: new Date().toISOString(),
+    }
+
+    if (staffId) {
+      await session.supabase.from('ecd_staff').update(payload).eq('id', staffId).eq('ecd_id', session.ecdId)
+    } else {
+      await session.supabase.from('ecd_staff').insert({
+        ecd_id: session.ecdId,
+        ...payload,
+      })
+    }
+
+    revalidatePath('/ecd/profile')
+    revalidatePath('/ecd/employment')
+    revalidatePath('/ecd/dsd-export')
+  }
+
+  async function deleteOfficialStaffRecord(formData: FormData) {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') {
+      redirect('/ecd/profile?staffError=Only%20centre%20admins%20can%20delete%20employee%20records.')
+    }
+
+    const staffId = String(formData.get('staff_id') ?? '').trim()
+    if (!staffId) {
+      redirect('/ecd/profile?staffError=Employee%20record%20not%20found.')
+    }
+
+    await session.supabase.from('ecd_staff').delete().eq('id', staffId).eq('ecd_id', session.ecdId)
+
+    revalidatePath('/ecd/profile')
+    revalidatePath('/ecd/employment')
+    revalidatePath('/ecd/dsd-export')
+  }
+
+  async function syncPortalStaffDirectory() {
+    'use server'
+    const session = await requireEcdPortalSession({ cached: false })
+    if (session.role !== 'ecd_admin') {
+      redirect('/ecd/profile?staffError=Only%20centre%20admins%20can%20sync%20employee%20records.')
+    }
+
+    const { data: members } = await session.supabase
+      .from('ecd_admins')
+      .select('role,user_profiles!ecd_admins_user_id_fkey(full_name)')
+      .eq('ecd_id', session.ecdId)
+      .limit(100)
+
+    for (const member of (members ?? []) as any[]) {
+      const profileEntry = Array.isArray(member.user_profiles) ? member.user_profiles[0] : member.user_profiles
+      const fullName = typeof profileEntry?.full_name === 'string' ? profileEntry.full_name : ''
+      const nextRole = member.role === 'ecd_admin' || member.role === 'ecd_supervisor' || member.role === 'ecd_staff'
+        ? member.role
+        : 'ecd_staff'
+      if (!fullName) continue
+
+      const syncResult = await syncPortalMemberToStaffRecord({
+        db: session.supabase,
+        ecdId: session.ecdId,
+        fullName,
+        role: nextRole as 'ecd_admin' | 'ecd_supervisor' | 'ecd_staff',
+      })
+
+      if (!syncResult.ok) {
+        console.warn('[ecd/profile] Failed to sync portal member into official staff directory:', syncResult.error)
+      }
+    }
+
+    revalidatePath('/ecd/profile')
+    revalidatePath('/ecd/employment')
+    revalidatePath('/ecd/dsd-export')
   }
 
   async function requestCancellation(formData: FormData) {
@@ -783,7 +939,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
+        <Card id="staff" className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
           <CardHeader className="bg-slate-50/50">
             <CardTitle className="text-base font-bold">Staff Management</CardTitle>
           </CardHeader>
@@ -795,6 +951,19 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             ) : null}
             <InviteStaffForm ecdId={ecdId} />
 
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Portal access team</p>
+                <p className="mt-1 text-2xl font-black text-slate-900">{(staffMembers ?? []).length}</p>
+                <p className="mt-1 text-xs text-slate-500">People who can log in and operate this centre.</p>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly report employees</p>
+                <p className="mt-1 text-2xl font-black text-slate-900">{officialStaffRecords.length}</p>
+                <p className="mt-1 text-xs text-slate-500">Official staff records used in DSD and DOE submissions.</p>
+              </div>
+            </div>
+
             <div className="space-y-3">
               {(staffMembers ?? []).length === 0 ? (
                 <p className="text-sm text-slate-500 py-4 italic">No staff members listed yet.</p>
@@ -804,7 +973,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                     key={member.user_id}
                     className="tile rounded-2xl border border-slate-100 p-5 shadow-sm transition-colors duration-200 hover:border-teal-100"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <p className="text-sm font-bold text-slate-900">
                           {Array.isArray(member.user_profiles) ? member.user_profiles[0]?.full_name ?? member.user_id : member.user_profiles?.full_name ?? member.user_id}
@@ -812,10 +981,10 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                         <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Role: {member.role.replace('ecd_', '')}</p>
                       </div>
                       {role === 'ecd_admin' ? (
-                        <div className="flex items-center gap-2">
-                          <form action={updateStaffRole} className="flex items-center gap-2">
+                        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                          <form action={updateStaffRole} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <input type="hidden" name="staff_user_id" value={member.user_id} />
-                            <select name="new_role" className="cc-native-field h-10 rounded-2xl w-40 text-xs border-slate-300 bg-white text-slate-800 font-semibold">
+                            <select name="new_role" defaultValue={member.role} className="cc-native-field h-10 w-full rounded-2xl text-xs border-slate-300 bg-white text-slate-800 font-semibold sm:w-40">
                               <option value="ecd_staff">Staff member</option>
                               <option value="ecd_supervisor">Supervisor</option>
                               <option value="ecd_admin">ECD admin</option>
@@ -911,12 +1080,30 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardContent>
         </Card>
 
+        <OfficialStaffRecordsCard
+          records={officialStaffRecords}
+          canManage={role === 'ecd_admin'}
+          saveAction={saveOfficialStaffRecord}
+          deleteAction={deleteOfficialStaffRecord}
+          syncAction={syncPortalStaffDirectory}
+        />
+
         <div className="xl:col-span-2">
           <DangerZoneClient action={requestCancellation} />
         </div>
       </section>
   )
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

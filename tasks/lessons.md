@@ -118,3 +118,10 @@
 - LESSON: ECD admins need tier visibility in the sidebar itself, not only on billing or profile screens.
   RULE: If the plan affects website/billing support decisions, surface it in the shell so admins do not hunt for it.
   PREVENTION: When adjusting the ECD nav, pair the label change with a compact tier card and a direct settings/billing shortcut.
+- LESSON: A stale or dev-contaminated `.next` can keep serving dev-style chunk URLs even after a seemingly successful start, which breaks hydration and makes client buttons look dead.
+  RULE: If a browser test sees `main-app.js` / `app-pages-internals.js` 404s, rebuild production output before blaming the feature.
+  PREVENTION: After any dev-server work, rerun `npm run build` and spot-check the HTML script tags before testing client-side buttons.
+
+- LESSON: Official DOE/DSD exports must read from the canonical staff records table, not from live portal-login members merged at render time.
+  RULE: Use `ecd_staff` as the export source of truth and sync portal invites/role changes into that table as a separate step.
+  PREVENTION: If a login profile has an incomplete or one-word name, skip auto-sync rather than fabricating a placeholder employee row in a government report.

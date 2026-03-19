@@ -377,6 +377,23 @@ export async function getDsdExportData(input: {
     notes: normalizeText(row.notes as string | null, '') || null,
   }))
 
+  const baseStaff = ((staffRows ?? []) as any[]).map(row => ({
+    id: String(row.id),
+    firstName: String(row.first_name),
+    surname: String(row.surname),
+    idNumber: normalizeText(row.id_number as string | null, '') || null,
+    role: String(row.role),
+    gender: normalizeText(row.gender as string | null, '') || null,
+    race: normalizeText(row.race as string | null, '') || null,
+    isDisabled: Boolean(row.is_disabled),
+    disabilityDescription: normalizeText(row.disability_description as string | null, '') || null,
+    isTrained: Boolean(row.is_trained),
+    trainingDescription: normalizeText(row.training_description as string | null, '') || null,
+    isComputerLiterate: Boolean(row.is_computer_literate),
+    isSubsidized: Boolean(row.is_subsidized),
+    monthlySalary: row.monthly_salary ? Number(row.monthly_salary) : null,
+  }))
+
   return {
     centreName: centre?.name?.trim() || 'Your creche',
     registrationNumber: centre?.registration_number?.trim() || null,
@@ -403,22 +420,7 @@ export async function getDsdExportData(input: {
     compliance,
     verifiedDocs: compliance.filter((item) => item.status === 'verified').length,
     doeStats: getDoeMonthlyReturnData(children),
-    staff: ((staffRows ?? []) as any[]).map(row => ({
-      id: String(row.id),
-      firstName: String(row.first_name),
-      surname: String(row.surname),
-      idNumber: normalizeText(row.id_number as string | null, '') || null,
-      role: String(row.role),
-      gender: normalizeText(row.gender as string | null, '') || null,
-      race: normalizeText(row.race as string | null, '') || null,
-      isDisabled: Boolean(row.is_disabled),
-      disabilityDescription: normalizeText(row.disability_description as string | null, '') || null,
-      isTrained: Boolean(row.is_trained),
-      trainingDescription: normalizeText(row.training_description as string | null, '') || null,
-      isComputerLiterate: Boolean(row.is_computer_literate),
-      isSubsidized: Boolean(row.is_subsidized),
-      monthlySalary: row.monthly_salary ? Number(row.monthly_salary) : null,
-    })),
+    staff: baseStaff,
   }
 }
 
@@ -429,3 +431,4 @@ export function csvEscape(value: string | number | null | undefined) {
   }
   return text
 }
+

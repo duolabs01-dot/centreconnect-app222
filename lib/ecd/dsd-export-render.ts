@@ -119,6 +119,11 @@ function monthLabel(selectedMonth: number, selectedYear: number) {
   return `${MONTH_NAMES[selectedMonth - 1] ?? 'Selected month'} ${selectedYear}`
 }
 
+export function buildDsdMonthlyReportTitle(centreName: string | null | undefined) {
+  const normalized = String(centreName ?? '').trim()
+  return normalized ? `Monthly Report ${normalized}` : 'Monthly Report'
+}
+
 function attendanceTotal(data: DsdExportData) {
   return Array.from(data.attendanceByChild.values()).reduce((sum, item) => sum + (item.present ?? 0), 0)
 }
@@ -129,7 +134,7 @@ export function buildDsdPdfHtml(data: DsdExportData) {
   const periodLabel = monthLabel(data.selectedMonth, data.selectedYear)
   const healthPermitLabel = stats.healthPermit?.label || 'Municipal Health Clearance Certificate'
   const healthPermitStatus = stats.healthPermit?.status === 'verified' ? 'Verified on file' : stats.healthPermit?.status || 'Not yet verified'
-  const reportTitle = `Monthly Report ${data.centreName}`
+  const reportTitle = buildDsdMonthlyReportTitle(data.centreName)
 
   return `
 <!DOCTYPE html>
@@ -619,3 +624,5 @@ export function buildDsdPdfHtml(data: DsdExportData) {
 </html>
 `
 }
+
+

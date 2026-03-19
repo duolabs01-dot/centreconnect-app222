@@ -458,3 +458,74 @@ See BACKLOG.md
 - [x] The profile page now shows billing and payment context, including subscription tier and card details when available.
 - [x] Verification passed: `npm run lint`
 - [x] Verification passed: `npm run build`
+
+## DSD Export Print Test - 2026-03-19
+- [x] Bajabulile monthly report print pack works in a hydrated browser session.
+- [x] Bajabulile PDF download returns `200` and `application/pdf`; direct authenticated fetch validates the body begins with `%PDF`.
+- [x] The print/export flow required a clean production rebuild because the previous `.next` had dev-style chunk URLs.
+
+## Session Plan - 2026-03-19 Mobile Overflow + DSD Template + Staff Sync
+- Task: Remove ECD mobile horizontal scrolling, make the Bajabulile monthly report the canonical monthly-report template for every centre/month, and turn ECD Settings into a synced staff-management surface that shows and manages the actual team.
+- Why now: Admissions must be usable one-handed on mobile, the subsidy report must stay government-standard across all centres, and ECD admins need one reliable place to view and manage team access plus staff records.
+- Definition of done:
+  - ECD admissions/applications pages no longer cause horizontal scrolling on mobile, and other obvious ECD overflow hotspots are tightened at the component/layout level.
+  - `Monthly Report {centreName}` uses one reusable template for all centres and months, with centre/month data mapped straight into the same Bajabulile-style structure in both page and PDF output.
+  - ECD Settings shows the current team clearly, supports role/removal actions, and also surfaces the synced DOE/DSD staff records used in exports.
+  - Relevant employee/staff data stays aligned between settings, employment, and monthly-report export sources.
+  - `npm run lint` and `npm run build` pass after the changes.
+- Files likely to touch:
+  - `app/ecd/(portal)/applications/page.tsx`
+  - `app/ecd/(portal)/applications/[id]/page.tsx`
+  - `app/ecd/(portal)/profile/page.tsx`
+  - `app/ecd/(portal)/employment/page.tsx`
+  - `app/ecd/(portal)/dsd-export/page.tsx`
+  - `lib/ecd/dsd-export.ts`
+  - `lib/ecd/dsd-export-render.ts`
+  - `components/ecd/invite-staff-form.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run build`
+  - Mobile browser spot-check on `/ecd/applications`, `/ecd/applications/[id]`, `/ecd/profile`, and `/ecd/dsd-export`
+- Commit message: `fix: tighten ecd mobile and staff sync`
+- Execution steps:
+  1. Remove the main mobile overflow causes in admissions and other obvious ECD page controls without changing the portal structure.
+  2. Tighten the monthly-report data model/renderer so one Bajabulile-style template is the canonical export for every centre/month.
+  3. Expand ECD Settings into a fuller team-management view that surfaces the same live team/staff records used elsewhere and keeps the export-facing staff data in sync.
+
+## Session Outcome - 2026-03-19 Mobile Overflow + DSD Template + Staff Sync
+- [x] ECD admissions/applications pages no longer cause page-level horizontal scrolling on mobile.
+- [x] Other ECD mobile hotspots checked: `/ecd/employment`, `/ecd/profile#staff`, and `/ecd/dsd-export` now stay within the phone viewport.
+- [x] The monthly report now uses one reusable `Monthly Report {centreName}` template for every centre and month in both the page and PDF renderer.
+- [x] ECD Settings now shows the portal team and the official employee records together, with add, save, delete, role-change, and sync actions in one place.
+- [x] Monthly report staff data now reads from the canonical `ecd_staff` records, while portal team changes sync into that dataset instead of being merged ad hoc at render time.
+- [x] Verification passed: `npm run audit:design`
+- [x] Verification passed: `npm run lint`
+- [x] Verification passed: `npm run build`
+- [x] Browser verification passed at 390px width on `/ecd/applications`, `/ecd/applications/544325be-652b-4197-980b-07bdbbb02cfe`, `/ecd/employment`, `/ecd/profile#staff`, and `/ecd/dsd-export`
+- Notes:
+  - The DSD/DOE report tables are still intentionally horizontally dense inside their own report layout, but the page itself no longer overflows the mobile viewport.
+  - Staff records with incomplete one-word names are now skipped from auto-sync until the account profile has a proper first-and-surname format.
+
+## Session Plan - 2026-03-20 Parallel Product Audit + Month Logic Fix
+- Task: Run a parallel audit across ECD/public, Parent, and CC Admin surfaces, fix the shared logic bugs the audit exposes, and rerun persona checks with strict ratings.
+- Why now: The product has to behave like one coherent system with one source of truth across portals; the month-switch bug and page/workflow regressions are trust-breakers.
+- Definition of done:
+  - Parallel audits cover ECD portal, ECD public pages, Parent pages, and Admin pages for broken buttons, dead workflows, stale copy, and canonical/single-source-of-truth issues.
+  - The monthly register/report flow updates correctly when the user changes month, with the selected month consistently reflected across page, data, and export output.
+  - High-priority issues found in the audits are fixed without duplicating logic across portals.
+  - Persona reviews run in parallel for Parent, ECD Admin, and Platform Admin after fixes, with strict ratings and clear pass/fail notes.
+  - `npm run lint`, `npm run audit:design`, and `npm run build` pass on the final code state.
+- Workstreams:
+  1. ECD + public audit in parallel, including copy/copyright consistency and single-source-of-truth checks.
+  2. Parent audit in parallel, including navigation, notifications, and state-sync logic.
+  3. CC Admin audit in parallel, including support, operations workflows, and trust in the data.
+  4. Local root-cause fix for the month-switch/register issue plus any shared-state defects surfaced by the parallel agents.
+  5. Persona panel rerun after fixes, then final verification.
+- Validation commands:
+  - `npm run lint`
+  - `npm run audit:design`
+  - `npm run build`
+  - Browser checks on the affected ECD, Parent, and Admin pages
+- Commit message: `fix: close cross-portal audit regressions`

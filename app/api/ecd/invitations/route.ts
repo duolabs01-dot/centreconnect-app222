@@ -18,6 +18,7 @@ import {
   sanitizeGeneratedAccessLink,
 } from '@/lib/auth/onboarding-links'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
+import { syncPortalMemberToStaffRecord } from '@/lib/ecd/staff-sync'
 
 const inviteSchema = z.object({
   ecdId: z.string().uuid(),
@@ -312,6 +313,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: message }, { status: 500 })
     }
 
+    const staffSyncResult = await syncPortalMemberToStaffRecord({
+      db: adminClient,
+      ecdId: data.ecdId,
+      fullName,
+      role: data.role,
+    })
+    if (!staffSyncResult.ok) {
+      console.warn('[ecd/invitations] Failed to sync staff directory:', staffSyncResult.error)
+    }
+
     if (previousRole === 'parent_user') {
       parentAccessRevocationError = await revokeParentAccess(adminClient, invitedUserId)
       parentAccessRevoked = !parentAccessRevocationError
@@ -497,6 +508,7 @@ export async function POST(request: Request) {
     emailQueued: emailQueueResult.success,
   })
 }
+
 
 
 

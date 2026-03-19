@@ -115,9 +115,10 @@ export function InviteStaffForm({ ecdId }: InviteStaffFormProps) {
           {isSubmitting ? 'Sending invite...' : 'Invite staff'}
         </Button>
         <p className="text-xs font-medium text-slate-500">
-          CentreConnect will email a secure activation link and add the team member to this centre.
+          CentreConnect will email a secure activation link, add the team member to this centre, and sync them into the monthly report employee records.
         </p>
       </div>
     </form>
   )
 }
+

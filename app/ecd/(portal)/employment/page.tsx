@@ -230,8 +230,8 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
                     member.role === 'ecd_admin' ? 'Crèche Admin' : member.role === 'ecd_supervisor' ? 'Supervisor' : 'Staff Member'
 
                   return (
-                    <div key={member.user_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                      <div className="min-w-[160px]">
+                    <div key={member.user_id} className="flex flex-col items-start gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">{name}</p>
                         <p className="text-xs text-slate-500">{memberRoleLabel}</p>
                       </div>
@@ -277,13 +277,13 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
             ) : (
               <div className="divide-y divide-border rounded-2xl border border-border">
                 {ecdStaff.map((staff) => (
-                  <div key={staff.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                    <div className="min-w-[200px]">
+                  <div key={staff.id} className="flex flex-col items-start gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground">{staff.first_name} {staff.surname}</p>
                       <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{staff.role}</p>
                     </div>
                     
-                    <form action={updateStaffRecordAction} className="flex flex-wrap items-center gap-4">
+                    <form action={updateStaffRecordAction} className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
                       <input type="hidden" name="staff_id" value={staff.id} />
                       
                       <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-600 cursor-pointer">
@@ -516,4 +516,5 @@ export default async function EcdEmploymentPage({ searchParams }: EmploymentPage
     </>
   )
 }
+
 

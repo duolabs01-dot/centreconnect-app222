@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -58,6 +58,16 @@ const STATUS_LABELS: Record<string, string> = {
   late: 'L',
 }
 
+function buildAttendanceMap(initialAttendance: AttendanceRecord[]) {
+  const map: Record<string, Record<number, AttendanceStatus>> = {}
+  initialAttendance.forEach((record) => {
+    const day = new Date(record.date).getDate()
+    if (!map[record.child_id]) map[record.child_id] = {}
+    map[record.child_id][day] = record.status
+  })
+  return map
+}
+
 export function AttendanceGridClient({
   ecdId,
   centreName,
@@ -75,17 +85,16 @@ export function AttendanceGridClient({
   const supabase = createClient()
   
   // Local state for attendance to make it snappy
-  const [localAttendance, setLocalAttendance] = useState<Record<string, Record<number, AttendanceStatus>>>(() => {
-    const map: Record<string, Record<number, AttendanceStatus>> = {}
-    initialAttendance.forEach(record => {
-      const day = new Date(record.date).getDate()
-      if (!map[record.child_id]) map[record.child_id] = {}
-      map[record.child_id][day] = record.status
-    })
-    return map
-  })
+  const [localAttendance, setLocalAttendance] = useState<Record<string, Record<number, AttendanceStatus>>>(() =>
+    buildAttendanceMap(initialAttendance)
+  )
 
   const [saving, setSaving] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLocalAttendance(buildAttendanceMap(initialAttendance))
+    setSaving(null)
+  }, [initialAttendance, selectedMonth, selectedYear, selectedClassId])
 
   const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
   const today = new Date().getDate()

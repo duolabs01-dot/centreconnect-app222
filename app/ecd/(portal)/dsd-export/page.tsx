@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
-import { getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
+import { buildDsdMonthlyReportTitle, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
 import { DsdPrintButton } from './print-button'
 import { PdfDownloadButton } from './pdf-download-button'
 
@@ -63,6 +63,8 @@ export default async function DsdExportPage({
   const selectedYear = normalizeYear(searchParams?.year, defaults.selectedYear)
   const data = await getDsdExportData({ supabase, ecdId, selectedMonth, selectedYear })
 
+  const reportTitle = buildDsdMonthlyReportTitle(data.centreName)
+
   const {
     total,
     r3500,
@@ -107,9 +109,9 @@ export default async function DsdExportPage({
         <Card className="rounded-[2rem] border-slate-200 bg-gradient-to-br from-cyan-50 to-white shadow-sm print-hide">
           <CardContent className="p-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <Building2 className="h-5 w-5 text-cyan-600" />
-                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">Monthly Report</span>
+                <span className="break-words text-sm font-black uppercase tracking-widest text-cyan-700">{reportTitle}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <DsdPrintButton />
@@ -153,7 +155,7 @@ export default async function DsdExportPage({
             </div>
             <div className="flex-1 text-center">
               <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500">Department of Education</p>
-              <p className="text-lg font-black uppercase tracking-[0.1em] text-slate-900">Monthly Report</p>
+              <p className="text-lg font-black uppercase tracking-[0.1em] text-slate-900">{reportTitle}</p>
               <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-600">Programme: Places of Care (Crèches)</p>
             </div>
           </div>
@@ -172,9 +174,9 @@ export default async function DsdExportPage({
                 ['EMIS Number', data.emisNumber || '--'],
                 ['NPO / DSD Reg No', data.npoReg || data.dsdRegNumber || '--'],
               ].map(([label, value]) => (
-                <div key={label} className="flex gap-4 border-b border-slate-100 py-1.5">
-                  <span className="w-52 shrink-0 text-[11px] font-black uppercase tracking-wide text-slate-500">{label}</span>
-                  <span className="text-sm font-semibold text-slate-900">{value}</span>
+                <div key={label} className="flex flex-col gap-1 border-b border-slate-100 py-1.5 sm:flex-row sm:gap-4">
+                  <span className="text-[11px] font-black uppercase tracking-wide text-slate-500 sm:w-52 sm:shrink-0">{label}</span>
+                  <span className="break-words text-sm font-semibold text-slate-900">{value}</span>
                 </div>
               ))}
             </div>
@@ -600,6 +602,9 @@ export default async function DsdExportPage({
     </>
   )
 }
+
+
+
 
 
 

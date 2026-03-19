@@ -687,7 +687,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
         <Card className="p-1 border-slate-100 shadow-sm rounded-3xl">
           <CardContent className="p-6 space-y-8">
-            <form method="get" action="/ecd/applications" className="flex gap-3">
+            <form method="get" action="/ecd/applications" className="flex flex-col gap-3 sm:flex-row">
               {selectedTab !== 'pending' ? <input type="hidden" name="tab" value={selectedTab} /> : null}
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -702,7 +702,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold shadow-sm">Search</Button>
             </form>
 
-            <div className="flex flex-wrap gap-2 p-1.5 rounded-2xl bg-slate-50 border border-slate-100 w-fit">
+            <div className="flex w-full flex-wrap gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-1.5">
               {[
                 { key: 'pending', label: 'Pending', count: filteredCounts.pending },
                 { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
@@ -821,7 +821,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
         </Card>
 
         <section id="details" className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
+          <div className="flex flex-col gap-3 border-b border-slate-50 bg-slate-50/30 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <FileText className="w-4 h-4 text-teal-600" />
               Application Insights
@@ -829,12 +829,12 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
           </div>
           <div className="p-0">
             {focusedApplication ? (
-              <div className="flex flex-col md:flex-row">
-                <div className="flex-1 p-8 space-y-8">
-                  <div className="grid grid-cols-2 gap-8">
+              <div className="flex flex-col">
+                <div className="flex-1 space-y-6 p-5 sm:space-y-8 sm:p-8">
+                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</p>
-                      <p className="text-2xl font-black text-slate-900 mt-1 tracking-tight">{focusedApplication.application_number}</p>
+                      <p className="mt-1 break-all text-2xl font-black tracking-tight text-slate-900">{focusedApplication.application_number}</p>
                     </div>
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
@@ -844,7 +844,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
 
                   <div className="h-px bg-slate-100" />
 
-                  <div className="grid grid-cols-2 gap-8">
+                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
                     <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
                       <div className="flex items-center gap-4">
@@ -865,14 +865,14 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                         </div>
                         <div>
                           <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'N/A'}</p>
-                          <p className="text-xs text-teal-600 font-bold">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
+                          <p className="break-all text-xs font-bold text-teal-600">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="w-full md:w-80 bg-slate-50/50 border-l border-slate-50 p-8">
+                <div className="w-full border-t border-slate-50 bg-slate-50/50 p-5 sm:p-8 md:w-80 md:border-l md:border-t-0">
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Internal Notes</p>
                   <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm min-h-[120px]">
                     <p className="text-sm text-slate-600 italic leading-relaxed">
@@ -898,6 +898,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
     </>
   )
 }
+
 
 
 
