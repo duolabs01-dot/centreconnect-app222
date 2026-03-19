@@ -79,6 +79,12 @@
   PREVENTION: Roll out device/session-limit enforcement behind a feature flag with browser regression coverage for login, dashboard, and first-click navigation.
 
 ## 2026-03-19
+- LESSON: Public marketplace visibility should follow `website_published` and `is_deleted`, not only `is_active`, or the directory collapses into a pilot-only slice.
+  RULE: If a centre should remain discoverable as a public listing, keep the public view aligned with publishing state rather than onboarding/activation state.
+  PREVENTION: When changing centre lifecycle rules, re-check directory, shortlist, compare, claim, and profile surfaces against the live public view count before shipping.
+- LESSON: A default suburb filter can quietly make the marketplace look pilot-only even when more public centres exist.
+  RULE: Public discovery must open on all eligible centres unless the user explicitly chooses an area.
+  PREVENTION: Audit SSR defaults, API defaults, and client copy together whenever discovery feels too narrow.
 - LESSON: Server-generated PDF/print renderers can legitimately need raw hex values even when the app UI should stay token-based.
   RULE: Exempt non-UI print/render files from the design audit instead of weakening the printed output.
   PREVENTION: When adding a new PDF or email-like renderer, decide upfront whether it belongs in `HEX_EXEMPT_PATTERNS` and record that with the feature.
@@ -105,6 +111,8 @@
 - LESSON: Live schema drift in one embedded select (`applications.fee_notes`) can blank an entire admissions detail page even when the record itself still exists.
   RULE: Never assume a production column still exists just because older code or generated types reference it.
   PREVENTION: Verify the live column list before touching a critical join and keep a smaller split-query fallback for recovery paths.
+
+
 
 
 

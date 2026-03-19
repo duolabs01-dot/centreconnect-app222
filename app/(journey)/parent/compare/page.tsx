@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, Compass, Scale } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
@@ -70,6 +71,7 @@ function formatLocation(centre: CompareCentreRow) {
 
 export default async function ComparePage({ searchParams }: ComparePageProps) {
   const supabase = await createClient()
+  const admin = createAdminClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -99,11 +101,11 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
 
   if (centreIds.length > 0) {
     const [centresResult, ownerRowsResult] = await Promise.all([
-      supabase
+      admin
         .from('public_ecd_centres')
         .select('id,slug,name,suburb,city,age_groups,is_registered,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee')
         .in('id', centreIds),
-      supabase.from('ecd_centres').select('id,owner_id').in('id', centreIds),
+      admin.from('public_ecd_centres').select('id,owner_id').in('id', centreIds),
     ])
 
     ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row) => {
@@ -311,3 +313,5 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
     </main>
   )
 }
+
+

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import HomeClientPage, { type HomeActiveCentre } from './page.client'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
@@ -118,17 +119,17 @@ export default async function HomePage({
 
   if (supabase && !shouldUseDemoCentreData()) {
     try {
-      const { data: centreRows } = await supabase
+      const admin = createAdminClient()
+      const { data: centreRows } = await admin
         .from('ecd_centres')
         .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude,owner_id,onboarding_complete,website_published,is_active')
+        .eq('website_published', true)
+        .or('is_deleted.is.null,is_deleted.eq.false')
         .order('created_at', { ascending: false })
         .limit(16)
 
       activeCentres = (centreRows ?? [])
-        .filter((centre: any) => {
-          const pilot = isPilotCentreIdentity({ name: centre.name, slug: centre.slug })
-          return centre.is_active === true || pilot
-        })
+        .filter((centre: any) => centre.website_published === true)
         .map((centre: any) => ({
           id: String(centre.id),
           name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'Creche',
@@ -161,4 +162,6 @@ export default async function HomePage({
 
   return <HomeClientPage activeCentres={activeCentres} />
 }
+
+
 

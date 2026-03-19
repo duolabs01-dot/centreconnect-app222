@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ApplyFlow } from '@/components/public/ApplyFlow'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft } from 'lucide-react'
@@ -54,30 +55,32 @@ function isUuid(value: string) {
 }
 
 async function getCentreByIdentifier(identifier: string): Promise<CentreRecord | null> {
-  const supabase = await createClient()
+  const admin = createAdminClient()
   const normalized = identifier.trim()
   const identifierIsUuid = isUuid(normalized)
 
   if (identifierIsUuid) {
-    const { data: byId } = await supabase
+    const { data: byId } = await admin
       .from('ecd_centres')
       .select(centreSelect)
+      .or('is_deleted.is.null,is_deleted.eq.false')
       .eq('id', normalized)
       .maybeSingle()
 
     if (byId) return mapCentre(byId)
   }
 
-  const { data: bySlug } = await supabase
+  const { data: bySlug } = await admin
     .from('ecd_centres')
     .select(centreSelect)
+    .or('is_deleted.is.null,is_deleted.eq.false')
     .eq('slug', normalized)
     .maybeSingle()
 
   if (bySlug) return mapCentre(bySlug)
 
   if (identifierIsUuid) {
-    const { data: publicById } = await supabase
+    const { data: publicById } = await admin
       .from('public_ecd_centres')
       .select('id,slug,name,city,suburb')
       .eq('id', normalized)
@@ -86,7 +89,7 @@ async function getCentreByIdentifier(identifier: string): Promise<CentreRecord |
     if (publicById) return mapPublicCentre(publicById)
   }
 
-  const { data: publicBySlug } = await supabase
+  const { data: publicBySlug } = await admin
     .from('public_ecd_centres')
     .select('id,slug,name,city,suburb')
     .eq('slug', normalized)
@@ -129,6 +132,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   }
 
   const supabase = await createClient()
+  const admin = createAdminClient()
 
   const {
     data: { user },
@@ -218,3 +222,13 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     </main>
   )
 }
+
+
+
+
+
+
+
+
+
+

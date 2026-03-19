@@ -240,7 +240,7 @@ export default function ParentDiscoverClient() {
 
   useEffect(() => {
     if (locationMode === 'device') return
-    const [lng, lat] = getLocationReference({ suburb: selectedSuburb || centres[0]?.suburb || 'Alexandra', city: centres[0]?.city })
+    const [lng, lat] = getLocationReference({ suburb: selectedSuburb || centres[0]?.suburb || '', city: centres[0]?.city })
     setLocation({ lat, lng })
   }, [centres, locationMode, selectedSuburb])
 
@@ -321,7 +321,7 @@ export default function ParentDiscoverClient() {
             <p>
               {locationMode === 'device'
                 ? 'Showing creches closest to your current location.'
-                : 'Showing Alexandra first. Allow location to see exact distance from you.'}
+                : 'Showing centres across Johannesburg. Allow location to see exact distance from you.'}
             </p>
             <p className="text-xs font-medium text-cyan-800">
               Preview image means the creche has not uploaded real photos yet. Public listing means contact the creche directly before you apply.
@@ -346,7 +346,7 @@ export default function ParentDiscoverClient() {
               onChange={(event) => setSelectedSuburb(event.target.value)}
               className="cc-native-field h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 outline-none focus:border-cyan-500"
             >
-              <option value="">All nearby suburbs</option>
+              <option value="">All Johannesburg suburbs</option>
               {suburbOptions.map((suburb) => (
                 <option key={suburb} value={suburb}>
                   {suburb}
@@ -472,5 +472,6 @@ export default function ParentDiscoverClient() {
     </div>
   )
 }
+
 
 

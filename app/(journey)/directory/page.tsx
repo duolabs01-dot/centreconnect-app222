@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Container } from '@/components/layout/container'
 import { MapPin } from 'lucide-react'
 import DirectoryExplorer from '@/components/directory/DirectoryExplorer'
@@ -126,7 +127,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let viewerRole: string | null = null
 
   if (shouldUseDemoCentreData()) {
-    effectiveSuburb = selectedSuburb || 'Alexandra'
+    effectiveSuburb = selectedSuburb
     centres = demoDirectoryCentres.filter((centre) => {
       if (search && !centre.name.toLowerCase().includes(search.toLowerCase())) return false
       if (effectiveSuburb && centre.suburb !== effectiveSuburb) return false
@@ -144,6 +145,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   } else {
     try {
       const supabase = await createClient()
+      const admin = createAdminClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -152,9 +154,9 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         viewerRole = profile?.role ?? null
       }
 
-      const facetsQuery = supabase.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
+      const facetsQuery = admin.from('public_ecd_centres').select('suburb,age_groups').order('suburb', { ascending: true })
 
-      let centresQuery = supabase
+      let centresQuery = admin
         .from('public_ecd_centres')
         .select(
           'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
@@ -163,14 +165,14 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
         .order('name', { ascending: true })
         .range(pageFrom, pageTo)
 
-      let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
+      let countQuery = admin.from('public_ecd_centres').select('id', { count: 'exact', head: true })
 
       if (search) {
         centresQuery = centresQuery.ilike('name', `%${search}%`)
         countQuery = countQuery.ilike('name', `%${search}%`)
       }
 
-      effectiveSuburb = selectedSuburb || (!user && !search ? 'Alexandra' : selectedSuburb)
+      effectiveSuburb = selectedSuburb
 
       if (effectiveSuburb) {
         centresQuery = centresQuery.eq('suburb', effectiveSuburb)
@@ -217,7 +219,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
       let savedCentreIds = new Set<string>()
 
       if (centreIds.length > 0) {
-        const { data: geoRows } = await supabase
+        const { data: geoRows } = await admin
           .from('ecd_centres')
           .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
           .in('id', centreIds)
@@ -373,3 +375,5 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
     </Container>
   )
 }
+
+

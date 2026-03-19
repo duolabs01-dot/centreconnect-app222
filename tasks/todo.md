@@ -1,3 +1,39 @@
+## Marketplace Listing Restore Results - 2026-03-19
+- [x] Restored the app-side marketplace logic so public directory, shortlist, compare, claim, centre-profile, and apply surfaces are ready to read all published non-deleted centre listings again.
+- [x] Added `supabase/migrations/20260319_001_restore_public_directory_listings.sql` to widen `public_ecd_centres` back to website-published, non-deleted centres instead of only active pilot-style centres.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run build` PASS.
+- [ ] Pending live DB step: apply `20260319_001_restore_public_directory_listings.sql` in Supabase so production/public directory expands from 4 visible centres to the broader published marketplace set.
+## Directory Visibility Cleanup Results - 2026-03-19
+- [x] Removed the forced `Alexandra` default from the public directory page, the directory search API, and parent discover so anonymous browsing now starts on all eligible centres.
+- [x] Updated directory/discover copy so the product now says it is showing centres across Johannesburg instead of implying a pilot-only Alexandra slice.
+- [x] Verified live data state: `64` centres exist in `ecd_centres`, `4` are currently public (`is_active = true` and `website_published = true`): Bajabulile Day Care Centre, Lombardy East Sunshine Seeds ECD, Sakhisizwe Day Care Centre, and Sunshine Early Learning Centre.
+- [x] Confirmed the remaining `60` centres are still hidden because they are inactive, not because of the directory filter bug.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run build` PASS.
+## Session Plan - 2026-03-19 Directory Visibility Cleanup
+- Task: Make the public directory show all eligible ECD centres by default instead of quietly starting on the Alexandra pilot slice.
+- Why now: The current directory experience still looks pilot-only because anonymous users are auto-filtered to `Alexandra`, which makes it appear that only two centres exist.
+- Definition of done:
+  - Public `/directory`, `/parent/discover`, and `/api/directory/search` no longer force `Alexandra` as the default filter.
+  - Directory messaging reflects “all centres” by default while still allowing suburb filtering.
+  - We can clearly explain which centres remain hidden because they are inactive or not website-published.
+  - Relevant verification passes after the patch.
+- Files to touch:
+  - `app/api/directory/search/route.ts`
+  - `app/(journey)/directory/page.tsx`
+  - `components/directory/DirectoryExplorer.tsx`
+  - `app/(journey)/parent/discover/discover-client.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run build`
+  - targeted grep/search checks for forced `Alexandra` defaults
+- Execution steps:
+  1. Remove the forced suburb default from the public directory API and SSR page.
+  2. Align the directory explorer and parent discover copy/state so the UI no longer implies Alexandra-only browsing.
+  3. Verify the remaining visibility rules and record the lesson so we do not quietly ship pilot-only defaults again.
 ## Session Result - 2026-03-19 Bajabulile Standards + Registration Trust Sprint
 - Status: DONE
 - Shipped:
@@ -387,6 +423,9 @@
 
 ## Backlog
 See BACKLOG.md
+
+
+
 
 
 

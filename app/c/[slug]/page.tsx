@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeCentreSlug, resolveCentreSlugCandidates } from '@/lib/ecd/centre-slug'
 import {
   CentreClient,
@@ -93,6 +94,7 @@ const PRIVATE_CENTRE_ENRICHMENT_SELECT = [
 ].join(',')
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+type CentreQueryClient = SupabaseServerClient | ReturnType<typeof createAdminClient>
 
 function buildEmptyPayload(): CentrePagePayload {
   return {
@@ -110,7 +112,7 @@ function buildEmptyPayload(): CentrePagePayload {
   }
 }
 
-async function loadPublicCentreRow(supabase: SupabaseServerClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
+async function loadPublicCentreRow(supabase: CentreQueryClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
   try {
     const { data, error } = await supabase
       .from('public_ecd_centres')
@@ -130,7 +132,7 @@ async function loadPublicCentreRow(supabase: SupabaseServerClient, slugCandidate
   }
 }
 
-async function loadPrivateCentreRow(supabase: SupabaseServerClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
+async function loadPrivateCentreRow(supabase: CentreQueryClient, slugCandidates: string[]): Promise<Partial<Centre> | null> {
   try {
     const { data, error } = await supabase
       .from('ecd_centres')
@@ -150,7 +152,7 @@ async function loadPrivateCentreRow(supabase: SupabaseServerClient, slugCandidat
   }
 }
 
-async function loadPrivateCentreEnrichment(supabase: SupabaseServerClient, centreId: string): Promise<Partial<Centre> | null> {
+async function loadPrivateCentreEnrichment(supabase: CentreQueryClient, centreId: string): Promise<Partial<Centre> | null> {
   try {
     const { data, error } = await supabase
       .from('ecd_centres')
@@ -171,7 +173,7 @@ async function loadPrivateCentreEnrichment(supabase: SupabaseServerClient, centr
 }
 
 async function loadCentreClassrooms(
-  supabase: SupabaseServerClient,
+  supabase: CentreQueryClient,
   centreId: string
 ): Promise<NonNullable<Centre['classrooms']>> {
   try {
@@ -195,7 +197,7 @@ async function loadCentreClassrooms(
 }
 
 async function loadWebsiteContent(
-  supabase: SupabaseServerClient,
+  supabase: CentreQueryClient,
   centreId: string
 ): Promise<WebsiteContentState> {
   const emptyContent: WebsiteContentState = {
@@ -243,8 +245,9 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
 
   try {
     const supabase = await createClient()
-    const publicCentre = await loadPublicCentreRow(supabase, slugCandidates)
-    const privateCentre = await loadPrivateCentreRow(supabase, slugCandidates)
+    const admin = createAdminClient()
+    const publicCentre = await loadPublicCentreRow(admin, slugCandidates)
+    const privateCentre = await loadPrivateCentreRow(admin, slugCandidates)
     const baseCentre = privateCentre ? { ...publicCentre, ...privateCentre } : publicCentre
 
     if (!baseCentre?.id) {
@@ -252,9 +255,9 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
     }
 
     const [enrichment, classrooms, websiteContent, trustDocuments] = await Promise.all([
-      loadPrivateCentreEnrichment(supabase, baseCentre.id),
-      loadCentreClassrooms(supabase, baseCentre.id),
-      loadWebsiteContent(supabase, baseCentre.id),
+      loadPrivateCentreEnrichment(admin, baseCentre.id),
+      loadCentreClassrooms(admin, baseCentre.id),
+      loadWebsiteContent(admin, baseCentre.id),
       loadPublicTrustDocuments(baseCentre.id),
     ])
 
@@ -331,8 +334,8 @@ async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCen
   }
 
   try {
-    const supabase = await createClient()
-    const publicCentre = await loadPublicCentreRow(supabase, slugCandidates)
+    const admin = createAdminClient()
+    const publicCentre = await loadPublicCentreRow(admin, slugCandidates)
     if (publicCentre?.name) {
       return {
         name: publicCentre.name,
@@ -340,7 +343,7 @@ async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCen
       }
     }
 
-    const privateCentre = await loadPrivateCentreRow(supabase, slugCandidates)
+    const privateCentre = await loadPrivateCentreRow(admin, slugCandidates)
     if (privateCentre?.name) {
       return {
         name: privateCentre.name,
@@ -463,6 +466,14 @@ export default async function CentrePage({
     />
   )
 }
+
+
+
+
+
+
+
+
 
 
 

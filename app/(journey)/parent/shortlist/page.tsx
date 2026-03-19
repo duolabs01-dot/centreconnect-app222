@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowRight, Compass, Heart, Scale, Sparkles } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { SurfaceCard } from '@/components/ui/surface-card'
 import CentreCard from '@/components/parent/CentreCard'
@@ -46,6 +47,7 @@ type CentreOwnerRow = {
 
 export default async function ParentShortlistPage() {
   const supabase = await createClient()
+  const admin = createAdminClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -67,7 +69,7 @@ export default async function ParentShortlistPage() {
 
   if (centreIds.length > 0) {
     const [centresResult, applicationsResult, ownerRowsResult] = await Promise.all([
-      supabase
+      admin
         .from('public_ecd_centres')
         .select('id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,phone')
         .in('id', centreIds),
@@ -79,7 +81,7 @@ export default async function ParentShortlistPage() {
             .in('ecd_id', centreIds)
             .order('created_at', { ascending: false })
         : Promise.resolve({ data: [] }),
-      supabase.from('ecd_centres').select('id,owner_id').in('id', centreIds),
+      admin.from('public_ecd_centres').select('id,owner_id').in('id', centreIds),
     ])
 
     ;((applicationsResult.data ?? []) as ApplicationRow[]).forEach((row) => {
@@ -248,3 +250,5 @@ export default async function ParentShortlistPage() {
     </div>
   )
 }
+
+

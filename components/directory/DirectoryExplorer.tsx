@@ -144,7 +144,7 @@ export default function DirectoryExplorer({
   useEffect(() => {
     if (userLocation || geoStatus === 'granted') return
 
-    const areaSuburb = selectedSuburb || initialFilters.suburb || centres[0]?.suburb || 'Alexandra'
+    const areaSuburb = selectedSuburb || initialFilters.suburb || centres[0]?.suburb || centres[0]?.city || ''
     setUserLocation(getLocationReference({ suburb: areaSuburb, city: centres[0]?.city }))
   }, [centres, geoStatus, initialFilters.suburb, selectedSuburb, userLocation])
 
@@ -749,6 +749,7 @@ export default function DirectoryExplorer({
     </div>
   )
 }
+
 
 
 

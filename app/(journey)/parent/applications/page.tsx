@@ -1,7 +1,8 @@
-﻿import type { Metadata } from 'next'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Compass, Map as MapIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from '@/components/ui/button'
 import { ApplicationsList } from './applications-list'
 import { startRoutePerf, logRoutePerf } from '@/lib/perf/server-timing'
@@ -79,6 +80,7 @@ function normalizeMissingDocuments(value: unknown): string[] {
 export default async function ParentApplicationsPage({ searchParams }: ParentApplicationsPageProps) {
   const perf = startRoutePerf('/parent/applications')
   const supabase = await createClient()
+  const admin = createAdminClient()
   try {
     const {
       data: { user },
@@ -122,7 +124,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     >()
 
     if (missingCentreIds.length > 0) {
-      const { data: fallbackCentres } = await supabase
+      const { data: fallbackCentres } = await admin
         .from('public_ecd_centres')
         .select('id,name,slug,logo_url,suburb,city')
         .in('id', missingCentreIds)
@@ -345,5 +347,6 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
     logRoutePerf(perf)
   }
 }
+
 
 

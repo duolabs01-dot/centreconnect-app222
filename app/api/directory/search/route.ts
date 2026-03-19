@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
@@ -47,10 +48,11 @@ export async function GET(req: Request) {
   }
 
   const supabase = await createClient()
+  const admin = createAdminClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  let centresQuery = supabase
+  let centresQuery = admin
     .from('public_ecd_centres')
     .select(
       'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
@@ -58,14 +60,14 @@ export async function GET(req: Request) {
     .order('name', { ascending: true })
     .range(0, PAGE_SIZE - 1)
 
-  let countQuery = supabase.from('public_ecd_centres').select('id', { count: 'exact', head: true })
+  let countQuery = admin.from('public_ecd_centres').select('id', { count: 'exact', head: true })
   if (query.search) {
     const pattern = `%${query.search}%`
     centresQuery = centresQuery.ilike('name', pattern)
     countQuery = countQuery.ilike('name', pattern)
   }
 
-  const effectiveSuburb = query.suburb || (!user && !query.search ? 'Alexandra' : '')
+  const effectiveSuburb = query.suburb || ''
   if (effectiveSuburb) {
     try {
       const { data: existing } = await supabase
@@ -120,7 +122,7 @@ export async function GET(req: Request) {
   centresQuery = centresQuery.range(from, to)
 
   const BAJABULILE_ID = 'f580f125-81ed-412a-8d25-f187605a6a69'
-  const bajabulileQuery = supabase
+  const bajabulileQuery = admin
     .from('public_ecd_centres')
     .select(
       'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
@@ -155,7 +157,7 @@ export async function GET(req: Request) {
   let savedCentreIds = new Set<string>()
 
   if (centreIds.length > 0) {
-    const { data: geoRows } = await supabase
+    const { data: geoRows } = await admin
       .from('ecd_centres')
       .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
       .in('id', centreIds)
@@ -243,3 +245,5 @@ export async function GET(req: Request) {
     totalResults: count ?? 0,
   })
 }
+
+

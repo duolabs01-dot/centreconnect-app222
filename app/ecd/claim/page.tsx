@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { Container } from '@/components/layout/container'
 import { ClaimRequestForm } from '@/components/ecd/ClaimRequestForm'
@@ -26,8 +27,9 @@ export default async function ClaimPage({ searchParams }: ClaimPageProps) {
     )
   }
 
-  const supabase = await createClient()
-  const { data: centre } = await supabase
+  await createClient()
+  const admin = createAdminClient()
+  const { data: centre } = await admin
     .from('public_ecd_centres')
     .select('name')
     .eq('slug', normalizedSlug)
@@ -50,3 +52,4 @@ export default async function ClaimPage({ searchParams }: ClaimPageProps) {
     </Container>
   )
 }
+

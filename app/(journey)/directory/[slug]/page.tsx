@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { createWhatsappClickToChatLink } from '@/lib/communications/whatsapp'
 import { Container } from '@/components/layout/container'
@@ -25,15 +26,17 @@ export default async function DirectorySlugPage({ params }: DirectorySlugPagePro
   if (!normalizedSlug) return notFound()
 
   const supabase = await createClient()
+  const admin = createAdminClient()
   const [{ data: centre }, { data: ecdCentre }] = await Promise.all([
-    supabase
+    admin
       .from('public_ecd_centres')
       .select('id,name,tagline,suburb,city,slug,logo_url,cover_image_url')
       .eq('slug', normalizedSlug)
       .maybeSingle(),
-    supabase
+    admin
       .from('ecd_centres')
       .select('owner_id,contact_phone,phone')
+      .or('is_deleted.is.null,is_deleted.eq.false')
       .eq('slug', normalizedSlug)
       .maybeSingle(),
   ])
@@ -127,3 +130,5 @@ export default async function DirectorySlugPage({ params }: DirectorySlugPagePro
     </Container>
   )
 }
+
+
