@@ -20,6 +20,7 @@ export default async function ParentNotificationsPage() {
     const { data } = await supabase
       .from('parent_notifications')
       .select('id,title,message,is_read,created_at,template_key,ecd_centres(name,contact_whatsapp,contact_phone)')
+      .eq('parent_id', user?.id ?? '')
       .order('created_at', { ascending: false })
       .limit(50)
 

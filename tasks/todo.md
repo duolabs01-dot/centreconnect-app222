@@ -1,3 +1,58 @@
+## Session Plan - 2026-03-19 Parent Daily Updates + Staff Invite + Notifications Sprint
+- Task: Make the parent dashboard show the latest enrolled-child daily updates cleanly, replace the fake support-assisted staff invite with a real ECD admin invite flow, and harden in-app notification reliability for parent-facing surfaces.
+- Why now: Parents with enrolled children still lose child-specific daily context on the dashboard, ECD admins cannot truly add staff from settings, and notification trust breaks when inbox/bell state is inconsistent or under-filtered.
+- Intent summary:
+  - Parent dashboard should stay household-first but show one latest daily update card per enrolled child when a family has multiple enrolled children.
+  - ECD profile staff management should use the real `/api/ecd/invitations` flow, not a support-ticket placeholder.
+  - Parent notification reads, lists, and bell updates should stay explicitly scoped to the logged-in parent and react to new inserts immediately.
+- P0 scope:
+  - Parent dashboard: derive latest published daily report per enrolled child and render a simple per-child updates section.
+  - Staff management: replace the support-assisted invite form in `/ecd/profile` with a real invite submission that hits the existing ECD invite API.
+  - Notifications: add explicit `parent_id` filtering where missing, and make the parent notification bell update live on insert/update without waiting for a manual refresh.
+- P1 scope:
+  - Tighten empty states and copy so multi-child / multi-centre households still understand where to tap next.
+  - Preserve current ECD sidebar / layout / admissions behavior.
+- Constraints:
+  - Do not redesign the parent IA or add a new child selector flow.
+  - Do not touch onboarding or admin invite flows unless shared invite logic must be reused safely.
+  - Keep changes mobile-safe, TypeScript-safe, and scoped to the affected surfaces.
+- Definition of done:
+  - Parent dashboard shows the latest published daily update for each enrolled child, with sensible single-child and multi-child presentation.
+  - ECD admins can invite staff from `/ecd/profile` without opening a support ticket.
+  - Parent inbox and bell stay filtered to the authenticated parent and reflect new notification inserts/reads reliably.
+  - `npm run lint`, `npm run audit:design`, `npm run build`, and `npm run test:parent-uat` all pass.
+- Files to inspect/touch:
+  - `app/(journey)/parent/dashboard/page.tsx`
+  - `app/(journey)/parent/notifications/page.tsx`
+  - `app/(journey)/parent/notifications/notifications-inbox.tsx`
+  - `components/notifications/parent-notification-bell.tsx`
+  - `app/ecd/(portal)/profile/page.tsx`
+  - `app/api/ecd/invitations/route.ts` only if shared invite logic must be extracted
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run audit:design`
+  - `npm run build`
+  - `npm run test:parent-uat`
+- Commit message: `fix: ship parent updates and real staff invites`
+- Execution steps:
+  1. Rework parent dashboard daily-update derivation so enrolled children each get a current update card without introducing a selector-first flow.
+  2. Replace the `/ecd/profile` support-ticket staff invite path with a real invite submission backed by the existing ECD invite API.
+  3. Harden parent notification reads and realtime bell/inbox updates with explicit parent scoping and live insert/update handling.
+  4. Re-run the full verification gate, capture lessons, then commit and push only the shipping diff.
+## Parent Daily Updates + Staff Invite + Notifications Results - 2026-03-19
+- [x] Parent dashboard now derives the latest published daily report per enrolled child and shows separate update cards when a household has multiple enrolled children.
+- [x] Added a lightweight dashboard realtime bridge so parent-facing ECD updates refresh the household home without a manual reload.
+- [x] `/ecd/profile` now uses the real ECD invite API via a client invite form, so ECD admins can add staff without creating support tickets.
+- [x] Staff invite delivery now succeeds even when direct SMTP falls back to the queued email path; the UI receives a success response with a delivery warning instead of a false failure.
+- [x] Parent inbox loading and mark-read actions are now explicitly scoped to `parent_id`, and realtime inserts hydrate centre contact metadata before rendering CTAs.
+- [x] Parent notification bell now refreshes live on insert/update.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run audit:design` PASS.
+- [x] Verification: `npm run build` PASS.
+- [x] Verification: `npm run test:parent-uat` PASS.
+- [x] Known build note: the existing postbuild dynamic-server warning for `/api/ecd/dsd-export/pdf` is unchanged in this sprint.
 # CentreConnect — Active Tasks
 
 ## Session Plan - 2026-03-19 ECD Admissions + Household Sync Sprint
@@ -275,3 +330,4 @@
 
 ## Backlog
 See BACKLOG.md
+

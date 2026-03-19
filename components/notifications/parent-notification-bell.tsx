@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
+import { createClient } from '@/lib/supabase/client'
 
 type ParentNotificationBellProps = {
   parentId: string
@@ -87,6 +88,7 @@ function BellFallbackButton() {
 }
 
 function ParentNotificationBellInner({ parentId }: ParentNotificationBellProps) {
+  const supabase = useMemo(() => createClient(), [])
   const [items, setItems] = useState<NotificationRow[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -142,6 +144,32 @@ function ParentNotificationBellInner({ parentId }: ParentNotificationBellProps) 
     if (!open) return
     void loadNotifications({ silent: true })
   }, [open, loadNotifications])
+
+  useEffect(() => {
+    if (!parentId) return
+
+    const channel = supabase
+      .channel(`parent-notification-bell-live-${parentId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        () => {
+          void loadNotifications({ silent: true })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
+        () => {
+          void loadNotifications({ silent: true })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [loadNotifications, parentId, supabase])
 
   async function markAsRead(id: string) {
     const target = items.find((item) => item.id === id)

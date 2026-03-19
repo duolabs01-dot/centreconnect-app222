@@ -18,6 +18,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 import { FeatureBanner } from '@/components/ui/feature-banner'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
 import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
+import { ParentDashboardRealtimeBridge } from './_sections/parent-dashboard-realtime-bridge'
 import { getParentProgress } from '@/lib/parent/progress'
 import { formatDate } from '@/lib/utils'
 import {
@@ -61,6 +62,7 @@ type ParentNotificationItem = {
 
 type DailyUpdateItem = {
   id: string
+  childId: string | null
   childName: string
   reportDate: string
   teacherNotes: string | null
@@ -111,6 +113,7 @@ type RawNotificationRow = {
 
 type RawDailyReportRow = {
   id: string
+  child_id: string | null
   report_date: string
   mood: string | null
   teacher_notes: string | null
@@ -304,17 +307,18 @@ export default async function ParentDashboardPage() {
       supabase
         .from('parent_notifications')
         .select('id,title,message,is_read,created_at,ecd_centres(name)')
+        .eq('parent_id', user?.id ?? '')
         .order('created_at', { ascending: false })
         .limit(homeState === 'discover' ? 3 : 6),
       enrolledChildIds.length > 0
         ? supabase
             .from('child_daily_reports')
-            .select('id,report_date,mood,teacher_notes,activities,children(first_name,last_name)')
+            .select('id,child_id,report_date,mood,teacher_notes,activities,children(first_name,last_name)')
             .in('child_id', enrolledChildIds)
             .not('published_at', 'is', null)
             .order('report_date', { ascending: false })
             .order('published_at', { ascending: false })
-            .limit(6)
+            .limit(Math.max(enrolledChildIds.length * 4, 12))
         : Promise.resolve({ data: [] }),
       enrolledCentreIds.length > 0
         ? supabase
@@ -341,19 +345,18 @@ export default async function ParentDashboardPage() {
     }))
 
     const unreadNotifications = notifications.filter((item) => !item.isRead)
-    const latestDailyUpdate = ((dailyReportsResult.data ?? []) as RawDailyReportRow[])
-      .map((report) => {
-        const child = normalizeOne<{ first_name?: string | null; last_name?: string | null }>(report.children)
-        return {
-          id: String(report.id),
-          childName: `${child?.first_name ?? ''} ${child?.last_name ?? ''}`.trim() || enrolledPrimaryChild?.displayName || enrolledApplication?.childName || 'your child',
-          reportDate: report.report_date,
-          teacherNotes: report.teacher_notes ?? null,
-          mood: report.mood ?? null,
-          activities: Array.isArray(report.activities) ? report.activities.map((activity) => String(activity).trim()).filter(Boolean) : [],
-        } satisfies DailyUpdateItem
-      })
-      .at(0) ?? null
+    const dailyReportItems = ((dailyReportsResult.data ?? []) as RawDailyReportRow[]).map((report) => {
+      const child = normalizeOne<{ first_name?: string | null; last_name?: string | null }>(report.children)
+      return {
+        id: String(report.id),
+        childId: report.child_id ? String(report.child_id) : null,
+        childName: `${child?.first_name ?? ''} ${child?.last_name ?? ''}`.trim() || enrolledPrimaryChild?.displayName || enrolledApplication?.childName || 'your child',
+        reportDate: report.report_date,
+        teacherNotes: report.teacher_notes ?? null,
+        mood: report.mood ?? null,
+        activities: Array.isArray(report.activities) ? report.activities.map((activity) => String(activity).trim()).filter(Boolean) : [],
+      } satisfies DailyUpdateItem
+    })
 
     const nextEvent = ((eventsResult.data ?? []) as RawCalendarEventRow[])
       .map((event) => ({
@@ -374,6 +377,7 @@ export default async function ParentDashboardPage() {
         },
       ])
     )
+    const childById = new Map(childRows.map((child) => [child.id, child] as const))
 
     const firstChildName =
       childRows[0]?.displayName ||
@@ -395,6 +399,32 @@ export default async function ParentDashboardPage() {
     const hasMultipleEnrolledChildren = enrolledChildCount > 1
     const hasMultipleCentres = householdCentreCount > 1
     const showHouseholdSummary = hasMultipleChildren || hasMixedHousehold || hasMultipleCentres
+
+    const latestDailyUpdateByChildId = new Map<string, DailyUpdateItem>()
+    for (const report of dailyReportItems) {
+      if (report.childId && !latestDailyUpdateByChildId.has(report.childId)) {
+        latestDailyUpdateByChildId.set(report.childId, report)
+      }
+    }
+
+    const enrolledDailyUpdateCards = enrolledChildIds.map((childId) => {
+      const child = childById.get(childId) ?? null
+      const enrolledApplicationForChild =
+        applications.find((application) => application.childId === childId && isEnrolledApplicationStatus(application.status)) ?? null
+      const childCentreMeta =
+        (child?.ecdId ? enrolledCentreMap.get(child.ecdId) : null) ??
+        (enrolledApplicationForChild?.ecdId ? enrolledCentreMap.get(enrolledApplicationForChild.ecdId) : null) ??
+        null
+
+      return {
+        childId,
+        childName: child?.displayName || enrolledApplicationForChild?.childName || 'your child',
+        centreName: childCentreMeta?.name ?? enrolledApplicationForChild?.centreName ?? null,
+        report: latestDailyUpdateByChildId.get(childId) ?? null,
+      }
+    })
+    const latestDailyUpdate = enrolledDailyUpdateCards[0]?.report ?? dailyReportItems.at(0) ?? null
+    const primaryDailyUpdateCard = enrolledDailyUpdateCards[0] ?? null
 
     const latestPendingApplication = activeApplications[0] ?? null
     const enrolledCentreMeta =
@@ -442,7 +472,6 @@ export default async function ParentDashboardPage() {
         ...applications.map((application) => application.childId ?? `application:${application.id}`),
       ])
     )
-    const childById = new Map(childRows.map((child) => [child.id, child] as const))
     const applicationsByJourneyKey = new Map<string, DashboardApplication[]>()
 
     for (const application of applications) {
@@ -545,6 +574,7 @@ export default async function ParentDashboardPage() {
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
         <div className="cc-stack">
+          {user?.id ? <ParentDashboardRealtimeBridge parentId={user.id} /> : null}
           {/* Next Action Card - Always show the most important next step */}
           {progress?.nextAction && (
             <SurfaceCard className="relative overflow-hidden border-2 border-cyan-200 bg-gradient-to-r from-cyan-50 to-white p-5">
@@ -821,14 +851,56 @@ export default async function ParentDashboardPage() {
                 <SurfaceCard className="p-5">
                   <div className="flex items-center gap-2 text-slate-900">
                     <Sparkles className="h-4 w-4 text-cyan-600" />
-                    <h2 className="text-base font-bold">Latest daily update</h2>
+                    <h2 className="text-base font-bold">{enrolledDailyUpdateCards.length > 1 ? 'Latest daily updates' : 'Latest daily update'}</h2>
                   </div>
-                  {latestDailyUpdate ? (
+                  {enrolledDailyUpdateCards.length > 1 ? (
+                    <>
+                      <div className="mt-4 grid gap-3">
+                        {enrolledDailyUpdateCards.map((card) => (
+                          <div key={card.childId} className="rounded-2xl border border-slate-200 bg-white p-4">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-slate-900">{card.childName}</p>
+                                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                                  {card.centreName ? `${card.centreName} • ` : ''}
+                                  {card.report ? `${formatDate(card.report.reportDate)} • ${getMoodLabel(card.report.mood)}` : "Waiting for today's update"}
+                                </p>
+                              </div>
+                              <span
+                                className={card.report
+                                  ? 'rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700'
+                                  : 'rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-500'}
+                              >
+                                {card.report ? 'Daily report ready' : 'Awaiting update'}
+                              </span>
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-slate-700">
+                              {card.report?.teacherNotes || `${card.childName} does not have a published daily report yet. It will appear here as soon as the creche shares it.`}
+                            </p>
+                            {card.report?.activities.length ? (
+                              <div className="mt-3 flex flex-wrap gap-1.5">
+                                {card.report.activities.slice(0, 4).map((activity) => (
+                                  <span key={activity} className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
+                                    {activity}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <QuickLink href="/parent/daily-reports" label="Open reports" />
+                        <QuickLink href="/parent/report-cards" label="Child reports" />
+                      </div>
+                    </>
+                  ) : latestDailyUpdate ? (
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{latestDailyUpdate.childName}</p>
                           <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
+                            {primaryDailyUpdateCard?.centreName ? `${primaryDailyUpdateCard.centreName} • ` : ''}
                             {formatDate(latestDailyUpdate.reportDate)} • {getMoodLabel(latestDailyUpdate.mood)}
                           </p>
                         </div>
@@ -852,6 +924,10 @@ export default async function ParentDashboardPage() {
                         <QuickLink href="/parent/daily-reports" label="Open reports" />
                         <QuickLink href="/parent/report-cards" label="Child reports" />
                       </div>
+                    </div>
+                  ) : primaryDailyUpdateCard ? (
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
+                      {primaryDailyUpdateCard.childName} does not have a published daily report yet. It will appear here as soon as the creche shares it.
                     </div>
                   ) : (
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
@@ -932,5 +1008,6 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
+
 
 

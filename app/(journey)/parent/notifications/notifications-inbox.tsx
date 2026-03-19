@@ -1,6 +1,6 @@
-﻿'use client'
+'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Bell, BellOff } from 'lucide-react'
 import { toast } from 'sonner'
@@ -108,6 +108,26 @@ export function NotificationsInbox({
   const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const seenRealtimeIdsRef = useRef(new Set(initialItems.map((item) => item.id)))
 
+  const hydrateRealtimeNotification = useCallback(
+    async (notificationId: string) => {
+      if (!parentId) return null
+
+      const { data, error } = await supabase
+        .from('parent_notifications')
+        .select('id,title,message,is_read,created_at,template_key,ecd_centres(name,contact_whatsapp,contact_phone)')
+        .eq('parent_id', parentId)
+        .eq('id', notificationId)
+        .maybeSingle()
+
+      if (error || !data) {
+        return null
+      }
+
+      return data as NotificationItem
+    },
+    [parentId, supabase]
+  )
+
   useEffect(() => {
     seenRealtimeIdsRef.current = new Set(items.map((item) => item.id))
   }, [items])
@@ -130,6 +150,7 @@ export function NotificationsInbox({
             template_key?: string | null
           }
           if (!next.id || seenRealtimeIdsRef.current.has(next.id)) return
+          seenRealtimeIdsRef.current.add(next.id)
 
           const nextItem: NotificationItem = {
             id: next.id,
@@ -141,7 +162,13 @@ export function NotificationsInbox({
             ecd_centres: null,
           }
 
-          setItems((current) => [nextItem, ...current].slice(0, 100))
+          setItems((current) => [nextItem, ...current.filter((item) => item.id !== nextItem.id)].slice(0, 100))
+          void hydrateRealtimeNotification(next.id).then((hydratedItem) => {
+            if (!hydratedItem) return
+            setItems((current) =>
+              [hydratedItem, ...current.filter((item) => item.id !== hydratedItem.id)].slice(0, 100)
+            )
+          })
           toast(nextItem.title, {
             description: `${nextItem.message} 😊`,
           })
@@ -163,7 +190,7 @@ export function NotificationsInbox({
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [parentId, supabase])
+  }, [hydrateRealtimeNotification, parentId, supabase])
 
   const filteredItems = useMemo(() => {
     let filtered = items
@@ -212,6 +239,7 @@ export function NotificationsInbox({
     const { error } = await supabase
       .from('parent_notifications')
       .update({ is_read: true })
+      .eq('parent_id', parentId)
       .eq('id', notificationId)
 
     if (error) {
@@ -226,7 +254,7 @@ export function NotificationsInbox({
     const unreadIds = items.filter((item) => !item.is_read).map((item) => item.id)
     if (unreadIds.length === 0) return
 
-    const { error } = await supabase.from('parent_notifications').update({ is_read: true }).in('id', unreadIds)
+    const { error } = await supabase.from('parent_notifications').update({ is_read: true }).eq('parent_id', parentId).in('id', unreadIds)
 
     if (error) {
       toast.error(error.message || 'Failed to mark all as read')
@@ -364,4 +392,6 @@ export function NotificationsInbox({
     </div>
   )
 }
+
+
 

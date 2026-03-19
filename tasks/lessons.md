@@ -79,6 +79,14 @@
   PREVENTION: Roll out device/session-limit enforcement behind a feature flag with browser regression coverage for login, dashboard, and first-click navigation.
 
 ## 2026-03-19
+- LESSON: Supabase realtime insert payloads do not carry joined centre contact metadata, so inbox cards can lose reply/action context if we render `payload.new` directly.
+  RULE: When an inbox item depends on relational CTA data, hydrate the inserted row by id before trusting the realtime payload.
+  PREVENTION: Keep realtime notification handlers narrow and refetch joined metadata on insert for inbox or bell surfaces.
+
+- LESSON: Server-rendered parent dashboard cards stay stale unless a small client bridge listens for the parent notification events that represent fresh ECD updates.
+  RULE: If a dashboard section is server-rendered but must react to live operational updates, pair it with a minimal client refresh bridge instead of rewriting the whole page client-side.
+  PREVENTION: Prefer one debounced realtime refresh bridge per dashboard over scattered client state copies.
+
 - LESSON: Parent entry routing cannot assume one child, one centre, or one household state.
   RULE: Parent redirects must be derived from the household state (`hasChildren`, `hasPendingApplications`, `hasEnrolledChild`), not a single enrolled yes/no check.
   PREVENTION: Keep one shared parent home-state helper and reuse it in `/`, auth redirects, and progress/dashboard logic so mixed families stay consistent.
@@ -90,3 +98,5 @@
 - LESSON: Live schema drift in one embedded select (`applications.fee_notes`) can blank an entire admissions detail page even when the record itself still exists.
   RULE: Never assume a production column still exists just because older code or generated types reference it.
   PREVENTION: Verify the live column list before touching a critical join and keep a smaller split-query fallback for recovery paths.
+
+

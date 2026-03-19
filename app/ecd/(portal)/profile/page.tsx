@@ -8,12 +8,12 @@ import { ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { updateNotificationPreferencesAction } from '@/lib/actions/settings/update-notification-preferences'
-import { inviteStaffAction } from '@/lib/actions/settings/staff-management'
 import { requestCancellationAction } from '@/lib/actions/settings/cancel-subscription'
 import { readAftercareConfig, sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
 import { readCentreLocationMetadata, writeCentreLocationMetadata, type CentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
 import { geocodeAddressWithPelias } from '@/lib/geo/pelias'
 import { DangerZoneClient } from './danger-zone-client'
+import { InviteStaffForm } from '@/components/ecd/invite-staff-form'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
@@ -309,18 +309,6 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
         : 'realtime',
     })
     revalidatePath('/ecd/profile')
-  }
-
-  async function inviteStaff(formData: FormData) {
-    'use server'
-    await inviteStaffAction({
-      ecdId,
-      name: String(formData.get('name') ?? '').trim(),
-      email: String(formData.get('email') ?? '').trim(),
-      role: String(formData.get('role') ?? 'ecd_staff'),
-    })
-    revalidatePath('/ecd/profile')
-    revalidatePath('/ecd/support')
   }
 
   async function updateStaffRole(formData: FormData) {
@@ -735,16 +723,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                 {searchParams.staffError}
               </p>
             ) : null}
-            <form action={inviteStaff} className="grid gap-4 md:grid-cols-3">
-              <input name="name" className="cc-native-field h-12 rounded-2xl" placeholder="Staff full name" required />
-              <input name="email" type="email" className="cc-native-field h-12 rounded-2xl" placeholder="Staff email" required />
-              <select name="role" className="cc-native-field h-12 rounded-2xl border-slate-300 bg-white text-slate-800 font-semibold">
-                <option value="ecd_staff">Staff member</option>
-                <option value="ecd_supervisor">Supervisor</option>
-                <option value="ecd_admin">ECD Admin</option>
-              </select>
-              <Button type="submit" className="w-fit md:col-span-3 bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl shadow-sm transition-colors">Invite Staff (Support-assisted)</Button>
-            </form>
+            <InviteStaffForm ecdId={ecdId} />
 
             <div className="space-y-3">
               {(staffMembers ?? []).length === 0 ? (

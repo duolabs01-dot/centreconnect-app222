@@ -442,15 +442,40 @@ export async function POST(request: Request) {
     const queueMessage = emailQueueResult.success
       ? 'Invite queued for delivery, but direct SMTP delivery failed.'
       : `Invite delivery failed. ${emailDiagnostics}`
-    return NextResponse.json(
-      {
-        error: queueMessage,
-        directEmailErrors,
-        directEmailNotes,
-        emailQueueError: emailQueueResult.success ? null : emailQueueResult.error,
-      },
-      { status: emailQueueResult.success ? 502 : 500 }
-    )
+
+    if (!emailQueueResult.success) {
+      return NextResponse.json(
+        {
+          error: queueMessage,
+          directEmailErrors,
+          directEmailNotes,
+          emailQueueError: emailQueueResult.error,
+        },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      ok: true,
+      ecdId: data.ecdId,
+      role: data.role,
+      invitedEmail: normalizedEmail,
+      userId: invitedUserId,
+      linkedExistingUser,
+      pendingLinkOnNextLogin,
+      previousRole,
+      parentAccessRevoked,
+      parentAccessRevocationError,
+      inviteLinkMode: accessLinkResult.mode,
+      accessLinkWarning: accessLinkResult.warning,
+      passwordSetupLinkGenerated: Boolean(passwordSetupResult.link),
+      passwordSetupWarning: passwordSetupResult.warning,
+      directEmailProvider: null,
+      emailQueued: true,
+      deliveryWarning: queueMessage,
+      directEmailErrors,
+      directEmailNotes,
+    })
   }
 
   return NextResponse.json({
