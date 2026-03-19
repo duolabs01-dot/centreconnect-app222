@@ -30,8 +30,8 @@ export const metadata: Metadata = {
 }
 
 type ApplicationDetailsPageProps = {
-  params: { id: string }
-  searchParams?: { lookup?: string }
+  params: { id: string } | Promise<{ id: string }>
+  searchParams?: { lookup?: string } | Promise<{ lookup?: string }>
 }
 
 type HistoryItem = {
@@ -97,7 +97,6 @@ type ApplicationRow = {
   rejection_reason_note: string | null
   rejected_at: string | null
   monthly_fee_cents: number | null
-  fee_notes: string | null
   missing_documents: unknown
   children: unknown
   parents: unknown
@@ -184,6 +183,18 @@ function safeDecodeRouteToken(value: string) {
   }
 }
 
+function extractFeeNoteFromAdminNotes(value: string | null | undefined) {
+  if (!value) return null
+  const feeNoteLine = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .reverse()
+    .find((line) => line.startsWith('Fee note: '))
+
+  return feeNoteLine ? feeNoteLine.slice('Fee note: '.length).trim() : null
+}
+
 async function fetchApplicationForRoute(
   client: DbQueryClient,
   ecdId: string,
@@ -191,9 +202,9 @@ async function fetchApplicationForRoute(
   preferNumberLookup: boolean
 ) {
   const selectVariants: string[] = [
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,fee_notes,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
   ]
 
   for (const selectClause of selectVariants) {
@@ -216,13 +227,66 @@ async function fetchApplicationForRoute(
   return null
 }
 
+async function fetchApplicationWithSplitQueries(
+  client: DbQueryClient,
+  ecdId: string,
+  routeToken: string,
+  preferNumberLookup: boolean
+) {
+  const baseSelect =
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents'
+  const byId = () =>
+    client.from('applications').select(baseSelect).eq('ecd_id', ecdId).eq('id', routeToken).maybeSingle()
+  const byNumber = () =>
+    client.from('applications').select(baseSelect).eq('ecd_id', ecdId).eq('application_number', routeToken).maybeSingle()
+
+  const primary = preferNumberLookup ? await byNumber() : await byId()
+  const fallback = primary.data ? null : preferNumberLookup ? await byId() : await byNumber()
+  const baseRecord = ((primary.data ?? fallback?.data) as Record<string, unknown> | null) ?? null
+  if (!baseRecord) return null
+
+  const childId = typeof baseRecord.child_id === 'string' ? baseRecord.child_id : null
+  const parentId = typeof baseRecord.parent_id === 'string' ? baseRecord.parent_id : null
+
+  const [childResult, parentResult] = await Promise.all([
+    childId
+      ? client
+          .from('children')
+          .select('id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs')
+          .eq('id', childId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    parentId
+      ? client
+          .from('parents')
+          .select(
+            'id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone)'
+          )
+          .eq('id', parentId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+
+  return {
+    ...baseRecord,
+    children: childResult.data ?? null,
+    parents: parentResult.data ?? null,
+  } as unknown as ApplicationRow
+}
+
 export default async function ApplicationDetailsPage({ params, searchParams }: ApplicationDetailsPageProps) {
+  const [{ id }, resolvedSearchParams] = await Promise.all([
+    Promise.resolve(params),
+    Promise.resolve(searchParams),
+  ])
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const adminClient = createAdminClient()
-  const routeToken = safeDecodeRouteToken(params.id)
+  const routeToken = safeDecodeRouteToken(id)
   const application =
-    (await fetchApplicationForRoute(supabase, ecdId, routeToken, searchParams?.lookup === 'number')) ??
-    (await fetchApplicationForRoute(adminClient, ecdId, routeToken, searchParams?.lookup === 'number'))
+    (await fetchApplicationForRoute(supabase, ecdId, routeToken, resolvedSearchParams?.lookup === 'number')) ??
+    (await fetchApplicationForRoute(adminClient, ecdId, routeToken, resolvedSearchParams?.lookup === 'number')) ??
+    (await fetchApplicationWithSplitQueries(supabase, ecdId, routeToken, resolvedSearchParams?.lookup === 'number')) ??
+    (await fetchApplicationWithSplitQueries(adminClient, ecdId, routeToken, resolvedSearchParams?.lookup === 'number'))
 
   if (!application) {
     return (
@@ -511,7 +575,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
               <FeeAgreementCard
                 applicationId={application.id}
                 initialMonthlyFeeCents={effectiveMonthlyFeeCents}
-                initialFeeNotes={application.fee_notes}
+                initialFeeNotes={extractFeeNoteFromAdminNotes(application.admin_notes)}
               />
             ) : null}
 

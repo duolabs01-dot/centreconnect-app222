@@ -94,9 +94,20 @@
   * {
     @apply border-border;
   }
+  html {
+    max-width: 100%;
+    overflow-x: clip;
+  }
   body {
     @apply bg-background text-foreground;
-    overflow-x: hidden;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  img,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
   }
 }
 

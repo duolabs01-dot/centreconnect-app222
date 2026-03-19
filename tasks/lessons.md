@@ -86,3 +86,7 @@
 - LESSON: Parent dashboard copy that says "your child" or "your creche" becomes misleading as soon as a family has multiple active journeys.
   RULE: Parent home should stay household-first, with child-level detail living in Applications and child pages.
   PREVENTION: Add a compact household summary instead of inventing a new selector every time a family spans multiple children or creches.
+
+- LESSON: Live schema drift in one embedded select (`applications.fee_notes`) can blank an entire admissions detail page even when the record itself still exists.
+  RULE: Never assume a production column still exists just because older code or generated types reference it.
+  PREVENTION: Verify the live column list before touching a critical join and keep a smaller split-query fallback for recovery paths.

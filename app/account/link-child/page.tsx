@@ -13,12 +13,19 @@ export const metadata = {
 }
 
 type LinkChildPageProps = {
-  searchParams?: {
-    token?: string
-    linked?: string
-    error?: string
-    childId?: string
-  }
+  searchParams?:
+    | {
+        token?: string
+        linked?: string
+        error?: string
+        childId?: string
+      }
+    | Promise<{
+        token?: string
+        linked?: string
+        error?: string
+        childId?: string
+      }>
 }
 
 function friendlyError(value: string | undefined) {
@@ -29,9 +36,10 @@ function friendlyError(value: string | undefined) {
 }
 
 export default async function LinkChildPage({ searchParams }: LinkChildPageProps) {
-  const linked = searchParams?.linked === '1'
-  const error = friendlyError(searchParams?.error)
-  const token = String(searchParams?.token ?? '').trim()
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const linked = resolvedSearchParams?.linked === '1'
+  const error = friendlyError(resolvedSearchParams?.error)
+  const token = String(resolvedSearchParams?.token ?? '').trim()
 
   if (!linked && !token) {
     return (

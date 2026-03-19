@@ -7,6 +7,7 @@ import { buildAuthCallbackRedirect, generateMagicFirstAccessLink, normalizeAppUr
 import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import { renderBaseEmailLayout } from '@/lib/email/email-layout'
 import { enqueueParentWelcomeSequence } from '@/lib/notifications/parent-welcome-sequence'
+import { sendParentInAppAndWhatsappNotification } from '@/lib/notifications/multi-channel'
 import { syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
 
 export type ParentLinkRequestStatus = 'pending' | 'opened' | 'accepted' | 'expired' | 'cancelled'
@@ -75,6 +76,35 @@ function normalizeText(value: string | null | undefined) {
 
 function normalizeEmail(value: string | null | undefined) {
   return normalizeText(value)?.toLowerCase() ?? null
+}
+
+function digitsOnly(value: string | null | undefined) {
+  return String(value ?? '').replace(/\D+/g, '')
+}
+
+function samePhone(a: string | null | undefined, b: string | null | undefined) {
+  const digitsA = digitsOnly(a)
+  const digitsB = digitsOnly(b)
+  if (digitsA && digitsB) return digitsA === digitsB
+  return normalizeText(a) === normalizeText(b)
+}
+
+function mergeParentPhones(input: {
+  ecdPhone: string | null
+  profilePhone: string | null
+  alternatePhone: string | null
+}) {
+  const primaryPhone = input.ecdPhone ?? input.profilePhone ?? input.alternatePhone ?? null
+  const alternateCandidates = input.ecdPhone
+    ? [input.profilePhone, input.alternatePhone]
+    : [input.alternatePhone]
+  const alternatePhone =
+    alternateCandidates.find((value) => value && !samePhone(value, primaryPhone)) ?? null
+
+  return {
+    primaryPhone,
+    alternatePhone,
+  }
 }
 
 function hashToken(token: string) {
@@ -557,15 +587,28 @@ export async function acceptParentLinkRequestByToken(input: {
 
   const existingRole = normalizeText(existingProfileResult.data?.role ?? null)
   const fullName = existingProfileResult.data?.full_name?.trim() || normalizeText(typeof request.parent_name === 'string' ? request.parent_name : null) || 'Parent'
-  const phone = existingProfileResult.data?.phone?.trim() || normalizeText(typeof request.parent_phone === 'string' ? request.parent_phone : null)
   const roleToPersist = !existingRole || existingRole === 'parent_user' ? 'parent_user' : existingRole
+
+  const { data: existingParent } = await admin
+    .from('parents')
+    .select('id,alt_phone')
+    .eq('id', input.userId)
+    .maybeSingle()
+  const requestedPhone = normalizeText(typeof request.parent_phone === 'string' ? request.parent_phone : null)
+  const existingProfilePhone = normalizeText(existingProfileResult.data?.phone ?? null)
+  const existingAlternatePhone = normalizeText(existingParent?.alt_phone ?? null)
+  const { primaryPhone, alternatePhone } = mergeParentPhones({
+    ecdPhone: requestedPhone,
+    profilePhone: existingProfilePhone,
+    alternatePhone: existingAlternatePhone,
+  })
 
   const { error: profileError } = await admin.from('user_profiles').upsert(
     {
       id: input.userId,
       role: roleToPersist,
       full_name: fullName,
-      phone,
+      phone: primaryPhone,
     },
     { onConflict: 'id' }
   )
@@ -580,12 +623,11 @@ export async function acceptParentLinkRequestByToken(input: {
     roleChanged = metadataSync.ok && metadataSync.changed
   }
 
-  const { data: existingParent } = await admin.from('parents').select('id').eq('id', input.userId).maybeSingle()
   const { error: parentError } = await admin.from('parents').upsert(
     {
       id: input.userId,
       billing_email: requestEmail,
-      alt_phone: phone,
+      alt_phone: alternatePhone,
       guardian_relationship: 'parent',
     },
     { onConflict: 'id' }
@@ -599,7 +641,7 @@ export async function acceptParentLinkRequestByToken(input: {
     admin,
     child,
     parentName: fullName,
-    parentPhone: phone,
+    parentPhone: primaryPhone,
     parentEmail: requestEmail,
   })
 
@@ -643,7 +685,23 @@ export async function acceptParentLinkRequestByToken(input: {
     changes: {
       request_id: String(request.id),
       parent_email: requestEmail,
+      primary_phone: primaryPhone,
+      alternate_phone: alternatePhone,
     },
+  })
+
+  const childName = `${child.first_name ?? ''} ${child.last_name ?? ''}`.trim() || 'your child'
+  const { data: centre } = await admin.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
+  const centreName = centre?.name?.trim() || 'your creche'
+
+  await sendParentInAppAndWhatsappNotification(admin as any, {
+    parent_id: input.userId,
+    ecd_id: ecdId,
+    title: 'Family link complete',
+    message: `Welcome to CentreConnect. ${childName} is now linked to ${centreName}. You will start receiving updates, reminders, and messages in one trusted place.`,
+    parent_phone: primaryPhone ?? alternatePhone,
+    recipient_name: fullName,
+    is_read: false,
   })
 
   if (!existingParent?.id) {
@@ -655,6 +713,7 @@ export async function acceptParentLinkRequestByToken(input: {
 
   revalidatePath('/parent/dashboard')
   revalidatePath('/parent/children')
+  revalidatePath('/parent/notifications')
   revalidatePath('/parent/profile')
   revalidatePath('/ecd/children')
   revalidatePath(`/ecd/children/${child.id}`)

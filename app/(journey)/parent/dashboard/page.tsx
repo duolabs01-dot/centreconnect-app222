@@ -76,6 +76,17 @@ type UpcomingEvent = {
   centreName: string | null
 }
 
+type HouseholdJourneyItem = {
+  key: string
+  childName: string
+  statusLabel: string
+  statusToneClassName: string
+  summary: string
+  detail: string | null
+  href: string
+  actionLabel: string
+}
+
 type RawApplicationRow = {
   id: string
   child_id: string | null
@@ -128,6 +139,17 @@ function normalizeText(value: string | null | undefined, fallback = '') {
 function normalizeMissingDocuments(value: unknown) {
   if (!Array.isArray(value)) return []
   return value.map((entry) => String(entry).trim()).filter(Boolean)
+}
+
+function uniqueText(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => normalizeText(value)).filter(Boolean)))
+}
+
+function formatNameList(values: string[]) {
+  if (values.length === 0) return ''
+  if (values.length === 1) return values[0]
+  if (values.length === 2) return `${values[0]} and ${values[1]}`
+  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
 }
 
 function formatStatusLabel(status: string) {
@@ -414,6 +436,111 @@ export default async function ParentDashboardPage() {
           : 'Each child keeps their own profile, and you can manage the family from one home without switching accounts.'
     const householdSummaryLinkHref = activeApplicationCount > 0 ? '/parent/applications' : '/parent/children'
     const householdSummaryLinkLabel = activeApplicationCount > 0 ? 'Open applications' : 'Manage children'
+    const householdJourneyKeys = Array.from(
+      new Set([
+        ...childRows.map((child) => child.id),
+        ...applications.map((application) => application.childId ?? `application:${application.id}`),
+      ])
+    )
+    const childById = new Map(childRows.map((child) => [child.id, child] as const))
+    const applicationsByJourneyKey = new Map<string, DashboardApplication[]>()
+
+    for (const application of applications) {
+      const key = application.childId ?? `application:${application.id}`
+      const existing = applicationsByJourneyKey.get(key)
+      if (existing) {
+        existing.push(application)
+      } else {
+        applicationsByJourneyKey.set(key, [application])
+      }
+    }
+
+    const householdJourneys = householdJourneyKeys
+      .map((key): HouseholdJourneyItem => {
+        const child = childById.get(key) ?? null
+        const childApplications = applicationsByJourneyKey.get(key) ?? []
+        const pendingApplications = childApplications.filter((application) => hasPendingParentApplicationStatus(application.status))
+        const enrolledApplicationsForChild = childApplications.filter((application) => isEnrolledApplicationStatus(application.status))
+        const enrolledCentreNames = uniqueText([
+          child?.ecdId ? enrolledCentreMap.get(child.ecdId)?.name ?? null : null,
+          ...enrolledApplicationsForChild.map((application) => application.centreName),
+        ])
+        const pendingCentreNames = uniqueText(pendingApplications.map((application) => application.centreName))
+        const missingDetails = uniqueText(
+          pendingApplications.flatMap((application) =>
+            application.missingDocuments.map((item) => item.replaceAll('_', ' '))
+          )
+        )
+        const childName = child?.displayName || childApplications[0]?.childName || 'your child'
+
+        if (enrolledCentreNames.length > 0 && pendingApplications.length > 0) {
+          return {
+            key,
+            childName,
+            statusLabel: 'Mixed journey',
+            statusToneClassName: 'border-amber-200 bg-amber-50 text-amber-800',
+            summary: 'Enrolled at ' + formatNameList(enrolledCentreNames) + ' with ' + pendingApplications.length + ' other application' + (pendingApplications.length === 1 ? '' : 's') + ' still open.',
+            detail: missingDetails.length > 0
+              ? 'Still missing: ' + missingDetails.slice(0, 2).join(', ') + '.'
+              : 'Still waiting on ' + formatNameList(pendingCentreNames) + '.',
+            href: '/parent/applications',
+            actionLabel: 'Open applications',
+          }
+        }
+
+        if (enrolledCentreNames.length > 0) {
+          return {
+            key,
+            childName,
+            statusLabel: 'Enrolled',
+            statusToneClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            summary: 'Connected to ' + formatNameList(enrolledCentreNames) + ' for daily updates, messages, and pickup.',
+            detail: hasMultipleCentres
+              ? 'This family is active across more than one creche, so CentreConnect keeps each child tied to the right place.'
+              : null,
+            href: hasMultipleCentres ? '/parent/applications' : '/parent/daily-reports',
+            actionLabel: hasMultipleCentres ? 'Open family overview' : 'See updates',
+          }
+        }
+
+        if (pendingApplications.length > 0) {
+          return {
+            key,
+            childName,
+            statusLabel: pendingApplications.length > 1 ? 'Applying' : 'Application open',
+            statusToneClassName: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+            summary: pendingApplications.length > 1
+              ? 'Applications are in progress at ' + formatNameList(pendingCentreNames) + '.'
+              : 'Waiting on ' + (pendingCentreNames[0] ?? 'your creche') + ' to respond.',
+            detail: missingDetails.length > 0
+              ? 'Still missing: ' + missingDetails.slice(0, 2).join(', ') + '.'
+              : 'Updated ' + formatDate(pendingApplications[0]?.lastUpdatedAt ?? '') + '.',
+            href: '/parent/applications',
+            actionLabel: 'Open applications',
+          }
+        }
+
+        return {
+          key,
+          childName,
+          statusLabel: 'Profile ready',
+          statusToneClassName: 'border-slate-200 bg-slate-50 text-slate-700',
+          summary: 'Profile ready for your next application whenever you want to apply again.',
+          detail: null,
+          href: '/parent/children',
+          actionLabel: 'Manage profile',
+        }
+      })
+      .sort((a, b) => {
+        const rank = (value: string) => {
+          if (value === 'Mixed journey') return 0
+          if (value === 'Enrolled') return 1
+          if (value === 'Applying' || value === 'Application open') return 2
+          return 3
+        }
+
+        return rank(a.statusLabel) - rank(b.statusLabel) || a.childName.localeCompare(b.childName)
+      })
 
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
@@ -471,6 +598,27 @@ export default async function ParentDashboardPage() {
                   <p className="mt-1 text-lg font-bold text-cyan-900">{householdCentreCount}</p>
                 </div>
               </div>
+              {householdJourneys.length > 0 ? (
+                <div className="mt-4 grid gap-3 lg:grid-cols-2">
+                  {householdJourneys.map((journey) => (
+                    <div key={journey.key} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-bold text-slate-900">{journey.childName}</p>
+                        <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + journey.statusToneClassName}>
+                          {journey.statusLabel}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{journey.summary}</p>
+                      {journey.detail ? (
+                        <p className="mt-2 text-xs leading-5 text-slate-500">{journey.detail}</p>
+                      ) : null}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <QuickLink href={journey.href} label={journey.actionLabel} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </SurfaceCard>
           ) : null}
 

@@ -1,5 +1,49 @@
 # CentreConnect — Active Tasks
 
+## Session Plan - 2026-03-19 ECD Admissions + Household Sync Sprint
+- Task: Restore ECD admissions opening/accept flow, make the parent dashboard show the full household smartly, notify parents after child linking, sync parent profile fields with ECD priority, and stop mobile horizontal overflow.
+- Why now: ECD admins are blocked from opening/accepting admissions, parents still see a partial household story, linked-profile updates are not consistently flowing from the ECD side, and mobile overflow keeps damaging trust.
+- Definition of done:
+  - ECD admins can open an application record and complete admissions actions again.
+  - Parent dashboard shows the whole family state clearly without adding a complicated selector-first experience.
+  - Successful child linking creates a parent notification with on-brand CentreConnect messaging.
+  - Parent profile sync gives ECD-supplied phone data priority on link, while preserving an additional number when the parent already had one.
+  - Mobile pages no longer introduce horizontal scrolling from the app shell/common layouts on narrow screens.
+  - `npm run lint`, `npm run audit:design`, `npm run build`, and `npm run test:parent-uat` all pass.
+- Files to inspect/touch:
+  - `app/(journey)/parent/dashboard/page.tsx`
+  - `app/ecd/(portal)/applications/page.tsx`
+  - `app/ecd/(portal)/applications/[id]/page.tsx`
+  - `app/ecd/(portal)/applications/_*` and related admissions action components
+  - `app/account/link-child/*` or linked account activation screens
+  - `lib/ecd/parent-link-requests.ts`
+  - `lib/notifications/*`
+  - `app/globals.css` and shared layout/shell files causing overflow
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run audit:design`
+  - `npm run build`
+  - `npm run test:parent-uat`
+- Commit message: `fix: restore admissions and household sync flows`
+- Execution steps:
+  1. Reproduce and fix the ECD admissions detail/action failure so opening and accepting applications works again.
+  2. Upgrade the parent household dashboard from summary-only to a clearer all-family view without adding complexity.
+  3. Add justified parent notification after successful child linking and align parent profile sync so ECD data wins for primary phone while preserving a secondary number when needed.
+  4. Apply a shared mobile overflow guard plus targeted fixes for confirmed offenders, then rerun the full verification gate and record lessons.
+## ECD Admissions + Household Sync Results - 2026-03-19
+- [x] Fixed the ECD application detail page so admissions records open again even when the live schema no longer exposes `applications.fee_notes`.
+- [x] Added a split-query fallback for application detail loading so embed-heavy joins do not blank the page when one select shape drifts from production.
+- [x] Updated fee agreement saving to persist `monthly_fee_cents` plus a tagged fee note inside `admin_notes`, avoiding the missing `fee_notes` column entirely.
+- [x] Expanded the parent dashboard `Family at a glance` card into a simple household view that shows every child journey without introducing a new selector flow.
+- [x] Successful child linking now sends a parent notification with CentreConnect welcome messaging and revalidates `/parent/notifications`.
+- [x] Parent phone sync now gives the ECD/request phone primary priority on link and keeps a different previous number as `parents.alt_phone`.
+- [x] Added shared and targeted mobile overflow fixes so the home and directory quick-filter chips wrap instead of causing horizontal scroll on small screens.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run audit:design` PASS.
+- [x] Verification: `npm run build` PASS.
+- [x] Verification: `npm run test:parent-uat` PASS.
 ## Session Plan - 2026-03-19 Parent Multi-Child Home Logic
 - Task: Make the parent entry flow and dashboard handle multiple children, mixed enrolment, and multiple ECDs without adding a new selector flow.
 - Why now: Parents can already have more than one child and more than one application, but the current entry logic still treats the household like a single yes/no enrolment case.
@@ -231,5 +275,3 @@
 
 ## Backlog
 See BACKLOG.md
-
-

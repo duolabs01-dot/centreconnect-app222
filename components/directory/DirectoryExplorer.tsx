@@ -503,7 +503,7 @@ export default function DirectoryExplorer({
           </Sheet>
         </div>
 
-        <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <Button
             type="button"
             onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}

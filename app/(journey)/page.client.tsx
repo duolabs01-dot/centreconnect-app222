@@ -201,9 +201,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-slate-600 sm:text-[18px] sm:leading-8">
                   Browse fees, ages, and hours. Apply or contact in one tap. No account needed to start.
                 </p>
-
-                <div className="mt-5 -mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0">
-                  <div className="flex min-w-max gap-2 pb-1">
+                <div className="mt-5 flex flex-wrap gap-2">
                     {suburbPills.map((suburb) => (
                       <Link
                         key={suburb.name}
@@ -216,7 +214,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         </span>
                       </Link>
                     ))}
-                  </div>
                 </div>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
