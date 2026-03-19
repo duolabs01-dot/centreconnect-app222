@@ -21,6 +21,8 @@ const ECD_HERO_BY_SLUG: Record<string, string> = {
     'https://images.pexels.com/photos/8363089/pexels-photo-8363089.jpeg?cs=srgb&dl=pexels-rdne-8363089.jpg&fm=jpg',
   'bajabulile':
     '/centres/bajabulile/hero.jpg',
+  'bajabulile-day-care-centre':
+    '/centres/bajabulile/hero.jpg',
 }
 
 const DEFAULT_ECD_HERO =
@@ -40,3 +42,4 @@ export function getCentreHeroImage(slug?: string | null, input?: string | null) 
 export function getSeedCentreHeroBySlug(slug: string) {
   return ECD_HERO_BY_SLUG[slug] ?? DEFAULT_ECD_HERO
 }
+

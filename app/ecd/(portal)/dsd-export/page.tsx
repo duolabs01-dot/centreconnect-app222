@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { Download, FileCheck2, ShieldCheck, Users, Briefcase, Building2, Printer, ArrowLeft, Loader2, ArrowRight } from 'lucide-react'
+import { FileCheck2, ShieldCheck, Users, Briefcase, Building2, ArrowLeft, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
+import { getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
 import { DsdPrintButton } from './print-button'
 import { PdfDownloadButton } from './pdf-download-button'
 
 export const metadata: Metadata = {
-  title: 'DOE Monthly Report | CentreConnect',
-  description: 'Official DOE Monthly Report — Places of Care (Crèches) generated from CentreConnect data.',
+  title: 'Monthly Report | CentreConnect',
+  description: 'Official Monthly Report — Places of Care (Crèches) generated from CentreConnect data.',
 }
 
 function normalizeMonth(value: string | undefined, fallback: number) {
@@ -56,38 +57,28 @@ export default async function DsdExportPage({
 }: {
   searchParams?: { month?: string; year?: string }
 }) {
-  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  const { supabase, ecdId, role } = await requireEcdPortalSession()
   const defaults = getDsdMonthOptions()
   const selectedMonth = normalizeMonth(searchParams?.month, defaults.selectedMonth)
   const selectedYear = normalizeYear(searchParams?.year, defaults.selectedYear)
   const data = await getDsdExportData({ supabase, ecdId, selectedMonth, selectedYear })
-  const monthParam = `month=${selectedMonth}&year=${selectedYear}`
 
-  const total = data.children.length
-  const r3500 = data.children.filter(c => c.parentIncomeCategory === 'R0-R3500').length
-  const r4500 = data.children.filter(c => c.parentIncomeCategory === 'R0-R4500').length
-  const otherIncome = data.children.filter(c => c.parentIncomeCategory === 'Other').length
-
-  const newAdmissions = data.children.filter(c => {
-    if (!c.startDate) return false
-    const d = new Date(c.startDate)
-    return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth
-  })
-  const newR3500 = newAdmissions.filter(c => c.parentIncomeCategory === 'R0-R3500').length
-  const newR4500 = newAdmissions.filter(c => c.parentIncomeCategory === 'R0-R4500').length
-  const newOther = newAdmissions.filter(c => !['R0-R3500','R0-R4500'].includes(c.parentIncomeCategory)).length
-
-  const trainedCount = data.staff.filter(s => s.isTrained).length
-  const disabledCount = data.children.filter(c => c.isDisabled).length
-  const practitionersEmployed = data.staff.filter(s =>
-    s.role.toLowerCase().includes('practitioner') || s.role.toLowerCase().includes('teacher')
-  ).length
-  const computerLiterateCount = data.staff.filter(s => s.isComputerLiterate).length
-
-  const practitioners = data.staff.filter(s =>
-    s.role.toLowerCase().includes('practitioner') || s.role.toLowerCase().includes('teacher')
-  )
-
+  const {
+    total,
+    r3500,
+    r4500,
+    otherIncome,
+    newR3500,
+    newR4500,
+    newOther,
+    trainedCount,
+    disabledCount,
+    practitionersEmployed,
+    computerLiterateCount,
+    practitioners,
+    verifiedCompliance,
+    healthPermit,
+  } = getDsdDerivedStats(data)
   const childrenSorted = [...data.children].sort((a, b) => {
     const lastA = a.childName.split(' ').slice(-1)[0] ?? ''
     const lastB = b.childName.split(' ').slice(-1)[0] ?? ''
@@ -118,7 +109,7 @@ export default async function DsdExportPage({
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-cyan-600" />
-                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">DOE Monthly Report</span>
+                <span className="text-sm font-black uppercase tracking-widest text-cyan-700">Monthly Report</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <DsdPrintButton />
@@ -177,6 +168,7 @@ export default async function DsdExportPage({
                 ['Province / District', `${data.province || 'Gauteng'} — ${data.district || '--'}`],
                 ['Ward', data.ward || '--'],
                 ['Contact Details + E-mail', [data.primaryContactPhone, data.primaryContactEmail].filter(Boolean).join(' / ') || '--'],
+                ['Registration Number', data.registrationNumber || '--'],
                 ['EMIS Number', data.emisNumber || '--'],
                 ['NPO / DSD Reg No', data.npoReg || data.dsdRegNumber || '--'],
               ].map(([label, value]) => (
@@ -272,6 +264,22 @@ export default async function DsdExportPage({
                 </table>
               </div>
             </div>
+
+            <div className="grid gap-3 pt-2 sm:grid-cols-2">
+              <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Registration and permit</p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">Registration number: {data.registrationNumber || '--'}</p>
+              <p className="mt-1 text-sm text-slate-700">{healthPermit?.label ?? 'Municipal Health Clearance Certificate'}</p>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                {healthPermit?.status === 'verified' ? 'Verified on file' : healthPermit?.status ? `Status: ${healthPermit.status}` : 'Awaiting verification'}
+              </p>
+              </div>
+              <div className="rounded-2xl border border-slate-300 bg-white p-4">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Supporting compliance pack</p>
+              <p className="mt-2 text-3xl font-black text-slate-900">{verifiedCompliance.length}</p>
+              <p className="mt-1 text-sm text-slate-700">Verified compliance document{verifiedCompliance.length === 1 ? '' : 's'} on file for this return.</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -346,6 +354,8 @@ export default async function DsdExportPage({
                 </tbody>
               </table>
             </div>
+
+
           </CardContent>
         </Card>
 
@@ -590,4 +600,12 @@ export default async function DsdExportPage({
     </>
   )
 }
+
+
+
+
+
+
+
+
 

@@ -1,3 +1,60 @@
+## Session Result - 2026-03-19 Bajabulile Standards + Registration Trust Sprint
+- Status: DONE
+- Shipped:
+  - DSD/DOE export now uses the live ECD portal session, matches the Bajabulile monthly report structure more closely, and supports direct PDF download from the portal without token hacks.
+  - Post-acceptance registration now opens only after enrollment/offer acceptance and saves the Bajabulile registration questions into the linked child intake record.
+  - Parent application acceptance now routes straight into registration, and both parent + ECD application detail screens now show registration progress clearly.
+  - Bajabulile public profile now carries stronger trust proof through permit/compliance data and the Bajabulile hero image fallback.
+- Verification:
+  - `npm run lint` ✅
+  - `npm run audit:design` ✅
+  - `npm run build` ✅
+  - `npm run test:parent-uat` ✅
+- Notes:
+  - `next build` still prints the existing dynamic-server warning for `/api/ecd/dsd-export/pdf` during postbuild sitemap generation, but the build completes successfully.
+## Session Plan - 2026-03-19 Bajabulile Standards + Registration Trust Sprint
+- Task: Raise parent, ECD, and founder trust by making the DSD/DOE export match the Bajabulile government report standard, introducing a proper post-acceptance registration step, and surfacing stronger Bajabulile trust signals on the public profile.
+- Why now: The export is subsidy-critical, the registration questions belong after acceptance rather than inside the application flow, and Bajabulile should visibly prove compliance and quality to parents.
+- Intent summary:
+  - Make the ECD export feel like the real `"Monthly Report Bajabulile Day Care Centre"` standard while still being clean and professional in-app and in PDF form.
+  - Create a simple registration handoff after an offer is accepted so parents complete centre-required questions only once they are enrolled.
+  - Strengthen Bajabulile's public listing/profile with the hero image, permit visibility, and centre registration details as social proof.
+- P0 scope:
+  - Audit the existing export against the Bajabulile source PDF and close the fidelity gaps in the ECD page and PDF route.
+  - Add a post-acceptance registration flow seeded from existing parent/child data and aligned to the Bajabulile registration form.
+  - Surface Bajabulile public trust markers: hero image, permit/proof block, and registration number details on the parent-facing centre page.
+- P1 scope:
+  - Tighten the parent acceptance success copy so the new registration step feels like the natural next action.
+  - Preserve existing admissions, dashboard, and multi-child logic outside the targeted flows.
+- Constraints:
+  - Do not move registration questions back into the application flow.
+  - Do not break the existing DSD data builder if the export page and PDF route can reuse it.
+  - Keep changes mobile-safe, TypeScript-safe, and honest to the real Bajabulile documents.
+- Definition of done:
+  - ECD export page and PDF output present the full data set in a government-ready structure aligned to the Bajabulile monthly report.
+  - After a parent accepts placement, they are guided into a centre registration form based on the Bajabulile registration questions.
+  - Bajabulile public centre detail shows stronger compliance/trust proof, including permit context and registration number.
+  - `npm run lint`, `npm run audit:design`, `npm run build`, and `npm run test:parent-uat` all pass.
+- Files to inspect/touch:
+  - `app/ecd/(portal)/dsd-export/page.tsx`
+  - `app/api/ecd/dsd-export/route.ts`
+  - `app/api/ecd/dsd-export/pdf/route.ts`
+  - `lib/ecd/dsd-export.ts`
+  - `app/c/[slug]/page.tsx`
+  - `app/c/[slug]/centre-client.tsx`
+  - acceptance / registration handoff files under `app/(journey)/parent/applications/*`, `app/api/parent/applications/*`, and new parent registration route(s) as needed
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run audit:design`
+  - `npm run build`
+  - `npm run test:parent-uat`
+- Commit message: `fix: align bajabulile export and registration trust flows`
+- Execution steps:
+  1. Extract the real Bajabulile monthly report, registration form, and permit details and map them to the current export/profile/registration surfaces.
+  2. Upgrade the DSD/DOE export page and PDF route to use the live ECD session data and the stronger government-style presentation.
+  3. Add the post-acceptance registration flow and parent-facing trust enhancements, then rerun the full verification gate and record lessons before commit/push.
 ## Session Plan - 2026-03-19 Parent Daily Updates + Staff Invite + Notifications Sprint
 - Task: Make the parent dashboard show the latest enrolled-child daily updates cleanly, replace the fake support-assisted staff invite with a real ECD admin invite flow, and harden in-app notification reliability for parent-facing surfaces.
 - Why now: Parents with enrolled children still lose child-specific daily context on the dashboard, ECD admins cannot truly add staff from settings, and notification trust breaks when inbox/bell state is inconsistent or under-filtered.
@@ -330,4 +387,6 @@
 
 ## Backlog
 See BACKLOG.md
+
+
 

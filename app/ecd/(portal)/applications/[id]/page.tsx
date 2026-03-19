@@ -10,6 +10,7 @@ import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-read
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { getRejectionReasonLabel } from '@/lib/admissions/rejection-reasons'
 import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
+import { buildRegistrationStatusLabel, getRegistrationSnapshot } from '@/lib/admissions/centre-registration'
 import { StatusUpdateForm } from './status-update-form'
 import { TemplateSendPanel } from './template-send-panel'
 import { FeeAgreementCard } from './fee-agreement-card'
@@ -54,6 +55,7 @@ type ChildProfile = {
   allergies: string | string[] | null
   medical_conditions: string | string[] | null
   special_needs: string | null
+  intake_documents?: unknown
 }
 
 type ParentProfile = {
@@ -202,9 +204,9 @@ async function fetchApplicationForRoute(
   preferNumberLookup: boolean
 ) {
   const selectVariants: string[] = [
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
-    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender),parents(id,alt_phone,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs,intake_documents),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,emergency_contact_name,emergency_contact_phone,id_verification_status,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,start_date,offer_made_at,offer_sent_at,offer_expires_at,offer_accepted_at,offer_breakdown,offer_conditions,offer_penalties,offer_legal_agreement,offer_legal_version,rejection_reason_code,rejection_reason_note,rejected_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender,intake_documents),parents(id,alt_phone,billing_email,address,suburb,city,province,guardian_relationship,user_profiles(full_name,phone))',
+    'id,application_number,status,submitted_at,parent_message,admin_notes,ecd_id,parent_id,child_id,reviewed_at,decided_at,offer_accepted_at,monthly_fee_cents,missing_documents,children(id,first_name,last_name,date_of_birth,gender,intake_documents),parents(id,alt_phone,user_profiles(full_name,phone))',
   ]
 
   for (const selectClause of selectVariants) {
@@ -252,7 +254,7 @@ async function fetchApplicationWithSplitQueries(
     childId
       ? client
           .from('children')
-          .select('id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs')
+          .select('id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,special_needs,intake_documents')
           .eq('id', childId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -316,6 +318,11 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
   const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? ''
   const parentName = normalizeName(parentProfile?.full_name, 'Primary parent')
   const childName = child ? `${child.first_name} ${child.last_name}` : 'Child'
+  const registrationSnapshot = getRegistrationSnapshot(child?.intake_documents)
+  const registrationStatusLabel = buildRegistrationStatusLabel(registrationSnapshot)
+  const registrationStatusClasses = registrationSnapshot?.submittedAt
+    ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+    : 'border border-amber-200 bg-amber-50 text-amber-800'
 
   const [centreResult, templatesResult, historyResult, requestHistoryRaw] = await Promise.all([
     supabase.from('ecd_centres').select('name,age_group_pricing,monthly_fee_min').eq('id', ecdId).maybeSingle(),
@@ -436,6 +443,9 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
               <p><span className="font-bold text-slate-800">Offer accepted:</span> {application.offer_accepted_at ? formatDate(application.offer_accepted_at) : 'No'}</p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${registrationStatusClasses}`}>
+                {registrationStatusLabel}
+              </span>
               {missingLabels.length > 0 ? (
                 <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
                   Missing docs: {missingLabels.slice(0, 3).join(', ')}{missingLabels.length > 3 ? '…' : ''}
@@ -502,6 +512,7 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
                 <p><span className="font-semibold text-slate-900">Allergies:</span> {Array.isArray(child?.allergies) ? child?.allergies.join(', ') : child?.allergies || 'None listed'}</p>
                 <p><span className="font-semibold text-slate-900">Conditions:</span> {Array.isArray(child?.medical_conditions) ? child?.medical_conditions.join(', ') : child?.medical_conditions || 'None listed'}</p>
                 <p><span className="font-semibold text-slate-900">Special needs:</span> {child?.special_needs || 'None listed'}</p>
+                <p><span className="font-semibold text-slate-900">Registration:</span> {registrationStatusLabel}</p>
               </CardContent>
             </Card>
 
@@ -630,4 +641,6 @@ export default async function ApplicationDetailsPage({ params, searchParams }: A
     </>
   )
 }
+
+
 

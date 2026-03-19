@@ -24,6 +24,8 @@ const HEX_EXEMPT_PATTERNS = [
   /^lib\/ecd\/parent-link-requests\./,
   /^lib\/payments\/billing-automation\./,
   /^lib\/payments\/receipts\./,
+  /^app\/api\/ecd\/dsd-export\/pdf\/route\./,
+  /^lib\/ecd\/dsd-export-render\./,
   /^lib\/ui\/centre-preview-image\./,
 ]
 

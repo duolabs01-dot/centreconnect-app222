@@ -15,6 +15,7 @@ import {
 } from './centre-client'
 import { demoCentrePageBySlug, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
 import { getParentShortlistSummary } from '@/lib/parent/shortlist-data'
+import { loadPublicTrustDocuments } from '@/lib/ecd/public-trust-documents'
 
 type MetadataCentre = {
   name: string
@@ -24,6 +25,7 @@ type MetadataCentre = {
 type CentrePagePayload = {
   centre: Centre | null
   websiteContent: WebsiteContentState
+  trustDocuments: Awaited<ReturnType<typeof loadPublicTrustDocuments>>
   userRole: string | null
   existingApplication: ExistingApplication | null
   isSaved: boolean
@@ -51,6 +53,10 @@ const PUBLIC_CENTRE_SELECT = [
   'subsidy_accepted',
   'contact_whatsapp',
   'contact_phone',
+  'registration_number',
+  'emis_number',
+  'dsd_reg_number',
+  'npo_reg',
 ].join(',')
 
 const PRIVATE_CENTRE_SELECT = [
@@ -76,6 +82,10 @@ const PRIVATE_CENTRE_ENRICHMENT_SELECT = [
   'subsidy_accepted',
   'contact_whatsapp',
   'contact_phone',
+  'registration_number',
+  'emis_number',
+  'dsd_reg_number',
+  'npo_reg',
   'onboarding_complete',
   'website_published',
   'communication_automation_settings',
@@ -93,6 +103,7 @@ function buildEmptyPayload(): CentrePagePayload {
       galleryUrls: [],
       visibleSections: DEFAULT_VISIBLE_SECTIONS,
     },
+    trustDocuments: [],
     userRole: null,
     existingApplication: null,
     isSaved: false,
@@ -227,7 +238,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
 
   if (shouldUseDemoCentreData()) {
     const match = slugCandidates.map((slug) => demoCentrePageBySlug[slug]).find(Boolean)
-    return match ? { ...match, isSaved: false } : emptyPayload
+    return match ? { ...match, trustDocuments: [], isSaved: false } : emptyPayload
   }
 
   try {
@@ -240,10 +251,11 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
       return emptyPayload
     }
 
-    const [enrichment, classrooms, websiteContent] = await Promise.all([
+    const [enrichment, classrooms, websiteContent, trustDocuments] = await Promise.all([
       loadPrivateCentreEnrichment(supabase, baseCentre.id),
       loadCentreClassrooms(supabase, baseCentre.id),
       loadWebsiteContent(supabase, baseCentre.id),
+      loadPublicTrustDocuments(baseCentre.id),
     ])
 
     const resolvedCentre = {
@@ -255,6 +267,7 @@ async function loadCentrePagePayload(slugCandidates: string[]): Promise<CentrePa
     const payload: CentrePagePayload = {
       centre: resolvedCentre,
       websiteContent,
+      trustDocuments,
       userRole: null,
       existingApplication: null,
       isSaved: false,
@@ -395,6 +408,7 @@ export default async function CentrePage({
         slug={normalizedSlug}
         centre={payload.centre}
         websiteContent={payload.websiteContent}
+        trustDocuments={payload.trustDocuments}
         userRole={payload.userRole}
         existingApplication={payload.existingApplication}
         isSaved={payload.isSaved}
@@ -442,9 +456,14 @@ export default async function CentrePage({
       slug={normalizeCentreSlug(centre.slug) ?? normalizedSlug}
       centre={payload.centre}
       websiteContent={payload.websiteContent}
+      trustDocuments={payload.trustDocuments}
       userRole={payload.userRole}
       existingApplication={payload.existingApplication}
       isSaved={payload.isSaved}
     />
   )
 }
+
+
+
+

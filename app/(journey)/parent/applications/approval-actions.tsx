@@ -1,11 +1,12 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check } from 'lucide-react'
+import { toast } from 'sonner'
+
+import { Button } from '@/components/ui/button'
 import { triggerFirstTimeConfetti } from '@/lib/ui/confetti'
 
 type ApprovalActionsProps = {
@@ -43,9 +44,11 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
             description: `${payload.withdrawnCount} other active application(s) were withdrawn.`,
           })
         }
-      } else {
-        toast.success('Placement declined')
+        window.location.assign(`/parent/applications/${applicationId}/registration`)
+        return
       }
+
+      toast.success('Placement declined')
       router.refresh()
     } catch (error: any) {
       toast.error(error?.message || 'Failed to update decision')
@@ -99,6 +102,3 @@ export function ApprovalActions({ applicationId }: ApprovalActionsProps) {
     </div>
   )
 }
-
-
-

@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Baby, BookOpenCheck, CheckCircle2, Circle, Clock3, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
+import { ArrowRight, Baby, BookOpenCheck, CheckCircle2, Circle, Clock3, ExternalLink, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
@@ -25,6 +25,15 @@ import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { formatAgeRangeSummary } from '@/lib/ecd/age-groups'
 import { readAftercareConfig } from '@/lib/ecd/centre-public-profile'
 import { readCentreLocationMetadata } from '@/lib/geo/centre-location-metadata'
+
+type CentreTrustDocument = {
+  documentType: string
+  label: string
+  status: string
+  fileUrl: string | null
+  expiresAt: string | null
+  notes: string | null
+}
 
 export type Centre = {
   id: string
@@ -52,6 +61,10 @@ export type Centre = {
   fees_last_updated_at: string | null
   contact_whatsapp: string | null
   contact_phone: string | null
+  registration_number?: string | null
+  emis_number?: string | null
+  dsd_reg_number?: string | null
+  npo_reg?: string | null
   operating_schedule?: CentreOperatingSchedule | null
   operating_hours_summary?: string | null
   communication_automation_settings?: unknown
@@ -269,6 +282,7 @@ export function CentreClient({
   userRole = null,
   existingApplication = null,
   isSaved = false,
+  trustDocuments = [],
 }: {
   slug: string
   centre: Centre | null
@@ -276,6 +290,7 @@ export function CentreClient({
   userRole?: string | null
   existingApplication?: ExistingApplication | null
   isSaved?: boolean
+  trustDocuments?: CentreTrustDocument[]
 }) {
 
   if (!centre) {
@@ -358,6 +373,9 @@ export function CentreClient({
     : isClaimed
       ? 'Verified'
       : 'Not yet on CentreConnect'
+  const healthPermitDocument = trustDocuments.find((document) => document.documentType === 'health_clearance') ?? null
+  const primaryRegistrationNumber = centre.registration_number?.trim() || centre.dsd_reg_number?.trim() || centre.npo_reg?.trim() || null
+  const showTrustProofSection = Boolean(isClaimed && (primaryRegistrationNumber || centre.emis_number?.trim() || healthPermitDocument))
     
   const practicalLabel = centre.capacity
     ? `Space for about ${centre.capacity} children`
@@ -598,6 +616,53 @@ export function CentreClient({
               <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
                 <SectionHeading eyebrow="About" title="About this creche" description={isClaimed ? 'A stronger creche profile helps parents decide faster, with fewer unanswered questions before they apply.' : 'A quick, parent-friendly summary before you decide whether to ask more questions.'} />
                 <p className="mt-5 whitespace-pre-line text-sm leading-8 text-slate-700 sm:text-base">{aboutCopy}</p>
+              </section>
+            ) : null}
+
+            {showTrustProofSection ? (
+              <section className="rounded-[2rem] border border-border bg-background p-4 shadow-[0_12px_30px_rgba(31,44,39,0.04)] sm:p-6">
+                <SectionHeading
+                  eyebrow="Trust and safety"
+                  title="The proof parents usually ask for"
+                  description="Bajabulile can show key compliance details right on the profile, so families do not need to guess whether the centre is legitimate."
+                />
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/60 p-5">
+                    <p className="text-[10px] font-semibold tracking-[0.08em] text-emerald-700">Health and safety</p>
+                    <h3 className="mt-3 text-[1.25rem] leading-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>
+                      {healthPermitDocument?.label ?? 'Municipal health clearance certificate'}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {healthPermitDocument?.status === 'verified'
+                        ? 'CentreConnect has a verified permit on file for this centre.'
+                        : 'This profile highlights the centre\'s health-clearance status for parents.'}
+                    </p>
+                    {healthPermitDocument?.fileUrl ? (
+                      <Link
+                        href={healthPermitDocument.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:underline"
+                      >
+                        View permit
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="rounded-[1.5rem] border border-border bg-white p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)]">
+                    <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Registration details</p>
+                    <p className="mt-3 text-sm font-semibold text-slate-900">Centre registration: {primaryRegistrationNumber ?? 'Shared on request'}</p>
+                    {centre.emis_number?.trim() ? (
+                      <p className="mt-2 text-sm leading-6 text-slate-600">EMIS number: {centre.emis_number.trim()}</p>
+                    ) : null}
+                    {centre.npo_reg?.trim() ? (
+                      <p className="mt-1 text-sm leading-6 text-slate-600">NPO / DSD reference: {centre.npo_reg.trim()}</p>
+                    ) : null}
+                    {!centre.npo_reg?.trim() && centre.dsd_reg_number?.trim() ? (
+                      <p className="mt-1 text-sm leading-6 text-slate-600">DSD registration: {centre.dsd_reg_number.trim()}</p>
+                    ) : null}
+                  </div>
+                </div>
               </section>
             ) : null}
 
@@ -851,6 +916,7 @@ export function CentreClient({
     </main>
   )
 }
+
 
 
 

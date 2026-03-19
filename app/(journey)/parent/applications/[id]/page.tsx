@@ -1,7 +1,10 @@
-﻿import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+
+import { getRegistrationSnapshot } from '@/lib/admissions/centre-registration'
 import { createClient } from '@/lib/supabase/server'
-import ApplicationDetailClient from './ApplicationDetailClient'
 import { canShowMultipleApplicationsFlag } from '@/lib/utils/applications/privacy'
+
+import ApplicationDetailClient from './ApplicationDetailClient'
 
 type ApplicationDetailPageProps = {
   params: {
@@ -40,8 +43,8 @@ type ApplicationRow = {
     | Array<{ name: string; suburb: string; slug: string }>
     | null
   children:
-    | { first_name: string; last_name: string }
-    | Array<{ first_name: string; last_name: string }>
+    | { first_name: string; last_name: string; intake_documents?: unknown }
+    | Array<{ first_name: string; last_name: string; intake_documents?: unknown }>
     | null
   application_status_history: StatusHistoryRow[] | null
 }
@@ -99,7 +102,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       offer_legal_agreement, offer_expires_at, rejection_reason_code, rejection_reason_note,
       offer_accepted_at, share_multiple_flag,
       ecd_centres (name, suburb, slug),
-      children (first_name, last_name),
+      children (first_name, last_name, intake_documents),
       application_status_history (new_status, created_at, notes)
     `)
     .eq('id', params.id)
@@ -113,17 +116,14 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
   const child = normalizeOne(appRow.children)
   const childFallback = child
     ? null
-    : await supabase
-        .from('children')
-        .select('first_name,last_name')
-        .eq('id', appRow.child_id)
-        .maybeSingle()
+    : await supabase.from('children').select('first_name,last_name').eq('id', appRow.child_id).maybeSingle()
   const resolvedChildFirstName = child?.first_name ?? childFallback?.data?.first_name ?? 'Child'
   const resolvedChildLastName = child?.last_name ?? childFallback?.data?.last_name ?? ''
   const history = [...(appRow.application_status_history ?? [])]
     .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    .map((h) => ({ status: h.new_status as any, created_at: h.created_at, notes: h.notes ?? undefined }))
+    .map((entry) => ({ status: entry.new_status as any, created_at: entry.created_at, notes: entry.notes ?? undefined }))
   const showMultipleApplicationsNotice = await canShowMultipleApplicationsFlag(user.id, appRow.child_id, appRow.ecd_id)
+  const registrationSnapshot = getRegistrationSnapshot(child?.intake_documents)
 
   return (
     <ApplicationDetailClient
@@ -150,10 +150,10 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       centreSlug={centre?.slug ?? ''}
       childFirstName={resolvedChildFirstName}
       childLastName={resolvedChildLastName}
+      registrationSubmittedAt={registrationSnapshot?.submittedAt ?? null}
       history={history}
       missingDocuments={normalizeMissingDocuments(appRow.missing_documents)}
       showMultipleApplicationsNotice={showMultipleApplicationsNotice}
     />
   )
 }
-

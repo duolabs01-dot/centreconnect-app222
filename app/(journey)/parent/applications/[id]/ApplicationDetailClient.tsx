@@ -1,14 +1,15 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+
 import ApplicationTimeline from '@/components/parent/ApplicationTimeline'
 import PlacementDecisionModal from '@/components/parent/PlacementDecisionModal'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/lib/utils'
 import { getRejectionReasonLabel, getRejectionReasonMessage } from '@/lib/admissions/rejection-reasons'
+import { createClient } from '@/lib/supabase/client'
+import { formatDate } from '@/lib/utils'
 
 type TimelineEvent = {
   status: 'submitted' | 'in_review' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
@@ -45,6 +46,7 @@ type ApplicationDetailClientProps = {
   centreSlug: string
   childFirstName: string
   childLastName: string
+  registrationSubmittedAt: string | null
   history: TimelineEvent[]
   missingDocuments: string[]
   showMultipleApplicationsNotice: boolean
@@ -64,6 +66,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
   const loadLatestCode = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
       if (!childId || !ecdId || !parentId) return
@@ -183,11 +186,13 @@ export default function ApplicationDetailClient({
   centreSuburb,
   childFirstName,
   childLastName,
+  registrationSubmittedAt,
   history: initialHistory,
   missingDocuments: initialMissingDocuments,
   showMultipleApplicationsNotice,
 }: ApplicationDetailClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
   const [liveStatus, setLiveStatus] = useState(initialStatus)
   const [liveAcceptedAt, setLiveAcceptedAt] = useState(acceptedAt)
@@ -238,6 +243,7 @@ export default function ApplicationDetailClient({
       : [{ status: currentStatus, created_at: submittedAt }]
   const canWithdraw = ['draft', 'partial', 'submitted', 'in_review', 'waitlisted', 'approved'].includes(liveStatus)
   const withdrawLabel = liveStatus === 'approved' ? 'Cancel application' : 'Withdraw application'
+  const registrationDone = searchParams.get('registration') === 'done'
 
   useEffect(() => {
     statusRef.current = liveStatus
@@ -337,7 +343,7 @@ export default function ApplicationDetailClient({
       toast.success('Other active applications were withdrawn automatically.')
     }
     setDecisionOpen(false)
-    router.refresh()
+    window.location.assign(`/parent/applications/${id}/registration`)
   }
 
   async function onDecline() {
@@ -419,6 +425,32 @@ export default function ApplicationDetailClient({
         <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
           This crèche can see that this child has multiple active applications because you enabled this sharing preference.
         </p>
+      ) : null}
+      {registrationDone ? (
+        <div className="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Registration received</p>
+          <p className="mt-1 text-sm text-emerald-900">Your Bajabulile-style registration form has been saved. CentreConnect will keep future updates linked to this child.</p>
+        </div>
+      ) : null}
+      {liveStatus === 'enrolled' ? (
+        registrationSubmittedAt ? (
+          <div className="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-emerald-700">Registration complete</p>
+            <p className="mt-1 text-sm text-emerald-900">Registration form submitted on {formatDate(registrationSubmittedAt)}. Your child&apos;s pickup, daily updates, and admissions details now stay linked in CentreConnect.</p>
+          </div>
+        ) : (
+          <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-amber-700">Finish registration</p>
+            <p className="mt-1 text-sm text-amber-900">The crèche accepted this child. Complete the registration form now so health, emergency, and guardian details are ready before the first full day.</p>
+            <Button
+              type="button"
+              onClick={() => router.push(`/parent/applications/${id}/registration`)}
+              className="mt-3 h-9 rounded-2xl bg-amber-600 px-3 text-xs font-semibold text-white hover:bg-amber-700"
+            >
+              Open registration form
+            </Button>
+          </div>
+        )
       ) : null}
       {liveMissingDocuments.length > 0 ? (
         <div className="mt-2 rounded-2xl border border-teal-200 bg-teal-50 p-3">
@@ -536,8 +568,8 @@ export default function ApplicationDetailClient({
                         type="button"
                         onClick={() => {
                           startSave(async () => {
-                            const supabase = createClient()
-                            const { error } = await supabase
+                            const client = createClient()
+                            const { error } = await client
                               .from('applications')
                               .update({ parent_message: editMessage })
                               .eq('id', id)
@@ -585,14 +617,9 @@ export default function ApplicationDetailClient({
           ) : null}
         </div>
       </div>
-      {liveStatus === 'enrolled' && (
-        <PickupCodeSection
-          applicationId={id}
-          childId={childId || ''}
-          ecdId={ecdId}
-          parentId={parentId}
-        />
-      )}
+      {liveStatus === 'enrolled' ? (
+        <PickupCodeSection applicationId={id} childId={childId || ''} ecdId={ecdId} parentId={parentId} />
+      ) : null}
       <ApplicationTimeline
         currentStatus={currentStatus}
         history={timelineHistory}
@@ -613,5 +640,3 @@ export default function ApplicationDetailClient({
     </div>
   )
 }
-
-

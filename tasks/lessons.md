@@ -79,6 +79,13 @@
   PREVENTION: Roll out device/session-limit enforcement behind a feature flag with browser regression coverage for login, dashboard, and first-click navigation.
 
 ## 2026-03-19
+- LESSON: Server-generated PDF/print renderers can legitimately need raw hex values even when the app UI should stay token-based.
+  RULE: Exempt non-UI print/render files from the design audit instead of weakening the printed output.
+  PREVENTION: When adding a new PDF or email-like renderer, decide upfront whether it belongs in `HEX_EXEMPT_PATTERNS` and record that with the feature.
+
+- LESSON: The Windows `apply_patch` path can fail with `CreateProcessWithLogonW failed: 1326` even for small tracked-doc edits.
+  RULE: If the patch tool fails twice on Windows, switch immediately to a single-quoted PowerShell here-string write and re-read the file before continuing.
+  PREVENTION: Treat tracked markdown/doc updates like any other risky write: verify the exact output right after the fallback write.
 - LESSON: Supabase realtime insert payloads do not carry joined centre contact metadata, so inbox cards can lose reply/action context if we render `payload.new` directly.
   RULE: When an inbox item depends on relational CTA data, hydrate the inserted row by id before trusting the realtime payload.
   PREVENTION: Keep realtime notification handlers narrow and refetch joined metadata on insert for inbox or bell surfaces.
@@ -98,5 +105,7 @@
 - LESSON: Live schema drift in one embedded select (`applications.fee_notes`) can blank an entire admissions detail page even when the record itself still exists.
   RULE: Never assume a production column still exists just because older code or generated types reference it.
   PREVENTION: Verify the live column list before touching a critical join and keep a smaller split-query fallback for recovery paths.
+
+
 
 
