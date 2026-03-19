@@ -111,9 +111,10 @@
 - LESSON: Live schema drift in one embedded select (`applications.fee_notes`) can blank an entire admissions detail page even when the record itself still exists.
   RULE: Never assume a production column still exists just because older code or generated types reference it.
   PREVENTION: Verify the live column list before touching a critical join and keep a smaller split-query fallback for recovery paths.
+- LESSON: A support queue button with no handler is still a broken workflow, even if the page loads and the table data is correct.
+  RULE: If a row action is visible in an operations screen, it must either navigate, open a drawer, or call a server action.
+  PREVENTION: Browser-test every admin row action once before shipping support or triage surfaces.
 
-
-
-
-
-
+- LESSON: ECD admins need tier visibility in the sidebar itself, not only on billing or profile screens.
+  RULE: If the plan affects website/billing support decisions, surface it in the shell so admins do not hunt for it.
+  PREVENTION: When adjusting the ECD nav, pair the label change with a compact tier card and a direct settings/billing shortcut.

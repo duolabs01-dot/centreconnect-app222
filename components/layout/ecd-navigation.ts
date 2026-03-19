@@ -48,8 +48,8 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   // 6 — MESSAGES
   { href: '/ecd/communications',label: 'Messages',   icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true },
 
-  // 7 — ADMIN (replaces Employment + Billing + Financials + Compliance + Calendar + Website)
-  { href: '/ecd/profile',       label: 'Admin',      icon: Settings2,       group: 'settings',  adminOnly: true },
+  // 7 — SETTINGS (account, billing, security + support)
+  { href: '/ecd/profile',       label: 'Settings',      icon: Settings2,       group: 'settings',  adminOnly: true },
 
   // 8 — DOE EXPORT (highly visible for compliance — keep top-level)
   { href: '/ecd/dsd-export',    label: 'DOE Export', icon: FileCheck,       group: 'admin',     supervisorAllowed: true },

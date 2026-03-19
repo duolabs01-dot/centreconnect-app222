@@ -429,3 +429,32 @@ See BACKLOG.md
 
 
 
+
+## Session Plan - 2026-03-19 ECD Sidebar + Settings Refresh
+- Task: Make the ECD sidebar clearer for admins by surfacing tier status, restoring a visible WhatsApp support action, and turning the profile/settings surface into a more useful account hub.
+- Why now: The ECD admin shell already has the data, but the operator needs faster visibility into tier, billing, and support without hunting through multiple screens.
+- Definition of done:
+  - ECD sidebar shows the tier clearly and has a visible WhatsApp support action on desktop and mobile.
+  - The primary ECD sidebar entry is labeled as Settings rather than a generic admin bucket.
+  - The settings/profile page shows account and billing context that helps an admin understand card/payment status quickly.
+  - `npm run lint` and `npm run build` pass after the change.
+- Files likely to touch:
+  - `components/layout/ecd-navigation.ts`
+  - `components/layout/ecd-portal-sidebar.tsx`
+  - `components/layout/mobile-nav-menu.tsx`
+  - `app/ecd/(portal)/profile/page.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run build`
+  - Browser spot-check: ECD sidebar on desktop + mobile, then `/ecd/profile` settings summary
+- Commit message: `fix: clarify ecd settings and support access`
+
+## Session Outcome - 2026-03-19 ECD Sidebar + Settings Refresh
+- [x] ECD sidebar now surfaces the current tier clearly on desktop and mobile.
+- [x] The primary ECD sidebar entry is labeled `Settings`, and the profile page now acts as the account hub.
+- [x] WhatsApp support was restored as a visible sidebar action for ECD admins.
+- [x] The profile page now shows billing and payment context, including subscription tier and card details when available.
+- [x] Verification passed: `npm run lint`
+- [x] Verification passed: `npm run build`

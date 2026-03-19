@@ -9,7 +9,7 @@ import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { MobileNavMenu } from './mobile-nav-menu'
-import { Lock, Sparkles } from 'lucide-react'
+import { ArrowRight, Lock, Sparkles } from 'lucide-react'
 import { getInternalTierLabel, toInternalTier, type InternalTier } from '@/lib/billing/plans'
 
 type EcdPortalSidebarProps = {
@@ -34,7 +34,7 @@ const GROUP_LABELS: Record<EcdNavGroup, string> = {
   daily_ops: '',
   admin: '',
   grow: '',
-  settings: '',
+  settings: 'Settings',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -225,6 +225,7 @@ export function EcdPortalSidebar({
             userEmail={userEmail}
             roleLabel={roleLabel}
             userRole={userRole}
+            subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
           <BrandMark compact className="brightness-100" />
@@ -242,7 +243,7 @@ export function EcdPortalSidebar({
           <BrandMark compact className="brightness-100" />
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Plan: {tierLabel}</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Tier: {tierLabel}</span>
           </div>
         </div>
         <nav className="mt-1 space-y-1.5" aria-label="ECD portal navigation">
@@ -308,13 +309,34 @@ export function EcdPortalSidebar({
               <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
             )}
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{roleLabel !== 'ECD Portal' && roleLabel !== 'Crèche Owner' && roleLabel !== 'ECD Admin' && roleLabel !== 'Staff Member' && roleLabel !== 'Supervisor' ? roleLabel : (userEmail ?? 'Unknown')}</p>
-            {roleLabel !== 'ECD Portal' && roleLabel !== 'ECD Admin' && roleLabel !== 'Staff Member' && roleLabel !== 'Supervisor' && roleLabel !== 'Crèche Owner' && (
-              <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
-            )}
+            <p className="truncate text-sm font-bold text-foreground">{roleLabel}</p>
+            <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
           </div>
 
-          <div className="space-y-2 pt-2">
+          <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
+            <p className="mt-1 text-sm font-bold text-foreground">{tierLabel}</p>
+            <p className="mt-1 text-xs text-slate-500">Billing and website controls follow this plan.</p>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Link
+              href="/ecd/profile"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Settings
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/ecd/billing"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Billing
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="space-y-2 pt-1">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
             <Link
               href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
@@ -323,7 +345,7 @@ export function EcdPortalSidebar({
               className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>💬</span>
-              WhatsApp Mandla
+              WhatsApp support
             </Link>
           </div>
 

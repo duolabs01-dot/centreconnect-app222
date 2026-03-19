@@ -4,9 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
 import { updateNotificationPreferencesAction } from '@/lib/actions/settings/update-notification-preferences'
 import { requestCancellationAction } from '@/lib/actions/settings/cancel-subscription'
 import { readAftercareConfig, sanitizeClassroomDrafts } from '@/lib/ecd/centre-public-profile'
@@ -59,6 +60,24 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
     .eq('ecd_id', ecdId)
     .order('invited_at', { ascending: false })
     .limit(20)
+
+  const [{ data: subscription }, { data: paymentMethod }] = await Promise.all([
+    supabase
+      .from('subscriptions')
+      .select('tier,status,monthly_price,trial_ends_at,current_period_start,current_period_end')
+      .eq('ecd_id', ecdId)
+      .order('current_period_start', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('ecd_billing_payment_methods')
+      .select('card_type,last4,bank,exp_month,exp_year,updated_at')
+      .eq('ecd_id', ecdId)
+      .maybeSingle(),
+  ])
+
+  const currentTier = toInternalTier(subscription?.tier ?? null, 'basic')
+  const tierLabel = getInternalTierLabel(currentTier)
 
   const aftercare = readAftercareConfig(centre?.communication_automation_settings)
   const locationMetadata = readCentreLocationMetadata(centre?.communication_automation_settings)
@@ -446,6 +465,57 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
 
   return (
     <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
+      <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden xl:col-span-2">
+        <CardHeader className="bg-slate-50/50">
+          <CardTitle className="text-base font-bold">Account Snapshot</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-6">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Role</p>
+              <p className="mt-1 text-lg font-bold text-slate-900">{role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}</p>
+              <p className="mt-1 text-xs text-slate-500">Manage settings, billing, and support from one place.</p>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tier</p>
+              <p className="mt-1 text-lg font-bold text-teal-700">{tierLabel}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {subscription?.status ? 'Subscription status: ' + subscription.status : 'No active subscription record yet.'}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {subscription?.monthly_price != null ? 'R' + subscription.monthly_price + '/month' : 'Open Billing to confirm the active plan.'}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment method</p>
+              {paymentMethod ? (
+                <>
+                  <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
+                    <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
+                    {paymentMethod.card_type ?? 'Card'} •••• {paymentMethod.last4 ?? '----'}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {paymentMethod.bank ?? 'Bank'} · Exp {paymentMethod.exp_month ?? '--'}/{paymentMethod.exp_year ?? '--'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-sm font-bold text-slate-900">No saved card yet</p>
+                  <p className="mt-1 text-xs text-slate-500">Open Billing to add or refresh card details.</p>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm">
+              <Link href="/ecd/billing">Open Billing <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
+              <Link href="/ecd/sessions">Device Sessions <ArrowRight className="ml-2 h-4 w-4" /></Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
         <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden">
           <CardHeader className="bg-slate-50/50">
             <CardTitle className="text-base font-bold">Crèche Readiness</CardTitle>
