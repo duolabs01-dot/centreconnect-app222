@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Clock3, Eye, EyeOff, MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -45,11 +45,11 @@ function confirmationErrorMessage(code: string | null) {
   if (code === 'confirmation-session-missing') return 'Confirmation succeeded, but we could not start your session. Please sign in.'
   if (code === 'confirmation-profile-setup') return 'Your email was confirmed, but account setup is incomplete. Please sign in again.'
   if (code === 'complete-profile') return 'We still need to finish setting up your account. Sign in again to continue.'
+  if (code === 'session_revoked') return 'Your saved session expired or was replaced. Sign in again to continue.'
   return null
 }
 
 export default function LoginPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -57,7 +57,9 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [resendLoading, setResendLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [formMessage, setFormMessage] = useState<{ tone: 'error' | 'success'; text: string } | null>(null)
+  const hasClearedRevokedSessionRef = useRef(false)
   const supabase = createClient()
   const requestedNext = searchParams.get('next')
   const reason = searchParams.get('reason')
@@ -77,6 +79,20 @@ export default function LoginPage() {
       setEmail((current) => current || queryEmail)
     }
   }, [searchParams])
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    const requiresFreshLogin = authError === 'session_revoked' || reason === 'session_expired'
+    if (!isHydrated || !requiresFreshLogin || hasClearedRevokedSessionRef.current) {
+      return
+    }
+
+    hasClearedRevokedSessionRef.current = true
+    void robustSignOut(createClient())
+  }, [authError, isHydrated, reason])
 
   function authDestinationPath() {
     return sanitizeNextPath(requestedNext) ?? (isAdminPersona ? '/admin/dashboard' : '/')
@@ -99,6 +115,7 @@ export default function LoginPage() {
   }
 
   async function handleResendConfirmation() {
+    if (!isHydrated) return
     const normalizedEmail = email.trim().toLowerCase()
     if (!normalizedEmail) {
       const message = 'Enter the parent email address first.'
@@ -144,6 +161,7 @@ export default function LoginPage() {
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!isHydrated) return
     setFormMessage(null)
 
     const normalizedEmail = email.trim().toLowerCase()
@@ -186,11 +204,7 @@ export default function LoginPage() {
         : 'Welcome back. Opening your account...'
       setFormMessage({ tone: 'success', text: successMessage })
       toast.success('Signed in.')
-      router.replace(destination)
-      router.refresh()
-      window.setTimeout(() => {
-        window.location.assign(destination)
-      }, 150)
+      window.location.assign(destination)
     } catch (error: unknown) {
       await robustSignOut(supabase)
       const message =
@@ -205,6 +219,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
+    if (!isHydrated) return
     if (isAdminPersona) {
       const message = 'Use your platform admin email and password.'
       setFormMessage({ tone: 'error', text: message })
@@ -324,6 +339,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       placeholder="ops@centreconnect.co.za"
+                      disabled={!isHydrated || loading}
                       className="h-12 rounded-xl border-white/10 bg-white/5 text-white placeholder:text-slate-500 focus-visible:border-cyan-400 focus-visible:ring-cyan-400/20"
                       autoComplete="email"
                       required
@@ -346,6 +362,7 @@ export default function LoginPage() {
                         type={showPassword ? 'text' : 'password'}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        disabled={!isHydrated || loading}
                         className="h-12 rounded-xl border-white/10 bg-white/5 pr-12 text-white placeholder:text-slate-500 focus-visible:border-cyan-400 focus-visible:ring-cyan-400/20"
                         autoComplete="current-password"
                         required
@@ -355,6 +372,7 @@ export default function LoginPage() {
                         variant="ghost"
                         size="icon"
                         className="absolute right-1 top-1 h-10 w-10 rounded-xl text-slate-400 hover:bg-transparent hover:text-white"
+                        disabled={!isHydrated || loading}
                         onClick={() => setShowPassword((previous) => !previous)}
                       >
                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -365,10 +383,11 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     className="h-12 w-full rounded-xl bg-primary text-primary-foreground shadow-[0_18px_40px_rgba(6,182,212,0.28)] hover:bg-primary/90"
+                    disabled={!isHydrated || loading}
                     loading={loading}
                     loadingText="Opening workspace..."
                   >
-                    Open Admin Workspace
+                    {!isHydrated ? 'Preparing sign in...' : 'Open Admin Workspace'}
                   </Button>
                 </form>
 
@@ -447,6 +466,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="mt-3 h-10 rounded-xl border-rose-200 bg-white text-rose-700 hover:bg-rose-100"
                 onClick={() => void handleResendConfirmation()}
+                disabled={!isHydrated || resendLoading}
                 loading={resendLoading}
                 loadingText="Sending email..."
               >
@@ -468,6 +488,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="mt-3 h-10 rounded-xl border-amber-200 bg-white text-amber-800 hover:bg-amber-100"
                 onClick={() => void handleResendConfirmation()}
+                disabled={!isHydrated || resendLoading}
                 loading={resendLoading}
                 loadingText="Sending email..."
               >
@@ -498,6 +519,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="name@domain.com"
+                disabled={!isHydrated || loading || googleLoading}
                 className={fieldClassName}
                 autoComplete="email"
                 required
@@ -520,6 +542,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
+                  disabled={!isHydrated || loading || googleLoading}
                   className={`${fieldClassName} pr-12`}
                   autoComplete="current-password"
                   required
@@ -529,6 +552,7 @@ export default function LoginPage() {
                   variant="ghost"
                   size="icon"
                   className="absolute right-1 top-1 h-10 w-10 rounded-xl text-slate-500 hover:bg-transparent hover:text-slate-700"
+                  disabled={!isHydrated || loading || googleLoading}
                   onClick={() => setShowPassword((previous) => !previous)}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -539,10 +563,11 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="h-12 w-full rounded-xl bg-primary text-primary-foreground shadow-[0_14px_30px_rgba(13,148,136,0.18)] hover:bg-primary/90"
+              disabled={!isHydrated || loading || googleLoading}
               loading={loading}
               loadingText="Signing in..."
             >
-              Sign in
+              {!isHydrated ? 'Preparing sign in...' : 'Sign in'}
             </Button>
           </form>
 
@@ -558,7 +583,7 @@ export default function LoginPage() {
             variant="outline"
             className="h-12 w-full rounded-xl border-border bg-white text-foreground hover:bg-muted"
             onClick={() => void handleGoogleSignIn()}
-            disabled={loading}
+            disabled={!isHydrated || loading || googleLoading}
             loading={googleLoading}
             loadingText="Opening Google..."
           >
@@ -595,4 +620,3 @@ export default function LoginPage() {
     />
   )
 }
-

@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
@@ -21,14 +21,16 @@ import {
 } from '@/lib/auth/client-auth'
 
 export default function EcdLoginPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const [formMessage, setFormMessage] = useState<{ tone: 'error' | 'success'; text: string } | null>(null)
+  const hasClearedRevokedSessionRef = useRef(false)
+  const loginErrorCode = searchParams.get('error')
 
   const nextPath = useMemo(() => {
     const raw = searchParams.get('next')?.trim()
@@ -37,13 +39,27 @@ export default function EcdLoginPage() {
   }, [searchParams])
 
   const loginErrorMessage = useMemo(() => {
-    const code = searchParams.get('error')
-    if (code === 'centre-link') return 'We could not link your account to a centre yet. Please contact support.'
+    if (loginErrorCode === 'centre-link') return 'We could not link your account to a centre yet. Please contact support.'
+    if (loginErrorCode === 'session_revoked') return 'This device session expired or was replaced. Sign in again to continue.'
     return null
-  }, [searchParams])
+  }, [loginErrorCode])
+
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isHydrated || loginErrorCode !== 'session_revoked' || hasClearedRevokedSessionRef.current) {
+      return
+    }
+
+    hasClearedRevokedSessionRef.current = true
+    void robustSignOut(createClient())
+  }, [isHydrated, loginErrorCode])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
+    if (!isHydrated) return
     setFormMessage(null)
     const normalizedEmail = email.trim().toLowerCase()
     const normalizedPassword = password.trim()
@@ -102,11 +118,7 @@ export default function EcdLoginPage() {
       const successMessage = 'Welcome back. Opening your ECD dashboard...'
       setFormMessage({ tone: 'success', text: successMessage })
       toast.success('Welcome back')
-      router.replace(nextPath)
-      router.refresh()
-      window.setTimeout(() => {
-        window.location.assign(nextPath)
-      }, 150)
+      window.location.assign(nextPath)
     } catch (error: any) {
       await robustSignOut(supabase)
       const message = error.message || 'Failed to login'
@@ -168,6 +180,7 @@ export default function EcdLoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@centre.co.za"
+                  disabled={!isHydrated || loading}
                   required
                 />
               </div>
@@ -180,6 +193,7 @@ export default function EcdLoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={!isHydrated || loading}
                     required
                     className="pr-11"
                   />
@@ -187,6 +201,7 @@ export default function EcdLoginPage() {
                     type="button"
                     className="absolute right-0 top-0 flex h-10 w-10 items-center justify-center rounded-2xl text-slate-500 hover:text-slate-700"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    disabled={!isHydrated || loading}
                     onClick={() => setShowPassword((prev) => !prev)}
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -194,8 +209,8 @@ export default function EcdLoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" size="lg" className="h-12 w-full" disabled={loading}>
-                {loading ? 'Signing in...' : 'Sign In'}
+              <Button type="submit" size="lg" className="h-12 w-full" disabled={!isHydrated || loading}>
+                {loading ? 'Signing in...' : !isHydrated ? 'Preparing sign in...' : 'Sign In'}
               </Button>
             </form>
 
@@ -225,5 +240,4 @@ export default function EcdLoginPage() {
     </div>
   )
 }
-
 

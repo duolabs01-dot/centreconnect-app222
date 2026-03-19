@@ -4,6 +4,7 @@ import { enforceEcdAdminDeviceLimit } from '@/lib/middleware-ecd-device-limit'
 import { ROOT_DOMAIN } from '@/lib/config'
 
 const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'admin', 'api'])
+const ECD_DEVICE_LIMIT_ENABLED = process.env.ENFORCE_ECD_DEVICE_LIMIT === '1'
 
 function getHostname(request: NextRequest) {
   const forwarded = request.headers.get('x-forwarded-host')
@@ -23,6 +24,7 @@ function resolveTenantSubdomain(hostname: string) {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  const isRscRequest = request.nextUrl.searchParams.has('_rsc') || request.headers.get('rsc') === '1'
   const subdomain = resolveTenantSubdomain(getHostname(request))
 
   if (subdomain && pathname === '/') {
@@ -39,7 +41,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Enforce ECD Admin device limit only for ECD routes
-  if (pathname.startsWith('/ecd')) {
+  if (ECD_DEVICE_LIMIT_ENABLED && pathname.startsWith('/ecd') && pathname !== '/ecd/login' && !isRscRequest) {
     const limitResponse = await enforceEcdAdminDeviceLimit(request)
     // If device-limit guard issues a redirect (e.g., session revoked), respect it
     if (limitResponse.status >= 300 && limitResponse.status < 400) {

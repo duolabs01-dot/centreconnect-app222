@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { readSupabasePublicEnv } from '@/lib/supabase/env'
-import { validateSession } from '@/lib/session-guard'
+import { registerSession, validateSession } from '@/lib/session-guard'
 
 /**
  * Middleware guard to enforce ECD Admin 2-device limit.
@@ -43,9 +43,30 @@ export async function enforceEcdAdminDeviceLimit(request: NextRequest) {
   } = await supabase.auth.getSession()
   if (!session?.access_token || sessionError) return NextResponse.next()
 
-  const isValid = await validateSession(user.id, session.access_token)
+  let isValid = await validateSession(user.id, session.access_token)
+
   if (!isValid) {
-    // Session not found (pruned or revoked); force logout
+    const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+    const city = request.headers.get('x-vercel-ip-city')
+    const country = request.headers.get('x-vercel-ip-country')
+    const region = city && country ? `${city}, ${country}` : country || 'unknown'
+    const userAgent = request.headers.get('user-agent') || 'unknown'
+
+    const repaired = await registerSession(
+      user.id,
+      session.access_token,
+      userAgent.slice(0, 100),
+      ip,
+      region,
+      userAgent
+    )
+
+    if (repaired) {
+      isValid = await validateSession(user.id, session.access_token)
+    }
+  }
+
+  if (!isValid) {
     const loginUrl = new URL('/ecd/login', request.url)
     loginUrl.searchParams.set('error', 'session_revoked')
     loginUrl.searchParams.set('next', request.nextUrl.pathname + request.nextUrl.search)

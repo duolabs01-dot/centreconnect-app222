@@ -60,6 +60,10 @@ export async function updateSession(request: NextRequest) {
   const protectedArea = getProtectedArea(pathname)
   const isAuthRoute = pathname === '/login' || pathname === '/register' || pathname === '/ecd/login'
   const isActivationPage = pathname === '/account/activate'
+  const authErrorCode = request.nextUrl.searchParams.get('error')
+  const authReason = request.nextUrl.searchParams.get('reason')
+  const allowAuthRecovery =
+    isAuthRoute && (authErrorCode === 'session_revoked' || authReason === 'session_expired')
   const hasSupabaseSessionCookie = request.cookies.getAll().some((cookie) => cookie.name.startsWith('sb-'))
 
   if (!hasSupabaseSessionCookie) {
@@ -177,6 +181,11 @@ export async function updateSession(request: NextRequest) {
   const dashboardPath = role ? getDashboardPath(role) : '/'
 
   if (isAuthRoute && role) {
+    if (allowAuthRecovery) {
+      clearRoleCache(response, request)
+      return finish(response, 'auth-route-recovery-pass')
+    }
+
     if (pathname === '/ecd/login' && isEcdRole(role)) {
       const ecdAccessLookup = await withTimeout(
         (async () => {

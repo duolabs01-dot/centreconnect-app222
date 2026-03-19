@@ -1,5 +1,66 @@
 # CentreConnect — Active Tasks
 
+## Session Plan - 2026-03-19 Live ECD Buttons + Landing Redirect Audit
+- Task: Verify the live ECD button failure and landing-page redirect report, then ship the smallest confirmed fix only.
+- Why now: Production ECD sign-in is landing on the dashboard with React/RSC navigation errors, which leaves client links unresponsive after login.
+- Definition of done:
+  - Live sign-in no longer throws post-login RSC/React errors.
+  - ECD dashboard links/buttons navigate again after login.
+  - `npm run lint` and `npm run build` pass on the shipping code.
+  - Any unreproduced landing-page loop is documented honestly instead of guessed at.
+- Files to touch:
+  - `app/(auth)/login/page.tsx`
+  - `app/ecd/login/page.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run build`
+  - Browser verification of live `/ecd/login` and post-login dashboard navigation
+- Execution steps:
+  1. Reproduce the live issue and capture the exact console/network failure.
+  2. Ship the smallest login redirect fix already validated locally.
+  3. Re-run lint/build and confirm post-login ECD navigation works again.
+
+## Live ECD Buttons + Landing Redirect Results - 2026-03-19
+- [x] Reproduced the ECD breakage as a real post-login/session middleware regression, not a missing sidebar or dead button DOM issue.
+- [x] Kept the login hydration + single-navigation fix in place for both parent and ECD auth pages.
+- [x] Stabilized session-key validation in `lib/session-guard.ts` and added one repair attempt in `lib/middleware-ecd-device-limit.ts`.
+- [x] Fixed the Edge-runtime middleware crash by replacing the Node `crypto` device hash with Web Crypto.
+- [x] Stopped the `/ecd/login?error=session_revoked` self-loop and disabled ECD device-limit enforcement by default behind `ENFORCE_ECD_DEVICE_LIMIT=1` until the flow is redesigned safely outside request middleware.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run build` PASS.
+- [x] Verification: local production browser flow loads `/ecd/dashboard`, `/ecd/attendance`, and `/ecd/applications` successfully; homepage `/` renders instead of entering a redirect loop.
+- [ ] Follow-up: redesign multi-session/device-limit enforcement off the request middleware path, then re-enable it with an explicit rollout plan.
+## Session Plan - 2026-03-18 Login Hydration Debug
+- Task: Trace and fix the reported "fails after log in" regression without changing unrelated portal behavior.
+- Why now: Local login is falling back to a native form submit on cold loads, which makes sign-in look broken even though authenticated portal routes still work once a session exists.
+- Definition of done:
+  - The parent and ECD login pages no longer native-submit before hydration is ready.
+  - A real authenticated ECD dashboard load still works after the change.
+  - `npm run lint` and `npm run build` exit 0 after the patch.
+- Files to touch:
+  - `app/(auth)/login/page.tsx`
+  - `app/ecd/login/page.tsx`
+  - `tasks/todo.md`
+  - `tasks/lessons.md`
+- Validation commands:
+  - `npm run lint`
+  - `npm run build`
+  - Browser verification of `/login` and `/ecd/login` with a warm submit path
+- Execution steps:
+  1. Confirm whether the failure is auth-related or a client-hydration/login-form regression.
+  2. Patch the login pages so form controls stay inert until hydration is ready, preventing destructive native submits on cold loads.
+  3. Re-run lint/build and verify that authenticated ECD dashboard access still succeeds after the fix.
+
+## Login Hydration Debug Results - 2026-03-19
+- [x] Identified the login failure as a cold-load hydration/native-submit problem, not bad credentials or a broken ECD dashboard route.
+- [x] Hardened parent and ECD login pages so auth controls stay disabled until hydration is ready.
+- [x] Verification: `npm run lint` PASS.
+- [x] Verification: `npm run build` PASS after clearing the repo-local `.next` lock from the running dev server.
+- [x] Verification: authenticated `/ecd/dashboard` still loads with a valid seeded session cookie; MCP browser hydration on local login routes remains inconsistent, so final click-through should be confirmed in a normal browser session.
+- [x] Production-server sign-in now completes with a single hard redirect from both login pages, removing the post-login RSC abort/React errors caused by double navigation.
+
 ## Session Plan - 2026-03-18 Cleanup & Copyright Sprint
 - Task: Restore the ECD portal shell, widen website access to all tiers, finish copyright cleanup, and rerun the full verification gate.
 - Why now: The redundant ECD page shell is breaking portal navigation, and this sprint closes the remaining product polish and legal-surface gaps before pilot growth.

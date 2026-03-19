@@ -57,3 +57,23 @@
 - LESSON: Bulk wrapper-removal edits need a post-pass for literal `` `r`n `` artifacts and missing closing tags before trusting the result.
   RULE: After scripted JSX wrapper removal, immediately grep for literal newline escape text and rerun syntax checks before broader validation.
   PREVENTION: Add a targeted `Select-String` sanity check plus `npm run lint` right after any multi-file wrapper cleanup.
+
+- LESSON: A cold Next dev load can leave login pages visible before their client handlers hydrate, which makes the browser fall back to a native form submit and look like auth is broken.
+  RULE: Critical auth forms must stay inert until hydration is ready, especially when local debug flows depend on large app chunks compiling on demand.
+  PREVENTION: Gate login form controls behind a tiny `isHydrated` state so cold-start users cannot trigger a destructive non-JS submit.
+
+- LESSON: Mixing `router.replace()` and a delayed `window.location.assign()` after auth can abort the RSC payload and throw misleading React errors even when sign-in succeeds.
+  RULE: Post-login redirects must use one navigation strategy only.
+  PREVENTION: Prefer a single hard navigation when the destination depends on fresh authenticated server state.
+
+- LESSON: Edge middleware cannot import Node-only modules like `crypto`; even a small helper inside a shared auth file can take every protected route down in production.
+  RULE: Any code imported by `middleware.ts` must stay Edge-runtime safe.
+  PREVENTION: Keep middleware helpers on Web APIs only (`crypto.subtle`, `TextEncoder`, standard fetch) and run a production build after any middleware change.
+
+- LESSON: A middleware redirect target must never be re-checked by the same revocation guard, or it will recurse into `next=%2Flogin%3Fnext=...` loops.
+  RULE: Login/recovery routes must be excluded from any session-revocation middleware that redirects to them.
+  PREVENTION: For every new middleware redirect, verify the target route is an explicit allowlist case before shipping.
+
+- LESSON: Route-level security middleware that breaks ECD navigation is worse than temporarily relaxing that one control.
+  RULE: If a production guard blocks core portal navigation, gate it behind an explicit env flag and restore the product first.
+  PREVENTION: Roll out device/session-limit enforcement behind a feature flag with browser regression coverage for login, dashboard, and first-click navigation.

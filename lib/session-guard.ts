@@ -5,17 +5,35 @@ function getSupabaseConfig() {
   return { supabaseUrl, supabaseAnonKey }
 }
 
-function hashDeviceFingerprint(deviceHint: string, userAgent: string, ipAddress?: string): string {
-  const crypto = require('crypto')
+function getStableSessionKey(sessionToken: string): string {
+  try {
+    const payload = sessionToken.split('.')[1]
+    if (!payload) return sessionToken
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=')
+    const decoded = JSON.parse(Buffer.from(padded, 'base64').toString('utf8')) as { session_id?: unknown }
+    if (typeof decoded.session_id === 'string' && decoded.session_id.trim().length > 0) {
+      return decoded.session_id
+    }
+  } catch {
+    // Fall back to the raw token when the JWT payload cannot be decoded.
+  }
+
+  return sessionToken
+}
+
+async function hashDeviceFingerprint(deviceHint: string, userAgent: string, ipAddress?: string): Promise<string> {
   const base = `${deviceHint}|${userAgent}|${ipAddress || ''}`
-  return crypto.createHash('sha256').update(base).digest('hex').slice(0, 32)
+  const bytes = new TextEncoder().encode(base)
+  const digest = await crypto.subtle.digest('SHA-256', bytes)
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('').slice(0, 32)
 }
 
 async function getUserRole(userId: string): Promise<string | null> {
   const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig()
   if (!supabaseAnonKey) return null
   try {
-    const resp = await fetch(`${supabaseUrl}/rest/v1/user_profiles?user_id=eq.${userId}&select=role`, {
+    const resp = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${encodeURIComponent(userId)}&select=role`, {
       headers: { apikey: supabaseAnonKey, Authorization: `Bearer ${supabaseAnonKey}` },
       cache: 'no-store',
     })
@@ -88,11 +106,12 @@ export async function registerSession(
   const role = await getUserRole(userId)
   const isEcdAdmin = role === 'ecd_admin'
   const maxSessions = isEcdAdmin ? 2 : 10 // generous default for non-admins
-  const fingerprint = hashDeviceFingerprint(deviceHint ?? 'unknown', userAgent ?? 'unknown', ipAddress)
+  const fingerprint = await hashDeviceFingerprint(deviceHint ?? 'unknown', userAgent ?? 'unknown', ipAddress)
+  const stableSessionKey = getStableSessionKey(sessionToken)
 
   try {
     // Upsert this session with device fingerprint
-    await fetch(`${supabaseUrl}/rest/v1/user_sessions`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/user_sessions`, {
       method: 'POST',
       headers: (() => {
         const headers = withAuthHeaders(sessionToken, true)
@@ -101,7 +120,7 @@ export async function registerSession(
       })(),
       body: JSON.stringify({
         user_id: userId,
-        session_token: sessionToken,
+        session_token: stableSessionKey,
         device_hint: deviceHint ?? 'unknown',
         device_fingerprint: fingerprint,
         ip_address: ipAddress,
@@ -111,6 +130,8 @@ export async function registerSession(
       }),
       cache: 'no-store',
     })
+
+    if (!response.ok) return false
 
     // Enforce per-user session limit for ECD Admins
     if (isEcdAdmin) {
@@ -131,6 +152,8 @@ export async function validateSession(
   if (!supabaseUrl || !userId) return false
   if (!sessionToken) return false
 
+  const stableSessionKey = getStableSessionKey(sessionToken)
+
   try {
     const response = await fetch(
       `${supabaseUrl}/rest/v1/user_sessions?user_id=eq.${encodeURIComponent(userId)}&select=session_token`,
@@ -147,7 +170,7 @@ export async function validateSession(
     if (!Array.isArray(data) || data.length === 0) return false
 
     // Accept if any row matches the token (multi-session support)
-    return data.some((row) => row.session_token === sessionToken)
+    return data.some((row) => row.session_token === stableSessionKey)
   } catch {
     return false
   }
