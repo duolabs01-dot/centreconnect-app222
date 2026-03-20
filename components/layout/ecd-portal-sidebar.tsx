@@ -217,8 +217,8 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
-        <div className="flex items-center gap-3">
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center justify-between border-b border-border bg-card px-3 md:hidden">
+        <div className="flex items-center gap-2">
           <MobileNavMenu
             items={visibleNav}
             userEmail={userEmail}
@@ -227,7 +227,7 @@ export function EcdPortalSidebar({
             subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
-          <BrandMark compact className="brightness-100" />
+          <BrandMark compact className="brightness-100 h-7" />
         </div>
         <div className="flex items-center gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
