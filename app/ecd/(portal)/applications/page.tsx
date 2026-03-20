@@ -9,6 +9,7 @@ import { SendReminderButton } from './send-reminder-button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireMinTier } from '@/lib/ecd/require-tier'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
@@ -353,7 +354,7 @@ function renderApplicationList(applications: ApplicationRow[]) {
 }
 
 export default async function EcdApplicationsPage({ searchParams }: ApplicationsPageProps) {
-  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  const { supabase, user, ecdId, role } = await requireMinTier('standard')
 
   async function updateIncompleteAdmissionsPolicyAction(formData: FormData) {
     'use server'
