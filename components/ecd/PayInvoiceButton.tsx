@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { beginPaymentMethodUpdateAction } from '@/app/ecd/billing/actions'
+import { beginPaymentMethodUpdateAction } from '@/app/ecd/(portal)/billing/actions'
 import { toast } from 'sonner'
 
 export function PayInvoiceButton({ invoiceId }: { invoiceId: string }) {

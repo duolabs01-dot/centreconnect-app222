@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 }
 
 type ApplicationDetailsPageProps = {
-  params: { id: string } | Promise<{ id: string }>
+  params: Promise<{ id: string }>
   searchParams?: { lookup?: string } | Promise<{ lookup?: string }>
 }
 

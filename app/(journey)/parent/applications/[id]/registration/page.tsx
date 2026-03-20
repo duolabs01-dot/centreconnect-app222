@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
 type PageProps = {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
