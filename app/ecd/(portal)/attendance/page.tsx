@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { getJohannesburgNowParts } from '@/lib/utils'
-import { requireMinTier } from '@/lib/ecd/require-tier'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { AttendanceGridClient } from './attendance-grid-client'
 import { AttendanceRealtimeBridge } from '@/components/ecd/AttendanceRealtimeBridge'
 
@@ -16,7 +16,7 @@ export default async function EcdAttendancePage({
 }: {
   searchParams: { classId?: string; month?: string; year?: string }
 }) {
-  const { supabase, user, ecdId, role } = await requireMinTier('standard')
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const now = getJohannesburgNowParts()
 
   const selectedYear = searchParams.year ? parseInt(searchParams.year) : now.year

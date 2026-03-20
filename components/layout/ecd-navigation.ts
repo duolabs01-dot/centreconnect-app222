@@ -26,89 +26,31 @@ export type EcdNavItem = Record<'href', string> & {
   comingSoon?: boolean
   adminOnly?: boolean
   supervisorAllowed?: boolean
-  /** Minimum internal tier required to see this nav item. Undefined = available to all tiers. */
   minTier?: InternalTier
 }
 
-/**
- * ECD Portal Navigation — Tier Gating
- *
- * Tier rank: basic=1 (Starter) | standard=2 (Growth) | premium=3 (Pro)
- *
- * Starter (basic) : Home + Children ONLY
- * Growth (standard): Starter + Attendance + Reports + Admissions + Messages
- * Pro (premium)   : Growth + Website Builder (future)
- */
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
-  // ─── STARTER (basic) ───────────────────────────────────────────────
-  {
-    href: '/ecd/dashboard',
-    label: 'Home',
-    icon: LayoutDashboard,
-    group: 'daily_ops',
-    supervisorAllowed: true,
-    // minTier undefined = visible to all tiers
-  },
-  {
-    href: '/ecd/children',
-    label: 'Children',
-    icon: Users,
-    group: 'daily_ops',
-    supervisorAllowed: true,
-    // minTier undefined = visible to all tiers
-  },
+  // HOME — all tiers
+  { href: '/ecd/dashboard',     label: 'Home',       icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
 
-  // ─── GROWTH+ (standard) ────────────────────────────────────────────
-  {
-    href: '/ecd/attendance',
-    label: 'Attendance',
-    icon: UserCheck,
-    group: 'daily_ops',
-    minTier: 'standard', // Growth+
-    supervisorAllowed: true,
-  },
-  {
-    href: '/ecd/daily-reports',
-    label: 'Reports',
-    icon: Zap,
-    group: 'daily_ops',
-    minTier: 'standard', // Growth+
-    supervisorAllowed: true,
-  },
-  {
-    href: '/ecd/applications',
-    label: 'Admissions',
-    icon: ClipboardList,
-    group: 'grow',
-    minTier: 'standard', // Growth+
-    supervisorAllowed: true,
-  },
-  {
-    href: '/ecd/communications',
-    label: 'Messages',
-    icon: MessagesSquare,
-    group: 'grow',
-    minTier: 'standard', // Growth+
-    supervisorAllowed: true,
-  },
+  // CHILDREN — all tiers
+  { href: '/ecd/children',      label: 'Children',   icon: Users,           group: 'daily_ops', supervisorAllowed: true },
 
-  // ─── ADMIN AREA (ecd_admin only — not tier-gated, role-gated) ──────
-  {
-    href: '/ecd/dsd-export',
-    label: 'DOE Export',
-    icon: FileCheck,
-    group: 'admin',
-    adminOnly: true,
-    supervisorAllowed: true,
-    // No minTier — admin-only, tier not relevant
-  },
-  {
-    href: '/ecd/profile',
-    label: 'Settings',
-    icon: Settings2,
-    group: 'settings',
-    adminOnly: true,
-    // Settings is always visible to ecd_admin regardless of tier
-    // No minTier needed since adminOnly=true gates it by role
-  },
+  // ATTENDANCE — STARTER gets this now (it's the core value — replaces paper registers)
+  { href: '/ecd/attendance',    label: 'Attendance', icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
+
+  // REPORTS — Growth+ only (built on attendance data)
+  { href: '/ecd/daily-reports', label: 'Reports',    icon: Zap,             group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+
+  // ADMISSIONS — Growth+ only
+  { href: '/ecd/applications',  label: 'Admissions', icon: ClipboardList,   group: 'grow',      supervisorAllowed: true, minTier: 'standard' },
+
+  // MESSAGES — Growth+ only
+  { href: '/ecd/communications', label: 'Messages',  icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true, minTier: 'standard' },
+
+  // SETTINGS — admin only (all tiers see settings, no tier gate)
+  { href: '/ecd/profile',       label: 'Settings',   icon: Settings2,       group: 'settings',  adminOnly: true },
+
+  // DOE EXPORT — Pro only (DOE compliance reporting is a premium feature)
+  { href: '/ecd/dsd-export',   label: 'DOE Export', icon: FileCheck,       group: 'admin',     adminOnly: true, minTier: 'premium' },
 ]

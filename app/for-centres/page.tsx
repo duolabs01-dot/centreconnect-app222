@@ -43,14 +43,14 @@ const planNarratives: Record<PublicPlan, PlanNarrative> = {
   starter: {
     emoji: '🌱',
     summary: 'A simple, beautiful first step online.',
-    bestFor: 'Smaller centres that want parents to find them and apply without WhatsApp chaos.',
-    spotlight: 'You get your public profile, applications, messages, and clean child intake in one place.',
+    bestFor: 'Smaller centres ready to digitise daily admin and present professionally to parents.',
+    spotlight: 'You get attendance, child records, and a professional listing — without the complexity.',
   },
   growth: {
     emoji: '🚀',
     summary: 'The everyday package for busy crèches.',
-    bestFor: 'Centres that want admissions plus daily operations to feel calmer.',
-    spotlight: 'You add attendance, calendar routines, reminders, and daily tracking on top of the parent-facing basics.',
+    bestFor: 'Centres ready to fill spaces faster and keep parents updated automatically.',
+    spotlight: 'You add admissions pipelines, messages, and calendar — full centre management in one place.',
   },
   pro: {
     emoji: '💎',
@@ -97,14 +97,17 @@ const workflowSteps = [
 ] as const
 
 const comparisonRows = [
-  { label: 'Public centre profile', starter: true, growth: true, pro: true },
-  { label: 'Online parent applications', starter: true, growth: true, pro: true },
-  { label: 'Announcements and parent messages', starter: true, growth: true, pro: true },
-  { label: 'Attendance register', starter: false, growth: true, pro: true },
-  { label: 'Calendar and routines', starter: false, growth: true, pro: true },
-  { label: 'Daily operational tracking', starter: false, growth: true, pro: true },
-  { label: 'Richer website sections', starter: false, growth: false, pro: true },
-  { label: 'Priority onboarding help', starter: false, growth: false, pro: true },
+  { label: 'Professional parent-facing centre listing', starter: true, growth: true, pro: true },
+  { label: 'Daily attendance register', starter: true, growth: true, pro: true },
+  { label: 'Child profiles and records', starter: true, growth: true, pro: true },
+  { label: 'Safe pickup management', starter: true, growth: true, pro: true },
+  { label: 'Parent applications pipeline', starter: false, growth: true, pro: true },
+  { label: 'Announcements and parent messages', starter: false, growth: true, pro: true },
+  { label: 'Calendar and daily routines', starter: false, growth: true, pro: true },
+  { label: 'Attendance reports and summaries', starter: false, growth: true, pro: true },
+  { label: 'DOE monthly compliance reports', starter: false, growth: false, pro: true },
+  { label: 'Team and staff management', starter: false, growth: false, pro: true },
+  { label: 'Priority onboarding and support', starter: false, growth: false, pro: true },
 ] as const
 
 function statusLabel(isRegistered: boolean) {
