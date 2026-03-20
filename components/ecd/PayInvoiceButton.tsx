@@ -1,30 +1,38 @@
 'use client'
 
-import { useTransition } from 'react'
-import { payInvoiceAction } from '@/lib/actions/ecd/pay-invoice'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { beginPaymentMethodUpdateAction } from '@/app/ecd/billing/actions'
 import { toast } from 'sonner'
 
 export function PayInvoiceButton({ invoiceId }: { invoiceId: string }) {
-  const [isPending, startTransition] = useTransition()
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
-  const handleClick = () => {
-    startTransition(async () => {
-      try {
-        await payInvoiceAction(invoiceId)
-      } catch (error: any) {
-        toast.error(error.message || 'Payment could not be started')
+  async function handlePay() {
+    setLoading(true)
+    try {
+      const result = await beginPaymentMethodUpdateAction({ invoiceId })
+      if (result?.authorizationUrl) {
+        window.location.href = result.authorizationUrl
+      } else {
+        toast.error(result?.error || 'Could not start payment. Please try again.')
       }
-    })
+    } catch (err) {
+      toast.error('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className="rounded-xl bg-cyan-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-cyan-700 disabled:opacity-50 transition-colors"
+    <Button
+      onClick={handlePay}
+      disabled={loading}
+      className="h-9 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-sm"
     >
-      {isPending ? 'Opening...' : 'Pay Now'}
-    </button>
+      {loading ? 'Redirecting...' : 'Update Payment Method'}
+    </Button>
   )
 }

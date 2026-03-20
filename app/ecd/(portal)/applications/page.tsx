@@ -287,7 +287,7 @@ function renderApplicationList(applications: ApplicationRow[]) {
         })}
       </div>
 
-      <div className="hidden lg:block overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+      <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-100 bg-white shadow-sm">
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">

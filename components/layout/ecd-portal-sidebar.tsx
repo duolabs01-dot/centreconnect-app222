@@ -302,22 +302,21 @@ export function EcdPortalSidebar({
           ) : null}
         </nav>
 
-        {/* Bottom card — tier (clickable → billing), WhatsApp, sign out */}
-        <div className="mt-8 shrink-0 rounded-[2rem] border border-border bg-card px-5 py-4 shadow-[var(--shadow-elevation-1)]">
+        {/* Bottom — tier badge, WhatsApp, sign out */}
+        <div className="mt-4 shrink-0 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 space-y-2">
           {centreName && (
-            <p className="truncate text-xs font-black text-teal-700 mb-1">{centreName}</p>
+            <p className="truncate text-[11px] font-black text-teal-700">{centreName}</p>
           )}
-          <p className="truncate text-[10px] text-slate-400 mb-3">{userEmail ?? ''}</p>
 
-          {/* Tier — clickable to billing */}
+          {/* Tier badge — links to billing */}
           <Link
             href="/ecd/billing"
-            className="flex items-center justify-between rounded-2xl border border-teal-200 bg-teal-50 px-4 py-2.5 mb-3 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-100 hover:border-teal-300"
+            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-slate-600 transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
           >
-            <span className="font-black uppercase tracking-[0.14em] text-[10px] text-teal-600">Plan</span>
-            <span className="flex items-center gap-1.5">
-              {tierLabel}
-              <ArrowRight className="h-3 w-3" />
+            <span className="font-black uppercase tracking-[0.14em] text-slate-400">Plan</span>
+            <span className="flex items-center gap-1">
+              <span className="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-black text-teal-700">{tierLabel}</span>
+              <ArrowRight className="h-3 w-3 text-slate-400" />
             </span>
           </Link>
 
@@ -325,16 +324,16 @@ export function EcdPortalSidebar({
           <Link
             href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
             target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 mb-3 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-1.5 text-[11px] font-bold text-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
           >
             <span>💬</span>
-            WhatsApp support
+            WhatsApp
           </Link>
 
           <SignOutButton
             redirectTo="/"
-            className="w-full rounded-3xl border border-border bg-card py-2.5 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="w-full rounded-xl border border-slate-200 bg-white py-1.5 text-[11px] font-semibold text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
           />
         </div>
       </aside>
