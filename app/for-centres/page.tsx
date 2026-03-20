@@ -240,7 +240,7 @@ export default async function ForCentresPage() {
       <Section id="plans" className="py-10 md:py-12" containerClassName="cc-section">
         <div className="mb-6 space-y-2">
           <Badge className="w-fit border-amber-200 bg-amber-50 text-amber-800 shadow-none hover:bg-amber-50">
-            Pilot programme: onboarding fee waived until end of next month 🎉
+            Pilot programme: onboarding fee waived until 30 April 2026 🎉
           </Badge>
           <Badge className="w-fit border-cyan-200 bg-cyan-50 text-cyan-800 shadow-none hover:bg-cyan-50">
             Simple pricing ✨
@@ -372,14 +372,17 @@ export default async function ForCentresPage() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-2">
             <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-800 shadow-none hover:bg-emerald-50">
-              Real centres live now 🎉
+              Active platform centres 🎉
             </Badge>
-            <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Parents are already seeing centres on CentreConnect.</h2>
+            <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">These centres are live on CentreConnect.</h2>
             <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              This is not a concept page. These are real listings that parents can discover, view, and apply to.
+              All {centres.length} of these centres use CentreConnect daily — parents can discover them, apply, and connect with them through the platform. Browse the full directory to also see centres listed but not yet active on the platform.
             </p>
           </div>
-          <p className="text-sm font-semibold text-slate-500">{centres.length} live centres</p>
+          <div className="shrink-0 text-right">
+            <p className="text-2xl font-black text-slate-950">{centres.length}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">active centres</p>
+          </div>
         </div>
 
         {centres.length === 0 ? (
