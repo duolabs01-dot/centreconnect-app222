@@ -123,7 +123,7 @@ export function EcdPortalSidebar({
     (item) => !item.minTier || tierRank[tier] >= tierRank[item.minTier]
   )
 
-  const settingsItem = visibleNav.find((item) => item.group === 'settings' || item.href === '/ecd/profile') ?? null
+  const settingsItem = visibleNav.find((item) => item.group === 'settings') ?? null
   const comingSoonItems = visibleNav.filter((item) => item.comingSoon)
   const primaryItems = visibleNav.filter((item) => !item.comingSoon && item !== settingsItem)
 
