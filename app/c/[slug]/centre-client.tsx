@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Baby, BookOpenCheck, CheckCircle2, Circle, Clock3, ExternalLink, MapPin, MessageCircle, Phone, ShieldCheck, Users, Wallet } from 'lucide-react'
+import { TinyBearsIcon, LittleCubsIcon, CheetahsIcon } from './class-icons'
 
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
@@ -297,7 +298,7 @@ export function CentreClient({
     return (
       <main className="min-h-screen bg-surface-secondary py-10 sm:py-16">
         <Container className="max-w-2xl">
-          <div className="rounded-[2rem] border border-border bg-background p-6 text-center shadow-[0_14px_34px_rgba(31,44,39,0.05)] sm:p-8">
+          <div className="rounded-[2rem] border border-border bg-background p-6 text-center shadow-[0_10px_24px_rgba(31,44,39,0.05)] sm:p-8">
             <h1 className="text-[2rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
               Centre profile unavailable
             </h1>
@@ -734,22 +735,31 @@ export function CentreClient({
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {visibleClassrooms.length > 0 ? visibleClassrooms.map((room, index) => (
-                  <div key={`${room.id ?? index}-${room.name}`} className={`rounded-[1.5rem] border p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)] ${isClaimed ? 'border-emerald-100 bg-gradient-to-b from-white to-emerald-50/40' : 'border-border bg-white'}`}>
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Class {String.fromCharCode(65 + index)}</p>
-                      {isClaimed ? <span className="rounded-full border border-emerald-100 bg-white px-2.5 py-1 text-[10px] font-semibold text-emerald-900">Parents can picture this group quickly</span> : null}
+                {visibleClassrooms.length > 0 ? visibleClassrooms.map((room, index) => {
+                  const icons = [TinyBearsIcon, LittleCubsIcon, CheetahsIcon]
+                  const IconComponent = icons[index] ?? TinyBearsIcon
+                  return (
+                    <div key={`${room.id ?? index}-${room.name}`} className={`rounded-[1.5rem] border p-5 shadow-[0_8px_20px_rgba(31,44,39,0.03)] ${isClaimed ? 'border-emerald-100 bg-gradient-to-b from-white to-emerald-50/40' : 'border-border bg-white'}`}>
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Class {String.fromCharCode(65 + index)}</p>
+                        {isClaimed ? <span className="rounded-full border border-emerald-100 bg-white px-2.5 py-1 text-[10px] font-semibold text-emerald-900">Parents can picture this group quickly</span> : null}
+                      </div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <IconComponent size={44} />
+                        <div className="min-w-0">
+                          <h3 className="text-[1.1rem] leading-tight text-slate-900 font-extrabold" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
+                          <p className="text-sm font-semibold text-teal-700">{room.age_group?.trim() || 'All ages'}</p>
+                        </div>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{classEmphasis[index] ?? 'A caring, age-matched space designed to help children feel secure, curious, and ready for the rhythm of the day.'}</p>
+                      {room.practitioner_name?.trim() ? <p className="mt-3 text-sm leading-6 text-slate-600">Led by {room.practitioner_name.trim()}</p> : null}
                     </div>
-                    <h3 className="mt-3 text-[1.25rem] leading-tight text-slate-900" style={{ fontFamily: 'var(--font-display)' }}>{room.name}</h3>
-                    <p className="mt-2 text-sm font-semibold text-teal-700">{room.age_group?.trim() || 'All ages'}</p>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{classEmphasis[index] ?? 'A caring, age-matched space designed to help children feel secure, curious, and ready for the rhythm of the day.'}</p>
-                    {room.practitioner_name?.trim() ? <p className="mt-3 text-sm leading-6 text-slate-600">Led by {room.practitioner_name.trim()}</p> : null}
-                  </div>
-                )) : (
-                  <div className="rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/40 p-5 text-sm leading-6 text-slate-600 sm:col-span-3">
-                    Classes are not listed yet. Send a quick question if you need help with placement.
-                  </div>
-                )}
+                  )
+                }) : (
+                    <div className="rounded-[1.5rem] border border-dashed border-amber-200 bg-amber-50/40 p-5 text-sm leading-6 text-slate-600 sm:col-span-3">
+                      Classes are not listed yet. Send a quick question if you need help with placement.
+                    </div>
+                  )}
               </div>
             </section>
 
@@ -772,7 +782,7 @@ export function CentreClient({
 
           <aside className="hidden space-y-5 lg:block">
             <div className="sticky top-24 space-y-5">
-              <div className="rounded-[2rem] border border-border bg-background p-5 shadow-[0_16px_36px_rgba(31,44,39,0.06)]">
+              <div className="rounded-[2rem] border border-border bg-background p-5 shadow-[0_10px_24px_rgba(31,44,39,0.06)]">
                 <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Next step</p>
                 <h3 className="mt-3 text-[1.8rem] font-extrabold leading-[1.08] tracking-[-0.025em] text-slate-950" style={{ fontFamily: 'var(--font-display)' }}>
                   {isClaimed ? 'Ready to act?' : 'Keep this creche close'}
@@ -916,10 +926,6 @@ export function CentreClient({
     </main>
   )
 }
-
-
-
-
 
 
 
