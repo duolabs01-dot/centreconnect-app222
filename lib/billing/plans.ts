@@ -92,11 +92,13 @@ const INTERNAL_TO_PUBLIC_PLAN: Record<InternalTier, PublicPlan> = {
 const PLAN_ALIAS_TO_PUBLIC_PLAN: Record<string, PublicPlan> = {
   starter: 'starter',
   basic: 'starter',
-  pilot: 'starter',
   growth: 'growth',
   standard: 'growth',
   pro: 'pro',
   premium: 'pro',
+  // Pilot / founding partner centres get the full Growth tier (R299/month)
+  pilot: 'growth',
+  founding_partner: 'growth',
 }
 
 export const PUBLIC_PLAN_OPTIONS: PublicPlan[] = ['starter', 'growth', 'pro']

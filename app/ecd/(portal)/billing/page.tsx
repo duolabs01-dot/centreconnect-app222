@@ -11,6 +11,7 @@ import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
+import { TierOverviewCard } from '@/components/ecd/tier-overview-card'
 import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
 import { beginPaymentMethodUpdateAction, requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 
@@ -107,6 +108,7 @@ export default async function EcdBillingPage() {
             trialEndsAt: subscription?.trial_ends_at ?? null,
           }}
         />
+        <TierOverviewCard />
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden lg:col-span-2">
             <CardHeader className="bg-slate-50/50">
