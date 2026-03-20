@@ -29,12 +29,11 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
   'grow',
 ]
 
-// === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
   daily_ops: '',
   admin: '',
   grow: '',
-  settings: 'Settings',
+  settings: '',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -217,7 +216,7 @@ export function EcdPortalSidebar({
 
   return (
     <>
-      {/* Mobile Top Header - Unified with Parent view */}
+      {/* Mobile Top Header */}
       <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
         <div className="flex items-center gap-3">
           <MobileNavMenu
@@ -239,13 +238,15 @@ export function EcdPortalSidebar({
         ref={desktopScrollRef}
         className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
+        {/* Header */}
         <div className="px-4 mb-3">
           <BrandMark compact className="brightness-100" />
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Tier: {tierLabel}</span>
           </div>
         </div>
+
+        {/* Navigation */}
         <nav className="mt-1 space-y-1.5" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
             <Fragment key={bucket.group}>
@@ -273,9 +274,6 @@ export function EcdPortalSidebar({
               <div className="my-4 px-4">
                 <div className="h-px w-full bg-border" />
               </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
-                {GROUP_LABELS.settings}
-              </p>
               {renderNavItem(settingsItem)}
             </Fragment>
           ) : null}
@@ -303,55 +301,40 @@ export function EcdPortalSidebar({
             </Fragment>
           ) : null}
         </nav>
-        <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
-          <div className="flex flex-col gap-1">
-            {centreName && (
-              <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
-            )}
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{roleLabel}</p>
-            <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
-          </div>
 
-          <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
-            <p className="mt-1 text-sm font-bold text-foreground">{tierLabel}</p>
-            <p className="mt-1 text-xs text-slate-500">Billing and website controls follow this plan.</p>
-          </div>
+        {/* Bottom card — tier (clickable → billing), WhatsApp, sign out */}
+        <div className="mt-8 shrink-0 rounded-[2rem] border border-border bg-card px-5 py-4 shadow-[var(--shadow-elevation-1)]">
+          {centreName && (
+            <p className="truncate text-xs font-black text-teal-700 mb-1">{centreName}</p>
+          )}
+          <p className="truncate text-[10px] text-slate-400 mb-3">{userEmail ?? ''}</p>
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Link
-              href="/ecd/profile"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Settings
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            <Link
-              href="/ecd/billing"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Billing
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+          {/* Tier — clickable to billing */}
+          <Link
+            href="/ecd/billing"
+            className="flex items-center justify-between rounded-2xl border border-teal-200 bg-teal-50 px-4 py-2.5 mb-3 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-100 hover:border-teal-300"
+          >
+            <span className="font-black uppercase tracking-[0.14em] text-[10px] text-teal-600">Plan</span>
+            <span className="flex items-center gap-1.5">
+              {tierLabel}
+              <ArrowRight className="h-3 w-3" />
+            </span>
+          </Link>
 
-          <div className="space-y-2 pt-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
-            <Link
-              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span>💬</span>
-              WhatsApp support
-            </Link>
-          </div>
+          {/* WhatsApp support */}
+          <Link
+            href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 mb-3 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span>💬</span>
+            WhatsApp support
+          </Link>
 
           <SignOutButton
             redirectTo="/"
-            className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="w-full rounded-3xl border border-border bg-card py-2.5 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
           />
         </div>
       </aside>
