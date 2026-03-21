@@ -526,7 +526,7 @@ function PackageSection({
               {comparisonRows.map((row: any) => (
                 <TableRow key={row.label} className="align-top hover:bg-white">
                   <TableCell className="px-4 py-4 font-black text-slate-900">{row.label}</TableCell>
-                  {row.values.map((value, index) => (
+                  {row.values.map((value: string, index: number) => (
                     <TableCell key={`${row.label}-${PACKAGE_COMPARE[index]?.plan}`} className="px-4 py-4 text-sm leading-6 text-slate-700">
                       {value}
                     </TableCell>
