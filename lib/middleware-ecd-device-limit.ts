@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { readSupabasePublicEnv } from '@/lib/supabase/env'
 import { registerSession, validateSession } from '@/lib/session-guard'
+import { getClientIp } from '@/lib/security/request-context'
 
 /**
  * Middleware guard to enforce ECD Admin 2-device limit.
@@ -46,7 +47,7 @@ export async function enforceEcdAdminDeviceLimit(request: NextRequest) {
   let isValid = await validateSession(user.id, session.access_token)
 
   if (!isValid) {
-    const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+    const ip = getClientIp(request)
     const city = request.headers.get('x-vercel-ip-city')
     const country = request.headers.get('x-vercel-ip-country')
     const region = city && country ? `${city}, ${country}` : country || 'unknown'
@@ -75,3 +76,4 @@ export async function enforceEcdAdminDeviceLimit(request: NextRequest) {
 
   return NextResponse.next()
 }
+

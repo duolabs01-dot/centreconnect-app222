@@ -128,3 +128,6 @@
 
 - LESSON: A stale helper signature in one route/action can survive refactors and only surface at build time.  RULE: When a shared helper changes, grep the repo for every old call pattern before shipping.  PREVENTION: Run a focused search for deprecated argument shapes (cached: false, old option bags) any time portal-session logic changes.
 
+
+- LESSON: NextRequest no longer exposes request.ip in our build target, so route code must use a shared IP helper instead.  RULE: Never read client IP directly off NextRequest.  PREVENTION: Standardize on getClientIp(request) for auth, middleware, and session logging paths.
+

@@ -29,11 +29,12 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
   'grow',
 ]
 
+// === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_ops: 'Daily Ops',
-  admin: 'Admin', 
-  grow: 'Grow',
-  settings: '',
+  daily_ops: '',
+  admin: '',
+  grow: '',
+  settings: 'Settings',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -55,16 +56,6 @@ function writeSavedSidebarScroll(value: number) {
   } catch {
     // Ignore storage write issues (private browsing / quota).
   }
-}
-
-/** Derive initials from a centre name for the avatar. */
-function centreInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join('')
 }
 
 export function EcdPortalSidebar({
@@ -133,7 +124,7 @@ export function EcdPortalSidebar({
     (item) => !item.minTier || tierRank[tier] >= tierRank[item.minTier]
   )
 
-  const settingsItem = visibleNav.find((item) => item.group === 'settings') ?? null
+  const settingsItem = visibleNav.find((item) => item.group === 'settings' || item.href === '/ecd/profile') ?? null
   const comingSoonItems = visibleNav.filter((item) => item.comingSoon)
   const primaryItems = visibleNav.filter((item) => !item.comingSoon && item !== settingsItem)
 
@@ -226,9 +217,9 @@ export function EcdPortalSidebar({
 
   return (
     <>
-      {/* Mobile Top Header */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center justify-between border-b border-border bg-card px-3 md:hidden">
-        <div className="flex items-center gap-2">
+      {/* Mobile Top Header - Unified with Parent view */}
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
+        <div className="flex items-center gap-3">
           <MobileNavMenu
             items={visibleNav}
             userEmail={userEmail}
@@ -237,7 +228,7 @@ export function EcdPortalSidebar({
             subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
-          <BrandMark compact className="brightness-100 h-7" />
+          <BrandMark compact className="brightness-100" />
         </div>
         <div className="flex items-center gap-2">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
@@ -246,17 +237,15 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-60 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
-        {/* Header */}
         <div className="px-4 mb-3">
           <BrandMark compact className="brightness-100" />
           <div className="mt-2 flex flex-wrap gap-1.5">
             <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Tier: {tierLabel}</span>
           </div>
         </div>
-
-        {/* Navigation */}
         <nav className="mt-1 space-y-1.5" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
             <Fragment key={bucket.group}>
@@ -284,6 +273,9 @@ export function EcdPortalSidebar({
               <div className="my-4 px-4">
                 <div className="h-px w-full bg-border" />
               </div>
+              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
+                {GROUP_LABELS.settings}
+              </p>
               {renderNavItem(settingsItem)}
             </Fragment>
           ) : null}
@@ -311,62 +303,56 @@ export function EcdPortalSidebar({
             </Fragment>
           ) : null}
         </nav>
+        <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
+          <div className="flex flex-col gap-1">
+            {centreName && (
+              <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
+            )}
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
+            <p className="truncate text-sm font-bold text-foreground">{roleLabel}</p>
+            <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
+          </div>
 
-        {/* Bottom footer — slim, premium */}
-        <div className="mt-4 shrink-0 space-y-2.5 px-3 py-3">
+          <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
+            <p className="mt-1 text-sm font-bold text-foreground">{tierLabel}</p>
+            <p className="mt-1 text-xs text-slate-500">Billing and website controls follow this plan.</p>
+          </div>
 
-          {/* Centre identity with avatar */}
-          {(centreName || userEmail) && (
-            <div className="flex items-center gap-2.5 px-1">
-              {centreName && (
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/15 text-[10px] font-black text-teal-700">
-                  {centreInitials(centreName)}
-                </div>
-              )}
-              <div className="min-w-0">
-                {centreName && (
-                  <p className="truncate text-[11px] font-semibold leading-tight text-teal-800">
-                    {centreName}
-                  </p>
-                )}
-                {userEmail && (
-                  <p className="truncate text-[10px] leading-tight text-slate-400">{userEmail}</p>
-                )}
-              </div>
-            </div>
-          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Link
+              href="/ecd/profile"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Settings
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href="/ecd/billing"
+              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Billing
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
 
-          {/* Plan badge */}
-          <Link
-            href="/ecd/billing"
-            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-1.5 transition-colors hover:border-teal-200 hover:bg-teal-50"
-          >
-            <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Plan</span>
-            <span className="flex items-center gap-1.5">
-              <span className="rounded-md bg-teal-100 px-2 py-0.5 text-[9px] font-black text-teal-700">
-                {tierLabel}
-              </span>
-              <ArrowRight className="h-3 w-3 text-slate-400" />
-            </span>
-          </Link>
-
-          {/* Support + Sign out side by side */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2 pt-1">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
             <Link
               href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
               target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-1.5 text-[11px] font-semibold text-emerald-700 transition-all hover:bg-emerald-500/18"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              <span className="text-[13px]">💬</span>
-              Support
+              <span>💬</span>
+              WhatsApp support
             </Link>
-
-            <SignOutButton
-              redirectTo="/"
-              className="w-full rounded-xl border border-slate-200 bg-white py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-            />
           </div>
+
+          <SignOutButton
+            redirectTo="/"
+            className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+          />
         </div>
       </aside>
     </>

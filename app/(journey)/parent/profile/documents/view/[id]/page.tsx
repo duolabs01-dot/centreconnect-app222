@@ -70,7 +70,7 @@ export default async function ParentDocumentViewerPage({ params }: ViewerPagePro
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const document = await loadDocument(supabase, user.id, (await params).id)
+  const document = await loadDocument(supabase, user.id, params.id)
   if (!document) notFound()
 
   const inlineUrl = `/api/parent/documents/${encodeURIComponent(document.id)}/file`

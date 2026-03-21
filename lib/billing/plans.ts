@@ -18,18 +18,17 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   starter: {
     label: 'Starter',
     monthlyPrice: 199,
-    description: 'The practical starter pack — run your centre day-to-day with attendance, child records, and professional parent listings.',
+    description: 'A simple, professional starting point for centres that want parents to find them and apply properly.',
     includes: [
-      'Professional centre listing for parents',
-      'Daily attendance register',
-      'Child profiles and records',
-      'Safe pickup QR management',
-      'Parent applications dashboard',
+      'Professional centre listing',
+      'Parent applications in one dashboard',
+      'Announcements and direct parent messages',
+      'Structured child profile intake',
     ],
     outcomes: [
-      'Know your numbers every month without counting by hand',
-      'Children\'s info ready in one place, not scattered across WhatsApp',
-      'Parents can find and apply to your centre without you chasing',
+      'Help parents trust your centre faster online',
+      'Reduce manual admission follow-up',
+      'Keep parent communication clear from day one',
     ],
     website: {
       includes: ['Centre profile page', 'Contact details + map', 'Hero, About and Programs sections'],
@@ -39,18 +38,17 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   growth: {
     label: 'Growth',
     monthlyPrice: 299,
-    description: 'Build your admissions pipeline and keep parents updated — the full centre management package.',
+    description: 'The everyday package for centres ready to handle admissions and daily operations in one flow.',
     includes: [
-      'Full Starter features',
-      'Parent admissions pipeline',
-      'Announcements and direct parent messages',
-      'Calendar and daily routines',
-      'Attendance reminders and follow-up',
+      'Attendance register',
+      'Calendar and routine planning',
+      'Faster admissions follow-up and reminders',
+      'Daily operational tracking',
     ],
     outcomes: [
-      'Fill empty spaces faster with a clear admissions flow',
-      'Parents hear from you automatically — no more WhatsApp chasing',
-      'Your team stays aligned without you being everywhere',
+      'Make daily admin feel calmer and more consistent',
+      'Improve conversion from application to enrollment',
+      'Keep the team aligned on attendance and child updates',
     ],
     website: {
       includes: ['Attendance and daily operations layer', 'Gallery + events + jobs sections', 'Richer public presentation'],
@@ -60,18 +58,17 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   pro: {
     label: 'Pro',
     monthlyPrice: 499,
-    description: 'The complete CentreConnect package — full operations, DOE compliance reporting, team management, and priority support.',
+    description: 'The full CentreConnect setup with website tools, premium support, and a faster rollout.',
     includes: [
-      'Full Growth features',
-      'DOE monthly compliance reports',
-      'Team staff management',
+      'Website and growth tools',
       'Priority onboarding and support',
-      'Advanced configuration',
+      'Advanced configuration support',
+      'Highest visibility and rollout support',
     ],
     outcomes: [
-      'Submit DOE reports in minutes, not hours',
-      'Your whole team can operate the centre without confusion',
-      'Get help fast when you need it most',
+      'Operate admissions and visibility from one system',
+      'Present a stronger public brand to parents',
+      'Move faster with high-touch support when you launch',
     ],
     website: {
       includes: ['Full public + operations stack support', 'Highest website support priority', 'Full growth stack compatibility'],
@@ -95,13 +92,11 @@ const INTERNAL_TO_PUBLIC_PLAN: Record<InternalTier, PublicPlan> = {
 const PLAN_ALIAS_TO_PUBLIC_PLAN: Record<string, PublicPlan> = {
   starter: 'starter',
   basic: 'starter',
+  pilot: 'starter',
   growth: 'growth',
   standard: 'growth',
   pro: 'pro',
   premium: 'pro',
-  // Pilot / founding partner centres get the full Growth tier (R299/month)
-  pilot: 'growth',
-  founding_partner: 'growth',
 }
 
 export const PUBLIC_PLAN_OPTIONS: PublicPlan[] = ['starter', 'growth', 'pro']

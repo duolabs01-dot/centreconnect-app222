@@ -74,7 +74,7 @@ CROSS JOIN (
   VALUES
     ('Class A: Tiny Bears', '1-2 years'),
     ('Class B: Little Cubs', '3-4 years'),
-    ('Class C: Cheetahs', '5-6 years')
+    ('Class C: Cheaters', '5-6 years')
 ) AS classes(class_name, age_group)
 WHERE LOWER(centre.name) LIKE 'bajabulile%'
   AND NOT EXISTS (

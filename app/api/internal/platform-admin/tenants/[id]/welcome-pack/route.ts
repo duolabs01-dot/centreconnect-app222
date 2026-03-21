@@ -6,14 +6,14 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 export async function POST(
   request: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id?: string } }
 ) {
   const identity = await requirePlatformAdmin(request)
   if (!identity) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const { id: centreId } = await context.params
+  const centreId = context.params.id
   if (!centreId) {
     return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })
   }
