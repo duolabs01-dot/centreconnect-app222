@@ -170,7 +170,7 @@ export async function validateSession(
     if (!Array.isArray(data) || data.length === 0) return false
 
     // Accept if any row matches the token (multi-session support)
-    return data.some((row) => row.session_token === stableSessionKey)
+    return data.some((row: any) => row.session_token === stableSessionKey)
   } catch {
     return false
   }

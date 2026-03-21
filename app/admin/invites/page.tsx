@@ -136,16 +136,16 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
   const centres = (centresResult.data ?? []) as Array<{ id: string; name: string }>
   const analyticsEvents = (analyticsResult.data ?? []) as Array<{ event_type: string }>
 
-  const sentCount = logs.filter((row) => row.status === 'sent').length
-  const deliveredCount = logs.filter((row) => row.status === 'delivered').length
-  const openedCount = logs.filter((row) => row.status === 'opened').length
-  const clickedCount = logs.filter((row) => row.status === 'clicked').length
-  const claimedCount = logs.filter((row) => row.status === 'claimed').length
-  const failedCount = logs.filter((row) => row.status === 'failed').length
+  const sentCount = logs.filter((row: any) => row.status === 'sent').length
+  const deliveredCount = logs.filter((row: any) => row.status === 'delivered').length
+  const openedCount = logs.filter((row: any) => row.status === 'opened').length
+  const clickedCount = logs.filter((row: any) => row.status === 'clicked').length
+  const claimedCount = logs.filter((row: any) => row.status === 'claimed').length
+  const failedCount = logs.filter((row: any) => row.status === 'failed').length
   const welcomePackCount = logs.filter(
-    (row) => row.event_type === 'welcome_pack' || row.event_type === 'centre_bootstrap_created'
+    (row: any) => row.event_type === 'welcome_pack' || row.event_type === 'centre_bootstrap_created'
   ).length
-  const ownerInviteCount = logs.filter((row) => row.event_type === 'owner_invite').length
+  const ownerInviteCount = logs.filter((row: any) => row.event_type === 'owner_invite').length
   const welcomeViewedCount = analyticsEvents.filter((event) => event.event_type === 'welcome_pack_viewed').length
   const qrViewedCount = analyticsEvents.filter((event) => event.event_type === 'qr_poster_viewed').length
   const qrPrintedCount = analyticsEvents.filter((event) => event.event_type === 'qr_poster_print_completed').length
@@ -317,7 +317,7 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {logs.map((row) => {
+                {logs.map((row: any) => {
                   const centreName = normalizeOne(row.ecd_centres)?.name ?? 'Unknown centre'
                   return (
                     <TableRow key={row.id} className="border-white/5 hover:bg-white/5">

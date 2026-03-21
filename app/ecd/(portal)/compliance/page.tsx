@@ -220,7 +220,7 @@ export default async function EcdCompliancePage() {
             ) : (
               <div className="space-y-2">
                 <div className="space-y-2 md:hidden">
-                  {staffChecks.map((row) => {
+                  {staffChecks.map((row: any) => {
                     const warning = expiryWarning(row.first_aid_cert_expires)
                     return (
                       <div key={row.id} className="rounded-2xl border border-slate-200 bg-white p-3">
@@ -248,7 +248,7 @@ export default async function EcdCompliancePage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {staffChecks.map((row) => {
+                      {staffChecks.map((row: any) => {
                         const warning = expiryWarning(row.first_aid_cert_expires)
                         return (
                           <TableRow key={row.id}>

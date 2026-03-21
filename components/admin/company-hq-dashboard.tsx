@@ -372,7 +372,7 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {accountabilityRows.map((row) => (
+            {accountabilityRows.map((row: any) => (
               <div key={row.role} className={`${INNER_PANEL_CLASS} p-4`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

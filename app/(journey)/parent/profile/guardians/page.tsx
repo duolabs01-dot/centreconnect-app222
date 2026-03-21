@@ -35,7 +35,7 @@ export default async function ParentGuardiansPage() {
       .limit(100)
 
     const linkedChildIds = Array.from(
-      new Set((linkedGuardianRows ?? []).map((row) => row.child_id).filter(Boolean))
+      new Set((linkedGuardianRows ?? []).map((row: any) => row.child_id).filter(Boolean))
     )
 
     let linkedChildren: GuardianChild[] = []

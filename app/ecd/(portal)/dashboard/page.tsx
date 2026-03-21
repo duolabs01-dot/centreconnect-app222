@@ -395,7 +395,7 @@ export default async function EcdDashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
-              {pendingRows.length > 0 ? pendingRows.map((row) => <PendingApplicationItem key={row.id} row={row} />) : (
+              {pendingRows.length > 0 ? pendingRows.map((row: any) => <PendingApplicationItem key={row.id} row={row} />) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   No new applications waiting. When families apply, they appear here.
                 </div>
@@ -414,7 +414,7 @@ export default async function EcdDashboardPage() {
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">
-              {parentLinkRows.length > 0 ? parentLinkRows.map((row) => <ParentLinkItem key={row.id} row={row} />) : (
+              {parentLinkRows.length > 0 ? parentLinkRows.map((row: any) => <ParentLinkItem key={row.id} row={row} />) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   No family email follow-ups are waiting right now. Once a parent needs linking, that action shows here clearly.
                 </div>
@@ -455,7 +455,7 @@ export default async function EcdDashboardPage() {
                   <p className="mt-1 text-xs text-slate-500">{verifiedDocs} on file</p>
                 </div>
               </div>
-              {unreadRows.length > 0 ? unreadRows.map((row) => <NotificationItem key={row.id} row={row} />) : (
+              {unreadRows.length > 0 ? unreadRows.map((row: any) => <NotificationItem key={row.id} row={row} />) : (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
                   All caught up. No unread messages.
                 </div>

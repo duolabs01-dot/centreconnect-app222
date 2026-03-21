@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       { onConflict: 'id' }
     )
 
-    const rowIds = validRows.map((row) => row.id)
+    const rowIds = validRows.map((row: any) => row.id)
     const inviteActionAt = new Date().toISOString()
     const lifecycleAwareLink = await admin
       .from('guardians')

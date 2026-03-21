@@ -354,7 +354,7 @@ export default async function ForCentresPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {comparisonRows.map((row) => (
+                {comparisonRows.map((row: any) => (
                   <TableRow key={row.label} className="border-slate-100 hover:bg-slate-50/60">
                     <TableCell className="px-4 py-4 text-sm font-semibold text-slate-700">{row.label}</TableCell>
                     <TableCell className="px-4 py-4 text-center"><PlanCheck active={row.starter} /></TableCell>

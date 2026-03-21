@@ -632,7 +632,7 @@ export async function previewAttendanceCsvAction(formData: FormData): Promise<At
   }
 
   const classNameById = new Map(
-    ((classesData ?? []) as ClassMatchRow[]).map((row) => [row.id, row.name])
+    ((classesData ?? []) as ClassMatchRow[]).map((row: any) => [row.id, row.name])
   )
 
   const childrenByName = new Map<string, ChildMatchOption[]>()
@@ -649,7 +649,7 @@ export async function previewAttendanceCsvAction(formData: FormData): Promise<At
     childrenByName.set(key, [...(childrenByName.get(key) ?? []), nextValue])
   }
 
-  const rows: AttendanceCsvPreviewRow[] = preview.rows.map((row) => {
+  const rows: AttendanceCsvPreviewRow[] = preview.rows.map((row: any) => {
     const match = findPreviewChildMatch(row, childrenByName)
     return {
       lineNumber: row.lineNumber,
@@ -664,7 +664,7 @@ export async function previewAttendanceCsvAction(formData: FormData): Promise<At
     }
   })
 
-  const readyCount = rows.filter((row) => row.matchedChildId && row.issues.length === 0).length
+  const readyCount = rows.filter((row: any) => row.matchedChildId && row.issues.length === 0).length
   const blockedCount = rows.length - readyCount
 
   return {
@@ -679,7 +679,7 @@ export async function previewAttendanceCsvAction(formData: FormData): Promise<At
     warnings: preview.warnings,
     readyCount,
     blockedCount,
-    fallbackHref: buildAttendanceBoardHref(rows.find((row) => row.attendanceDate)?.attendanceDate ?? fallbackDate),
+    fallbackHref: buildAttendanceBoardHref(rows.find((row: any) => row.attendanceDate)?.attendanceDate ?? fallbackDate),
     guidance: dedupeGuidance([
       ...ATTENDANCE_CSV_GUIDANCE,
       ...ATTENDANCE_CSV_LIMITATIONS,
@@ -707,7 +707,7 @@ export async function importAttendanceCsvAction(formData: FormData): Promise<Att
     return { success: false, message: 'Invalid CSV import payload.' }
   }
 
-  const readyRows = parsed.data.rows.filter((row) => row.matchedChildId && row.attendanceDate && row.issues.length === 0)
+  const readyRows = parsed.data.rows.filter((row: any) => row.matchedChildId && row.attendanceDate && row.issues.length === 0)
   const blockedCount = parsed.data.rows.length - readyRows.length
   const fallbackDate = readyRows[0]?.attendanceDate ?? new Date().toISOString().slice(0, 10)
   const attendanceHref = buildAttendanceBoardHref(fallbackDate)
@@ -722,7 +722,7 @@ export async function importAttendanceCsvAction(formData: FormData): Promise<Att
     }
   }
 
-  const childIds = Array.from(new Set(readyRows.map((row) => row.matchedChildId).filter(Boolean))) as string[]
+  const childIds = Array.from(new Set(readyRows.map((row: any) => row.matchedChildId).filter(Boolean))) as string[]
   const { data: childMatches, error: childMatchError } = await session.supabase
     .from('children')
     .select('id,ecd_id,class_id,first_name,last_name')
@@ -739,7 +739,7 @@ export async function importAttendanceCsvAction(formData: FormData): Promise<Att
   }
 
   const childMap = new Map(
-    ((childMatches ?? []) as Array<ChildMatchRow & { ecd_id: string }>).map((row) => [row.id, row])
+    ((childMatches ?? []) as Array<ChildMatchRow & { ecd_id: string }>).map((row: any) => [row.id, row])
   )
 
   if (childMap.size !== childIds.length) {
@@ -751,7 +751,7 @@ export async function importAttendanceCsvAction(formData: FormData): Promise<Att
     }
   }
 
-  const upsertPayload = readyRows.map((row) => {
+  const upsertPayload = readyRows.map((row: any) => {
     const child = childMap.get(row.matchedChildId as string)
     return buildAttendanceRecordPayload(session, {
       childId: row.matchedChildId as string,
@@ -928,7 +928,7 @@ export async function extractRegisterPhotoAction(formData: FormData): Promise<Re
       return { success: false, message: error?.message || 'Failed to save extracted register data.' }
     }
 
-    const serializedItems = (createdRows as Record<string, unknown>[]).map((row) => serializeImportRow(row))
+    const serializedItems = (createdRows as Record<string, unknown>[]).map((row: any) => serializeImportRow(row))
 
     revalidatePath('/ecd/ai-upload')
     return {

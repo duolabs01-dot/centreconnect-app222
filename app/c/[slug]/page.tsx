@@ -219,7 +219,7 @@ async function loadWebsiteContent(
       return emptyContent
     }
 
-    const sectionMap = new Map((data ?? []).map((row) => [row.section, row.content_blocks]))
+    const sectionMap = new Map((data ?? []).map((row: any) => [row.section, row.content_blocks]))
     return {
       aboutText: fromParagraphBlocks(sectionMap.get('about')),
       programCards: fromProgramBlocks(sectionMap.get('programs')),

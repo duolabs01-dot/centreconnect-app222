@@ -94,9 +94,9 @@ export default async function AdminAuditTrailPage({ searchParams }: { searchPara
   }
 
   const rows = (data ?? []) as ActivityRow[]
-  const actionOptions = Array.from(new Set(rows.map((row) => row.action))).sort((a, b) => a.localeCompare(b))
+  const actionOptions = Array.from(new Set(rows.map((row: any) => row.action))).sort((a, b) => a.localeCompare(b))
 
-  const filteredRows = rows.filter((row) => {
+  const filteredRows = rows.filter((row: any) => {
     if (selectedAction && row.action !== selectedAction) return false
     if (actor) {
       const actorValue = (row.actor_email ?? '').toLowerCase()
@@ -224,7 +224,7 @@ export default async function AdminAuditTrailPage({ searchParams }: { searchPara
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredRows.map((row) => (
+                  filteredRows.map((row: any) => (
                     <TableRow key={row.id} className="border-slate-800">
                       <TableCell>{formatDateTime(row.created_at)}</TableCell>
                       <TableCell className="text-xs text-slate-300">{row.actor_email ?? row.actor_user_id ?? 'platform-admin'}</TableCell>

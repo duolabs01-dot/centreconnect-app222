@@ -69,7 +69,7 @@ function hydrateBody(template: string, name: string) {
 }
 
 function mapRowsForParent(parentId: string, parentName: string, fallbackCentreId: string | null): ParentNotificationRecord[] {
-  return WELCOME_TEMPLATE_ROWS.map((row) => ({
+  return WELCOME_TEMPLATE_ROWS.map((row: any) => ({
     parent_id: parentId,
     ecd_id: fallbackCentreId,
     template_key: row.template_key,
@@ -127,7 +127,7 @@ export async function enqueueParentWelcomeSequence(
   }
 
   const { error: templateError } = await db.from('communication_templates').upsert(
-    WELCOME_TEMPLATE_ROWS.map((row) => ({
+    WELCOME_TEMPLATE_ROWS.map((row: any) => ({
       template_key: row.template_key,
       title: row.title,
       body: row.body,

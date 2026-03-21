@@ -27,14 +27,14 @@ async function getLatestMembership(
     .order('invited_at', { ascending: false })
     .limit(10)
 
-  const membershipRows = (memberships ?? []).filter((row) => Boolean(row?.ecd_id))
+  const membershipRows = (memberships ?? []).filter((row: any) => Boolean(row?.ecd_id))
   if (membershipRows.length === 0) return null
 
-  const candidateIds = Array.from(new Set(membershipRows.map((row) => row.ecd_id)))
+  const candidateIds = Array.from(new Set(membershipRows.map((row: any) => row.ecd_id)))
   const { data: visibleCentres } = await supabase.from('ecd_centres').select('id').in('id', candidateIds)
   const visibleSet = new Set((visibleCentres ?? []).map((centre) => centre.id))
 
-  const validMembership = membershipRows.find((row) => visibleSet.has(row.ecd_id))
+  const validMembership = membershipRows.find((row: any) => visibleSet.has(row.ecd_id))
   if (validMembership?.ecd_id) return validMembership.ecd_id
 
   return null

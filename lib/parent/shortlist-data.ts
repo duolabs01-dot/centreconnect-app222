@@ -29,7 +29,7 @@ export async function getParentShortlistSummary(
 
   const savedCentreIds = new Set(
     ((visibleResult.data ?? []) as ShortlistRow[])
-      .map((row) => row.centre_id)
+      .map((row: any) => row.centre_id)
       .filter(Boolean)
   )
 

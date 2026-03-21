@@ -56,7 +56,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
     .select('user_id')
     .eq('ecd_id', parsed.data.ecd_id)
 
-  const adminIds = Array.from(new Set((admins ?? []).map((row) => row.user_id).filter(Boolean)))
+  const adminIds = Array.from(new Set((admins ?? []).map((row: any) => row.user_id).filter(Boolean)))
 
   if (adminIds.length) {
     await supabase.from('notifications').insert(

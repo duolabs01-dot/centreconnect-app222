@@ -127,9 +127,9 @@ export async function resolveProvisionRole(
   const membershipRows = membershipResult.data ?? []
   const membershipRole =
     membershipRows
-      .map((row) => parseEcdRole(row.role))
+      .map((row: any) => parseEcdRole(row.role))
       .find((role): role is EcdRole => Boolean(role)) ?? null
-  const membershipEcdIds = uniq(membershipRows.map((row) => row.ecd_id))
+  const membershipEcdIds = uniq(membershipRows.map((row: any) => row.ecd_id))
 
   if (membershipRole) {
     return {
@@ -145,9 +145,9 @@ export async function resolveProvisionRole(
   const invitationRows = [...(inviteByAuthResult.data ?? []), ...(inviteByEmailResult.data ?? [])]
   const invitationRole =
     invitationRows
-      .map((row) => parseEcdRole(row.role))
+      .map((row: any) => parseEcdRole(row.role))
       .find((role): role is EcdRole => Boolean(role)) ?? null
-  const invitationEcdIds = uniq(invitationRows.map((row) => row.ecd_id))
+  const invitationEcdIds = uniq(invitationRows.map((row: any) => row.ecd_id))
 
   const resolved = resolveProvisionRoleFromSignals({
     existingProfileRole: roleFromExisting,

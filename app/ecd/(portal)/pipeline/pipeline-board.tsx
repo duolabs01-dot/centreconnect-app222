@@ -185,7 +185,7 @@ export function PipelineBoard({ ecdId, centreName, initialApplications }: Pipeli
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'applications', filter: `ecd_id=eq.${ecdId}` },
-        (payload) => {
+        (payload: any) => {
           const next = payload.new as { id?: string; status?: PipelineStatus; offer_made_at?: string | null }
           if (!next?.id || !next.status) return
           const nextStatus = next.status

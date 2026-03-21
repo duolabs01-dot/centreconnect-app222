@@ -45,13 +45,13 @@ export default async function JoinPage({ searchParams }: PageProps) {
   }
   const expired =
     rows.length === 0 ||
-    rows.every((row) => !row.invite_token_expires_at || new Date(row.invite_token_expires_at) < new Date())
-  const alreadyLinked = rows.length > 0 && rows.every((row) => Boolean(row.linked_user_id))
+    rows.every((row: any) => !row.invite_token_expires_at || new Date(row.invite_token_expires_at) < new Date())
+  const alreadyLinked = rows.length > 0 && rows.every((row: any) => Boolean(row.linked_user_id))
 
   const childNames = Array.from(
     new Set(
       rows
-        .map((row) => {
+        .map((row: any) => {
           const rawChild = row.children
           const child = Array.isArray(rawChild) ? rawChild[0] : rawChild
           if (!child) return null

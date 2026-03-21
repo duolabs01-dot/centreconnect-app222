@@ -88,7 +88,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       .order('created_at', { ascending: false })
       .limit(12)
 
-    const shortlistIds = ((shortlistResult.data ?? []) as Array<{ centre_id: string }>).map((row) => row.centre_id)
+    const shortlistIds = ((shortlistResult.data ?? []) as Array<{ centre_id: string }>).map((row: any) => row.centre_id)
     savedCount = shortlistIds.length
 
     if (centreIds.length === 0) {
@@ -108,7 +108,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
       admin.from('public_ecd_centres').select('id,owner_id').in('id', centreIds),
     ])
 
-    ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row) => {
+    ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row: any) => {
       if (row.owner_id?.trim()) claimedCentreIds.add(row.id)
     })
 

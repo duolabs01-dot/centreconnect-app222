@@ -427,7 +427,7 @@ export default async function AdminDashboardPage() {
     },
   ]
 
-  const recentCentres = ((recentCentresResult.data ?? []) as Array<any>).map((row) => ({
+  const recentCentres = ((recentCentresResult.data ?? []) as Array<any>).map((row: any) => ({
     id: row.id,
     name: safe(row.name, 'Unnamed centre'),
     city: safe(row.city, 'Unknown city'),
@@ -435,7 +435,7 @@ export default async function AdminDashboardPage() {
     createdAt: row.created_at,
   })) as RecentCentre[]
 
-  const recentParents = ((recentParentsResult.data ?? []) as Array<any>).map((row) => ({
+  const recentParents = ((recentParentsResult.data ?? []) as Array<any>).map((row: any) => ({
     id: row.id,
     fullName: safe(row.full_name, 'Parent account'),
     phone: safe(row.phone, 'No phone'),
@@ -443,7 +443,7 @@ export default async function AdminDashboardPage() {
   })) as RecentPerson[]
 
   const rawInviteRows = (inviteRowsResult.data ?? []) as Array<any>
-  const inviteRows = rawInviteRows.map((row) => {
+  const inviteRows = rawInviteRows.map((row: any) => {
     const centre = normalizeOne(row.ecd_centres)
     const statusKey = row.status as RowStatus
     return {
@@ -836,7 +836,7 @@ export default async function AdminDashboardPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                inviteRows.map((row) => (
+                inviteRows.map((row: any) => (
                   <TableRow key={row.id} className="border-white/5 hover:bg-white/5">
                     <TableCell className="p-4 text-xs text-slate-400">{fmtDate(row.createdAt)}</TableCell>
                     <TableCell className="p-4 text-sm font-medium text-white">{row.centreName}</TableCell>

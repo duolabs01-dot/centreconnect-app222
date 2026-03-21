@@ -264,7 +264,7 @@ export default async function AdminTenantsPage() {
       | null
   }>
   const classesByCentre = new Map<string, CentreClassroomDraft[]>()
-  classRows.forEach((row) => {
+  classRows.forEach((row: any) => {
     const centreId = row.ecd_id ?? ''
     if (!centreId) return
     const next = classesByCentre.get(centreId) ?? []
@@ -411,7 +411,7 @@ export default async function AdminTenantsPage() {
     const ageMs = Date.now() - created
     return ageMs <= 24 * 60 * 60 * 1000 && log.status === 'failed'
   }).length
-  const ownerAcceptedCount = invitationRows.filter((row) => Boolean(row.accepted_at)).length
+  const ownerAcceptedCount = invitationRows.filter((row: any) => Boolean(row.accepted_at)).length
   const ownerPendingCount = Math.max(invitationRows.length - ownerAcceptedCount, 0)
   const pendingClaimCount = tenants.filter((tenant) => tenant.status !== 'Claimed').length
   const missingBrandingCount = tenants.filter((tenant) => !tenant.logoUrl || !tenant.coverImageUrl).length

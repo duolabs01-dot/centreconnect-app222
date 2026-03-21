@@ -57,10 +57,10 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
 
   const stats = useMemo(() => {
     return {
-      failed: rows.filter((row) => row.status === 'failed').length,
-      ignored: rows.filter((row) => row.status === 'ignored').length,
-      received: rows.filter((row) => row.status === 'received').length,
-      processed: rows.filter((row) => row.status === 'processed').length,
+      failed: rows.filter((row: any) => row.status === 'failed').length,
+      ignored: rows.filter((row: any) => row.status === 'ignored').length,
+      received: rows.filter((row: any) => row.status === 'received').length,
+      processed: rows.filter((row: any) => row.status === 'processed').length,
     }
   }, [rows])
 
@@ -90,7 +90,7 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
 
   const visibleRows = useMemo(() => {
     const search = query.trim().toLowerCase()
-    return rows.filter((row) => {
+    return rows.filter((row: any) => {
       if (statusFilter !== 'all' && row.status !== statusFilter) return false
       if (!search) return true
       const haystack = `${row.event_id} ${row.event_type} ${row.reference ?? ''} ${row.invoice_number ?? row.invoice_id ?? ''} ${row.error_message ?? ''}`.toLowerCase()
@@ -278,7 +278,7 @@ export function WebhookFailureDashboard({ rows, activityAlertMetrics }: Props) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  visibleRows.map((row) => (
+                  visibleRows.map((row: any) => (
                     <TableRow key={row.id} className="border-slate-800">
                       <TableCell>
                         <p className="font-medium text-slate-100">{row.event_type}</p>

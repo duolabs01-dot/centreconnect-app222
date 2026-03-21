@@ -224,7 +224,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           .select('id,latitude,longitude,onboarding_complete,owner_id,address,communication_automation_settings')
           .in('id', centreIds)
 
-        ;((geoRows ?? []) as CentreGeoRow[]).forEach((row) => {
+        ;((geoRows ?? []) as CentreGeoRow[]).forEach((row: any) => {
           geoById.set(row.id, {
             latitude: row.latitude,
             longitude: row.longitude,
@@ -247,7 +247,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
           getParentShortlistSummary(supabase, user.id, centreIds),
         ])
 
-        ;((applicationRowsResult.data ?? []) as CentreApplicationRow[]).forEach((row) => {
+        ;((applicationRowsResult.data ?? []) as CentreApplicationRow[]).forEach((row: any) => {
           if (!applicationByCentre.has(row.ecd_id)) {
             applicationByCentre.set(row.ecd_id, {
               id: row.id,

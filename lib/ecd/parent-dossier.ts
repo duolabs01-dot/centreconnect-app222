@@ -143,7 +143,7 @@ const RELEVANT_DOCUMENT_ALIASES = [
 ] as const
 
 function normalizeParentDocumentRows(rows: ParentDocumentSelectRow[], includeVerificationStatus: boolean): ParentDocumentRow[] {
-  return rows.map((row) => ({
+  return rows.map((row: any) => ({
     id: row.id,
     doc_type: row.doc_type,
     file_name: row.file_name,
@@ -222,8 +222,8 @@ function isRelevantDocument(docType: string | null, fileName: string | null) {
 
 function toRelevantParentDocuments(rows: ParentDocumentRow[]): RelevantParentDocument[] {
   return rows
-    .filter((row) => isRelevantDocument(row.doc_type, row.file_name))
-    .map((row) => ({
+    .filter((row: any) => isRelevantDocument(row.doc_type, row.file_name))
+    .map((row: any) => ({
       id: row.id,
       label: getDocumentLabel(row.doc_type, row.file_name),
       fileName: clean(row.file_name) || getDocumentLabel(row.doc_type, row.file_name),

@@ -199,7 +199,7 @@ export function buildCsvStatusLabel(status: AttendanceRecordStatus) {
 }
 
 export function buildAttendanceCsvFallbackHref(rows: Array<{ attendanceDate: string }>) {
-  const firstDate = rows.find((row) => row.attendanceDate)?.attendanceDate ?? null
+  const firstDate = rows.find((row: any) => row.attendanceDate)?.attendanceDate ?? null
   return buildAttendanceBoardHref(firstDate)
 }
 

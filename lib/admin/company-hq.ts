@@ -370,7 +370,7 @@ export async function getCompanyHqSnapshot(input?: {
   await Promise.all(
     foundingRows
       .filter((row): row is CentreRow => Boolean(row))
-      .map(async (row) => {
+      .map(async (row: any) => {
         const [childrenResult, attendanceResult, applicationCountResult] = await Promise.all([
           admin.from('children').select('id', { count: 'exact', head: true }).eq('ecd_id', row.id),
           admin.from('attendance').select('id', { count: 'exact', head: true }).eq('ecd_id', row.id),
@@ -417,9 +417,9 @@ export async function getCompanyHqSnapshot(input?: {
     return sum + (foundingCounts.get(row.id)?.attendance ?? 0)
   }, 0)
   const completeFoundingOnboarding = foundingRows.filter(
-    (row) => row?.onboarding_complete === true
+    (row: any) => row?.onboarding_complete === true
   ).length
-  const activeFoundingRows = foundingRows.filter((row) => row?.is_active === true).length
+  const activeFoundingRows = foundingRows.filter((row: any) => row?.is_active === true).length
 
   const ceoBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'ceo')
   const ctoBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'cto')

@@ -523,7 +523,7 @@ function PackageSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {comparisonRows.map((row) => (
+              {comparisonRows.map((row: any) => (
                 <TableRow key={row.label} className="align-top hover:bg-white">
                   <TableCell className="px-4 py-4 font-black text-slate-900">{row.label}</TableCell>
                   {row.values.map((value, index) => (

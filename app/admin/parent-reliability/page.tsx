@@ -121,14 +121,14 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   if (failureTypeFilter) rowsQuery = rowsQuery.ilike('failure_type', `%${failureTypeFilter}%`)
 
   const rowsResult = await rowsQuery
-  const rows = ((rowsResult.data ?? []) as FailureRow[]).filter((row) => row.created_at)
+  const rows = ((rowsResult.data ?? []) as FailureRow[]).filter((row: any) => row.created_at)
 
-  const parentIds = Array.from(new Set(rows.map((row) => row.parent_id).filter(Boolean)))
+  const parentIds = Array.from(new Set(rows.map((row: any) => row.parent_id).filter(Boolean)))
   const parentProfilesResult = parentIds.length
     ? await admin.from('user_profiles').select('id,full_name,phone').in('id', parentIds)
     : { data: [] as Array<{ id: string; full_name: string | null; phone: string | null }> }
   const profileMap = new Map(
-    ((parentProfilesResult.data ?? []) as Array<{ id: string; full_name: string | null; phone: string | null }>).map((row) => [
+    ((parentProfilesResult.data ?? []) as Array<{ id: string; full_name: string | null; phone: string | null }>).map((row: any) => [
       row.id,
       row,
     ])
@@ -188,9 +188,9 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
         : 'border-slate-500/30 bg-slate-500/10 text-slate-300'
 
   const maxBucket = Math.max(...trendBuckets, 1)
-  const uniqueParents = new Set(rows.map((row) => row.parent_id).filter(Boolean)).size
-  const uniqueRoutes = new Set(rows.map((row) => row.route_path).filter(Boolean)).size
-  const uniqueFailureTypes = new Set(rows.map((row) => row.failure_type).filter(Boolean)).size
+  const uniqueParents = new Set(rows.map((row: any) => row.parent_id).filter(Boolean)).size
+  const uniqueRoutes = new Set(rows.map((row: any) => row.route_path).filter(Boolean)).size
+  const uniqueFailureTypes = new Set(rows.map((row: any) => row.failure_type).filter(Boolean)).size
   const latestFailure = rows[0]
   const windowLabel = selectedWindow === '24h' ? '24h' : '7d'
   const trendDetailLabel = selectedWindow === '24h' ? 'Hourly' : 'Daily'
@@ -501,7 +501,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             {routeHotspots.length === 0 ? (
               <p className="text-sm text-slate-500">No route hotspots in the selected filter window.</p>
             ) : (
-              routeHotspots.map((row) => (
+              routeHotspots.map((row: any) => (
                 <div key={row.route} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
                   <p className="truncate pr-3 text-sm text-slate-200">{row.route}</p>
                   <div className="flex items-center gap-2">
@@ -529,7 +529,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
             {failureTypeHotspots.length === 0 ? (
               <p className="text-sm text-slate-500">No failure types recorded in the selected filter window.</p>
             ) : (
-              failureTypeHotspots.map((row) => (
+              failureTypeHotspots.map((row: any) => (
                 <div key={row.failureType} className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2">
                   <p className="truncate pr-3 text-sm text-slate-200">{row.failureType}</p>
                   <div className="flex items-center gap-2">
@@ -594,7 +594,7 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
                   </TableCell>
                 </TableRow>
               ) : (
-                rows.slice(0, 50).map((row) => {
+                rows.slice(0, 50).map((row: any) => {
                   const parentProfile = profileMap.get(row.parent_id)
                   const parentName = parentProfile?.full_name?.trim() || 'Parent account'
                   const parentPhone = parentProfile?.phone?.trim() || null

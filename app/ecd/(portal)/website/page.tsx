@@ -289,7 +289,7 @@ export default async function EcdWebsitePage({
       .maybeSingle(),
   ])
 
-  const sectionMap = new Map((contentRows ?? []).map((row) => [row.section, row.content_blocks]))
+  const sectionMap = new Map((contentRows ?? []).map((row: any) => [row.section, row.content_blocks]))
   const aboutText = fromParagraphBlocks(sectionMap.get('about'))
   const programsText = fromProgramBlocks(sectionMap.get('programs'))
   const existingGalleryUrls = toGalleryUrls(sectionMap.get('gallery'))

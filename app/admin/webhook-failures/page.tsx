@@ -53,7 +53,7 @@ export default async function AdminWebhookFailuresPage() {
     .gte('created_at', previousWindowStartIso)
     .lt('created_at', nowIso)
 
-  const mappedRows = (rows ?? []).map((row) => {
+  const mappedRows = (rows ?? []).map((row: any) => {
     const invoice = normalizeOne(row.invoices as { invoice_number?: string } | { invoice_number?: string }[] | null)
     return {
       id: row.id as string,
@@ -70,7 +70,7 @@ export default async function AdminWebhookFailuresPage() {
   })
 
   const countInWindow = (actionName: string, fromMs: number, toMs: number) =>
-    (activityRows ?? []).filter((row) => {
+    (activityRows ?? []).filter((row: any) => {
       if (row.action !== actionName) return false
       const createdMs = Date.parse(String(row.created_at))
       if (Number.isNaN(createdMs)) return false

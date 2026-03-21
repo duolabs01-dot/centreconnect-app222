@@ -83,7 +83,7 @@ export function BrowserNotificationBridge({
 
   const baselineLoad = useCallback(
     (rows: NotificationRow[]) => {
-      rows.forEach((row) => markSeen(row.id))
+      rows.forEach((row: any) => markSeen(row.id))
       initializedRef.current = true
     },
     [markSeen]
@@ -111,7 +111,7 @@ export function BrowserNotificationBridge({
       baselineLoad(rows)
       return
     }
-    rows.forEach((row) => notify(row))
+    rows.forEach((row: any) => notify(row))
   }, [baselineLoad, canRun, ecdId, mode, notify, parentId, supabase, table])
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export function BrowserNotificationBridge({
           table,
           filter,
         },
-        (payload) => {
+        (payload: any) => {
           const row = payload.new as NotificationRow
           if (!initializedRef.current) {
             markSeen(row.id)

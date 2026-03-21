@@ -137,7 +137,7 @@ export default async function AdminUsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ecdAdminRows.map((row) => (
+              {ecdAdminRows.map((row: any) => (
                 <TableRow key={row.id} className="border-white/5 hover:bg-white/5 group">
                   <TableCell className="p-4">
                     <span className="font-medium text-white block">{row.full_name}</span>

@@ -109,8 +109,8 @@ export default async function AdminRevenuePage() {
   const webhookEvents = webhookEventsResult.data ?? []
   const failedWebhookCount24h = failedWebhookCountResult.count ?? 0
   const laggedWebhookCount = laggedWebhookResult.count ?? 0
-  const sentAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'alert_activity_log_write_failure').length
-  const suppressedAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row) => row.action === 'suppress_activity_log_write_failure').length
+  const sentAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row: any) => row.action === 'alert_activity_log_write_failure').length
+  const suppressedAlertCount24h = (alertActivityRowsResult.data ?? []).filter((row: any) => row.action === 'suppress_activity_log_write_failure').length
   const currentRefreshIso = new Date().toISOString()
   const latestWebhookCounterMs = webhookEvents.reduce<number | null>((max, row) => {
     const ts = Date.parse(String(row.created_at))
@@ -169,7 +169,7 @@ export default async function AdminRevenuePage() {
     }
   })
 
-  const invoiceRows = invoices.map((inv) => {
+  const invoiceRows = invoices.map((inv: any) => {
     const centre = normalizeOne(inv.ecd_centres as { name?: string; slug?: string } | { name?: string; slug?: string }[] | null)
     return {
       id: inv.id as string,
@@ -413,7 +413,7 @@ export default async function AdminRevenuePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.slice(0, 10).map((inv) => (
+                {invoices.slice(0, 10).map((inv: any) => (
                   <TableRow key={inv.id} className="border-white/5 hover:bg-white/5">
                     <TableCell className="font-medium text-white p-4">{(inv.ecd_centres as any)?.name ?? 'Unknown'}</TableCell>
                     <TableCell className="text-slate-300 p-4">{formatCurrency(inv.total)}</TableCell>

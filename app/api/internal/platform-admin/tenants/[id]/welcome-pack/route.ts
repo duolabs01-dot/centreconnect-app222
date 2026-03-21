@@ -13,7 +13,7 @@ export async function POST(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const centreId = context.params.id
+  const centreId = (await context.params).id
   if (!centreId) {
     return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })
   }

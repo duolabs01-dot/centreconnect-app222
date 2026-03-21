@@ -388,7 +388,7 @@ export function AttendanceCsvImportSection() {
                 </tr>
               </thead>
               <tbody>
-                {preview.rows.map((row) => {
+                {preview.rows.map((row: any) => {
                   const ready = rowIsReady(row)
 
                   return (

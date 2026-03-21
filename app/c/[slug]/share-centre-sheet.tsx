@@ -28,7 +28,7 @@ function toWhatsappNumber(raw: string) {
 
 function dedupeContacts(rows: ShareContact[]) {
   const seen = new Set<string>()
-  return rows.filter((row) => {
+  return rows.filter((row: any) => {
     const key = toWhatsappNumber(row.phone)
     if (!key || seen.has(key)) return false
     seen.add(key)
@@ -109,14 +109,14 @@ export function ShareCentreSheet({ centreName, centreSlug, suburb, city }: Share
           ? guardiansResult.value.data ?? []
           : []
 
-      const coParentRows = coParentsData.map((row) => ({
+      const coParentRows = coParentsData.map((row: any) => ({
         id: `co-${row.id}`,
         name: row.full_name?.trim() || 'Co-parent',
         phone: row.phone ?? '',
         label: 'Co-parent' as const,
       }))
 
-      const guardianRows = guardiansData.map((row) => ({
+      const guardianRows = guardiansData.map((row: any) => ({
         id: `g-${row.id}`,
         name: row.full_name?.trim() || row.relationship?.trim() || 'Guardian',
         phone: row.phone ?? '',

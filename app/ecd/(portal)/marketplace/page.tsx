@@ -125,14 +125,14 @@ export default async function EcdMarketplacePage() {
       .eq('id', session.ecdId)
       .maybeSingle()
 
-    const orderIds = cartOrders.map((row) => row.id)
+    const orderIds = cartOrders.map((row: any) => row.id)
     await session.supabase
       .from('ecd_marketplace_orders')
       .update({ status: 'requested' })
       .in('id', orderIds)
       .eq('ecd_id', session.ecdId)
 
-    const supportTickets = cartOrders.map((row) => {
+    const supportTickets = cartOrders.map((row: any) => {
       const service = Array.isArray(row.marketplace_services)
         ? row.marketplace_services[0]
         : row.marketplace_services
@@ -188,13 +188,13 @@ export default async function EcdMarketplacePage() {
   const services = ((servicesData ?? []) as ServiceRow[]) ?? []
   const tier = (subscription?.tier ?? 'basic') as SubscriptionTier
   const orders = ((ordersData ?? []) as OrderRow[]) ?? []
-  const cartOrders = orders.filter((row) => row.status === 'cart')
-  const requestHistory = orders.filter((row) => row.status !== 'cart')
-  const cartServiceIds = new Set(cartOrders.map((row) => row.service_id))
+  const cartOrders = orders.filter((row: any) => row.status === 'cart')
+  const requestHistory = orders.filter((row: any) => row.status !== 'cart')
+  const cartServiceIds = new Set(cartOrders.map((row: any) => row.service_id))
   const openRequestServiceIds = new Set(
     requestHistory
-      .filter((row) => row.status === 'requested' || row.status === 'paid')
-      .map((row) => row.service_id)
+      .filter((row: any) => row.status === 'requested' || row.status === 'paid')
+      .map((row: any) => row.service_id)
   )
 
   return (

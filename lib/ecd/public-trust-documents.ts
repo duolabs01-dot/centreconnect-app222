@@ -26,7 +26,7 @@ export async function loadPublicTrustDocuments(centreId: string) {
     return [] as PublicTrustDocument[]
   }
 
-  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row: any) => ({
     documentType: String(row.document_type ?? ''),
     label: String(row.label ?? 'Compliance document').trim(),
     status: String(row.status ?? 'missing').trim(),

@@ -582,7 +582,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       },
       {
         id: 'claimedDate',
-        accessorFn: (row) => row.claimedDate ?? '',
+        accessorFn: (row: any) => row.claimedDate ?? '',
         sortingFn: (a, b) => {
           const left = a.original.claimedDate ? new Date(a.original.claimedDate).getTime() : 0
           const right = b.original.claimedDate ? new Date(b.original.claimedDate).getTime() : 0
@@ -593,7 +593,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
       },
       {
         id: 'package',
-        accessorFn: (row) => `${row.subscriptionTier} ${row.subscriptionStatus}`,
+        accessorFn: (row: any) => `${row.subscriptionTier} ${row.subscriptionStatus}`,
         header: 'Package',
         cell: ({ row }) => (
           <span className="text-slate-300">
@@ -1011,7 +1011,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
     }
   }
 
-  const visibleRowIds = table.getRowModel().rows.map((row) => row.original.id)
+  const visibleRowIds = table.getRowModel().rows.map((row: any) => row.original.id)
   const selectedCount = selectedIds.size
   const visibleSelected = visibleRowIds.length > 0 && visibleRowIds.every((id) => selectedIds.has(id))
 
@@ -1117,7 +1117,7 @@ export function AdminTenantsTable({ tenants }: AdminTenantsTableProps) {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  table.getRowModel().rows.map((row) => (
+                  table.getRowModel().rows.map((row: any) => (
                     <TableRow key={row.id} className="border-slate-800">
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className={cell.column.id === 'actions' ? 'text-right' : ''}>

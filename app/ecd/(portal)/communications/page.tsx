@@ -176,7 +176,7 @@ export default async function EcdCommunicationsPage({
   const templates = ((templatesResult.data ?? []) as Template[]) ?? []
   const unreadNotifications = (unreadNotificationsResult.data ?? []) as EcdNotificationRow[]
   const centreParticipantIds = Array.from(
-    new Set((centreParticipantsResult.data ?? []).map((row) => String(row.user_id)).filter(Boolean))
+    new Set((centreParticipantsResult.data ?? []).map((row: any) => String(row.user_id)).filter(Boolean))
   )
   const recentThreads = ((recentThreadsResult.data ?? []) as ThreadRow[]).filter((thread) =>
     (thread.participant_ids ?? []).some((participantId) => !centreParticipantIds.includes(participantId))
@@ -244,7 +244,7 @@ export default async function EcdCommunicationsPage({
     allParentIds.length > 0
       ? await admin.from('user_profiles').select('id,full_name').in('id', allParentIds)
       : { data: [] as ProfileRow[] }
-  const parentProfiles = new Map(((parentProfilesResult.data ?? []) as ProfileRow[]).map((row) => [row.id, row]))
+  const parentProfiles = new Map(((parentProfilesResult.data ?? []) as ProfileRow[]).map((row: any) => [row.id, row]))
 
   const threadSummaries = recentThreads.map((thread) => {
     const parentId =

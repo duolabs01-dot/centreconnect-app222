@@ -277,7 +277,7 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
     if (!editingChild) return
 
     startEditTransition(async () => {
-      const selectedClass = classes.find((row) => row.id === (editForm.classId === 'none' ? null : editForm.classId)) ?? null
+      const selectedClass = classes.find((row: any) => row.id === (editForm.classId === 'none' ? null : editForm.classId)) ?? null
       const result = await updateChildBasicsAction({
         child_id: editingChild.id,
         first_name: editForm.firstName.trim(),

@@ -293,7 +293,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
       .select('id')
       .eq('ecd_id', session.ecdId)
 
-    const existingIds = ((existingClasses ?? []) as Array<{ id: string }>).map((row) => row.id)
+    const existingIds = ((existingClasses ?? []) as Array<{ id: string }>).map((row: any) => row.id)
     const incomingIds = classrooms.map((room) => room.id).filter((value): value is string => Boolean(value))
     const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id))
 

@@ -67,7 +67,7 @@ export async function addGuardianAction(input: unknown) {
     .in('child_id', childIds)
     .eq('phone', phone)
 
-  const existingByChild = new Set((existing ?? []).map((row) => row.child_id))
+  const existingByChild = new Set((existing ?? []).map((row: any) => row.child_id))
   const newChildIds = childIds.filter((id) => !existingByChild.has(id))
 
   if (newChildIds.length === 0) {

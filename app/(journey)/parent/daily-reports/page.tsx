@@ -142,7 +142,7 @@ export default async function ParentDailyReportsPage({ searchParams }: ParentDai
 
   const childRows = (applications ?? []) as ApplicationRow[]
   const seenChildIds = new Set<string>()
-  const children = childRows.flatMap((row) => {
+  const children = childRows.flatMap((row: any) => {
     const child = normalizeOne(row.children)
     const childId = child?.id ?? row.child_id
     if (!childId || seenChildIds.has(childId)) return []

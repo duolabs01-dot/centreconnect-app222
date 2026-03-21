@@ -61,7 +61,7 @@ export default async function ParentShortlistPage() {
         .limit(24)
     : { data: [] }
 
-  const centreIds = ((shortlistRows.data ?? []) as Array<{ centre_id: string }>).map((row) => row.centre_id)
+  const centreIds = ((shortlistRows.data ?? []) as Array<{ centre_id: string }>).map((row: any) => row.centre_id)
 
   let centres: ShortlistCentreRow[] = []
   const existingApplications = new Map<string, { id: string; status: string | null }>()
@@ -84,13 +84,13 @@ export default async function ParentShortlistPage() {
       admin.from('public_ecd_centres').select('id,owner_id').in('id', centreIds),
     ])
 
-    ;((applicationsResult.data ?? []) as ApplicationRow[]).forEach((row) => {
+    ;((applicationsResult.data ?? []) as ApplicationRow[]).forEach((row: any) => {
       if (!existingApplications.has(row.ecd_id)) {
         existingApplications.set(row.ecd_id, { id: row.id, status: row.status ?? null })
       }
     })
 
-    ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row) => {
+    ;((ownerRowsResult.data ?? []) as CentreOwnerRow[]).forEach((row: any) => {
       if (row.owner_id?.trim()) claimedCentreIds.add(row.id)
     })
 

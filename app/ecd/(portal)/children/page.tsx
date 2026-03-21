@@ -62,13 +62,13 @@ export default async function EcdChildrenRosterPage() {
   ])
 
   const centreName = centreResult.data?.name?.trim() || 'Your Centre'
-  const classes = (classesResult.data ?? []).map((row) => ({
+  const classes = (classesResult.data ?? []).map((row: any) => ({
     id: String(row.id),
     name: typeof row.name === 'string' ? row.name : 'Class',
     ageGroup: typeof row.age_group === 'string' && row.age_group.trim().length > 0 ? row.age_group.trim() : null,
   }))
 
-  const classMap = new Map(classes.map((row) => [row.id, row]))
+  const classMap = new Map(classes.map((row: any) => [row.id, row]))
   const childIds = ((childrenResult.data ?? []) as Array<{ id: string }>).map((child) => String(child.id))
   const parentIds = Array.from(new Set((childrenResult.data ?? []).map((child) => child.parent_id).filter((value): value is string => Boolean(value))))
 
@@ -82,8 +82,8 @@ export default async function EcdChildrenRosterPage() {
     getLatestParentLinkRequestsByChildIds(childIds),
   ])
 
-  const parentProfileMap = new Map(((profileRows.data ?? []) as ParentProfileRow[]).map((row) => [row.id, row]))
-  const parentMetaMap = new Map(((parentMetaRows.data ?? []) as ParentMetaRow[]).map((row) => [row.id, row]))
+  const parentProfileMap = new Map(((profileRows.data ?? []) as ParentProfileRow[]).map((row: any) => [row.id, row]))
+  const parentMetaMap = new Map(((parentMetaRows.data ?? []) as ParentMetaRow[]).map((row: any) => [row.id, row]))
 
   const children = (childrenResult.data ?? []).map((child: any) => {
     const guardian = getPrimaryGuardian(child.guardian_contacts)

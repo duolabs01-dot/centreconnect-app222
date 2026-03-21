@@ -196,7 +196,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
             .eq('parent_id', parent.id)
             .limit(100)
           docTypes = (docsRows ?? [])
-            .map((row) => row.doc_type)
+            .map((row: any) => row.doc_type)
             .filter((docType): docType is string => typeof docType === 'string' && docType.trim().length > 0)
         }
       } catch {
@@ -434,7 +434,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
 
         const otherRows = (otherApplications ?? []) as Array<{ id: string; ecd_id: string; application_number: string | null; status: string | null }>
         if (otherRows.length > 0) {
-          const otherIds = otherRows.map((row) => row.id)
+          const otherIds = otherRows.map((row: any) => row.id)
           await admin
             .from('applications')
             .update({
@@ -447,7 +447,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
             .in('id', otherIds)
 
           await admin.from('application_status_history').insert(
-            otherRows.map((row) => ({
+            otherRows.map((row: any) => ({
               application_id: row.id,
               old_status: row.status ?? 'approved',
               new_status: 'withdrawn',
@@ -458,7 +458,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
           )
 
           await admin.from('parent_notifications').insert(
-            otherRows.map((row) => ({
+            otherRows.map((row: any) => ({
               parent_id: application.parent_id,
               ecd_id: row.ecd_id,
               application_id: row.id,
@@ -470,7 +470,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
           )
 
           await admin.from('ecd_notifications').insert(
-            otherRows.map((row) => ({
+            otherRows.map((row: any) => ({
               ecd_id: row.ecd_id,
               application_id: row.id,
               title: 'Application withdrawn',

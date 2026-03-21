@@ -134,7 +134,7 @@ export function CommunicationsComposer({
       const { data: applications, error: appsError } = await appsQuery
       if (appsError) throw appsError
 
-      const parentIds = Array.from(new Set((applications ?? []).map((row) => row.parent_id).filter(Boolean)))
+      const parentIds = Array.from(new Set((applications ?? []).map((row: any) => row.parent_id).filter(Boolean)))
       if (parentIds.length === 0) {
         toast('No matching parents. Were you trying one parent only? Switch to Direct.')
         return

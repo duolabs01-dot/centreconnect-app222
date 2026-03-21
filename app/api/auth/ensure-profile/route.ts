@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
         .select('ecd_id')
         .eq('user_id', user.id)
 
-      const ecdIds = (memberships ?? []).map((row) => row.ecd_id).filter(Boolean) as string[]
+      const ecdIds = (memberships ?? []).map((row: any) => row.ecd_id).filter(Boolean) as string[]
       
       if (ecdIds.length > 0) {
         await admin

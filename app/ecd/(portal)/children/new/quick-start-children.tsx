@@ -87,7 +87,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
   const [isCreating, startCreateTransition] = useTransition()
 
   function updateQuickRow(id: string, patch: Partial<QuickAddRow>) {
-    setQuickRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)))
+    setQuickRows((current) => current.map((row: any) => (row.id === id ? { ...row, ...patch } : row)))
   }
 
   function updatePendingForm(childId: string, patch: Partial<ParentLinkFormState>) {
@@ -103,7 +103,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
   }
 
   function handleQuickCreate() {
-    const startedRows = quickRows.filter((row) =>
+    const startedRows = quickRows.filter((row: any) =>
       Boolean(
         row.first_name.trim() ||
           row.last_name.trim() ||
@@ -118,7 +118,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
       return
     }
 
-    const hasInvalidRow = startedRows.some((row) => !row.first_name.trim() || !row.last_name.trim())
+    const hasInvalidRow = startedRows.some((row: any) => !row.first_name.trim() || !row.last_name.trim())
     if (hasInvalidRow) {
       toast.error('Each child needs a first name and surname.')
       return
@@ -126,7 +126,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
 
     startCreateTransition(async () => {
       const result = await quickCreateChildrenAction({
-        children: startedRows.map((row) => ({
+        children: startedRows.map((row: any) => ({
           first_name: row.first_name.trim(),
           last_name: row.last_name.trim(),
           enrollment_start_date: quickStartDate,
@@ -145,7 +145,7 @@ export function QuickStartChildren({ centreName, classes, pendingParentChildren 
       setCreatedRows(created)
       setQuickRows(createQuickAddRows())
       setPendingRows((current) => [
-        ...created.map((row) => ({
+        ...created.map((row: any) => ({
           id: row.id,
           first_name: row.firstName,
           last_name: row.lastName,

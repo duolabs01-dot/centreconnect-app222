@@ -60,7 +60,7 @@ export async function publishAnnouncementAction(input: PublishAnnouncementInput)
       .eq('ecd_id', ecdId)
       .in('status', ['approved', 'enrolled'])
 
-    const parentIds = Array.from(new Set((eligibleApps ?? []).map((row) => row.parent_id).filter(Boolean)))
+    const parentIds = Array.from(new Set((eligibleApps ?? []).map((row: any) => row.parent_id).filter(Boolean)))
     const { data: centre } = await session.supabase
       .from('ecd_centres')
       .select('slug,name,email')

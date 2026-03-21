@@ -49,7 +49,7 @@ export default function SessionsPage() {
     let cancelled = false
     setLoading(true)
     getActiveSessions(profile.id)
-      .then((data) => {
+      .then((data: any) => {
         if (!cancelled) setSessions(data)
       })
       .catch(() => {
@@ -124,7 +124,7 @@ export default function SessionsPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {sessions.map((session) => {
+          {sessions.map((session: any) => {
             const Icon = getDeviceIcon(session.device_hint)
             // We cannot directly compare tokens because we only store a hash; instead, mark current by last_seen recency and token presence
             const isCurrent = currentSessionToken && session.last_seen_at === sessions[0]?.last_seen_at

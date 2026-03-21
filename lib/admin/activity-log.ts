@@ -139,7 +139,7 @@ async function shouldSendFailureAlert(
     return true
   }
 
-  const hasRecentMarker = (data ?? []).some((row) => {
+  const hasRecentMarker = (data ?? []).some((row: any) => {
     const markerKey = readAlertKey(row.details)
     if (markerKey !== alertKey) return false
     const markerTs = Date.parse(String(row.created_at))

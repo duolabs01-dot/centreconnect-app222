@@ -99,7 +99,7 @@ export default async function ReportCardsPage() {
         },
       ]
     }),
-    ...((enrolledRows ?? []) as EnrolledRow[]).flatMap((row) => {
+    ...((enrolledRows ?? []) as EnrolledRow[]).flatMap((row: any) => {
       const child = normalizeOne(row.children)
       const childId = child?.id ?? row.child_id
       if (!childId || seenChildIds.has(childId)) return []

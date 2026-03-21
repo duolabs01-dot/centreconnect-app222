@@ -75,7 +75,7 @@ export default async function AiUploadPage() {
       .limit(400),
   ])
 
-  const imports = ((importsData ?? []) as RegisterImportRow[]).map((row) => normalizeImportRow(row))
+  const imports = ((importsData ?? []) as RegisterImportRow[]).map((row: any) => normalizeImportRow(row))
   const childOptions = ((childrenData ?? []) as ChildRow[]).map((child) => ({
     id: child.id,
     name: displayChildName(child),

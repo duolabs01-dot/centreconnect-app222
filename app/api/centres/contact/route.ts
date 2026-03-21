@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unable to locate centre staff right now.' }, { status: 500 })
   }
 
-  const adminIds = (admins ?? []).map((row) => row.user_id).filter(Boolean)
+  const adminIds = (admins ?? []).map((row: any) => row.user_id).filter(Boolean)
   const participantIds = Array.from(new Set([user.id, ...adminIds]))
 
   const { data: existingThread } = await admin

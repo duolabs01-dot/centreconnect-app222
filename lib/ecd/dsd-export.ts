@@ -256,14 +256,14 @@ export async function getDsdExportData(input: {
   const useApplications = applicationRows.length > 0
 
   const allChildIds = useApplications
-    ? applicationRows.map((row) => String(row.child_id ?? (normalizeOne(row.children as any) as any)?.id ?? ''))
-    : directChildRows.map((row) => String(row.id))
+    ? applicationRows.map((row: any) => String(row.child_id ?? (normalizeOne(row.children as any) as any)?.id ?? ''))
+    : directChildRows.map((row: any) => String(row.id))
 
   const classIds = Array.from(
     new Set(
       (useApplications
-        ? applicationRows.map((row) => normalizeOne(row.children as any)).map((child) => normalizeText((child as Record<string, unknown> | null)?.class_id as string | null, ''))
-        : directChildRows.map((row) => normalizeText(row.class_id as string | null, ''))
+        ? applicationRows.map((row: any) => normalizeOne(row.children as any)).map((child) => normalizeText((child as Record<string, unknown> | null)?.class_id as string | null, ''))
+        : directChildRows.map((row: any) => normalizeText(row.class_id as string | null, ''))
       ).filter(Boolean)
     )
   )
@@ -283,7 +283,7 @@ export async function getDsdExportData(input: {
   ])
 
   const classMap = new Map(
-    ((classRows ?? []) as Array<{ id: string; name: string | null; age_group: string | null }>).map((row) => [
+    ((classRows ?? []) as Array<{ id: string; name: string | null; age_group: string | null }>).map((row: any) => [
       String(row.id),
       row,
     ])
@@ -292,7 +292,7 @@ export async function getDsdExportData(input: {
   let children: DsdEnrolledChild[]
 
   if (useApplications) {
-    children = applicationRows.map((row) => {
+    children = applicationRows.map((row: any) => {
       const child = normalizeOne(row.children as any) as Record<string, unknown> | null
       const parent = normalizeOne(row.parents as any) as Record<string, unknown> | null
       const parentProfile = normalizeOne((parent?.user_profiles ?? null) as any) as Record<string, unknown> | null
@@ -316,7 +316,7 @@ export async function getDsdExportData(input: {
       }
     })
   } else {
-    children = directChildRows.map((row) => {
+    children = directChildRows.map((row: any) => {
       const classId = normalizeText(row.class_id as string | null, '')
       const classMeta = classId ? classMap.get(classId) : null
       return {
@@ -367,7 +367,7 @@ export async function getDsdExportData(input: {
     summary.attendanceRate = summary.totalRecorded > 0 ? Math.round((attended / summary.totalRecorded) * 100) : 0
   }
 
-  const compliance = ((complianceRows ?? []) as Array<Record<string, unknown>>).map((row) => ({
+  const compliance = ((complianceRows ?? []) as Array<Record<string, unknown>>).map((row: any) => ({
     id: String(row.id),
     documentType: String(row.document_type ?? ''),
     label: normalizeText(row.label as string | null, 'Compliance document'),

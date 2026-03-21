@@ -695,7 +695,7 @@ export async function bulkCreateExistingChildrenAction(
     return { success: false, message: error.message || 'Failed to create child profiles.' }
   }
 
-  const createdIds = (inserted ?? []).map((row) => String(row.id))
+  const createdIds = (inserted ?? []).map((row: any) => String(row.id))
 
   // Auto-sync birthdays for created children
   if (createdIds.length > 0) {

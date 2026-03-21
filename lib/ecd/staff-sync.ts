@@ -95,7 +95,7 @@ export async function syncPortalMemberToStaffRecord(input: {
   const rowsResult = typeof query.limit === 'function' ? await query.limit(200) : await query
   const rows = ((rowsResult.data ?? []) as Array<{ id: string; first_name: string | null; surname: string | null; role: string | null }>)
 
-  const existing = rows.find((row) => buildStaffNameKey({ firstName: row.first_name, surname: row.surname }) === matchKey) ?? null
+  const existing = rows.find((row: any) => buildStaffNameKey({ firstName: row.first_name, surname: row.surname }) === matchKey) ?? null
 
   if (existing) {
     const { error } = await input.db
