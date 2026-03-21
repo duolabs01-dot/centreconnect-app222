@@ -258,7 +258,7 @@ export default function ApplicationDetailClient({
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'applications', filter: `id=eq.${id}` },
-        (payload) => {
+        (payload: any) => {
           const nextApplication = payload.new as {
             status?: string
             offer_accepted_at?: string | null
@@ -288,7 +288,7 @@ export default function ApplicationDetailClient({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'application_status_history', filter: `application_id=eq.${id}` },
-        (payload) => {
+        (payload: any) => {
           const nextHistory = payload.new as {
             new_status?: string
             created_at?: string
@@ -310,7 +310,7 @@ export default function ApplicationDetailClient({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
+        (payload: any) => {
           const nextNotification = payload.new as {
             application_id?: string | null
             title?: string
