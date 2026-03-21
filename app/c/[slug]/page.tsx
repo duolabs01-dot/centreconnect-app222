@@ -357,9 +357,10 @@ async function loadCentreMetadata(slugCandidates: string[]): Promise<MetadataCen
   return null
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const normalizedSlug = normalizeCentreSlug(params.slug)
-  const slugCandidates = resolveCentreSlugCandidates(params.slug)
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const normalizedSlug = normalizeCentreSlug(slug)
+  const slugCandidates = resolveCentreSlugCandidates(slug)
   const centre = await loadCentreMetadata(slugCandidates)
 
   if (!centre) return { title: 'Creche Not Found' }
@@ -370,7 +371,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     openGraph: {
       images: [
         {
-          url: `/api/og/centre/${normalizedSlug ?? params.slug}`,
+          url: `/api/og/centre/${normalizedSlug ?? slug}`,
           width: 1200,
           height: 630,
           alt: centre.name,
@@ -394,15 +395,16 @@ export default async function CentrePage({
   params,
   searchParams,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
   searchParams?: { preview?: string | string[] }
 }) {
-  const normalizedSlug = normalizeCentreSlug(params.slug)
+  const { slug } = await params
+  const normalizedSlug = normalizeCentreSlug(slug)
   if (!normalizedSlug) {
     notFound()
   }
 
-  const slugCandidates = resolveCentreSlugCandidates(params.slug)
+  const slugCandidates = resolveCentreSlugCandidates(slug)
   const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
   if (!previewRequested) {
     const payload = await loadCentrePagePayload(slugCandidates)
