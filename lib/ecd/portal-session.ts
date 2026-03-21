@@ -1,5 +1,4 @@
 import 'server-only'
-import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -177,20 +176,10 @@ async function resolveEcdPortalSession(): Promise<EcdPortalSession | null> {
   }
 }
 
-const getEcdPortalSessionCached = cache(resolveEcdPortalSession)
-
 type SessionOptions = {
   cached?: boolean
 }
 
-export async function getEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession | null> {
-  return options.cached === false ? await resolveEcdPortalSession() : await getEcdPortalSessionCached()
-}
-
 export async function requireEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession> {
-  const session = await getEcdPortalSession(options)
+  const session = await resolveEcdPortalSession()
   if (!session) {
-    redirect('/ecd/login')
-  }
-  return session
-}
