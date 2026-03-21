@@ -77,7 +77,7 @@ function extractNumberedNameCandidates(rawText: string) {
 function normalizeCandidateName(value: string) {
   return value
     .replace(/^\s*\d{1,3}[\).:\-\s]+/, '')
-    .replace(/[|â€¢Â·]/g, ' ')
+    .replace(/[|•·]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
 }

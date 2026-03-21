@@ -395,7 +395,7 @@ export default async function EcdBillingPage() {
                   >
                     <p className="text-sm font-bold text-slate-900">{ticket.ticket_number}</p>
                     <p className="mt-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {ticket.status} â€¢ {formatDate(ticket.created_at)}
+                      {ticket.status} • {formatDate(ticket.created_at)}
                     </p>
                   </div>
                 ))}
