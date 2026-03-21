@@ -183,3 +183,7 @@ type SessionOptions = {
 export async function requireEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession> {
   const session = await resolveEcdPortalSession()
   if (!session) {
+    redirect('/ecd/login')
+  }
+  return session
+}
