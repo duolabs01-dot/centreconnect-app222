@@ -125,3 +125,9 @@
 - LESSON: Official DOE/DSD exports must read from the canonical staff records table, not from live portal-login members merged at render time.
   RULE: Use `ecd_staff` as the export source of truth and sync portal invites/role changes into that table as a separate step.
   PREVENTION: If a login profile has an incomplete or one-word name, skip auto-sync rather than fabricating a placeholder employee row in a government report.
+
+- LESSON: A stale helper signature in one route/action can survive refactors and only surface at build time.  RULE: When a shared helper changes, grep the repo for every old call pattern before shipping.  PREVENTION: Run a focused search for deprecated argument shapes (cached: false, old option bags) any time portal-session logic changes.
+
+
+- LESSON: NextRequest no longer exposes request.ip in our build target, so route code must use a shared IP helper instead.  RULE: Never read client IP directly off NextRequest.  PREVENTION: Standardize on getClientIp(request) for auth, middleware, and session logging paths.
+

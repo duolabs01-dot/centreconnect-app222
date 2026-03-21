@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate } from '@/lib/utils'
-import { requireMinTier } from '@/lib/ecd/require-tier'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { markEcdNotificationsReadAction } from './actions'
 import { CommunicationsComposer } from './composer'
 import { DirectMessagePanel } from './direct-message-panel'
@@ -101,7 +101,7 @@ export default async function EcdCommunicationsPage({
 }: {
   searchParams?: { recipient?: string; contextType?: string; contextId?: string; tab?: string; q?: string }
 }) {
-  const { user, ecdId, role } = await requireMinTier('standard')
+  const { user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
 
   const requestedParentId = String(searchParams?.recipient ?? '').trim() || null

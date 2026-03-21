@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
+import { getClientIp } from '@/lib/security/request-context'
 import { enqueueParentWelcomeSequence } from '@/lib/notifications/parent-welcome-sequence'
 import { sendPlatformAdminActionNotification } from '@/lib/email/platform-admin-action-notification'
 import { resolveProvisionRole, syncAuthUserMetadataRole } from '@/lib/auth/provision-role'
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession()
     
     if (session?.access_token) {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      const ip = getClientIp(request)
       const city = request.headers.get('x-vercel-ip-city')
       const country = request.headers.get('x-vercel-ip-country')
       const region = city && country ? `${city}, ${country}` : country || 'unknown'
@@ -245,6 +246,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
 }
-
-
 

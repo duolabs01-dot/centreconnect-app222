@@ -43,14 +43,14 @@ const planNarratives: Record<PublicPlan, PlanNarrative> = {
   starter: {
     emoji: '🌱',
     summary: 'A simple, beautiful first step online.',
-    bestFor: 'Smaller centres ready to digitise daily admin and present professionally to parents.',
-    spotlight: 'You get attendance, child records, and a professional listing — without the complexity.',
+    bestFor: 'Smaller centres that want parents to find them and apply without WhatsApp chaos.',
+    spotlight: 'You get your public profile, applications, messages, and clean child intake in one place.',
   },
   growth: {
     emoji: '🚀',
     summary: 'The everyday package for busy crèches.',
-    bestFor: 'Centres ready to fill spaces faster and keep parents updated automatically.',
-    spotlight: 'You add admissions pipelines, messages, and calendar — full centre management in one place.',
+    bestFor: 'Centres that want admissions plus daily operations to feel calmer.',
+    spotlight: 'You add attendance, calendar routines, reminders, and daily tracking on top of the parent-facing basics.',
   },
   pro: {
     emoji: '💎',
@@ -97,17 +97,14 @@ const workflowSteps = [
 ] as const
 
 const comparisonRows = [
-  { label: 'Professional parent-facing centre listing', starter: true, growth: true, pro: true },
-  { label: 'Daily attendance register', starter: true, growth: true, pro: true },
-  { label: 'Child profiles and records', starter: true, growth: true, pro: true },
-  { label: 'Safe pickup management', starter: true, growth: true, pro: true },
-  { label: 'Parent applications pipeline', starter: false, growth: true, pro: true },
-  { label: 'Announcements and parent messages', starter: false, growth: true, pro: true },
-  { label: 'Calendar and daily routines', starter: false, growth: true, pro: true },
-  { label: 'Attendance reports and summaries', starter: false, growth: true, pro: true },
-  { label: 'DOE monthly compliance reports', starter: false, growth: false, pro: true },
-  { label: 'Team and staff management', starter: false, growth: false, pro: true },
-  { label: 'Priority onboarding and support', starter: false, growth: false, pro: true },
+  { label: 'Public centre profile', starter: true, growth: true, pro: true },
+  { label: 'Online parent applications', starter: true, growth: true, pro: true },
+  { label: 'Announcements and parent messages', starter: true, growth: true, pro: true },
+  { label: 'Attendance register', starter: false, growth: true, pro: true },
+  { label: 'Calendar and routines', starter: false, growth: true, pro: true },
+  { label: 'Daily operational tracking', starter: false, growth: true, pro: true },
+  { label: 'Richer website sections', starter: false, growth: false, pro: true },
+  { label: 'Priority onboarding help', starter: false, growth: false, pro: true },
 ] as const
 
 function statusLabel(isRegistered: boolean) {
@@ -243,7 +240,7 @@ export default async function ForCentresPage() {
       <Section id="plans" className="py-10 md:py-12" containerClassName="cc-section">
         <div className="mb-6 space-y-2">
           <Badge className="w-fit border-amber-200 bg-amber-50 text-amber-800 shadow-none hover:bg-amber-50">
-            Pilot programme: onboarding fee waived until 30 April 2026 🎉
+            Pilot programme: onboarding fee waived until end of next month 🎉
           </Badge>
           <Badge className="w-fit border-cyan-200 bg-cyan-50 text-cyan-800 shadow-none hover:bg-cyan-50">
             Simple pricing ✨
@@ -375,17 +372,14 @@ export default async function ForCentresPage() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div className="space-y-2">
             <Badge className="w-fit border-emerald-200 bg-emerald-50 text-emerald-800 shadow-none hover:bg-emerald-50">
-              Active platform centres 🎉
+              Real centres live now 🎉
             </Badge>
-            <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">These centres are live on CentreConnect.</h2>
+            <h2 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Parents are already seeing centres on CentreConnect.</h2>
             <p className="max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-              All {centres.length} of these centres use CentreConnect daily — parents can discover them, apply, and connect with them through the platform. Browse the full directory to also see centres listed but not yet active on the platform.
+              This is not a concept page. These are real listings that parents can discover, view, and apply to.
             </p>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="text-2xl font-black text-slate-950">{centres.length}</p>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">active centres</p>
-          </div>
+          <p className="text-sm font-semibold text-slate-500">{centres.length} live centres</p>
         </div>
 
         {centres.length === 0 ? (

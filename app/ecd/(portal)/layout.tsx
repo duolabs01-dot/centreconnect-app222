@@ -150,7 +150,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         className="flex-1 overflow-y-auto bg-card md:ml-72 [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80"
       >
         <EcdMainScrollMemory />
-        <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-20 sm:px-6 md:pb-10 md:pt-12 lg:px-8 xl:px-10">
+        <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-24 sm:px-6 md:pb-10 md:pt-12 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
           {showBreadcrumbs ? (
             <AppBreadcrumbs

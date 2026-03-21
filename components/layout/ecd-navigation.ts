@@ -30,27 +30,29 @@ export type EcdNavItem = Record<'href', string> & {
 }
 
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
-  // HOME — all tiers
+  // 1 — HOME
   { href: '/ecd/dashboard',     label: 'Home',       icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
 
-  // CHILDREN — all tiers
+  // 2 — CHILDREN (replaces Children + DOE Report + Report Cards)
   { href: '/ecd/children',      label: 'Children',   icon: Users,           group: 'daily_ops', supervisorAllowed: true },
 
-  // ATTENDANCE — STARTER gets this now (it's the core value — replaces paper registers)
+  // 3 — ATTENDANCE (replaces Attendance + Pickup as primary; pickup accessible from attendance)
   { href: '/ecd/attendance',    label: 'Attendance', icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
 
-  // REPORTS — Growth+ only (built on attendance data)
-  { href: '/ecd/daily-reports', label: 'Reports',    icon: Zap,             group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  // 4 — REPORTS (replaces Daily Reports + Report Cards)
+  { href: '/ecd/daily-reports', label: 'Reports',    icon: Zap,             group: 'daily_ops', supervisorAllowed: true },
 
-  // ADMISSIONS — Growth+ only
-  { href: '/ecd/applications',  label: 'Admissions', icon: ClipboardList,   group: 'grow',      supervisorAllowed: true, minTier: 'standard' },
+  // 5 — ADMISSIONS (replaces Applications/Pipeline + Messages)
+  { href: '/ecd/applications',  label: 'Admissions', icon: ClipboardList,   group: 'grow',      supervisorAllowed: true },
 
-  // MESSAGES — Growth+ only
-  { href: '/ecd/communications', label: 'Messages',  icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true, minTier: 'standard' },
+  // 6 — MESSAGES
+  { href: '/ecd/communications',label: 'Messages',   icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true },
 
-  // SETTINGS — admin only (all tiers see settings, no tier gate)
-  { href: '/ecd/profile',       label: 'Settings',   icon: Settings2,       group: 'settings',  adminOnly: true },
+  // 7 — SETTINGS (account, billing, security + support)
+  { href: '/ecd/profile',       label: 'Settings',      icon: Settings2,       group: 'settings',  adminOnly: true },
 
-  // DOE EXPORT — Pro only (DOE compliance reporting is a premium feature)
-  { href: '/ecd/dsd-export',   label: 'DOE Export', icon: FileCheck,       group: 'admin',     adminOnly: true, minTier: 'premium' },
+  // 8 — DOE EXPORT (highly visible for compliance — keep top-level)
+  { href: '/ecd/dsd-export',    label: 'DOE Export', icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
 ]
+
+

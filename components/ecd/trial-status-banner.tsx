@@ -54,70 +54,39 @@ export function TrialStatusBanner({ subscription, className }: TrialStatusBanner
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Your plan</p>
-          <p className="flex items-center gap-2 text-lg font-black text-slate-900">
-            <span className={cn(
-              'rounded-xl px-2.5 py-0.5 text-sm font-black',
-              tier === 'standard' ? 'bg-teal-100 text-teal-700' :
-              tier === 'premium' ? 'bg-purple-100 text-purple-700' :
-              'bg-slate-100 text-slate-700'
-            )}>
-              {planLabel}
-            </span>
-            <span className="text-sm font-bold text-slate-500">
-              R{monthlyPrice > 0 ? monthlyPrice : '0'}/month
-            </span>
-            {isTrial && (
-              <span className="rounded-xl border border-amber-300 bg-amber-100 px-2 py-0.5 text-xs font-black text-amber-700">
-                Trial
-              </span>
-            )}
-            {!isTrial && status !== 'active' && (
-              <span className={cn(
-                'rounded-xl border px-2 py-0.5 text-xs font-black',
-                status === 'past_due' ? 'border-rose-300 bg-rose-100 text-rose-700' :
-                'border-slate-300 bg-slate-100 text-slate-600'
-              )}>
-                {statusCopy(status)}
-              </span>
-            )}
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Current package</p>
+          <p className="mt-1 text-sm font-black">
+            {planLabel} | {statusCopy(status)} {monthlyPrice > 0 ? `| R${monthlyPrice}/month` : '| R0/month'}
           </p>
           {isTrial ? (
-            <p className="text-xs font-semibold text-amber-700">
+            <p className="mt-1 text-xs font-semibold">
               {trialDaysRemaining === null
-                ? 'Trial active — no charge yet.'
+                ? 'Trial active.'
                 : trialDaysRemaining === 0
-                  ? 'Trial ends today. Add payment to continue.'
-                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} left — add payment method now.`}
+                  ? 'Trial ends today.'
+                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} left in trial.`}
             </p>
           ) : null}
         </div>
         <Link
           href="/ecd/billing"
           className={cn(
-            'inline-flex h-9 items-center justify-center rounded-xl border px-4 text-xs font-bold transition-colors',
+            'inline-flex h-8 items-center justify-center rounded-xl border px-3 text-xs font-bold transition-colors',
             isTrial
               ? 'border-amber-300 text-amber-900 hover:bg-amber-100'
               : 'border-teal-300 text-teal-900 hover:bg-teal-100'
           )}
         >
-          {isTrial ? 'Add payment' : 'Manage billing'}
+          View billing
         </Link>
       </div>
-
-      {/* Feature pills */}
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-        {included.slice(0, 4).map((feature) => (
-          <span key={feature} className="text-[11px] font-medium opacity-80">
-            · {feature}
+        {included.slice(0, 3).map((feature) => (
+          <span key={feature} className="text-[11px] font-medium opacity-90">
+            - {feature}
           </span>
         ))}
-        {included.length > 4 && (
-          <span className="text-[11px] font-medium text-teal-600 opacity-80">
-            +{included.length - 4} more
-          </span>
-        )}
       </div>
     </div>
   )

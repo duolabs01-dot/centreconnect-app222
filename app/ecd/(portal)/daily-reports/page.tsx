@@ -1,6 +1,6 @@
 ﻿// app/ecd/(portal)/daily-reports/page.tsx
 import type { Metadata } from 'next'
-import { requireMinTier } from '@/lib/ecd/require-tier'
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { DailyReportsClient } from './daily-reports-client'
 
@@ -26,7 +26,7 @@ function toDateString(value: Date) {
 }
 
 export default async function EcdDailyReportsPage() {
-  const { supabase, user, ecdId, role } = await requireMinTier('standard')
+  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
   const todayUtc = new Date(Date.UTC(year, month - 1, day))

@@ -46,7 +46,7 @@ export async function requestCancellationAction(formData: FormData) {
 
 export async function saveFinancialSnapshotAction(formData: FormData) {
   const session = await requireEcdPortalSession({ cached: false })
-  if (session.role !== 'ecd_admin') return { error: 'Only centre admins can update financial snapshots.' }
+  if (session.role === 'ecd_staff') return
 
   const parsed = financialSnapshotSchema.safeParse({
     period_month: String(formData.get('period_month') ?? '').trim(),
@@ -77,33 +77,27 @@ export async function saveFinancialSnapshotAction(formData: FormData) {
 
 export async function beginPaymentMethodUpdateAction() {
   const session = await requireEcdPortalSession({ cached: false })
-  if (session.role !== 'ecd_admin') return { error: 'Only centre admins can update payment details.' }
+  if (session.role !== 'ecd_admin') return
 
-  const { data: centre } = await session.supabase
-    .from('ecd_centres').select('id,email').eq('id', session.ecdId).maybeSingle()
+  const { data: centre } = await session.supabase.from('ecd_centres').select('id,email').eq('id', session.ecdId).maybeSingle()
   const customerEmail = centre?.email?.trim() || session.user.email?.trim() || null
-  if (!customerEmail) return { error: 'No email found. Add a contact email in Settings.' }
+  if (!customerEmail) return
 
   const updateAmount = (() => {
     const parsed = Number(process.env.PAYSTACK_PAYMENT_METHOD_UPDATE_AMOUNT_ZAR)
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 5
+    if (!Number.isFinite(parsed) || parsed <= 0) return 5
+    return parsed
   })()
 
-  let payment: Awaited<ReturnType<typeof initializePaystackPaymentMethodUpdate>> | null = null
-  try {
-    payment = await initializePaystackPaymentMethodUpdate({
-      ecdId: session.ecdId,
-      customerEmail,
-      initiatedByUserId: session.user.id,
-      amountZar: updateAmount,
-      metadata: { source: 'ecd_billing_self_serve' },
-    })
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Payment could not be started. Please try again.'
-    return { error: message }
-  }
-
-  if (!payment?.authorizationUrl) return { error: 'No payment URL received. Please try again.' }
+  const payment = await initializePaystackPaymentMethodUpdate({
+    ecdId: session.ecdId,
+    customerEmail,
+    initiatedByUserId: session.user.id,
+    amountZar: updateAmount,
+    metadata: {
+      source: 'ecd_billing_self_serve',
+    },
+  })
 
   const admin = createAdminClient()
   await admin.from('billing_payment_method_updates').insert({
