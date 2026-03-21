@@ -576,7 +576,7 @@ export async function extractExistingChildrenFromPhotoAction(
   formData: FormData
 ): Promise<ExtractExistingChildrenFromPhotoResult> {
   try {
-    const session = await getEcdPortalSession({ cached: false })
+    const session = await getEcdPortalSession()
     if (!session?.ecdId) {
       return { success: false, message: 'ECD session not found.' }
     }
@@ -1182,13 +1182,4 @@ export async function saveTempChildProfileAndInviteParentAction(
     parentOnboardingUrl,
   }
 }
-
-
-
-
-
-
-
-
-
 
