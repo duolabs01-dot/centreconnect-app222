@@ -17,7 +17,7 @@ function normalizeTier(value: string | undefined): 'basic' | 'standard' | 'premi
 
 export async function POST(
   request: Request,
-  context: { params: { id?: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const identity = await requirePlatformAdmin(request)
   if (!identity) {

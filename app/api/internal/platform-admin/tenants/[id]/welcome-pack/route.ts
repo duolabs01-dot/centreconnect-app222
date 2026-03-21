@@ -6,7 +6,7 @@ import { writeInviteLog } from '@/lib/admin/invite-logs'
 
 export async function POST(
   request: Request,
-  context: { params: { id?: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const identity = await requirePlatformAdmin(request)
   if (!identity) {

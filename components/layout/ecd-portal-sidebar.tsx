@@ -303,7 +303,8 @@ export function EcdPortalSidebar({
             </Fragment>
           ) : null}
         </nav>
-        <div className="mt-8 shrink-0 space-y-4 rounded-[2rem] border border-border bg-card p-6 shadow-[var(--shadow-elevation-1)]">
+        {/* Bottom card — tier, WhatsApp, sign out */}
+        <div className="mt-8 shrink-0 space-y-2 rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)]">
           <div className="flex flex-col gap-1">
             {centreName && (
               <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
@@ -315,25 +316,7 @@ export function EcdPortalSidebar({
 
           <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
-            <p className="mt-1 text-sm font-bold text-foreground">{tierLabel}</p>
-            <p className="mt-1 text-xs text-slate-500">Billing and website controls follow this plan.</p>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Link
-              href="/ecd/profile"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Settings
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-            <Link
-              href="/ecd/billing"
-              className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-card px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
-            >
-              Billing
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            <p className="mt-1 text-sm font-black text-teal-700">Plan: {tierLabel}</p>
           </div>
 
           <div className="space-y-2 pt-1">
