@@ -6,7 +6,7 @@ import { requireSupabasePublicEnv } from './env'
 export async function createClient() {
   requireConfiguredAppUrl()
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('server-client')
 
   return createServerClient(
