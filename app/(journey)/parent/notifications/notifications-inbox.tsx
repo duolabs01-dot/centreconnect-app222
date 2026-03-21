@@ -140,7 +140,7 @@ export function NotificationsInbox({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
+        (payload: any) => {
           const next = payload.new as {
             id?: string
             title?: string
