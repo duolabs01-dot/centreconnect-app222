@@ -3,6 +3,7 @@ import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { registerSession } from '@/lib/session-guard'
+import { getClientIp } from '@/lib/security/request-context'
 import {
   resolveProvisionRole,
   syncAuthUserMetadataRole,
@@ -221,7 +222,7 @@ export async function GET(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
     if (session?.access_token) {
-      const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+      const ip = getClientIp(request)
       const city = request.headers.get('x-vercel-ip-city')
       const country = request.headers.get('x-vercel-ip-country')
       const region = city && country ? `${city}, ${country}` : country || 'unknown'
@@ -284,6 +285,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(buildRedirectUrl('/login?error=confirmation-failed', request))
   }
 }
-
-
 
