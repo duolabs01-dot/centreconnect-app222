@@ -137,7 +137,7 @@ function parseRegisterNames(extraction: AiExtractionPayload) {
 export async function POST(request: Request) {
   let stage = 'session'
   try {
-    const session = await getEcdPortalSession({ cached: false })
+    const session = await getEcdPortalSession()
     if (!session?.ecdId) {
       return NextResponse.json({ success: false, message: 'ECD session not found.' }, { status: 401 })
     }
@@ -219,3 +219,4 @@ export async function POST(request: Request) {
     )
   }
 }
+
