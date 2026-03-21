@@ -30,9 +30,9 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
 ]
 
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_ops: '',
-  admin: '',
-  grow: '',
+  daily_ops: 'Daily Ops',
+  admin: 'Admin', 
+  grow: 'Grow',
   settings: '',
 }
 
@@ -55,6 +55,16 @@ function writeSavedSidebarScroll(value: number) {
   } catch {
     // Ignore storage write issues (private browsing / quota).
   }
+}
+
+/** Derive initials from a centre name for the avatar. */
+function centreInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('')
 }
 
 export function EcdPortalSidebar({
@@ -236,7 +246,7 @@ export function EcdPortalSidebar({
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden h-screen w-60 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
         {/* Header */}
         <div className="px-4 mb-3">
@@ -302,39 +312,61 @@ export function EcdPortalSidebar({
           ) : null}
         </nav>
 
-        {/* Bottom — tier badge, WhatsApp, sign out */}
-        <div className="mt-4 shrink-0 rounded-2xl border border-slate-100 bg-slate-50/80 px-4 py-3 space-y-2">
-          {centreName && (
-            <p className="truncate text-[11px] font-black text-teal-700">{centreName}</p>
+        {/* Bottom footer — slim, premium */}
+        <div className="mt-4 shrink-0 space-y-2.5 px-3 py-3">
+
+          {/* Centre identity with avatar */}
+          {(centreName || userEmail) && (
+            <div className="flex items-center gap-2.5 px-1">
+              {centreName && (
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-teal-500/30 bg-teal-500/15 text-[10px] font-black text-teal-700">
+                  {centreInitials(centreName)}
+                </div>
+              )}
+              <div className="min-w-0">
+                {centreName && (
+                  <p className="truncate text-[11px] font-semibold leading-tight text-teal-800">
+                    {centreName}
+                  </p>
+                )}
+                {userEmail && (
+                  <p className="truncate text-[10px] leading-tight text-slate-400">{userEmail}</p>
+                )}
+              </div>
+            </div>
           )}
 
-          {/* Tier badge — links to billing */}
+          {/* Plan badge */}
           <Link
             href="/ecd/billing"
-            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-semibold text-slate-600 transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-1.5 transition-colors hover:border-teal-200 hover:bg-teal-50"
           >
-            <span className="font-black uppercase tracking-[0.14em] text-slate-400">Plan</span>
-            <span className="flex items-center gap-1">
-              <span className="inline-flex items-center rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-black text-teal-700">{tierLabel}</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-400">Plan</span>
+            <span className="flex items-center gap-1.5">
+              <span className="rounded-md bg-teal-100 px-2 py-0.5 text-[9px] font-black text-teal-700">
+                {tierLabel}
+              </span>
               <ArrowRight className="h-3 w-3 text-slate-400" />
             </span>
           </Link>
 
-          {/* WhatsApp support */}
-          <Link
-            href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 py-1.5 text-[11px] font-bold text-white shadow-sm transition-transform hover:scale-[1.01] active:scale-[0.99]"
-          >
-            <span>💬</span>
-            WhatsApp
-          </Link>
+          {/* Support + Sign out side by side */}
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-1.5 text-[11px] font-semibold text-emerald-700 transition-all hover:bg-emerald-500/18"
+            >
+              <span className="text-[13px]">💬</span>
+              Support
+            </Link>
 
-          <SignOutButton
-            redirectTo="/"
-            className="w-full rounded-xl border border-slate-200 bg-white py-1.5 text-[11px] font-semibold text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-          />
+            <SignOutButton
+              redirectTo="/"
+              className="w-full rounded-xl border border-slate-200 bg-white py-1.5 text-[11px] font-semibold text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+            />
+          </div>
         </div>
       </aside>
     </>
