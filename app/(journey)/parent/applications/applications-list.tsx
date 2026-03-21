@@ -229,7 +229,7 @@ export function ApplicationsList({
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'applications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
+        (payload: any) => {
           const nextRow = payload.new as {
             id?: string
             status?: string
@@ -258,7 +258,7 @@ export function ApplicationsList({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'application_status_history' },
-        (payload) => {
+        (payload: any) => {
           const nextHistory = payload.new as { application_id?: string; new_status?: string }
           if (!nextHistory.application_id || !knownApplicationIdsRef.current.has(nextHistory.application_id)) return
           if (nextHistory.new_status) {
@@ -270,7 +270,7 @@ export function ApplicationsList({
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'parent_notifications', filter: `parent_id=eq.${parentId}` },
-        (payload) => {
+        (payload: any) => {
           const nextNotification = payload.new as {
             application_id?: string | null
             title?: string
