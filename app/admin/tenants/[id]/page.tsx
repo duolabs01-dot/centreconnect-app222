@@ -32,7 +32,7 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-type PageProps = { params: { id: string } }
+type PageProps = { params: Promise<{ id: string }> }
 
 export default async function AdminTenantDetailPage({ params }: PageProps) {
   const supabase = await createClient()

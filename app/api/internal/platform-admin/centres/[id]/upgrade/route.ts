@@ -17,14 +17,14 @@ function normalizeTier(value: string | undefined): 'basic' | 'standard' | 'premi
 
 export async function POST(
   request: Request,
-  context: { params: { id?: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   const identity = await requirePlatformAdmin(request)
   if (!identity) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  const centreId = context.params.id
+  const { id: centreId } = await context.params
   if (!centreId) {
     return NextResponse.json({ error: 'Missing centre id' }, { status: 400 })
   }
