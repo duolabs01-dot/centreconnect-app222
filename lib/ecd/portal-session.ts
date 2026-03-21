@@ -180,6 +180,10 @@ type SessionOptions = {
   cached?: boolean
 }
 
+export async function getEcdPortalSession(): Promise<EcdPortalSession | null> {
+  return await resolveEcdPortalSession()
+}
+
 export async function requireEcdPortalSession(options: SessionOptions = {}): Promise<EcdPortalSession> {
   const session = await resolveEcdPortalSession()
   if (!session) {
