@@ -104,9 +104,9 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   let centre: CentreRecord | null = null
 
   try {
-    centre = await getCentreByIdentifier(params.identifier)
+    centre = await getCentreByIdentifier((await params).identifier)
   } catch (error) {
-    console.error('Apply page failed for identifier:', params.identifier, error)
+    console.error('Apply page failed for identifier:', (await params).identifier, error)
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
         <Card className="border-slate-200">

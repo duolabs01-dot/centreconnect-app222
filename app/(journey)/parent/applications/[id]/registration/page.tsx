@@ -40,12 +40,12 @@ export default async function ParentApplicationRegistrationPage({ params }: Page
   const { data: application } = await supabase
     .from('applications')
     .select('id,status,offer_accepted_at,start_date,ecd_centres(name,suburb),children(id,first_name,last_name,date_of_birth,gender,allergies,medical_conditions,doctor_name,medical_aid_number,emergency_contact_name,emergency_contact_phone,special_needs_notes,intake_documents),parents(alt_phone,guardian_relationship,emergency_contact_name,emergency_contact_phone,medical_aid_name,medical_aid_number,address,user_profiles(full_name,phone))')
-    .eq('id', params.id)
+    .eq('id', (await params).id)
     .eq('parent_id', user.id)
     .maybeSingle()
 
   if (!application) notFound()
-  if (application.status !== 'enrolled' && !application.offer_accepted_at) redirect(`/parent/applications/${params.id}`)
+  if (application.status !== 'enrolled' && !application.offer_accepted_at) redirect(`/parent/applications/${(await params).id}`)
 
   const centre = normalizeOne((application as any).ecd_centres)
   const child = normalizeOne((application as any).children)
@@ -85,7 +85,7 @@ export default async function ParentApplicationRegistrationPage({ params }: Page
     <main className="min-h-screen bg-surface-secondary pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-5 sm:px-6 sm:py-8">
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <Link href={`/parent/applications/${params.id}`} className="inline-flex items-center gap-2 font-semibold text-emerald-700 hover:text-emerald-800">
+          <Link href={`/parent/applications/${(await params).id}`} className="inline-flex items-center gap-2 font-semibold text-emerald-700 hover:text-emerald-800">
             <ArrowLeft className="h-4 w-4" />
             Back to application
           </Link>
@@ -98,7 +98,7 @@ export default async function ParentApplicationRegistrationPage({ params }: Page
           <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">{centreName} accepted {childName}. Complete this once so the centre has the health, emergency, and guardian details they need from day one.</p>
         </section>
 
-        <form action={`/api/parent/applications/${params.id}/registration`} method="post" className="space-y-6">
+        <form action={`/api/parent/applications/${(await params).id}/registration`} method="post" className="space-y-6">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <h2 className="text-lg font-bold text-slate-900">Learner details</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export default async function ParentApplicationRegistrationPage({ params }: Page
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm leading-6 text-slate-500">CentreConnect keeps these details linked to {clean(child.first_name) || 'your child'} so pickup, daily updates, and admissions stay in one place.</p>
-            <div className="flex gap-3"><Button type="button" variant="outline" className="rounded-2xl" asChild><Link href={`/parent/applications/${params.id}`}>Cancel</Link></Button><Button type="submit" className="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700">{submittedAt ? 'Save changes' : 'Submit registration'}</Button></div>
+            <div className="flex gap-3"><Button type="button" variant="outline" className="rounded-2xl" asChild><Link href={`/parent/applications/${(await params).id}`}>Cancel</Link></Button><Button type="submit" className="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700">{submittedAt ? 'Save changes' : 'Submit registration'}</Button></div>
           </div>
         </form>
       </div>

@@ -45,7 +45,7 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  const tenantId = params.id
+  const tenantId = (await params).id
   const [centreResult, adminsResult, invitationsResult, appsResult, analyticsResult, ticketResult, activityResult, adminTaskResult] = await Promise.all([
     admin
       .from('ecd_centres')

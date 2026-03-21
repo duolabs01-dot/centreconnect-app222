@@ -105,7 +105,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       children (first_name, last_name, intake_documents),
       application_status_history (new_status, created_at, notes)
     `)
-    .eq('id', params.id)
+    .eq('id', (await params).id)
     .eq('parent_id', user.id)
     .single()
 
