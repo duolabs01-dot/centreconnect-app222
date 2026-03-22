@@ -302,3 +302,70 @@ html.lite-mode img {
 html[data-app-shell] {
   overscroll-behavior-x: none;
 }
+
+/* ===== PRINT STYLES — prevent table cutoff ===== */
+@media print {
+  /* Allow page breaks inside flex/grid children */
+  .overflow-x-auto,
+  .overflow-x-clip,
+  .overflow-hidden {
+    overflow: visible !important;
+  }
+
+  /* Keep tables on one page — never split across pages */
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr,
+  .overflow-x-auto > *,
+  [class*="overflow-"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid breaking right before a row */
+  tr {
+    break-before: avoid;
+    page-break-before: avoid;
+  }
+
+  /* Avoid breaking inside table headers */
+  thead {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Ensure table containers don't clip */
+  div[class*="rounded"] {
+    overflow: visible !important;
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  /* Hide navigation, sidebars, action buttons in print */
+  nav,
+  aside,
+  .sidebar,
+  button,
+  a[role="button"],
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  /* Reset background and ensure text is dark for print */
+  body {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+    max-width: 100% !important;
+  }
+
+  /* Ensure cards/sections don't clip */
+  section,
+  main,
+  div {
+    overflow: visible !important;
+  }
+}
