@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. Generate invoices and notify parents
-  const results = []
+  const results: { childId: string; success: boolean; error?: string; invoiceId?: string }[] = []
   const lastDayOfMonth = new Date(year, month, 0).toISOString().split('T')[0]
 
   for (const app of newApplications) {
