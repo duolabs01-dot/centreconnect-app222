@@ -94,68 +94,37 @@ export default async function DsdExportPage({
         dangerouslySetInnerHTML={{
           __html: `
             @media print {
-              /* Hide everything in the portal */
-              body > * { display: none !important; }
-
-              /* Show only the print region */
+              @page { size: A4; margin: 12mm 10mm; }
+              * { visibility: hidden !important; }
               #doe-print-region,
-              #doe-print-region * {
-                display: revert !important;
-                visibility: visible !important;
-              }
-
-              /* Position the print region to fill the page */
+              #doe-print-region * { visibility: visible !important; }
               #doe-print-region {
-                position: fixed !important;
+                position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
                 width: 100% !important;
+                padding: 0 !important;
                 margin: 0 !important;
-                padding: 12mm 10mm !important;
                 background: white !important;
                 color: black !important;
                 font-family: Arial, sans-serif !important;
                 font-size: 11px !important;
               }
-
-              /* Page setup */
-              @page {
-                size: A4;
-                margin: 12mm 10mm;
-              }
-
-              /* Tables must not break mid-row */
-              tr { page-break-inside: avoid; }
-
-              /* Section headers with dark background */
-              .doe-section-title {
+              .print-hide { display: none !important; visibility: hidden !important; }
+              .doe-dark-bg {
                 background: #1e293b !important;
                 color: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
-
-              /* Total rows with dark background */
-              .doe-total-row {
-                background: #1e293b !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-
-              /* Borders must print */
-              table, th, td {
-                border-color: #94a3b8 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-
-              /* Header background cells */
+              table { border-collapse: collapse !important; width: 100% !important; }
               th {
                 background: #f1f5f9 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
+              tr { page-break-inside: avoid !important; }
+              thead { display: table-header-group !important; }
             }
           `,
         }}
@@ -255,7 +224,7 @@ export default async function DsdExportPage({
 
               {/* Places of Care Table */}
               <div>
-                <div className="mb-1 rounded-t-xl bg-slate-900 px-4 py-2 doe-section-title">
+                <div className="mb-1 rounded-t-xl bg-slate-900 px-4 py-2 doe-section-title doe-dark-bg">
                   <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white">Places of Care (Crèche)</p>
                 </div>
                 <div className="overflow-x-auto rounded-b-xl border border-slate-300">
@@ -311,7 +280,7 @@ export default async function DsdExportPage({
 
           {/* SECTION 2 — Classification of Income per Beneficiaries (pages 2/3) */}
           <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none mb-6">
-            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title doe-dark-bg">
               <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
                 <Users className="h-4 w-4 text-cyan-400" />
                 Classification of Income per Beneficiaries — Summary of Beneficiaries, Partial Care Facility (Crèches)
@@ -443,7 +412,7 @@ export default async function DsdExportPage({
 
           {/* SECTION 4 — Breakdown of Staff & Management (page 6 of PDF) */}
           <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none mb-6">
-            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title doe-dark-bg">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
                   <Briefcase className="h-4 w-4 text-cyan-400" />
@@ -518,7 +487,7 @@ export default async function DsdExportPage({
           {/* SECTION 5 — Grand Total of Beneficiaries (page 11 of PDF) */}
           <div className="grid gap-6 sm:grid-cols-2 mb-6">
             <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
-              <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title">
+              <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title doe-dark-bg">
                 <CardTitle className="text-sm font-black uppercase tracking-widest text-white">
                   Grand Total of Beneficiaries
                 </CardTitle>
@@ -560,7 +529,7 @@ export default async function DsdExportPage({
 
             {/* ── Practitioners List (DSD format, page 8 of PDF) ── */}
             <Card className="rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none">
-              <CardHeader className="border-b border-slate-200 bg-slate-800 py-3 doe-section-title">
+              <CardHeader className="border-b border-slate-200 bg-slate-800 py-3 doe-section-title doe-dark-bg">
                 <CardTitle className="text-sm font-black uppercase tracking-widest text-white">
                   Teachers / Practitioners List
                 </CardTitle>
