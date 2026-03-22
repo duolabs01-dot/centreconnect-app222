@@ -627,47 +627,29 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Role</p>
-              <p className="mt-1 text-lg font-bold text-slate-900">{role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}</p>
-              <p className="mt-1 text-xs text-slate-500">Manage settings, billing, and support from one place.</p>
+              <p className="mt-1 text-sm font-bold text-slate-900">{role === 'ecd_admin' ? 'ECD Admin' : role === 'ecd_supervisor' ? 'ECD Supervisor' : 'ECD Staff'}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tier</p>
-              <p className="mt-1 text-lg font-bold text-teal-700">{tierLabel}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                {subscription?.status ? 'Subscription status: ' + subscription.status : 'No active subscription record yet.'}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                {subscription?.monthly_price != null ? 'R' + subscription.monthly_price + '/month' : 'Open Billing to confirm the active plan.'}
-              </p>
+              <p className="mt-1 text-sm font-bold text-teal-700">{tierLabel}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Payment method</p>
               {paymentMethod ? (
-                <>
-                  <p className="mt-1 flex items-center gap-2 text-sm font-bold text-slate-900">
-                    <CreditCard className="h-4 w-4 shrink-0 text-slate-400" />
-                    {paymentMethod.card_type ?? 'Card'} •••• {paymentMethod.last4 ?? '----'}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {paymentMethod.bank ?? 'Bank'} · Exp {paymentMethod.exp_month ?? '--'}/{paymentMethod.exp_year ?? '--'}
-                  </p>
-                </>
+                <p className="mt-1 flex items-center gap-1.5 text-sm font-bold text-slate-900">
+                  <CreditCard className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                  {paymentMethod.card_type ?? 'Card'} •••• {paymentMethod.last4 ?? '----'}
+                </p>
               ) : (
-                <>
-                  <p className="mt-1 text-sm font-bold text-slate-900">No saved card yet</p>
-                  <p className="mt-1 text-xs text-slate-500">Open Billing to add or refresh card details.</p>
-                </>
+                <p className="mt-1 text-sm font-bold text-slate-400">None saved</p>
               )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm">
               <Link href="/ecd/billing">Open Billing <ArrowRight className="ml-2 h-4 w-4" /></Link>
-            </Button>
-            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-              <Link href="/ecd/sessions">Device Sessions <ArrowRight className="ml-2 h-4 w-4" /></Link>
             </Button>
           </div>
         </CardContent>
@@ -722,7 +704,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
+        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
           <CardHeader className="bg-slate-50/50">
             <CardTitle className="text-base font-bold">Location & Address</CardTitle>
           </CardHeader>
@@ -969,7 +951,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                           <input
                             type="hidden"
                             name="can_publish_announcements"
-                            value={member.can_publish_announcements ? 'true' : 'false'}
+                            value={member.can_publish_announcements ? 'false' : 'true'}
                           />
                           <Button
                             type="submit"
@@ -994,7 +976,7 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
                           <input
                             type="hidden"
                             name="can_publish_announcements"
-                            value={member.can_publish_announcements ? 'false' : 'true'}
+                            value={member.can_publish_announcements ? 'true' : 'false'}
                           />
                           <Button
                             type="submit"

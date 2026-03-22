@@ -40,10 +40,10 @@ export default async function AdminUsersPage() {
     .order('created_at', { ascending: false })
 
   const { data: authUsers } = await admin.auth.admin.listUsers()
-  const userMap = new Map(authUsers.users.map((u) => [u.id, u]) as [string, unknown][])
+  const userMap = new Map(authUsers.users.map((u) => [u.id, u]))
 
   const ecdAdminRows = (ecdAdminProfiles ?? []).map((p) => {
-    const auth = userMap.get(p.id)
+    const auth = userMap.get(p.id) as { email?: string; last_sign_in_at?: string } | undefined
     const ecdInfo = Array.isArray(p.ecd_admins) ? p.ecd_admins[0] : p.ecd_admins
     const centreName = (ecdInfo as any)?.ecd_centres?.name
     const tier = (ecdInfo as any)?.ecd_centres?.subscriptions?.[0]?.tier

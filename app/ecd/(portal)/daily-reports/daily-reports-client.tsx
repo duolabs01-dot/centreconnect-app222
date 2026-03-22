@@ -391,13 +391,13 @@ export function DailyReportsClient({
   return (
     <>
       <div className="space-y-6">
-        <section className="hidden lg:flex lg:items-end lg:justify-between">
+        <section className="hidden lg:flex lg:items-end lg:justify-between min-w-0">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-600">Daily Reporting</p>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Daily Reports</h1>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 shrink-0 min-w-0">
               {reportTabs.map((tab) => (
                 <button
                   key={tab.key}
