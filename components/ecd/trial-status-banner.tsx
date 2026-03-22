@@ -41,29 +41,26 @@ export function TrialStatusBanner({ subscription, className }: TrialStatusBanner
   const status = normalizeSubscriptionStatus(subscription?.status, 'trial')
   const planLabel = getInternalTierLabel(tier)
   const monthlyPrice = Number(subscription?.monthlyPrice ?? getInternalTierDefinition(tier).monthlyPrice)
-  const included = getInternalTierDefinition(tier).includes
   const trialDaysRemaining = getTrialDaysRemaining(subscription?.trialEndsAt)
   const isTrial = status === 'trial'
 
   return (
     <div
       className={cn(
-        'rounded-2xl border px-3 py-2.5 shadow-sm',
+        'rounded-xl border px-2.5 py-2 shadow-sm',
         isTrial ? 'border-amber-200/80 bg-amber-50/80 text-amber-900' : 'border-teal-200/80 bg-teal-50/80 text-teal-900',
         className
       )}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Package</p>
-            <p className="text-xs font-bold">
-              {planLabel} · {statusCopy(status)} {monthlyPrice > 0 ? `· R${monthlyPrice}/mo` : '· Free'}
-            </p>
-          </div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Pkg</span>
+          <span className="text-xs font-bold">
+            {planLabel} · {statusCopy(status)}{monthlyPrice > 0 ? ` · R${monthlyPrice}/mo` : ''}
+          </span>
           {isTrial && trialDaysRemaining !== null && (
             <span className={cn(
-              'inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold',
+              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold',
               trialDaysRemaining <= 1 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
             )}>
               {trialDaysRemaining === 0 ? 'Trial ends today' : `${trialDaysRemaining}d left`}
@@ -73,7 +70,7 @@ export function TrialStatusBanner({ subscription, className }: TrialStatusBanner
         <Link
           href="/ecd/billing"
           className={cn(
-            'inline-flex h-7 items-center justify-center rounded-lg border px-2.5 text-[10px] font-semibold transition-colors',
+            'inline-flex h-6 items-center justify-center rounded-lg border px-2 text-[9px] font-semibold transition-colors',
             isTrial
               ? 'border-amber-300/60 text-amber-800 hover:bg-amber-100/60'
               : 'border-teal-300/60 text-teal-800 hover:bg-teal-100/60'

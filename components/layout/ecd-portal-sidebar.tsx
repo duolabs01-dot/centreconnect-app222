@@ -153,14 +153,14 @@ export function EcdPortalSidebar({
 
     if (item.comingSoon) {
       return (
-        <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50 px-3.5 py-2" aria-disabled="true">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
+        <div key={item.href} className="group relative flex items-center gap-2.5 rounded-xl border border-border bg-slate-50 px-3 py-2" aria-disabled="true">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-200 text-slate-500">
             <item.icon className="h-4 w-4 shrink-0" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-bold tracking-tight text-slate-700">{item.label}</p>
+            <p className="truncate text-[13px] font-semibold text-slate-700">{item.label}</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500">
+          <span className="inline-flex items-center rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-medium text-slate-500">
             Soon
           </span>
         </div>
@@ -179,19 +179,19 @@ export function EcdPortalSidebar({
           }
         }}
         className={cn(
-          'group relative flex items-center gap-2.5 rounded-2xl px-3.5 py-2 text-[13px] font-bold tracking-tight transition-colors duration-200',
+          'group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-medium transition-all duration-200',
           active
-            ? 'border border-teal-200 bg-teal-50/90 text-teal-900 shadow-sm'
-            : 'border border-transparent text-slate-700 hover:border-teal-100 hover:bg-teal-50/60 hover:text-teal-800'
+            ? 'bg-gradient-to-r from-teal-500/10 to-transparent border border-teal-200/50 text-teal-900'
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
         )}
         aria-current={active ? 'page' : undefined}
       >
         <div
           className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-xl transition-colors',
+            'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
             active
-              ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'
-              : 'bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-700'
+              ? 'bg-teal-600 text-white shadow-md shadow-teal-900/20'
+              : 'bg-slate-100 text-slate-500 group-hover:bg-teal-50 group-hover:text-teal-700'
           )}
         >
           <item.icon className="h-4 w-4 shrink-0" />
@@ -199,26 +199,26 @@ export function EcdPortalSidebar({
         <div className="min-w-0 flex-1">
           <p className="truncate">{item.label}</p>
           {applicationInsight ? (
-            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-semibold text-teal-700">
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-medium text-teal-600">
               <Sparkles className="h-3 w-3 shrink-0" />
               {applicationInsight}
             </p>
           ) : null}
         </div>
         {badgeCount > 0 ? (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-black text-white ring-2 ring-white">
+          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white ring-2 ring-white">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         ) : null}
-        {active ? <div className="absolute left-0 h-6 w-1 rounded-r-full bg-teal-600" /> : null}
+        {active ? <div className="absolute left-0 h-5 w-0.5 rounded-r-full bg-teal-500" /> : null}
       </Link>
     )
   }
 
   return (
     <>
-      {/* Mobile Top Header - Unified with Parent view */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
+      {/* Mobile Top Header */}
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card/95 backdrop-blur px-4 md:hidden">
         <div className="flex items-center gap-3">
           <MobileNavMenu
             items={visibleNav}
@@ -231,102 +231,97 @@ export function EcdPortalSidebar({
           <BrandMark compact className="brightness-100" />
         </div>
         <div className="flex items-center gap-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-teal-600">{roleLabel}</p>
         </div>
       </div>
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-slate-200/60 bg-card px-5 py-5 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden h-screen w-64 shrink-0 overflow-y-auto border-r border-slate-200/60 bg-card px-4 py-4 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
-        <div className="px-3 mb-4">
+        {/* Header */}
+        <div className="px-2 pb-4">
           <BrandMark compact className="brightness-100" />
           <div className="mt-3 flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-semibold text-teal-600">{roleLabel}</span>
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-100 text-[10px] font-medium text-slate-500">{tierLabel}</span>
+            <span className="inline-flex items-center rounded-full bg-teal-50/80 border border-teal-100/50 px-2 py-0.5 text-[10px] font-medium text-teal-700">{roleLabel}</span>
           </div>
         </div>
-        <nav className="mt-1 space-y-1" aria-label="ECD portal navigation">
+
+        {/* Divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4" />
+
+        {/* Navigation */}
+        <nav className="space-y-0.5" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
-            <Fragment key={bucket.group}>
-              <p className="mb-2 mt-4 px-3 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+            <div key={bucket.group} className="mb-4">
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
                 {GROUP_LABELS[bucket.group]}
               </p>
               {bucket.items.map((item) => renderNavItem(item))}
-            </Fragment>
+            </div>
           ))}
 
           {comingSoonItems.length > 0 ? (
-            <Fragment>
-              <div className="my-4 px-3">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-              </div>
-              <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+            <div className="mb-4">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent my-4" />
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
                 Coming Soon
               </p>
               {comingSoonItems.map((item) => renderNavItem(item))}
-            </Fragment>
-          ) : null}
-
-          {settingsItem ? (
-            <Fragment>
-              <div className="my-4 px-3">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-              </div>
-              <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
-                {GROUP_LABELS.settings}
-              </p>
-              {renderNavItem(settingsItem)}
-            </Fragment>
+            </div>
           ) : null}
 
           {lockedByTier.length > 0 ? (
-            <Fragment>
-              <div className="my-4 px-3">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-              </div>
-              <p className="mb-2 px-3 text-[10px] font-black uppercase tracking-[0.25em] text-slate-400/80">
+            <div className="mb-4">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent my-4" />
+              <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
                 Upgrade to unlock
               </p>
               {lockedByTier.map((item) => (
-                <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50/80 px-3.5 py-2 opacity-80">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                <div key={item.href} className="group relative flex items-center gap-2.5 rounded-xl border border-border bg-slate-50/80 px-3 py-2 opacity-60">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
                     <item.icon className="h-4 w-4 shrink-0" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold tracking-tight text-slate-600">{item.label}</p>
+                    <p className="truncate text-[13px] font-medium text-slate-600">{item.label}</p>
                     <p className="text-[10px] font-medium text-slate-400">Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'}</p>
                   </div>
                   <Lock className="h-4 w-4 text-slate-400 shrink-0" />
                 </div>
               ))}
-            </Fragment>
+            </div>
           ) : null}
         </nav>
-        {/* Bottom card — compact tier badge, WhatsApp, sign out */}
-        <div className="mt-auto pt-4 shrink-0 space-y-2">
-          <div className="flex items-center justify-between gap-2 px-1">
-            <div className="min-w-0">
-              {centreName && (
-                <p className="truncate text-xs font-semibold text-slate-700">{centreName}</p>
-              )}
-              <p className="text-[10px] text-slate-400">{roleLabel}</p>
+
+        {/* Footer */}
+        <div className="mt-auto pt-4 space-y-2">
+          {/* Centre info */}
+          <div className="rounded-xl border border-slate-200/60 bg-slate-50/50 p-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                {centreName && (
+                  <p className="truncate text-xs font-semibold text-slate-800">{centreName}</p>
+                )}
+                <p className="text-[10px] text-slate-500 truncate">{userEmail}</p>
+              </div>
+              <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-100 px-2 py-0.5 text-[9px] font-semibold text-teal-700 shrink-0">
+                {tierLabel}
+              </span>
             </div>
-            <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-600 shrink-0">
-              {tierLabel}
-            </span>
           </div>
 
+          {/* WhatsApp support */}
           <Link
             href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2 text-xs font-semibold text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 transition-all hover:shadow-md"
+            className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-xs font-medium text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 transition-all hover:shadow-md"
           >
             <span>💬</span>
             WhatsApp support
           </Link>
 
+          {/* Sign out */}
           <SignOutButton
             redirectTo="/"
             className="w-full rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm py-2 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-white hover:border-slate-300 hover:shadow-sm"
