@@ -452,7 +452,7 @@ export default async function EcdCalendarPage({ searchParams }: CalendarPageProp
     if (endTime && !/^\d{2}:\d{2}$/.test(endTime)) return
     if (startTime && endTime && startTime > endTime) return
 
-    const events = []
+    const events: { ecd_id: string; title: string; description: string | null; event_date: string; start_time: string | null; end_time: string | null; is_public: boolean; created_by: string }[] = []
     const baseDate = new Date(eventDate)
     
     if (!repeat) {
