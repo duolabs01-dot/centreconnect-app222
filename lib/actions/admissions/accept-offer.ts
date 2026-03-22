@@ -51,22 +51,22 @@ export async function acceptOffer(applicationId: string): Promise<AcceptOfferRes
     .maybeSingle()
 
   if (refreshed) {
-    const childRaw = (refreshed as any).children
+    const childRaw = refreshed.children
     const child = Array.isArray(childRaw) ? childRaw[0] : childRaw
-    const parentRaw = (refreshed as any).parents
+    const parentRaw = refreshed.parents
     const parent = Array.isArray(parentRaw) ? parentRaw[0] : parentRaw
     const parentProfileRaw = parent?.user_profiles
     const parentProfile = Array.isArray(parentProfileRaw) ? parentProfileRaw[0] : parentProfileRaw
-    const centreRaw = (refreshed as any).ecd_centres
+    const centreRaw = refreshed.ecd_centres
     const centre = Array.isArray(centreRaw) ? centreRaw[0] : centreRaw
 
     const childName = `${child?.first_name ?? 'Child'} ${child?.last_name ?? ''}`.trim()
     const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
     const centreName = centre?.name ?? 'your creche'
 
-    await sendParentInAppAndWhatsappNotification(supabase as any, {
+    await sendParentInAppAndWhatsappNotification(supabase, {
       parent_id: user.id,
-      ecd_id: (refreshed as any).ecd_id,
+      ecd_id: refreshed.ecd_id as string,
       application_id: applicationId,
       template_key: 'offer_acceptance',
       title: 'Enrollment confirmed',
@@ -82,8 +82,8 @@ export async function acceptOffer(applicationId: string): Promise<AcceptOfferRes
       is_read: false,
     })
 
-    await sendEcdInAppAndEmailNotification(supabase as any, {
-      ecd_id: (refreshed as any).ecd_id,
+    await sendEcdInAppAndEmailNotification(supabase, {
+      ecd_id: refreshed.ecd_id as string,
       application_id: applicationId,
       title: 'Offer accepted',
       message: `A parent accepted the offer for ${childName}.`,

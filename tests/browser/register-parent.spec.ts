@@ -8,7 +8,7 @@ test.describe('Parent Onboarding Flow', () => {
 
     const timestamp = Date.now();
     const email = `test_parent_${timestamp}@example.com`;
-    const password = 'TestPassword123!';
+    // TODO: Replace with environment variable or test utility for password
     const firstName = 'Test';
     const lastName = `Parent_${timestamp}`;
 
