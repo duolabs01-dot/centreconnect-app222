@@ -702,7 +702,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold shadow-sm">Search</Button>
             </form>
 
-            <div className="hidden lg:flex flex-wrap gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-1.5">
+            <div className="hidden lg:flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
               {[
                 { key: 'pending', label: 'Pending', count: filteredCounts.pending },
                 { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
@@ -716,7 +716,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
                   key={tab.key}
                   href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
                   className={cn(
-                    "px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors",
+                    "shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap",
                     selectedTab === tab.key
                       ? "bg-white text-teal-700 shadow-sm border border-slate-100"
                       : "text-slate-500 hover:text-slate-900"
