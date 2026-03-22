@@ -13,9 +13,8 @@ import {
   normalizeCommunicationAutomationSettings,
   renderAutomationTemplate,
 } from '@/lib/communications/automation-settings'
-import { requireEcdPortalSession }
+import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createAdminClient } from '@/lib/supabase/admin' from '@/lib/ecd/portal-session'
 import { sendParentInAppNotification, toWhatsappHref } from '@/lib/notifications/multi-channel'
 
 const sendReminderSchema = z.object({

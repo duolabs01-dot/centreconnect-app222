@@ -397,7 +397,7 @@ export function DailyReportsClient({
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Daily Reports</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1">
               {reportTabs.map((tab) => (
                 <button
                   key={tab.key}
@@ -455,7 +455,7 @@ export function DailyReportsClient({
         <Card>
           <CardContent className="space-y-4 pt-6">
             <div className="flex flex-col gap-3 lg:hidden">
-              <div className="inline-flex w-full gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 lg:w-auto overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex flex-wrap gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 lg:w-auto">
                 {reportTabs.map((tab) => (
                   <button
                     key={tab.key}

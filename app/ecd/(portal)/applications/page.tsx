@@ -702,7 +702,7 @@ export default async function EcdApplicationsPage({ searchParams }: Applications
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold shadow-sm">Search</Button>
             </form>
 
-            <div className="flex w-full flex-nowrap gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="hidden lg:flex flex-wrap gap-2 rounded-2xl border border-slate-100 bg-slate-50 p-1.5">
               {[
                 { key: 'pending', label: 'Pending', count: filteredCounts.pending },
                 { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },

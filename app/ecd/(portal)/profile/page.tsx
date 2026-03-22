@@ -700,47 +700,6 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
 
         <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
           <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 pt-6">
-            <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 rounded-2xl shadow-sm">
-              <Link href="/ecd/website">Open Website Builder</Link>
-            </Button>
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-                <Link href="/ecd/billing">Open Billing</Link>
-              </Button>
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-                <Link href="/ecd/team-plans">Weekly Staff Plan</Link>
-              </Button>
-            </div>
-            {centre?.slug ? (
-              <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-                <Link href={`/centre/${centre.slug}`}>Invite Parents (Share Profile)</Link>
-              </Button>
-            ) : (
-              <Button variant="outline" disabled className="border-slate-200 text-slate-400 font-bold h-11 rounded-2xl">
-                Add a centre slug to invite parents
-              </Button>
-            )}
-            <Button variant="outline" asChild className="border-slate-200 text-slate-700 font-bold h-11 rounded-2xl">
-              <Link href="/ecd/dashboard">Back to Today</Link>
-            </Button>
-            <div className="mt-2 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-xs">
-              <p className="font-bold text-slate-900 uppercase tracking-widest text-[10px]">Public visibility</p>
-              <p className="mt-1.5 text-slate-500 font-medium">{centre?.is_active ? 'Visible on public pages' : 'Hidden from public pages'}</p>
-              <form action={setPublicVisibility} className="mt-3">
-                <input type="hidden" name="next_active" value={centre?.is_active ? 'false' : 'true'} />
-                <Button size="sm" type="submit" variant="outline" className="border-slate-200 text-slate-700 font-bold rounded-2xl w-full">
-                  {centre?.is_active ? 'Hide Public Profile' : 'Show Public Profile'}
-                </Button>
-              </form>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-          <CardHeader className="bg-slate-50/50">
             <CardTitle className="text-base font-bold">Crèche Basics</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -952,12 +911,12 @@ export default async function EcdProfilePage({ searchParams }: ProfilePageProps)
             <InviteStaffForm ecdId={ecdId} />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Portal access team</p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{(staffMembers ?? []).length}</p>
                 <p className="mt-1 text-xs text-slate-500">People who can log in and operate this centre.</p>
               </div>
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly report employees</p>
                 <p className="mt-1 text-2xl font-black text-slate-900">{officialStaffRecords.length}</p>
                 <p className="mt-1 text-xs text-slate-500">Official staff records used in DSD and DOE submissions.</p>
