@@ -116,7 +116,7 @@ export async function sendPlatformAdminActionNotification(input: PlatformAdminAc
   const subject = `[CentreConnect Admin] ${input.subject}`
   const { html } = buildHtml(input)
 
-  const results = []
+  const results: { recipient: string; ok: boolean; channel: string; error: string | null }[] = []
   for (const recipient of recipients) {
     results.push({
       recipient,
