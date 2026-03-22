@@ -125,6 +125,6 @@ export async function beginPaymentMethodUpdateAction(): Promise<PaymentMethodUpd
   })
 
   revalidatePath('/ecd/billing')
-  redirect(payment.authorizationUrl)
+  return { success: true, authorizationUrl: payment.authorizationUrl }
 }
 
