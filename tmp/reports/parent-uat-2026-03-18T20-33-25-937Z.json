@@ -1,0 +1,79 @@
+{
+  "suite": "parent-portal-hard-pass-smoke",
+  "status": "fail",
+  "startedAt": "2026-03-18T20:33:25.870Z",
+  "finishedAt": "2026-03-18T20:33:25.937Z",
+  "durationMs": 67,
+  "summary": {
+    "total": 16,
+    "passed": 15,
+    "failed": 1
+  },
+  "checks": [
+    {
+      "name": "Parent route matrix files exist",
+      "status": "pass"
+    },
+    {
+      "name": "Critical parent actions are still present",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use readiness bootstrap",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use friendly error mapping",
+      "status": "pass"
+    },
+    {
+      "name": "Parent submit-failure telemetry is wired for key parent forms",
+      "status": "pass"
+    },
+    {
+      "name": "Parent dashboard readiness card is wired with completion and CTA links",
+      "status": "pass"
+    },
+    {
+      "name": "Admin parent reliability monitor is platform-admin guarded with trend and recent failure views",
+      "status": "pass"
+    },
+    {
+      "name": "Admin dashboard parent audience surfaces reliability severity card with deep-link",
+      "status": "pass"
+    },
+    {
+      "name": "Child create path normalizes list fields for array DB columns",
+      "status": "pass"
+    },
+    {
+      "name": "Parent layout guardrails ensure parent bootstrap on entry",
+      "status": "pass"
+    },
+    {
+      "name": "Browser Supabase client remains singleton",
+      "status": "pass"
+    },
+    {
+      "name": "Bottom nav parent IA remains de-crowded",
+      "status": "pass"
+    },
+    {
+      "name": "Landing journey strip is non-overlapping and public shell keeps brand header",
+      "status": "pass"
+    },
+    {
+      "name": "Parent signup confirmation email template keeps inline-safe styling",
+      "status": "pass"
+    },
+    {
+      "name": "Scoreboard tracks parent UAT matrix/live-smoke progression and next active task",
+      "status": "fail",
+      "message": "The input did not match the regular expression /\\[(READY|DONE|ACTIVE)\\]\\s+`BL-PARENT-030`/. Input:\n\n'# Backlog Execution Scoreboard\\r\\n' +\n  '\\r\\n' +\n  'Last updated: 2026-03-18 (design audit cleared, ECD nav simplified, automated code gate green; live pilot data still blocking expansion)\\r\\n' +\n  'Owner: Founder\\r\\n' +\n  '\\r\\n' +\n  'This file is the live execution board for orchestrated Codex sessions.\\r\\n' +\n  'Rule: keep exactly one `Now` item active until its definition of done is met.\\r\\n' +\n  '\\r\\n' +\n  '## Snapshot\\r\\n' +\n  '\\r\\n' +\n  '- Objective: Clear the final production-readiness gate for the 20-creche pilot expansion.\\r\\n' +\n  '- Current bottleneck: Sakhisizwe still has `onboarding_complete = false` with `child_count = 0`, and the authenticated realtime/browser checks still need staging verification.\\r\\n' +\n  '- Active lane: `pilot expansion readiness`\\r\\n' +\n  '\\r\\n' +\n  '## Now\\r\\n' +\n  '\\r\\n' +\n  '- [ACTIVE] `BL-PILOT-020` `platform` Fix Sakhisizwe activation through product surfaces and rerun the live pilot-centre readiness check.\\r\\n' +\n  '  - Why: Code is green, but the pilot cannot honestly expand while one named pilot centre is incomplete in live data.\\r\\n' +\n  '  - Definition of done:\\r\\n' +\n  '    - Sakhisizwe shows `is_active = true`, `onboarding_complete = true`, `child_count > 0`, and `admin_count > 0`.\\r\\n' +\n  '    - Re-run the pilot-centre readiness query and record the passing result.\\r\\n' +\n  '    - Re-check the admin dashboard pilot cards after the data fix.\\r\\n' +\n  '  - Validation:\\r\\n' +\n  '    - read-only pilot-centre readiness query or Supabase SQL editor\\r\\n' +\n  '    - authenticated admin dashboard verification\\r\\n' +\n  '  - Est: 1-2h\\r\\n' +\n  '\\r\\n' +\n  '## Next\\r\\n' +\n  '\\r\\n' +\n  '- [READY] `BL-PILOT-021` `platform` Run authenticated staging realtime checks for ECD admissions, parent applications, parent notifications, and pilot admin cards.\\r\\n' +\n  '\\r\\n' +\n  '## Blocked\\r\\n' +\n  '\\r\\n' +\n  '- `BL-PILOT-021` Authenticated manual flows are blocked in this shell until founder/admin, ECD, and parent staging sessions are available.\\r\\n' +\n  '  - Unblock: sign into local or staging with the required roles and execute the Gate 3 checklist end-to-end.\\r\\n' +\n  '\\r\\n' +\n  '## Done This Week\\r\\n' +\n  '\\r\\n' +\n  '- [DONE] `BL-UX-012` Cleared final design audit warnings, added visible dialog close controls, normalized semantic color tokens, moved `/ecd/sessions` out of primary ECD nav, and corrected the April 2026 pilot-offer copy.\\r\\n' +\n  '\\r\\n' +\n  '- [DONE] `BL-PARENT-006` Parent hard-pass blockers fixed: Supabase browser singleton, parent bootstrap/upsert guardrails, child creation array-field fix, emergency/doc/profile mutation hardening, bottom-nav de-crowding, landing overlap fix, brand header restore, and parent signup confirmation email CSS refresh.\\r\\n' +\n  '- [DONE] `BL-PARENT-007` Scripted parent UAT smoke matrix shipped (`tests/qa/parent-portal-hard-pass-smoke.test.mjs`) and wired via `npm run test:parent-uat`.\\r\\n' +\n  '- [DONE] `BL-PARENT-008` Added live smoke runner for child create + emergency contact create (`scripts/run-parent-create-live-smoke.mjs`) with npm commands for dry/live runs.\\r\\n' +\n  '- [DONE] `BL-PARENT-009` Completed plain-English parent copy pass across profile/documents/security/emergency/support/dashboard surfaces and removed brittle copy assertions in parent smoke checks.\\r\\n' +\n  '- [DONE] `BL-PARENT-010` Added parent submit-failure telemetry (`route_path` + `failure_type`) across key parent forms with API ingestion and persistence migration.\\r\\n' +\n  '- [DONE] `BL-PARENT-011` Added parent smoke audit artifact output (`tmp/reports/parent-uat-*.json` + latest json/txt) while preserving non-zero exit on failures.\\r\\n' +\n  '- [DONE] `BL-PARENT-012` Added parent dashboard readiness health card with completion percentage and CTA links for missing setup actions.\\r\\n' +\n  '- [DONE] `BL-PARENT-013` Defined and activated the next concrete parent reliability slice (`BL-PARENT-014`) with scope and validation criteria.\\r\\n' +\n  '- [DONE] `BL-PARENT-014` Added platform-admin parent reliability monitor with 24h trend, route/failure-type summaries, and recent failure table.\\r\\n' +\n  '- [DONE] `BL-PARENT-015` Added parent reliability severity card on `/admin/dashboard` with 24h failure count, healthy/warning/critical badge, and deep-link to `/admin/parent-reliability`.\\r\\n' +\n  '- [DONE] `BL-PARENT-016` Added query-parameter triage controls on `/admin/parent-reliability` (`window` + `route`) with scoped cards/trends/hotspots and clear-filters control.\\r\\n' +\n  '- [DONE] `BL-PARENT-017` Updated dashboard parent reliability deep-link to carry `window=24h` context into reliability console and added regression assertions.\\r\\n' +\n  '- [DONE] `BL-PARENT-018` Added compact incident handoff summary on `/admin/parent-reliability` with active window, failure count, top route/type, and copy-ready snippet.\\r\\n' +\n  '- [DONE] `BL-PARENT-019` Added one-click copy action with feedback and prefilled WhatsApp share link for incident handoff summary.\\r\\n' +\n  '- [DONE] `BL-PARENT-020` Added summary-driven drill-in CTAs for top route and top failure type with preserved window/filter context.\\r\\n' +\n  '- [DONE] `BL-PARENT-021` Added trend delta indicator (up/down/flat + percentage) comparing first half vs second half of selected reliability window.\\r\\n' +\n  '- [DONE] `BL-PARENT-022` Added direct failure-type triage input and preserved `window` context on filter apply/clear flows.\\r\\n' +\n  '- [DONE] `BL-PARENT-023` Added one-click combined route+failure drill-in actions on hotspot pair cards with selected-window preservation.\\r\\n' +\n  '- [DONE] `BL-PARENT-024` Added one-click latest-incident combined drill-in action with selected-window preservation.\\r\\n' +\n  '- [DONE] `BL-PARENT-025` Added row-level combined route+failure drill-in actions in the recent failures table.\\r\\n' +\n  '- [DONE] `BL-PARENT-026` Added route-hotspot row drill-in actions with selected-window preservation.\\r\\n' +\n  '- [DONE] `BL-PARENT-027` Added failure-type hotspot row drill-in actions with selected-window preservation.\\r\\n' +\n  '- [DONE] `BL-PARENT-028` Added one-click per-filter clear chips for active route/failure triage context.\\r\\n' +\n  '- [DONE] `BL-PARENT-029` Added empty-state recovery CTAs (reset filters + alternate window) for faster no-result troubleshooting.\\r\\n' +\n  '- [DONE] `BL-REV-010` Removed stale manual status mutation controls from admin revenue operations UI.\\r\\n' +\n  '- [DONE] `BL-REL-003` Added persistence-backed throttling for activity-log failure alerts using marker entries.\\r\\n' +\n  '- [DONE] `BL-QA-003` Extended regression checks for activity-log forced-failure simulation and non-production guard.\\r\\n' +\n  '- [DONE] `BL-UX-010` Added read-only event-driven status guidance panel with incident/runbook links in Revenue Ops.\\r\\n' +\n  '- [DONE] `BL-UX-011` Applied mobile-first spacing and heading scale reductions on key landing, centre profile, and admin dashboard surfaces for Android-sized screens.\\r\\n' +\n  '- [DONE] `BL-OPS-006` Added one-click incident/runbook/audit deep-links to the Revenue Ops KPI summary panel.\\r\\n' +\n  '\\r\\n' +\n  '- [DONE] BL-ECD-012 Simplified ECD owner first-run flow: setup email first, welcome guide after password setup, clearer logged-out guide gate, and dashboard-oriented first-value messaging.\\r\\n' +\n  '- [DONE] BL-OPS-007 Added branded founder visibility alerts for key onboarding and growth milestones (ECD setup sent, owner invite resent, owner first password set, parent signup started, parent joined).\\r\\n'\n"
+    },
+    {
+      "name": "Parent live smoke command and script are wired",
+      "status": "pass"
+    }
+  ]
+}

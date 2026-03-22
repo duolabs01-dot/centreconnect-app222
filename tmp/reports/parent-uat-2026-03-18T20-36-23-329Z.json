@@ -1,0 +1,78 @@
+{
+  "suite": "parent-portal-hard-pass-smoke",
+  "status": "pass",
+  "startedAt": "2026-03-18T20:36:23.266Z",
+  "finishedAt": "2026-03-18T20:36:23.329Z",
+  "durationMs": 63,
+  "summary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "name": "Parent route matrix files exist",
+      "status": "pass"
+    },
+    {
+      "name": "Critical parent actions are still present",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use readiness bootstrap",
+      "status": "pass"
+    },
+    {
+      "name": "Parent write flows use friendly error mapping",
+      "status": "pass"
+    },
+    {
+      "name": "Parent submit-failure telemetry is wired for key parent forms",
+      "status": "pass"
+    },
+    {
+      "name": "Parent dashboard readiness card is wired with completion and CTA links",
+      "status": "pass"
+    },
+    {
+      "name": "Admin parent reliability monitor is platform-admin guarded with trend and recent failure views",
+      "status": "pass"
+    },
+    {
+      "name": "Admin dashboard parent audience surfaces reliability severity card with deep-link",
+      "status": "pass"
+    },
+    {
+      "name": "Child create path normalizes list fields for array DB columns",
+      "status": "pass"
+    },
+    {
+      "name": "Parent layout guardrails ensure parent bootstrap on entry",
+      "status": "pass"
+    },
+    {
+      "name": "Browser Supabase client remains singleton",
+      "status": "pass"
+    },
+    {
+      "name": "Bottom nav parent IA remains de-crowded",
+      "status": "pass"
+    },
+    {
+      "name": "Landing journey strip is non-overlapping and public shell keeps brand header",
+      "status": "pass"
+    },
+    {
+      "name": "Parent signup confirmation email template keeps inline-safe styling",
+      "status": "pass"
+    },
+    {
+      "name": "Scoreboard tracks parent UAT matrix/live-smoke progression and next active task",
+      "status": "pass"
+    },
+    {
+      "name": "Parent live smoke command and script are wired",
+      "status": "pass"
+    }
+  ]
+}
