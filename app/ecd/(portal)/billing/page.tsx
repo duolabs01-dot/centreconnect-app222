@@ -12,7 +12,8 @@ import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
-import { beginPaymentMethodUpdateAction, requestCancellationAction, saveFinancialSnapshotAction } from './actions'
+import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
+import { PaymentMethodUpdateButton } from './payment-method-update-button'
 
 export const metadata: Metadata = {
   title: 'Billing - CentreConnect',
@@ -221,15 +222,7 @@ export default async function EcdBillingPage() {
               </div>
             ) : null}
 
-            <form action={beginPaymentMethodUpdateAction}>
-              <Button
-                type="submit"
-                className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm"
-                disabled={role !== 'ecd_admin'}
-              >
-                Update Payment Method
-              </Button>
-            </form>
+            <PaymentMethodUpdateButton />
             <p className="text-xs text-slate-500">
               This opens a secure Paystack checkout. A small verification charge may apply and helps save your updated card authorization.
             </p>

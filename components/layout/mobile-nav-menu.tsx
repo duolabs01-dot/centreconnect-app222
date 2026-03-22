@@ -168,42 +168,33 @@ export function MobileNavMenu({
             </nav>
           </div>
 
-          <div className="shrink-0 p-4 border-t border-slate-50 bg-slate-50">
-            <div className="mb-4 space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current tier</p>
-                <p className="mt-1 text-sm font-bold text-slate-900">{tierLabel}</p>
-                <p className="mt-1 text-xs text-slate-500">Billing and website tools follow this plan.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href="/ecd/profile"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
-                >
-                  Settings
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+          <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50">
+            <div className="mb-4 rounded-xl border border-slate-100 bg-card p-3 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Plan</p>
+                  <p className="text-sm font-bold text-teal-700">{tierLabel}</p>
+                </div>
                 <Link
                   href="/ecd/billing"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                 >
                   Billing
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <a
-                href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 px-4 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>💬</span>
-                WhatsApp support
-              </a>
             </div>
+            <a
+              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-white shadow-sm mb-4"
+            >
+              <span>💬</span>
+              WhatsApp support
+            </a>
             {userEmail && (
               <div className="mb-4 px-2">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Account</p>

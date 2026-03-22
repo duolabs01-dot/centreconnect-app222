@@ -304,37 +304,34 @@ export function EcdPortalSidebar({
           ) : null}
         </nav>
         {/* Bottom card — tier, WhatsApp, sign out */}
-        <div className="mt-8 shrink-0 space-y-2 rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)]">
-          <div className="flex flex-col gap-1">
-            {centreName && (
-              <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
-            )}
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{roleLabel}</p>
-            <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
+        <div className="mt-auto pt-4 shrink-0 space-y-3">
+          <div className="rounded-2xl border border-slate-100 bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                {centreName && (
+                  <p className="truncate text-xs font-bold text-teal-700">{centreName}</p>
+                )}
+                <p className="text-[10px] font-medium text-slate-400">{roleLabel}</p>
+              </div>
+              <span className="inline-flex items-center rounded-full bg-teal-50 border border-teal-100 px-2.5 py-1 text-[10px] font-bold text-teal-700">
+                {tierLabel}
+              </span>
+            </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
-            <p className="mt-1 text-sm font-black text-teal-700">Plan: {tierLabel}</p>
-          </div>
-
-          <div className="space-y-2 pt-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
-            <Link
-              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span>💬</span>
-              WhatsApp support
-            </Link>
-          </div>
+          <Link
+            href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-600 transition-colors"
+          >
+            <span>💬</span>
+            WhatsApp support
+          </Link>
 
           <SignOutButton
             redirectTo="/"
-            className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:border-slate-300"
           />
         </div>
       </aside>
