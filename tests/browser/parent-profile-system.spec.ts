@@ -8,7 +8,7 @@ test.describe('Comprehensive Parent Profile Completion System', () => {
 
     const timestamp = Date.now();
     const email = `audit_parent_${timestamp}@example.com`;
-    const password = 'AuditPassword123!';
+    const password = process.env.TEST_USER_PASSWORD ?? 'AuditPassword123!';
 
     // 1. Setup: Register and get to onboarding
     await page.goto(`${BASE_URL}/register`);
