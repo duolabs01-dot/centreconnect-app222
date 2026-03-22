@@ -13,7 +13,9 @@ import {
   normalizeCommunicationAutomationSettings,
   renderAutomationTemplate,
 } from '@/lib/communications/automation-settings'
-import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdPortalSession }
+import { createAdminClient } from '@/lib/supabase/admin'
+import { createAdminClient } from '@/lib/supabase/admin' from '@/lib/ecd/portal-session'
 import { sendParentInAppNotification, toWhatsappHref } from '@/lib/notifications/multi-channel'
 
 const sendReminderSchema = z.object({
@@ -175,7 +177,7 @@ export async function sendIncompleteApplicationReminderAction(input: unknown): P
   const shouldExposeWhatsapp = channelIncludesWhatsapp(automationSettings.send_channel)
 
   if (shouldSendInApp) {
-    const notificationResult = await sendParentInAppNotification(session.supabase as any, {
+    const notificationResult = await sendParentInAppNotification(createAdminClient(), {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,

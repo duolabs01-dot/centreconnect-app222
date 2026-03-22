@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   sendEcdInAppAndEmailNotification,
   sendParentInAppAndWhatsappNotification,
@@ -156,7 +157,7 @@ export async function saveDailyReportAction(input: unknown): Promise<SaveDailyRe
       : 'Daily highlights are now available.'
     const parentMessage = `Daily report ready for ${childName} (${shortDate}). ${summaryLine}`
 
-    const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
+    const parentNotification = await sendParentInAppAndWhatsappNotification(createAdminClient(), {
       parent_id: child.parent_id,
       ecd_id: session.ecdId,
       application_id: application?.id ?? null,
@@ -187,7 +188,7 @@ export async function saveDailyReportAction(input: unknown): Promise<SaveDailyRe
       <p>Open Daily Reports to review or update.</p>
     `
 
-    const ecdNotification = await sendEcdInAppAndEmailNotification(session.supabase as any, {
+    const ecdNotification = await sendEcdInAppAndEmailNotification(createAdminClient(), {
       ecd_id: session.ecdId,
       application_id: application?.id ?? null,
       title: 'Daily report published',
