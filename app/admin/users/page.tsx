@@ -41,7 +41,7 @@ export default async function AdminUsersPage() {
 
   const { data: authUsers } = await admin.auth.admin.listUsers()
   const userMap = new Map<string, { email?: string; last_sign_in_at?: string }>(
-    authUsers.users.map((u: { id: string; email?: string; last_sign_in_at?: string }) => [u.id, u])
+    authUsers.users.map(u => [u.id, { email: u.email, last_sign_in_at: u.last_sign_in_at }] as const)
   )
 
   const ecdAdminRows = (ecdAdminProfiles ?? []).map((p) => {
