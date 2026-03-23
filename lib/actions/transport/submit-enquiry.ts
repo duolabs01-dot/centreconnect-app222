@@ -56,7 +56,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
     .select('user_id')
     .eq('ecd_id', parsed.data.ecd_id)
 
-  const adminIds = Array.from(new Set((admins ?? []).map((row: any) => row.user_id).filter(Boolean))
+  const adminIds = (admins ?? []).map((row: any) => row.user_id).filter((id: any): id is string => Boolean(id))
 
   if (adminIds.length) {
     await supabase.from('notifications').insert(
@@ -70,7 +70,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
       }))
     )
 
-    const participantIds = Array.from(new Set([user.id, ...adminIds])
+    const participantIds = [user.id, ...adminIds]
     const { data: thread } = await supabase
       .from('message_threads')
       .insert({
@@ -86,7 +86,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
       await supabase.from('messages').insert({
         thread_id: thread.id,
         sender_id: user.id,
-        body: ['Transport Quote Request', '', `Pickup address: ${parsed.data.pickup_address}`, parsed.data.notes ? `Notes: ${parsed.data.notes}` : ''].filter(Boolean).join('\n'),
+        body: ['Transport Quote Request', '', `Pickup address: ${parsed.data.pickup_address}`, parsed.data.notes ? `Notes: ${parsed.data.notes}` : ''].filter(Boolean).join('\n')
       })
     }
   }
