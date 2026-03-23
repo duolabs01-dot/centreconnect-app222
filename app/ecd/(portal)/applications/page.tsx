@@ -703,29 +703,31 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
               <Button type="submit" className="bg-teal-600 hover:bg-teal-700 text-white h-12 px-8 rounded-2xl font-bold shadow-sm">Search</Button>
             </form>
 
-            <div className="hidden lg:flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 shrink-0">
-              {[
-                { key: 'pending', label: 'Pending', count: filteredCounts.pending },
-                { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
-                { key: 'approved', label: 'Approved', count: filteredCounts.approved },
-                { key: 'enrolled', label: 'Enrolled', count: filteredCounts.enrolled },
-                { key: 'waitlisted', label: 'Waitlist', count: filteredCounts.waitlisted },
-                { key: 'rejected', label: 'Rejected', count: filteredCounts.rejected },
-                { key: 'withdrawn', label: 'Withdrawn', count: filteredCounts.withdrawn },
-              ].map((tab) => (
-                <Link
-                  key={tab.key}
-                  href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
-                  className={cn(
-                    "shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap",
-                    selectedTab === tab.key
-                      ? "bg-white text-teal-700 shadow-sm border border-slate-100"
-                      : "text-slate-500 hover:text-slate-900"
-                  )}
-                >
-                  {tab.label} ({tab.count})
-                </Link>
-              ))}
+            <div className="min-w-0 overflow-hidden">
+              <div className="hidden lg:flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto max-w-full [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                {[
+                  { key: 'pending', label: 'Pending', count: filteredCounts.pending },
+                  { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
+                  { key: 'approved', label: 'Approved', count: filteredCounts.approved },
+                  { key: 'enrolled', label: 'Enrolled', count: filteredCounts.enrolled },
+                  { key: 'waitlisted', label: 'Waitlist', count: filteredCounts.waitlisted },
+                  { key: 'rejected', label: 'Rejected', count: filteredCounts.rejected },
+                  { key: 'withdrawn', label: 'Withdrawn', count: filteredCounts.withdrawn },
+                ].map((tab) => (
+                  <Link
+                    key={tab.key}
+                    href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
+                    className={cn(
+                      "shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap",
+                      selectedTab === tab.key
+                        ? "bg-white text-teal-700 shadow-sm border border-slate-100"
+                        : "text-slate-500 hover:text-slate-900"
+                    )}
+                  >
+                    {tab.label} ({tab.count})
+                  </Link>
+                ))}
+              </div>
             </div>
 
             {selectedTab === 'pending' && blockedPendingApplications.length > 0 && (

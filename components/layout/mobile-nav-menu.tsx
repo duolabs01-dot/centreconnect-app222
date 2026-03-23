@@ -169,16 +169,16 @@ export function MobileNavMenu({
           </div>
 
           <div className="shrink-0 p-4 border-t border-slate-100 bg-slate-50">
-            <div className="mb-4 rounded-xl border border-slate-100 bg-card p-3 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Plan</p>
-                  <p className="text-sm font-bold text-teal-700">{tierLabel}</p>
+            <div className="mb-4 rounded-xl border border-slate-100 bg-card p-2.5 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Plan</p>
+                  <p className="text-sm font-bold text-teal-700 truncate">{tierLabel}</p>
                 </div>
                 <Link
                   href="/ecd/billing"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-slate-50 shrink-0"
                 >
                   Billing
                   <ArrowRight className="h-3 w-3" />

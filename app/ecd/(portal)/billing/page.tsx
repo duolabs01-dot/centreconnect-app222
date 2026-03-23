@@ -120,28 +120,28 @@ export default async function EcdBillingPage() {
                   description="Your subscription details will appear once billing is activated."
                 />
               ) : (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tier</p>
-                    <p className="mt-1 text-lg font-bold text-teal-700">
+                    <p className="mt-0.5 text-sm font-semibold text-teal-700">
                       {getInternalTierLabel(toInternalTier(subscription.tier, 'basic'))}
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900 capitalize">{subscription.status}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900 capitalize">{subscription.status}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Monthly Price</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900">R{subscription.monthly_price}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900">R{subscription.monthly_price}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Setup Fee</p>
-                    <p className="mt-1 text-lg font-bold text-slate-900">R{subscription.setup_fee}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-slate-900">R{subscription.setup_fee}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:col-span-2">
+                  <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 sm:col-span-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Billing Period</p>
-                    <p className="mt-1 text-sm font-bold text-slate-700">
+                    <p className="mt-0.5 text-xs font-semibold text-slate-700">
                       {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
                     </p>
                     {subscription.trial_ends_at ? (

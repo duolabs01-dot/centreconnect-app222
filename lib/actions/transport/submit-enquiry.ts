@@ -20,16 +20,15 @@ export async function submitTransportEnquiryAction(input: unknown) {
   }
 
   const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('submit-transport-enquiry-action')
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    { cookies: { getAll: () => cookieStore.getAll() } }
-  )
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      get: async (name) => (await cookies()).get(name)?.value,
+      set: async (name, value, options) => { try { (await cookies()).set(name, value, options) } catch { } },
+      remove: async (name, options) => { try { (await cookies()).delete({ name, ...options }) } catch { } },
+    },
+  })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
     return { error: 'Please log in to request a transport quote' }
@@ -57,7 +56,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
     .select('user_id')
     .eq('ecd_id', parsed.data.ecd_id)
 
-  const adminIds = Array.from(new Set((admins ?? []).map((row: any) => row.user_id).filter(Boolean)))
+  const adminIds = (admins ?? []).map((row: any) => row.user_id).filter((id: any): id is string => Boolean(id))
 
   if (adminIds.length) {
     await supabase.from('notifications').insert(
@@ -71,7 +70,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
       }))
     )
 
-    const participantIds = Array.from(new Set([user.id, ...adminIds]))
+    const participantIds = [user.id, ...adminIds]
     const { data: thread } = await supabase
       .from('message_threads')
       .insert({
@@ -87,14 +86,7 @@ export async function submitTransportEnquiryAction(input: unknown) {
       await supabase.from('messages').insert({
         thread_id: thread.id,
         sender_id: user.id,
-        body: [
-          'Transport Quote Request',
-          '',
-          `Pickup address: ${parsed.data.pickup_address}`,
-          parsed.data.notes ? `Notes: ${parsed.data.notes}` : '',
-        ]
-          .filter(Boolean)
-          .join('\n'),
+        body: ['Transport Quote Request', '', `Pickup address: ${parsed.data.pickup_address}`, parsed.data.notes ? `Notes: ${parsed.data.notes}` : ''].filter(Boolean).join('\n')
       })
     }
   }
