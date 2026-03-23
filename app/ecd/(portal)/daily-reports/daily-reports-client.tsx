@@ -397,22 +397,24 @@ export function DailyReportsClient({
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Daily Reports</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 shrink-0">
-              {reportTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    'shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition whitespace-nowrap',
-                    activeTab === tab.key
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto max-w-full [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 shrink-0">
+                {reportTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={cn(
+                      'shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition whitespace-nowrap',
+                      activeTab === tab.key
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="relative w-80 shrink-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

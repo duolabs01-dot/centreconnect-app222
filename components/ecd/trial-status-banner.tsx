@@ -47,37 +47,26 @@ export function TrialStatusBanner({ subscription, className }: TrialStatusBanner
   return (
     <div
       className={cn(
-        'rounded-xl border px-2.5 py-2 shadow-sm',
+        'rounded-lg border px-2 py-1.5 shadow-sm',
         isTrial ? 'border-amber-200/80 bg-amber-50/80 text-amber-900' : 'border-teal-200/80 bg-teal-50/80 text-teal-900',
         className
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Pkg</span>
-          <span className="text-xs font-bold">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[9px] font-black uppercase tracking-widest opacity-60 shrink-0">Pkg</span>
+          <span className="text-[11px] font-semibold truncate">
             {planLabel} · {statusCopy(status)}{monthlyPrice > 0 ? ` · R${monthlyPrice}/mo` : ''}
           </span>
           {isTrial && trialDaysRemaining !== null && (
             <span className={cn(
-              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold',
+              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold shrink-0',
               trialDaysRemaining <= 1 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
             )}>
               {trialDaysRemaining === 0 ? 'Trial ends today' : `${trialDaysRemaining}d left`}
             </span>
           )}
         </div>
-        <Link
-          href="/ecd/billing"
-          className={cn(
-            'inline-flex h-6 items-center justify-center rounded-lg border px-2 text-[9px] font-semibold transition-colors',
-            isTrial
-              ? 'border-amber-300/60 text-amber-800 hover:bg-amber-100/60'
-              : 'border-teal-300/60 text-teal-800 hover:bg-teal-100/60'
-          )}
-        >
-          Billing
-        </Link>
       </div>
     </div>
   )
