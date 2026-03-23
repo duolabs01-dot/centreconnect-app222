@@ -154,7 +154,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
     .eq('parent_id', user.id)
     .is('linked_user_id', null)
 
-  const inviteTargets = ((pendingGuardians ?? []) as PendingGuardianRow[]).filter((row: any) => {
+  const inviteTargets = ((pendingGuardians ?? []) as PendingGuardianRow[]).filter((row) => {
     const rowEmail = row.email?.trim().toLowerCase() || null
     const rowPhone = normalizePhoneForWhatsapp(row.phone) || row.phone?.trim() || null
     if (normalizedEmail && rowEmail === normalizedEmail) return true
@@ -162,7 +162,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
     return row.id === guardian.id
   })
 
-  const uniqueTargets = Array.from(new Map(inviteTargets.map((row: any) => [row.id, row])).values())
+  const uniqueTargets = Array.from(new Map(inviteTargets.map((row) => [row.id, row])).values())
   if (uniqueTargets.length === 0) {
     return { error: 'No matching pending co-parent records were found for this contact.' }
   }
@@ -172,7 +172,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
   const expiresHours = 72
 
   const inviteSentAt = new Date().toISOString()
-  const targetIds = uniqueTargets.map((row: any) => row.id)
+  const targetIds = uniqueTargets.map((row) => row.id)
   const lifecycleAwareUpdate = await supabase
     .from('guardians')
     .update({
@@ -209,7 +209,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
   const childNames = Array.from(
     new Set(
       uniqueTargets
-        .map((row: any) => {
+        .map((row) => {
           const rawChild = row.children
           const child = Array.isArray(rawChild) ? rawChild[0] : rawChild
           if (!child) return null
@@ -231,7 +231,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
     ? await sendEmail({ to: normalizedEmail, subject, html })
     : { success: false as const }
 
-  const childIds = Array.from(new Set(uniqueTargets.map((row: any) => row.child_id)))
+  const childIds = Array.from(new Set(uniqueTargets.map((row) => row.child_id)))
   const { data: relatedApplications } = await supabase
     .from('applications')
     .select('id,child_id,ecd_id')
@@ -241,7 +241,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
 
   const primaryApplication = (relatedApplications ?? [])[0]
   if (primaryApplication?.ecd_id) {
-    await sendParentInAppAndWhatsappNotification(supabase as any, {
+    await sendParentInAppAndWhatsappNotification(supabase, {
       parent_id: user.id,
       ecd_id: primaryApplication.ecd_id,
       application_id: primaryApplication.id,
@@ -260,7 +260,7 @@ export async function sendCoParentInviteAction(input: unknown): Promise<{
       .eq('id', primaryApplication.ecd_id)
       .maybeSingle()
     const centreName = centre?.name ?? 'your centre'
-    await sendEcdInAppAndEmailNotification(supabase as any, {
+    await sendEcdInAppAndEmailNotification(supabase, {
       ecd_id: primaryApplication.ecd_id,
       application_id: primaryApplication.id,
       title: 'Co-parent invite sent',

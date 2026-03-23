@@ -22,7 +22,7 @@ import {
   validateAttendanceImportFile,
 } from '@/lib/attendance/imports'
 import { requireEcdPortalSession, type EcdPortalSession } from '@/lib/ecd/portal-session'
-import { checkChildIdentityDuplicates, recordChildIdentity } from '@/lib/parent/child-identity'
+import { checkChildIdentityDuplicates, recordChildIdentity, type ChildIdentityMatch } from '@/lib/parent/child-identity'
 
 const extractSchema = z.object({
   attendance_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().or(z.literal('')),
@@ -92,7 +92,7 @@ export type RegisterImportActionResult = {
   message: string
   item?: ImportRow
   attendanceHref?: string
-  duplicates?: any[]
+  duplicates?: ChildIdentityMatch[]
 }
 
 export type AttendanceCsvPreviewRow = z.infer<typeof csvPreviewRowSchema>

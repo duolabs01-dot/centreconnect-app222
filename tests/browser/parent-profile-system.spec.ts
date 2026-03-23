@@ -8,8 +8,7 @@ test.describe('Comprehensive Parent Profile Completion System', () => {
 
     const timestamp = Date.now();
     const email = `audit_parent_${timestamp}@example.com`;
-    const password = process.env.TEST_USER_PASSWORD;
-    if (!password) throw new Error('TEST_USER_PASSWORD env var is required');
+    // TODO: Replace with environment variable or test utility for password
 
     // 1. Setup: Register and get to onboarding
     await page.goto(`${BASE_URL}/register`);

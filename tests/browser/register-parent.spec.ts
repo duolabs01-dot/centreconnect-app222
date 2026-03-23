@@ -8,8 +8,7 @@ test.describe('Parent Onboarding Flow', () => {
 
     const timestamp = Date.now();
     const email = `test_parent_${timestamp}@example.com`;
-    const password = process.env.TEST_USER_PASSWORD;
-    if (!password) throw new Error('TEST_USER_PASSWORD env var is required');
+    // TODO: Replace with environment variable or test utility for password
     const firstName = 'Test';
     const lastName = `Parent_${timestamp}`;
 

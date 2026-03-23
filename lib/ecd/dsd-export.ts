@@ -1,10 +1,8 @@
 import 'server-only'
 
-type SupabaseLike = {
-  from: (table: string) => {
-    select: (columns: string, options?: Record<string, unknown>) => any
-  }
-}
+import { SupabaseClient } from '@supabase/supabase-js'
+
+type SupabaseLike = Pick<SupabaseClient, 'from'>
 
 export type DsdEnrolledChild = {
   applicationId: string
@@ -213,7 +211,7 @@ export function getDoeMonthlyReturnData(children: DsdEnrolledChild[]): DoeMonthl
 }
 
 export async function getDsdExportData(input: {
-  supabase: any
+  supabase: SupabaseLike
   ecdId: string
   selectedMonth: number
   selectedYear: number
@@ -256,14 +254,14 @@ export async function getDsdExportData(input: {
   const useApplications = applicationRows.length > 0
 
   const allChildIds = useApplications
-    ? applicationRows.map((row: any) => String(row.child_id ?? (normalizeOne(row.children as any) as any)?.id ?? ''))
-    : directChildRows.map((row: any) => String(row.id))
+    ? applicationRows.map((row) => String(row.child_id ?? (normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null))?.id ?? ''))
+    : directChildRows.map((row) => String(row.id))
 
   const classIds = Array.from(
     new Set(
       (useApplications
-        ? applicationRows.map((row: any) => normalizeOne(row.children as any)).map((child) => normalizeText((child as Record<string, unknown> | null)?.class_id as string | null, ''))
-        : directChildRows.map((row: any) => normalizeText(row.class_id as string | null, ''))
+        ? applicationRows.map((row) => normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null)).map((child) => normalizeText(child?.class_id as string | null, ''))
+        : directChildRows.map((row) => normalizeText(row.class_id as string | null, ''))
       ).filter(Boolean)
     )
   )
@@ -283,7 +281,7 @@ export async function getDsdExportData(input: {
   ])
 
   const classMap = new Map(
-    ((classRows ?? []) as Array<{ id: string; name: string | null; age_group: string | null }>).map((row: any) => [
+    ((classRows ?? []) as Array<{ id: string; name: string | null; age_group: string | null }>).map((row) => [
       String(row.id),
       row,
     ])
@@ -292,10 +290,10 @@ export async function getDsdExportData(input: {
   let children: DsdEnrolledChild[]
 
   if (useApplications) {
-    children = applicationRows.map((row: any) => {
-      const child = normalizeOne(row.children as any) as Record<string, unknown> | null
-      const parent = normalizeOne(row.parents as any) as Record<string, unknown> | null
-      const parentProfile = normalizeOne((parent?.user_profiles ?? null) as any) as Record<string, unknown> | null
+    children = applicationRows.map((row) => {
+      const child = normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null)
+      const parent = normalizeOne(row.parents as Record<string, unknown> | Record<string, unknown>[] | null)
+      const parentProfile = normalizeOne((parent?.user_profiles ?? null) as Record<string, unknown> | Record<string, unknown>[] | null)
       const classId = normalizeText((child?.class_id as string | null) ?? null, '')
       const classMeta = classId ? classMap.get(classId) : null
       return {
