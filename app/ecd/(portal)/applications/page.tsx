@@ -24,12 +24,12 @@ export const metadata: Metadata = {
 }
 
 type ApplicationsPageProps = {
-  searchParams?: {
+  searchParams: Promise<{
     focus?: string
     tab?: string
     q?: string
     page?: string
-  }
+  }>
 }
 
 type TabKey = 'pending' | 'awaiting_offer_response' | 'approved' | 'enrolled' | 'waitlisted' | 'rejected' | 'withdrawn'
@@ -352,7 +352,8 @@ function renderApplicationList(applications: ApplicationRow[]) {
   )
 }
 
-export default async function EcdApplicationsPage({ searchParams }: ApplicationsPageProps) {
+export default async function EcdApplicationsPage(props: ApplicationsPageProps) {
+  const searchParams = await props.searchParams
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
 
   async function updateIncompleteAdmissionsPolicyAction(formData: FormData) {
