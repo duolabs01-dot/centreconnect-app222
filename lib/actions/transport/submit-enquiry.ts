@@ -20,10 +20,11 @@ export async function submitTransportEnquiryAction(input: unknown) {
   }
 
   const { supabaseUrl, supabaseAnonKey } = requireSupabasePublicEnv('submit-transport-enquiry-action')
+  const cookieStore = await cookies()
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
-    { cookies: { getAll: () => cookies().getAll() } }
+    { cookies: { getAll: () => cookieStore.getAll() } }
   )
 
   const {

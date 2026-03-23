@@ -60,7 +60,6 @@ export async function createFamilyLinkRequest(input: unknown): Promise<FamilyLin
     .single()
 
   if (error) {
-    console.error('[family-link] Error creating link:', error)
     return { success: false, error: 'Failed to link accounts' }
   }
 
@@ -129,7 +128,6 @@ export async function getFamilyLinkRequestsForECD(): Promise<any[]> {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('[family-link] Error fetching requests:', error)
     return []
   }
 

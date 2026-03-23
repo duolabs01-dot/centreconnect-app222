@@ -26,7 +26,7 @@ export function LiteImage({ fallbackSrc, ...props }: LiteImageProps) {
     <Image 
       {...props} 
       src={src}
-      alt={props.alt} 
+      alt={props.alt || ''} 
       quality={effectiveQuality} 
       onError={() => setError(true)}
     />

@@ -130,7 +130,6 @@ export async function publishAnnouncementAction(input: PublishAnnouncementInput)
       recipientCount: parentIds.length,
     }
   } catch (err) {
-    console.error('publishAnnouncementAction failed:', err)
     return { error: 'An unexpected error occurred while publishing. Please try again.' as const }
   }
 }
