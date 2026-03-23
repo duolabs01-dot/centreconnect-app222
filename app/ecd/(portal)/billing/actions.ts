@@ -113,22 +113,22 @@ export async function beginPaymentMethodUpdateAction(): Promise<PaymentMethodUpd
     return { success: false, error: message }
   }
 
-  if (!payment.data?.authorization_url) {
-    return { success: false, error: payment.message || 'Paystack did not return an authorization URL.' }
+  if (!payment.authorizationUrl) {
+    return { success: false, error: 'Paystack did not return an authorization URL.' }
   }
 
   const admin = createAdminClient()
   await admin.from('billing_payment_method_updates').insert({
     ecd_id: session.ecdId,
     initiated_by: session.user.id,
-    paystack_reference: payment.data.reference,
-    payment_url: payment.data.authorization_url,
+    paystack_reference: payment.reference,
+    payment_url: payment.authorizationUrl,
     amount: updateAmount,
-    currency: payment.data?.access_code ?? 'ZAR',
+    currency: payment.accessCode ?? 'ZAR',
     status: 'pending',
   })
 
   revalidatePath('/ecd/billing')
-  return { success: true, authorizationUrl: payment.data.authorization_url }
+  return { success: true, authorizationUrl: payment.authorizationUrl }
 }
 
