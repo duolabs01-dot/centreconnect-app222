@@ -41,52 +41,32 @@ export function TrialStatusBanner({ subscription, className }: TrialStatusBanner
   const status = normalizeSubscriptionStatus(subscription?.status, 'trial')
   const planLabel = getInternalTierLabel(tier)
   const monthlyPrice = Number(subscription?.monthlyPrice ?? getInternalTierDefinition(tier).monthlyPrice)
-  const included = getInternalTierDefinition(tier).includes
   const trialDaysRemaining = getTrialDaysRemaining(subscription?.trialEndsAt)
   const isTrial = status === 'trial'
 
   return (
     <div
       className={cn(
-        'rounded-2xl border px-4 py-3 shadow-sm',
-        isTrial ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-teal-200 bg-teal-50 text-teal-900',
+        'rounded-lg border px-2 py-1.5 shadow-sm',
+        isTrial ? 'border-amber-200/80 bg-amber-50/80 text-amber-900' : 'border-teal-200/80 bg-teal-50/80 text-teal-900',
         className
       )}
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Current package</p>
-          <p className="mt-1 text-sm font-black">
-            {planLabel} | {statusCopy(status)} {monthlyPrice > 0 ? `| R${monthlyPrice}/month` : '| R0/month'}
-          </p>
-          {isTrial ? (
-            <p className="mt-1 text-xs font-semibold">
-              {trialDaysRemaining === null
-                ? 'Trial active.'
-                : trialDaysRemaining === 0
-                  ? 'Trial ends today.'
-                  : `${trialDaysRemaining} day${trialDaysRemaining === 1 ? '' : 's'} left in trial.`}
-            </p>
-          ) : null}
-        </div>
-        <Link
-          href="/ecd/billing"
-          className={cn(
-            'inline-flex h-8 items-center justify-center rounded-xl border px-3 text-xs font-bold transition-colors',
-            isTrial
-              ? 'border-amber-300 text-amber-900 hover:bg-amber-100'
-              : 'border-teal-300 text-teal-900 hover:bg-teal-100'
-          )}
-        >
-          View billing
-        </Link>
-      </div>
-      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-        {included.slice(0, 3).map((feature) => (
-          <span key={feature} className="text-[11px] font-medium opacity-90">
-            - {feature}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[9px] font-black uppercase tracking-widest opacity-60 shrink-0">Pkg</span>
+          <span className="text-[11px] font-semibold truncate">
+            {planLabel} · {statusCopy(status)}{monthlyPrice > 0 ? ` · R${monthlyPrice}/mo` : ''}
           </span>
-        ))}
+          {isTrial && trialDaysRemaining !== null && (
+            <span className={cn(
+              'inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold shrink-0',
+              trialDaysRemaining <= 1 ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+            )}>
+              {trialDaysRemaining === 0 ? 'Trial ends today' : `${trialDaysRemaining}d left`}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

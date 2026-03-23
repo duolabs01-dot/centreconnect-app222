@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/ecd/BrandMark'
@@ -9,8 +9,7 @@ import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { MobileNavMenu } from './mobile-nav-menu'
-import { ArrowRight, Lock, Sparkles } from 'lucide-react'
-import { getInternalTierLabel, toInternalTier, type InternalTier } from '@/lib/billing/plans'
+import { Lock, Sparkles } from 'lucide-react'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -29,12 +28,11 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
   'grow',
 ]
 
-// === GROUP LABELS (Updated to 3 main categories for clarity) ===
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
   daily_ops: '',
   admin: '',
   grow: '',
-  settings: 'Settings',
+  settings: '',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -78,16 +76,9 @@ export function EcdPortalSidebar({
   useEffect(() => {
     const element = desktopScrollRef.current
     if (!element) return
-
     const saved = readSavedSidebarScroll()
-    if (saved !== null) {
-      element.scrollTop = saved
-    }
-
-    const onScroll = () => {
-      writeSavedSidebarScroll(element.scrollTop)
-    }
-
+    if (saved !== null) element.scrollTop = saved
+    const onScroll = () => writeSavedSidebarScroll(element.scrollTop)
     element.addEventListener('scroll', onScroll, { passive: true })
     return () => element.removeEventListener('scroll', onScroll)
   }, [])
@@ -95,16 +86,9 @@ export function EcdPortalSidebar({
   useEffect(() => {
     const element = desktopScrollRef.current
     if (!element) return
-
     const saved = readSavedSidebarScroll()
-    if (saved !== null) {
-      element.scrollTop = saved
-    }
+    if (saved !== null) element.scrollTop = saved
   }, [pathname])
-
-  const tier = toInternalTier(subscriptionTier, 'basic')
-  const tierLabel = getInternalTierLabel(tier)
-  const tierRank: Record<InternalTier, number> = { basic: 1, standard: 2, premium: 3 }
 
   const roleEligibleNav = useMemo(
     () =>
@@ -117,11 +101,11 @@ export function EcdPortalSidebar({
   )
 
   const lockedByTier = roleEligibleNav.filter(
-    (item) => item.minTier && tierRank[tier] < tierRank[item.minTier]
+    (item) => item.minTier && (item.minTier === 'standard' || item.minTier === 'premium')
   )
 
   const visibleNav = roleEligibleNav.filter(
-    (item) => !item.minTier || tierRank[tier] >= tierRank[item.minTier]
+    (item) => !item.minTier || (item.minTier !== 'standard' && item.minTier !== 'premium')
   )
 
   const settingsItem = visibleNav.find((item) => item.group === 'settings' || item.href === '/ecd/profile') ?? null
@@ -137,12 +121,8 @@ export function EcdPortalSidebar({
   const partialApplicationsCount = attentionBadges['/ecd/applications:partial'] ?? 0
 
   const getApplicationInsight = () => {
-    if (stale72hCount > 0) {
-      return `${stale72hCount} applications older than 72h - prioritize these`
-    }
-    if (partialApplicationsCount > 0) {
-      return `${partialApplicationsCount} partial applications waiting for documents`
-    }
+    if (stale72hCount > 0) return `${stale72hCount} applications older than 72h - prioritize these`
+    if (partialApplicationsCount > 0) return `${partialApplicationsCount} partial applications waiting for documents`
     return null
   }
 
@@ -153,14 +133,18 @@ export function EcdPortalSidebar({
 
     if (item.comingSoon) {
       return (
-        <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50 px-3.5 py-2" aria-disabled="true">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
-            <item.icon className="h-4 w-4 shrink-0" />
+        <div
+          key={item.href}
+          className="group relative flex items-center gap-3 rounded-xl border border-slate-200/60 bg-slate-50/60 px-3 py-2.5"
+          aria-disabled="true"
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
+            <item.icon className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-bold tracking-tight text-slate-700">{item.label}</p>
+            <p className="truncate text-[13px] font-medium text-slate-500">{item.label}</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-slate-500">
+          <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-400">
             Soon
           </span>
         </div>
@@ -174,51 +158,53 @@ export function EcdPortalSidebar({
         scroll={false}
         onClick={() => {
           const element = desktopScrollRef.current
-          if (element) {
-            writeSavedSidebarScroll(element.scrollTop)
-          }
+          if (element) writeSavedSidebarScroll(element.scrollTop)
         }}
         className={cn(
-          'group relative flex items-center gap-2.5 rounded-2xl px-3.5 py-2 text-[13px] font-bold tracking-tight transition-colors duration-200',
+          'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
           active
-            ? 'border border-teal-200 bg-teal-50/90 text-teal-900 shadow-sm'
-            : 'border border-transparent text-slate-700 hover:border-teal-100 hover:bg-teal-50/60 hover:text-teal-800'
+            ? 'bg-teal-500/10 text-teal-800 border border-teal-200/60'
+            : 'text-slate-600 hover:bg-accent hover:text-accent-foreground border border-transparent'
         )}
         aria-current={active ? 'page' : undefined}
       >
         <div
           className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-xl transition-colors',
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all',
             active
-              ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'
-              : 'bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-700'
+              ? 'bg-teal-600 text-white shadow-sm shadow-teal-900/20'
+              : 'bg-slate-100 text-slate-500 group-hover:bg-teal-50 group-hover:text-teal-700'
           )}
         >
-          <item.icon className="h-4 w-4 shrink-0" />
+          <item.icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate">{item.label}</p>
           {applicationInsight ? (
-            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-semibold text-teal-700">
+            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-medium text-teal-600">
               <Sparkles className="h-3 w-3 shrink-0" />
               {applicationInsight}
             </p>
           ) : null}
         </div>
         {badgeCount > 0 ? (
-          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-black text-white ring-2 ring-white">
+          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white ring-2 ring-white">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         ) : null}
-        {active ? <div className="absolute left-0 h-6 w-1 rounded-r-full bg-teal-600" /> : null}
+        {active ? (
+          <div className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-teal-500" />
+        ) : null}
       </Link>
     )
   }
 
+  const roleInitial = roleLabel?.[0]?.toUpperCase() ?? 'E'
+
   return (
     <>
-      {/* Mobile Top Header - Unified with Parent view */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-card px-4 md:hidden">
+      {/* Mobile Top Header */}
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 md:hidden">
         <div className="flex items-center gap-3">
           <MobileNavMenu
             items={visibleNav}
@@ -228,113 +214,119 @@ export function EcdPortalSidebar({
             subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
-          <BrandMark compact className="brightness-100" />
+          <BrandMark compact />
         </div>
-        <div className="flex items-center gap-2">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</p>
-        </div>
+        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700 border border-teal-100">
+          {roleLabel}
+        </span>
       </div>
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-72 shrink-0 overflow-y-auto border-r border-border bg-card px-6 py-6 text-foreground shadow-[var(--shadow-elevation-1)] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden h-screen w-[260px] shrink-0 overflow-y-auto border-r border-slate-200/80 bg-card text-foreground shadow-sm [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200/80 md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
-        <div className="px-4 mb-3">
-          <BrandMark compact className="brightness-100" />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-50 border border-teal-100 text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">{roleLabel}</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em] text-slate-600">Tier: {tierLabel}</span>
+        {/* Header */}
+        <div className="px-5 pt-6 pb-5">
+          <BrandMark compact />
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[11px] font-bold text-teal-700 border border-teal-100 shadow-sm">
+              {roleInitial}
+            </div>
+            <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-semibold text-teal-700 border border-teal-100 shadow-sm">
+              {roleLabel}
+            </span>
           </div>
         </div>
-        <nav className="mt-1 space-y-1.5" aria-label="ECD portal navigation">
+
+        {/* Divider */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mx-5" />
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-0.5 px-4 py-5" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
-            <Fragment key={bucket.group}>
-              <p className="mb-2 mt-4 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
-                {GROUP_LABELS[bucket.group]}
-              </p>
+            <div key={bucket.group} className="mb-5">
+              {GROUP_LABELS[bucket.group] ? (
+                <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
+                  {GROUP_LABELS[bucket.group]}
+                </p>
+              ) : null}
               {bucket.items.map((item) => renderNavItem(item))}
-            </Fragment>
+            </div>
           ))}
 
+          {settingsItem && !settingsItem.comingSoon ? (
+            <div className="mb-5">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
+                Account
+              </p>
+              {renderNavItem(settingsItem)}
+            </div>
+          ) : null}
+
           {comingSoonItems.length > 0 ? (
-            <Fragment>
-              <div className="my-4 px-4">
-                <div className="h-px w-full bg-border" />
-              </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
+            <div className="mb-5">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
                 Coming Soon
               </p>
               {comingSoonItems.map((item) => renderNavItem(item))}
-            </Fragment>
-          ) : null}
-
-          {settingsItem ? (
-            <Fragment>
-              <div className="my-4 px-4">
-                <div className="h-px w-full bg-border" />
-              </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
-                {GROUP_LABELS.settings}
-              </p>
-              {renderNavItem(settingsItem)}
-            </Fragment>
+            </div>
           ) : null}
 
           {lockedByTier.length > 0 ? (
-            <Fragment>
-              <div className="my-4 px-4">
-                <div className="h-px w-full bg-border" />
-              </div>
-              <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-[0.25em] text-slate-500/80">
+            <div className="mb-5">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
+              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
                 Upgrade to unlock
               </p>
               {lockedByTier.map((item) => (
-                <div key={item.href} className="group relative flex items-center gap-2.5 rounded-2xl border border-border bg-slate-50 px-3.5 py-2 opacity-85">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-slate-500">
-                    <item.icon className="h-4 w-4 shrink-0" />
+                <div
+                  key={item.href}
+                  className="group relative flex items-center gap-3 rounded-xl border border-slate-200/60 bg-slate-50/60 px-3 py-2.5 opacity-60"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 border border-slate-200">
+                    <item.icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold tracking-tight text-slate-700">{item.label}</p>
-                    <p className="text-[10px] font-semibold text-slate-500">Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'}</p>
+                    <p className="truncate text-[13px] font-medium text-slate-500">{item.label}</p>
+                    <p className="text-[10px] font-medium text-slate-400">
+                      Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'} plan
+                    </p>
                   </div>
-                  <Lock className="h-4 w-4 text-slate-500" />
+                  <Lock className="h-4 w-4 shrink-0 text-slate-400" />
                 </div>
               ))}
-            </Fragment>
+            </div>
           ) : null}
         </nav>
-        {/* Bottom card — tier, WhatsApp, sign out */}
-        <div className="mt-8 shrink-0 space-y-2 rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-elevation-1)]">
-          <div className="flex flex-col gap-1">
-            {centreName && (
-              <p className="truncate text-xs font-black text-teal-700">{centreName}</p>
-            )}
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Operator</p>
-            <p className="truncate text-sm font-bold text-foreground">{roleLabel}</p>
-            <p className="truncate text-[10px] text-slate-400">{userEmail ?? ''}</p>
+
+        {/* Footer */}
+        <div className="mt-auto space-y-2 px-4 py-5 border-t border-slate-200/60">
+          {/* Centre info */}
+          <div className="rounded-xl border border-slate-200/60 bg-slate-50/60 p-3.5 shadow-sm">
+            <div className="min-w-0">
+              {centreName && (
+                <p className="truncate text-xs font-semibold text-slate-800">{centreName}</p>
+              )}
+              <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
+            </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-slate-100 bg-slate-50/70 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Current tier</p>
-            <p className="mt-1 text-sm font-black text-teal-700">Plan: {tierLabel}</p>
-          </div>
+          {/* WhatsApp support */}
+          <Link
+            href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-xs font-medium text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 transition-all hover:shadow-md"
+          >
+            💬 WhatsApp support
+          </Link>
 
-          <div className="space-y-2 pt-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Need Help?</p>
-            <Link
-              href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-500 py-2.5 text-xs font-black text-white shadow-lg shadow-green-900/20 transition-transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <span>💬</span>
-              WhatsApp support
-            </Link>
-          </div>
-
+          {/* Sign out */}
           <SignOutButton
             redirectTo="/"
-            className="w-full rounded-3xl border border-border bg-card py-3 text-sm font-bold text-foreground shadow-[var(--shadow-elevation-1)] transition-colors hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
+            className="w-full rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-white hover:border-slate-300 hover:shadow-sm"
           />
         </div>
       </aside>

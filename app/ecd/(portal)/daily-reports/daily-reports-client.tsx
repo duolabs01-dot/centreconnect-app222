@@ -391,30 +391,32 @@ export function DailyReportsClient({
   return (
     <>
       <div className="space-y-6">
-        <section className="hidden lg:flex lg:items-end lg:justify-between">
+        <section className="hidden lg:flex lg:items-end lg:justify-between min-w-0">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-600">Daily Reporting</p>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Daily Reports</h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1">
-              {reportTabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    'rounded-xl px-4 py-2 text-xs font-semibold transition',
-                    activeTab === tab.key
-                      ? 'bg-white text-slate-900 shadow-sm'
-                      : 'text-slate-500 hover:text-slate-700'
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="inline-flex gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 overflow-x-auto max-w-full [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 shrink-0">
+                {reportTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={cn(
+                      'shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition whitespace-nowrap',
+                      activeTab === tab.key
+                        ? 'bg-white text-slate-900 shadow-sm'
+                        : 'text-slate-500 hover:text-slate-700'
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="relative w-80">
+            <div className="relative w-80 shrink-0">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={searchQuery}
@@ -455,97 +457,101 @@ export function DailyReportsClient({
         <Card>
           <CardContent className="space-y-4 pt-6">
             <div className="flex flex-col gap-3 lg:hidden">
-              <div className="inline-flex w-full gap-1 rounded-2xl border border-slate-200 bg-slate-50 p-1 lg:w-auto">
-                {reportTabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setActiveTab(tab.key)}
-                    className={cn(
-                      'rounded-xl px-4 py-2 text-xs font-semibold transition',
-                      activeTab === tab.key
-                        ? 'bg-white text-slate-900 shadow-sm'
-                        : 'text-slate-500 hover:text-slate-700'
-                    )}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              <div className="relative w-full">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  className="h-11 rounded-xl border-slate-200 pl-9"
-                  placeholder="Search child name"
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {filteredChildren.map((child) => {
-                const primaryReport = getPrimaryReportForTab(child.id, activeTab)
-                const status = getReportStatus(primaryReport)
-                const isExpanded = expandedChildId === child.id
-                const fullName = `${child.first_name} ${child.last_name}`.trim()
-
-                return (
-                  <button
-                    key={child.id}
-                    type="button"
-                    onClick={() => selectChild(child.id)}
-                    className={cn(
-                      'rounded-2xl border bg-white p-4 text-left transition hover:border-cyan-200 hover:shadow-sm',
-                      isExpanded ? 'border-cyan-300 shadow-sm' : 'border-slate-200'
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                          {child.photo_url ? (
-                            <Image src={child.photo_url} alt={fullName} fill className="object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-xs font-bold text-slate-500">
-                              {extractInitials(child)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-slate-900">{fullName}</p>
-                          <p className="truncate text-xs text-slate-500">
-                            {primaryReport ? toDateLabel(primaryReport.report_date) : 'No report yet'}
-                          </p>
-                        </div>
-                      </div>
-                      <span
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="max-w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-1">
+                  <div className="flex gap-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+                    {reportTabs.map((tab) => (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        onClick={() => setActiveTab(tab.key)}
                         className={cn(
-                          'shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
-                          statusClass(status)
+                          'shrink-0 rounded-xl px-4 py-2 text-xs font-semibold transition whitespace-nowrap',
+                          activeTab === tab.key
+                            ? 'bg-white text-slate-900 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
                         )}
                       >
-                        {statusLabel(status)}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-1.5 text-slate-600">
-                        Mood: {getMoodLabel(primaryReport?.mood)}
-                      </div>
-                      <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-1.5 text-slate-600">
-                        Meals: {mealValueLabel(primaryReport?.lunch_eaten)}
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-
-            {filteredChildren.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                No children match this search.
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="relative w-full sm:w-80 shrink-0">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    className="h-11 rounded-xl border-slate-200 pl-9"
+                    placeholder="Search child name"
+                  />
+                </div>
               </div>
-            ) : null}
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {filteredChildren.map((child) => {
+                  const primaryReport = getPrimaryReportForTab(child.id, activeTab)
+                  const status = getReportStatus(primaryReport)
+                  const isExpanded = expandedChildId === child.id
+                  const fullName = `${child.first_name} ${child.last_name}`.trim()
+
+                  return (
+                    <button
+                      key={child.id}
+                      type="button"
+                      onClick={() => selectChild(child.id)}
+                      className={cn(
+                        'rounded-2xl border bg-white p-4 text-left transition hover:border-cyan-200 hover:shadow-sm',
+                        isExpanded ? 'border-cyan-300 shadow-sm' : 'border-slate-200'
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+                            {child.photo_url ? (
+                              <Image src={child.photo_url} alt={fullName} fill className="object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-slate-500">
+                                {extractInitials(child)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-900">{fullName}</p>
+                            <p className="truncate text-xs text-slate-500">
+                              {primaryReport ? toDateLabel(primaryReport.report_date) : 'No report yet'}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            'shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide',
+                            statusClass(status)
+                          )}
+                        >
+                          {statusLabel(status)}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-1.5 text-slate-600">
+                          Mood: {getMoodLabel(primaryReport?.mood)}
+                        </div>
+                        <div className="rounded-xl border border-slate-100 bg-slate-50 px-2 py-1.5 text-slate-600">
+                          Meals: {mealValueLabel(primaryReport?.lunch_eaten)}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {filteredChildren.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                  No children match this search.
+                </div>
+              ) : null}
+            </div>
           </CardContent>
         </Card>
 

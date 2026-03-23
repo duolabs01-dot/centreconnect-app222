@@ -106,14 +106,6 @@ export async function submitJobApplicationAction(input: SubmitJobApplicationInpu
   }
 
   if (insertError) {
-    console.error('submitJobApplicationAction failed:', {
-      code: insertError.code,
-      message: insertError.message,
-      details: insertError.details,
-      hint: insertError.hint,
-      jobId: parsed.data.job_id,
-      ecdId: parsed.data.ecd_id,
-    })
     return { error: 'Failed to submit application. Please try again.' as const }
   }
 

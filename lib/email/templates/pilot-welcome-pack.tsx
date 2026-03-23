@@ -69,6 +69,16 @@ const BRAND = {
 const CENTRECONNECT_LOGO_URL = 'https://centerconnect.co.za/centreconnect-logo-email.png'
 const FOUNDER_PHOTO_URL = 'https://centerconnect.co.za/founder-mandlenkosi.jpeg'
 
+function escapeHtml(text: string | null | undefined): string {
+  if (!text) return ''
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 function BrandLogoMark({ size = 30 }: { size?: number }) {
   return (
     <img
@@ -104,7 +114,7 @@ function isSafeHttpImage(url: string | null | undefined) {
 function toFirstName(value: string | null | undefined, fallback = 'Friend') {
   const text = (value ?? '').trim()
   if (!text) return fallback
-  return text.split(' ')[0] || fallback
+  return escapeHtml(text.split(' ')[0] || fallback)
 }
 
 function renderChecklist(items: PilotWelcomeChecklistItem[]) {
@@ -112,16 +122,18 @@ function renderChecklist(items: PilotWelcomeChecklistItem[]) {
     .map((item) => {
       const done = Boolean(item.done)
       const marker = done ? '&#9989;' : '&#11036;'
-      const itemLabel = done ? `<s>${item.label}</s>` : item.label
-      const where = item.whereItShows
-        ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${item.whereItShows}</p>`
+      const itemLabel = escapeHtml(item.label)
+      const itemLabelHtml = done ? `<s>${itemLabel}</s>` : itemLabel
+      const whereText = item.whereItShows ? escapeHtml(item.whereItShows) : ''
+      const where = whereText
+        ? `<p style="margin:4px 0 0;font-size:11px;color:${BRAND.muted};">Shows in: ${whereText}</p>`
         : ''
 
       return `
       <tr>
         <td style="padding:10px 12px;border-bottom:1px solid ${BRAND.border};">
-          <a href="${item.href}" style="color:${BRAND.body};text-decoration:none;font-size:13px;line-height:1.6;">
-            ${marker} ${itemLabel}
+          <a href="${escapeHtml(item.href)}" style="color:${BRAND.body};text-decoration:none;font-size:13px;line-height:1.6;">
+            ${marker} ${itemLabelHtml}
           </a>
           ${where}
         </td>
@@ -138,8 +150,8 @@ function renderFeatureScenarioCards(items: Array<{ title: string; body: string; 
           (item) => `
             <tr>
               <td style="padding:12px 14px;border:1px solid ${BRAND.border};border-radius:14px;background:#FFFFFF;">
-                <p style="margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${item.accent};">${item.title}</p>
-                <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">${item.body}</p>
+                <p style="margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${item.accent};">${escapeHtml(item.title)}</p>
+                <p style="margin:0;font-size:13px;line-height:1.6;color:${BRAND.body};">${escapeHtml(item.body)}</p>
               </td>
             </tr>
           `
@@ -150,6 +162,7 @@ function renderFeatureScenarioCards(items: Array<{ title: string; body: string; 
 }
 
 function renderCentreCardPreview(input: { centreName: string }) {
+  const centreName = escapeHtml(input.centreName)
   return `
     <table role="presentation" width="100%" style="border-collapse:collapse;border:1px solid ${BRAND.border};border-radius:18px;overflow:hidden;background:#FFFDF9;margin:0 0 18px;">
       <tr>
@@ -159,7 +172,7 @@ function renderCentreCardPreview(input: { centreName: string }) {
       </tr>
       <tr>
         <td style="padding:14px 16px 16px;">
-          <p style="margin:0 0 4px;font-size:17px;font-weight:800;line-height:1.3;color:${BRAND.heading};">${input.centreName}</p>
+          <p style="margin:0 0 4px;font-size:17px;font-weight:800;line-height:1.3;color:${BRAND.heading};">${centreName}</p>
           <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:${BRAND.muted};">CentreConnect parent card</p>
           <div style="margin:0 0 10px;">
             <span style="display:inline-block;margin:0 6px 6px 0;padding:6px 10px;border-radius:999px;border:1px solid #CCFBF1;background:#FFFFFF;font-size:11px;font-weight:700;color:#115E59;">Daily updates</span>
@@ -322,24 +335,30 @@ function button(label: string, href: string, tone: 'primary' | 'secondary' = 'pr
     tone === 'primary'
       ? `background:${BRAND.primary};color:#fff;border:1px solid ${BRAND.primary};`
       : `background:#fff;color:${BRAND.primary};border:1px solid ${BRAND.border};`
+  const safeLabel = escapeHtml(label)
+  const safeHref = escapeHtml(href)
 
-  return `<a href="${href}" style="display:inline-block;padding:12px 18px;border-radius:12px;${style}font-weight:700;text-decoration:none;font-size:14px;">${label}</a>`
+  return `<a href="${safeHref}" style="display:inline-block;padding:12px 18px;border-radius:12px;${style}font-weight:700;text-decoration:none;font-size:14px;">${safeLabel}</a>`
 }
 
 export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
   const firstName = toFirstName(input.contactName)
+  const centreName = escapeHtml(input.centreName)
+  const lockedEmail = escapeHtml(input.lockedEmail)
+  const setupLink = escapeHtml(input.setupLink)
+  const loginLink = escapeHtml(input.loginLink)
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
-      Your CentreConnect account for <strong>${input.centreName}</strong> is ready.
+      Your CentreConnect account for <strong>${centreName}</strong> is ready.
       Start with this one simple step and you will be inside your workspace.
     </p>
-    <div style="margin:0 0 16px;">${button('Set password and open workspace', input.setupLink)}</div>
+    <div style="margin:0 0 16px;">${button('Set password and open workspace', setupLink)}</div>
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#F8FAFC;margin:0 0 14px;">
       <tr>
         <td style="padding:12px 14px;">
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.muted};">Locked Email</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">${input.lockedEmail}</p>
+          <p style="margin:0;font-size:14px;font-weight:700;color:${BRAND.heading};">${lockedEmail}</p>
           <p style="margin:6px 0 0;font-size:12px;line-height:1.5;color:${BRAND.muted};">This setup link is tied to this email and will expire for your safety.</p>
         </td>
       </tr>
@@ -354,11 +373,11 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
       </tr>
     </table>
     <p style="margin:0 0 10px;font-size:13px;line-height:1.65;color:${BRAND.muted};">
-      Your sign-in page for later: <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${input.loginLink}</a>
+      Your sign-in page for later: <a href="${loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${loginLink}</a>
     </p>
     <p style="margin:0;font-size:12px;color:${BRAND.muted};line-height:1.6;">
       If the button does not open, copy this secure link into your browser:<br/>
-      <span style="word-break:break-all;">${input.setupLink}</span>
+      <span style="word-break:break-all;">${setupLink}</span>
     </p>
   `
 
@@ -371,9 +390,13 @@ export function renderEcdPasswordSetupEmail(input: PasswordSetupEmailInput) {
 
 export function renderPasswordSetupConfirmedEmail(input: PasswordSetupConfirmedEmailInput) {
   const firstName = toFirstName(input.contactName)
-  const isEcdRole = input.roleLabel.toLowerCase().includes('ecd')
-  const centreLine = input.centreName?.trim()
-    ? `<p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:${BRAND.body};">Centre: <strong>${input.centreName.trim()}</strong></p>`
+  const roleLabel = escapeHtml(input.roleLabel)
+  const centreNameRaw = input.centreName?.trim()
+  const centreName = centreNameRaw ? escapeHtml(centreNameRaw) : ''
+  const loginLink = escapeHtml(input.loginLink)
+  const isEcdRole = roleLabel.toLowerCase().includes('ecd')
+  const centreLine = centreName
+    ? `<p style="margin:0 0 12px;font-size:14px;line-height:1.65;color:${BRAND.body};">Centre: <strong>${centreName}</strong></p>`
     : ''
 
   const nextSteps = isEcdRole
@@ -418,16 +441,16 @@ export function renderPasswordSetupConfirmedEmail(input: PasswordSetupConfirmedE
         <td style="padding:14px 16px;">
           <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;font-weight:800;text-transform:uppercase;color:${BRAND.muted};">Account Access</p>
           <p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:${BRAND.heading};">
-            Role: <strong>${input.roleLabel}</strong>
+            Role: <strong>${roleLabel}</strong>
           </p>
           ${centreLine}
           <p style="margin:0;font-size:13px;line-height:1.65;color:${BRAND.body};">
-            Sign in here: <a href="${input.loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${input.loginLink}</a>
+            Sign in here: <a href="${loginLink}" style="color:${BRAND.primary};font-weight:700;text-decoration:none;">${loginLink}</a>
           </p>
         </td>
       </tr>
     </table>
-    <div style="margin:0 0 16px;">${button(isEcdRole ? 'Open CentreConnect sign in' : 'Open CentreConnect', input.loginLink)}</div>
+    <div style="margin:0 0 16px;">${button(isEcdRole ? 'Open CentreConnect sign in' : 'Open CentreConnect', loginLink)}</div>
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.warmBorder};border-radius:14px;background:${BRAND.warm};margin:0 0 16px;">
       <tr>
         <td style="padding:12px 14px;">
@@ -452,21 +475,28 @@ export function renderPasswordSetupConfirmedEmail(input: PasswordSetupConfirmedE
 }
 
 export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
-  const supportWhatsApp = input.supportWhatsApp ?? '+27685356430'
-  const supportEmail = input.supportEmail ?? 'admin@centerconnect.co.za'
-  const supportLink = input.supportLink ?? `mailto:${supportEmail}`
+  const supportWhatsApp = escapeHtml(input.supportWhatsApp ?? '+27685356430')
+  const supportEmail = escapeHtml(input.supportEmail ?? 'admin@centerconnect.co.za')
+  const supportLink = escapeHtml(input.supportLink ?? `mailto:${supportEmail}`)
   const supportWhatsappDigits = supportWhatsApp.replace(/[^0-9]/g, '')
+  const contactName = escapeHtml(input.contactName)
+  const centreName = escapeHtml(input.centreName)
   const supportWhatsappLaunchLink = `https://wa.me/${supportWhatsappDigits}?text=${encodeURIComponent(
     `Hi CentreConnect team, this is ${input.contactName} from ${input.centreName}. Please help us finish onboarding.`
   )}`
-  const welcomeGuideUrl = input.welcomeGuideLink?.trim() || input.dashboardLink
+  const welcomeGuideUrl = escapeHtml(input.welcomeGuideLink?.trim() || input.dashboardLink)
   const firstName = toFirstName(input.contactName)
   const plan = toPublicPlan(input.packagePlan ?? input.packageLabel, 'growth')
   const packageInfo = describePlan(plan)
 
   const checklistItems =
     input.quickSteps && input.quickSteps.length > 0
-      ? input.quickSteps
+      ? input.quickSteps.map(step => ({
+          label: step.label,
+          href: step.href,
+          done: step.done,
+          whereItShows: step.whereItShows,
+        }))
       : [
           {
             label: 'Add your first child',
@@ -494,7 +524,8 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
           },
         ]
 
-  const centreLogoBlock = isSafeHttpImage(input.centreLogoUrl)
+  const centreLogoUrl = isSafeHttpImage(input.centreLogoUrl) ? input.centreLogoUrl : null
+  const centreLogoBlock = centreLogoUrl
     ? `
       <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFFFFF;margin:0 0 14px;">
         <tr>
@@ -502,10 +533,10 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="width:56px;vertical-align:middle;">
-                  <img src="${input.centreLogoUrl}" width="48" height="48" alt="${input.centreName} logo" style="display:block;border-radius:999px;border:1px solid ${BRAND.border};background:#fff;" />
+                  <img src="${centreLogoUrl}" width="48" height="48" alt="${centreName} logo" style="display:block;border-radius:999px;border:1px solid ${BRAND.border};background:#fff;" />
                 </td>
                 <td style="vertical-align:middle;">
-                  <p style="margin:0;font-size:12px;font-weight:700;color:${BRAND.heading};">${input.centreName} is set up on CentreConnect</p>
+                  <p style="margin:0;font-size:12px;font-weight:700;color:${BRAND.heading};">${centreName} is set up on CentreConnect</p>
                   <p style="margin:2px 0 0;font-size:11px;color:${BRAND.muted};">Your branding is already showing in the workspace.</p>
                 </td>
               </tr>
@@ -541,7 +572,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hi ${firstName},</p>
     <p style="margin:0 0 14px;font-size:14px;line-height:1.65;">
-      Welcome to CentreConnect for <strong>${input.centreName}</strong>.
+      Welcome to CentreConnect for <strong>${centreName}</strong>.
       This guide shows you, in simple English, what the product helps you do and what to start with first.
     </p>
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.warmBorder};border-radius:14px;background:${BRAND.warm};margin:0 0 14px;">
@@ -553,7 +584,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
       </tr>
     </table>
     <p style="margin:0 0 16px;font-size:13px;line-height:1.65;color:rgb(51,65,85);">
-      Because your child’s centre already uses CentreConnect, you can now see attendance, daily notes, pickup safety checks, and document requests right from your phone — no more chasing the same chats on WhatsApp.
+      Because your child's centre already uses CentreConnect, you can now see attendance, daily notes, pickup safety checks, and document requests right from your phone — no more chasing the same chats on WhatsApp.
     </p>
 
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#ECFEFF;margin:0 0 14px;">
@@ -569,7 +600,7 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
     ${centreLogoBlock}
 
     <p style="margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;color:${BRAND.heading};">How parents will see your creche</p>
-    ${renderCentreCardPreview({ centreName: input.centreName })}
+    ${renderCentreCardPreview({ centreName })}
 
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px;">
       ${button('Open my welcome guide', welcomeGuideUrl)}
@@ -656,11 +687,15 @@ export function renderPilotWelcomePackEmail(input: PilotWelcomePackEmailInput) {
 
 export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigrationEmailInput) {
   const firstName = toFirstName(input.contactName)
+  const centreName = escapeHtml(input.centreName)
+  const dashboardLink = escapeHtml(input.dashboardLink)
+  const websiteBuilderLink = escapeHtml(input.websiteBuilderLink)
+  const applicationsLink = escapeHtml(input.applicationsLink)
   const body = `
     <p style="margin:0 0 10px;font-size:14px;line-height:1.65;">Hey ${firstName},</p>
     <p style="margin:0 0 12px;font-size:14px;line-height:1.65;">
       Your CentreConnect account was upgraded from <strong>Parent</strong> to <strong>ECD Admin</strong> for
-      <strong> ${input.centreName}</strong>.
+      <strong> ${centreName}</strong>.
     </p>
     <table role="presentation" width="100%" style="border:1px solid ${BRAND.border};border-radius:12px;background:#FFF7ED;margin:0 0 14px;">
       <tr>
@@ -680,9 +715,9 @@ export function renderParentToEcdAdminMigrationEmail(input: ParentToEcdAdminMigr
       <li>Access attendance, daily reports, pickup tools, and dashboard.</li>
     </ul>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;">
-      ${button('Open website setup', input.websiteBuilderLink)}
-      ${button('Open dashboard', input.dashboardLink, 'secondary')}
-      ${button('Open applications', input.applicationsLink, 'secondary')}
+      ${button('Open website setup', websiteBuilderLink)}
+      ${button('Open dashboard', dashboardLink, 'secondary')}
+      ${button('Open applications', applicationsLink, 'secondary')}
     </div>
   `
 

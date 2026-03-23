@@ -15,7 +15,7 @@ test.describe('Deep Functional Tests', () => {
     
     page.on('console', msg => {
       if (msg.type() === 'error') console.error(`BROWSER ERROR: ${msg.text()}`);
-      else if (msg.type() === 'warn') console.warn(`BROWSER WARN: ${msg.text()}`);
+      else if (msg.type() === 'warning') console.warn(`BROWSER WARN: ${msg.text()}`);
     });
 
     await page.goto(`${BASE_URL}/login`);

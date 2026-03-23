@@ -75,13 +75,21 @@ export async function saveFinancialSnapshotAction(formData: FormData) {
   revalidatePath('/ecd/billing')
 }
 
-export async function beginPaymentMethodUpdateAction() {
+export type PaymentMethodUpdateResult =
+  | { success: true; authorizationUrl: string }
+  | { success: false; error: string }
+
+export async function beginPaymentMethodUpdateAction(): Promise<PaymentMethodUpdateResult> {
   const session = await requireEcdPortalSession({ cached: false })
-  if (session.role !== 'ecd_admin') return
+  if (session.role !== 'ecd_admin') {
+    return { success: false, error: 'Only administrators can update payment methods.' }
+  }
 
   const { data: centre } = await session.supabase.from('ecd_centres').select('id,email').eq('id', session.ecdId).maybeSingle()
   const customerEmail = centre?.email?.trim() || session.user.email?.trim() || null
-  if (!customerEmail) return
+  if (!customerEmail) {
+    return { success: false, error: 'No email found. Please contact support to update your payment method.' }
+  }
 
   const updateAmount = (() => {
     const parsed = Number(process.env.PAYSTACK_PAYMENT_METHOD_UPDATE_AMOUNT_ZAR)
@@ -89,15 +97,25 @@ export async function beginPaymentMethodUpdateAction() {
     return parsed
   })()
 
-  const payment = await initializePaystackPaymentMethodUpdate({
-    ecdId: session.ecdId,
-    customerEmail,
-    initiatedByUserId: session.user.id,
-    amountZar: updateAmount,
-    metadata: {
-      source: 'ecd_billing_self_serve',
-    },
-  })
+  let payment: Awaited<ReturnType<typeof initializePaystackPaymentMethodUpdate>>
+  try {
+    payment = await initializePaystackPaymentMethodUpdate({
+      ecdId: session.ecdId,
+      customerEmail,
+      initiatedByUserId: session.user.id,
+      amountZar: updateAmount,
+      metadata: {
+        source: 'ecd_billing_self_serve',
+      },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to initialize payment update.'
+    return { success: false, error: message }
+  }
+
+  if (!payment.authorizationUrl) {
+    return { success: false, error: 'Paystack did not return an authorization URL.' }
+  }
 
   const admin = createAdminClient()
   await admin.from('billing_payment_method_updates').insert({
@@ -106,11 +124,11 @@ export async function beginPaymentMethodUpdateAction() {
     paystack_reference: payment.reference,
     payment_url: payment.authorizationUrl,
     amount: updateAmount,
-    currency: payment.currency,
+    currency: payment.accessCode ?? 'ZAR',
     status: 'pending',
   })
 
   revalidatePath('/ecd/billing')
-  redirect(payment.authorizationUrl)
+  return { success: true, authorizationUrl: payment.authorizationUrl }
 }
 

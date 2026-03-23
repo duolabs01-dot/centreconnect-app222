@@ -30,7 +30,6 @@ export async function updateTicketStatus(ticketId: string, newStatus: string) {
     .select()
 
   if (error) {
-    console.error('Error updating ticket status:', error)
     return { success: false, error: error.message }
   }
 

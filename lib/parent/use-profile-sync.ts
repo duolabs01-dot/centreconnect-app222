@@ -24,7 +24,6 @@ export function useParentProfileSync() {
       if (!ready.ok) return { ok: false, error: ready.error }
 
       // Log sync event for audit trail
-      console.log(`[Sync] Initiating profile sync for user ${ready.userId}`)
 
       const { error: parentError } = await supabase
         .from('parents')
@@ -52,7 +51,6 @@ export function useParentProfileSync() {
         return { ok: false, error: 'Database update failed' }
       }
 
-      console.log('[Sync] Profile synced successfully')
       return { ok: true }
     } catch (e) {
       console.error('[Sync] Unexpected error during sync', e)

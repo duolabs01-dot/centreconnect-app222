@@ -529,3 +529,64 @@ See BACKLOG.md
   - `npm run build`
   - Browser checks on the affected ECD, Parent, and Admin pages
 - Commit message: `fix: close cross-portal audit regressions`
+
+## Sprint: DOE Export PDF + Print Fix - March 22, 2026
+
+### Tasks
+- [ ] Task 1: Delete the broken PDF API route (app/api/ecd/dsd-export/pdf/)
+- [ ] Task 2: Rewrite PdfDownloadButton to trigger window.print() with PDF instructions
+- [ ] Task 3: Add print stylesheet to dsd-export page (hides portal chrome)
+- [ ] Task 4: Fix DsdPrintButton to use same print trigger
+- [ ] Task 5: Fix month-change stale state in dsd-export page
+- [ ] Task 6: Pass centreName to PdfDownloadButton
+- [ ] Task 7: Remove puppeteer from package.json
+- [ ] Task 8: Verify and test
+
+### Root Causes
+1. PDF download button reads auth token from localStorage — Supabase SSR doesn't store tokens there
+2. PDF API route has hardcoded ECD ID (Bajabulile's UUID) — every centre sees Bajabulile's report
+3. PDF API route uses Puppeteer, which cannot run on Vercel (50MB function limit, no Chromium)
+4. Print button calls window.print() which prints entire page — sidebar, header, nav and all
+5. Month change on export page may not update register
+
+### Solution
+Eliminate Puppeteer entirely. Use browser-native print for both PDF and print. The browser's "Save as PDF" in print dialog IS the PDF. Works on every device, every browser, including mobile.
+
+## Sprint: DOE Export PDF + Print Fix - RESULTS - March 22, 2026
+
+- [x] Task 1: Deleted broken Puppeteer PDF API route (app/api/ecd/dsd-export/pdf/)
+- [x] Task 2: Rewrote PdfDownloadButton to use browser window.print() with PDF filename
+- [x] Task 3: Added print stylesheet with #doe-print-region wrapper and proper CSS
+- [x] Task 4: Fixed DsdPrintButton to use window.print()
+- [x] Task 5: Month change verified working - page re-fetches data via searchParams
+- [x] Task 6: Added centreName prop to PdfDownloadButton
+- [x] Task 7: Removed puppeteer from package.json
+- [x] Task 8: Build passes, lint passes
+- [x] Bonus: Fixed TypeScript error in platform-admin-action-notification.ts
+
+### Changes Made:
+1. **Deleted** `app/api/ecd/dsd-export/pdf/` directory entirely
+2. **Updated** `pdf-download-button.tsx` - Now sets document.title for filename and calls window.print()
+3. **Updated** `page.tsx`:
+   - Wrapped all DOE report content in `#doe-print-region` div
+   - Added comprehensive `@media print` CSS that hides portal chrome
+   - Added `doe-section-title` and `doe-total-row` CSS classes for print styling
+   - Added `print-hide` class to control bar and navigation elements
+4. **Updated** `print-button.tsx` - Cleaned up to just call window.print()
+5. **Removed** puppeteer dependency from package.json
+6. **Fixed** TypeScript type error in `lib/email/platform-admin-action-notification.ts`
+
+### How PDF Download Works Now:
+1. User clicks "Download PDF"
+2. Button sets `document.title` to format: `DOE-Monthly-Report-{Month}-{Year}-{CentreName}.pdf`
+3. Calls `window.print()` which opens OS print dialog
+4. User selects "Save as PDF" from the dialog (available on all OS/browsers)
+5. PDF saves with the formatted filename
+6. Original page title restored after dialog closes
+
+### Print Styling:
+- All portal chrome (sidebar, header, nav, buttons) hidden via CSS
+- Only `#doe-print-region` content is visible
+- Dark backgrounds preserved with `print-color-adjust: exact`
+- Tables formatted with proper borders and page breaks
+- A4 page size configured

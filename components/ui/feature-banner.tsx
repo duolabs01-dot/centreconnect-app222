@@ -176,7 +176,7 @@ export function FeatureBanner({ context }: { context: BannerContext }) {
       <div className="flex items-start justify-between gap-4 p-5">
         <div className="flex-1 space-y-2">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600">
-            {context === 'ecd' ? '💡 Feature tip' : '✨ New on CentreConnect'}
+            {context === 'ecd' ? (<><span aria-hidden="true">💡</span> Feature tip</>) : (<><span aria-hidden="true">✨</span> New on CentreConnect</>)}
           </p>
           <h3 className="text-lg font-black text-slate-900">{content.title}</h3>
           <p className="text-sm leading-relaxed text-slate-600">{content.message}</p>

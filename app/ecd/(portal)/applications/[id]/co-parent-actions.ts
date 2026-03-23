@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import {
@@ -173,7 +174,7 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
     normalizeText(guardianById.get(payload.requestedForGuardianId ?? '')?.phone) ||
     null
   const whatsappEventKey = `document_request_from_coparent:${application.id}:${payload.requestedByUserId}:${payload.requestedForUserId}:${Date.now()}`
-  const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
+  const parentNotification = await sendParentInAppAndWhatsappNotification(createAdminClient(), {
     parent_id: payload.requestedForUserId,
     ecd_id: session.ecdId,
     application_id: application.id,
@@ -196,7 +197,7 @@ export async function requestLinkedParentDocumentsAction(input: unknown): Promis
     return { ok: false, error: parentNotification.error || 'Document request saved, but notification failed.' }
   }
 
-  await sendEcdInAppAndEmailNotification(session.supabase as any, {
+  await sendEcdInAppAndEmailNotification(createAdminClient(), {
     ecd_id: session.ecdId,
     application_id: application.id,
     title: 'Linked parent request sent',

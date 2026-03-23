@@ -30,16 +30,19 @@ export async function removeGuardianAction(guardianId: string) {
     return { success: false, error: 'You do not have permission to remove this co-parent.' }
   }
 
-  // Delete the guardian record. 
-  // If it was linked to a user_id, it just breaks that link for THIS child.
-  const { error: deleteError } = await supabase
-    .from('guardians')
-    .delete()
-    .eq('id', guardianId)
+  try {
+    // Delete the guardian record. 
+    // If it was linked to a user_id, it just breaks that link for THIS child.
+    const { error: deleteError } = await supabase
+      .from('guardians')
+      .delete()
+      .eq('id', guardianId)
 
-  if (deleteError) {
-    console.error('[removeGuardianAction] Delete error:', deleteError)
-    return { success: false, error: 'Failed to remove the co-parent link.' }
+    if (deleteError) {
+      return { success: false, error: 'Failed to remove the co-parent link.' }
+    }
+  } catch (err) {
+    return { error: 'An unexpected error occurred while removing the co-parent. Please try again.' as const }
   }
 
   revalidatePath('/parent/profile/guardians')

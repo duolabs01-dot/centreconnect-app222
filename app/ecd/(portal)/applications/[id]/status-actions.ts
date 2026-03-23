@@ -328,7 +328,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         status,
       })
 
-      const parentNotification = await sendParentInAppAndWhatsappNotification(session.supabase as any, {
+      const parentNotification = await sendParentInAppAndWhatsappNotification(createAdminClient(), {
         parent_id: parent.id,
         ecd_id: session.ecdId,
         application_id: applicationId,
@@ -372,7 +372,7 @@ export async function updateApplicationStatusAction(input: unknown): Promise<Upd
         warnings.push('email queue')
       }
 
-      const ecdNotification = await sendEcdInAppAndEmailNotification(session.supabase as any, {
+      const ecdNotification = await sendEcdInAppAndEmailNotification(createAdminClient(), {
         ecd_id: session.ecdId,
         application_id: applicationId,
         title: 'Application status changed',

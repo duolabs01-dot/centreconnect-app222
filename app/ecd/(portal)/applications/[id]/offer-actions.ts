@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { buildWarmApplicationUpdateMessage } from '@/lib/communications/templates'
 import { applicationStatusEmail } from '@/lib/email/templates'
@@ -265,7 +266,7 @@ export async function createApplicationOfferAction(input: unknown): Promise<Acti
       status: 'approved',
     })
 
-    await sendParentInAppAndWhatsappNotification(session.supabase as any, {
+    await sendParentInAppAndWhatsappNotification(createAdminClient(), {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,
@@ -388,7 +389,7 @@ export async function rejectApplicationWithReasonAction(input: unknown): Promise
   const centreName = centre?.name?.trim() || 'Your creche'
 
   if (parent?.id) {
-    await sendParentInAppAndWhatsappNotification(session.supabase as any, {
+    await sendParentInAppAndWhatsappNotification(createAdminClient(), {
       parent_id: parent.id,
       ecd_id: session.ecdId,
       application_id: application.id,

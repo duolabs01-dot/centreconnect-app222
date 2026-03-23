@@ -149,6 +149,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Upload a register photo first.' }, { status: 400 })
     }
 
+    // File size limit: 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, message: 'File too large. Maximum size is 10MB.' },
+        { status: 413 }
+      )
+    }
+
     const fallbackStartDate = normalizeDateString(String(formData.get('default_start_date') ?? '').trim())
 
     stage = 'gemini-extraction'
