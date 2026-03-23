@@ -109,6 +109,13 @@ async function deliverNotification(recipient: string, subject: string, html: str
   }
 }
 
+type NotificationResult = {
+  recipient: string
+  ok: boolean
+  channel: string
+  error: string | null
+}
+
 export async function sendPlatformAdminActionNotification(input: PlatformAdminActionNotificationInput) {
   const recipients = Array.from(
     new Set([input.recipientEmail ?? PRIMARY_RECIPIENT, PRIMARY_RECIPIENT, CC_RECIPIENT].filter(Boolean))
@@ -116,7 +123,7 @@ export async function sendPlatformAdminActionNotification(input: PlatformAdminAc
   const subject = `[CentreConnect Admin] ${input.subject}`
   const { html } = buildHtml(input)
 
-  const results: { recipient: string; ok: boolean; channel: string; error: string | null }[] = []
+  const results: NotificationResult[] = []
   for (const recipient of recipients) {
     results.push({
       recipient,
