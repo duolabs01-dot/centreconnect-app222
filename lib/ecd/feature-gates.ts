@@ -12,7 +12,7 @@ type FeatureKey =
 
 const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   financials: 'standard',
-  compliance: 'standard',
+  compliance: 'basic',
   'report-cards': 'standard',
   'website-builder': 'basic',
 }

@@ -6,23 +6,25 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { ComplianceDocumentRow } from './compliance-document-row'
+import { PrintComplianceButton } from './print-button'
 import { addStaffCheckAction } from './actions'
-import { Printer } from 'lucide-react'
+import { ShieldCheck, AlertTriangle } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Compliance Toolkit - CentreConnect',
+  title: 'Compliance — CentreConnect',
   description: 'Track required compliance documents and staff clearances for your crèche.',
 }
 
-const REQUIRED_DOCUMENTS: Array<{ document_type: string; label: string }> = [
-  { document_type: 'dbe_registration', label: 'DBE ECD Programme Registration (Form 16)' },
-  { document_type: 'partial_care', label: 'Partial Care Facility Registration (Form 11)' },
-  { document_type: 'health_clearance', label: 'Municipal Health Clearance Certificate' },
-  { document_type: 'fire_clearance', label: 'Fire Clearance Certificate' },
-  { document_type: 'building_plan', label: 'Approved Building Plan' },
-  { document_type: 'dsd_registration', label: 'DSD/Provincial Registration Certificate' },
-  { document_type: 'npo_certificate', label: 'NPO Certificate (if applicable)' },
-  { document_type: 'popia_policy', label: 'POPIA Privacy Policy - on file and displayed to parents' },
+// critical = needed for DSD government subsidy, important = required for registration
+const REQUIRED_DOCUMENTS: Array<{ document_type: string; label: string; priority: 'critical' | 'important' | 'standard' }> = [
+  { document_type: 'dsd_registration', label: 'DSD/Provincial Registration Certificate', priority: 'critical' },
+  { document_type: 'dbe_registration', label: 'DBE ECD Programme Registration (Form 16)', priority: 'critical' },
+  { document_type: 'npo_certificate', label: 'NPO Certificate (if applicable)', priority: 'critical' },
+  { document_type: 'partial_care', label: 'Partial Care Facility Registration (Form 11)', priority: 'important' },
+  { document_type: 'health_clearance', label: 'Municipal Health Clearance Certificate', priority: 'important' },
+  { document_type: 'fire_clearance', label: 'Fire Clearance Certificate', priority: 'important' },
+  { document_type: 'building_plan', label: 'Approved Building Plan', priority: 'standard' },
+  { document_type: 'popia_policy', label: 'POPIA Privacy Policy — on file and shown to parents', priority: 'standard' },
 ]
 
 type ComplianceDocument = {
@@ -129,42 +131,61 @@ export default async function EcdCompliancePage() {
 
   return (
     <>
-      <div className="flex justify-end mb-4 no-print">
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer className="mr-2 h-4 w-4" />
-          Print Checklist
-        </Button>
+      <div className="flex items-center justify-between mb-6 no-print">
+        <div>
+          <h1 className="text-xl font-black text-slate-900">Compliance Toolkit</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Keep your crèche documents up to date. Upload a photo — AI fills the details.</p>
+        </div>
+        <PrintComplianceButton />
       </div>
       <section className="space-y-6 print:space-y-8">
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Compliance Score</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600">{centre?.name ?? 'Your crèche'}</p>
-            <p className={`mt-1 text-3xl font-black ${scoreClass(score)}`}>{score}%</p>
-            <p className="text-xs text-slate-500">
-              {doneDocs} of {totalDocs} required documents uploaded or verified
-            </p>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-              <div className={`h-full ${scoreBarClass(score)}`} style={{ width: `${score}%` }} />
+        <Card className="border-slate-200 overflow-hidden">
+          <CardContent className="p-5">
+            <div className="flex items-start gap-4">
+              <div className={`h-14 w-14 shrink-0 flex items-center justify-center rounded-2xl ${score >= 80 ? 'bg-emerald-100' : score >= 50 ? 'bg-amber-100' : 'bg-rose-100'}`}>
+                <ShieldCheck className={`h-7 w-7 ${scoreClass(score)}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{centre?.name ?? 'Your crèche'}</p>
+                <p className={`text-4xl font-black mt-0.5 ${scoreClass(score)}`}>{score}%</p>
+                <p className="text-xs text-slate-500 mt-0.5">{doneDocs} of {totalDocs} documents uploaded or verified</p>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div className={`h-full rounded-full transition-all ${scoreBarClass(score)}`} style={{ width: `${score}%` }} />
+                </div>
+              </div>
             </div>
+            {score < 80 && (
+              <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-100 px-3 py-2.5">
+                <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800">
+                  <strong>Critical for subsidy:</strong> DSD Registration, DBE Registration, and NPO Certificate are required for government subsidy payments. Upload these first.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle>Required Documents</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Required Documents</CardTitle>
+            <p className="text-xs text-slate-500 -mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-rose-500 mr-1" />Critical for subsidy
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 mx-1 ml-3" />Required for registration
+            </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            {documents.map((doc) => (
-              <ComplianceDocumentRow
-                key={doc.id}
-                doc={doc}
-                canEdit={role !== 'ecd_staff'}
-                statusClassName={statusChipClass(doc.status)}
-              />
-            ))}
+            {documents.map((doc) => {
+              const meta = REQUIRED_DOCUMENTS.find(r => r.document_type === doc.document_type)
+              return (
+                <ComplianceDocumentRow
+                  key={doc.id}
+                  doc={doc}
+                  canEdit={role !== 'ecd_staff'}
+                  statusClassName={statusChipClass(doc.status)}
+                  priority={meta?.priority ?? 'standard'}
+                />
+              )
+            })}
           </CardContent>
         </Card>
 

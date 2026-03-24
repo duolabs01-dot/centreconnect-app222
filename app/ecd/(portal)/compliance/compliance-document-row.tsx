@@ -23,13 +23,14 @@ type ComplianceDocumentRowProps = {
   }
   canEdit: boolean
   statusClassName: string
+  priority?: 'critical' | 'important' | 'standard'
 }
 
 function aiFieldClass(confidence: number | undefined) {
   return confidence ? 'border-teal-300 ring-2 ring-teal-100' : ''
 }
 
-export function ComplianceDocumentRow({ doc, canEdit, statusClassName }: ComplianceDocumentRowProps) {
+export function ComplianceDocumentRow({ doc, canEdit, statusClassName, priority = 'standard' }: ComplianceDocumentRowProps) {
   const [expiresAt, setExpiresAt] = useState(doc.expires_at ?? '')
   const [notes, setNotes] = useState(doc.notes ?? '')
   const [issuingAuthority, setIssuingAuthority] = useState('')
@@ -75,8 +76,12 @@ export function ComplianceDocumentRow({ doc, canEdit, statusClassName }: Complia
       <input type="hidden" name="current_status" value={doc.status} />
       <input type="hidden" name="file_url" value={fileUrl} />
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-900">{doc.label}</p>
-        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClassName}`}>
+        <div className="flex items-center gap-2 min-w-0">
+          {priority === 'critical' && <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-rose-500" title="Critical for subsidy" />}
+          {priority === 'important' && <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-amber-400" title="Required for registration" />}
+          <p className="text-sm font-semibold text-slate-900">{doc.label}</p>
+        </div>
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${statusClassName}`}>
           {doc.status}
         </span>
       </div>

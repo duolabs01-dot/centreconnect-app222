@@ -704,16 +704,16 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
             </form>
 
             <div className="min-w-0 overflow-hidden">
-              <div className="hidden lg:flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto max-w-full [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
+              <div className="flex items-center gap-1.5 rounded-2xl border border-slate-100 bg-slate-50 p-1.5 overflow-x-auto max-w-full [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300">
                 {[
-                  { key: 'pending', label: 'Pending', count: filteredCounts.pending },
+                  { key: 'pending', label: 'New', count: filteredCounts.pending },
                   { key: 'awaiting_offer_response', label: 'Offers', count: filteredCounts.awaitingOfferResponse },
                   { key: 'approved', label: 'Approved', count: filteredCounts.approved },
                   { key: 'enrolled', label: 'Enrolled', count: filteredCounts.enrolled },
                   { key: 'waitlisted', label: 'Waitlist', count: filteredCounts.waitlisted },
                   { key: 'rejected', label: 'Rejected', count: filteredCounts.rejected },
                   { key: 'withdrawn', label: 'Withdrawn', count: filteredCounts.withdrawn },
-                ].map((tab) => (
+                ].filter((tab) => tab.count > 0 || tab.key === 'pending' || tab.key === selectedTab).map((tab) => (
                   <Link
                     key={tab.key}
                     href={buildApplicationsHref({ tab: tab.key as TabKey, page: 1 })}
