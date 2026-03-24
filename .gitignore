@@ -32,3 +32,21 @@ all_ts_files.txt
 # Local test reports (keep out of commits)
 tmp/reports/*-latest.*
 tmp/reports/*.txt
+
+# AI tool configs (other platforms)
+.trae/
+.opencode/
+.windsurf/
+.agents/
+Antigravity Skills/
+cc-agents/
+cc-agents.zip
+
+# Personal/non-code files
+Founder CV/
+CC Pilot docs.zip
+Pilot files.zip
+ECD media/
+
+# Claude worktrees
+.claude/worktrees/

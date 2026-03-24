@@ -2,7 +2,7 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
-  // Note: ESLint is now handled via root config or separate lint command in Next 15+
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
     optimizePackageImports: ['lucide-react'],
     serverActions: {
