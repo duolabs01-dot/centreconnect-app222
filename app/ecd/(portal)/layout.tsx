@@ -144,6 +144,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         subscriptionTier={subscriptionTier}
         attentionBadges={attentionBadges}
         centreName={centre?.name?.trim() ?? null}
+        ownerName={ownerDisplayName}
       />
       <main
         id="ecd-portal-main-scroll"

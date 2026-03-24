@@ -18,6 +18,7 @@ type EcdPortalSidebarProps = {
   subscriptionTier?: string | null
   attentionBadges?: Partial<Record<string, number>>
   centreName?: string | null
+  ownerName?: string | null
 }
 
 type EcdNavGroup = NonNullable<EcdNavItem['group']>
@@ -55,6 +56,7 @@ export function EcdPortalSidebar({
   subscriptionTier = null,
   attentionBadges = {},
   centreName = null,
+  ownerName = null,
 }: EcdPortalSidebarProps) {
   const pathname = usePathname()
   useAppNavLock()
@@ -176,10 +178,10 @@ export function EcdPortalSidebar({
 
   return (
     <>
-      {/* ── Mobile Top Header ── */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center justify-between bg-slate-900/95 px-4 md:hidden"
-        style={{ backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-3">
+      {/* ── Mobile Top Header — always above everything ── */}
+      <div className="fixed inset-x-0 top-0 z-[110] flex h-14 items-center justify-between bg-slate-900 px-4 md:hidden"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-3 min-w-0">
           <MobileNavMenu
             items={visibleNav}
             userEmail={userEmail}
@@ -188,13 +190,18 @@ export function EcdPortalSidebar({
             subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
-          <BrandMark compact className="[&_*]:text-white" />
+          <BrandMark compact className="shrink-0 [&_*]:text-white" />
         </div>
-        <div className="flex items-center gap-2">
-          {centreName && (
-            <span className="max-w-[140px] truncate text-[11px] font-semibold text-slate-300">{centreName}</span>
-          )}
-        </div>
+        {(centreName || ownerName) && (
+          <div className="flex min-w-0 flex-col items-end text-right">
+            {centreName && (
+              <span className="max-w-[160px] truncate text-[11px] font-bold leading-tight text-white">{centreName}</span>
+            )}
+            {ownerName && (
+              <span className="max-w-[160px] truncate text-[10px] leading-tight text-slate-400">{ownerName}</span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── Desktop Sidebar ── */}
