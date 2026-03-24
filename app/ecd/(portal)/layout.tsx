@@ -7,7 +7,6 @@ import { redirect } from 'next/navigation'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { EcdPortalSidebar } from '@/components/layout/ecd-portal-sidebar'
 import { EcdMainScrollMemory } from '@/components/layout/ecd-main-scroll-memory'
-import { EcdMobileBottomNav } from '@/components/layout/ecd-mobile-bottom-nav'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BrowserNotificationBridge } from '@/components/notifications/browser-notification-bridge'
 import { AppBreadcrumbs } from '@/components/layout/app-breadcrumbs'
@@ -151,7 +150,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         className="flex-1 overflow-y-auto bg-card md:ml-[220px] [scrollbar-width:none] hover:[scrollbar-width:thin] [&::-webkit-scrollbar]:w-0 hover:[&::-webkit-scrollbar]:w-2 hover:[&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300/80"
       >
         <EcdMainScrollMemory />
-        <div className="mx-auto w-full max-w-[1600px] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-20 sm:px-6 md:pb-10 md:pt-8 lg:px-8 xl:px-10">
+        <div className="mx-auto w-full max-w-[1600px] px-4 pb-6 pt-20 sm:px-6 md:pb-10 md:pt-8 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
           {showBreadcrumbs ? (
             <AppBreadcrumbs
@@ -163,8 +162,6 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
           <div className="text-foreground">{children}</div>
         </div>
       </main>
-      {/* Mobile bottom tab bar — ECD portal */}
-      <EcdMobileBottomNav pathname={pathname} attentionBadges={attentionBadges} />
     </div>
   )
 }
