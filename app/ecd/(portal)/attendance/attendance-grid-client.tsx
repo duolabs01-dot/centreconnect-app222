@@ -113,6 +113,40 @@ export function AttendanceGridClient({
     })
   }
 
+  async function markAllPresentToday() {
+    if (!isCurrentMonth) return
+    const dateStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(today).padStart(2, '0')}`
+
+    // Optimistic update
+    setLocalAttendance(prev => {
+      const next = { ...prev }
+      enrolledChildren.forEach(child => {
+        next[child.id] = { ...(prev[child.id] || {}), [today]: 'present' }
+      })
+      return next
+    })
+
+    try {
+      await supabase
+        .from('attendance_records')
+        .upsert(
+          enrolledChildren.map(child => ({
+            centre_id: ecdId,
+            child_id: child.id,
+            class_id: child.class_id ?? selectedClassId,
+            date: dateStr,
+            status: 'present' as AttendanceStatus,
+            recorded_by: staffId,
+            updated_at: new Date().toISOString(),
+          })),
+          { onConflict: 'child_id,date' }
+        )
+      toast.success(`${enrolledChildren.length} children marked present for today`)
+    } catch {
+      toast.error('Failed to mark all present')
+    }
+  }
+
   async function toggleStatus(childId: string, day: number) {
     const currentStatus = localAttendance[childId]?.[day] ?? null
     const currentIndex = STATUS_ORDER.indexOf(currentStatus)
@@ -239,9 +273,17 @@ export function AttendanceGridClient({
           </Select>
         </div>
 
-         <div className="flex items-center gap-2">
+         <div className="flex flex-wrap items-center gap-2">
            {isPending && <Loader2 className="h-4 w-4 animate-spin text-slate-400" />}
-           <Button 
+           {isCurrentMonth && (
+             <Button
+               onClick={markAllPresentToday}
+               className="rounded-xl font-black gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+             >
+               ✓ All Present Today
+             </Button>
+           )}
+           <Button
              onClick={() => window.print()}
              variant="outline"
              className="rounded-xl font-black gap-2 border-2 border-slate-100"
@@ -255,26 +297,28 @@ export function AttendanceGridClient({
          </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 no-print">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-black uppercase tracking-wide text-slate-500">Reliable fallback</p>
-            <h2 className="mt-1 text-sm font-bold text-slate-900">This attendance register is the dependable manual path</h2>
-            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-              If a paper register photo is blurry, messy, or misses names, keep working here. You can also switch to
-              the import tools for one clear photo or a typed CSV, then come back here to confirm the result.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-white font-black text-slate-700">
-              <Link href="/ecd/children/new#bulk-existing-children">Bulk add children</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-xl border-slate-200 bg-white font-black text-slate-700">
-              <Link href="/ecd/attendance">Use manual attendance</Link>
-            </Button>
+      {isCurrentMonth && (
+        <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 no-print">
+          <p className="text-[11px] font-black uppercase tracking-wide text-teal-700">Today — {MONTHS[selectedMonth - 1]} {today}, {selectedYear}</p>
+          <div className="mt-2 flex flex-wrap gap-3">
+            {(() => {
+              const presentToday = enrolledChildren.filter(c => localAttendance[c.id]?.[today] === 'present').length
+              const absentToday = enrolledChildren.filter(c => localAttendance[c.id]?.[today] === 'absent').length
+              const sickToday = enrolledChildren.filter(c => localAttendance[c.id]?.[today] === 'sick').length
+              const unmarked = enrolledChildren.filter(c => !localAttendance[c.id]?.[today]).length
+              return (
+                <>
+                  <span className="rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-sm font-black text-emerald-800">{presentToday} present</span>
+                  {absentToday > 0 && <span className="rounded-full border border-rose-200 bg-rose-100 px-3 py-1 text-sm font-black text-rose-800">{absentToday} absent</span>}
+                  {sickToday > 0 && <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-sm font-black text-amber-800">{sickToday} sick</span>}
+                  {unmarked > 0 && <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-bold text-slate-500">{unmarked} not yet marked</span>}
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-bold text-slate-600">{enrolledChildren.length} enrolled</span>
+                </>
+              )
+            })()}
           </div>
         </div>
-      </div>
+      )}
 
       <div className="overflow-x-auto rounded-[2rem] border border-slate-200 bg-white shadow-xl">
         <div className="min-w-max p-8 print:p-0">

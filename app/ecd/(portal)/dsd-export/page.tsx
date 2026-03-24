@@ -170,6 +170,53 @@ export default async function DsdExportPage(props: {
           </CardContent>
         </Card>
 
+        {/* ── Filing Readiness Checklist ── */}
+        {(() => {
+          const readinessItems = [
+            { label: 'Centre name', ok: Boolean(data.centreName) },
+            { label: 'Physical address', ok: Boolean(data.addressLine1) },
+            { label: 'Contact details', ok: Boolean(data.primaryContactPhone || data.primaryContactEmail) },
+            { label: 'Registration number', ok: Boolean(data.registrationNumber || data.npoReg) },
+            { label: 'Children enrolled', ok: data.children.length > 0 },
+            { label: `Boys count (${data.doeStats.totalMale})`, ok: data.doeStats.totalMale > 0 },
+            { label: `Girls count (${data.doeStats.totalFemale})`, ok: data.doeStats.totalFemale > 0 },
+            { label: 'Attendance data', ok: data.attendanceDaysReported > 0 },
+            { label: 'Staff records', ok: data.staff.length > 0 },
+            { label: 'Compiled by (owner name)', ok: Boolean(data.primaryContactName) },
+          ]
+          const passed = readinessItems.filter(i => i.ok).length
+          const allGood = passed === readinessItems.length
+          return (
+            <Card className={`rounded-[2rem] border-2 shadow-sm print-hide overflow-hidden ${allGood ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/60'}`}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className={`h-5 w-5 ${allGood ? 'text-emerald-600' : 'text-amber-600'}`} />
+                    <span className={`text-sm font-black uppercase tracking-widest ${allGood ? 'text-emerald-800' : 'text-amber-800'}`}>
+                      Filing Readiness — {passed}/{readinessItems.length} Complete
+                    </span>
+                  </div>
+                  {!allGood && (
+                    <Link href="/ecd/profile" className="text-xs font-bold text-amber-700 underline underline-offset-2 hover:text-amber-900">
+                      Fix in Settings →
+                    </Link>
+                  )}
+                </div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {readinessItems.map(item => (
+                    <div key={item.label} className="flex items-center gap-2 text-sm">
+                      <span className={`h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-[10px] font-black ${item.ok ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-white'}`}>
+                        {item.ok ? '✓' : '!'}
+                      </span>
+                      <span className={item.ok ? 'text-slate-700' : 'font-semibold text-amber-800'}>{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
+
         <div className="flex flex-wrap gap-2 print-hide">
           <Button variant="outline" asChild className="rounded-2xl font-bold border-slate-200 text-slate-600">
             <Link href="/ecd/report-cards">Report Cards <ArrowRight className="ml-2 h-4 w-4" /></Link>
