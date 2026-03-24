@@ -11,6 +11,7 @@ import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
+import { PilotPromoBanner } from '@/components/ecd/pilot-promo-banner'
 import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
 import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 import { PaymentMethodUpdateButton } from './payment-method-update-button'
@@ -87,11 +88,16 @@ export default async function EcdBillingPage() {
   const monthlyProfit = pnl.revenue - pnl.expenses
   const netWorth = pnl.assets - pnl.liabilities
 
+  const isTrial = !subscription || subscription.status === 'trial'
+
   return (
     <>
       <section className="space-y-6">
+        {isTrial && (
+          <PilotPromoBanner trialEndsAt={subscription?.trial_ends_at ?? null} />
+        )}
         {role === 'ecd_admin' && (
-          <MonthlyInvoicesCard 
+          <MonthlyInvoicesCard
             ecdId={ecdId}
             enrolledWithFeesCount={enrolledWithFeesCount}
             totalExpectedMonthlyRevenue={totalExpectedMonthlyRevenue}
