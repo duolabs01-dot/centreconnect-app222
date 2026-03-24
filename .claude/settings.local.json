@@ -46,7 +46,10 @@
       "Bash(find C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan/app -path */node_modules -prune -o -type f -name *shell* -print)",
       "Bash(grep -E \"\\\\.tsx?$\")",
       "Bash(grep -E \"\\\\.ts$\")",
-      "Bash(grep -rn netlify C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan --include=*.json --include=*.ts --include=*.tsx --include=*.js --include=*.md -l)"
+      "Bash(grep -rn netlify C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan --include=*.json --include=*.ts --include=*.tsx --include=*.js --include=*.md -l)",
+      "Bash(npm audit:*)",
+      "Bash(find /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -type f -name tailwind.config.*)",
+      "Bash(find /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -name *theme* -o -name *ecd-theme* -o -name globals.css)"
     ]
   }
 }

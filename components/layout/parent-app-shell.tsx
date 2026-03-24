@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon, Home, Search, ClipboardList, Zap, GraduationCap, User } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { createClient } from '@/lib/supabase/client'
@@ -23,14 +23,13 @@ type ParentAppShellProps = {
   children: React.ReactNode
 }
 
-const DESKTOP_PARENT_TABS: Array<{ href: string; label: string }> = [
-  { href: '/parent/dashboard', label: 'Dashboard' },
-  { href: '/parent/discover', label: 'Discover' },
-  { href: '/parent/applications', label: 'Applications' },
-  { href: '/parent/daily-reports', label: 'Daily Reports' },
-  { href: '/parent/report-cards', label: 'Report Cards' },
-  { href: '/parent/notifications', label: 'Notifications' },
-  { href: '/parent/profile', label: 'Profile' },
+const DESKTOP_PARENT_TABS: Array<{ href: string; label: string; icon: React.ElementType }> = [
+  { href: '/parent/dashboard',    label: 'Home',         icon: Home },
+  { href: '/parent/discover',     label: 'Discover',     icon: Search },
+  { href: '/parent/applications', label: 'Applications', icon: ClipboardList },
+  { href: '/parent/daily-reports',label: 'Daily Reports',icon: Zap },
+  { href: '/parent/report-cards', label: 'Report Cards', icon: GraduationCap },
+  { href: '/parent/profile',      label: 'Profile',      icon: User },
 ]
 
 function getTitle(pathname: string) {
@@ -239,20 +238,22 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
             </div>
           </div>
 
-          <nav className="mt-3 hidden items-center gap-2 overflow-x-auto pb-1 md:flex">
+          <nav className="mt-3 hidden items-center gap-1.5 overflow-x-auto pb-1 md:flex">
             {DESKTOP_PARENT_TABS.map((tab) => {
               const active = isDesktopTabActive(pathname, tab.href)
+              const Icon = tab.icon
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
                   className={cn(
-                    'rounded-2xl border px-3.5 py-2 text-xs font-black uppercase tracking-[0.08em] transition-colors',
+                    'flex items-center gap-1.5 rounded-2xl border px-3 py-2 text-xs font-bold transition-all duration-150 whitespace-nowrap',
                     active
-                      ? 'border-teal-300 bg-teal-50 text-teal-700'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-teal-200 hover:text-teal-700'
+                      ? 'border-teal-300 bg-teal-50 text-teal-700 shadow-sm'
+                      : 'border-slate-200 bg-white text-slate-500 hover:border-teal-200 hover:bg-teal-50/50 hover:text-teal-700'
                   )}
                 >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
                   {tab.label}
                 </Link>
               )
