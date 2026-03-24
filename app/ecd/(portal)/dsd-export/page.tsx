@@ -86,6 +86,20 @@ export default async function DsdExportPage(props: {
     return lastA.localeCompare(lastB)
   })
 
+  // Build day-by-day attendance map for Annexure A
+  const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate()
+  const dailyAttMap = new Map<string, Map<number, string>>()
+  for (const row of data.rawAttendanceRows) {
+    const d = new Date(row.date)
+    const day = d.getDate()
+    const month = d.getMonth() + 1
+    const year = d.getFullYear()
+    if (month !== selectedMonth || year !== selectedYear) continue
+    if (!dailyAttMap.has(row.child_id)) dailyAttMap.set(row.child_id, new Map())
+    dailyAttMap.get(row.child_id)!.set(day, row.status)
+  }
+  const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+
   return (
     <>
       <style
@@ -259,19 +273,37 @@ export default async function DsdExportPage(props: {
                 </div>
               </div>
 
-              <div className="grid gap-3 pt-2 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Registration and permit</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">Registration number: {data.registrationNumber || '--'}</p>
-                  <p className="mt-1 text-sm text-slate-700">{healthPermit?.label ?? 'Municipal Health Clearance Certificate'}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-                    {healthPermit?.status === 'verified' ? 'Verified on file' : healthPermit?.status ? `Status: ${healthPermit.status}` : 'Awaiting verification'}
-                  </p>
+              {/* Other Relevant Information — matches real DOE form page 1 */}
+              <div className="mt-4">
+                <div className="mb-1 rounded-t-xl bg-slate-900 px-4 py-2 doe-dark-bg">
+                  <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white">Other Relevant Information</p>
                 </div>
-                <div className="rounded-2xl border border-slate-300 bg-white p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Supporting compliance pack</p>
-                  <p className="mt-2 text-3xl font-black text-slate-900">{verifiedCompliance.length}</p>
-                  <p className="mt-1 text-sm text-slate-700">Verified compliance document{verifiedCompliance.length === 1 ? '' : 's'} on file for this return.</p>
+                <div className="overflow-x-auto rounded-b-xl border border-slate-300">
+                  <table className="min-w-full text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-100">
+                        <th className={`${TH} w-10`}>No.</th>
+                        <th className={`${TH} text-left`}>Description</th>
+                        <th className={TH}>Total number for the current month</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ['1', 'No. of ECD Practitioners that received training', trainedCount],
+                        ['2', 'No. of ECD Volunteers that received training', 0],
+                        ['3', 'No. of Children with Disabilities', disabledCount],
+                        ['4', 'No. of ECD Practitioners Employed', practitionersEmployed],
+                        ['5', 'No. of computers in an NPO', data.staff.filter(s => s.isComputerLiterate).length > 0 ? 1 : '--'],
+                        ['6', 'No. of Staff who are computer literate (Excel)', computerLiterateCount],
+                      ].map(([no, desc, val]) => (
+                        <tr key={String(no)} className="border-b border-slate-100">
+                          <td className={TD}>{no}</td>
+                          <td className={TDL}>{desc}</td>
+                          <td className={`${TD} font-black`}>{String(val)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </CardContent>
@@ -290,18 +322,26 @@ export default async function DsdExportPage(props: {
                 <table className="min-w-full text-[11px]">
                   <thead>
                     <tr className="bg-slate-100">
-                      <th className={TH}>No.</th>
-                      <th className={`${TH} text-left min-w-[160px]`}>Surname & Initial / Full Name</th>
-                      <th className={TH}>Date of Birth</th>
-                      <th className={TH}>Age</th>
+                      <th className={TH} rowSpan={2}>No.</th>
+                      <th className={`${TH} text-left min-w-[160px]`} rowSpan={2}>Surname & Initial<br />/ Full Name</th>
+                      <th className={TH} rowSpan={2}>Date of Birth<br />/ ID Number</th>
+                      <th className={TH} rowSpan={2}>Age</th>
+                      <th className={`${TH} border-l-2`} colSpan={5}>Race</th>
+                      <th className={`${TH} border-l-2`} colSpan={2}>Gender</th>
+                      <th className={TH} rowSpan={2}>Disabled<br />Yes/No</th>
+                      <th className={`${TH} border-l-2`} colSpan={3}>Income 1 Parent</th>
+                      <th className={`${TH} border-l-2`} colSpan={3}>Income 2 Parents</th>
+                      <th className={TH} rowSpan={2}>Other</th>
+                      <th className={TH} rowSpan={2}>New<br />Admission</th>
+                      <th className={TH} rowSpan={2}>Discharge</th>
+                      <th className={TH} rowSpan={2}>Total Days<br />Attendance</th>
+                    </tr>
+                    <tr className="bg-slate-50">
+                      {['B','W','C','I','A'].map(r => <th key={r} className={TH}>{r}</th>)}
                       <th className={TH}>M</th>
                       <th className={TH}>F</th>
-                      <th className={TH}>Race B</th>
-                      <th className={TH}>Disabled</th>
-                      <th className={TH}>R0-R3500<br />(1 Parent)</th>
-                      <th className={TH}>R0-R4500<br />(2 Parent)</th>
-                      <th className={TH}>Other</th>
-                      <th className={TH}>Days<br />Attendance</th>
+                      {['R0-R3500','R3501-R4500','R4501+'].map(h => <th key={`1p${h}`} className={TH}>{h}</th>)}
+                      {['R0-R3500','R3501-R4500','R4501+'].map(h => <th key={`2p${h}`} className={TH}>{h}</th>)}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -312,36 +352,49 @@ export default async function DsdExportPage(props: {
                       const parts = child.childName.split(' ')
                       const surname = parts.slice(-1)[0] ?? ''
                       const given = parts.slice(0, -1).join(' ')
-                      const initial = given ? given[0]?.toUpperCase() + '.' : ''
-                      const displayName = given ? `${surname}, ${given}` : `${surname} ${initial}`
+                      const displayName = given ? `${surname}, ${given}` : surname
+                      const race = (child as any).race ?? 'B'
+                      const isNew = child.startDate ? (() => { const d = new Date(child.startDate); return d.getFullYear() === selectedYear && d.getMonth() + 1 === selectedMonth })() : false
+                      const cat = child.parentIncomeCategory
                       return (
                         <tr key={child.childId} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                           <td className={TD}>{idx + 1}</td>
                           <td className={`${TDL} font-semibold`}>{displayName}</td>
                           <td className={TD}>{doeDate(child.dateOfBirth)}</td>
                           <td className={TD}>{age ?? '--'}</td>
+                          {['B','W','C','I','A'].map(r => <td key={r} className={TD}>{race.toUpperCase().startsWith(r) ? '✓' : ''}</td>)}
                           <td className={TD}>{gi === 'M' ? '✓' : ''}</td>
                           <td className={TD}>{gi === 'F' ? '✓' : ''}</td>
-                          <td className={TD}>B</td>
                           <td className={TD}>{child.isDisabled ? 'Yes' : 'No'}</td>
-                          <td className={TD}>{child.parentIncomeCategory === 'R0-R3500' ? '✓' : ''}</td>
-                          <td className={TD}>{child.parentIncomeCategory === 'R0-R4500' ? '✓' : ''}</td>
-                          <td className={TD}>{child.parentIncomeCategory === 'Other' ? '✓' : ''}</td>
+                          {/* Income 1 Parent */}
+                          <td className={TD}>{cat === 'R0-R3500' ? '✓' : ''}</td>
+                          <td className={TD}>{cat === 'R3501-R4500' ? '✓' : ''}</td>
+                          <td className={TD}>{cat === 'R4501+' ? '✓' : ''}</td>
+                          {/* Income 2 Parents */}
+                          <td className={TD}>{cat === 'R0-R4500' ? '✓' : ''}</td>
+                          <td className={TD}>{cat === 'R4501-R9000' ? '✓' : ''}</td>
+                          <td className={TD}>{cat === 'R9001+' ? '✓' : ''}</td>
+                          <td className={TD}>{!['R0-R3500','R3501-R4500','R4501+','R0-R4500','R4501-R9000','R9001+'].includes(cat) ? '✓' : ''}</td>
+                          <td className={TD}>{isNew ? 'Yes' : ''}</td>
+                          <td className={TD}></td>
                           <td className={`${TD} font-bold`}>{att?.present ?? 0}</td>
                         </tr>
                       )
                     })}
                     {/* Totals row */}
-                    <tr className="doe-total-row font-black text-xs">
+                    <tr className="bg-slate-200 font-black text-xs">
                       <td className={TD} colSpan={4}>TOTAL</td>
+                      <td className={TD}>{total}</td>
+                      <td className={TD}></td><td className={TD}></td><td className={TD}></td><td className={TD}></td>
                       <td className={TD}>{data.doeStats.totalMale}</td>
                       <td className={TD}>{data.doeStats.totalFemale}</td>
-                      <td className={TD}>{total}</td>
                       <td className={TD}>{disabledCount}</td>
-                      <td className={TD}>{r3500}</td>
-                      <td className={TD}>{r4500}</td>
+                      <td className={TD}>{r3500}</td><td className={TD}></td><td className={TD}></td>
+                      <td className={TD}>{r4500}</td><td className={TD}></td><td className={TD}></td>
                       <td className={TD}>{otherIncome}</td>
-                      <td className={TD}>--</td>
+                      <td className={TD}>{newR3500 + newR4500 + newOther}</td>
+                      <td className={TD}>0</td>
+                      <td className={TD}>{Array.from(data.attendanceByChild.values()).reduce((s, a) => s + a.present, 0)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -354,47 +407,55 @@ export default async function DsdExportPage(props: {
             </CardContent>
           </Card>
 
-          {/* SECTION 3 — Attendance Summary (pages 4/5) */}
+          {/* SECTION 3 — Attendance Register Annexure A (day-by-day grid, matches pages 4/5 of PDF) */}
           <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none mb-6">
-            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-section-title doe-dark-bg">
               <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
                 <FileCheck2 className="h-4 w-4 text-cyan-400" />
-                Attendance Summary — Days Attended Per Child
+                Attendance Register — Partial Care Facility (Crèches) — Annexure A
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="min-w-full text-[11px]">
+                <table className="min-w-full text-[9px]">
                   <thead>
                     <tr className="bg-slate-100">
                       <th className={TH}>No.</th>
-                      <th className={`${TH} text-left min-w-[140px]`}>Surname & Initial</th>
-                      <th className={TH}>Age</th>
-                      <th className={TH}>Days Present</th>
-                      <th className={TH}>Days Absent</th>
-                      <th className={TH}>Total Days</th>
-                      <th className={TH}>Attendance %</th>
+                      <th className={`${TH} text-left min-w-[120px]`}>Surname &amp; Initials</th>
+                      <th className={`${TH} min-w-[32px]`}>Age<br />(Yrs)</th>
+                      <th className={`${TH} min-w-[24px]`}>Age<br />(Mo)</th>
+                      {allDays.map(d => (
+                        <th key={d} className={`${TH} w-7 px-0.5`}>{d}</th>
+                      ))}
+                      <th className={TH}>Total<br />Days</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {childrenSorted.map((child, idx) => {
-                      const att = data.attendanceByChild.get(child.childId)
                       const age = calcAge(child.dateOfBirth, selectedYear, selectedMonth)
+                      const dobDate = child.dateOfBirth ? new Date(child.dateOfBirth) : null
+                      const ageMonths = dobDate ? ((selectedYear - dobDate.getFullYear()) * 12 + (selectedMonth - (dobDate.getMonth() + 1))) % 12 : '--'
                       const parts = child.childName.split(' ')
                       const surname = parts.slice(-1)[0] ?? ''
                       const given = parts.slice(0, -1).join(' ')
                       const initial = given ? given[0]?.toUpperCase() + '.' : ''
+                      const dayMap = dailyAttMap.get(child.childId) ?? new Map<number, string>()
+                      const totalPresent = Array.from(dayMap.values()).filter(s => s === 'present' || s === 'late').length
                       return (
                         <tr key={child.childId} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
                           <td className={TD}>{idx + 1}</td>
                           <td className={TDL}>{surname} {initial}</td>
-                          <td className={TD}>{age != null ? age : '--'}</td>
-                          <td className={`${TD} font-bold text-emerald-700`}>{att?.present ?? 0}</td>
-                          <td className={`${TD} text-rose-600`}>{att?.absent ?? 0}</td>
-                          <td className={TD}>{data.attendanceDaysReported}</td>
-                          <td className={`${TD} font-black text-slate-900`}>
-                            {att && att.totalRecorded > 0 ? `${att.attendanceRate}%` : '--'}
-                          </td>
+                          <td className={TD}>{age ?? '--'}</td>
+                          <td className={TD}>{ageMonths}</td>
+                          {allDays.map(d => {
+                            const status = dayMap.get(d)
+                            return (
+                              <td key={d} className={`${TD} w-7 px-0.5 ${status === 'present' || status === 'late' ? 'text-emerald-700 font-black' : status === 'absent' ? 'text-rose-600' : 'text-slate-300'}`}>
+                                {status === 'present' || status === 'late' ? 'P' : status === 'absent' ? 'A' : ''}
+                              </td>
+                            )
+                          })}
+                          <td className={`${TD} font-black`}>{totalPresent}</td>
                         </tr>
                       )
                     })}
@@ -403,9 +464,14 @@ export default async function DsdExportPage(props: {
               </div>
               {data.attendanceDaysReported === 0 && (
                 <p className="px-6 py-4 text-center text-[11px] text-slate-400 font-bold uppercase tracking-widest">
-                  No attendance records found for this period. Import from the Attendance Register.
+                  No attendance records found. Mark attendance daily from the Attendance page.
                 </p>
               )}
+              <div className="border-t border-slate-200 px-6 py-3 text-[11px] text-slate-600 flex gap-6">
+                <span><span className="font-black text-emerald-700">P</span> = Present</span>
+                <span><span className="font-black text-rose-600">A</span> = Absent</span>
+                <span className="font-black uppercase tracking-widest mr-2">Name of Manager: {data.primaryContactName || '--'}</span>
+              </div>
             </CardContent>
           </Card>
 
@@ -568,6 +634,92 @@ export default async function DsdExportPage(props: {
                 )}
               </CardContent>
             </Card>
+          {/* SECTION 5 — Grand Total of Beneficiaries (matches page 11 of PDF) */}
+          <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none mb-6">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-dark-bg">
+              <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+                <Users className="h-4 w-4 text-cyan-400" />
+                Grand Total of Beneficiaries
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className={`${TH} w-12`}>No.</th>
+                      <th className={`${TH} text-left`}>Beneficiaries Category</th>
+                      <th className={TH}>Total Number</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="bg-white">
+                      <td className={TD}>1</td>
+                      <td className={TDL}>Boys</td>
+                      <td className={`${TD} text-xl font-black`}>{data.doeStats.totalMale}</td>
+                    </tr>
+                    <tr className="bg-slate-50/50">
+                      <td className={TD}>2</td>
+                      <td className={TDL}>Girls</td>
+                      <td className={`${TD} text-xl font-black`}>{data.doeStats.totalFemale}</td>
+                    </tr>
+                    <tr className="bg-slate-200 font-black">
+                      <td className={TD} colSpan={2}>TOTAL</td>
+                      <td className={`${TD} text-xl font-black`}>{total}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-slate-200 px-6 py-3 text-[11px] text-slate-600">
+                <span className="font-black uppercase tracking-widest mr-2">Compiled by:</span>{data.primaryContactName || '--'}
+                <span className="ml-8 font-black uppercase tracking-widest mr-2">Date:</span>{defaults.months[selectedMonth - 1]} {selectedYear}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SECTION 6 — DSD Practitioners List (matches page 8 of PDF) */}
+          <Card className="print-page-break rounded-[2rem] border-2 border-slate-300 shadow-md overflow-hidden print:rounded-none mb-6">
+            <CardHeader className="border-b border-slate-200 bg-slate-900 py-3 doe-dark-bg">
+              <CardTitle className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-white">
+                <Briefcase className="h-4 w-4 text-cyan-400" />
+                Teachers / Practitioners List — DSD
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="px-6 pt-3 pb-1 text-[11px] text-slate-600">
+                <span className="font-black">{data.centreName}</span>
+                {data.dsdRegNumber && <span className="ml-4 text-slate-500">DSD Reg No: {data.dsdRegNumber}</span>}
+                {data.npoReg && <span className="ml-4 text-slate-500">NPO: {data.npoReg}</span>}
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-100">
+                      <th className={`${TH} w-12`}>No.</th>
+                      <th className={`${TH} text-left`}>Full Name and Surname</th>
+                      <th className={TH}>ID Number</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.staff.map((s, idx) => (
+                      <tr key={s.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}>
+                        <td className={TD}>{idx + 1}</td>
+                        <td className={TDL}>{s.firstName} {s.surname}</td>
+                        <td className={`${TD} font-mono tracking-wider`}>{s.idNumber || '--'}</td>
+                      </tr>
+                    ))}
+                    {data.staff.length === 0 && (
+                      <tr><td colSpan={3} className="px-4 py-3 text-center text-slate-400 italic text-sm">No staff records. Add via Employment → Staff.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="border-t border-slate-200 px-6 py-3 text-[11px] text-slate-600 flex gap-8">
+                <span><span className="font-black uppercase tracking-widest mr-2">Compiled by:</span>{data.primaryContactName || '--'}</span>
+                <span><span className="font-black uppercase tracking-widest mr-2">Date:</span>{defaults.months[selectedMonth - 1]} {selectedYear}</span>
+              </div>
+            </CardContent>
+          </Card>
           </div>
 
           {/* ── Footer ── */}

@@ -73,6 +73,12 @@ export type DsdStaffRecord = {
   monthlySalary: number | null
 }
 
+export type DsdRawAttendanceRow = {
+  child_id: string
+  date: string
+  status: string
+}
+
 export type DsdExportData = {
   centreName: string
   registrationNumber: string | null
@@ -96,6 +102,7 @@ export type DsdExportData = {
   children: DsdEnrolledChild[]
   attendanceByChild: Map<string, DsdAttendanceSummary>
   attendanceDaysReported: number
+  rawAttendanceRows: DsdRawAttendanceRow[]
   compliance: DsdComplianceItem[]
   verifiedDocs: number
   doeStats: DoeMonthlyStats
@@ -415,6 +422,7 @@ export async function getDsdExportData(input: {
     children,
     attendanceByChild,
     attendanceDaysReported: uniqueAttendanceDays.size,
+    rawAttendanceRows: (attendanceRows ?? []) as DsdRawAttendanceRow[],
     compliance,
     verifiedDocs: compliance.filter((item) => item.status === 'verified').length,
     doeStats: getDoeMonthlyReturnData(children),
