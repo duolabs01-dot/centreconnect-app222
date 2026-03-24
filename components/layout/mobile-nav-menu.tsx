@@ -147,8 +147,8 @@ export function MobileNavMenu({
           <Menu className="h-6 w-6" />
         </button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] p-0 border-none bg-slate-900 z-[100]">
-        <div className="flex flex-col h-full pt-14">
+      <SheetContent side="left" className="w-[280px] p-0 border-none bg-slate-900 z-[105] top-14 h-[calc(100svh-3.5rem)]">
+        <div className="flex flex-col h-full">
           <div className="flex-1 overflow-y-auto px-3 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <nav className="space-y-0.5">
               {visibleNav.map((item, index) => {
