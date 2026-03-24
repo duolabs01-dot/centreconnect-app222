@@ -204,7 +204,7 @@ export function EcdPortalSidebar({
   return (
     <>
       {/* Mobile Top Header */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 md:hidden">
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between bg-teal-600 px-4 md:hidden shadow-md">
         <div className="flex items-center gap-3">
           <MobileNavMenu
             items={visibleNav}
@@ -214,37 +214,37 @@ export function EcdPortalSidebar({
             subscriptionTier={subscriptionTier}
             attentionBadges={attentionBadges}
           />
-          <BrandMark compact />
+          <BrandMark compact className="[&_*]:text-white" />
         </div>
-        <span className="rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700 border border-teal-100">
-          {roleLabel}
-        </span>
+        <div className="flex items-center gap-2">
+          {centreName && <span className="hidden sm:block text-[11px] font-bold text-teal-100 truncate max-w-[140px]">{centreName}</span>}
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white border border-white/20">
+            {roleLabel}
+          </span>
+        </div>
       </div>
 
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-[260px] shrink-0 overflow-y-auto border-r border-slate-200/80 bg-card text-foreground shadow-sm [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200/80 md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden h-screen w-[260px] shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white text-foreground shadow-sm [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-teal-100 md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
-        {/* Header */}
-        <div className="px-5 pt-6 pb-4">
-          <BrandMark compact />
+        {/* Branded Header */}
+        <div className="bg-gradient-to-br from-teal-600 to-teal-700 px-5 pt-5 pb-4">
+          <BrandMark compact className="[&_*]:text-white [&_svg]:text-white" />
           {centreName && (
-            <p className="mt-3 text-[13px] font-black text-slate-800 leading-tight truncate">{centreName}</p>
+            <p className="mt-3 text-[14px] font-black text-white leading-tight truncate">{centreName}</p>
           )}
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-semibold text-teal-700 border border-teal-100">
+          <div className="mt-2 flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-white border border-white/20">
               {roleLabel}
             </span>
             {subscriptionTier && (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100 capitalize">
-                {subscriptionTier === 'standard' ? 'Growth' : subscriptionTier === 'premium' ? 'Pro' : subscriptionTier}
+              <span className="inline-flex items-center rounded-full bg-amber-400/30 px-2.5 py-0.5 text-[10px] font-semibold text-amber-100 border border-amber-300/30 capitalize">
+                {subscriptionTier === 'standard' ? '⭐ Growth' : subscriptionTier === 'premium' ? '🚀 Pro' : subscriptionTier}
               </span>
             )}
           </div>
         </div>
-
-        {/* Divider */}
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mx-5" />
 
         {/* Navigation */}
         <nav className="flex-1 space-y-0.5 px-4 py-5" aria-label="ECD portal navigation">
@@ -312,15 +312,10 @@ export function EcdPortalSidebar({
         </nav>
 
         {/* Footer */}
-        <div className="mt-auto space-y-2 px-4 py-5 border-t border-slate-200/60">
-          {/* Centre info */}
-          <div className="rounded-xl border border-slate-200/60 bg-slate-50/60 p-3.5 shadow-sm">
-            <div className="min-w-0">
-              {centreName && (
-                <p className="truncate text-xs font-semibold text-slate-800">{centreName}</p>
-              )}
-              <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
-            </div>
+        <div className="mt-auto space-y-2 px-4 py-5 border-t border-slate-100">
+          {/* User email */}
+          <div className="rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
+            <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
           </div>
 
           {/* WhatsApp support */}
