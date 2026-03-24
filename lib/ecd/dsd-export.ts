@@ -260,11 +260,23 @@ export async function getDsdExportData(input: {
 
   const applicationRows = (enrolledApplications ?? []) as Array<Record<string, unknown>>
   const directChildRows = (directChildren ?? []) as Array<Record<string, unknown>>
+
+  // Build a set of child IDs already covered by enrolled applications
+  const appChildIds = new Set(
+    applicationRows.map((row) =>
+      String(row.child_id ?? (normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null))?.id ?? '')
+    ).filter(Boolean)
+  )
+
+  // Include ALL children: enrolled applications + direct children not already in applications
+  // This prevents undercounting when children are added directly without going through applications
+  const missingDirectRows = directChildRows.filter((row) => !appChildIds.has(String(row.id)))
   const useApplications = applicationRows.length > 0
 
-  const allChildIds = useApplications
-    ? applicationRows.map((row) => String(row.child_id ?? (normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null))?.id ?? ''))
-    : directChildRows.map((row) => String(row.id))
+  const allChildIds = [
+    ...Array.from(appChildIds),
+    ...missingDirectRows.map((row) => String(row.id)),
+  ]
 
   const classIds = Array.from(
     new Set(
@@ -296,54 +308,55 @@ export async function getDsdExportData(input: {
     ])
   )
 
-  let children: DsdEnrolledChild[]
+  // Build children from enrolled applications
+  const childrenFromApplications: DsdEnrolledChild[] = applicationRows.map((row) => {
+    const child = normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null)
+    const parent = normalizeOne(row.parents as Record<string, unknown> | Record<string, unknown>[] | null)
+    const parentProfile = normalizeOne((parent?.user_profiles ?? null) as Record<string, unknown> | Record<string, unknown>[] | null)
+    const classId = normalizeText((child?.class_id as string | null) ?? null, '')
+    const classMeta = classId ? classMap.get(classId) : null
+    return {
+      applicationId: String(row.id),
+      childId: String(row.child_id ?? child?.id ?? ''),
+      childName: `${normalizeText(child?.first_name as string | null)} ${normalizeText(child?.last_name as string | null)}`.trim() || 'Child',
+      dateOfBirth: normalizeText(child?.date_of_birth as string | null, '') || null,
+      ageLabel: formatAgeLabel(normalizeText(child?.date_of_birth as string | null, '') || null),
+      gender: normalizeText(child?.gender as string | null, '') || null,
+      className: classMeta?.name?.trim() || null,
+      ageGroup: classMeta?.age_group?.trim() || null,
+      startDate: normalizeText(row.start_date as string | null, '') || null,
+      parentName: normalizeText(parentProfile?.full_name as string | null, 'Parent not linked yet'),
+      parentPhone: normalizeText((parentProfile?.phone as string | null) ?? (parent?.alt_phone as string | null), '--'),
+      parentIncomeCategory: normalizeText(child?.parent_income_category as string | null, 'Other'),
+      isDisabled: Boolean(child?.is_disabled),
+      disabilityDescription: normalizeText(child?.disability_description as string | null, ''),
+    }
+  })
 
-  if (useApplications) {
-    children = applicationRows.map((row) => {
-      const child = normalizeOne(row.children as Record<string, unknown> | Record<string, unknown>[] | null)
-      const parent = normalizeOne(row.parents as Record<string, unknown> | Record<string, unknown>[] | null)
-      const parentProfile = normalizeOne((parent?.user_profiles ?? null) as Record<string, unknown> | Record<string, unknown>[] | null)
-      const classId = normalizeText((child?.class_id as string | null) ?? null, '')
-      const classMeta = classId ? classMap.get(classId) : null
-      return {
-        applicationId: String(row.id),
-        childId: String(row.child_id ?? child?.id ?? ''),
-        childName: `${normalizeText(child?.first_name as string | null)} ${normalizeText(child?.last_name as string | null)}`.trim() || 'Child',
-        dateOfBirth: normalizeText(child?.date_of_birth as string | null, '') || null,
-        ageLabel: formatAgeLabel(normalizeText(child?.date_of_birth as string | null, '') || null),
-        gender: normalizeText(child?.gender as string | null, '') || null,
-        className: classMeta?.name?.trim() || null,
-        ageGroup: classMeta?.age_group?.trim() || null,
-        startDate: normalizeText(row.start_date as string | null, '') || null,
-        parentName: normalizeText(parentProfile?.full_name as string | null, 'Parent not linked yet'),
-        parentPhone: normalizeText((parentProfile?.phone as string | null) ?? (parent?.alt_phone as string | null), '--'),
-        parentIncomeCategory: normalizeText(child?.parent_income_category as string | null, 'Other'),
-        isDisabled: Boolean(child?.is_disabled),
-        disabilityDescription: normalizeText(child?.disability_description as string | null, ''),
-      }
-    })
-  } else {
-    children = directChildRows.map((row: any) => {
-      const classId = normalizeText(row.class_id as string | null, '')
-      const classMeta = classId ? classMap.get(classId) : null
-      return {
-        applicationId: '',
-        childId: String(row.id),
-        childName: `${normalizeText(row.first_name as string | null)} ${normalizeText(row.last_name as string | null)}`.trim() || 'Child',
-        dateOfBirth: normalizeText(row.date_of_birth as string | null, '') || null,
-        ageLabel: formatAgeLabel(normalizeText(row.date_of_birth as string | null, '') || null),
-        gender: normalizeText(row.gender as string | null, '') || null,
-        className: classMeta?.name?.trim() || null,
-        ageGroup: classMeta?.age_group?.trim() || null,
-        startDate: normalizeText(row.enrollment_start_date as string | null, '') || null,
-        parentName: 'Parent not linked yet',
-        parentPhone: '--',
-        parentIncomeCategory: normalizeText(row.parent_income_category as string | null, 'Other'),
-        isDisabled: Boolean(row.is_disabled),
-        disabilityDescription: normalizeText(row.disability_description as string | null, ''),
-      }
-    })
-  }
+  // Build children from direct records NOT already covered by applications
+  const childrenFromDirect: DsdEnrolledChild[] = missingDirectRows.map((row: any) => {
+    const classId = normalizeText(row.class_id as string | null, '')
+    const classMeta = classId ? classMap.get(classId) : null
+    return {
+      applicationId: '',
+      childId: String(row.id),
+      childName: `${normalizeText(row.first_name as string | null)} ${normalizeText(row.last_name as string | null)}`.trim() || 'Child',
+      dateOfBirth: normalizeText(row.date_of_birth as string | null, '') || null,
+      ageLabel: formatAgeLabel(normalizeText(row.date_of_birth as string | null, '') || null),
+      gender: normalizeText(row.gender as string | null, '') || null,
+      className: classMeta?.name?.trim() || null,
+      ageGroup: classMeta?.age_group?.trim() || null,
+      startDate: normalizeText(row.enrollment_start_date as string | null, '') || null,
+      parentName: 'Parent not linked yet',
+      parentPhone: '--',
+      parentIncomeCategory: normalizeText(row.parent_income_category as string | null, 'Other'),
+      isDisabled: Boolean(row.is_disabled),
+      disabilityDescription: normalizeText(row.disability_description as string | null, ''),
+    }
+  })
+
+  // Merge: applications first, then direct children not covered by applications
+  const children: DsdEnrolledChild[] = [...childrenFromApplications, ...childrenFromDirect]
 
   children.sort((a, b) => a.childName.localeCompare(b.childName))
 

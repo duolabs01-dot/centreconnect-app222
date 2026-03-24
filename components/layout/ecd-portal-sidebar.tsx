@@ -9,7 +9,7 @@ import { SignOutButton } from '@/components/ecd/SignOutButton'
 import { ECD_DASHBOARD_NAV, type EcdNavItem } from './ecd-navigation'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { MobileNavMenu } from './mobile-nav-menu'
-import { Lock, Sparkles } from 'lucide-react'
+import { Lock, Sparkles, Zap } from 'lucide-react'
 
 type EcdPortalSidebarProps = {
   userEmail: string | null
@@ -22,14 +22,10 @@ type EcdPortalSidebarProps = {
 
 type EcdNavGroup = NonNullable<EcdNavItem['group']>
 
-const MAIN_GROUP_ORDER: EcdNavGroup[] = [
-  'daily_ops',
-  'admin',
-  'grow',
-]
+const MAIN_GROUP_ORDER: EcdNavGroup[] = ['daily_ops', 'admin', 'grow']
 
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_ops: 'Daily Operations',
+  daily_ops: 'Daily Ops',
   admin: 'Management',
   grow: 'Grow',
   settings: 'Account',
@@ -43,17 +39,13 @@ function readSavedSidebarScroll() {
     if (!saved) return null
     const parsed = Number.parseInt(saved, 10)
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
-  } catch {
-    return null
-  }
+  } catch { return null }
 }
 
 function writeSavedSidebarScroll(value: number) {
   try {
     window.sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(Math.max(0, Math.floor(value))))
-  } catch {
-    // Ignore storage write issues (private browsing / quota).
-  }
+  } catch { /* noop */ }
 }
 
 export function EcdPortalSidebar({
@@ -74,36 +66,34 @@ export function EcdPortalSidebar({
   }, [])
 
   useEffect(() => {
-    const element = desktopScrollRef.current
-    if (!element) return
+    const el = desktopScrollRef.current
+    if (!el) return
     const saved = readSavedSidebarScroll()
-    if (saved !== null) element.scrollTop = saved
-    const onScroll = () => writeSavedSidebarScroll(element.scrollTop)
-    element.addEventListener('scroll', onScroll, { passive: true })
-    return () => element.removeEventListener('scroll', onScroll)
+    if (saved !== null) el.scrollTop = saved
+    const onScroll = () => writeSavedSidebarScroll(el.scrollTop)
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
   useEffect(() => {
-    const element = desktopScrollRef.current
-    if (!element) return
+    const el = desktopScrollRef.current
+    if (!el) return
     const saved = readSavedSidebarScroll()
-    if (saved !== null) element.scrollTop = saved
+    if (saved !== null) el.scrollTop = saved
   }, [pathname])
 
   const roleEligibleNav = useMemo(
-    () =>
-      ECD_DASHBOARD_NAV.filter((item) => {
-        if (userRole === 'ecd_admin') return true
-        if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
-        return !item.adminOnly
-      }),
+    () => ECD_DASHBOARD_NAV.filter((item) => {
+      if (userRole === 'ecd_admin') return true
+      if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
+      return !item.adminOnly
+    }),
     [userRole]
   )
 
   const lockedByTier = roleEligibleNav.filter(
     (item) => item.minTier && (item.minTier === 'standard' || item.minTier === 'premium')
   )
-
   const visibleNav = roleEligibleNav.filter(
     (item) => !item.minTier || (item.minTier !== 'standard' && item.minTier !== 'premium')
   )
@@ -120,33 +110,23 @@ export function EcdPortalSidebar({
   const stale72hCount = attentionBadges['/ecd/applications:stale72h'] ?? 0
   const partialApplicationsCount = attentionBadges['/ecd/applications:partial'] ?? 0
 
-  const getApplicationInsight = () => {
-    if (stale72hCount > 0) return `${stale72hCount} applications older than 72h - prioritize these`
-    if (partialApplicationsCount > 0) return `${partialApplicationsCount} partial applications waiting for documents`
-    return null
-  }
-
   const renderNavItem = (item: EcdNavItem) => {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
     const badgeCount = attentionBadges[item.href] ?? 0
-    const applicationInsight = item.href === '/ecd/applications' ? getApplicationInsight() : null
+    const appInsight = item.href === '/ecd/applications'
+      ? stale72hCount > 0 ? `${stale72hCount} waiting 72h+`
+        : partialApplicationsCount > 0 ? `${partialApplicationsCount} partial`
+        : null
+      : null
 
     if (item.comingSoon) {
       return (
-        <div
-          key={item.href}
-          className="group relative flex items-center gap-3 rounded-xl border border-slate-200/60 bg-slate-50/60 px-3 py-2.5"
-          aria-disabled="true"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400">
-            <item.icon className="h-4 w-4" />
+        <div key={item.href} className="flex items-center gap-2.5 rounded-xl px-3 py-2 opacity-40" aria-disabled="true">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/5">
+            <item.icon className="h-4 w-4 text-slate-500" />
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-slate-500">{item.label}</p>
-          </div>
-          <span className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-400">
-            Soon
-          </span>
+          <span className="flex-1 truncate text-[12px] font-medium text-slate-500">{item.label}</span>
+          <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">Soon</span>
         </div>
       )
     }
@@ -157,54 +137,48 @@ export function EcdPortalSidebar({
         href={item.href}
         scroll={false}
         onClick={() => {
-          const element = desktopScrollRef.current
-          if (element) writeSavedSidebarScroll(element.scrollTop)
+          const el = desktopScrollRef.current
+          if (el) writeSavedSidebarScroll(el.scrollTop)
         }}
         className={cn(
-          'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200',
+          'group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-[12px] font-medium transition-all duration-150',
           active
-            ? 'bg-teal-500/10 text-teal-800 border border-teal-200/60'
-            : 'text-slate-600 hover:bg-accent hover:text-accent-foreground border border-transparent'
+            ? 'bg-teal-500/15 text-teal-300'
+            : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
         )}
         aria-current={active ? 'page' : undefined}
       >
-        <div
-          className={cn(
-            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all',
-            active
-              ? 'bg-teal-600 text-white shadow-sm shadow-teal-900/20'
-              : 'bg-slate-100 text-slate-500 group-hover:bg-teal-50 group-hover:text-teal-700'
-          )}
-        >
-          <item.icon className="h-4 w-4" />
+        <div className={cn(
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-all',
+          active
+            ? 'bg-teal-500/20 text-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.25)]'
+            : 'bg-white/5 text-slate-500 group-hover:bg-white/10 group-hover:text-slate-300'
+        )}>
+          <item.icon className="h-3.5 w-3.5" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate">{item.label}</p>
-          {applicationInsight ? (
-            <p className="mt-0.5 flex items-center gap-1.5 truncate text-[10px] font-medium text-teal-600">
-              <Sparkles className="h-3 w-3 shrink-0" />
-              {applicationInsight}
-            </p>
-          ) : null}
+          {appInsight && (
+            <p className="mt-0.5 truncate text-[10px] font-medium text-teal-400/80">{appInsight}</p>
+          )}
         </div>
-        {badgeCount > 0 ? (
-          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white ring-2 ring-white">
+        {badgeCount > 0 && (
+          <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
             {badgeCount > 99 ? '99+' : badgeCount}
           </span>
-        ) : null}
-        {active ? (
-          <div className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-teal-500" />
-        ) : null}
+        )}
+        {active && (
+          <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-teal-400" />
+        )}
       </Link>
     )
   }
 
-  const roleInitial = roleLabel?.[0]?.toUpperCase() ?? 'E'
-
   return (
     <>
-      {/* Mobile Top Header */}
-      <div className="fixed inset-x-0 top-0 z-[90] flex h-16 items-center justify-between bg-teal-600 px-4 md:hidden shadow-md">
+      {/* ── Mobile Top Header ── */}
+      <div className="fixed inset-x-0 top-0 z-[90] flex h-14 items-center justify-between bg-slate-900/95 px-4 md:hidden"
+        style={{ backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
           <MobileNavMenu
             items={visibleNav}
@@ -217,121 +191,110 @@ export function EcdPortalSidebar({
           <BrandMark compact className="[&_*]:text-white" />
         </div>
         <div className="flex items-center gap-2">
-          {centreName && <span className="hidden sm:block text-[11px] font-bold text-teal-100 truncate max-w-[140px]">{centreName}</span>}
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white border border-white/20">
-            {roleLabel}
-          </span>
+          {centreName && (
+            <span className="max-w-[140px] truncate text-[11px] font-semibold text-slate-300">{centreName}</span>
+          )}
         </div>
       </div>
 
+      {/* ── Desktop Sidebar ── */}
       <aside
         ref={desktopScrollRef}
-        className="hidden h-screen w-[260px] shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white text-foreground shadow-sm [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-teal-100 md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        className="hidden w-[220px] shrink-0 overflow-y-auto bg-slate-900 text-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
+        style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}
       >
-        {/* Branded Header */}
-        <div className="bg-gradient-to-br from-teal-600 to-teal-700 px-5 pt-5 pb-4">
-          <BrandMark compact className="[&_*]:text-white [&_svg]:text-white" />
+        {/* Header */}
+        <div className="px-4 pt-5 pb-4">
+          <BrandMark compact className="[&_*]:text-white" />
           {centreName && (
-            <p className="mt-3 text-[14px] font-black text-white leading-tight truncate">{centreName}</p>
+            <p className="mt-3 truncate text-[13px] font-black leading-tight text-white">{centreName}</p>
           )}
-          <div className="mt-2 flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-semibold text-white border border-white/20">
+          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <span className="rounded-full border border-white/10 bg-white/10 px-2 py-0.5 text-[9px] font-semibold text-slate-300">
               {roleLabel}
             </span>
             {subscriptionTier && (
-              <span className="inline-flex items-center rounded-full bg-amber-400/30 px-2.5 py-0.5 text-[10px] font-semibold text-amber-100 border border-amber-300/30 capitalize">
+              <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-2 py-0.5 text-[9px] font-semibold text-teal-300 capitalize">
                 {subscriptionTier === 'standard' ? '⭐ Growth' : subscriptionTier === 'premium' ? '🚀 Pro' : subscriptionTier}
               </span>
             )}
           </div>
         </div>
 
+        {/* Divider */}
+        <div className="mx-4 h-px bg-white/[0.06]" />
+
         {/* Navigation */}
-        <nav className="flex-1 space-y-0.5 px-4 py-5" aria-label="ECD portal navigation">
+        <nav className="flex-1 space-y-0 px-3 py-4" aria-label="ECD portal navigation">
           {groupedPrimaryItems.map((bucket) => (
-            <div key={bucket.group} className="mb-5">
-              {GROUP_LABELS[bucket.group] ? (
-                <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
-                  {GROUP_LABELS[bucket.group]}
-                </p>
-              ) : null}
+            <div key={bucket.group} className="mb-4">
+              <p className="mb-1 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">
+                {GROUP_LABELS[bucket.group]}
+              </p>
               {bucket.items.map((item) => renderNavItem(item))}
             </div>
           ))}
 
-          {settingsItem && !settingsItem.comingSoon ? (
-            <div className="mb-5">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
-              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
-                Account
-              </p>
+          {settingsItem && !settingsItem.comingSoon && (
+            <div className="mb-4">
+              <div className="mx-3 mb-3 h-px bg-white/[0.06]" />
+              <p className="mb-1 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">Account</p>
               {renderNavItem(settingsItem)}
             </div>
-          ) : null}
+          )}
 
-          {comingSoonItems.length > 0 ? (
-            <div className="mb-5">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
-              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
-                Coming Soon
-              </p>
+          {comingSoonItems.length > 0 && (
+            <div className="mb-4">
+              <div className="mx-3 mb-3 h-px bg-white/[0.06]" />
+              <p className="mb-1 px-3 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-600">Coming Soon</p>
               {comingSoonItems.map((item) => renderNavItem(item))}
             </div>
-          ) : null}
+          )}
 
-          {lockedByTier.length > 0 ? (
-            <div className="mb-5">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 mx-3" />
+          {lockedByTier.length > 0 && (
+            <div className="mb-4">
+              <div className="mx-3 mb-3 h-px bg-white/[0.06]" />
               <Link
                 href="/ecd/billing"
-                className="block mx-1 mb-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 px-3 py-2.5 hover:from-amber-100 hover:to-orange-100 transition-colors"
+                className="mx-1 mb-2 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 transition-colors hover:bg-amber-500/15"
               >
-                <div className="flex items-center gap-2 mb-0.5">
-                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  <p className="text-[11px] font-black text-amber-800">Unlock more features</p>
+                <Zap className="h-3.5 w-3.5 text-amber-400" />
+                <div>
+                  <p className="text-[10px] font-black text-amber-300">Unlock {lockedByTier.length} more</p>
+                  <p className="text-[9px] text-amber-400/70">Upgrade plan</p>
                 </div>
-                <p className="text-[10px] text-amber-700 leading-tight">Upgrade your plan to access {lockedByTier.length} more tool{lockedByTier.length > 1 ? 's' : ''}</p>
               </Link>
               {lockedByTier.map((item) => (
-                <Link
-                  key={item.href}
-                  href="/ecd/billing"
-                  className="group relative flex items-center gap-3 rounded-xl border border-dashed border-amber-200 bg-amber-50/30 px-3 py-2 mb-1 hover:bg-amber-50 transition-colors"
+                <Link key={item.href} href="/ecd/billing"
+                  className="flex items-center gap-2.5 rounded-xl px-3 py-2 opacity-50 hover:opacity-70 transition-opacity"
                 >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-                    <item.icon className="h-3.5 w-3.5" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                    <item.icon className="h-3.5 w-3.5 text-amber-500" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12px] font-medium text-amber-800">{item.label}</p>
-                  </div>
-                  <Lock className="h-3 w-3 shrink-0 text-amber-400" />
+                  <span className="flex-1 truncate text-[12px] font-medium text-amber-300/80">{item.label}</span>
+                  <Lock className="h-3 w-3 text-amber-500/60" />
                 </Link>
               ))}
             </div>
-          ) : null}
+          )}
         </nav>
 
         {/* Footer */}
-        <div className="mt-auto space-y-2 px-4 py-5 border-t border-slate-100">
-          {/* User email */}
-          <div className="rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2.5">
-            <p className="truncate text-[11px] text-slate-500">{userEmail}</p>
-          </div>
-
-          {/* WhatsApp support */}
-          <Link
+        <div className="mt-auto space-y-2 px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <a
             href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-xs font-medium text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 transition-all hover:shadow-md"
+            className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-500/15 border border-emerald-500/20 py-2 text-[11px] font-semibold text-emerald-400 transition-all hover:bg-emerald-500/25"
           >
             💬 WhatsApp support
-          </Link>
-
-          {/* Sign out */}
+          </a>
+          <div className="rounded-xl bg-white/5 px-3 py-2">
+            <p className="truncate text-[10px] text-slate-500">{userEmail}</p>
+          </div>
           <SignOutButton
             redirectTo="/"
-            className="w-full rounded-xl border border-slate-200/80 bg-white/80 backdrop-blur-sm py-2.5 text-sm font-medium text-slate-600 shadow-sm transition-all hover:bg-white hover:border-slate-300 hover:shadow-sm"
+            className="w-full rounded-xl border border-white/10 bg-white/5 py-2 text-[11px] font-medium text-slate-400 transition-all hover:bg-white/10 hover:text-slate-200"
           />
         </div>
       </aside>

@@ -7,7 +7,6 @@ interface PdfDownloadButtonProps {
   month: number
   year: number
   centreName?: string
-  /** Pass the full HTML string from buildDsdPdfHtml — rendered server-side */
   htmlContent?: string
 }
 
@@ -18,38 +17,45 @@ const MONTH_NAMES = [
 
 export function PdfDownloadButton({ month, year, centreName, htmlContent }: PdfDownloadButtonProps) {
   function handleDownload() {
-    if (htmlContent) {
-      // Open the pre-rendered full HTML in a new window and trigger print
-      const win = window.open('', '_blank', 'width=900,height=700')
-      if (!win) {
-        alert('Pop-up blocked. Please allow pop-ups for this site and try again.')
-        return
-      }
-      win.document.write(htmlContent)
-      win.document.close()
-      // Give the browser a moment to render fonts/styles before printing
-      win.addEventListener('load', () => {
-        setTimeout(() => {
-          win.focus()
-          win.print()
-        }, 400)
-      })
-      // Fallback if load already fired
-      setTimeout(() => {
-        if (!win.closed) {
-          win.focus()
-          win.print()
-        }
-      }, 1200)
+    if (!htmlContent) return
+
+    const safe = (centreName ?? 'DOE-Report').replace(/[^a-zA-Z0-9\s-]/g, '').trim()
+    const filename = `DOE-Monthly-Report-${MONTH_NAMES[month - 1]}-${year}-${safe}`
+
+    // Inject a save-instructions banner into the HTML before opening
+    const instructions = `
+      <div id="save-banner" style="
+        position:fixed;top:0;left:0;right:0;z-index:9999;
+        background:#0f766e;color:white;
+        padding:10px 16px;
+        font:bold 13px/1.5 Arial,sans-serif;
+        display:flex;align-items:center;justify-content:space-between;
+        gap:12px;
+      ">
+        <span>📄 <strong>${filename}</strong></span>
+        <span style="font-size:12px;opacity:0.9;">
+          Press <kbd style="background:rgba(255,255,255,0.2);border-radius:4px;padding:1px 6px;">Ctrl+P</kbd>
+          (or <kbd style="background:rgba(255,255,255,0.2);border-radius:4px;padding:1px 6px;">⌘P</kbd> on Mac)
+          → set destination to <strong>Save as PDF</strong>
+        </span>
+        <button onclick="document.getElementById('save-banner').remove()" style="
+          background:rgba(255,255,255,0.2);border:none;border-radius:6px;
+          color:white;padding:4px 10px;cursor:pointer;font-size:12px;
+        ">✕ Dismiss</button>
+      </div>
+      <div style="height:44px;"></div>
+    `
+
+    const htmlWithBanner = htmlContent.replace('<body>', `<body>${instructions}`)
+
+    const win = window.open('', '_blank', `width=1000,height=800,title=${filename}`)
+    if (!win) {
+      alert('Pop-ups are blocked. Please allow pop-ups for this site and try again.')
       return
     }
-
-    // Fallback: print current page (legacy behaviour)
-    const safe = (centreName ?? 'DOE-Report').replace(/[^a-zA-Z0-9\s]/g, '').trim()
-    const original = document.title
-    document.title = `DOE-Monthly-Report-${MONTH_NAMES[month - 1]}-${year}-${safe}`
-    window.print()
-    setTimeout(() => { document.title = original }, 1200)
+    win.document.write(htmlWithBanner)
+    win.document.close()
+    win.focus()
   }
 
   return (
