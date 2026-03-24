@@ -371,7 +371,7 @@ export default async function EcdCalendarPage({ searchParams: searchParamsPromis
       all_day: true,
       is_public: item.is_published,
       source: 'announcement',
-      href: `/ecd/announcements`,
+      href: `/ecd/communications`,
     })
   }
 
@@ -619,34 +619,22 @@ export default async function EcdCalendarPage({ searchParams: searchParamsPromis
         </section>
 
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-amber-100 p-2">
-              <svg className="h-5 w-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="font-bold text-amber-800">Share with Parents</h3>
-              <p className="mt-1 text-sm text-amber-700">
-                Parents can see public events and birthdays on their app. Make events &quot;Public&quot; to share them.
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-0.5">
+              <h3 className="font-bold text-amber-800">Visible to Parents</h3>
+              <p className="text-sm text-amber-700">
+                Events marked <span className="font-semibold">&quot;Public&quot;</span> appear on the parent app. Birthdays are shared automatically.
               </p>
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  readOnly
-                  value={parentCalendarHref}
-                  className="flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="border-amber-300 text-amber-700 hover:bg-amber-100"
-                >
-                  <Link href={parentCalendarHref}>Open</Link>
-                </Button>
-              </div>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              asChild
+              className="shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100"
+            >
+              <Link href={parentCalendarHref}>Parent view →</Link>
+            </Button>
           </div>
         </section>
 
