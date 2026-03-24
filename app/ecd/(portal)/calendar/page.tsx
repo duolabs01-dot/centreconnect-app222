@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { Calendar, CalendarDays, Clock3, MessageSquare, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CollapsibleCard } from '@/components/ui/collapsible-card'
 import { Button } from '@/components/ui/button'
 import { EcdIosCalendarView, type EcdCalendarFeedItem } from '@/components/ecd/ecd-ios-calendar-view'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
@@ -738,14 +739,7 @@ export default async function EcdCalendarPage({ searchParams: searchParamsPromis
             </CardContent>
           </Card>
 
-          <Card className="rounded-3xl border-slate-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <MessageSquare className="h-4 w-4 text-teal-600" />
-                Communication Automation
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+          <CollapsibleCard title="Communication Automation">
               <form action={saveAutomationSettingsAction} className="space-y-4">
                 <div className="grid gap-2">
                   <label className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
@@ -846,8 +840,7 @@ export default async function EcdCalendarPage({ searchParams: searchParamsPromis
                   Save Automation Settings
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+          </CollapsibleCard>
         </section>
 
         <section className="grid gap-5 xl:grid-cols-2">

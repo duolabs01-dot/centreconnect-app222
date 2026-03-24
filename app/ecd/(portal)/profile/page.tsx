@@ -17,7 +17,7 @@ import { DangerZoneClient } from './danger-zone-client'
 import { InviteStaffForm } from '@/components/ecd/invite-staff-form'
 import { OfficialStaffRecordsCard } from '@/components/ecd/official-staff-records-card'
 import { syncPortalMemberToStaffRecord } from '@/lib/ecd/staff-sync'
-import { CollapsibleCard } from './collapsible-card'
+import { CollapsibleCard } from '@/components/ui/collapsible-card'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
