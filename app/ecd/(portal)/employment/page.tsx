@@ -51,7 +51,7 @@ type TeamMemberRow = {
 }
 
 type EmploymentPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 const PANEL_CLASS = 'rounded-3xl border-border bg-card shadow-[var(--shadow-elevation-1)]'
@@ -100,7 +100,8 @@ function toDateTimeLocal(value: string | null): string {
   return timezoneAdjusted.toISOString().slice(0, 16)
 }
 
-export default async function EcdEmploymentPage({ searchParams }: EmploymentPageProps) {
+export default async function EcdEmploymentPage({ searchParams: searchParamsPromise }: EmploymentPageProps) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
   const canManageJobs = role === 'ecd_admin'
 

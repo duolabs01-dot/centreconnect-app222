@@ -34,9 +34,10 @@ function pickPrimaryAgeGroup(value: unknown) {
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams?: { source?: string }
+  searchParams?: Promise<{ source?: string }>
 }) {
-  if (searchParams?.source === 'pwa') {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  if (resolvedSearchParams?.source === 'pwa') {
     redirect('/')
   }
 

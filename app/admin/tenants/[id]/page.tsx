@@ -32,9 +32,10 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-type PageProps = { params: { id: string } }
+type PageProps = { params: Promise<{ id: string }> }
 
 export default async function AdminTenantDetailPage({ params }: PageProps) {
+  const { id: tenantId } = await params
   const supabase = await createClient()
   const admin = createAdminClient()
   const {
@@ -44,8 +45,6 @@ export default async function AdminTenantDetailPage({ params }: PageProps) {
 
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
-
-  const tenantId = params.id
   const [centreResult, adminsResult, invitationsResult, appsResult, analyticsResult, ticketResult, activityResult, adminTaskResult] = await Promise.all([
     admin
       .from('ecd_centres')

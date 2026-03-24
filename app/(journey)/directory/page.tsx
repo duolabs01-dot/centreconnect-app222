@@ -23,14 +23,14 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 type DirectoryPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     search?: string
     suburb?: string
     age?: string
     fee?: string
     registered?: string
     page?: string
-  }
+  }>
 }
 
 type DirectoryFacetSource = {
@@ -103,11 +103,12 @@ function toDirectoryCentre(centre: RawDirectoryCentre): DirectoryCentre | null {
 }
 
 export default async function DirectoryPage({ searchParams }: DirectoryPageProps) {
-  const search = (searchParams?.search ?? '').trim()
-  const rawSuburb = (searchParams?.suburb ?? '').trim()
-  const rawAgeGroup = (searchParams?.age ?? '').trim()
-  const rawFee = (searchParams?.fee ?? '').trim()
-  const rawRegistered = (searchParams?.registered ?? '').trim()
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const search = (resolvedSearchParams?.search ?? '').trim()
+  const rawSuburb = (resolvedSearchParams?.suburb ?? '').trim()
+  const rawAgeGroup = (resolvedSearchParams?.age ?? '').trim()
+  const rawFee = (resolvedSearchParams?.fee ?? '').trim()
+  const rawRegistered = (resolvedSearchParams?.registered ?? '').trim()
 
   const selectedSuburb = rawSuburb.toLowerCase() === 'all' ? '' : rawSuburb
   const selectedAgeGroup = rawAgeGroup.toLowerCase() === 'all' ? '' : rawAgeGroup
@@ -116,7 +117,7 @@ export default async function DirectoryPage({ searchParams }: DirectoryPageProps
   let effectiveSuburb = selectedSuburb
 
   const pageSize = 20
-  const rawPage = Number.parseInt(searchParams?.page ?? '1', 10)
+  const rawPage = Number.parseInt(resolvedSearchParams?.page ?? '1', 10)
   const currentPage = Number.isFinite(rawPage) && rawPage > 0 ? rawPage : 1
   const pageFrom = (currentPage - 1) * pageSize
   const pageTo = pageFrom + pageSize - 1

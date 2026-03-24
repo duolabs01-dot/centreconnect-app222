@@ -16,13 +16,14 @@ export const metadata: Metadata = {
 }
 
 type DirectorySlugPageProps = {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export default async function DirectorySlugPage({ params }: DirectorySlugPageProps) {
-  const normalizedSlug = normalizeCentreSlug(params.slug)
+  const { slug } = await params
+  const normalizedSlug = normalizeCentreSlug(slug)
   if (!normalizedSlug) return notFound()
 
   const supabase = await createClient()

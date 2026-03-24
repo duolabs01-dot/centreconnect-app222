@@ -10,11 +10,12 @@ export const metadata: Metadata = {
 }
 
 type PageProps = {
-  searchParams: { token?: string }
+  searchParams: Promise<{ token?: string }>
 }
 
 export default async function JoinPage({ searchParams }: PageProps) {
-  const token = searchParams.token?.trim()
+  const resolvedSearchParams = await searchParams
+  const token = resolvedSearchParams.token?.trim()
 
   if (!token) {
     redirect('/')

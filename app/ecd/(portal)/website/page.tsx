@@ -253,10 +253,11 @@ async function uploadWebsiteImage(
 }
 
 export default async function EcdWebsitePage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams?: { status?: string | string[] }
+  searchParams?: Promise<{ status?: string | string[] }>
 }) {
+  const searchParams = await searchParamsPromise
   const rawStatus = searchParams?.status
   const status =
     typeof rawStatus === 'string'

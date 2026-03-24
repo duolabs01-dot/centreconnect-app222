@@ -97,10 +97,11 @@ function buildConversationHref(parentId: string, contextType: SupportedContextTy
 }
 
 export default async function EcdCommunicationsPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams?: { recipient?: string; contextType?: string; contextId?: string; tab?: string; q?: string }
+  searchParams?: Promise<{ recipient?: string; contextType?: string; contextId?: string; tab?: string; q?: string }>
 }) {
+  const searchParams = await searchParamsPromise
   const { user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
 

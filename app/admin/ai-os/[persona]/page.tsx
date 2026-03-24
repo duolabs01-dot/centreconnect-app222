@@ -18,12 +18,13 @@ export const metadata: Metadata = {
 export default async function AdminAiCompanyLightPersonaPage({
   params,
 }: {
-  params: { persona: string }
+  params: Promise<{ persona: string }>
 }) {
+  const { persona: personaId } = await params
   const identity = await requirePlatformAdmin()
   if (!identity) redirect('/login')
 
-  if (!isAiCompanyLightPersonasEnabled() || !isAiCompanyLightPersonaId(params.persona)) {
+  if (!isAiCompanyLightPersonasEnabled() || !isAiCompanyLightPersonaId(personaId)) {
     notFound()
   }
 
@@ -32,9 +33,9 @@ export default async function AdminAiCompanyLightPersonaPage({
   })
 
   const persona = snapshot.lightPersonas.find(
-    (item) => item.agentId === params.persona
+    (item) => item.agentId === personaId
   )
-  const brief = snapshot.agents.find((item) => item.agentId === params.persona)
+  const brief = snapshot.agents.find((item) => item.agentId === personaId)
 
   if (!persona || !brief) {
     notFound()

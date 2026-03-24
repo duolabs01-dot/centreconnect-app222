@@ -42,7 +42,7 @@ type InviteRow = {
 }
 
 type InvitesPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 function queryValue(value: string | string[] | undefined) {
@@ -94,6 +94,7 @@ function sanitizeSearchTerm(value: string) {
 }
 
 export default async function AdminInvitesPage({ searchParams }: InvitesPageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const supabase = await createClient()
   const admin = createAdminClient()
   const {
@@ -104,12 +105,12 @@ export default async function AdminInvitesPage({ searchParams }: InvitesPageProp
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  const selectedChannel = normalizeInviteChannel(queryValue(searchParams?.channel))
-  const autoRetry = queryValue(searchParams?.autoRetry) === '1'
-  const selectedStatus = autoRetry ? 'failed' : normalizeInviteStatus(queryValue(searchParams?.status))
-  const selectedEventType = normalizeInviteEventType(queryValue(searchParams?.event))
-  const selectedCentreId = queryValue(searchParams?.centre)
-  const searchTerm = sanitizeSearchTerm(queryValue(searchParams?.q))
+  const selectedChannel = normalizeInviteChannel(queryValue(resolvedSearchParams?.channel))
+  const autoRetry = queryValue(resolvedSearchParams?.autoRetry) === '1'
+  const selectedStatus = autoRetry ? 'failed' : normalizeInviteStatus(queryValue(resolvedSearchParams?.status))
+  const selectedEventType = normalizeInviteEventType(queryValue(resolvedSearchParams?.event))
+  const selectedCentreId = queryValue(resolvedSearchParams?.centre)
+  const searchTerm = sanitizeSearchTerm(queryValue(resolvedSearchParams?.q))
 
   let logsQuery = admin
     .from('notification_logs')

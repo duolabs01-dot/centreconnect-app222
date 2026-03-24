@@ -13,19 +13,12 @@ export const metadata = {
 }
 
 type LinkChildPageProps = {
-  searchParams?:
-    | {
-        token?: string
-        linked?: string
-        error?: string
-        childId?: string
-      }
-    | Promise<{
-        token?: string
-        linked?: string
-        error?: string
-        childId?: string
-      }>
+  searchParams?: Promise<{
+    token?: string
+    linked?: string
+    error?: string
+    childId?: string
+  }>
 }
 
 function friendlyError(value: string | undefined) {

@@ -98,9 +98,10 @@ function CentreLogo({ logoImage, centreName, size = 72 }: { logoImage: string | 
 export default async function CentrePosterPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const slug = (params.slug ?? '').trim().toLowerCase()
+  const { slug: rawSlug } = await params
+  const slug = (rawSlug ?? '').trim().toLowerCase()
   if (!slug) notFound()
 
   const centre = await loadCentre(slug)

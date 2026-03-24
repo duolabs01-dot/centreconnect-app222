@@ -6,10 +6,10 @@ import { formatDate } from '@/lib/utils'
 import { PublicJobApplyForm } from '@/components/public/public-job-apply-form'
 
 type PublicJobPageProps = {
-  params: {
+  params: Promise<{
     slug: string
     jobId: string
-  }
+  }>
 }
 
 type JobCentre = {
@@ -20,11 +20,12 @@ type JobCentre = {
 }
 
 export async function generateMetadata({ params }: PublicJobPageProps): Promise<Metadata> {
+  const { jobId } = await params
   const supabase = await createClient()
   const { data: job } = await supabase
     .from('jobs')
     .select('title,ecd_centres(name)')
-    .eq('id', params.jobId)
+    .eq('id', jobId)
     .eq('is_published', true)
     .maybeSingle()
 
@@ -37,11 +38,12 @@ export async function generateMetadata({ params }: PublicJobPageProps): Promise<
 }
 
 export default async function PublicJobPage({ params }: PublicJobPageProps) {
+  const { jobId } = await params
   const supabase = await createClient()
   const { data: job } = await supabase
     .from('jobs')
     .select('id,ecd_id,title,role_type,description,requirements,closes_at,is_published,ecd_centres(id,name,slug,logo_url)')
-    .eq('id', params.jobId)
+    .eq('id', jobId)
     .eq('is_published', true)
     .maybeSingle()
   if (!job) notFound()

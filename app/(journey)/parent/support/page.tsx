@@ -14,15 +14,16 @@ export const metadata: Metadata = {
 }
 
 type ParentSupportPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     created?: string
     status?: string
-  }
+  }>
 }
 
 const CATEGORIES = ['general', 'technical', 'application', 'billing'] as const
 
 export default async function ParentSupportPage({ searchParams }: ParentSupportPageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const supabase = await createClient()
   const {
     data: { user },
@@ -71,7 +72,7 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
     redirect('/parent/support?created=1')
   }
 
-  const statusFilter = (searchParams?.status ?? 'open').toLowerCase()
+  const statusFilter = (resolvedSearchParams?.status ?? 'open').toLowerCase()
   let query = supabase
     .from('support_tickets')
     .select('id,ticket_number,subject,category,status,priority,created_at')
@@ -93,12 +94,12 @@ export default async function ParentSupportPage({ searchParams }: ParentSupportP
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Report an Issue</h1>
         <p className="mt-1 text-sm text-slate-600">Tell us what happened and the support team will follow up in your inbox.</p>
-        {searchParams?.created === '1' && (
+        {resolvedSearchParams?.created === '1' && (
           <div className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wider">
             Ticket submitted successfully
           </div>
         )}
-        {searchParams?.created === '0' && (
+        {resolvedSearchParams?.created === '0' && (
           <div className="mt-3 inline-flex rounded-full border border-rose-200 bg-rose-50 px-4 py-1.5 text-xs font-bold text-rose-700 uppercase tracking-wider">
             Submission failed. Please try again.
           </div>

@@ -64,10 +64,11 @@ function roleLabel(role: TeamMemberRow['role']) {
 }
 
 export default async function TeamPlansPage({
-  searchParams,
+  searchParams: searchParamsPromise,
 }: {
-  searchParams?: { success?: string; error?: string }
+  searchParams?: Promise<{ success?: string; error?: string }>
 }) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
 
   const [{ data: teamMembers }, { data: currentPlan }, { data: tasks }, { data: centre }] = await Promise.all([

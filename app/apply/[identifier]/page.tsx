@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ArrowLeft } from 'lucide-react'
 
 type ApplyPageProps = {
-  params: {
+  params: Promise<{
     identifier: string
-  }
+  }>
 }
 
 type CentreRecord = {
@@ -101,12 +101,13 @@ async function getCentreByIdentifier(identifier: string): Promise<CentreRecord |
 }
 
 export default async function ApplyPage({ params }: ApplyPageProps) {
+  const { identifier } = await params
   let centre: CentreRecord | null = null
 
   try {
-    centre = await getCentreByIdentifier(params.identifier)
+    centre = await getCentreByIdentifier(identifier)
   } catch (error) {
-    console.error('Apply page failed for identifier:', params.identifier, error)
+    console.error('Apply page failed for identifier:', identifier, error)
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
         <Card className="border-slate-200">
@@ -115,12 +116,12 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
             <CardDescription>Please try again in a moment or return to the centre profile.</CardDescription>
           </CardHeader>
           <CardContent>
-            <a
+            <Link
               href="/directory"
               className="inline-flex items-center justify-center rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white hover:bg-cyan-700"
             >
               Browse centres
-            </a>
+            </Link>
           </CardContent>
         </Card>
       </main>

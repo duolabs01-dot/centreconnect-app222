@@ -30,8 +30,9 @@ type StopRow = {
   children: StopChild | StopChild[] | null
 }
 
-export default async function DriverPage({ params }: { params: { token: string } }) {
-  const token = params.token?.trim()
+export default async function DriverPage({ params }: { params: Promise<{ token: string }> }) {
+  const { token: rawToken } = await params
+  const token = rawToken?.trim()
   if (!token || !/^[a-f0-9]{32}$/i.test(token)) {
     notFound()
   }

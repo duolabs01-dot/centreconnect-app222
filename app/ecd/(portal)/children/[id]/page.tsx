@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 }
 
 type ChildDetailPageProps = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 function parseTextArray(value: unknown) {
@@ -48,7 +48,7 @@ function getPrimaryGuardian(raw: unknown) {
 }
 
 export default async function EcdChildDetailPage({ params }: ChildDetailPageProps) {
-  const { id } = params
+  const { id } = await params
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
 
   const childSelect =

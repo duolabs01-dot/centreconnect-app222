@@ -16,11 +16,11 @@ export const metadata: Metadata = {
 }
 
 type CalendarPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     month?: string
     edit?: string
     day?: string
-  }
+  }>
 }
 
 type CentreAutomationRow = {
@@ -231,7 +231,8 @@ async function syncBirthdaysForCentre(session: PortalSessionLite) {
   }
 }
 
-export default async function EcdCalendarPage({ searchParams }: CalendarPageProps) {
+export default async function EcdCalendarPage({ searchParams: searchParamsPromise }: CalendarPageProps) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const nowJhb = getJohannesburgNowParts()
   const today = new Date(
