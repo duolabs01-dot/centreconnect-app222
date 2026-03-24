@@ -54,6 +54,8 @@ export type DoeMonthlyStats = {
   }
   totalMale: number
   totalFemale: number
+  // totalChildren is always the ground truth — totalMale+totalFemale may be less
+  // if some children have no gender recorded
 }
 
 export type DsdStaffRecord = {
