@@ -17,6 +17,7 @@ import { DangerZoneClient } from './danger-zone-client'
 import { InviteStaffForm } from '@/components/ecd/invite-staff-form'
 import { OfficialStaffRecordsCard } from '@/components/ecd/official-staff-records-card'
 import { syncPortalMemberToStaffRecord } from '@/lib/ecd/staff-sync'
+import { CollapsibleCard } from './collapsible-card'
 
 export const metadata: Metadata = {
   title: 'Settings - CentreConnect',
@@ -621,6 +622,11 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
   }
 
   return (
+    <>
+      <div className="mb-6">
+        <h1 className="text-xl font-black text-slate-900">Settings</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Manage your crèche, account, and preferences.</p>
+      </div>
     <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
       <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden xl:col-span-2">
         <CardHeader className="bg-slate-50/50">
@@ -681,11 +687,7 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
           </CardContent>
         </Card>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Crèche Basics</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+        <CollapsibleCard title="Crèche Basics" defaultOpen={true}>
             <form action={saveCentreBasics} className="grid gap-4 md:grid-cols-2">
               <input name="name" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.name ?? ''} placeholder="Crèche name" required />
               <input name="tagline" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.tagline ?? ''} placeholder="Tagline" />
@@ -702,14 +704,9 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
                 Save Basics
               </Button>
             </form>
-          </CardContent>
-        </Card>
+        </CollapsibleCard>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Location & Address</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+        <CollapsibleCard title="Location & Address" className="xl:col-span-2">
             <form action={saveCentreLocation} className="grid gap-4 md:grid-cols-2">
               <input name="address" className="cc-native-field md:col-span-2 h-12 rounded-2xl" defaultValue={centre?.address ?? ''} placeholder="Street address" />
               <input name="suburb" className="cc-native-field h-12 rounded-2xl" defaultValue={centre?.suburb ?? ''} placeholder="Suburb" />
@@ -738,14 +735,10 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
                 Save Location
               </Button>
             </form>
-          </CardContent>
-        </Card>
+        </CollapsibleCard>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Classes & Aftercare</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
+        <CollapsibleCard title="Classes & Aftercare" className="xl:col-span-2">
+          <div className="space-y-6">
             <form action={saveClassroomsAndCare} className="space-y-6">
               <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
                 <div className="space-y-2">
@@ -794,14 +787,11 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
                 Save Classes & Aftercare
               </Button>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleCard>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">My Account</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+        <CollapsibleCard title="My Account" defaultOpen={true} className="xl:col-span-2">
+          <div>
             <form action={saveAccountDetails} className="grid gap-4 md:grid-cols-2">
               <input name="full_name" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.full_name ?? ''} placeholder="Full name" />
               <input name="profile_phone" className="cc-native-field h-12 rounded-2xl" defaultValue={profile?.phone ?? ''} placeholder="Phone number" />
@@ -830,14 +820,10 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
                 Last crèche update: {new Date(centre.updated_at).toLocaleString()}
               </p>
             ) : null}
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleCard>
 
-        <Card className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Notification Preferences</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
+        <CollapsibleCard title="Notification Preferences" className="xl:col-span-2">
             <form action={saveNotificationPreferences} className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3">
                 <label className="flex items-center gap-3 text-sm text-slate-700 font-medium cursor-pointer group">
@@ -878,14 +864,10 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
               </div>
               <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">Save Notification Preferences</Button>
             </form>
-          </CardContent>
-        </Card>
+        </CollapsibleCard>
 
-        <Card id="staff" className="border-slate-100 shadow-sm rounded-3xl overflow-hidden bg-white xl:col-span-2">
-          <CardHeader className="bg-slate-50/50">
-            <CardTitle className="text-base font-bold">Staff Management</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
+        <CollapsibleCard id="staff" title="Staff Management" className="xl:col-span-2">
+          <div className="space-y-6">
             {searchParams?.staffError ? (
               <p className="rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 uppercase tracking-tight">
                 {searchParams.staffError}
@@ -1019,8 +1001,8 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
                 ))
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleCard>
 
         <OfficialStaffRecordsCard
           records={officialStaffRecords}
@@ -1034,6 +1016,7 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
           <DangerZoneClient action={requestCancellation} />
         </div>
       </section>
+    </>
   )
 }
 
