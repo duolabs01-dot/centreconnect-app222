@@ -7,14 +7,13 @@ import {
   ShieldCheck,
   UserCheck,
   Users,
-  Zap,
   Globe,
   MessagesSquare,
   FileText,
   LineChart,
   FileCheck,
-  Briefcase,
   ListChecks,
+  BookOpen,
   type LucideIcon,
 } from 'lucide-react'
 import type { InternalTier } from '@/lib/billing/plans'
@@ -30,29 +29,25 @@ export type EcdNavItem = Record<'href', string> & {
 }
 
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
-  // 1 — HOME
-  { href: '/ecd/dashboard',     label: 'Home',       icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
+  // ── DAILY OPS ─────────────────────────────────────────────
+  { href: '/ecd/dashboard',     label: 'Home',          icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/children',      label: 'Children',      icon: Users,           group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/report-cards',  label: 'Report Cards',  icon: BookOpen,        group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/calendar',      label: 'Calendar',      icon: CalendarDays,    group: 'daily_ops', supervisorAllowed: true },
 
-  // 2 — CHILDREN (replaces Children + DOE Report + Report Cards)
-  { href: '/ecd/children',      label: 'Children',   icon: Users,           group: 'daily_ops', supervisorAllowed: true },
+  // ── MANAGEMENT ────────────────────────────────────────────
+  { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true },
+  { href: '/ecd/communications',label: 'Messages',      icon: MessagesSquare,  group: 'admin',     supervisorAllowed: true },
+  { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
+  { href: '/ecd/compliance',    label: 'Compliance',    icon: ShieldCheck,     group: 'admin',     adminOnly: true },
 
-  // 3 — ATTENDANCE (replaces Attendance + Pickup as primary; pickup accessible from attendance)
-  { href: '/ecd/attendance',    label: 'Attendance', icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
+  // ── GROW ──────────────────────────────────────────────────
+  { href: '/ecd/financials',    label: 'Financials',    icon: LineChart,       group: 'grow',      adminOnly: true,  minTier: 'standard' },
+  { href: '/ecd/website',       label: 'Website',       icon: Globe,           group: 'grow',      adminOnly: true,  minTier: 'standard' },
 
-  // 4 — REPORTS (replaces Daily Reports + Report Cards)
-  { href: '/ecd/daily-reports', label: 'Reports',    icon: Zap,             group: 'daily_ops', supervisorAllowed: true },
-
-  // 5 — ADMISSIONS (replaces Applications/Pipeline + Messages)
-  { href: '/ecd/applications',  label: 'Admissions', icon: ClipboardList,   group: 'grow',      supervisorAllowed: true },
-
-  // 6 — MESSAGES
-  { href: '/ecd/communications',label: 'Messages',   icon: MessagesSquare,  group: 'grow',      supervisorAllowed: true },
-
-  // 7 — SETTINGS (account, billing, security + support)
+  // ── ACCOUNT ───────────────────────────────────────────────
+  { href: '/ecd/billing',       label: 'Billing',       icon: CreditCard,      group: 'settings',  adminOnly: true },
   { href: '/ecd/profile',       label: 'Settings',      icon: Settings2,       group: 'settings',  adminOnly: true },
-
-  // 8 — DOE EXPORT (highly visible for compliance — keep top-level)
-  { href: '/ecd/dsd-export',    label: 'DOE Export', icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
 ]
-
-
