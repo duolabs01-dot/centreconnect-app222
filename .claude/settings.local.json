@@ -49,7 +49,18 @@
       "Bash(grep -rn netlify C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan --include=*.json --include=*.ts --include=*.tsx --include=*.js --include=*.md -l)",
       "Bash(npm audit:*)",
       "Bash(find /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -type f -name tailwind.config.*)",
-      "Bash(find /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -name *theme* -o -name *ecd-theme* -o -name globals.css)"
+      "Bash(find /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -name *theme* -o -name *ecd-theme* -o -name globals.css)",
+      "Bash(grep -n \"TestChild\\\\|Automated\\\\|test_child\\\\|test child\" C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan -r --include=*.ts --include=*.tsx --include=*.sql)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -rn \"ECD_MOBILE\\\\|ecdBottomNav\\\\|ecd-bottom\" C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn ECD_MOBILE_NAV_ITEMS C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn BottomNavProvider C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan/app/ecd --include=*.tsx --include=*.ts)",
+      "Bash(grep -rn BottomNavProvider C:/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/.claude/worktrees/festive-dhawan/app --include=*.tsx)",
+      "Bash(cat app/ecd/\\\\\\(portal\\\\\\)/team-plans/page.tsx)",
+      "Bash(node -e \"require\\(''''docx''''\\)\")",
+      "Bash(dir \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222\\\\CentreConnect_Sales_Playbook.docx\")",
+      "Bash(grep -n \"applications\\\\|Applications\" app/ecd/\\\\\\(portal\\\\\\)/applications/[id]/page.tsx)",
+      "Bash(head -5 app/ecd/\\\\\\(portal\\\\\\)/announcements/page.tsx)"
     ]
   }
 }

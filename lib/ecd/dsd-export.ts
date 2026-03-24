@@ -185,9 +185,9 @@ export function getDoeMonthlyReturnData(children: DsdEnrolledChild[]): DoeMonthl
       age--
     }
 
-    const gender = (child.gender || '').toLowerCase()
-    const isMale = gender === 'male' || gender === 'm'
-    const isFemale = gender === 'female' || gender === 'f'
+    const gender = (child.gender || '').toLowerCase().trim()
+    const isMale = gender === 'male' || gender === 'm' || gender === 'boy' || gender === 'b' || gender === '1'
+    const isFemale = gender === 'female' || gender === 'f' || gender === 'girl' || gender === 'g' || gender === '2'
 
     if (isMale) stats.totalMale++
     if (isFemale) stats.totalFemale++
@@ -228,7 +228,7 @@ export async function getDsdExportData(input: {
   const { supabase, ecdId, selectedMonth, selectedYear } = input
   const { startDate, endDate } = getMonthWindow(selectedYear, selectedMonth)
 
-  const [{ data: centre }, { data: enrolledApplications }, { data: directChildren }, { data: complianceRows }, { data: staffRows }] = await Promise.all([
+  const [{ data: centre }, { data: enrolledApplications }, { data: directChildren }, { data: complianceRows }, { data: staffRows }, { data: adminProfile }] = await Promise.all([
     supabase
       .from('ecd_centres')
       .select('name,registration_number,emis_number,npo_reg,dsd_reg_number,address_line1,address_line2,province,approved_capacity_partial_care,approved_capacity_sla,ward,district,primary_contact_name,primary_contact_phone,primary_contact_email,contact_phone,contact_email')
@@ -256,6 +256,13 @@ export async function getDsdExportData(input: {
       .select('id,first_name,surname,id_number,role,gender,race,is_disabled,disability_description,is_trained,training_description,is_computer_literate,is_subsidized,monthly_salary')
       .eq('ecd_id', ecdId)
       .order('surname', { ascending: true }),
+    supabase
+      .from('ecd_admins')
+      .select('user_profiles!ecd_admins_user_id_fkey(full_name)')
+      .eq('ecd_id', ecdId)
+      .eq('role', 'ecd_admin')
+      .limit(1)
+      .maybeSingle(),
   ])
 
   const applicationRows = (enrolledApplications ?? []) as Array<Record<string, unknown>>
@@ -427,7 +434,10 @@ export async function getDsdExportData(input: {
     approvedCapacitySla: centre?.approved_capacity_sla || null,
     ward: centre?.ward?.trim() || null,
     district: centre?.district?.trim() || null,
-    primaryContactName: centre?.primary_contact_name?.trim() || null,
+    primaryContactName: centre?.primary_contact_name?.trim() ||
+      (Array.isArray((adminProfile as Record<string,unknown>)?.user_profiles)
+        ? ((adminProfile as Record<string,unknown>)?.user_profiles as Array<{full_name:string|null}>)?.[0]?.full_name?.trim()
+        : ((adminProfile as Record<string,unknown>)?.user_profiles as {full_name:string|null} | null)?.full_name?.trim()) || null,
     primaryContactPhone: (centre?.primary_contact_phone ?? centre?.contact_phone)?.trim() || null,
     primaryContactEmail: (centre?.primary_contact_email ?? centre?.contact_email)?.trim() || null,
     selectedMonth,

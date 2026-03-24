@@ -47,8 +47,8 @@ export function calculateAgeAtPeriod(dateOfBirth: string | null | undefined, sel
 
 export function getGenderInitial(gender: string | null | undefined) {
   const normalized = String(gender ?? '').trim().toLowerCase()
-  if (normalized === 'male' || normalized === 'm') return 'M'
-  if (normalized === 'female' || normalized === 'f') return 'F'
+  if (normalized === 'male' || normalized === 'm' || normalized === 'boy' || normalized === 'b' || normalized === '1') return 'M'
+  if (normalized === 'female' || normalized === 'f' || normalized === 'girl' || normalized === 'g' || normalized === '2') return 'F'
   return '--'
 }
 
@@ -137,8 +137,8 @@ export function buildDsdPdfHtml(data: DsdExportData) {
   const reportTitle = buildDsdMonthlyReportTitle(data.centreName)
 
   // Single source of truth: gender counts derived directly from children array
-  const totalBoys = children.filter(c => { const g = (c.gender || '').toLowerCase(); return g === 'male' || g === 'm' }).length
-  const totalGirls = children.filter(c => { const g = (c.gender || '').toLowerCase(); return g === 'female' || g === 'f' }).length
+  const totalBoys = children.filter(c => { const g = (c.gender || '').toLowerCase().trim(); return g === 'male' || g === 'm' || g === 'boy' || g === 'b' || g === '1' }).length
+  const totalGirls = children.filter(c => { const g = (c.gender || '').toLowerCase().trim(); return g === 'female' || g === 'f' || g === 'girl' || g === 'g' || g === '2' }).length
   const grandTotal = children.length // always authoritative
 
   // Build day-by-day attendance map for Annexure A

@@ -281,6 +281,12 @@ export function EcdPortalSidebar({
 
         {/* Footer */}
         <div className="mt-auto space-y-2 px-3 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <Link
+            href="/ecd/support"
+            className="flex items-center justify-center gap-2 w-full rounded-xl bg-white/5 border border-white/10 py-2 text-[11px] font-semibold text-slate-400 transition-all hover:bg-white/10 hover:text-slate-200"
+          >
+            Help &amp; Support
+          </Link>
           <a
             href="https://wa.me/27685356430?text=Hi%20Mandla%2C%20I%20need%20help%20with%20CentreConnect"
             target="_blank"

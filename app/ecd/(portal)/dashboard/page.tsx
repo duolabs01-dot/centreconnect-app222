@@ -430,7 +430,7 @@ export default async function EcdDashboardPage() {
               </CardTitle>
               <div className="flex flex-wrap gap-2">
                 <Button asChild variant="outline" className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                  <Link href="/ecd/announcements">Announce</Link>
+                  <Link href="/ecd/communications">Announce</Link>
                 </Button>
                 <Button asChild variant="outline" className="h-9 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
                   <Link href="/ecd/compliance">Compliance</Link>
