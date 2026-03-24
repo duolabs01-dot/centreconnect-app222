@@ -11,25 +11,26 @@ export const metadata: Metadata = {
 }
 
 type EditChildPageProps = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function EditChildPage({ params }: EditChildPageProps) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect(`/login?next=/parent/children/${params.id}/edit`)
+    redirect(`/login?next=/parent/children/${id}/edit`)
   }
 
   const { data: child } = await supabase
     .from('children')
     .select('id,parent_id,first_name,last_name,date_of_birth,gender')
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('parent_id', user.id)
     .maybeSingle()
 
@@ -46,7 +47,7 @@ export default async function EditChildPage({ params }: EditChildPageProps) {
     } = await serverClient.auth.getUser()
 
     if (!actionUser) {
-      redirect(`/login?next=/parent/children/${params.id}/edit`)
+      redirect(`/login?next=/parent/children/${id}/edit`)
     }
 
     const firstName = String(formData.get('first_name') ?? '').trim()
@@ -55,7 +56,7 @@ export default async function EditChildPage({ params }: EditChildPageProps) {
     const gender = String(formData.get('gender') ?? '').trim()
 
     if (!firstName || !lastName || !dateOfBirth || !gender) {
-      redirect(`/parent/children/${params.id}/edit`)
+      redirect(`/parent/children/${id}/edit`)
     }
 
     const { error } = await serverClient
@@ -66,11 +67,11 @@ export default async function EditChildPage({ params }: EditChildPageProps) {
         date_of_birth: dateOfBirth,
         gender,
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('parent_id', actionUser.id)
 
     if (error) {
-      redirect(`/parent/children/${params.id}/edit`)
+      redirect(`/parent/children/${id}/edit`)
     }
 
     redirect('/parent/children?success=child-updated')

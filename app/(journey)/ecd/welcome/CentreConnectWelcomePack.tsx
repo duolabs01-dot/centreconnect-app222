@@ -646,7 +646,7 @@ export default function CentreConnectWelcomePack() {
         <div className="space-y-2">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">Welcome to CentreConnect, {firstName}!</h1>
           <p className="mx-auto max-w-2xl text-base font-medium leading-7 text-slate-600 sm:text-lg">
-            Everything you need to run your centre with confidence. From applications to daily attendance, we've got you covered.
+            Everything you need to run your centre with confidence. From applications to daily attendance, we&apos;ve got you covered.
           </p>
         </div>
       </header>
@@ -727,7 +727,7 @@ export default function CentreConnectWelcomePack() {
           <div className="space-y-2">
             <h2 className="text-2xl font-black sm:text-3xl">Ready to grow your centre?</h2>
             <p className="text-slate-400 font-medium">
-              We're here to help you every step of the way. If you have any questions or need a hand getting set up, just reach out.
+              We&apos;re here to help you every step of the way. If you have any questions or need a hand getting set up, just reach out.
             </p>
           </div>
           <div className="flex flex-col items-center gap-4 pt-4 sm:flex-row sm:justify-center">

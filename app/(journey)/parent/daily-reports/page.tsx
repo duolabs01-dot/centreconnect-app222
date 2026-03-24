@@ -65,10 +65,10 @@ type DailyReportRow = {
 }
 
 type ParentDailyReportsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     tab?: string
     q?: string
-  }
+  }>
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -114,14 +114,15 @@ function buildTabHref(tab: ReportTab, query: string) {
 }
 
 export default async function ParentDailyReportsPage({ searchParams }: ParentDailyReportsPageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const activeTab = normalizeTab(searchParams?.tab)
-  const searchQuery = (searchParams?.q ?? '').trim()
+  const activeTab = normalizeTab(resolvedSearchParams?.tab)
+  const searchQuery = (resolvedSearchParams?.q ?? '').trim()
   const normalizedSearch = searchQuery.toLowerCase()
 
   const { year, month, day } = getJohannesburgNowParts()

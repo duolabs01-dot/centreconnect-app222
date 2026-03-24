@@ -14,12 +14,13 @@ export const metadata: Metadata = {
 }
 
 type SupportPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     status?: string
-  }
+  }>
 }
 
-export default async function EcdSupportPage({ searchParams }: SupportPageProps) {
+export default async function EcdSupportPage({ searchParams: searchParamsPromise }: SupportPageProps) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   async function createTicket(formData: FormData) {
     'use server'

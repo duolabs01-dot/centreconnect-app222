@@ -10,6 +10,6 @@ export function createClient() {
     return browserClient
   }
 
-  browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  browserClient = createBrowserClient(supabaseUrl!, supabaseAnonKey!)
   return browserClient
 }

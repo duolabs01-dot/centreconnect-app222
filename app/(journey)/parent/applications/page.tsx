@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils'
 import { SurfaceCard } from '@/components/ui/surface-card'
 
 type ParentApplicationsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     childId?: string
-  }
+  }>
 }
 
 export const metadata: Metadata = {
@@ -78,6 +78,7 @@ function normalizeMissingDocuments(value: unknown): string[] {
 }
 
 export default async function ParentApplicationsPage({ searchParams }: ParentApplicationsPageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const perf = startRoutePerf('/parent/applications')
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -193,7 +194,7 @@ export default async function ParentApplicationsPage({ searchParams }: ParentApp
       count: childCounts.get(child.id as string) ?? 0,
     }))
 
-    const selectedChildId = searchParams?.childId ?? (childCards[0]?.id ?? null)
+    const selectedChildId = resolvedSearchParams?.childId ?? (childCards[0]?.id ?? null)
     const filteredApplications = selectedChildId
       ? applications.filter((application) => application.childId === selectedChildId)
       : applications

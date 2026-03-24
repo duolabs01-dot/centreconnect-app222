@@ -92,7 +92,8 @@ function trendDeltaFromSeries(series: number[]) {
   return { direction, percentChange, firstHalfTotal, secondHalfTotal }
 }
 
-export default async function AdminParentReliabilityPage({ searchParams }: { searchParams?: SearchParams }) {
+export default async function AdminParentReliabilityPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const supabase = await createClient()
   const admin = createAdminClient()
   const {
@@ -103,9 +104,9 @@ export default async function AdminParentReliabilityPage({ searchParams }: { sea
   const { data: profile } = await admin.from('user_profiles').select('role').eq('id', user.id).maybeSingle()
   if (profile?.role !== 'platform_admin') redirect('/login')
 
-  const selectedWindow = toWindow(first(searchParams?.window))
-  const routeFilter = first(searchParams?.route)
-  const failureTypeFilter = first(searchParams?.failureType)
+  const selectedWindow = toWindow(first(resolvedSearchParams?.window))
+  const routeFilter = first(resolvedSearchParams?.route)
+  const failureTypeFilter = first(resolvedSearchParams?.failureType)
   const windowMs = selectedWindow === '24h' ? 24 * 60 * 60 * 1000 : 7 * 24 * 60 * 60 * 1000
   const nowMs = Date.now()
   const windowStartMs = nowMs - windowMs

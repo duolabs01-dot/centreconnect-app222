@@ -7,9 +7,9 @@ import { canShowMultipleApplicationsFlag } from '@/lib/utils/applications/privac
 import ApplicationDetailClient from './ApplicationDetailClient'
 
 type ApplicationDetailPageProps = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 type StatusHistoryRow = {
@@ -88,6 +88,7 @@ function parseOfferBreakdown(value: unknown): OfferBreakdownItem[] {
 }
 
 export default async function ParentApplicationDetailPage({ params }: ApplicationDetailPageProps) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
@@ -105,7 +106,7 @@ export default async function ParentApplicationDetailPage({ params }: Applicatio
       children (first_name, last_name, intake_documents),
       application_status_history (new_status, created_at, notes)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .eq('parent_id', user.id)
     .single()
 

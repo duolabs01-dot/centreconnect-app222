@@ -14,14 +14,15 @@ export const metadata: Metadata = {
 export default async function EcdAttendancePage({
   searchParams,
 }: {
-  searchParams: { classId?: string; month?: string; year?: string }
+  searchParams: Promise<{ classId?: string; month?: string; year?: string }>
 }) {
+  const resolvedSearchParams = await searchParams
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const now = getJohannesburgNowParts()
 
-  const selectedYear = searchParams.year ? parseInt(searchParams.year) : now.year
-  const selectedMonth = searchParams.month ? parseInt(searchParams.month) : now.month
-  const selectedClassId = searchParams.classId || null
+  const selectedYear = resolvedSearchParams.year ? parseInt(resolvedSearchParams.year) : now.year
+  const selectedMonth = resolvedSearchParams.month ? parseInt(resolvedSearchParams.month) : now.month
+  const selectedClassId = resolvedSearchParams.classId || null
 
   // Fetch classes for the centre
   const { data: classes } = await supabase

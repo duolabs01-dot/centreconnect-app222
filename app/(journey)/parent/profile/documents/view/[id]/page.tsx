@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 }
 
 type ViewerPageProps = {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 type ParentDocumentRow = {
@@ -64,13 +64,14 @@ function looksInlineFriendly(mimeType: string | null | undefined, fileName: stri
 }
 
 export default async function ParentDocumentViewerPage({ params }: ViewerPageProps) {
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const document = await loadDocument(supabase, user.id, params.id)
+  const document = await loadDocument(supabase, user.id, id)
   if (!document) notFound()
 
   const inlineUrl = `/api/parent/documents/${encodeURIComponent(document.id)}/file`

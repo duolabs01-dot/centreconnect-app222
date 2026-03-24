@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 }
 
 type ComparePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     centres?: string | string[]
-  }
+  }>
 }
 
 type CompareCentreRow = {
@@ -70,13 +70,14 @@ function formatLocation(centre: CompareCentreRow) {
 }
 
 export default async function ComparePage({ searchParams }: ComparePageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const supabase = await createClient()
   const admin = createAdminClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const requestedIds = normalizeCentresParam(searchParams?.centres)
+  const requestedIds = normalizeCentresParam(resolvedSearchParams?.centres)
   let centreIds = requestedIds
   let savedCount = 0
 

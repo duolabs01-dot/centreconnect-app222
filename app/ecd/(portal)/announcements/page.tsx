@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 }
 
 type AnnouncementsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     published?: string
     template?: string
-  }
+  }>
 }
 
 const announcementTemplates: Record<string, { title: string; message: string; commsTemplate?: string }> = {
@@ -45,16 +45,17 @@ const announcementTemplates: Record<string, { title: string; message: string; co
 }
 
 export default async function EcdAnnouncementsPage({ searchParams }: AnnouncementsPageProps) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase.from('ecd_centres').select('name').eq('id', ecdId).maybeSingle()
-  const publishedFilter = searchParams?.published === 'false' ? 'false' : 'all'
+  const publishedFilter = resolvedSearchParams?.published === 'false' ? 'false' : 'all'
   const selectedTemplate =
-    searchParams?.template && announcementTemplates[searchParams.template]
-      ? announcementTemplates[searchParams.template]
+    resolvedSearchParams?.template && announcementTemplates[resolvedSearchParams.template]
+      ? announcementTemplates[resolvedSearchParams.template]
       : null
   const sendSimilarHref =
-    searchParams?.template && announcementTemplates[searchParams.template]?.commsTemplate
-      ? `/ecd/communications?mode=broadcast&template=${announcementTemplates[searchParams.template]?.commsTemplate}&audience=all`
+    resolvedSearchParams?.template && announcementTemplates[resolvedSearchParams.template]?.commsTemplate
+      ? `/ecd/communications?mode=broadcast&template=${announcementTemplates[resolvedSearchParams.template]?.commsTemplate}&audience=all`
       : null
 
   async function createAnnouncement(formData: FormData) {

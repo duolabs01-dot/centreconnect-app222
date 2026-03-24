@@ -24,9 +24,9 @@ export const metadata: Metadata = {
 }
 
 type ProfilePageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     staffError?: string
-  }
+  }>
 }
 
 type OfficialStaffRecord = {
@@ -41,7 +41,8 @@ type OfficialStaffRecord = {
   monthlySalary: number | null
 }
 
-export default async function EcdProfilePage({ searchParams }: ProfilePageProps) {
+export default async function EcdProfilePage({ searchParams: searchParamsPromise }: ProfilePageProps) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const { data: centre } = await supabase
     .from('ecd_centres')

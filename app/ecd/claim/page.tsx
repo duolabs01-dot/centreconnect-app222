@@ -12,12 +12,13 @@ export const metadata: Metadata = {
 }
 
 type ClaimPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     slug?: string
-  }
+  }>
 }
 
-export default async function ClaimPage({ searchParams }: ClaimPageProps) {
+export default async function ClaimPage({ searchParams: searchParamsPromise }: ClaimPageProps) {
+  const searchParams = await searchParamsPromise
   const normalizedSlug = normalizeCentreSlug(searchParams?.slug ?? '')
   if (!normalizedSlug) {
     return (

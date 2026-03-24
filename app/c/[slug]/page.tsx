@@ -396,16 +396,17 @@ export default async function CentrePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams?: { preview?: string | string[] }
+  searchParams?: Promise<{ preview?: string | string[] }>
 }) {
   const { slug } = await params
+  const resolvedSearchParams = await Promise.resolve(searchParams)
   const normalizedSlug = normalizeCentreSlug(slug)
   if (!normalizedSlug) {
     notFound()
   }
 
   const slugCandidates = resolveCentreSlugCandidates(slug)
-  const previewRequested = isTruthyPreviewFlag(searchParams?.preview)
+  const previewRequested = isTruthyPreviewFlag(resolvedSearchParams?.preview)
   if (!previewRequested) {
     const payload = await loadCentrePagePayload(slugCandidates)
     return (

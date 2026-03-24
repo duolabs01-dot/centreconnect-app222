@@ -28,9 +28,9 @@ type LineItemRow = {
 }
 
 type FinancialsPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     period?: string
-  }
+  }>
 }
 
 function resolvePeriod(periodParam?: string): string {
@@ -41,7 +41,8 @@ function resolvePeriod(periodParam?: string): string {
   return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)
 }
 
-export default async function EcdFinancialsPage({ searchParams }: FinancialsPageProps) {
+export default async function EcdFinancialsPage({ searchParams: searchParamsPromise }: FinancialsPageProps) {
+  const searchParams = await searchParamsPromise
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   await requireEcdFeatureAccess({ supabase, ecdId, feature: 'financials' })
   const canEdit = role === 'ecd_admin' || role === 'ecd_supervisor'
