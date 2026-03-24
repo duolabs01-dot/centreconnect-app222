@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
-import { buildDsdMonthlyReportTitle, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
+import { buildDsdMonthlyReportTitle, buildDsdPdfHtml, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
 import { DsdPrintButton } from './print-button'
 import { PdfDownloadButton } from './pdf-download-button'
 
@@ -63,6 +63,8 @@ export default async function DsdExportPage(props: {
   const data = await getDsdExportData({ supabase, ecdId, selectedMonth, selectedYear })
 
   const reportTitle = buildDsdMonthlyReportTitle(data.centreName)
+  // Pre-render the full print-ready HTML on the server — passed to the download button
+  const pdfHtml = buildDsdPdfHtml(data)
 
   const {
     total,
@@ -153,7 +155,7 @@ export default async function DsdExportPage(props: {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <DsdPrintButton />
-                <PdfDownloadButton month={selectedMonth} year={selectedYear} centreName={data.centreName} />
+                <PdfDownloadButton month={selectedMonth} year={selectedYear} centreName={data.centreName} htmlContent={pdfHtml} />
               </div>
             </div>
             <form className="mt-4 flex flex-wrap items-center gap-2">

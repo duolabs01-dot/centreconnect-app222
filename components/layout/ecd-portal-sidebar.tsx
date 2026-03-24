@@ -29,10 +29,10 @@ const MAIN_GROUP_ORDER: EcdNavGroup[] = [
 ]
 
 const GROUP_LABELS: Record<EcdNavGroup, string> = {
-  daily_ops: '',
-  admin: '',
-  grow: '',
-  settings: '',
+  daily_ops: 'Daily Operations',
+  admin: 'Management',
+  grow: 'Grow',
+  settings: 'Account',
 }
 
 const SIDEBAR_SCROLL_KEY = 'ecd-portal-sidebar-scroll-top'
@@ -226,15 +226,20 @@ export function EcdPortalSidebar({
         className="hidden h-screen w-[260px] shrink-0 overflow-y-auto border-r border-slate-200/80 bg-card text-foreground shadow-sm [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-200/80 md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:flex-col"
       >
         {/* Header */}
-        <div className="px-5 pt-6 pb-5">
+        <div className="px-5 pt-6 pb-4">
           <BrandMark compact />
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[11px] font-bold text-teal-700 border border-teal-100 shadow-sm">
-              {roleInitial}
-            </div>
-            <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-1 text-[10px] font-semibold text-teal-700 border border-teal-100 shadow-sm">
+          {centreName && (
+            <p className="mt-3 text-[13px] font-black text-slate-800 leading-tight truncate">{centreName}</p>
+          )}
+          <div className="mt-1.5 flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-semibold text-teal-700 border border-teal-100">
               {roleLabel}
             </span>
+            {subscriptionTier && (
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-100 capitalize">
+                {subscriptionTier === 'standard' ? 'Growth' : subscriptionTier === 'premium' ? 'Pro' : subscriptionTier}
+              </span>
+            )}
           </div>
         </div>
 
@@ -276,26 +281,31 @@ export function EcdPortalSidebar({
 
           {lockedByTier.length > 0 ? (
             <div className="mb-5">
-              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-5 mx-3" />
-              <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-slate-400/80">
-                Upgrade to unlock
-              </p>
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-4 mx-3" />
+              <Link
+                href="/ecd/billing"
+                className="block mx-1 mb-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 px-3 py-2.5 hover:from-amber-100 hover:to-orange-100 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                  <p className="text-[11px] font-black text-amber-800">Unlock more features</p>
+                </div>
+                <p className="text-[10px] text-amber-700 leading-tight">Upgrade your plan to access {lockedByTier.length} more tool{lockedByTier.length > 1 ? 's' : ''}</p>
+              </Link>
               {lockedByTier.map((item) => (
-                <div
+                <Link
                   key={item.href}
-                  className="group relative flex items-center gap-3 rounded-xl border border-slate-200/60 bg-slate-50/60 px-3 py-2.5 opacity-60"
+                  href="/ecd/billing"
+                  className="group relative flex items-center gap-3 rounded-xl border border-dashed border-amber-200 bg-amber-50/30 px-3 py-2 mb-1 hover:bg-amber-50 transition-colors"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-400 border border-slate-200">
-                    <item.icon className="h-4 w-4" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                    <item.icon className="h-3.5 w-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-slate-500">{item.label}</p>
-                    <p className="text-[10px] font-medium text-slate-400">
-                      Requires {item.minTier === 'standard' ? 'Growth' : 'Pro'} plan
-                    </p>
+                    <p className="truncate text-[12px] font-medium text-amber-800">{item.label}</p>
                   </div>
-                  <Lock className="h-4 w-4 shrink-0 text-slate-400" />
-                </div>
+                  <Lock className="h-3 w-3 shrink-0 text-amber-400" />
+                </Link>
               ))}
             </div>
           ) : null}

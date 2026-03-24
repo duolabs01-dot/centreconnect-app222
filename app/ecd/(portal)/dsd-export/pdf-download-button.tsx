@@ -7,6 +7,8 @@ interface PdfDownloadButtonProps {
   month: number
   year: number
   centreName?: string
+  /** Pass the full HTML string from buildDsdPdfHtml — rendered server-side */
+  htmlContent?: string
 }
 
 const MONTH_NAMES = [
@@ -14,22 +16,40 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-export function PdfDownloadButton({ month, year, centreName }: PdfDownloadButtonProps) {
+export function PdfDownloadButton({ month, year, centreName, htmlContent }: PdfDownloadButtonProps) {
   function handleDownload() {
-    // Set the document title so the browser uses it as the PDF filename
-    const originalTitle = document.title
-    const safeCenter = (centreName ?? 'DOE-Report').replace(/[^a-zA-Z0-9\s]/g, '').trim()
-    document.title = `DOE-Monthly-Report-${MONTH_NAMES[month - 1]}-${year}-${safeCenter}`
+    if (htmlContent) {
+      // Open the pre-rendered full HTML in a new window and trigger print
+      const win = window.open('', '_blank', 'width=900,height=700')
+      if (!win) {
+        alert('Pop-up blocked. Please allow pop-ups for this site and try again.')
+        return
+      }
+      win.document.write(htmlContent)
+      win.document.close()
+      // Give the browser a moment to render fonts/styles before printing
+      win.addEventListener('load', () => {
+        setTimeout(() => {
+          win.focus()
+          win.print()
+        }, 400)
+      })
+      // Fallback if load already fired
+      setTimeout(() => {
+        if (!win.closed) {
+          win.focus()
+          win.print()
+        }
+      }, 1200)
+      return
+    }
 
-    // Trigger browser print — user selects "Save as PDF" in the print dialog
-    // The print stylesheet hides all portal chrome and shows only the DOE form
+    // Fallback: print current page (legacy behaviour)
+    const safe = (centreName ?? 'DOE-Report').replace(/[^a-zA-Z0-9\s]/g, '').trim()
+    const original = document.title
+    document.title = `DOE-Monthly-Report-${MONTH_NAMES[month - 1]}-${year}-${safe}`
     window.print()
-
-    // Restore title after print dialog closes
-    // Use setTimeout to let the print dialog open first
-    setTimeout(() => {
-      document.title = originalTitle
-    }, 1000)
+    setTimeout(() => { document.title = original }, 1200)
   }
 
   return (
