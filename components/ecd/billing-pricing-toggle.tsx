@@ -142,11 +142,11 @@ const PLANS = [
     description: 'Get discovered. Get your first parents through the door.',
     features: [
       'Centre listing in parent directory',
-      '3 full parent applications per month',
-      'Attendance register — current month',
-      '1 announcement per month',
-      'Basic daily reports (mood only)',
+      '3 full parent applications (see demand before upgrading)',
+      'Attendance register — current month only',
+      '1 DOE monthly report per quarter',
       '1 AI register import',
+      'Contact page + map for parents',
     ],
   },
   {

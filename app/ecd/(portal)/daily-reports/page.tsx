@@ -1,7 +1,10 @@
 ﻿// app/ecd/(portal)/daily-reports/page.tsx
 import type { Metadata } from 'next'
+import Link from 'next/link'
+import { FileText, Smile, UtensilsCrossed, Footprints, Zap } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
+import { hasEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { DailyReportsClient } from './daily-reports-client'
 
@@ -28,7 +31,73 @@ function toDateString(value: Date) {
 
 export default async function EcdDailyReportsPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
-  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'daily-reports' })
+  const dailyReportsAccess = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'daily-reports' })
+
+  if (!dailyReportsAccess.allowed) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-5 py-8">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500/10">
+            <FileText className="h-5 w-5 text-teal-600" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-slate-900">Daily Reports</h1>
+            <p className="text-sm text-slate-500">Send mood, meal and activity updates to parents every day</p>
+          </div>
+        </div>
+
+        <Card className="rounded-3xl border-amber-200 bg-amber-50 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base text-amber-900">
+              <Zap className="h-4 w-4 text-amber-500" />
+              Daily Reports — Growth feature
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-amber-800">
+            <p>
+              Daily Reports let you send a quick update to each child&apos;s family at the end of every day — mood, meals, nap times, activities. Parents love it. It keeps them connected and builds trust.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-white/60 px-3 py-3">
+                <Smile className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <div>
+                  <p className="font-black text-amber-900">Mood check-in</p>
+                  <p className="text-xs text-amber-700">Happy, okay, or struggling — parents know what to expect at pick-up</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-white/60 px-3 py-3">
+                <UtensilsCrossed className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <div>
+                  <p className="font-black text-amber-900">Meals &amp; nap times</p>
+                  <p className="text-xs text-amber-700">Log what they ate and when they slept — no more guessing games</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2 rounded-2xl border border-amber-200 bg-white/60 px-3 py-3">
+                <Footprints className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                <div>
+                  <p className="font-black text-amber-900">Activities</p>
+                  <p className="text-xs text-amber-700">What they learned today — builds confidence in your programme</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-white/70 px-4 py-3">
+              <div>
+                <p className="font-black text-amber-900">Unlock Daily Reports — R299/month</p>
+                <p className="text-xs text-amber-700">Growth plan includes attendance, reports, DOE export, and more</p>
+              </div>
+              <Link
+                href="/ecd/billing"
+                className="flex items-center gap-1.5 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-amber-600"
+              >
+                <Zap className="h-3.5 w-3.5" />
+                Upgrade to Growth
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
   const { year, month, day } = getJohannesburgNowParts()
   const todayDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
   const todayUtc = new Date(Date.UTC(year, month - 1, day))

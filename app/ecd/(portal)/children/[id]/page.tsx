@@ -52,7 +52,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
 
   const childSelect =
-    'id,first_name,last_name,date_of_birth,class_id,enrollment_start_date,enrollment_status,parent_id,guardian_contacts,emergency_contacts,allergies,medical_conditions,special_needs,dietary_restrictions,doctor_name,medical_aid_number,created_at,ecd_classes(name,age_group)'
+    'id,first_name,last_name,date_of_birth,gender,class_id,enrollment_start_date,enrollment_status,parent_id,guardian_contacts,emergency_contacts,allergies,medical_conditions,special_needs,dietary_restrictions,doctor_name,medical_aid_number,created_at,ecd_classes(name,age_group)'
 
   const childResult = await supabase
     .from('children')
@@ -148,6 +148,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
               </CardHeader>
               <CardContent className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
                 <p><span className="font-semibold text-slate-900">Date of birth:</span> {child.date_of_birth ? formatDate(child.date_of_birth) : 'Not added yet'}</p>
+                <p><span className="font-semibold text-slate-900">Gender:</span> {String(child.gender ?? '').trim() ? String(child.gender).charAt(0).toUpperCase() + String(child.gender).slice(1) : 'Not recorded'}</p>
                 <p><span className="font-semibold text-slate-900">Primary guardian saved:</span> {primaryGuardian.parent_name || 'Not saved yet'}</p>
                 <p><span className="font-semibold text-slate-900">Allergies:</span> {parseTextArray(child.allergies).join(', ') || 'None listed'}</p>
                 <p><span className="font-semibold text-slate-900">Medical conditions:</span> {parseTextArray(child.medical_conditions).join(', ') || 'None listed'}</p>

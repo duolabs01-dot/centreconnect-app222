@@ -35,7 +35,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   // Starter: attendance (current month), applications (3 free), DOE (1/quarter banner)
   // Pages handle their own tier limits — no nav lock needed for these three
   { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/report-cards',  label: 'Report Cards',  icon: BookOpen,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/calendar',      label: 'Calendar',      icon: CalendarDays,    group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
 
