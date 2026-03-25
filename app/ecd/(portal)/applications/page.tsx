@@ -357,38 +357,116 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
   const searchParams = await props.searchParams
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
 
-  // Starter tier teaser — show count only, not the full inbox
+  // Starter tier teaser — show first 5 peeked rows, rest locked
   const access = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'applications' })
   if (!access.allowed) {
-    const { count: totalApplications } = await supabase
-      .from('applications')
-      .select('id', { count: 'exact', head: true })
-      .eq('ecd_id', ecdId)
-      .in('status', ['submitted', 'in_review', 'partial', 'draft'])
+    const [totalResult, peekResult] = await Promise.all([
+      supabase
+        .from('applications')
+        .select('id', { count: 'exact', head: true })
+        .eq('ecd_id', ecdId)
+        .in('status', ['submitted', 'in_review', 'partial', 'draft']),
+      supabase
+        .from('applications')
+        .select('id, status, submitted_at, children(first_name, last_name)')
+        .eq('ecd_id', ecdId)
+        .in('status', ['submitted', 'in_review', 'partial', 'draft'])
+        .order('submitted_at', { ascending: false })
+        .limit(3),
+    ])
+    const totalApplications = totalResult.count ?? 0
+    const peeked = (peekResult.data ?? []) as Array<{
+      id: string
+      status: string
+      submitted_at: string
+      children: { first_name: string; last_name: string } | Array<{ first_name: string; last_name: string }> | null
+    }>
+    const lockedCount = Math.max(0, totalApplications - peeked.length)
 
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
-        <div className="mx-auto max-w-md">
-          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-50 ring-1 ring-amber-200 mx-auto">
-            <span className="text-4xl font-black text-amber-600">{totalApplications ?? 0}</span>
+      <div className="space-y-6 pb-10">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900">Admissions Inbox</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {totalApplications === 0
+                ? 'No applications yet'
+                : totalApplications === 1
+                ? '1 parent has applied to your centre'
+                : `${totalApplications} parents have applied to your centre`}
+            </p>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">
-            {totalApplications === 1
-              ? '1 parent has applied'
-              : `${totalApplications ?? 0} parents have applied`}
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            Upgrade to Growth to view each application, manage admissions, send offers, and track enrollments — all in one place.
-          </p>
           <Link
             href="/ecd/billing"
-            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-amber-600"
+            className="inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-5 py-2.5 text-sm font-black text-white shadow-sm hover:bg-amber-600"
           >
-            Upgrade to Growth — R299/month
+            Upgrade to open
             <ChevronRight className="h-4 w-4" />
           </Link>
-          <p className="mt-3 text-xs text-slate-400">Or R2,990/year — save R598.</p>
         </div>
+
+        {totalApplications === 0 ? (
+          <div className="rounded-2xl border border-slate-100 bg-slate-50 p-12 text-center">
+            <p className="text-sm text-slate-500">No applications yet. Complete your profile so parents can find you.</p>
+            <Button asChild className="mt-4 bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 rounded-2xl font-bold">
+              <Link href="/ecd/profile">Complete profile →</Link>
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Peeked rows — visible but non-clickable */}
+            {peeked.map((app) => {
+              const child = Array.isArray(app.children) ? app.children[0] : app.children
+              const childName = child ? `${child.first_name} ${child.last_name}` : 'Child name hidden'
+              return (
+                <div
+                  key={app.id}
+                  className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm opacity-60"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-sm font-black text-slate-500">
+                      {(child?.first_name?.[0] ?? '?').toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-800 truncate">{childName}</p>
+                      <p className="text-xs text-slate-400">{formatDate(app.submitted_at)}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={app.status} />
+                    <span className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-400">🔒 Locked</span>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Starter limit notice — always show so they know where they stand */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-500 text-center">
+              Starter includes <span className="font-bold text-slate-700">3 full applications</span>. You are viewing {Math.min(peeked.length, 3)}/3.
+            </div>
+
+            {/* Locked remainder */}
+            {lockedCount > 0 && (
+              <div className="flex items-center justify-between rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50 p-5">
+                <div>
+                  <p className="text-sm font-black text-amber-800">
+                    + {lockedCount} {lockedCount === 1 ? 'parent is' : 'parents are'} waiting — you can't see them yet
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-600">
+                    Every locked application is a child not enrolled. Growth unlocks all of them.
+                  </p>
+                </div>
+                <Link
+                  href="/ecd/billing"
+                  className="flex-shrink-0 ml-4 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-amber-600"
+                >
+                  Unlock → R299/mo
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     )
   }

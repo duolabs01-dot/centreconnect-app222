@@ -43,6 +43,7 @@ type AttendanceGridClientProps = {
   selectedMonth: number
   selectedYear: number
   staffId: string
+  isStarterTier?: boolean
 }
 
 const MONTHS = [
@@ -79,6 +80,7 @@ export function AttendanceGridClient({
   selectedMonth,
   selectedYear,
   staffId,
+  isStarterTier = false,
 }: AttendanceGridClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -244,33 +246,50 @@ export function AttendanceGridClient({
             </SelectContent>
           </Select>
 
-          <Select 
-            value={String(selectedMonth)} 
-            onValueChange={(val) => updateParams(selectedClassId || 'all', val, String(selectedYear))}
-          >
-            <SelectTrigger className="w-[140px] rounded-xl font-bold">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl shadow-xl">
-              {MONTHS.map((m, i) => (
-                <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isStarterTier ? (
+            // Starter: current month only — locked navigation
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-500">
+                {MONTHS[selectedMonth - 1]} {selectedYear}
+              </div>
+              <Link
+                href="/ecd/billing"
+                className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-700 hover:bg-amber-100"
+              >
+                🔒 History on Growth
+              </Link>
+            </div>
+          ) : (
+            <>
+              <Select
+                value={String(selectedMonth)}
+                onValueChange={(val) => updateParams(selectedClassId || 'all', val, String(selectedYear))}
+              >
+                <SelectTrigger className="w-[140px] rounded-xl font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl shadow-xl">
+                  {MONTHS.map((m, i) => (
+                    <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <Select 
-            value={String(selectedYear)} 
-            onValueChange={(val) => updateParams(selectedClassId || 'all', String(selectedMonth), val)}
-          >
-            <SelectTrigger className="w-[100px] rounded-xl font-bold">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-2xl shadow-xl">
-              {[2024, 2025, 2026].map(y => (
-                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Select
+                value={String(selectedYear)}
+                onValueChange={(val) => updateParams(selectedClassId || 'all', String(selectedMonth), val)}
+              >
+                <SelectTrigger className="w-[100px] rounded-xl font-bold">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl shadow-xl">
+                  {[2024, 2025, 2026].map(y => (
+                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
         </div>
 
          <div className="flex flex-wrap items-center gap-2">

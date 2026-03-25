@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
+import { hasEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { fetchMergedAttendance } from '@/lib/ecd/attendance-merge'
 import { AttendanceGridClient } from './attendance-grid-client'
 import { AttendanceRealtimeBridge } from '@/components/ecd/AttendanceRealtimeBridge'
@@ -19,12 +19,14 @@ export default async function EcdAttendancePage({
   searchParams: Promise<{ classId?: string; month?: string; year?: string }>
 }) {
   const resolvedSearchParams = await searchParams
-  const { supabase, user, ecdId, role } = await requireEcdPortalSession()
-  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'attendance' })
+  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const attendanceAccess = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'attendance' })
+  const isStarterTier = !attendanceAccess.allowed
   const now = getJohannesburgNowParts()
 
-  const selectedYear = resolvedSearchParams.year ? parseInt(resolvedSearchParams.year) : now.year
-  const selectedMonth = resolvedSearchParams.month ? parseInt(resolvedSearchParams.month) : now.month
+  // Starter tier: lock to current month only
+  const selectedYear = (!isStarterTier && resolvedSearchParams.year) ? parseInt(resolvedSearchParams.year) : now.year
+  const selectedMonth = (!isStarterTier && resolvedSearchParams.month) ? parseInt(resolvedSearchParams.month) : now.month
   const selectedClassId = resolvedSearchParams.classId || null
 
   // Fetch classes for the centre
@@ -74,6 +76,7 @@ export default async function EcdAttendancePage({
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         staffId={user.id}
+        isStarterTier={isStarterTier}
       />
     </>
   )

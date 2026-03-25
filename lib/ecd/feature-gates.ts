@@ -9,24 +9,30 @@ type FeatureKey =
   | 'compliance'
   | 'report-cards'
   | 'website-builder'
-  | 'attendance'
+  | 'attendance'          // Starter: current month only. Growth: full history.
+  | 'attendance-history'  // Full history (month navigation) — Growth+
   | 'calendar'
   | 'daily-reports'
-  | 'dsd-export'
+  | 'dsd-export'          // Starter: 1 per quarter with banner. Growth: unlimited.
+  | 'dsd-export-unlimited'// Unlimited DOE exports — Growth+
   | 'employment'
-  | 'applications'
+  | 'applications'        // Starter: 3 full. Growth: unlimited.
+  | 'applications-full'   // Full inbox, all applications — Growth+
 
 const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   financials: 'standard',
-  compliance: 'basic',
+  compliance: 'standard',
   'report-cards': 'standard',
   'website-builder': 'premium',
-  attendance: 'standard',
+  attendance: 'basic',            // Starter gets current month
+  'attendance-history': 'standard', // History requires Growth
   calendar: 'standard',
   'daily-reports': 'standard',
-  'dsd-export': 'standard',
+  'dsd-export': 'basic',          // Starter gets 1/quarter with banner
+  'dsd-export-unlimited': 'standard', // Unlimited requires Growth
   employment: 'standard',
-  applications: 'standard',
+  applications: 'basic',          // Starter gets 3 full
+  'applications-full': 'standard', // Full inbox requires Growth
 }
 
 async function getCurrentTier(supabase: SupabaseClient, ecdId: string) {

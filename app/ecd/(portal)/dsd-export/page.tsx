@@ -4,7 +4,7 @@ import { FileCheck2, ShieldCheck, Users, Briefcase, Building2, ArrowLeft, ArrowR
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
-import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
+import { hasEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
 import { buildDsdMonthlyReportTitle, buildDsdPdfHtml, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
 import { DsdPrintButton } from './print-button'
@@ -58,7 +58,7 @@ export default async function DsdExportPage(props: {
 }) {
   const searchParams = await props.searchParams
   const { supabase, ecdId, role } = await requireEcdPortalSession()
-  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'dsd-export' })
+  const dsdAccess = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'dsd-export' })
   const defaults = getDsdMonthOptions()
   const selectedMonth = normalizeMonth(searchParams?.month, defaults.selectedMonth)
   const selectedYear = normalizeYear(searchParams?.year, defaults.selectedYear)
@@ -104,6 +104,13 @@ export default async function DsdExportPage(props: {
   }
   const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
+  // ── Starter tier: build a quarterly banner to show inline with the real report ──
+  // Starter users CAN generate the DOE report — but they see a "1 free per quarter" nudge.
+  // This lets them file legally while feeling the pull to upgrade for unlimited history.
+  const isStarterTier = !dsdAccess.allowed
+  const currentQuarter = Math.ceil(new Date().getMonth() / 3) // Q1–Q4
+  const currentQuarterLabel = `Q${currentQuarter} ${new Date().getFullYear()}`
+
   return (
     <>
       <style
@@ -147,6 +154,29 @@ export default async function DsdExportPage(props: {
         }}
       />
       <div className="space-y-6 pb-10">
+        {/* ── Starter quarterly nudge — inline, not a wall ── */}
+        {isStarterTier && (
+          <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 print-hide">
+            <div className="flex items-center gap-3 min-w-0">
+              <FileCheck2 className="h-5 w-5 flex-shrink-0 text-amber-600" />
+              <div className="min-w-0">
+                <p className="text-sm font-black text-amber-800">
+                  1 free DOE export this quarter ({currentQuarterLabel})
+                </p>
+                <p className="mt-0.5 text-xs text-amber-600">
+                  Attendance history and unlimited exports are on <span className="font-bold">Growth</span>.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/ecd/billing"
+              className="flex-shrink-0 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-amber-600"
+            >
+              Upgrade → R299/mo
+            </Link>
+          </div>
+        )}
+
         {/* ── Controls Bar (hidden when printing) ── */}
         <Card className="rounded-[2rem] border-slate-200 bg-gradient-to-br from-cyan-50 to-white shadow-sm print-hide">
           <CardContent className="p-5">

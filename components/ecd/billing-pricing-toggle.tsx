@@ -70,11 +70,12 @@ function PlanCard({
         {monthlyPrice === 0 ? (
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-sm font-semibold text-slate-400 line-through">R199/mo</span>
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">Free pilot</span>
+              <span className="text-sm font-semibold text-slate-400 line-through">Was R199/month</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">Free forever</span>
             </div>
-            <div className="mt-0.5 flex items-baseline gap-1">
-              <span className="text-4xl font-black text-slate-900">Free</span>
+            <div className="mt-0.5 flex items-baseline gap-1.5">
+              <span className="text-4xl font-black text-slate-900">R0</span>
+              <span className="text-sm font-medium text-slate-500">/ month</span>
             </div>
           </div>
         ) : (
@@ -138,12 +139,14 @@ const PLANS = [
     name: 'Starter',
     monthlyPrice: 0,
     yearlyPrice: null,
-    description: 'Free listing so parents can find you and apply.',
+    description: 'Get discovered. Get your first parents through the door.',
     features: [
-      'Centre listing page',
-      'Application teasers (see count)',
-      '1 logo + 1 preview image',
-      'Contact details + map',
+      'Centre listing in parent directory',
+      '3 full parent applications per month',
+      'Attendance register — current month',
+      '1 announcement per month',
+      'Basic daily reports (mood only)',
+      '1 AI register import',
     ],
   },
   {
@@ -151,16 +154,16 @@ const PLANS = [
     name: 'Growth',
     monthlyPrice: 299,
     yearlyPrice: 2990,
-    description: 'Full daily operations — attendance, admissions, reports.',
+    description: 'Run your crèche properly. Every day. DSD-ready.',
     features: [
-      'Full admissions pipeline',
-      'Attendance register',
-      'Daily Reports + Report Cards',
-      'DOE Monthly Report export',
-      'Calendar & routine planning',
-      'Employment & staff records',
-      'Financials & compliance',
-      'Parent messaging',
+      'Unlimited applications + full pipeline',
+      'Full attendance history + DOE export',
+      'Unlimited announcements',
+      'Full daily reports (meals + activities)',
+      'AI register import — unlimited',
+      'Staff management',
+      'Report cards',
+      'Compliance tracker',
     ],
     badge: 'Most popular',
   },
@@ -169,12 +172,14 @@ const PLANS = [
     name: 'Pro',
     monthlyPrice: 499,
     yearlyPrice: 4990,
-    description: 'Growth plus a website, priority support & unlimited uploads.',
+    description: 'Grow beyond your current walls. Business tools included.',
     features: [
       'Everything in Growth',
-      'Website Builder',
+      'Financials dashboard',
+      'Advanced website (gallery, events, jobs)',
+      'Multi-class management',
+      'Bulk parent messaging',
       'Priority WhatsApp support',
-      'Unlimited uploads',
       'AI features (coming soon)',
     ],
   },
