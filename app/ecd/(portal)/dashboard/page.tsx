@@ -211,6 +211,8 @@ export default async function EcdDashboardPage({
     supabase.from('ecd_admins').select('user_id', { count: 'exact', head: true }).eq('ecd_id', ecdId),
   ])
 
+  const subscriptionTier = subscriptionResult.data?.tier ?? 'basic'
+  const isStarterTier = subscriptionTier === 'basic'
   const centre = centreResult.data
   const snapshot = (snapshotResult.data?.[0] ?? {}) as {
     attendance_today_count?: number
@@ -279,13 +281,15 @@ export default async function EcdDashboardPage({
             tone: 'border-slate-200 bg-white/90',
           }
         : null,
-      // Always show calendar quick action
-      {
-        title: 'View calendar',
-        detail: 'See your centre\'s events and schedule.',
-        href: '/ecd/calendar',
-        tone: 'border-purple-200 bg-purple-50/80',
-      },
+      // Calendar is Growth+ only — don't show for Starter (would just redirect back)
+      !isStarterTier
+        ? {
+            title: 'View calendar',
+            detail: "See your centre's events and schedule.",
+            href: '/ecd/calendar',
+            tone: 'border-purple-200 bg-purple-50/80',
+          }
+        : null,
     ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
 
   return (
@@ -362,6 +366,28 @@ export default async function EcdDashboardPage({
             ) : null}
           </CardContent>
         </Card>
+
+        {upgradeFeature && (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-amber-900">
+                  Upgrade to Growth to unlock {FEATURE_DISPLAY_NAMES[upgradeFeature] ?? upgradeFeature}
+                </p>
+                <p className="mt-0.5 text-xs text-amber-700">
+                  R299/month — attendance, calendar, DOE reports, admissions, and more. Or R2,990/year (save R598).
+                </p>
+              </div>
+              <Link
+                href="/ecd/billing"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-amber-600"
+              >
+                See Plans
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         <FeatureBanner context="ecd" />
 
@@ -487,31 +513,9 @@ export default async function EcdDashboardPage({
           </Card>
         </div>
 
-        {upgradeFeature && (
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-black text-amber-900">
-                  Upgrade to Growth to unlock {FEATURE_DISPLAY_NAMES[upgradeFeature] ?? upgradeFeature}
-                </p>
-                <p className="mt-0.5 text-xs text-amber-700">
-                  R299/month — attendance, calendar, DOE reports, admissions, and more. Or R2,990/year (save R598).
-                </p>
-              </div>
-              <Link
-                href="/ecd/billing"
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-amber-600"
-              >
-                See Plans
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        )}
-
         <TrialStatusBanner
           subscription={{
-            tier: subscriptionResult.data?.tier ?? 'basic',
+            tier: subscriptionTier,
             status: subscriptionResult.data?.status ?? 'trial',
             monthlyPrice: subscriptionResult.data?.monthly_price ?? null,
             trialEndsAt: subscriptionResult.data?.trial_ends_at ?? null,

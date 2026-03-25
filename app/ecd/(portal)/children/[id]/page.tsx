@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ParentDossierCards } from '@/components/ecd/parent-dossier-cards'
 import { ParentLinkRequestCard } from '@/components/ecd/parent-link-request-card'
 import { GenderEditField } from './gender-edit'
+import { ChildDetailsEditButton } from './child-details-edit'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { buildParentDossierForChild } from '@/lib/ecd/parent-dossier'
 import { getLatestParentLinkRequestsByChildIds } from '@/lib/ecd/parent-link-requests'
@@ -98,6 +99,17 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
   const classMeta = Array.isArray(child.ecd_classes) ? child.ecd_classes[0] : child.ecd_classes
   const primaryGuardian = getPrimaryGuardian(child.guardian_contacts)
 
+  const { data: classesData } = await supabase
+    .from('ecd_classes')
+    .select('id,name,age_group')
+    .eq('ecd_id', ecdId)
+    .order('name', { ascending: true })
+  const classes = (classesData ?? []).map((c: any) => ({
+    id: String(c.id),
+    name: String(c.name ?? ''),
+    ageGroup: c.age_group ? String(c.age_group) : null,
+  }))
+
   const dossier = await buildParentDossierForChild({
     supabase,
     ecdId,
@@ -142,10 +154,30 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
           <div className="space-y-5">
             <Card className="rounded-3xl border-slate-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base text-slate-900">
-                  <UserRound className="h-4 w-4 text-teal-600" />
-                  Child details
-                </CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+                    <UserRound className="h-4 w-4 text-teal-600" />
+                    Child details
+                  </CardTitle>
+                  {role === 'ecd_admin' && (
+                    <ChildDetailsEditButton
+                      childId={String(child.id)}
+                      current={{
+                        enrollment_status: child.enrollment_status ? String(child.enrollment_status) : null,
+                        enrollment_start_date: child.enrollment_start_date ? String(child.enrollment_start_date) : null,
+                        class_id: child.class_id ? String(child.class_id) : null,
+                        date_of_birth: child.date_of_birth ? String(child.date_of_birth) : null,
+                        allergies: parseTextArray(child.allergies),
+                        medical_conditions: parseTextArray(child.medical_conditions),
+                        special_needs: child.special_needs ? String(child.special_needs) : null,
+                        dietary_restrictions: child.dietary_restrictions ? String(child.dietary_restrictions) : null,
+                        doctor_name: child.doctor_name ? String(child.doctor_name) : null,
+                        medical_aid_number: child.medical_aid_number ? String(child.medical_aid_number) : null,
+                      }}
+                      classes={classes}
+                    />
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
                 <p><span className="font-semibold text-slate-900">Date of birth:</span> {child.date_of_birth ? formatDate(child.date_of_birth) : 'Not added yet'}</p>
