@@ -32,15 +32,17 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
   // DAILY OPS
   { href: '/ecd/dashboard',     label: 'Home',          icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/children',      label: 'Children',      icon: Users,           group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  // Starter: attendance (current month), applications (3 free), DOE (1/quarter banner)
+  // Pages handle their own tier limits — no nav lock needed for these three
+  { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/report-cards',  label: 'Report Cards',  icon: BookOpen,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/calendar',      label: 'Calendar',      icon: CalendarDays,    group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
 
   // MANAGEMENT
-  { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true },
   { href: '/ecd/communications',label: 'Messages',      icon: MessagesSquare,  group: 'admin',     supervisorAllowed: true },
-  { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
   { href: '/ecd/compliance',    label: 'Compliance',    icon: ShieldCheck,     group: 'admin',     adminOnly: true },
 
   // GROW

@@ -93,11 +93,17 @@ export function EcdPortalSidebar({
     [userRole]
   )
 
+  const tierRank = (tier: string | null | undefined): number => {
+    if (tier === 'premium') return 3
+    if (tier === 'standard') return 2
+    return 1 // 'basic' or null = Starter
+  }
+  const userTierRank = tierRank(subscriptionTier)
   const lockedByTier = roleEligibleNav.filter(
-    (item) => item.minTier && (item.minTier === 'standard' || item.minTier === 'premium')
+    (item) => item.minTier && tierRank(item.minTier) > userTierRank
   )
   const visibleNav = roleEligibleNav.filter(
-    (item) => !item.minTier || (item.minTier !== 'standard' && item.minTier !== 'premium')
+    (item) => !item.minTier || tierRank(item.minTier) <= userTierRank
   )
 
   const settingsItem = visibleNav.find((item) => item.group === 'settings' || item.href === '/ecd/profile') ?? null
@@ -183,7 +189,7 @@ export function EcdPortalSidebar({
         style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3 min-w-0">
           <MobileNavMenu
-            items={visibleNav}
+            items={roleEligibleNav}
             userEmail={userEmail}
             roleLabel={roleLabel}
             userRole={userRole}
