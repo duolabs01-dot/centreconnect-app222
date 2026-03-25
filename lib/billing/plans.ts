@@ -64,6 +64,7 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   pro: {
     label: 'Pro',
     monthlyPrice: 499,
+    yearlyPrice: 4990, // 10 months for 12 — save R998/year
     description: 'Growth plus a professional website, priority support, and unlimited uploads.',
     includes: [
       'Everything in Growth',

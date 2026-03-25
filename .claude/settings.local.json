@@ -60,7 +60,14 @@
       "Bash(node -e \"require\\(''''docx''''\\)\")",
       "Bash(dir \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222\\\\CentreConnect_Sales_Playbook.docx\")",
       "Bash(grep -n \"applications\\\\|Applications\" app/ecd/\\\\\\(portal\\\\\\)/applications/[id]/page.tsx)",
-      "Bash(head -5 app/ecd/\\\\\\(portal\\\\\\)/announcements/page.tsx)"
+      "Bash(head -5 app/ecd/\\\\\\(portal\\\\\\)/announcements/page.tsx)",
+      "Bash(find C:UsersTHEMBADownloads -name *.pdf -maxdepth 3)",
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(wc -l app/ecd/\\\\\\(portal\\\\\\)/profile/page.tsx app/ecd/\\\\\\(portal\\\\\\)/calendar/page.tsx app/ecd/\\\\\\(portal\\\\\\)/attendance/attendance-grid-client.tsx)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

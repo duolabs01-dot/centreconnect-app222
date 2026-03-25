@@ -68,8 +68,14 @@ function PlanCard({
 
       <div className="mb-6">
         {monthlyPrice === 0 ? (
-          <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-black text-slate-900">Free</span>
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-semibold text-slate-400 line-through">R199/mo</span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">Free pilot</span>
+            </div>
+            <div className="mt-0.5 flex items-baseline gap-1">
+              <span className="text-4xl font-black text-slate-900">Free</span>
+            </div>
           </div>
         ) : (
           <>
@@ -162,7 +168,7 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     monthlyPrice: 499,
-    yearlyPrice: null,
+    yearlyPrice: 4990,
     description: 'Growth plus a website, priority support & unlimited uploads.',
     features: [
       'Everything in Growth',
