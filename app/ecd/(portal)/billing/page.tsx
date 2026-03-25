@@ -7,12 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { redirect } from 'next/navigation'
 import { PayInvoiceButton } from '@/components/ecd/PayInvoiceButton'
 import { MonthlyInvoicesCard } from './monthly-invoices-card'
 import { StatusBadge } from "@/components/ui/status-badge";
 import { TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { PilotPromoBanner } from '@/components/ecd/pilot-promo-banner'
-import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
+import { getInternalTierLabel, toInternalTier, toPublicPlan } from '@/lib/billing/plans'
+import { BillingPricingToggle } from '@/components/ecd/billing-pricing-toggle'
 import { requestCancellationAction, saveFinancialSnapshotAction } from './actions'
 import { PaymentMethodUpdateButton } from './payment-method-update-button'
 
@@ -23,6 +25,7 @@ export const metadata: Metadata = {
 
 export default async function EcdBillingPage() {
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  if (role !== 'ecd_admin') redirect('/ecd/dashboard')
   const now = new Date()
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
   const monthName = now.toLocaleString('en-ZA', { month: 'long' })
@@ -114,6 +117,14 @@ export default async function EcdBillingPage() {
             trialEndsAt: subscription?.trial_ends_at ?? null,
           }}
         />
+
+        {/* Pricing Plans */}
+        <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-base font-black text-slate-900">Plans</h2>
+          <p className="mb-6 text-xs text-slate-500">Choose the plan that fits your centre.</p>
+          <BillingPricingToggle currentTier={subscription?.tier ?? 'basic'} />
+        </div>
+
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="border-slate-100 bg-white shadow-sm rounded-3xl overflow-hidden lg:col-span-2">
             <CardHeader className="bg-slate-50/50">
@@ -322,7 +333,7 @@ export default async function EcdBillingPage() {
                   placeholder="Add context for this month..."
                 />
               </label>
-              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm" disabled={role === 'ecd_staff'}>
+              <Button type="submit" className="w-full sm:w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">
                 Save Financial Snapshot
               </Button>
             </form>

@@ -4,6 +4,7 @@ import { FileCheck2, ShieldCheck, Users, Briefcase, Building2, ArrowLeft, ArrowR
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
 import { buildDsdMonthlyReportTitle, buildDsdPdfHtml, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
 import { DsdPrintButton } from './print-button'
@@ -57,6 +58,7 @@ export default async function DsdExportPage(props: {
 }) {
   const searchParams = await props.searchParams
   const { supabase, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'dsd-export' })
   const defaults = getDsdMonthOptions()
   const selectedMonth = normalizeMonth(searchParams?.month, defaults.selectedMonth)
   const selectedYear = normalizeYear(searchParams?.year, defaults.selectedYear)

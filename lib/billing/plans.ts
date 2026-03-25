@@ -5,6 +5,7 @@ export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'canceled' | 
 type PlanDefinition = {
   label: string
   monthlyPrice: number
+  yearlyPrice?: number // total billed annually (Growth-only promo)
   description: string
   includes: string[]
   outcomes: string[]
@@ -17,38 +18,43 @@ type PlanDefinition = {
 const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   starter: {
     label: 'Starter',
-    monthlyPrice: 199,
-    description: 'A simple, professional starting point for centres that want parents to find them and apply properly.',
+    monthlyPrice: 0,
+    description: 'A free listing so parents can find your centre online and submit applications.',
     includes: [
-      'Professional centre listing',
-      'Parent applications in one dashboard',
-      'Announcements and direct parent messages',
-      'Structured child profile intake',
+      'Professional centre listing (parents can find you)',
+      'Application teasers — see how many parents applied',
+      '1 logo upload + 1 preview image',
+      'Contact details + map page',
     ],
     outcomes: [
-      'Help parents trust your centre faster online',
-      'Reduce manual admission follow-up',
-      'Keep parent communication clear from day one',
+      'Get discovered by parents searching for ECD centres',
+      'See application demand before committing to a paid plan',
+      'No credit card required — free forever',
     ],
     website: {
       includes: ['Centre profile page', 'Contact details + map', 'Hero, About and Programs sections'],
-      suggestedAddOns: ['Gallery expansion', 'Design polish support'],
+      suggestedAddOns: ['Upgrade to Growth to manage applications', 'Unlock gallery + events sections'],
     },
   },
   growth: {
     label: 'Growth',
     monthlyPrice: 299,
-    description: 'The everyday package for centres ready to handle admissions and daily operations in one flow.',
+    yearlyPrice: 2990, // 10 months for 12 — save R598/year
+    description: 'Everything you need to run your centre day-to-day — attendance, admissions, reports, and more.',
     includes: [
-      'Attendance register',
+      'Full admissions pipeline — manage every application',
+      'Attendance register (with legacy data merge)',
       'Calendar and routine planning',
-      'Faster admissions follow-up and reminders',
-      'Daily operational tracking',
+      'Daily Reports and Report Cards',
+      'DOE Monthly Report export',
+      'Employment and staff records',
+      'Financials and compliance tracking',
+      'Parent messaging and announcements',
     ],
     outcomes: [
-      'Make daily admin feel calmer and more consistent',
-      'Improve conversion from application to enrollment',
-      'Keep the team aligned on attendance and child updates',
+      'Replace spreadsheets and WhatsApp chaos with one system',
+      'Never miss a DOE filing deadline again',
+      'Keep parents informed and your team aligned',
     ],
     website: {
       includes: ['Attendance and daily operations layer', 'Gallery + events + jobs sections', 'Richer public presentation'],
@@ -58,20 +64,21 @@ const PLAN_DEFINITIONS: Record<PublicPlan, PlanDefinition> = {
   pro: {
     label: 'Pro',
     monthlyPrice: 499,
-    description: 'The full CentreConnect setup with website tools, premium support, and a faster rollout.',
+    description: 'Growth plus a professional website, priority support, and unlimited uploads.',
     includes: [
-      'Website and growth tools',
-      'Priority onboarding and support',
-      'Advanced configuration support',
-      'Highest visibility and rollout support',
+      'Everything in Growth',
+      'Website Builder — full public site',
+      'Priority WhatsApp support',
+      'Unlimited photo and document uploads',
+      'AI-powered features (coming soon)',
     ],
     outcomes: [
-      'Operate admissions and visibility from one system',
-      'Present a stronger public brand to parents',
-      'Move faster with high-touch support when you launch',
+      'Own your online presence with a real website',
+      'Get help faster when something needs fixing',
+      'Never hit an upload limit',
     ],
     website: {
-      includes: ['Full public + operations stack support', 'Highest website support priority', 'Full growth stack compatibility'],
+      includes: ['Full public + operations stack', 'All sections: gallery, events, jobs, programs', 'Custom domain support'],
       suggestedAddOns: ['Seasonal campaign design', 'Advanced integrations'],
     },
   },
@@ -139,6 +146,10 @@ export function getInternalTierLabel(tier: InternalTier) {
 
 export function getPublicPlanPrice(plan: PublicPlan) {
   return PLAN_DEFINITIONS[plan].monthlyPrice
+}
+
+export function getPublicPlanYearlyPrice(plan: PublicPlan): number | null {
+  return PLAN_DEFINITIONS[plan].yearlyPrice ?? null
 }
 
 export function getInternalTierPrice(tier: InternalTier) {

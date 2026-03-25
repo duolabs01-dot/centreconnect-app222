@@ -9,6 +9,7 @@ import { SendReminderButton } from './send-reminder-button'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { hasEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { evaluateApplicationIntakeReadiness } from '@/lib/admissions/intake-readiness'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
@@ -355,6 +356,42 @@ function renderApplicationList(applications: ApplicationRow[]) {
 export default async function EcdApplicationsPage(props: ApplicationsPageProps) {
   const searchParams = await props.searchParams
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+
+  // Starter tier teaser — show count only, not the full inbox
+  const access = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'applications' })
+  if (!access.allowed) {
+    const { count: totalApplications } = await supabase
+      .from('applications')
+      .select('id', { count: 'exact', head: true })
+      .eq('ecd_id', ecdId)
+      .in('status', ['submitted', 'in_review', 'partial', 'draft'])
+
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-16 text-center">
+        <div className="mx-auto max-w-md">
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-50 ring-1 ring-amber-200 mx-auto">
+            <span className="text-4xl font-black text-amber-600">{totalApplications ?? 0}</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900">
+            {totalApplications === 1
+              ? '1 parent has applied'
+              : `${totalApplications ?? 0} parents have applied`}
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-slate-600">
+            Upgrade to Growth to view each application, manage admissions, send offers, and track enrollments — all in one place.
+          </p>
+          <Link
+            href="/ecd/billing"
+            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-amber-500 px-6 py-3 text-sm font-black text-white shadow-sm transition-colors hover:bg-amber-600"
+          >
+            Upgrade to Growth — R299/month
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+          <p className="mt-3 text-xs text-slate-400">Or R2,990/year — save R598.</p>
+        </div>
+      </div>
+    )
+  }
 
   async function updateIncompleteAdmissionsPolicyAction(formData: FormData) {
     'use server'

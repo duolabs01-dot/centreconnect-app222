@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { SupabaseClient } from '@supabase/supabase-js'
+import { fetchMergedAttendance } from './attendance-merge'
 
 type SupabaseLike = Pick<SupabaseClient, 'from'>
 
@@ -294,46 +295,13 @@ export async function getDsdExportData(input: {
     )
   )
 
-  const [{ data: classRows }, { data: attendanceRecordsRows }, { data: legacyAttendanceRows }] = await Promise.all([
+  const [{ data: classRows }, attendanceRows] = await Promise.all([
     classIds.length > 0
       ? supabase.from('ecd_classes').select('id,name,age_group').in('id', classIds)
       : Promise.resolve({ data: [] }),
-    // New system: attendance_records (status P/A/S/L, keyed by centre_id)
-    allChildIds.length > 0
-      ? supabase
-          .from('attendance_records')
-          .select('child_id,date,status')
-          .eq('centre_id', ecdId)
-          .gte('date', startDate)
-          .lte('date', endDate)
-      : Promise.resolve({ data: [] }),
-    // Legacy system: attendance (checked_in boolean, keyed by ecd_id)
-    // Always query this so old data (e.g. February before grid was deployed) is included
-    supabase
-      .from('attendance')
-      .select('child_id,date,checked_in,picked_up')
-      .eq('ecd_id', ecdId)
-      .gte('date', startDate)
-      .lte('date', endDate),
+    // Merged attendance: new system (attendance_records) wins on conflict with legacy table
+    fetchMergedAttendance({ supabase, ecdId, startDate, endDate }),
   ])
-
-  // Merge both attendance sources. New system (attendance_records) wins on conflict.
-  // Legacy rows only added if no attendance_records row exists for same child+date.
-  const newSystemKeys = new Set(
-    ((attendanceRecordsRows ?? []) as Array<{ child_id: string; date: string }>).map(
-      (r) => `${r.child_id}::${r.date}`
-    )
-  )
-  const legacyMapped = ((legacyAttendanceRows ?? []) as Array<{ child_id: string; date: string; checked_in: boolean; picked_up: boolean }>)
-    .filter((r) => !newSystemKeys.has(`${r.child_id}::${r.date}`))
-    .map((r) => ({
-      child_id: r.child_id,
-      date: r.date,
-      // checked_in = present, picked_up without checked_in is still a day present
-      status: r.checked_in ? 'present' : 'absent',
-    }))
-
-  const attendanceRows = [...(attendanceRecordsRows ?? []), ...legacyMapped]
 
   const classMap = new Map(
     ((classRows ?? []) as Array<{ id: string; name: string | null; age_group: string | null }>).map((row) => [

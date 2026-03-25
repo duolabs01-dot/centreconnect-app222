@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { Menu, X, LogOut, ArrowRight, LucideIcon } from 'lucide-react'
+import { Menu, X, LogOut, ArrowRight, LucideIcon, Lock, Zap } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,8 @@ import { SignOutButton as EcdSignOutButton } from '@/components/ecd/SignOutButto
 import { SignOutButton as AdminSignOutButton } from '@/components/cc-admin/SignOutButton'
 import { useBottomNav } from '@/lib/context/BottomNavProvider'
 import { useEffect } from 'react'
-import { getInternalTierLabel, toInternalTier } from '@/lib/billing/plans'
+import { getInternalTierLabel, toInternalTier, type InternalTier } from '@/lib/billing/plans'
+import { hasMinimumTier } from '@/lib/billing/tiers'
 
 type NavItem = {
   href: string
@@ -26,6 +27,7 @@ type NavItem = {
   comingSoon?: boolean
   adminOnly?: boolean
   supervisorAllowed?: boolean
+  minTier?: InternalTier
 }
 
 type MobileNavMenuProps = {
@@ -64,12 +66,21 @@ export function MobileNavMenu({
     return () => setVisible(true)
   }, [open, setVisible])
 
-  const visibleNav = items.filter((item) => {
+  const currentInternalTier = toInternalTier(subscriptionTier, 'basic')
+
+  const roleEligibleNav = items.filter((item) => {
     if (type === 'public') return true
     if (userRole === 'ecd_admin' || userRole === 'platform_admin') return true
     if (userRole === 'ecd_supervisor') return item.supervisorAllowed === true && !item.adminOnly
     return !item.adminOnly
   })
+
+  const lockedByTier = roleEligibleNav.filter(
+    (item) => item.minTier && !hasMinimumTier(currentInternalTier, item.minTier)
+  )
+  const visibleNav = roleEligibleNav.filter(
+    (item) => !item.minTier || hasMinimumTier(currentInternalTier, item.minTier)
+  )
 
   const renderNavItem = (item: NavItem) => {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -166,6 +177,35 @@ export function MobileNavMenu({
                   </React.Fragment>
                 )
               })}
+
+              {lockedByTier.length > 0 && (
+                <>
+                  <div className="mx-3 my-3 h-px bg-white/[0.06]" />
+                  <Link
+                    href="/ecd/billing"
+                    onClick={() => setOpen(false)}
+                    className="mx-1 mb-2 flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2 transition-colors hover:bg-amber-500/15"
+                  >
+                    <Zap className="h-3.5 w-3.5 text-amber-400" />
+                    <div>
+                      <p className="text-[10px] font-black text-amber-300">Unlock {lockedByTier.length} more</p>
+                      <p className="text-[9px] text-amber-400/70">Upgrade plan</p>
+                    </div>
+                  </Link>
+                  {lockedByTier.map((item) => (
+                    <Link key={item.href} href="/ecd/billing"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 opacity-50 hover:opacity-70 transition-opacity"
+                    >
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
+                        <item.icon className="h-3.5 w-3.5 text-amber-500" />
+                      </div>
+                      <span className="flex-1 truncate text-[12px] font-medium text-amber-300/80">{item.label}</span>
+                      <Lock className="h-3 w-3 text-amber-500/60" />
+                    </Link>
+                  ))}
+                </>
+              )}
             </nav>
           </div>
 

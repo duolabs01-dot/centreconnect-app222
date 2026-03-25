@@ -9,12 +9,24 @@ type FeatureKey =
   | 'compliance'
   | 'report-cards'
   | 'website-builder'
+  | 'attendance'
+  | 'calendar'
+  | 'daily-reports'
+  | 'dsd-export'
+  | 'employment'
+  | 'applications'
 
 const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   financials: 'standard',
   compliance: 'basic',
   'report-cards': 'standard',
-  'website-builder': 'basic',
+  'website-builder': 'premium',
+  attendance: 'standard',
+  calendar: 'standard',
+  'daily-reports': 'standard',
+  'dsd-export': 'standard',
+  employment: 'standard',
+  applications: 'standard',
 }
 
 async function getCurrentTier(supabase: SupabaseClient, ecdId: string) {

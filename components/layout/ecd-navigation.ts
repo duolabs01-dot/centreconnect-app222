@@ -29,25 +29,25 @@ export type EcdNavItem = Record<'href', string> & {
 }
 
 export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
-  // ── DAILY OPS ─────────────────────────────────────────────
+  // DAILY OPS
   { href: '/ecd/dashboard',     label: 'Home',          icon: LayoutDashboard, group: 'daily_ops', supervisorAllowed: true },
   { href: '/ecd/children',      label: 'Children',      icon: Users,           group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/report-cards',  label: 'Report Cards',  icon: BookOpen,        group: 'daily_ops', supervisorAllowed: true },
-  { href: '/ecd/calendar',      label: 'Calendar',      icon: CalendarDays,    group: 'daily_ops', supervisorAllowed: true },
+  { href: '/ecd/attendance',    label: 'Attendance',    icon: UserCheck,       group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/daily-reports', label: 'Daily Reports', icon: FileText,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/report-cards',  label: 'Report Cards',  icon: BookOpen,        group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
+  { href: '/ecd/calendar',      label: 'Calendar',      icon: CalendarDays,    group: 'daily_ops', supervisorAllowed: true, minTier: 'standard' },
 
-  // ── MANAGEMENT ────────────────────────────────────────────
-  { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true },
+  // MANAGEMENT
+  { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/communications',label: 'Messages',      icon: MessagesSquare,  group: 'admin',     supervisorAllowed: true },
-  { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
+  { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/compliance',    label: 'Compliance',    icon: ShieldCheck,     group: 'admin',     adminOnly: true },
 
-  // ── GROW ──────────────────────────────────────────────────
+  // GROW
   { href: '/ecd/financials',    label: 'Financials',    icon: LineChart,       group: 'grow',      adminOnly: true,  minTier: 'standard' },
-  { href: '/ecd/website',       label: 'Website',       icon: Globe,           group: 'grow',      adminOnly: true,  minTier: 'standard' },
+  { href: '/ecd/website',       label: 'Website',       icon: Globe,           group: 'grow',      adminOnly: true,  minTier: 'premium' },
 
-  // ── ACCOUNT ───────────────────────────────────────────────
+  // ACCOUNT
   { href: '/ecd/billing',       label: 'Billing',       icon: CreditCard,      group: 'settings',  adminOnly: true },
   { href: '/ecd/profile',       label: 'Settings',      icon: Settings2,       group: 'settings',  adminOnly: true },
 ]
