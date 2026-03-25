@@ -876,7 +876,7 @@ export function ChildEnrollmentWizard({ centreName, classes }: ChildEnrollmentWi
                 <option value="up_to_date">Up to date</option>
                 <option value="catching_up">Catching up</option>
                 <option value="not_started">Not started</option>
-                <option value="unknown">Unknown</option>
+                <option value="unknown">Not sure yet</option>
               </select>
             </div>
             <div className="space-y-2">

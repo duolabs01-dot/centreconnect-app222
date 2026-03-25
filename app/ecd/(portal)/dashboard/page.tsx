@@ -112,9 +112,9 @@ function ParentLinkItem({ row }: { row: ParentLinkRow }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-slate-900">{childName}</p>
-          <p className="mt-1 text-sm text-slate-600">{normalizeText(row.parent_name, normalizeText(row.parent_email, 'Parent details captured'))}</p>
+          <p className="mt-1 text-sm text-slate-600">{normalizeText(row.parent_name, normalizeText(row.parent_email, 'Parent contact not added'))}</p>
           <p className="mt-1 text-xs text-slate-500">
-            {row.opened_at ? `Opened ${formatDate(row.opened_at)}` : row.sent_at ? `Sent ${formatDate(row.sent_at)}` : 'Ready for follow-up'}
+            {row.opened_at ? `Opened ${formatDate(row.opened_at)}` : row.sent_at ? `Sent ${formatDate(row.sent_at)}` : 'No reply yet — send a reminder'}
           </p>
         </div>
         <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] ${tone}`}>
@@ -409,7 +409,7 @@ export default async function EcdDashboardPage({
                 New applications
               </CardTitle>
               <Link href="/ecd/applications" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-                View all
+                View all applications
               </Link>
             </CardHeader>
             <CardContent className="space-y-3">

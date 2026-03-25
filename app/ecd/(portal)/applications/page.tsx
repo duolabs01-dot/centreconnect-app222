@@ -237,8 +237,8 @@ function renderApplicationList(applications: ApplicationRow[]) {
           const child = normalizeOne(application.children)
           const parent = normalizeOne(application.parents)
           const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-          const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
-          const parentName = parentProfile?.full_name ?? 'Unknown parent'
+          const childName = child ? `${child.first_name} ${child.last_name}` : 'Child name not added'
+          const parentName = parentProfile?.full_name ?? 'Parent name not added'
           const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
           const phoneLinks = phoneHref(parentPhone)
           const missingDocs = normalizeMissingDocuments(application.missing_documents)
@@ -305,8 +305,8 @@ function renderApplicationList(applications: ApplicationRow[]) {
               const child = normalizeOne(application.children)
               const parent = normalizeOne(application.parents)
               const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-              const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
-              const parentName = parentProfile?.full_name ?? 'Unknown parent'
+              const childName = child ? `${child.first_name} ${child.last_name}` : 'Child name not added'
+              const parentName = parentProfile?.full_name ?? 'Parent name not added'
               const parentPhone = parentProfile?.phone ?? parent?.alt_phone ?? null
               const phoneLinks = phoneHref(parentPhone)
               const missingDocs = normalizeMissingDocuments(application.missing_documents)
@@ -880,8 +880,8 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
                     const child = normalizeOne(application.children)
                     const parent = normalizeOne(application.parents)
                     const parentProfile = normalizeOne(parent?.user_profiles ?? null)
-                    const childName = child ? `${child.first_name} ${child.last_name}` : 'Unknown child'
-                    const parentName = parentProfile?.full_name ?? 'Unknown parent'
+                    const childName = child ? `${child.first_name} ${child.last_name}` : 'Child name not added'
+                    const parentName = parentProfile?.full_name ?? 'Parent name not added'
                     return (
                       <div
                         key={application.id}
@@ -970,7 +970,7 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
                           {focusedChild?.first_name?.[0] ?? 'C'}
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-slate-900">{focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'N/A'}</p>
+                          <p className="text-lg font-bold text-slate-900">{focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'Child name not added'}</p>
                           <p className="text-xs text-slate-500 font-medium">Applicant</p>
                         </div>
                       </div>
@@ -982,8 +982,8 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
                           {focusedParentProfile?.full_name?.[0] ?? 'P'}
                         </div>
                         <div>
-                          <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'N/A'}</p>
-                          <p className="break-all text-xs font-bold text-teal-600">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone'}</p>
+                          <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'Parent name not added'}</p>
+                          <p className="break-all text-xs font-bold text-teal-600">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone on file'}</p>
                         </div>
                       </div>
                     </div>

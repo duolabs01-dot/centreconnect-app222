@@ -169,7 +169,7 @@ function parseOfferBreakdown(value: unknown): OfferBreakdownItem[] {
     .filter((entry): entry is OfferBreakdownItem => Boolean(entry))
 }
 
-const normalizeName = (value: string | null | undefined, fallback = 'Unknown user') => (value?.trim() ? value.trim() : fallback)
+const normalizeName = (value: string | null | undefined, fallback = 'Name not added') => (value?.trim() ? value.trim() : fallback)
 
 function includesMissingColumnError(errorMessage: string | null | undefined) {
   if (!errorMessage) return false

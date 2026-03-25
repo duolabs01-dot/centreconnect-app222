@@ -138,7 +138,7 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
     'use server'
     const session = await requireEcdPortalSession({ cached: false })
     const patch = {
-      name: String(formData.get('name') ?? '').trim() || 'My ECD Crèche',
+      name: String(formData.get('name') ?? '').trim() || null,
       tagline: String(formData.get('tagline') ?? '').trim() || null,
       phone: String(formData.get('phone') ?? '').trim() || null,
       contact_phone: String(formData.get('contact_phone') ?? '').trim() || null,

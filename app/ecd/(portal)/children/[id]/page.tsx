@@ -132,7 +132,7 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
               <p><span className="font-bold text-slate-800">Class:</span> {classMeta?.name ?? 'Not assigned yet'}</p>
               <p><span className="font-bold text-slate-800">Age group:</span> {classMeta?.age_group ?? 'Not set'}</p>
               <p><span className="font-bold text-slate-800">Start date:</span> {child.enrollment_start_date ? formatDate(child.enrollment_start_date) : 'Not set'}</p>
-              <p><span className="font-bold text-slate-800">Created:</span> {child.created_at ? formatDate(child.created_at) : 'Unknown'}</p>
+              <p><span className="font-bold text-slate-800">Created:</span> {child.created_at ? formatDate(child.created_at) : 'Not recorded'}</p>
             </div>
           </CardHeader>
         </Card>

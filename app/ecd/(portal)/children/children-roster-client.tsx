@@ -139,8 +139,8 @@ function getParentStatus(child: ChildRosterItem) {
       label: 'Parent connected',
       badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
       helper: child.parentSource === 'synced'
-        ? 'This child is already connected to the parent profile.'
-        : 'This child is already connected to a parent account.',
+        ? 'This child is linked to a parent who signed up on CentreConnect.'
+        : 'This child is linked to a parent account.',
     }
   }
 
@@ -198,12 +198,12 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
   const needsParentCount = totalChildren - linkedChildrenCount
 
   const ageGroupCounts = useMemo(() => {
-    const counts: Record<string, number> = { 'Baby': 0, 'Toddler': 0, 'Preschool': 0, 'School': 0, 'Unknown': 0 }
+    const counts: Record<string, number> = { 'Baby': 0, 'Toddler': 0, 'Preschool': 0, 'School': 0, 'No DOB': 0 }
     const now = new Date()
-    
+
     children.forEach(child => {
       if (!child.dateOfBirth) {
-        counts['Unknown']++
+        counts['No DOB']++
         return
       }
       const dob = new Date(child.dateOfBirth)
@@ -498,14 +498,14 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
                     </div>
                     <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
                       {child.parentSource === 'synced'
-                        ? 'Live parent profile'
+                        ? 'Connected to parent account'
                         : child.parentLinkRequest?.status === 'opened'
                           ? `Opened ${formatDateLabel(child.parentLinkRequest.openedAt)}`
                           : child.parentLinkRequest?.status === 'pending'
                             ? `Sent ${formatDateLabel(child.parentLinkRequest.sentAt)}`
                             : child.parentSource === 'snapshot'
-                              ? 'Saved from child record'
-                              : 'No parent shared yet'}
+                              ? 'Contact details on file'
+                              : 'No parent linked yet'}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{parentStatus.helper}</p>
                   </div>
