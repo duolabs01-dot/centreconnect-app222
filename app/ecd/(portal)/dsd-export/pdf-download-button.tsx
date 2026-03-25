@@ -8,6 +8,8 @@ interface PdfDownloadButtonProps {
   year: number
   centreName?: string
   htmlContent?: string
+  /** Called before the window opens — used by Starter tier to log the export */
+  onExport?: () => Promise<void>
 }
 
 const MONTH_NAMES = [
@@ -15,14 +17,18 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-export function PdfDownloadButton({ month, year, centreName, htmlContent }: PdfDownloadButtonProps) {
-  function handleDownload() {
+export function PdfDownloadButton({ month, year, centreName, htmlContent, onExport }: PdfDownloadButtonProps) {
+  async function handleDownload() {
     if (!htmlContent) return
+
+    // Log the export first (Starter quota tracking), then open the window
+    if (onExport) {
+      try { await onExport() } catch { /* non-fatal — still open the window */ }
+    }
 
     const safe = (centreName ?? 'DOE-Report').replace(/[^a-zA-Z0-9\s-]/g, '').trim()
     const filename = `DOE-Monthly-Report-${MONTH_NAMES[month - 1]}-${year}-${safe}`
 
-    // Inject a save-instructions banner into the HTML before opening
     const instructions = `
       <div id="save-banner" style="
         position:fixed;top:0;left:0;right:0;z-index:9999;
@@ -47,7 +53,6 @@ export function PdfDownloadButton({ month, year, centreName, htmlContent }: PdfD
     `
 
     const htmlWithBanner = htmlContent.replace('<body>', `<body>${instructions}`)
-
     const win = window.open('', '_blank', `width=1000,height=800,title=${filename}`)
     if (!win) {
       alert('Pop-ups are blocked. Please allow pop-ups for this site and try again.')

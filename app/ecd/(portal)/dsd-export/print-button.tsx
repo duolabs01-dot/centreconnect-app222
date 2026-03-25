@@ -3,8 +3,16 @@
 import { Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function DsdPrintButton() {
-  function handlePrint() {
+interface DsdPrintButtonProps {
+  /** Called before window.print() — used by Starter tier to log the export */
+  onExport?: () => Promise<void>
+}
+
+export function DsdPrintButton({ onExport }: DsdPrintButtonProps) {
+  async function handlePrint() {
+    if (onExport) {
+      try { await onExport() } catch { /* non-fatal */ }
+    }
     window.print()
   }
 

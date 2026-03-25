@@ -17,13 +17,16 @@ import {
   Cookie,
   Frown,
   Laugh,
+  Lock,
   Moon,
   Search,
   Share,
   Smile,
   Sparkles,
   Utensils,
+  Zap,
 } from 'lucide-react'
+import Link from 'next/link'
 
 type Child = {
   id: string
@@ -63,6 +66,8 @@ type DailyReportsClientProps = {
   userRoleLabel: string
   userEmail: string
   userRole: 'ecd_admin' | 'ecd_staff' | 'ecd_supervisor'
+  /** Starter tier: mood-only. Meals, nap, activities, teacher notes are locked. */
+  isStarterTier?: boolean
 }
 
 const MOODS = [
@@ -176,6 +181,7 @@ export function DailyReportsClient({
   userRoleLabel,
   userEmail,
   userRole,
+  isStarterTier = false,
 }: DailyReportsClientProps) {
   const [activeTab, setActiveTab] = useState<ReportTab>('today')
   const [searchQuery, setSearchQuery] = useState('')
@@ -391,6 +397,20 @@ export function DailyReportsClient({
   return (
     <>
       <div className="space-y-6">
+        {isStarterTier && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Smile className="h-4 w-4 shrink-0 text-amber-500" />
+              <div>
+                <p className="text-sm font-black text-amber-800">Mood reports — Starter plan</p>
+                <p className="text-xs text-amber-600">You can record and send daily mood updates. Upgrade to Growth for meals, nap times, activities, and teacher notes.</p>
+              </div>
+            </div>
+            <Link href="/ecd/billing" className="flex items-center gap-1.5 rounded-2xl bg-amber-500 px-3 py-1.5 text-xs font-black text-white shadow-sm hover:bg-amber-600">
+              <Zap className="h-3 w-3" /> Upgrade
+            </Link>
+          </div>
+        )}
         <section className="hidden lg:flex lg:items-end lg:justify-between min-w-0">
           <div className="space-y-1">
             <p className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-600">Daily Reporting</p>
@@ -590,43 +610,65 @@ export function DailyReportsClient({
             <CardContent className="space-y-6 pt-6">
               <div className="grid gap-6 xl:grid-cols-2">
                 <section className="space-y-5">
-                  <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Meals</p>
-                    {[
-                      { key: 'breakfast_eaten', label: 'Breakfast', icon: Coffee },
-                      { key: 'lunch_eaten', label: 'Lunch', icon: Utensils },
-                      { key: 'snack_eaten', label: 'Snack', icon: Cookie },
-                    ].map((meal) => (
-                      <div key={meal.key} className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                          <meal.icon className="h-4 w-4 text-slate-400" />
-                          {meal.label}
-                        </div>
-                        <div className="grid grid-cols-4 gap-2">
-                          {EATEN_OPTIONS.map((option) => (
-                            <Button
-                              key={option.value}
-                              type="button"
-                              variant="outline"
-                              onClick={() =>
-                                updateReport(selectedChild.id, selectedDate, {
-                                  [meal.key]: option.value,
-                                } as Partial<DailyReport>)
-                              }
-                              className={cn(
-                                'h-10 rounded-xl px-2 text-[11px] font-semibold',
-                                (selectedReport as any)[meal.key] === option.value
-                                  ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
-                                  : 'border-slate-200 bg-white text-slate-500'
-                              )}
-                            >
-                              {option.label}
-                            </Button>
+                  {isStarterTier ? (
+                    <div className="relative overflow-hidden rounded-2xl border border-slate-200 p-4">
+                      <div className="pointer-events-none select-none opacity-30 blur-[2px]">
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Meals</p>
+                        <div className="space-y-3">
+                          {['Breakfast', 'Lunch', 'Snack'].map((meal) => (
+                            <div key={meal} className="grid grid-cols-4 gap-2">
+                              {['All', 'Some', 'None', 'N/A'].map((opt) => (
+                                <div key={opt} className="h-10 rounded-xl border border-slate-200 bg-slate-50" />
+                              ))}
+                            </div>
                           ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70 backdrop-blur-[1px]">
+                        <Lock className="h-5 w-5 text-amber-500" />
+                        <p className="text-xs font-black text-slate-700">Meals — Growth</p>
+                        <Link href="/ecd/billing" className="rounded-xl bg-amber-500 px-3 py-1 text-[11px] font-black text-white hover:bg-amber-600">Upgrade → R299/mo</Link>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Meals</p>
+                      {[
+                        { key: 'breakfast_eaten', label: 'Breakfast', icon: Coffee },
+                        { key: 'lunch_eaten', label: 'Lunch', icon: Utensils },
+                        { key: 'snack_eaten', label: 'Snack', icon: Cookie },
+                      ].map((meal) => (
+                        <div key={meal.key} className="space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
+                            <meal.icon className="h-4 w-4 text-slate-400" />
+                            {meal.label}
+                          </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {EATEN_OPTIONS.map((option) => (
+                              <Button
+                                key={option.value}
+                                type="button"
+                                variant="outline"
+                                onClick={() =>
+                                  updateReport(selectedChild.id, selectedDate, {
+                                    [meal.key]: option.value,
+                                  } as Partial<DailyReport>)
+                                }
+                                className={cn(
+                                  'h-10 rounded-xl px-2 text-[11px] font-semibold',
+                                  (selectedReport as any)[meal.key] === option.value
+                                    ? 'border-cyan-300 bg-cyan-50 text-cyan-700'
+                                    : 'border-slate-200 bg-white text-slate-500'
+                                )}
+                              >
+                                {option.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
                     <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Mood</p>
@@ -653,66 +695,92 @@ export function DailyReportsClient({
                 </section>
 
                 <section className="space-y-5">
-                  <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Activities and rest</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="mb-1 block text-[11px] font-semibold text-slate-500">Nap start</label>
-                        <input
-                          type="time"
-                          value={selectedReport.nap_start ?? ''}
-                          onChange={(event) =>
-                            updateReport(selectedChild.id, selectedDate, { nap_start: event.target.value })
-                          }
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
-                        />
+                  {isStarterTier ? (
+                    <div className="relative overflow-hidden rounded-2xl border border-slate-200 p-4">
+                      <div className="pointer-events-none select-none opacity-30 blur-[2px]">
+                        <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">Activities and rest</p>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div className="h-10 rounded-xl border border-slate-200 bg-slate-50" />
+                          <div className="h-10 rounded-xl border border-slate-200 bg-slate-50" />
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-5">
+                          {ACTIVITIES.map((activity) => (
+                            <div key={activity} className="h-8 w-20 rounded-full border border-slate-200 bg-slate-50" />
+                          ))}
+                        </div>
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">Teacher notes</p>
+                        <div className="h-[80px] rounded-xl border border-slate-200 bg-slate-50" />
                       </div>
-                      <div>
-                        <label className="mb-1 block text-[11px] font-semibold text-slate-500">Nap end</label>
-                        <input
-                          type="time"
-                          value={selectedReport.nap_end ?? ''}
-                          onChange={(event) =>
-                            updateReport(selectedChild.id, selectedDate, { nap_end: event.target.value })
-                          }
-                          className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
-                        />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70 backdrop-blur-[1px]">
+                        <Lock className="h-5 w-5 text-amber-500" />
+                        <p className="text-xs font-black text-slate-700">Activities, nap &amp; notes — Growth</p>
+                        <Link href="/ecd/billing" className="rounded-xl bg-amber-500 px-3 py-1 text-[11px] font-black text-white hover:bg-amber-600">Upgrade → R299/mo</Link>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {ACTIVITIES.map((activity) => {
-                        const isActive = selectedReport.activities?.includes(activity)
-                        return (
-                          <Button
-                            key={activity}
-                            type="button"
-                            variant="outline"
-                            onClick={() => toggleActivity(selectedChild.id, selectedDate, activity)}
-                            className={cn(
-                              'h-10 rounded-full px-4 text-xs font-semibold',
-                              isActive
-                                ? 'border-cyan-600 bg-cyan-600 text-white hover:bg-cyan-700'
-                                : 'border-slate-200 text-slate-600'
-                            )}
-                          >
-                            {activity}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Activities and rest</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="mb-1 block text-[11px] font-semibold text-slate-500">Nap start</label>
+                            <input
+                              type="time"
+                              value={selectedReport.nap_start ?? ''}
+                              onChange={(event) =>
+                                updateReport(selectedChild.id, selectedDate, { nap_start: event.target.value })
+                              }
+                              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-1 block text-[11px] font-semibold text-slate-500">Nap end</label>
+                            <input
+                              type="time"
+                              value={selectedReport.nap_end ?? ''}
+                              onChange={(event) =>
+                                updateReport(selectedChild.id, selectedDate, { nap_end: event.target.value })
+                              }
+                              className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {ACTIVITIES.map((activity) => {
+                            const isActive = selectedReport.activities?.includes(activity)
+                            return (
+                              <Button
+                                key={activity}
+                                type="button"
+                                variant="outline"
+                                onClick={() => toggleActivity(selectedChild.id, selectedDate, activity)}
+                                className={cn(
+                                  'h-10 rounded-full px-4 text-xs font-semibold',
+                                  isActive
+                                    ? 'border-cyan-600 bg-cyan-600 text-white hover:bg-cyan-700'
+                                    : 'border-slate-200 text-slate-600'
+                                )}
+                              >
+                                {activity}
+                              </Button>
+                            )
+                          })}
+                        </div>
+                      </div>
 
-                  <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Teacher notes</p>
-                    <Textarea
-                      value={selectedReport.teacher_notes ?? ''}
-                      onChange={(event) =>
-                        updateReport(selectedChild.id, selectedDate, { teacher_notes: event.target.value })
-                      }
-                      className="min-h-[130px] rounded-xl border-slate-200"
-                      placeholder="Share highlights, behavior changes, and any parent follow-up."
-                    />
-                  </div>
+                      <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
+                        <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Teacher notes</p>
+                        <Textarea
+                          value={selectedReport.teacher_notes ?? ''}
+                          onChange={(event) =>
+                            updateReport(selectedChild.id, selectedDate, { teacher_notes: event.target.value })
+                          }
+                          className="min-h-[130px] rounded-xl border-slate-200"
+                          placeholder="Share highlights, behavior changes, and any parent follow-up."
+                        />
+                      </div>
+                    </>
+                  )}
                 </section>
               </div>
 

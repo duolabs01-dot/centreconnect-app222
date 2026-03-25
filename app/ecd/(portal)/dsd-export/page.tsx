@@ -7,8 +7,10 @@ import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { hasEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { getDsdExportData, getDsdMonthOptions } from '@/lib/ecd/dsd-export'
 import { buildDsdMonthlyReportTitle, buildDsdPdfHtml, getDsdDerivedStats } from '@/lib/ecd/dsd-export-render'
+import { getCurrentQuarterAndYear, checkDsdExportUsed } from '@/lib/ecd/dsd-export-log'
 import { DsdPrintButton } from './print-button'
 import { PdfDownloadButton } from './pdf-download-button'
+import { recordDsdExportAction } from './actions'
 
 export const metadata: Metadata = {
   title: 'Monthly Report | CentreConnect',
@@ -104,12 +106,12 @@ export default async function DsdExportPage(props: {
   }
   const allDays = Array.from({ length: daysInMonth }, (_, i) => i + 1)
 
-  // ── Starter tier: build a quarterly banner to show inline with the real report ──
-  // Starter users CAN generate the DOE report — but they see a "1 free per quarter" nudge.
-  // This lets them file legally while feeling the pull to upgrade for unlimited history.
+  // ── Starter tier: 1 free DOE export per calendar quarter ──
   const isStarterTier = !dsdAccess.allowed
-  const currentQuarter = Math.ceil(new Date().getMonth() / 3) // Q1–Q4
-  const currentQuarterLabel = `Q${currentQuarter} ${new Date().getFullYear()}`
+  const { quarter: currentQuarter, year: currentYear, label: currentQuarterLabel } = getCurrentQuarterAndYear()
+  const starterExportUsed = isStarterTier
+    ? await checkDsdExportUsed(supabase, ecdId, currentQuarter, currentYear)
+    : false
 
   return (
     <>
@@ -154,8 +156,8 @@ export default async function DsdExportPage(props: {
         }}
       />
       <div className="space-y-6 pb-10">
-        {/* ── Starter quarterly nudge — inline, not a wall ── */}
-        {isStarterTier && (
+        {/* ── Starter quarterly nudge / quota wall ── */}
+        {isStarterTier && !starterExportUsed && (
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 print-hide">
             <div className="flex items-center gap-3 min-w-0">
               <FileCheck2 className="h-5 w-5 flex-shrink-0 text-amber-600" />
@@ -164,7 +166,8 @@ export default async function DsdExportPage(props: {
                   1 free DOE export this quarter ({currentQuarterLabel})
                 </p>
                 <p className="mt-0.5 text-xs text-amber-600">
-                  Attendance history and unlimited exports are on <span className="font-bold">Growth</span>.
+                  Once you download or print, this quarter&apos;s free export is used.
+                  Upgrade to Growth for unlimited exports and full attendance history.
                 </p>
               </div>
             </div>
@@ -174,6 +177,30 @@ export default async function DsdExportPage(props: {
             >
               Upgrade → R299/mo
             </Link>
+          </div>
+        )}
+        {isStarterTier && starterExportUsed && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 print-hide">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <FileCheck2 className="h-5 w-5 flex-shrink-0 text-amber-600" />
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-amber-800">
+                    Free export used for {currentQuarterLabel}
+                  </p>
+                  <p className="mt-0.5 text-xs text-amber-700">
+                    You&apos;ve already generated your 1 free DOE report this quarter.
+                    You can still view the report below — but downloading or printing requires Growth.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/ecd/billing"
+                className="flex-shrink-0 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-amber-600"
+              >
+                Unlock unlimited — R299/mo
+              </Link>
+            </div>
           </div>
         )}
 
@@ -186,8 +213,26 @@ export default async function DsdExportPage(props: {
                 <span className="break-words text-sm font-black uppercase tracking-widest text-cyan-700">{reportTitle}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <DsdPrintButton />
-                <PdfDownloadButton month={selectedMonth} year={selectedYear} centreName={data.centreName} htmlContent={pdfHtml} />
+                {(!isStarterTier || !starterExportUsed) && (
+                  <DsdPrintButton onExport={isStarterTier ? recordDsdExportAction : undefined} />
+                )}
+                {(!isStarterTier || !starterExportUsed) && (
+                  <PdfDownloadButton
+                    month={selectedMonth}
+                    year={selectedYear}
+                    centreName={data.centreName}
+                    htmlContent={pdfHtml}
+                    onExport={isStarterTier ? recordDsdExportAction : undefined}
+                  />
+                )}
+                {isStarterTier && starterExportUsed && (
+                  <Link
+                    href="/ecd/billing"
+                    className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-400 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-amber-500"
+                  >
+                    Upgrade for unlimited exports
+                  </Link>
+                )}
               </div>
             </div>
             <form className="mt-4 flex flex-wrap items-center gap-2">

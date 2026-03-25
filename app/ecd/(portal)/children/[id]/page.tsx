@@ -4,6 +4,7 @@ import { CalendarDays, HeartPulse, ShieldCheck, UserRound } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ParentDossierCards } from '@/components/ecd/parent-dossier-cards'
 import { ParentLinkRequestCard } from '@/components/ecd/parent-link-request-card'
+import { GenderEditField } from './gender-edit'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { buildParentDossierForChild } from '@/lib/ecd/parent-dossier'
 import { getLatestParentLinkRequestsByChildIds } from '@/lib/ecd/parent-link-requests'
@@ -148,7 +149,10 @@ export default async function EcdChildDetailPage({ params }: ChildDetailPageProp
               </CardHeader>
               <CardContent className="grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
                 <p><span className="font-semibold text-slate-900">Date of birth:</span> {child.date_of_birth ? formatDate(child.date_of_birth) : 'Not added yet'}</p>
-                <p><span className="font-semibold text-slate-900">Gender:</span> {String(child.gender ?? '').trim() ? String(child.gender).charAt(0).toUpperCase() + String(child.gender).slice(1) : 'Not recorded'}</p>
+                {role === 'ecd_admin'
+                  ? <GenderEditField childId={String(child.id)} currentGender={String(child.gender ?? '')} />
+                  : <p><span className="font-semibold text-slate-900">Gender:</span> {String(child.gender ?? '').trim() ? String(child.gender).charAt(0).toUpperCase() + String(child.gender).slice(1) : 'Not recorded'}</p>
+                }
                 <p><span className="font-semibold text-slate-900">Primary guardian saved:</span> {primaryGuardian.parent_name || 'Not saved yet'}</p>
                 <p><span className="font-semibold text-slate-900">Allergies:</span> {parseTextArray(child.allergies).join(', ') || 'None listed'}</p>
                 <p><span className="font-semibold text-slate-900">Medical conditions:</span> {parseTextArray(child.medical_conditions).join(', ') || 'None listed'}</p>
