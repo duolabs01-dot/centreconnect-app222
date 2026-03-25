@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { getJohannesburgNowParts } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
+import { fetchMergedAttendance } from '@/lib/ecd/attendance-merge'
 import { AttendanceGridClient } from './attendance-grid-client'
 import { AttendanceRealtimeBridge } from '@/components/ecd/AttendanceRealtimeBridge'
 
@@ -18,6 +20,7 @@ export default async function EcdAttendancePage({
 }) {
   const resolvedSearchParams = await searchParams
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'attendance' })
   const now = getJohannesburgNowParts()
 
   const selectedYear = resolvedSearchParams.year ? parseInt(resolvedSearchParams.year) : now.year
@@ -55,12 +58,7 @@ export default async function EcdAttendancePage({
   const lastDay = new Date(selectedYear, selectedMonth, 0).getDate()
   const endDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${lastDay}`
 
-  const { data: attendance } = await supabase
-    .from('attendance_records')
-    .select('child_id, date, status')
-    .eq('centre_id', ecdId)
-    .gte('date', startDate)
-    .lte('date', endDate)
+  const attendance = await fetchMergedAttendance({ supabase, ecdId, startDate, endDate })
 
   return (
     <>
@@ -71,7 +69,7 @@ export default async function EcdAttendancePage({
         registrationNumber={centre?.registration_number ?? ''}
         classes={classes ?? []}
         enrolledChildren={children ?? []}
-        initialAttendance={attendance ?? []}
+        initialAttendance={attendance as Array<{ child_id: string; date: string; status: 'present' | 'absent' | 'sick' | 'late' | null }>}
         selectedClassId={selectedClassId}
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}

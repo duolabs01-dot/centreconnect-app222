@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { formatDate } from '@/lib/utils'
 import { createJobAction, toggleJobPublishAction, updateJobApplicationStatusAction, updateStaffRecordAction } from './actions'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 
 export const metadata: Metadata = {
   title: 'Employment - CentreConnect',
@@ -103,6 +104,7 @@ function toDateTimeLocal(value: string | null): string {
 export default async function EcdEmploymentPage({ searchParams: searchParamsPromise }: EmploymentPageProps) {
   const searchParams = await searchParamsPromise
   const { supabase, user, role, ecdId } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'employment' })
   const canManageJobs = role === 'ecd_admin'
 
   const selectedTemplateKey = queryValue(searchParams?.template)

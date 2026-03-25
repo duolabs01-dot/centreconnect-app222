@@ -34,12 +34,12 @@ export function PilotPromoBanner({ trialEndsAt }: PilotPromoBannerProps) {
 
       {/* Body */}
       <p className="mt-1.5 text-[13px] leading-relaxed text-slate-400">
-        As one of our founding crèches, your onboarding and first month are
+        As one of our founding crèches, your onboarding and pilot period are
         completely free — no card needed now, no catch.
         {endDate ? (
-          <> After <span className="font-semibold text-slate-300">{endDate}</span>, you'll be billed just <span className="font-semibold text-white">R299/month</span>.</>
+          <> After <span className="font-semibold text-slate-300">{endDate}</span>, you'll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
         ) : (
-          <> After your pilot, you'll be billed just <span className="font-semibold text-white">R299/month</span>.</>
+          <> After your pilot, you'll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
         )}{' '}
         Cancel anytime.
       </p>
@@ -69,7 +69,7 @@ export function PilotPromoBanner({ trialEndsAt }: PilotPromoBannerProps) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">After your pilot</p>
-            <p className="mt-0.5 text-sm font-black text-white">R299 <span className="text-xs font-semibold text-slate-400">/ month</span></p>
+            <p className="mt-0.5 text-sm font-black text-white">Growth <span className="text-xs font-semibold text-slate-400">R299/mo</span></p>
           </div>
           <div className="text-right">
             <p className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-500">Setup fee</p>

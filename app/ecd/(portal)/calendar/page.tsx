@@ -7,6 +7,7 @@ import { CollapsibleCard } from '@/components/ui/collapsible-card'
 import { Button } from '@/components/ui/button'
 import { EcdIosCalendarView, type EcdCalendarFeedItem } from '@/components/ecd/ecd-ios-calendar-view'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS, normalizeCommunicationAutomationSettings } from '@/lib/communications/automation-settings'
 import { toApplicationDocumentLabels } from '@/lib/admissions/application-documents'
 import { formatDate, getJohannesburgNowParts } from '@/lib/utils'
@@ -235,6 +236,7 @@ async function syncBirthdaysForCentre(session: PortalSessionLite) {
 export default async function EcdCalendarPage({ searchParams: searchParamsPromise }: CalendarPageProps) {
   const searchParams = await searchParamsPromise
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'calendar' })
   const nowJhb = getJohannesburgNowParts()
   const today = new Date(
     `${nowJhb.year}-${String(nowJhb.month).padStart(2, '0')}-${String(nowJhb.day).padStart(2, '0')}T00:00:00`

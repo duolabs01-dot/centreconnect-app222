@@ -125,7 +125,25 @@ function ParentLinkItem({ row }: { row: ParentLinkRow }) {
   )
 }
 
-export default async function EcdDashboardPage() {
+const FEATURE_DISPLAY_NAMES: Record<string, string> = {
+  attendance: 'Attendance Register',
+  calendar: 'Calendar & Planning',
+  'daily-reports': 'Daily Reports',
+  'dsd-export': 'DOE Monthly Report',
+  employment: 'Employment & Staff',
+  'report-cards': 'Report Cards',
+  financials: 'Financials',
+  applications: 'Admissions Pipeline',
+  'website-builder': 'Website Builder',
+}
+
+export default async function EcdDashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ upgrade?: string }>
+}) {
+  const resolvedSearchParams = await (searchParams ?? Promise.resolve({} as { upgrade?: string }))
+  const upgradeFeature = resolvedSearchParams.upgrade
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
   const nowJhb = getJohannesburgGreeting()
@@ -468,6 +486,28 @@ export default async function EcdDashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {upgradeFeature && (
+          <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-amber-900">
+                  Upgrade to Growth to unlock {FEATURE_DISPLAY_NAMES[upgradeFeature] ?? upgradeFeature}
+                </p>
+                <p className="mt-0.5 text-xs text-amber-700">
+                  R299/month — attendance, calendar, DOE reports, admissions, and more. Or R2,990/year (save R598).
+                </p>
+              </div>
+              <Link
+                href="/ecd/billing"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-2xl bg-amber-500 px-4 py-2 text-xs font-black text-white shadow-sm transition-colors hover:bg-amber-600"
+              >
+                See Plans
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         <TrialStatusBanner
           subscription={{
