@@ -721,14 +721,9 @@ export default async function EcdProfilePage({ searchParams: searchParamsPromise
               <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-600">
                 Save your street address and CentreConnect will geocode it with Pelias. If you already know the exact pin, paste latitude and longitude to get the most accurate distance for parents.
                 {centre?.latitude != null && centre?.longitude != null ? (
-                  <a
-                    href={`https://www.openstreetmap.org/?mlat=${centre.latitude}&mlon=${centre.longitude}#map=18/${centre.latitude}/${centre.longitude}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex font-semibold text-teal-700 hover:text-teal-800"
-                  >
-                    Preview saved pin on OpenStreetMap
-                  </a>
+                  <span className="mt-2 inline-flex items-center gap-1 text-teal-700 font-semibold text-xs">
+                    ✓ Pin saved — ({Number(centre.latitude).toFixed(4)}, {Number(centre.longitude).toFixed(4)})
+                  </span>
                 ) : null}
               </div>
               <Button type="submit" className="w-fit bg-teal-600 hover:bg-teal-700 text-white font-bold h-11 px-8 rounded-2xl transition-colors shadow-sm">

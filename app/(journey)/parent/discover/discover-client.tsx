@@ -19,6 +19,7 @@ import {
   type CentreCoordinateSource,
 } from '@/lib/geo/centre-location-metadata'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
+import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 
 type DiscoverCentre = {
   id: string
@@ -367,10 +368,11 @@ export default function ParentDiscoverClient() {
             <p className="text-xs uppercase tracking-[0.3em] text-teal-700">Start here</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {featuredCentres.map((centre) => {
+                // getCentreHeroImage checks: real cover_image_url → slug map → default
+                // This ensures Bajabulile and other pilot centres show their known hero image
                 const hasRealCover = typeof centre.cover_image_url === 'string' && centre.cover_image_url.trim().length > 0
-                const heroSrc = hasRealCover
-                  ? centre.cover_image_url!.trim()
-                  : buildCentrePreviewImage({ name: centre.name, suburb: centre.suburb, isClaimed: centre.is_claimed ?? true })
+                const heroSrc = getCentreHeroImage(centre.slug, centre.cover_image_url)
+                  || buildCentrePreviewImage({ name: centre.name, suburb: centre.suburb, isClaimed: centre.is_claimed ?? true })
                 const detailHref = centre.slug ? `/c/${encodeURIComponent(centre.slug)}` : '/directory'
                 const locationLabel = [centre.suburb, centre.city].filter(Boolean).join(', ') || 'Near you'
                 const logoSrc = centre.logo_url?.trim() || null

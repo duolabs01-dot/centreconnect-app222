@@ -57,7 +57,12 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
   const onboardingComplete =
     typeof centre.onboarding_complete === 'boolean' ? centre.onboarding_complete : true
   const isOwner = role === 'ecd_admin' && centre.owner_id === user.id
-  const ownerDisplayName = centre?.primary_contact_name?.trim() || null
+  // Guard against placeholder values accidentally stored in the DB
+  const PLACEHOLDER_PATTERNS = ['full name here', 'owner full name', 'your name', 'owner name here', 'contact name here']
+  const rawContactName = centre?.primary_contact_name?.trim() || null
+  const ownerDisplayName = rawContactName && !PLACEHOLDER_PATTERNS.some(p => rawContactName.toLowerCase().includes(p))
+    ? rawContactName
+    : null
   const roleLabel =
     role === 'ecd_staff'
       ? 'Staff Member'

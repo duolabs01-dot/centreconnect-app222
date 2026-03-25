@@ -758,6 +758,17 @@ export function CentreClient({
                 <SectionHeading eyebrow="Practical details" title="Where to find them" description={isClaimed ? 'The final details most parents want before they apply.' : 'Simple details for parents who want to visit, call, or compare one more time.'} />
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <InfoRow icon={MapPin} label="Address" value={fallbackAddressLabel} />
+                  {(centre.address?.trim() || locationLabel) && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(centre.address?.trim() || locationLabel)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-700 hover:text-teal-900 underline underline-offset-2"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      Get directions →
+                    </a>
+                  )}
                   <InfoRow
                     icon={Phone}
                     label="Phone"
