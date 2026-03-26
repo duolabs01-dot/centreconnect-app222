@@ -363,7 +363,7 @@ export function CentreClient({
   const fallbackAddressLabel = centre.address?.trim() || locationLabel || 'Address shared on request'
   const safeCentreSlug = normalizeCentreSlug(centre.slug) ?? centre.slug
   const claimHref = `/for-centres/register?flow=confirm&claim=${encodeURIComponent(safeCentreSlug)}`
-  const showClaimLink = !isClaimed && userRole !== 'parent_user'
+  const showClaimLink = !isClaimed
   const feesLabel = formatFeesLabel(centre)
   const registrationFeeLabel = formatRegistrationFeeLabel(centre)
   const ageGroupsLabel = formatAgeSummary(centre.age_groups)
@@ -584,7 +584,7 @@ export function CentreClient({
                 <p className="text-sm leading-6 text-amber-950">{UNCLAIMED_CENTRE_DISCLAIMER}</p>
                 {showClaimLink ? (
                   <Link href={claimHref} className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-teal-700 hover:underline">
-                    Do you run this creche? Claim it <ArrowRight className="h-4 w-4" />
+                    Are you the owner? Claim this listing <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : null}
               </div>

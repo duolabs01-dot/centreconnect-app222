@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Heart, MapPin, Check, Phone } from 'lucide-react'
+import { Heart, MapPin, Check, Phone, ArrowRight } from 'lucide-react'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { type CentreCardData, formatAgeRange } from '@/types/centre-card'
@@ -186,10 +186,13 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
     <motion.div
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100"
+      className={cn(
+        'bg-white rounded-2xl overflow-hidden shadow-sm border',
+        centre.is_claimed ? 'border-slate-100' : 'border-slate-200 opacity-90'
+      )}
     >
       {/* Hero */}
-      <div className="relative h-[140px] overflow-hidden rounded-t-2xl">
+      <div className={cn('relative h-[140px] overflow-hidden rounded-t-2xl', !centre.is_claimed && 'grayscale-[20%]')}>
         {hasRealPhoto ? (
           <Image
             src={heroSrc}
@@ -213,15 +216,19 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
         {/* Gradient overlay — covers bottom 70% */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 to-transparent" style={{ top: '30%' }} />
 
-        {/* Top-left: Free to apply badge (claimed only) */}
-        {centre.is_claimed && (
-          <div className="absolute left-2.5 top-2.5 z-10">
+        {/* Top-left: status badge */}
+        <div className="absolute left-2.5 top-2.5 z-10">
+          {centre.is_claimed ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-green-600 backdrop-blur-sm shadow-sm">
               <Check className="h-3 w-3" />
               Free to apply
             </span>
-          </div>
-        )}
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/75 px-2.5 py-1 text-[10px] font-medium text-slate-200 backdrop-blur-sm shadow-sm">
+              Not on CentreConnect yet
+            </span>
+          )}
+        </div>
 
         {/* Top-right: Heart save button */}
         <div className="absolute right-2.5 top-2.5 z-10">
@@ -299,7 +306,7 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
                 )}
               </>
             ) : (
-              <span className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-slate-700 py-2.5 text-[13px] font-semibold text-white">
+              <span className="flex flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-slate-600 py-2.5 text-[13px] font-semibold text-white">
                 <Phone className="h-3.5 w-3.5" />
                 Call or WhatsApp
               </span>
@@ -316,6 +323,19 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
           </p>
         </div>
       </Link>
+
+      {/* Unclaimed: claim listing link — outside the main Link to avoid nested <a> */}
+      {!centre.is_claimed && (
+        <div className="px-4 pb-3">
+          <a
+            href="/ecd/claim"
+            className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-teal-600 transition-colors"
+          >
+            Are you the owner? Claim this listing
+            <ArrowRight className="h-3 w-3" />
+          </a>
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -337,10 +357,14 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
     <motion.div
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      className={cn(!centre.is_claimed && 'opacity-90')}
     >
       <Link
         href={`/c/${centre.slug}`}
-        className="flex min-h-[108px] overflow-hidden rounded-[10px] border border-stone-100 bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+        className={cn(
+          'flex min-h-[108px] overflow-hidden rounded-[10px] border bg-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500',
+          centre.is_claimed ? 'border-stone-100' : 'border-slate-200'
+        )}
       >
         {/* Image block */}
         <div className="relative w-[100px] shrink-0 overflow-hidden">
@@ -409,13 +433,24 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
             </span>
             <span className={cn(
               'shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white',
-              centre.is_claimed ? 'bg-teal-600' : 'bg-slate-700'
+              centre.is_claimed ? 'bg-teal-600' : 'bg-slate-600'
             )}>
               {centre.is_claimed ? 'Apply free' : 'Call'}
             </span>
           </div>
         </div>
       </Link>
+
+      {/* Unclaimed: claim link — outside Link to avoid nested <a> */}
+      {!centre.is_claimed && (
+        <a
+          href="/ecd/claim"
+          className="mt-1 inline-flex items-center gap-1 px-1 text-[10.5px] text-slate-400 hover:text-teal-600 transition-colors"
+        >
+          Are you the owner? Claim this listing
+          <ArrowRight className="h-3 w-3" />
+        </a>
+      )}
     </motion.div>
   )
 }
