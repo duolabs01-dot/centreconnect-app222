@@ -476,6 +476,7 @@ File: `components/parent/CentreCard.tsx`
 - CTA button: "Apply free" (not "Apply online")
 - Copy for unclaimed centres: "Call or WhatsApp the crèche to ask about space."
 - Parent-first psychology: lead with emotion (free, easy, direct) not features (online, digital, portal)
+- `whileTap={{ scale: 0.97 }}` spring animation on the card wrapper (stiffness 400, damping 25) — gives tap feedback on mobile
 
 ### Notification Bell — LOCKED
 File: `components/notifications/parent-notification-bell.tsx`
@@ -488,6 +489,23 @@ File: `components/notifications/parent-notification-bell.tsx`
 - "Mark all read" button in dropdown header
 - Max 8 items in dropdown, full inbox link at bottom
 - Unread badge: rose-500 background, pulses on new arrival, scales to 0 when cleared
+
+### Homepage Hero — LOCKED
+File: `app/(journey)/page.client.tsx`
+
+- **Single primary CTA only:** "Find crèches near me" → `/directory`
+- Secondary link (text, not button): "Want to apply? Create a free account →" → `/register`
+- **No WhatsApp share button** in the hero — removed, can stay in footer only
+- Suburb filter pills have `whileTap={{ scale: 1.08 }}` spring animation (stiffness 500, damping 20)
+- Below-fold images use `loading="lazy"` — do not add `priority` to them
+
+### Loading Screens — LOCKED
+File: `app/loading.tsx`
+
+- The root loading screen is a **content-first cream skeleton** matching the homepage layout
+- It is **NOT** a dark splash screen with logo and "Opening CentreConnect…" text — that was removed
+- Skeletons use `animate-pulse`, cream/stone background (`bg-[rgb(250,248,244)]`)
+- Directory loading (`app/(journey)/directory/loading.tsx`) uses card-shaped skeletons matching CentreCard dimensions
 
 ### PDF / DOE Export
 - The Download PDF button opens a new window with HTML content
@@ -584,6 +602,16 @@ export default async function MyEcdPage() {
 // Pass isAllowed as a prop from server component
 <MyFeatureComponent isGrowthTier={allowed} />
 ```
+
+### Bottom Nav Visibility Logic
+File: `lib/navigation/parent-bottom-nav.ts`
+
+`shouldHideParentBottomNav(pathname)` returns `true` on routes where the nav should be suppressed (e.g. `/parent/applications/*`, `/parent/profile/*`). Always check this before adding new parent routes — if the nav would interfere with a multi-step form or detail view, add it here.
+
+`FooterConditionalRenderer` (`components/layout/FooterConditionalRenderer.tsx`) is the single place that decides which nav renders. Logic:
+- Signed-in parent on `isParentPortal` routes → `PARENT_NAV_ITEMS_PRE_ENROLLMENT` or `PARENT_NAV_ITEMS_ENROLLED` (based on `homeState`)
+- Admin on `/admin/*` → `ADMIN_MOBILE_NAV_ITEMS`
+- ECD portal gets **no** bottom nav — hamburger drawer only
 
 ### Attendance Page Pattern
 - `revalidate = 0` (no cache — always fresh)
