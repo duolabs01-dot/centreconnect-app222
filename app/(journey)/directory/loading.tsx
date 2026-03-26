@@ -1,44 +1,54 @@
 export default function DirectoryLoading() {
   return (
     <div className="min-h-screen bg-[rgb(250,248,244)] px-4 pb-32 pt-6 sm:px-6">
-      {/* Search bar skeleton */}
       <div className="mx-auto max-w-6xl">
-        <div className="h-12 w-full animate-pulse rounded-2xl bg-stone-200/60" />
+        {/* Search bar skeleton */}
+        <div className="h-14 w-full animate-pulse rounded-[1.4rem] bg-stone-200/60" />
         {/* Filter pills */}
         <div className="mt-4 flex gap-2 overflow-hidden">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-9 w-24 shrink-0 animate-pulse rounded-full bg-stone-200/50" />
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-10 w-24 shrink-0 animate-pulse rounded-full bg-stone-200/50" />
           ))}
         </div>
+        {/* Results bar skeleton */}
+        <div className="mt-6 flex items-center justify-between rounded-[1.5rem] border border-stone-200 bg-stone-50 px-5 py-4">
+          <div className="space-y-2">
+            <div className="h-2.5 w-16 animate-pulse rounded-full bg-stone-200/60" />
+            <div className="h-4 w-32 animate-pulse rounded-full bg-stone-200/60" />
+          </div>
+          <div className="flex gap-1 rounded-full bg-slate-100 p-0.5">
+            <div className="h-8 w-8 animate-pulse rounded-full bg-stone-200/60" />
+            <div className="h-8 w-8 animate-pulse rounded-full bg-stone-200/40" />
+          </div>
+        </div>
       </div>
-      {/* Centre card skeletons — match actual card aspect ratio */}
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+      {/* Full-card skeletons (grid) */}
+      <div className="mx-auto mt-4 grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div
-            key={i}
-            className="overflow-hidden rounded-[2rem] border border-stone-200/60 bg-white"
-          >
-            <div className="aspect-[16/5.9] w-full animate-pulse bg-stone-200/50" />
-            <div className="space-y-2.5 p-4">
-              <div className="flex items-start gap-3">
-                <div className="h-12 w-12 shrink-0 animate-pulse rounded-2xl bg-stone-200/60" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 animate-pulse rounded bg-stone-200/60" />
-                  <div className="h-3 w-1/2 animate-pulse rounded bg-stone-200/40" />
-                </div>
+          <div key={i} className="overflow-hidden rounded-2xl border border-stone-100 bg-white shadow-sm">
+            {/* Hero */}
+            <div className="h-[140px] w-full animate-pulse bg-stone-200/50" />
+            {/* Body */}
+            <div className="px-4 pb-3.5 pt-7 space-y-2.5">
+              <div className="h-4 w-3/4 animate-pulse rounded bg-stone-200/60" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-stone-200/40" />
+              <div className="h-3 w-2/3 animate-pulse rounded bg-stone-200/40" />
+              {/* Badges */}
+              <div className="flex gap-1.5">
+                <div className="h-5 w-14 animate-pulse rounded-full bg-stone-200/50" />
+                <div className="h-5 w-16 animate-pulse rounded-full bg-stone-200/40" />
+                <div className="h-5 w-12 animate-pulse rounded-full bg-stone-200/40" />
               </div>
-              <div className="flex gap-2">
-                <div className="h-6 w-20 animate-pulse rounded-full bg-stone-200/40" />
-                <div className="h-6 w-16 animate-pulse rounded-full bg-stone-200/40" />
+              {/* Buttons */}
+              <div className="flex gap-2 pt-1">
+                <div className="h-10 flex-1 animate-pulse rounded-[10px] bg-teal-100/50" />
+                <div className="h-10 w-12 animate-pulse rounded-[10px] bg-stone-100/60" />
               </div>
-              <div className="flex gap-2">
-                <div className="h-8 w-24 animate-pulse rounded-full bg-stone-200/50" />
-                <div className="h-8 w-20 animate-pulse rounded-full bg-stone-200/50" />
-              </div>
-              <div className="h-4 w-full animate-pulse rounded bg-stone-200/30" />
             </div>
-            <div className="border-t border-stone-200/50 p-4">
-              <div className="h-12 w-full animate-pulse rounded-2xl bg-teal-100/40" />
+            {/* Trust line */}
+            <div className="border-t border-stone-100 px-4 py-2">
+              <div className="h-3 w-4/5 animate-pulse rounded bg-stone-200/30" />
             </div>
           </div>
         ))}

@@ -121,12 +121,10 @@ export async function getParentProgress(userId: string): Promise<ParentProgress>
   const requiredDocumentsCount = documentChecklist.totalRequired
   const hasAllRequiredDocuments = documentChecklist.missingCodes.length === 0
 
-  // Profile completeness (5 profile fields + documents)
+  // Profile completeness — 5 profile fields only (documents tracked separately)
+  // A parent who fills in all visible profile fields must reach exactly 100%
   const profileFieldsComplete = [hasName, hasPhone, hasRelationship, hasEmergencyContact, hasAvatar].filter(Boolean).length
-  const profileCompleteness = Math.round(
-    ((profileFieldsComplete / 5) * 70) + 
-    ((documentsCount / Math.max(requiredDocumentsCount, 1)) * 30)
-  )
+  const profileCompleteness = Math.round((profileFieldsComplete / 5) * 100)
 
   // Check for expiring documents (30, 7, 1 days)
   const today = new Date()

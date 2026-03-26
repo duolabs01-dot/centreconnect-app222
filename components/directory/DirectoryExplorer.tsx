@@ -4,13 +4,14 @@ import { useEffect, useState, useTransition, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Baby, MapPin, Search, ShieldCheck, SlidersHorizontal, Map as MapIcon, LayoutGrid, Check, X, Clock, Heart } from 'lucide-react'
+import { Baby, MapPin, Search, ShieldCheck, SlidersHorizontal, Map as MapIcon, LayoutGrid, List, Check, X, Clock, Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SharedCentreCard } from '@/components/shared/CentreCard'
 import { type CentreCardData, parseAgeGroupsToMonths } from '@/types/centre-card'
+import { useCardViewPreference } from '@/lib/hooks/use-card-view-preference'
 
 import { cn } from '@/lib/utils'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
@@ -122,6 +123,7 @@ export default function DirectoryExplorer({
   const [centres, setCentres] = useState(initialCentres)
   const [totalResults, setTotalResults] = useState(initialTotal)
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const { variant: cardVariant, setVariant: setCardVariant } = useCardViewPreference()
 
   const [search, setSearch] = useState(initialFilters.search ?? '')
   const [selectedSuburb, setSelectedSuburb] = useState(initialFilters.suburb ?? '')
@@ -547,20 +549,41 @@ export default function DirectoryExplorer({
 
       <div className="relative mt-2 min-h-[500px]">
         <div className="mb-4 rounded-[1.5rem] border border-stone-200 bg-stone-50 px-4 py-4 shadow-[0_10px_24px_rgba(31,44,39,0.04)] sm:px-5">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-500">Results</p>
               <p className="mt-1 text-sm font-semibold text-stone-800">
-                {totalResults} {totalResults === 1 ? 'centre' : 'centres'} to compare
-              </p>
-              <p className="mt-1 text-xs leading-5 text-stone-600">
-                Creches on CentreConnect let you apply online. Public listings show direct contact options.
+                {totalResults} {totalResults === 1 ? 'cr\u00E8che' : 'cr\u00E8ches'} found
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">Apply online</span>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-800">Message in app</span>
-              <span className="rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-semibold text-stone-800">Call or WhatsApp</span>
+            {/* Card view toggle */}
+            <div className="flex items-center gap-1 rounded-full bg-slate-100 p-0.5">
+              <button
+                type="button"
+                onClick={() => setCardVariant('full')}
+                aria-label="Grid view"
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-all',
+                  cardVariant === 'full'
+                    ? 'bg-white text-teal-600 shadow-sm'
+                    : 'bg-transparent text-slate-400 hover:text-slate-600'
+                )}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCardVariant('compact')}
+                aria-label="List view"
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-full transition-all',
+                  cardVariant === 'compact'
+                    ? 'bg-white text-teal-600 shadow-sm'
+                    : 'bg-transparent text-slate-400 hover:text-slate-600'
+                )}
+              >
+                <List className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -628,7 +651,11 @@ export default function DirectoryExplorer({
                 </Button>
               </motion.div>
             ) : (
-              <div className="space-y-2 sm:grid sm:grid-cols-2 sm:gap-5 sm:space-y-0 lg:grid-cols-3">
+              <div className={cn(
+                cardVariant === 'full'
+                  ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+                  : 'space-y-2'
+              )}>
                 {centres.map((centre, index) => {
                   const { age_min_months, age_max_months } = parseAgeGroupsToMonths(centre.age_groups)
                   const cardData: CentreCardData = {
@@ -646,6 +673,12 @@ export default function DirectoryExplorer({
                     is_dsd_registered: Boolean(centre.is_registered),
                     vacancy_status: null,
                     is_claimed: Boolean(centre.is_claimed),
+                    logo_url: centre.logo_url ?? null,
+                    tagline: centre.tagline ?? null,
+                    age_groups: centre.age_groups ?? null,
+                    contact_whatsapp: centre.contact_whatsapp ?? null,
+                    contact_phone: centre.contact_phone ?? null,
+                    is_saved: Boolean(centre.is_saved),
                   }
                   return (
                     <motion.div
@@ -655,7 +688,7 @@ export default function DirectoryExplorer({
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.03 }}
                     >
-                      <SharedCentreCard centre={cardData} />
+                      <SharedCentreCard centre={cardData} variant={cardVariant} />
                     </motion.div>
                   )
                 })}

@@ -30,6 +30,8 @@ export async function SuggestedCentresSection() {
       is_dsd_registered: Boolean(row.is_registered),
       vacancy_status: null,
       is_claimed: true,
+      logo_url: row.logo_url ?? null,
+      age_groups: row.age_groups ?? null,
     }
   })
 
@@ -50,7 +52,7 @@ export async function SuggestedCentresSection() {
           <EmptyState title="No suggestions yet" description="Check back soon for cr&egrave;che recommendations." />
         ) : (
           suggestedCentres.map((centre) => (
-            <SharedCentreCard key={centre.id} centre={centre} />
+            <SharedCentreCard key={centre.id} centre={centre} variant="compact" />
           ))
         )}
       </div>

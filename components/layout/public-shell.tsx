@@ -20,7 +20,7 @@ export function PublicShell({ children }: PublicShellProps) {
   const showBreadcrumbs = shouldShowBreadcrumbs(pathname, 'public')
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-stone-50 text-foreground">
+    <div className="min-h-screen overflow-x-clip bg-stone-50 text-foreground">
       <header className="fixed inset-x-0 top-0 z-50 border-b border-stone-200 bg-stone-50/92 shadow-[0_6px_20px_rgba(34,49,46,0.06)] backdrop-blur-2xl">
         <Container className="flex min-h-[68px] items-center justify-between gap-3 py-2 sm:min-h-[72px] sm:py-3">
           <div className="flex items-center gap-3">

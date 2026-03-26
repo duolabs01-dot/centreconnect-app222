@@ -13,6 +13,13 @@ export interface CentreCardData {
   is_dsd_registered: boolean
   vacancy_status: 'available' | 'limited' | 'full' | null
   is_claimed: boolean
+  // Optional — enriched fields for the full card variant
+  logo_url?: string | null
+  tagline?: string | null
+  age_groups?: string[] | null
+  contact_whatsapp?: string | null
+  contact_phone?: string | null
+  is_saved?: boolean
 }
 
 /**

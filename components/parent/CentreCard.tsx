@@ -1,3 +1,4 @@
+// DEPRECATED — use components/shared/CentreCard.tsx with variant="full" | "compact"
 'use client'
 
 import Image from 'next/image'
