@@ -180,7 +180,7 @@ export function CentreCard({
   const heroImageSrc = hasRealCoverImage ? cover_image_url.trim() : previewImageSrc
   const isOnCentreConnect = Boolean(is_claimed)
   const isVerifiedForParents = Boolean(is_claimed && is_registered)
-  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply online'
+  const primaryLabel = existingApplicationId ? formatExistingStatus(existingApplicationStatus) : 'Apply free'
   const whatsappHref = buildWhatsappHref(contact_whatsapp ?? contact_phone ?? phone, name)
   const callHref = buildCallHref(contact_phone ?? phone ?? contact_whatsapp)
   const publicPrimaryHref = whatsappHref ?? callHref ?? detailHref
@@ -318,7 +318,7 @@ export function CentreCard({
               ) : null}
               {is_claimed ? (
                 <Badge className="border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-teal-700 shadow-none">
-                  Apply now
+                  Free to apply
                 </Badge>
               ) : (
                 <Badge className="border border-stone-200 bg-stone-50 px-2.5 py-1 text-[9px] font-medium tracking-[0.08em] text-stone-600 shadow-none">
@@ -334,7 +334,9 @@ export function CentreCard({
             </div>
 
             <p className="text-[12px] leading-5 text-stone-600">
-              {is_claimed ? 'Apply online or message the creche in the app.' : 'Call or WhatsApp the creche if you want to act now.'}
+              {is_claimed
+                ? 'No registration fee. Apply free and hear back directly.'
+                : 'Call or WhatsApp the crèche to ask about space.'}
             </p>
           </CardContent>
         </Link>

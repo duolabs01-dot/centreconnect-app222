@@ -729,8 +729,8 @@ export function CentreClient({
                 </div>
                 <div className="rounded-[1.5rem] border border-border bg-white p-5">
                   <p className="text-[10px] font-semibold tracking-[0.08em] text-slate-500">Classes</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900">{classrooms.length > 0 ? `${classrooms.length} class${classrooms.length === 1 ? '' : 'es'} listed` : 'Ask the centre for class placement'}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Ask the centre which class fits your child best.</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900">{visibleClassrooms.length > 0 ? `${visibleClassrooms.length} class${visibleClassrooms.length === 1 ? '' : 'es'}` : 'Ask the centre about placement'}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">The centre will place your child in the right class for their age.</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4 sm:grid-cols-3">
@@ -827,7 +827,7 @@ export function CentreClient({
                       ) : null}
                     </div>
                     <p className="mt-3 text-sm leading-6 text-amber-950">
-                      Creches on CentreConnect let parents do more straight away: apply online, send a message in the app, and follow what happens next with less confusion.
+                      No registration fee to apply. Browse, compare, and apply to any crèche on CentreConnect for free. Your application and messages stay organised in one place.
                     </p>
                     {pilotBadges.length > 0 ? (
                       <div className="mt-3 flex flex-wrap gap-2">
@@ -865,7 +865,7 @@ export function CentreClient({
                     isAvailable={isClaimed}
                     unavailableLabel="Online applications not available yet"
                     helperText={
-                      isClaimed ? 'Apply now if you are ready, or send a quick message first if you need one more answer.' : 'Use the public details now, then come back when online applications open.'
+                      isClaimed ? 'No registration fee. Apply free and hear back directly from the crèche.' : 'Use the public details now, then come back when online applications open.'
                     }
                   />
                   {isClaimed ? (

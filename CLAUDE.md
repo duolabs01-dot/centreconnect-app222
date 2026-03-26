@@ -456,6 +456,39 @@ These rules must not be changed without explicit instruction from the product ow
 | Parent | Light — white/cream, teal accents |
 | Admin | Dark — same as ECD |
 
+### Hero Image Resolution — LOCKED
+File: `lib/ui/centre-hero-images.ts`
+
+Pilot centres (Bajabulile, Sakhisizwe) have **curated local hero images** in `public/centres/[slug]/hero.jpg`. The `getCentreHeroImage()` function resolves hero images in this order:
+
+1. If slug is in `CURATED_HERO_SLUGS` → always use the local curated image (ignore DB value)
+2. If `cover_image_url` from DB is valid and not a placeholder → use it
+3. If slug has a seed entry in `ECD_HERO_BY_SLUG` → use the seed image
+4. Fallback → generic ECD hero image
+
+**Why curated slugs override DB:** A centre owner may upload an incorrect or low-quality cover image. For pilot centres we maintain curated images locally that are known to be correct. The DB value is ignored entirely for these slugs.
+
+### CentreCard Copy Principles — LOCKED
+File: `components/parent/CentreCard.tsx`
+
+- **Lead with "No registration fee"** — South African parents expect to pay registration fees when applying to crèches. Removing this expectation is our biggest conversion lever. Every CentreCard on a claimed centre says "No registration fee. Apply free and hear back directly."
+- Badge text for claimed centres: "Free to apply" (not "Apply now")
+- CTA button: "Apply free" (not "Apply online")
+- Copy for unclaimed centres: "Call or WhatsApp the crèche to ask about space."
+- Parent-first psychology: lead with emotion (free, easy, direct) not features (online, digital, portal)
+
+### Notification Bell — LOCKED
+File: `components/notifications/parent-notification-bell.tsx`
+
+- Uses framer-motion spring animations: bell shake on new notifications, badge scale-in, item stagger
+- Supabase Realtime subscription for live updates (INSERT/UPDATE on `parent_notifications`)
+- Error boundary wrapping: if the bell crashes, falls back to a plain link to `/parent/notifications`
+- Skeleton loading state (3 shimmer rows) while fetching
+- Mark-as-read with optimistic UI (instant visual update, background PATCH)
+- "Mark all read" button in dropdown header
+- Max 8 items in dropdown, full inbox link at bottom
+- Unread badge: rose-500 background, pulses on new arrival, scales to 0 when cleared
+
 ### PDF / DOE Export
 - The Download PDF button opens a new window with HTML content
 - It does NOT call `window.print()` automatically
@@ -487,6 +520,26 @@ Application statuses must always be shown in plain English. Use `statusToPlainEn
 - `enrolled` state = window into the child's day. Teacher notes, mood chips, pickup code
 - ProfileReadinessCard belongs on `/parent/profile` only — **never** on the dashboard
 - Bottom nav changes by state (pre-enrollment vs enrolled)
+
+### Centre Profile Page (`/c/[slug]`) — Design Rules
+File: `app/c/[slug]/centre-client.tsx`
+
+- Class count displayed must match `visibleClassrooms.length` (capped at 3 for claimed centres), not the full `classrooms.length`
+- Trust copy must lead with "No registration fee to apply"
+- Apply CTA helper text: "No registration fee. Apply free and hear back directly from the crèche."
+- Classroom card limit: 3 visible for claimed centres (prevents clutter, encourages contact)
+- Aftercare, classes, and schedule are shown as stat cards — always sourced from DB, never hardcoded
+
+### Copywriting Principles — LOCKED
+All parent-facing copy across the platform follows these rules:
+
+1. **Lead with emotion, not features.** "Find the right crèche for your child" not "Search our directory of centres"
+2. **Acknowledge the parent's state.** "You are waiting to hear back" not "Applications in progress"
+3. **Remove financial barriers upfront.** "No registration fee" is the single most important message. Parents in our market expect to pay R500+ just to apply. Saying "free" removes the biggest blocker.
+4. **Plain English statuses.** Never show database codes. Always use `statusToPlainEnglish()`.
+5. **Use "crèche" not "centre" in parent-facing copy.** Parents call it a crèche. We use "centre" in the code/admin.
+6. **Use South African English.** "Colour" not "color", "organised" not "organized" in UI copy.
+7. **No jargon.** "Documents needed" not "awaiting_documents". "The crèche sent you a message" not "New notification received".
 
 ---
 

@@ -25,6 +25,12 @@ const ECD_HERO_BY_SLUG: Record<string, string> = {
     '/centres/bajabulile/hero.jpg',
 }
 
+/** Slugs whose hero image is curated and must NOT be overridden by a database URL */
+const CURATED_HERO_SLUGS = new Set([
+  'bajabulile',
+  'bajabulile-day-care-centre',
+])
+
 const DEFAULT_ECD_HERO =
   'https://images.pexels.com/photos/8363783/pexels-photo-8363783.jpeg?cs=srgb&dl=pexels-rdne-8363783.jpg&fm=jpg'
 
@@ -34,6 +40,8 @@ function isInvalidOrPlaceholder(input?: string | null) {
 }
 
 export function getCentreHeroImage(slug?: string | null, input?: string | null) {
+  // Curated pilot centres always use the local hero — ignore any DB value
+  if (slug && CURATED_HERO_SLUGS.has(slug)) return ECD_HERO_BY_SLUG[slug]
   if (!isInvalidOrPlaceholder(input)) return input as string
   if (slug && ECD_HERO_BY_SLUG[slug]) return ECD_HERO_BY_SLUG[slug]
   return DEFAULT_ECD_HERO
@@ -42,4 +50,3 @@ export function getCentreHeroImage(slug?: string | null, input?: string | null) 
 export function getSeedCentreHeroBySlug(slug: string) {
   return ECD_HERO_BY_SLUG[slug] ?? DEFAULT_ECD_HERO
 }
-
