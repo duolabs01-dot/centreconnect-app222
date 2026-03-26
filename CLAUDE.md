@@ -72,9 +72,14 @@ centreconnect-app222/
 │   ├── auth/                   # ParentAuthShell + auth UI
 │   ├── ecd/                    # ECD-specific components
 │   ├── layout/                 # Sidebar, nav, shells, headers
-│   ├── parent/                 # Parent portal components
+│   ├── parent/                 # Parent portal components (full CentreCard)
+│   ├── shared/                 # Shared components used across portals
+│   │   └── CentreCard.tsx      # Compact horizontal card (directory + dashboard)
 │   ├── ui/                     # shadcn/ui base components
 │   └── ...
+├── types/
+│   ├── centre-card.ts          # CentreCardData type + age group parsers
+│   └── ...                     # Other global TypeScript types
 ├── lib/
 │   ├── auth/                   # Auth utilities, role provisioning
 │   ├── billing/                # Plans, tiers, Paystack integration

@@ -67,7 +67,13 @@
       "Bash(wc -l app/ecd/\\\\\\(portal\\\\\\)/profile/page.tsx app/ecd/\\\\\\(portal\\\\\\)/calendar/page.tsx app/ecd/\\\\\\(portal\\\\\\)/attendance/attendance-grid-client.tsx)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(gh api:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(grep -h \"^CREATE TABLE\" /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/supabase/migrations/*.sql)",
+      "Bash(grep -h \"^export async function\\\\|^export async function POST\\\\|^export async function GET\\\\|^export async function PUT\\\\|^export async function DELETE\\\\|^export async function PATCH\" /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/app/api/**/route.ts)",
+      "Bash(ls \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222\\\\app\\\\\\(journey\\)\\\\parent\\\\dashboard\\\\_sections\"\")",
+      "Bash(find \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222/app/\\(journey\\)\" -name \"layout.tsx\" -type f)",
+      "Bash(grep -n \"visibleClassrooms\\\\|classrooms\\\\|classroom\" /Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/app/c/[slug]/centre-client.tsx)",
+      "Bash(find /Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222 -name *public_ecd* -type f)"
     ]
   }
 }
