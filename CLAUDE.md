@@ -72,9 +72,9 @@ centreconnect-app222/
 │   ├── auth/                   # ParentAuthShell + auth UI
 │   ├── ecd/                    # ECD-specific components
 │   ├── layout/                 # Sidebar, nav, shells, headers
-│   ├── parent/                 # Parent portal components (full CentreCard)
+│   ├── parent/                 # Parent portal components (CentreCard.tsx DEPRECATED — do not use)
 │   ├── shared/                 # Shared components used across portals
-│   │   └── CentreCard.tsx      # Compact horizontal card (directory + dashboard)
+│   │   └── CentreCard.tsx      # Unified card — variant="full" (grid) or "compact" (list)
 │   ├── ui/                     # shadcn/ui base components
 │   └── ...
 ├── types/
@@ -430,6 +430,13 @@ toInternalTier('growth')     // → 'standard'
 getPublicPlanPrice('growth') // → 299
 ```
 
+### `lib/hooks/use-card-view-preference.ts`
+Persists the centre card view mode (`full` / `compact`) in localStorage (`cc-card-view`).
+Default is `full` on screens ≥390px, `compact` on smaller screens. Both `/directory` and `/parent/discover` use this hook for the ⊞/≡ toggle.
+
+### `lib/parent/progress.ts`
+Profile completeness is calculated from **5 profile fields only** (full_name, phone, relationship_type, suburb, child present). Formula: `Math.round((profileFieldsComplete / 5) * 100)`. Documents are tracked separately and do **not** affect the completeness percentage.
+
 ### `lib/supabase/`
 ```typescript
 // Client component (browser)
@@ -473,9 +480,16 @@ Pilot centres (Bajabulile, Sakhisizwe) have **curated local hero images** in `pu
 
 **Why curated slugs override DB:** A centre owner may upload an incorrect or low-quality cover image. For pilot centres we maintain curated images locally that are known to be correct. The DB value is ignored entirely for these slugs.
 
-### CentreCard Copy Principles — LOCKED
-File: `components/parent/CentreCard.tsx`
+### CentreCard — LOCKED
+File: `components/shared/CentreCard.tsx` (canonical). `components/parent/CentreCard.tsx` is **deprecated** — do not use.
 
+**Variants:**
+- `variant="full"` — vertical card with 140px hero image, logo bubble, age badges, fee stats, CTA buttons, trust line. Used in directory grid and Find tab grid.
+- `variant="compact"` — horizontal card with 100px image, inline details. Used in dashboard suggested section and list view.
+
+**View toggle:** `lib/hooks/use-card-view-preference.ts` — localStorage key `cc-card-view`, defaults `full` on ≥390px screens. Both `/directory` and `/parent/discover` share this hook.
+
+**Copy principles:**
 - **Lead with "No registration fee"** — South African parents expect to pay registration fees when applying to crèches. Removing this expectation is our biggest conversion lever. Every CentreCard on a claimed centre says "No registration fee. Apply free and hear back directly."
 - Badge text for claimed centres: "Free to apply" (not "Apply now")
 - CTA button: "Apply free" (not "Apply online")
@@ -671,3 +685,5 @@ These centres have special handling in some parts of the codebase (featured on h
 12. **Do not show raw status codes to parents** — always use `statusToPlainEnglish()` or the mapping above.
 13. **Do not use a single static bottom nav for parents** — the nav changes by `homeState` (pre-enrollment vs enrolled). Use `PARENT_NAV_ITEMS_PRE_ENROLLMENT` or `PARENT_NAV_ITEMS_ENROLLED`.
 14. **Do not use unescaped apostrophes in JSX string literals** — use `&apos;`, `\u2019`, or template literals to avoid SWC parse errors.
+15. **Do not use `components/parent/CentreCard`** — it is deprecated. Use `SharedCentreCard` from `components/shared/CentreCard.tsx` with `variant="full"` or `variant="compact"`.
+16. **Do not use `overflow-x-hidden` on full-height containers** — it creates a scroll container that breaks vertical scroll on iOS Safari and Android Chrome. Use `overflow-x-clip` instead (set on `body` in `app/layout.tsx` and the root div in `components/layout/public-shell.tsx`).

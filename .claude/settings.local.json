@@ -73,7 +73,15 @@
       "Bash(ls \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222\\\\app\\\\\\(journey\\)\\\\parent\\\\dashboard\\\\_sections\"\")",
       "Bash(find \"C:\\\\Users\\\\THEMBA\\\\Downloads\\\\centreconnect-app\\\\centreconnect-app222/app/\\(journey\\)\" -name \"layout.tsx\" -type f)",
       "Bash(grep -n \"visibleClassrooms\\\\|classrooms\\\\|classroom\" /Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/app/c/[slug]/centre-client.tsx)",
-      "Bash(find /Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222 -name *public_ecd* -type f)"
+      "Bash(find /Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222 -name *public_ecd* -type f)",
+      "Bash(npx kill-port:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3010/)",
+      "Bash(findstr :3010)",
+      "Bash(cmd //c \"taskkill /PID 35032 /F\")",
+      "Bash(cmd //c \"taskkill /IM node.exe /F\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3010/directory)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3010)",
+      "Bash(grep -B5 -A5 is_claimed /c/Users/THEMBA/Downloads/centreconnect-app/centreconnect-app222/supabase/migrations/*.sql)"
     ]
   }
 }
