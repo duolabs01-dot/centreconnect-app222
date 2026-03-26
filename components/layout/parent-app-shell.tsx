@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Container } from '@/components/layout/container'
 import { BrandMark } from '@/components/ecd/BrandMark'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, BadgeCheck, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon, Home, Search, ClipboardList, Zap, GraduationCap, User } from 'lucide-react'
+import { ArrowLeft, BadgeCheck, LogOut, ChevronDown, Sparkles, FileText, Lock as LockIcon, Home, Search, ClipboardList, Zap, GraduationCap, User, Building2 } from 'lucide-react'
 import { useAppNavLock } from '@/lib/hooks/useAppNavLock'
 import { LiteImage } from '@/components/ui/LiteImage'
 import { createClient } from '@/lib/supabase/client'
@@ -197,6 +197,15 @@ export function ParentAppShell({ children }: ParentAppShellProps) {
                           {isVerified && <BadgeCheck className="h-4 w-4 fill-cyan-50 text-cyan-500" />}
                         </div>
                       </div>
+
+                      <Link
+                        href="/parent/discover"
+                        onClick={() => setShowUserDropdown(false)}
+                        className="flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50"
+                      >
+                        <Building2 className="h-4 w-4" />
+                        Find a crèche
+                      </Link>
 
                       <Link
                         href="/parent/profile/documents"

@@ -630,13 +630,20 @@ export default async function ParentDashboardPage() {
                 Message {enrolledCentreName}
               </Link>
 
-              {/* Divider + past reports */}
-              <div className="border-t border-slate-200 pt-4">
+              {/* Divider + secondary links */}
+              <div className="flex items-center gap-4 border-t border-slate-200 pt-4">
                 <Link
                   href="/parent/daily-reports"
                   className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
                 >
                   Past reports
+                </Link>
+                <span className="text-slate-300">·</span>
+                <Link
+                  href="/parent/discover"
+                  className="text-sm font-medium text-slate-500 hover:text-cyan-600"
+                >
+                  Browse crèches
                 </Link>
               </div>
             </div>
