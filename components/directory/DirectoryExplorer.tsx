@@ -9,7 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import CentreCard from '@/components/parent/CentreCard'
+import { SharedCentreCard } from '@/components/shared/CentreCard'
+import { type CentreCardData, parseAgeGroupsToMonths } from '@/types/centre-card'
 
 import { cn } from '@/lib/utils'
 import { getLocationReference, resolveCentreCoordinates } from '@/lib/geo/centre-location'
@@ -627,30 +628,37 @@ export default function DirectoryExplorer({
                 </Button>
               </motion.div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {centres.map((centre, index) => (
-                  <motion.div
-                    key={centre.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                  >
-                    <CentreCard
-                      {...centre}
-                      isPilot={centre.is_pilot}
-                      isFeatured={centre.is_featured}
-                      capacity={centre.capacity ?? undefined}
-                      age_groups={centre.age_groups ?? []}
-                      logo_url={centre.logo_url ?? undefined}
-                      cover_image_url={centre.cover_image_url ?? undefined}
-                      distanceLabel={exactUserLocation && isTrustedDistanceSource(centre.coordinate_source ?? null, centre.coordinate_confidence ?? null) ? formatDistanceLabel(haversineMeters(exactUserLocation, centre)) ?? undefined : undefined}
-                      viewerRole={viewerRole}
-                      isSaved={centre.is_saved ?? false}
-                      mapLink={buildMapsLink(centre) ?? undefined}
-                    />
-                  </motion.div>
-                ))}
+              <div className="space-y-2 sm:grid sm:grid-cols-2 sm:gap-5 sm:space-y-0 lg:grid-cols-3">
+                {centres.map((centre, index) => {
+                  const { age_min_months, age_max_months } = parseAgeGroupsToMonths(centre.age_groups)
+                  const cardData: CentreCardData = {
+                    id: centre.id,
+                    slug: centre.slug,
+                    name: centre.name,
+                    suburb: centre.suburb ?? null,
+                    area: centre.city ?? null,
+                    fee_min: centre.monthly_fee_min ?? null,
+                    fee_max: centre.monthly_fee_max ?? null,
+                    age_min_months,
+                    age_max_months,
+                    hero_image_url: centre.cover_image_url ?? null,
+                    is_verified: Boolean(centre.is_claimed),
+                    is_dsd_registered: Boolean(centre.is_registered),
+                    vacancy_status: null,
+                    is_claimed: Boolean(centre.is_claimed),
+                  }
+                  return (
+                    <motion.div
+                      key={centre.id}
+                      layout
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                    >
+                      <SharedCentreCard centre={cardData} />
+                    </motion.div>
+                  )
+                })}
               </div>
             )}
 
