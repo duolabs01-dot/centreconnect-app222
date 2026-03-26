@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { ArrowRight, CheckCircle2, Clock3, FileCheck2, MapPin, Share2, ShieldCheck, Smartphone, Users2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { ArrowRight, CheckCircle2, Clock3, MapPin, ShieldCheck, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { GovernmentRegisteredBadge, PremiumVerifiedBadge } from '@/components/ui/premium-verified-badge'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
@@ -203,56 +204,37 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                     {suburbPills.map((suburb) => (
-                      <Link
+                      <motion.div
                         key={suburb.name}
-                        href={suburbHref(suburb.name)}
-                        className="inline-flex items-center whitespace-nowrap rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 shadow-[0_8px_20px_rgba(31,44,39,0.04)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
+                        whileTap={{ scale: 1.08 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20, duration: 0.2 }}
                       >
-                        <span>{suburb.name}</span>
-                      </Link>
+                        <Link
+                          href={suburbHref(suburb.name)}
+                          className="inline-flex items-center whitespace-nowrap rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 shadow-[0_8px_20px_rgba(31,44,39,0.04)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
+                        >
+                          <span>{suburb.name}</span>
+                        </Link>
+                      </motion.div>
                     ))}
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                   <Button
                     size="lg"
                     className="h-14 w-full justify-center rounded-[1.05rem] bg-[var(--teal)] px-7 text-base font-semibold text-white shadow-[0_16px_34px_rgba(13,148,136,0.22)] hover:bg-primary/90 sm:w-auto"
                     asChild
                   >
-                    <Link href="/directory">Find creches near me</Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="h-14 w-full rounded-[1.05rem] border-slate-200 bg-white px-7 text-base font-semibold text-slate-900 shadow-[0_10px_26px_rgba(34,49,46,0.05)] hover:bg-muted sm:w-auto"
-                    asChild
-                  >
-                    <Link href="/register">
-                      <span>Create a free account</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="ghost"
-                    className="h-12 w-full rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-muted sm:w-auto"
-                    asChild
-                  >
-                    <a
-                      href="https://wa.me/?text=Check+out+CentreConnect+-+find+cr%C3%A8ches+near+you+in+Alexandra+%F0%9F%98%8A+https://centreconnect.co.za"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <Share2 className="h-4 w-4" />
-                      <span>Share on WhatsApp</span>
-                    </a>
+                    <Link href="/directory">Find crèches near me</Link>
                   </Button>
                 </div>
 
-                <div className="mt-3">
-                  <Link href="/for-centres/intro" className="text-[12px] font-semibold text-teal-700 underline-offset-4 hover:underline">
-                    Own a creche? Join CentreConnect →
+                <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:gap-4">
+                  <Link href="/register" className="inline-flex items-center gap-1 text-[13px] font-semibold text-teal-700 underline-offset-4 hover:underline">
+                    Want to apply? Create a free account <ArrowRight className="h-3 w-3" />
+                  </Link>
+                  <Link href="/for-centres/intro" className="text-[12px] font-semibold text-slate-500 underline-offset-4 hover:underline hover:text-teal-700">
+                    Own a crèche? Join CentreConnect →
                   </Link>
                 </div>
 
@@ -281,7 +263,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           What parents need first
                         </div>
                         <h2 className="mt-4 text-[1.45rem] font-bold leading-tight text-slate-950 sm:text-[1.7rem]">
-                          You shouldn't have to guess where to start.
+                          You shouldn&apos;t have to guess where to start.
                         </h2>
                         <div className="mt-5 space-y-3">
                           {parentMoments.map((item, index) => (
@@ -382,6 +364,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         src={getLandingCentreImage(centre)}
                         alt={centre.name}
                         fill
+                        loading="lazy"
                         className="object-cover"
                         unoptimized={getLandingCentreImage(centre).startsWith('data:image/svg+xml')}
                       />

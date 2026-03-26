@@ -37,9 +37,9 @@ export function PilotPromoBanner({ trialEndsAt }: PilotPromoBannerProps) {
         As one of our founding crèches, your onboarding and pilot period are
         completely free — no card needed now, no catch.
         {endDate ? (
-          <> After <span className="font-semibold text-slate-300">{endDate}</span>, you'll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
+          <> After <span className="font-semibold text-slate-300">{endDate}</span>, you&apos;ll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
         ) : (
-          <> After your pilot, you'll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
+          <> After your pilot, you&apos;ll move to <span className="font-semibold text-white">Growth (R299/month)</span> — or R2,990/year.</>
         )}{' '}
         Cancel anytime.
       </p>

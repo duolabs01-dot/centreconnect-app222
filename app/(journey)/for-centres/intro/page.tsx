@@ -123,7 +123,7 @@ export default function CentreIntroPage() {
           <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-600">Looking for a creche?</p>
           <h3 className="text-xl font-bold text-slate-900 tracking-tight">Find the perfect creche for your little one.</h3>
           <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
-            Browse real fees, hours, and age groups. Apply online in minutes — no phone calls, no waiting. Your child's first great step starts here.
+            Browse real fees, hours, and age groups. Apply online in minutes — no phone calls, no waiting. Your child&apos;s first great step starts here.
           </p>
           <Link
             href="/directory"

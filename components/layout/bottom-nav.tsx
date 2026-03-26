@@ -21,8 +21,14 @@ interface BottomNavProps {
 
 function isTabActive(pathname: string, href: string) {
   if (href === '/') return pathname === '/'
+  if (href === '/directory') {
+    return pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
+  }
   if (href === '/parent/discover') {
     return pathname === '/parent/discover' || pathname === '/directory' || pathname.startsWith('/c/') || pathname.startsWith('/apply/')
+  }
+  if (href === '/login') {
+    return pathname === '/login' || pathname === '/register'
   }
   return pathname === href || pathname.startsWith(`${href}/`)
 }
@@ -175,8 +181,7 @@ export function BottomNav({ items, pathname }: BottomNavProps) {
     [pathname, router]
   )
 
-  const isAuthPage = pathname?.includes('/login') || pathname?.includes('/register')
-  if (!mounted || !isVisible || pathname === '/' || isAuthPage) return null
+  if (!mounted || !isVisible) return null
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-[100] flex justify-center md:hidden">

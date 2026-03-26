@@ -439,7 +439,7 @@ export default function LoginPage() {
         <div className="space-y-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">New to CentreConnect?</p>
           <p className="text-sm leading-6 text-muted-foreground">
-            Create a free parent account. Your child's story deserves a great start.
+            Create a free parent account. Your child&apos;s story deserves a great start.
           </p>
           <Button
             variant="outline"

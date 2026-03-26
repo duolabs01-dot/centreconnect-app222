@@ -451,7 +451,7 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
               <div className="flex items-center justify-between rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50 p-5">
                 <div>
                   <p className="text-sm font-black text-amber-800">
-                    + {lockedCount} {lockedCount === 1 ? 'parent is' : 'parents are'} waiting — you can't see them yet
+                    + {lockedCount} {lockedCount === 1 ? 'parent is' : 'parents are'} waiting — you can&apos;t see them yet
                   </p>
                   <p className="mt-0.5 text-xs text-amber-600">
                     Every locked application is a child not enrolled. Growth unlocks all of them.

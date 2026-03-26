@@ -161,7 +161,7 @@ export default function RegisterPage() {
       description="One account. Every creche you care about. Every step tracked — so nothing slips through."
       headerNote={
         <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
-          Rather browse first? That's fine — no account needed. Come back when you are ready to apply or save your progress.
+          Rather browse first? That&apos;s fine — no account needed. Come back when you are ready to apply or save your progress.
         </div>
       }
       supportTitle="Your family's future, one step at a time."
@@ -189,7 +189,7 @@ export default function RegisterPage() {
           <ol className="space-y-2 text-sm leading-6 text-muted-foreground">
             <li>1. Create your account — takes under a minute.</li>
             <li>2. Confirm your email address.</li>
-            <li>3. Sign in, add your child's details, and apply.</li>
+            <li>3. Sign in, add your child&apos;s details, and apply.</li>
           </ol>
         </div>
       }
