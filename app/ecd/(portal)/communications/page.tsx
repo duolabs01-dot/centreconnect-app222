@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatDate } from '@/lib/utils'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { markEcdNotificationsReadAction } from './actions'
 import { CommunicationsComposer } from './composer'
 import { DirectMessagePanel } from './direct-message-panel'
@@ -102,7 +103,8 @@ export default async function EcdCommunicationsPage({
   searchParams?: Promise<{ recipient?: string; contextType?: string; contextId?: string; tab?: string; q?: string }>
 }) {
   const searchParams = await searchParamsPromise
-  const { user, ecdId, role } = await requireEcdPortalSession()
+  const { user, ecdId, role, supabase } = await requireEcdPortalSession()
+  await requireEcdFeatureAccess({ supabase, ecdId, feature: 'communications' })
   const admin = createAdminClient()
 
   const requestedParentId = String(searchParams?.recipient ?? '').trim() || null

@@ -41,7 +41,7 @@ export const ECD_DASHBOARD_NAV: EcdNavItem[] = [
 
   // MANAGEMENT
   { href: '/ecd/applications',  label: 'Admissions',    icon: ClipboardList,   group: 'admin',     supervisorAllowed: true },
-  { href: '/ecd/communications',label: 'Messages',      icon: MessagesSquare,  group: 'admin',     supervisorAllowed: true },
+  { href: '/ecd/communications',label: 'Messages',      icon: MessagesSquare,  group: 'admin',     supervisorAllowed: true, minTier: 'standard' },
   { href: '/ecd/dsd-export',    label: 'DOE Report',    icon: FileCheck,       group: 'admin',     supervisorAllowed: true },
   { href: '/ecd/compliance',    label: 'Compliance',    icon: ShieldCheck,     group: 'admin',     adminOnly: true },
 
