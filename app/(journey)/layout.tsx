@@ -87,6 +87,7 @@ export default async function JourneyLayout({ children }: { children: React.Reac
           missing: progress.nextAction.missingProfileFields.slice(0, 4),
         },
     userId: user.id,
+    homeState: progress.homeState,
   }
 
   return (

@@ -157,39 +157,39 @@ export default function RegisterPage() {
   return (
     <ParentAuthShell
       eyebrow="Parent account"
-      title="Create your family account"
-      description="Save your details once so you can apply to trusted creches faster when you are ready."
+      title="Your child's next chapter starts here."
+      description="One account. Every creche you care about. Every step tracked — so nothing slips through."
       headerNote={
         <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
-          Browse first if you prefer. Create an account only when you want to save child details, documents, or an application.
+          Rather browse first? That's fine — no account needed. Come back when you are ready to apply or save your progress.
         </div>
       }
-      supportTitle="Start simple and stay in control"
-      supportDescription="CentreConnect helps you keep family details ready, apply faster, and follow what happens next without repeat admin."
+      supportTitle="Your family's future, one step at a time."
+      supportDescription="CentreConnect keeps your child's details safe, your applications organised, and your next move always clear — without the back-and-forth."
       highlights={[
         {
           icon: FileCheck2,
-          title: 'Save child details once',
-          description: 'Reuse the basics across multiple creche applications instead of typing them again each time.',
+          title: "Your child\u2019s story, kept safe",
+          description: "Enter your child\u2019s details once and reuse them across every application \u2014 no retyping, no frustration.",
         },
         {
           icon: CheckCircle2,
-          title: 'Track each application clearly',
-          description: 'See which creche you contacted, what was sent, and what still needs attention.',
+          title: "Never wonder what\u2019s happening next",
+          description: "See every application you\u2019ve sent, what\u2019s been received, and exactly what needs your attention.",
         },
         {
           icon: ShieldCheck,
-          title: 'Keep family information secure',
-          description: 'Your account keeps pickup, contact, and child details inside one protected place.',
+          title: 'Protected the way your family deserves',
+          description: 'Pickup details, emergency contacts, and child records stay inside your secure account — nowhere else.',
         },
       ]}
       supportFootnote={
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">What happens next</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">Three steps to your first application</p>
           <ol className="space-y-2 text-sm leading-6 text-muted-foreground">
-            <li>1. Create your account.</li>
-            <li>2. Confirm your email.</li>
-            <li>3. Sign in and finish any details you need before you apply.</li>
+            <li>1. Create your account — takes under a minute.</li>
+            <li>2. Confirm your email address.</li>
+            <li>3. Sign in, add your child's details, and apply.</li>
           </ol>
         </div>
       }

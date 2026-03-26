@@ -140,9 +140,9 @@ export default function EcdLoginPage() {
               </Link>
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">CentreConnect</p>
               <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.11em] text-cyan-700">ECD Portal</p>
-              <CardTitle className="mt-2 text-2xl text-slate-900">ECD Centre Login</CardTitle>
+              <CardTitle className="mt-2 text-2xl text-slate-900">Welcome back to your centre.</CardTitle>
               <CardDescription className="mt-1 text-slate-600">
-                Sign in as an ECD admin or staff member
+                Your children are waiting. Let&apos;s get you in.
               </CardDescription>
             </div>
           </CardHeader>
@@ -215,21 +215,21 @@ export default function EcdLoginPage() {
             </form>
 
             <div className="mt-4 text-center text-sm">
-              <span className="text-slate-600">Are you a parent? </span>
+              <span className="text-slate-600">Logging in as a parent? </span>
               <Link href="/login" className="font-medium text-primary hover:underline">
-                Parent login
+                Sign in here
               </Link>
             </div>
 
             <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 px-4 py-3 text-center">
               <p className="text-xs font-medium leading-relaxed text-slate-700">
-                Got an ECD invite email? Open the secure link from that email first to activate access.
+                Received an invite email? Open the secure link in that email first — it activates your access automatically.
               </p>
               <div className="mt-2 flex flex-wrap items-center justify-center gap-3 text-xs font-semibold">
                 <Link href="/forgot-password" className="text-cyan-700 hover:underline">
                   Set or reset password
                 </Link>
-                <a href="mailto:admin@centerconnect.co.za" className="text-cyan-700 hover:underline">
+                <a href="mailto:admin@centreconnect.co.za" className="text-cyan-700 hover:underline">
                   Contact support
                 </a>
               </div>

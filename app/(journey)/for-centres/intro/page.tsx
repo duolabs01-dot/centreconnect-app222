@@ -54,22 +54,22 @@ export default function CentreIntroPage() {
               <div className="space-y-6">
                 {[
                   {
-                    title: "Parents applying by WhatsApp? Done.",
-                    desc: "Parents apply online and upload their docs directly. You see everything in one clean office view.",
+                    title: "No more WhatsApp applications.",
+                    desc: "Parents apply online and upload their documents directly. You see every family in one calm, clear view — not buried in voice notes.",
                     icon: MessageCircle,
                     color: "text-cyan-600",
                     bg: "bg-cyan-50"
                   },
                   {
-                    title: "Chasing attendance registers?",
-                    desc: "Mark who's in from your phone. No paper. No catch-up.",
+                    title: "Attendance done before the day starts.",
+                    desc: "Mark who's in from your phone in under a minute. No paper register. No month-end counting nightmare.",
                     icon: ShieldCheck,
                     color: "text-emerald-600",
                     bg: "bg-emerald-50"
                   },
                   {
-                    title: "Applications buried in your inbox?",
-                    desc: "Every new application goes to one place. You decide. Parents get notified automatically.",
+                    title: "Every application. One place. You decide.",
+                    desc: "New applications land in a single queue. Accept, waitlist, or reply from one screen — and parents hear back automatically.",
                     icon: Zap,
                     color: "text-amber-600",
                     bg: "bg-amber-50"
@@ -118,18 +118,18 @@ export default function CentreIntroPage() {
       </Container>
 
       {/* Parent Guard Section */}
-      <Container className="mt-20">
-        <div className="max-w-2xl mx-auto text-center space-y-4">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Wait, are you a parent?</p>
-          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Looking for a creche for your child?</h3>
-          <p className="text-sm text-slate-500">
-            This page is for school owners. If you want to find and apply to a creche near you, please visit our Parent Discover page.
+      <Container className="mt-20 mb-8">
+        <div className="max-w-2xl mx-auto rounded-[2rem] border border-slate-100 bg-white/80 px-8 py-10 text-center shadow-sm space-y-4">
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-teal-600">Looking for a creche?</p>
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight">Find the perfect creche for your little one.</h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+            Browse real fees, hours, and age groups. Apply online in minutes — no phone calls, no waiting. Your child's first great step starts here.
           </p>
-          <Link 
+          <Link
             href="/directory"
             className="inline-flex items-center gap-2 text-cyan-600 font-black text-sm uppercase tracking-widest hover:text-cyan-700"
           >
-            Go to Parent Search <ArrowRight className="h-4 w-4" />
+            Find creches near me <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </Container>

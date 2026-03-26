@@ -1,0 +1,587 @@
+# CentreConnect — AI Agent Reference Guide
+
+> This file is the single source of truth for any AI agent (Claude, ChatGPT, Cursor, Copilot, etc.) working on this codebase.
+> Read this before touching any file. It will save you from making wrong assumptions.
+
+---
+
+## What This Product Is
+
+**CentreConnect** is a South African SaaS platform for Early Childhood Development (ECD) centres — commonly called "creches". It serves three user types:
+
+1. **Parents** — find creches, apply, track applications, receive daily reports on enrolled children
+2. **ECD Owners / Staff** — manage admissions, attendance, compliance, DOE reporting, parent communications
+3. **Platform Admin** — CentreConnect staff who manage tenants, billing, support
+
+The product is live and in production. There are real paying customers. Treat every change carefully.
+
+**Domain:** `centreconnect.co.za`
+**Currency:** South African Rand (ZAR)
+**Primary market:** Gauteng, South Africa (Alexandra, Sandton, Tembisa area)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 15.1.0 (App Router) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 3.3 + shadcn/ui (Radix UI) |
+| Database | Supabase (PostgreSQL + RLS + Realtime) |
+| Auth | Supabase Auth (email/password + Google OAuth) |
+| Payments | Paystack (ZAR, webhooks at `/api/webhooks/paystack`) |
+| Email | Nodemailer + SMTP |
+| AI | Google Gemini (`GEMINI_API_KEY`) |
+| OCR | Tesseract.js (attendance register scanning) |
+| Maps | MapLibre GL (no Google Maps dependency) |
+| Push Notifications | Web Push API + VAPID keys |
+| Rate Limiting | Upstash Redis (optional) |
+| Bot Protection | Cloudflare Turnstile |
+| Analytics | Vercel Analytics |
+| PDF Export | HTML → new window → Ctrl+P (no Puppeteer in user flow) |
+| Runtime | Node.js 20.20.0 (via Volta) |
+
+---
+
+## Repository Structure
+
+```
+centreconnect-app222/
+├── app/                        # Next.js App Router pages & API routes
+│   ├── (auth)/                 # Parent/admin login + register
+│   ├── (journey)/              # Main public + parent portal routes
+│   │   ├── page.tsx            # Home page (server) + page.client.tsx
+│   │   ├── directory/          # Centre search directory
+│   │   ├── for-centres/intro/  # ECD marketing/conversion page
+│   │   ├── ecd/welcome/        # Post-signup ECD welcome pack
+│   │   ├── join/               # ECD onboarding flow
+│   │   └── parent/             # Full parent portal
+│   ├── ecd/                    # ECD centre portal
+│   │   ├── (portal)/           # All authenticated ECD pages
+│   │   ├── login/              # ECD login
+│   │   ├── register/           # ECD registration (4-step wizard)
+│   │   ├── claim/              # Claim existing centre
+│   │   └── onboarding/         # Post-registration onboarding
+│   ├── admin/                  # Platform admin workspace
+│   ├── apply/[identifier]/     # Public application form (no auth needed)
+│   ├── c/[slug]/               # Public centre profile page
+│   ├── api/                    # All API route handlers
+│   └── ...                     # Legal, auth callbacks, misc
+├── components/
+│   ├── auth/                   # ParentAuthShell + auth UI
+│   ├── ecd/                    # ECD-specific components
+│   ├── layout/                 # Sidebar, nav, shells, headers
+│   ├── parent/                 # Parent portal components
+│   ├── ui/                     # shadcn/ui base components
+│   └── ...
+├── lib/
+│   ├── auth/                   # Auth utilities, role provisioning
+│   ├── billing/                # Plans, tiers, Paystack integration
+│   ├── ecd/                    # Feature gates, DOE export, provisioning
+│   ├── email/                  # Email templates + sender
+│   ├── supabase/               # Client, server, admin Supabase clients
+│   ├── actions/                # Server Actions (admissions, guardians, etc.)
+│   └── ...
+├── supabase/
+│   └── migrations/             # 125+ SQL migration files
+├── types/                      # Global TypeScript types
+├── public/                     # Static assets
+├── .claude/
+│   ├── rules/                  # Locked UX/UI rules — READ THESE
+│   └── launch.json             # Dev server config (port 3010)
+├── CLAUDE.md                   # This file
+├── launch_guide.md             # Pre-launch checklist (may be out of date)
+└── BACKLOG.md                  # Prioritised feature backlog
+```
+
+---
+
+## The Three Portals
+
+### 1. Parent Portal (`/parent/*` and `/(journey)/*`)
+
+**Auth:** `parent_user` role
+**Theme:** Light — white/cream backgrounds, teal accents
+**Entry:** `/` home → `/directory` → `/apply/[identifier]` → `/register` → `/login` → `/parent/dashboard`
+**Shell:** `components/layout/parent-app-shell.tsx`
+**Mobile nav:** State-based bottom tab bar (`components/layout/bottom-nav.tsx`)
+
+**Parent home state machine** (`lib/parent/home-state.ts`):
+The parent dashboard and bottom navigation change based on three states:
+
+| State | Condition | Dashboard shows | Bottom nav |
+|---|---|---|---|
+| `discover` | No applications, no enrolled child | Warm greeting + suggested crèches + single CTA | Find · Applied · Updates · Profile |
+| `pending` | Has active applications, no enrolled child | Per-application cards with plain English status | Find · Applied · Updates · Profile |
+| `enrolled` | Has enrolled child | Child's daily report, teacher notes, pickup code | Today · Inbox · Pickup · Profile |
+
+The state is derived by `deriveParentHomeState()` and flows through `ParentLayoutProvider` context to both the dashboard page and `FooterConditionalRenderer` (which renders the bottom nav).
+
+**Nav arrays** (`lib/navigation-config.ts`):
+- `PARENT_NAV_ITEMS_PRE_ENROLLMENT` — Find, Applied, Updates, Profile
+- `PARENT_NAV_ITEMS_ENROLLED` — Today, Inbox, Pickup, Profile
+
+Key pages:
+- `/parent/dashboard` — emotion-first home screen (content varies by state)
+- `/parent/applications` — all applications with status tracking
+- `/parent/children` — child profiles, documents, guardians
+- `/parent/daily-reports` — daily updates from ECD staff
+- `/parent/shortlist` — saved centres
+- `/parent/compare` — side-by-side centre comparison
+- `/parent/onboarding` — multi-step setup wizard
+
+### 2. ECD Portal (`/ecd/(portal)/*`)
+
+**Auth:** `ecd_admin`, `ecd_staff`, or `ecd_supervisor` role
+**Theme:** DARK — `bg-slate-900`, teal accents (`text-teal-300`, `bg-teal-500/15`)
+**Entry:** `/ecd/login` → `/ecd/dashboard`
+**Shell:** `app/ecd/layout.tsx` + `components/layout/ecd-portal-sidebar.tsx`
+**Mobile nav:** Hamburger → Sheet drawer (same dark style as desktop sidebar — NO bottom tab bar)
+
+Navigation groups (from `components/layout/ecd-navigation.ts`):
+
+| Group | Items |
+|---|---|
+| Daily Ops | Dashboard, Children, Attendance, Daily Reports, Report Cards, Calendar |
+| Management | Admissions, Communications, DOE Monthly Return, Compliance |
+| Grow | Financials, Website |
+| Account | Billing, Settings |
+
+Key pages:
+- `/ecd/dashboard` — stats overview, quick actions
+- `/ecd/(portal)/attendance` — DSD-compliant attendance register
+- `/ecd/(portal)/applications` — admissions pipeline
+- `/ecd/(portal)/dsd-export` — DOE monthly report generation + PDF download
+- `/ecd/(portal)/children` — enrolled child records
+- `/ecd/(portal)/communications` — parent messaging (Growth tier+)
+- `/ecd/(portal)/daily-reports` — staff daily logs
+- `/ecd/(portal)/report-cards` — child assessments
+
+### 3. Admin Portal (`/admin/*`)
+
+**Auth:** `platform_admin` role
+**Theme:** Dark, same as ECD
+**Entry:** `/admin/command`
+
+Key pages:
+- `/admin/command` — primary command centre
+- `/admin/tenants` — manage all ECD centres (CRUD, approve applications)
+- `/admin/revenue` — billing + Paystack payments
+- `/admin/support` — support tickets
+- `/admin/webhook-failures` — failed Paystack webhook tracking
+- `/admin/audit-trail` — system audit logs
+- `/admin/invites` — pending invitations
+- `/admin/ai-os` — AI assistant commands
+
+---
+
+## Auth & Roles
+
+### Roles (stored in `user_profiles.role`)
+
+```typescript
+type AuthRole =
+  | 'platform_admin'   // CentreConnect internal team
+  | 'ecd_admin'        // Centre owner / principal
+  | 'ecd_staff'        // Centre staff member
+  | 'ecd_supervisor'   // Supervisory staff
+  | 'parent_user'      // Parent / guardian
+```
+
+### Auth Flows
+
+**Parents:**
+- Email/password OR Google OAuth
+- Email confirmation required before first login
+- `POST /api/auth/register-parent` → confirms email → `GET /auth/confirm` → `/parent/onboarding`
+
+**ECD users:**
+- Email/password only (no Google OAuth)
+- Invited via `/api/ecd/invitations` → secure link in email → set password → login
+- On login: calls `POST /api/ecd/bootstrap-centre` — returns 403 if application not yet approved by admin
+- **New ECD registrations are gated** — they submit an application (`ecd_service_applications` table) and must be manually approved by a platform admin before they can access the portal
+
+**Supabase clients (three different clients — never mix them up):**
+```
+lib/supabase/client.ts    → Browser client (anon key, client components)
+lib/supabase/server.ts    → Server client (anon key + cookies, server components/actions)
+lib/supabase/admin.ts     → Admin client (service_role key — server only, bypasses RLS)
+```
+
+---
+
+## Billing & Tiers
+
+### Plans
+
+| Public Name | Internal Tier | Price | Paystack |
+|---|---|---|---|
+| Starter | `basic` | R0/month | No subscription |
+| Growth | `standard` | R299/month or R2,990/year | Active subscription |
+| Pro | `premium` | R499/month or R4,990/year | Active subscription |
+
+### Feature Gates
+
+File: `lib/ecd/feature-gates.ts`
+Function: `hasEcdFeatureAccess({ supabase, ecdId, feature })` → `{ allowed, tier, minimumTier }`
+
+| Feature Key | Minimum Tier | Notes |
+|---|---|---|
+| `attendance` | `basic` (Starter) | Current month only on Starter |
+| `attendance-history` | `standard` (Growth) | Month navigation, past months |
+| `dsd-export` | `basic` (Starter) | 1 export/quarter on Starter |
+| `dsd-export-unlimited` | `standard` (Growth) | Unlimited exports |
+| `applications` | `basic` (Starter) | 3 full applications on Starter |
+| `applications-full` | `standard` (Growth) | Unlimited |
+| `communications` | `standard` (Growth) | Parent messaging |
+| `calendar` | `standard` (Growth) | |
+| `daily-reports` | `standard` (Growth) | |
+| `report-cards` | `standard` (Growth) | |
+| `compliance` | `standard` (Growth) | |
+| `employment` | `standard` (Growth) | |
+| `financials` | `standard` (Growth) | |
+| `website-builder` | `premium` (Pro) | Coming soon |
+
+### Subscription Status Values
+`trial` | `active` | `past_due` | `canceled` | `suspended`
+
+---
+
+## Database Key Tables
+
+All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when you need to bypass RLS.
+
+### Core Tables
+
+| Table | Purpose |
+|---|---|
+| `user_profiles` | id, role, full_name, phone — one row per auth user |
+| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at |
+| `ecd_admins` | Links user → centre (user_id, ecd_id, role, invited_at, accepted_at) |
+| `children` | id, ecd_id, first_name, last_name, date_of_birth, class_id, gender |
+| `attendance` | child_id, date, status (present/absent/sick/late), ecd_id |
+| `applications` | Parent → centre application (ecd_id, status, child details) |
+| `subscriptions` | ecd_id, tier, status, monthly_price, trial_ends_at |
+| `invoices` | ecd_id, subscription_id, amount, status, paystack_reference |
+| `ecd_service_applications` | New centre registration applications (status: pending/approved/provisioned) |
+| `ecd_classes` | id, ecd_id, name, practitioner_name |
+| `dsd_export_log` | Tracks DOE export usage per centre per quarter (quota enforcement) |
+| `announcements` | Centre-to-parent broadcast messages |
+| `push_subscriptions` | VAPID push notification endpoints |
+| `support_tickets` | id, ecd_id or parent_id, status, subject, messages |
+| `audit_logs` | Platform-wide action audit trail |
+| `payment_webhook_events` | Paystack webhook payloads (for replay/debugging) |
+
+### Confirmed Real Data
+- **Bajabulile Day Care Centre**: ~30 children, 17 boys, 13 girls — active pilot
+- **Sakhisizwe Day Care Centre**: Account exists, `onboarding_complete = false`, 0 children
+
+**NEVER hardcode counts or numbers that should come from the database. Always query.**
+
+---
+
+## API Routes Reference
+
+### Auth
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/auth/register-parent` | Create parent account |
+| POST | `/api/auth/resend-parent-confirmation` | Resend confirmation email |
+| POST | `/api/auth/ensure-profile` | Bootstrap user profile |
+| POST | `/api/auth/sign-out` | Sign out |
+| POST | `/api/auth/activate-role-transition` | Switch roles |
+
+### Directory
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/directory/search` | Search centres (suburb, age, fee, registered) |
+| POST | `/api/directory/waitlist` | Join centre waitlist |
+
+### ECD
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/ecd/bootstrap-centre` | Initialize centre workspace (called on ECD login) |
+| POST | `/api/ecd/dsd-export` | Generate DOE HTML export |
+| POST | `/api/ecd/invitations` | Send staff invite email |
+| POST | `/api/ecd/claim` | Claim/register centre listing |
+| POST | `/api/ecd/service-applications/submit` | Submit new centre registration |
+| POST | `/api/ecd/resend-welcome-pack` | Resend welcome email |
+| GET | `/api/ecd/parent-documents/[id]/file` | Download parent doc |
+
+### Parent
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/parent/applications/[id]` | Get application |
+| POST | `/api/parent/applications/[id]/decision` | Accept/reject placement offer |
+| POST | `/api/parent/applications/[id]/registration` | Submit registration |
+| POST | `/api/parent/applications/[id]/pickup-activation` | Activate pickup |
+| GET | `/api/parent/notifications` | Fetch notifications |
+| GET | `/api/parent/shortlist/summary` | Shortlist summary |
+
+### Internal (Platform Admin only)
+All under `/api/internal/platform-admin/` — require `platform_admin` role:
+- `centres/` — CRUD, activate, upgrade
+- `invoices/` — generate, collect, resend
+- `subscriptions/[id]` — update
+- `support-tickets/` — create, update status
+- `webhooks/paystack/events/[id]/replay` — replay failed webhooks
+- `tenants/[id]/welcome-pack` — send welcome email
+- `revalidate` — trigger ISR revalidation
+
+### Webhooks
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/webhooks/paystack` | Paystack payment events |
+| POST | `/api/webhooks/resend` | Email delivery events |
+
+---
+
+## Environment Variables
+
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# App URLs
+NEXT_PUBLIC_APP_URL=https://centreconnect.co.za
+NEXT_PUBLIC_ROOT_DOMAIN=centreconnect.co.za
+ROOT_DOMAIN=centreconnect.co.za
+TENANT_ROOT_DOMAIN=centreconnect.co.za     # for subdomain routing
+
+# Paystack (ZAR payments)
+PAYSTACK_SECRET_KEY=
+PAYSTACK_WEBHOOK_SECRET=
+PAYSTACK_CALLBACK_URL=
+PAYSTACK_PAYMENT_METHOD_CALLBACK_URL=
+PAYSTACK_PAYMENT_METHOD_UPDATE_AMOUNT_ZAR=5
+
+# Billing config
+BILLING_DUNNING_GRACE_DAYS=7
+BILLING_WEBHOOK_LAG_ALERT_MINUTES=15
+BILLING_WEBHOOK_FAILURE_ALERT_LOOKBACK_HOURS=24
+
+# Email (SMTP)
+SMTP_HOST=
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+SMTP_PORT=465
+SMTP_SECURE=true
+SUPPORT_EMAIL=admin@centreconnect.co.za
+BOOKKEEPER_EMAIL=
+
+# Security
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=   # Cloudflare Turnstile (bot protection)
+TURNSTILE_SECRET_KEY=
+CRON_SECRET=                       # For scheduled tasks
+
+# Push notifications
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+
+# AI
+GEMINI_API_KEY=                    # Google Gemini (AI features, OCR)
+
+# Rate limiting (optional)
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+
+# Misc
+ENFORCE_ECD_DEVICE_LIMIT=          # Set to "1" to enforce single-device ECD sessions
+ENABLE_MW_TIMING=                  # Set to "1" for middleware timing logs
+TEST_USER_PASSWORD=                 # For Playwright E2E tests
+```
+
+---
+
+## Key Library Files
+
+### `lib/ecd/portal-session.ts`
+Call `requireEcdPortalSession()` in any ECD server component to get `{ supabase, user, ecdId, role }`. Throws and redirects if not authenticated.
+
+### `lib/ecd/feature-gates.ts`
+```typescript
+// Check if a centre has access to a feature
+const { allowed, tier } = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'communications' })
+
+// Redirect to upgrade page if not allowed
+await requireEcdFeatureAccess({ supabase, ecdId, feature: 'attendance-history' })
+```
+
+### `lib/ecd/dsd-export-render.ts`
+`buildDsdPdfHtml()` is the **single source of truth** for the DOE monthly report HTML.
+The PDF download button opens this HTML in a new window — it does NOT call `window.print()` automatically.
+The user is instructed to press Ctrl+P → Save as PDF.
+
+### `lib/billing/plans.ts`
+```typescript
+// Convert between public plan names and internal tiers
+toPublicPlan('standard')     // → 'growth'
+toInternalTier('growth')     // → 'standard'
+getPublicPlanPrice('growth') // → 299
+```
+
+### `lib/supabase/`
+```typescript
+// Client component (browser)
+import { createClient } from '@/lib/supabase/client'
+
+// Server component / Server Action / API route
+import { createClient } from '@/lib/supabase/server'
+
+// Admin operations (bypasses RLS — server only)
+import { createAdminClient } from '@/lib/supabase/admin'
+```
+
+---
+
+## UX/UI Rules — LOCKED
+
+These rules must not be changed without explicit instruction from the product owner.
+
+### ECD Portal Navigation
+- **Mobile:** Hamburger → Sheet drawer (left side, `bg-slate-900`)
+- **Desktop:** Fixed left sidebar, `w-[220px]`, `bg-slate-900`
+- **FORBIDDEN:** No bottom tab bar on ECD pages. No duplicate nav.
+- Active nav item style: `bg-teal-500/15 text-teal-300`
+
+### Colour Themes
+| Portal | Theme |
+|---|---|
+| ECD | Dark — `bg-slate-900`, teal accents |
+| Parent | Light — white/cream, teal accents |
+| Admin | Dark — same as ECD |
+
+### PDF / DOE Export
+- The Download PDF button opens a new window with HTML content
+- It does NOT call `window.print()` automatically
+- A banner instructs the user to press Ctrl+P → Save as PDF
+- `buildDsdPdfHtml()` in `lib/ecd/dsd-export-render.ts` is the single source of truth
+
+### Data & Numbers
+**NEVER hardcode, guess, or assume any number that comes from a database.**
+Boys/girls counts, attendance totals, child numbers — always read from queries.
+
+### Application Status Copy — LOCKED
+Application statuses must always be shown in plain English. Use `statusToPlainEnglish()` in `app/(journey)/parent/dashboard/page.tsx` or follow this mapping:
+
+| Raw status | What the parent sees |
+|---|---|
+| `submitted` / `partial` / `draft` | Application sent |
+| `in_review` | The crèche is reviewing your application |
+| `awaiting_documents` | Documents needed |
+| `offer_made` / `offer_sent` / `offer_pending` | Crèche has made an offer — respond now |
+| `approved` / `accepted` | Accepted — confirm your start date |
+| `enrolled` | Enrolled |
+| `rejected` | Not accepted this time |
+| `withdrawn` | Application withdrawn |
+
+### Parent Dashboard Design Principles — LOCKED
+- The dashboard is **emotion-first** — it responds to the parent's current situation
+- `discover` state = crèche directory feel. No profile cards, no readiness checks
+- `pending` state = acknowledge the wait. Show per-application cards, not ticket systems
+- `enrolled` state = window into the child's day. Teacher notes, mood chips, pickup code
+- ProfileReadinessCard belongs on `/parent/profile` only — **never** on the dashboard
+- Bottom nav changes by state (pre-enrollment vs enrolled)
+
+---
+
+## Middleware (`middleware.ts`)
+
+Runs on every request. Does four things in order:
+
+1. **Session refresh** — calls Supabase `updateSession()` to keep auth tokens fresh
+2. **Subdomain routing** — if hostname matches `[slug].centreconnect.co.za`, rewrites to `/c/[slug]`
+3. **Reserved subdomain protection** — blocks `www`, `app`, `admin`, `api` subdomains
+4. **Device limit enforcement** — if `ENFORCE_ECD_DEVICE_LIMIT=1`, prevents multiple concurrent ECD admin sessions (only on `/ecd/*` routes, excluding `/ecd/login`)
+
+---
+
+## Dev Server
+
+```bash
+npm run dev        # starts on port 3010
+npm run dev:safe   # port cleanup + start
+npm run build      # production build
+npm run start      # production server on port 3010
+```
+
+The `.claude/launch.json` is configured for preview tools to use port 3010.
+
+---
+
+## Common Patterns
+
+### Server Component with Auth Guard
+```typescript
+// ECD page
+export default async function MyEcdPage() {
+  const { supabase, user, ecdId } = await requireEcdPortalSession()
+  const { allowed } = await hasEcdFeatureAccess({ supabase, ecdId, feature: 'communications' })
+  // ...
+}
+```
+
+### Feature Gate in Client Component
+```typescript
+// Pass isAllowed as a prop from server component
+<MyFeatureComponent isGrowthTier={allowed} />
+```
+
+### Attendance Page Pattern
+- `revalidate = 0` (no cache — always fresh)
+- Month/year/class passed as URL search params
+- Server component re-fetches on `router.push()` with new params
+- Client component receives `initialAttendance` and resets local state via `useEffect`
+
+### ECD Registration Flow
+1. Centre submits `/api/ecd/service-applications/submit`
+2. Platform admin approves in `/admin/tenants`
+3. On next ECD login, `POST /api/ecd/bootstrap-centre` provisions the centre workspace
+4. Centre is redirected to `/ecd/welcome` for onboarding
+
+---
+
+## Pilot Centres
+
+Defined in `lib/ecd/pilot-centres.ts`.
+
+- **Bajabulile Day Care Centre** — slug: `bajabulile-day-care-centre` — Active, ~30 children
+- **Sakhisizwe Day Care Centre** — Active account, `onboarding_complete = false`, needs in-person activation
+
+These centres have special handling in some parts of the codebase (featured on homepage, pilot badges).
+
+---
+
+## Business Context
+
+- **Pilot offer:** Onboarding fee waived + first month free until end of April 2026
+- **Billing cliff:** Pilot period ends May 1 2026 — Paystack billing activates
+- **Pricing:** R299/month (Growth), R499/month (Pro), annual plans at 10-month price
+- **Support email:** `admin@centreconnect.co.za` ← note spelling (not "center")
+- **Founder:** Mandlenkosi ("Mandla") — built in Alexandra, Johannesburg
+- **Legal:** Registered company (PTY) in South Africa
+- **Compliance framework:** DSD (Department of Social Development) — the DOE monthly report is a government-required document that every registered creche must submit
+
+---
+
+## What NOT to Do
+
+1. **Do not import `EcdOsShell`** — it was removed. Use the portal layout directly.
+2. **Do not hardcode children/attendance counts** — always query the database.
+3. **Do not add a bottom tab bar to ECD pages** — mobile nav is hamburger → drawer only.
+4. **Do not widen the ECD sidebar beyond `w-[220px]`**.
+5. **Do not add a white/light theme to the ECD portal** — it is dark by design.
+6. **Do not call `window.print()` from the DOE export button** — it opens a new window with HTML.
+7. **Do not use the admin Supabase client in browser/client components** — service role key must stay server-side.
+8. **Do not call `/api/ecd/dsd-export` from the PDF button** — the button receives `htmlContent` as a prop and opens it directly.
+9. **Do not add fake/placeholder numbers to the UI** — zero assumptions on data.
+10. **Do not change the support email** — it is `admin@centreconnect.co.za` (with "re", not "er").
+11. **Do not put ProfileReadinessCard on the dashboard** — it belongs on `/parent/profile` only.
+12. **Do not show raw status codes to parents** — always use `statusToPlainEnglish()` or the mapping above.
+13. **Do not use a single static bottom nav for parents** — the nav changes by `homeState` (pre-enrollment vs enrolled). Use `PARENT_NAV_ITEMS_PRE_ENROLLMENT` or `PARENT_NAV_ITEMS_ENROLLED`.
+14. **Do not use unescaped apostrophes in JSX string literals** — use `&apos;`, `\u2019`, or template literals to avoid SWC parse errors.

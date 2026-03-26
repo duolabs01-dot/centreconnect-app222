@@ -28,12 +28,12 @@ type HomeClientPageProps = {
   activeCentres: HomeActiveCentre[]
 }
 
-const suburbPills: Array<{ name: string; count: number }> = [
-  { name: 'Alexandra', count: 3 },
-  { name: 'Marlboro', count: 2 },
-  { name: 'Wynberg', count: 1 },
-  { name: 'Tembisa', count: 2 },
-  { name: 'Sandton', count: 4 },
+const suburbPills: Array<{ name: string }> = [
+  { name: 'Alexandra' },
+  { name: 'Marlboro' },
+  { name: 'Wynberg' },
+  { name: 'Tembisa' },
+  { name: 'Sandton' },
 ]
 
 const safetyPoints = [
@@ -43,29 +43,29 @@ const safetyPoints = [
 ] as const
 
 const parentMoments = [
-  'See nearby centres fast',
-  'Check fees, ages, and hours quickly',
-  'Apply online or contact the centre right away',
+  'See real fees, hours, and age groups — no guessing',
+  'Compare centres that actually have space',
+  'Apply in minutes — no phone calls, no waiting',
 ] as const
 
 const centreMoments = [
-  'See new applications clearly',
-  'Reply once and keep the parent updated',
-  'Run attendance and pickup with less paper',
+  'Every application in one clear place',
+  'Parents hear back faster and trust you more',
+  'Less paper. More time with the children.',
 ] as const
 
 const parentTrustChecks = [
   {
-    title: 'Browse without signing up',
-    body: 'Create an account only when you want to apply. Everything else is open.',
+    title: 'No account needed to start',
+    body: 'Browse every centre freely. Create an account only when you are ready to apply.',
   },
   {
-    title: "You'll always know what to do next",
-    body: 'Apply online on CentreConnect centres. Call or WhatsApp public listings.',
+    title: 'You will always know what to do next',
+    body: 'Apply online to CentreConnect centres. Call or WhatsApp public listings directly.',
   },
   {
-    title: 'Pickup stays in your pocket',
-    body: 'Pickup codes and collection updates stay clear after your child joins.',
+    title: 'Your family details stay protected',
+    body: 'Pickup codes, child records, and contact details live inside your secure account.',
   },
 ] as const
 function suburbHref(suburb: string) {
@@ -195,11 +195,11 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="mt-5 text-[2.35rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-950 sm:max-w-[12ch] sm:text-[3.85rem] sm:leading-[1] lg:max-w-none lg:text-[4.85rem]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Find a creche near you. See everything first.
+                  Every great start begins with the right creche.
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-[16px] leading-7 text-slate-600 sm:text-[18px] sm:leading-8">
-                  Browse fees, ages, and hours. Apply or contact in one tap. No account needed to start.
+                  Real fees. Real hours. Real people. Find a creche you can trust — and apply before the spot is gone.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
                     {suburbPills.map((suburb) => (
@@ -209,9 +209,6 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                         className="inline-flex items-center whitespace-nowrap rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-medium text-slate-600 shadow-[0_8px_20px_rgba(31,44,39,0.04)] transition-colors hover:border-[var(--teal)] hover:text-[var(--teal)]"
                       >
                         <span>{suburb.name}</span>
-                        <span className="ml-2 rounded-full bg-[var(--teal)] px-1.5 py-0.5 text-[10px] font-bold text-white">
-                          {suburb.count}
-                        </span>
                       </Link>
                     ))}
                 </div>
@@ -231,7 +228,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                     asChild
                   >
                     <Link href="/register">
-                      <span>Save and apply faster</span>
+                      <span>Create a free account</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -255,7 +252,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
 
                 <div className="mt-3">
                   <Link href="/for-centres/intro" className="text-[12px] font-semibold text-teal-700 underline-offset-4 hover:underline">
-                    Run your centre on CentreConnect
+                    Own a creche? Join CentreConnect →
                   </Link>
                 </div>
 
@@ -284,7 +281,7 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                           What parents need first
                         </div>
                         <h2 className="mt-4 text-[1.45rem] font-bold leading-tight text-slate-950 sm:text-[1.7rem]">
-                          See your options. Know your next step. Keep moving.
+                          You shouldn't have to guess where to start.
                         </h2>
                         <div className="mt-5 space-y-3">
                           {parentMoments.map((item, index) => (
@@ -366,10 +363,10 @@ export default function HomeClientPage({ activeCentres }: HomeClientPageProps) {
                   className="text-[1.95rem] leading-[1.05] tracking-[-0.03em] text-slate-950 sm:text-[2.8rem] sm:leading-[1]"
                   style={{ fontFamily: 'var(--font-display)' }}
                 >
-                  Start with centres you can act on today.
+                  Every child deserves a great first place to grow.
                 </h2>
                 <p className="mt-4 text-[15px] leading-7 text-slate-600 sm:text-base">
-                  Creches on CentreConnect let you apply online. Public listings show the fastest direct contact option.
+                  CentreConnect centres let you apply online in minutes. Public listings show you the fastest way to reach them directly.
                 </p>
               </div>
 

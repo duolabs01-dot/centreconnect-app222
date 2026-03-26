@@ -405,48 +405,48 @@ export default function LoginPage() {
   return (
     <ParentAuthShell
       eyebrow="Parent sign in"
-      title="Welcome back"
-      description="Sign in to see saved creches, applications, and your child details in one place."
+      title="Welcome back."
+      description="Your saved creches, applications, and your child's details are right where you left them."
       headerNote={
         <div className="rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
-          No account is needed to browse. Create one only when you want to apply or save progress.
-          <Link href="/directory" className="ml-1 font-semibold text-primary hover:underline">
-            Browse the directory first
-          </Link>
-          .
+          Just browsing? No account needed.{' '}
+          <Link href="/directory" className="font-semibold text-primary hover:underline">
+            Explore creches first
+          </Link>{' '}
+          and come back when you are ready to apply.
         </div>
       }
-      supportTitle="Keep each family step clear"
-      supportDescription="Use your account when you want to save applications, child details, and the next step for each creche."
+      supportTitle="Your search. Your family. Always in reach."
+      supportDescription="Every creche you saved, every application you sent, every next step you need — all here, waiting for you."
       highlights={[
         {
           icon: MapPin,
-          title: 'Pick up where you left off',
-          description: 'See saved creches, open applications, and your next action without starting over.',
+          title: 'Every step you took, still here',
+          description: 'Saved creches, open applications, and your next action — exactly where you left them.',
         },
         {
           icon: ShieldCheck,
-          title: 'Keep family details protected',
-          description: 'Child and pickup details stay inside your secure CentreConnect account.',
+          title: 'Safe. Private. Yours alone.',
+          description: "Your child\u2019s details and pickup information stay protected inside your secure account.",
         },
         {
           icon: Clock3,
-          title: 'Move faster when you are ready',
-          description: 'Sign in only when you want to apply, upload details, or track what happens next.',
+          title: 'Apply when your heart says yes',
+          description: 'Sign in when you are ready — to apply, to upload, or to see what happens next.',
         },
       ]}
       supportFootnote={
         <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">New here?</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">New to CentreConnect?</p>
           <p className="text-sm leading-6 text-muted-foreground">
-            Create a parent account when you want to save your family details and apply faster.
+            Create a free parent account. Your child's story deserves a great start.
           </p>
           <Button
             variant="outline"
             asChild
             className="h-11 rounded-xl border-border bg-white text-foreground hover:bg-muted"
           >
-            <Link href={registerHref()}>Create a parent account</Link>
+            <Link href={registerHref()}>Create a free account</Link>
           </Button>
         </div>
       }

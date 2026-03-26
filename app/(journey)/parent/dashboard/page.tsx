@@ -3,21 +3,14 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import {
   ArrowRight,
-  BellRing,
-  Building2,
   CalendarDays,
-  CheckCircle2,
-  FileText,
   MessageSquare,
-  Search,
   ShieldCheck,
-  Sparkles,
+  Upload,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { SurfaceCard } from '@/components/ui/surface-card'
-import { FeatureBanner } from '@/components/ui/feature-banner'
 import { SuggestedCentresSection } from './_sections/suggested-centres-section'
-import { ProfileReadinessCard, ProfileReadinessCardSkeleton } from './_sections/profile-readiness-card'
 import { ParentDashboardRealtimeBridge } from './_sections/parent-dashboard-realtime-bridge'
 import { getParentProgress } from '@/lib/parent/progress'
 import { formatDate } from '@/lib/utils'
@@ -78,17 +71,6 @@ type UpcomingEvent = {
   centreName: string | null
 }
 
-type HouseholdJourneyItem = {
-  key: string
-  childName: string
-  statusLabel: string
-  statusToneClassName: string
-  summary: string
-  detail: string | null
-  href: string
-  actionLabel: string
-}
-
 type RawApplicationRow = {
   id: string
   child_id: string | null
@@ -144,21 +126,6 @@ function normalizeMissingDocuments(value: unknown) {
   return value.map((entry) => String(entry).trim()).filter(Boolean)
 }
 
-function uniqueText(values: Array<string | null | undefined>) {
-  return Array.from(new Set(values.map((value) => normalizeText(value)).filter(Boolean)))
-}
-
-function formatNameList(values: string[]) {
-  if (values.length === 0) return ''
-  if (values.length === 1) return values[0]
-  if (values.length === 2) return `${values[0]} and ${values[1]}`
-  return `${values.slice(0, -1).join(', ')}, and ${values[values.length - 1]}`
-}
-
-function formatStatusLabel(status: string) {
-  return normalizeText(status).replaceAll('_', ' ') || 'submitted'
-}
-
 function formatEventTime(startTime: string | null | undefined) {
   const value = normalizeText(startTime)
   if (!value) return null
@@ -167,46 +134,49 @@ function formatEventTime(startTime: string | null | undefined) {
 
 function getMoodLabel(mood: string | null | undefined) {
   const normalized = normalizeText(mood)
-  if (!normalized) return 'Update shared'
+  if (!normalized) return null
   return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
-function ReadinessHighlights({ missing }: { missing: string[] }) {
-  if (missing.length === 0) return null
-
-  return (
-    <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-amber-700">Profile still needs</p>
-      <p className="mt-1">{missing.slice(0, 3).join(', ')}</p>
-    </div>
-  )
+/** Map raw application status to plain English */
+function statusToPlainEnglish(status: string): string {
+  const normalized = String(status ?? '').trim().toLowerCase()
+  switch (normalized) {
+    case 'submitted':
+    case 'partial':
+    case 'draft':
+      return 'Application sent'
+    case 'in_review':
+      return 'The crèche is reviewing your application'
+    case 'awaiting_documents':
+      return 'Documents needed'
+    case 'offer_made':
+    case 'offer_sent':
+    case 'offer_pending':
+      return 'Crèche has made an offer — respond now'
+    case 'approved':
+    case 'accepted':
+      return 'Accepted — confirm your start date'
+    case 'enrolled':
+      return 'Enrolled'
+    case 'rejected':
+      return 'Not accepted this time'
+    case 'withdrawn':
+      return 'Application withdrawn'
+    default:
+      return normalizeText(status).replaceAll('_', ' ') || 'Application sent'
+  }
 }
 
-function QuickLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-    >
-      {label}
-      <ArrowRight className="h-4 w-4" />
-    </Link>
-  )
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
-function SectionHeading({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
-  return (
-    <div>
-      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-cyan-700">{eyebrow}</p>
-      <h1
-        className="mt-2 text-[1.6rem] font-extrabold leading-[1.08] tracking-[-0.03em] text-slate-900 sm:text-[2rem]"
-        style={{ fontFamily: 'var(--font-display)' }}
-      >
-        {title}
-      </h1>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">{description}</p>
-    </div>
-  )
+function getDayName(): string {
+  return new Date().toLocaleDateString('en-ZA', { weekday: 'long' })
 }
 
 export default async function ParentDashboardPage() {
@@ -263,7 +233,7 @@ export default async function ParentDashboardPage() {
         status: String(application.status ?? '').trim().toLowerCase(),
         lastUpdatedAt: String(application.updated_at ?? application.submitted_at ?? ''),
         startDate: application.start_date ?? null,
-        centreName: centre?.name?.trim() || 'Your creche',
+        centreName: centre?.name?.trim() || 'Your crèche',
         centreSlug: centre?.slug ?? null,
         childName,
         missingDocuments: normalizeMissingDocuments(application.missing_documents),
@@ -338,7 +308,7 @@ export default async function ParentDashboardPage() {
     const notifications = ((notificationsResult.data ?? []) as RawNotificationRow[]).map((item) => ({
       id: String(item.id),
       title: normalizeText(item.title, 'New update'),
-      message: normalizeText(item.message, 'Open your inbox to read the latest update from your creche.'),
+      message: normalizeText(item.message, 'Open your inbox to read the latest update from your crèche.'),
       isRead: item.is_read === true,
       createdAt: item.created_at,
       centreName: normalizeOne<{ name?: string | null }>(item.ecd_centres)?.name?.trim() || null,
@@ -372,7 +342,7 @@ export default async function ParentDashboardPage() {
       (((enrolledCentresResult.data ?? []) as Array<{ id: string; name: string | null; slug: string | null }>)).map((centre) => [
         String(centre.id),
         {
-          name: centre.name?.trim() || 'Your creche',
+          name: centre.name?.trim() || 'Your crèche',
           slug: centre.slug?.trim() || null,
         },
       ])
@@ -383,22 +353,6 @@ export default async function ParentDashboardPage() {
       childRows[0]?.displayName ||
       applications[0]?.childName ||
       'your child'
-    const householdChildCount = childRows.length
-    const enrolledChildCount = enrolledChildIds.length
-    const activeApplicationCount = activeApplications.length
-    const householdCentreCount = Array.from(
-      new Set([
-        ...enrolledCentreIds,
-        ...activeApplications
-          .map((application) => application.ecdId)
-          .filter((value): value is string => Boolean(value)),
-      ])
-    ).length
-    const hasMultipleChildren = householdChildCount > 1
-    const hasMixedHousehold = enrolledChildCount > 0 && activeApplicationCount > 0
-    const hasMultipleEnrolledChildren = enrolledChildCount > 1
-    const hasMultipleCentres = householdCentreCount > 1
-    const showHouseholdSummary = hasMultipleChildren || hasMixedHousehold || hasMultipleCentres
 
     const latestDailyUpdateByChildId = new Map<string, DailyUpdateItem>()
     for (const report of dailyReportItems) {
@@ -426,578 +380,264 @@ export default async function ParentDashboardPage() {
     const latestDailyUpdate = enrolledDailyUpdateCards[0]?.report ?? dailyReportItems.at(0) ?? null
     const primaryDailyUpdateCard = enrolledDailyUpdateCards[0] ?? null
 
-    const latestPendingApplication = activeApplications[0] ?? null
     const enrolledCentreMeta =
       (enrolledApplication?.ecdId ? enrolledCentreMap.get(enrolledApplication.ecdId) : null) ??
       (enrolledPrimaryChild?.ecdId ? enrolledCentreMap.get(enrolledPrimaryChild.ecdId) : null) ??
       null
     const pickupHref =
-      hasMultipleEnrolledChildren || hasMultipleCentres
+      enrolledChildIds.length > 1
         ? '/parent/applications'
         : enrolledApplication
           ? `/parent/applications/${enrolledApplication.id}#pickup-code-section`
           : '/parent/children'
-    const pickupLabel = hasMultipleEnrolledChildren || hasMultipleCentres ? 'Open pickup codes' : 'Open pickup code'
-    const centreInfoHref =
-      hasMultipleCentres
-        ? '/parent/applications'
-        : enrolledApplication?.centreSlug
-          ? `/c/${enrolledApplication.centreSlug}`
-          : enrolledCentreMeta?.slug
-            ? `/c/${enrolledCentreMeta.slug}`
-            : '/parent/discover'
-    const centreInfoLabel = hasMultipleCentres ? 'View centres' : 'Creche info'
-    const enrolledHeroTitle = hasMultipleEnrolledChildren
-      ? 'Family home'
-      : `Today with ${enrolledApplication?.childName ?? enrolledPrimaryChild?.displayName ?? 'your child'}`
-    const enrolledHeroDescription = hasMixedHousehold
-      ? `You have ${enrolledChildCount} enrolled child${enrolledChildCount === 1 ? '' : 'ren'} and ${activeApplicationCount} application${activeApplicationCount === 1 ? '' : 's'} still moving. Use this home for live care updates, then open Applications for the rest.`
-      : hasMultipleCentres
-        ? `Your children are linked to ${householdCentreCount} creche${householdCentreCount === 1 ? '' : 's'}. Daily updates, messages, pickup, and reminders still stay organised together here.`
-        : hasMultipleEnrolledChildren
-          ? 'Stay close to each enrolled child from one family home. Daily updates, messages, pickup, and reminders stay organised together.'
-          : `You are no longer here to search first. Your main job now is staying close to ${enrolledApplication?.centreName ?? enrolledCentreMeta?.name ?? 'your creche'} through daily updates, messages, pickup, and important reminders.`
-    const householdSummaryText = hasMixedHousehold
-      ? 'One family can have more than one journey at once. Enrolled children stay on the dashboard, while applications still in progress stay easy to open from one place.'
-      : hasMultipleCentres
-        ? 'Your family is connected to more than one creche. CentreConnect keeps each child attached to the right centre without making you switch accounts.'
-        : activeApplicationCount > 0
-          ? 'Each child keeps their own journey, and Applications lets you switch focus whenever you need more detail.'
-          : 'Each child keeps their own profile, and you can manage the family from one home without switching accounts.'
-    const householdSummaryLinkHref = activeApplicationCount > 0 ? '/parent/applications' : '/parent/children'
-    const householdSummaryLinkLabel = activeApplicationCount > 0 ? 'Open applications' : 'Manage children'
-    const householdJourneyKeys = Array.from(
-      new Set([
-        ...childRows.map((child) => child.id),
-        ...applications.map((application) => application.childId ?? `application:${application.id}`),
-      ])
-    )
-    const applicationsByJourneyKey = new Map<string, DashboardApplication[]>()
 
-    for (const application of applications) {
-      const key = application.childId ?? `application:${application.id}`
-      const existing = applicationsByJourneyKey.get(key)
-      if (existing) {
-        existing.push(application)
-      } else {
-        applicationsByJourneyKey.set(key, [application])
+    const enrolledChildName = enrolledApplication?.childName ?? enrolledPrimaryChild?.displayName ?? firstChildName
+    const enrolledCentreName = enrolledApplication?.centreName ?? enrolledCentreMeta?.name ?? 'your crèche'
+
+    // Build mood chips for enrolled state
+    const moodChips: string[] = []
+    if (latestDailyUpdate) {
+      const mood = getMoodLabel(latestDailyUpdate.mood)
+      if (mood) moodChips.push(mood)
+      for (const activity of latestDailyUpdate.activities.slice(0, 2)) {
+        moodChips.push(activity)
       }
     }
-
-    const householdJourneys = householdJourneyKeys
-      .map((key): HouseholdJourneyItem => {
-        const child = childById.get(key) ?? null
-        const childApplications = applicationsByJourneyKey.get(key) ?? []
-        const pendingApplications = childApplications.filter((application) => hasPendingParentApplicationStatus(application.status))
-        const enrolledApplicationsForChild = childApplications.filter((application) => isEnrolledApplicationStatus(application.status))
-        const enrolledCentreNames = uniqueText([
-          child?.ecdId ? enrolledCentreMap.get(child.ecdId)?.name ?? null : null,
-          ...enrolledApplicationsForChild.map((application) => application.centreName),
-        ])
-        const pendingCentreNames = uniqueText(pendingApplications.map((application) => application.centreName))
-        const missingDetails = uniqueText(
-          pendingApplications.flatMap((application) =>
-            application.missingDocuments.map((item) => item.replaceAll('_', ' '))
-          )
-        )
-        const childName = child?.displayName || childApplications[0]?.childName || 'your child'
-
-        if (enrolledCentreNames.length > 0 && pendingApplications.length > 0) {
-          return {
-            key,
-            childName,
-            statusLabel: 'Mixed journey',
-            statusToneClassName: 'border-amber-200 bg-amber-50 text-amber-800',
-            summary: 'Enrolled at ' + formatNameList(enrolledCentreNames) + ' with ' + pendingApplications.length + ' other application' + (pendingApplications.length === 1 ? '' : 's') + ' still open.',
-            detail: missingDetails.length > 0
-              ? 'Still missing: ' + missingDetails.slice(0, 2).join(', ') + '.'
-              : 'Still waiting on ' + formatNameList(pendingCentreNames) + '.',
-            href: '/parent/applications',
-            actionLabel: 'Open applications',
-          }
-        }
-
-        if (enrolledCentreNames.length > 0) {
-          return {
-            key,
-            childName,
-            statusLabel: 'Enrolled',
-            statusToneClassName: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-            summary: 'Connected to ' + formatNameList(enrolledCentreNames) + ' for daily updates, messages, and pickup.',
-            detail: hasMultipleCentres
-              ? 'This family is active across more than one creche, so CentreConnect keeps each child tied to the right place.'
-              : null,
-            href: hasMultipleCentres ? '/parent/applications' : '/parent/daily-reports',
-            actionLabel: hasMultipleCentres ? 'Open family overview' : 'See updates',
-          }
-        }
-
-        if (pendingApplications.length > 0) {
-          return {
-            key,
-            childName,
-            statusLabel: pendingApplications.length > 1 ? 'Applying' : 'Application open',
-            statusToneClassName: 'border-cyan-200 bg-cyan-50 text-cyan-800',
-            summary: pendingApplications.length > 1
-              ? 'Applications are in progress at ' + formatNameList(pendingCentreNames) + '.'
-              : 'Waiting on ' + (pendingCentreNames[0] ?? 'your creche') + ' to respond.',
-            detail: missingDetails.length > 0
-              ? 'Still missing: ' + missingDetails.slice(0, 2).join(', ') + '.'
-              : 'Updated ' + formatDate(pendingApplications[0]?.lastUpdatedAt ?? '') + '.',
-            href: '/parent/applications',
-            actionLabel: 'Open applications',
-          }
-        }
-
-        return {
-          key,
-          childName,
-          statusLabel: 'Profile ready',
-          statusToneClassName: 'border-slate-200 bg-slate-50 text-slate-700',
-          summary: 'Profile ready for your next application whenever you want to apply again.',
-          detail: null,
-          href: '/parent/children',
-          actionLabel: 'Manage profile',
-        }
-      })
-      .sort((a, b) => {
-        const rank = (value: string) => {
-          if (value === 'Mixed journey') return 0
-          if (value === 'Enrolled') return 1
-          if (value === 'Applying' || value === 'Application open') return 2
-          return 3
-        }
-
-        return rank(a.statusLabel) - rank(b.statusLabel) || a.childName.localeCompare(b.childName)
-      })
 
     return (
       <div className="min-h-screen bg-surface-secondary px-4 pb-24 pt-4">
         <div className="cc-stack">
           {user?.id ? <ParentDashboardRealtimeBridge parentId={user.id} /> : null}
-          {/* Next Action Card - Always show the most important next step */}
-          {progress?.nextAction && (
-            <SurfaceCard className="relative overflow-hidden border-2 border-cyan-200 bg-gradient-to-r from-cyan-50 to-white p-5">
-              <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-cyan-100/50 to-transparent" />
-              <div className="relative flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-cyan-600">Your next step</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">{progress.nextAction.title}</p>
-                  <p className="mt-1 text-sm text-slate-600">{progress.nextAction.description}</p>
-                </div>
-                <Link
-                  href={progress.nextAction.href}
-                  className="shrink-0 inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                >
-                  Do it
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </SurfaceCard>
-          )}
 
-          {showHouseholdSummary ? (
-            <SurfaceCard className="border border-border bg-white p-5">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Building2 className="h-4 w-4 text-cyan-600" />
-                    <p className="text-sm font-bold">Family at a glance</p>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{householdSummaryText}</p>
-                </div>
-                <div className="shrink-0">
-                  <QuickLink href={householdSummaryLinkHref} label={householdSummaryLinkLabel} />
-                </div>
-              </div>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Children</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900">{householdChildCount}</p>
-                </div>
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-emerald-700">Enrolled</p>
-                  <p className="mt-1 text-lg font-bold text-emerald-900">{enrolledChildCount}</p>
-                </div>
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-700">Applying</p>
-                  <p className="mt-1 text-lg font-bold text-amber-900">{activeApplicationCount}</p>
-                </div>
-                <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-cyan-700">Creches</p>
-                  <p className="mt-1 text-lg font-bold text-cyan-900">{householdCentreCount}</p>
-                </div>
-              </div>
-              {householdJourneys.length > 0 ? (
-                <div className="mt-4 grid gap-3 lg:grid-cols-2">
-                  {householdJourneys.map((journey) => (
-                    <div key={journey.key} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-bold text-slate-900">{journey.childName}</p>
-                        <span className={'rounded-full border px-2.5 py-1 text-[11px] font-bold ' + journey.statusToneClassName}>
-                          {journey.statusLabel}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">{journey.summary}</p>
-                      {journey.detail ? (
-                        <p className="mt-2 text-xs leading-5 text-slate-500">{journey.detail}</p>
-                      ) : null}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <QuickLink href={journey.href} label={journey.actionLabel} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
-            </SurfaceCard>
-          ) : null}
-
+          {/* ─────────────────────────────────────────────── */}
+          {/* STATE: DISCOVER                                 */}
+          {/* ─────────────────────────────────────────────── */}
           {homeState === 'discover' ? (
-            <div className="cc-stack">
-              <SurfaceCard className="relative overflow-hidden border border-border bg-gradient-to-b from-muted/40 to-background p-6 sm:p-7">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(13,148,136,0.12),transparent_55%),radial-gradient(circle_at_top_right,rgba(212,147,90,0.12),transparent_38%)]" />
-                <div className="relative">
-                  <SectionHeading
-                    eyebrow={`Welcome back, ${parentFirstName}`}
-                    title={`Find the right creche for ${firstChildName}.`}
-                    description="You have already done the hard part by signing in again. Now use CentreConnect to compare trusted creches quickly and apply when one feels right."
-                  />
-
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Link
-                      href="/parent/discover"
-                      className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                    >
-                      Find a creche
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      href="/parent/shortlist"
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-                    >
-                      View saved creches
-                    </Link>
-                    <Link
-                      href="/parent/support"
-                      className="inline-flex min-h-[48px] items-center justify-center text-sm font-semibold text-cyan-700 hover:text-cyan-800"
-                    >
-                      Need help choosing?
-                    </Link>
-                  </div>
-
-                  <ReadinessHighlights missing={progress?.nextAction.missingProfileFields ?? []} />
+            <div className="space-y-6">
+              {/* Warm welcome header */}
+              <div className="pt-2">
+                <h1
+                  className="text-[1.6rem] font-extrabold leading-[1.12] tracking-[-0.03em] text-slate-900 sm:text-[2rem]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {getGreeting()}, {parentFirstName}.{' '}
+                  <span className="text-slate-600">Find the right crèche for your child.</span>
+                </h1>
+                <div className="mt-5">
+                  <Link
+                    href="/parent/discover"
+                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-colors hover:bg-cyan-700"
+                  >
+                    Find crèches near me
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </div>
-              </SurfaceCard>
-
-              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                <Suspense fallback={<ProfileReadinessCardSkeleton />}>
-                  <ProfileReadinessCard />
-                </Suspense>
-
-                <SurfaceCard className="p-5">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <BellRing className="h-4 w-4 text-cyan-600" />
-                    <h2 className="text-base font-bold">You are ready to move</h2>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Browse first, save what you like, and apply only when a creche feels right for your family.
-                  </p>
-                  <div className="mt-4 grid gap-2 text-sm text-slate-700">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-3">Verified and DSD registered creches are easier to trust fast.</div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-3">Public listings still show the fastest WhatsApp or call path.</div>
-                  </div>
-                </SurfaceCard>
               </div>
 
+              {/* Suggested centres — the primary content */}
               <Suspense fallback={<div className="h-48 animate-pulse rounded-3xl bg-slate-100" />}>
                 <SuggestedCentresSection />
               </Suspense>
+
+              {/* Trust line */}
+              <p className="text-center text-sm text-slate-500">
+                No registration fees. Apply to any crèche for free.
+              </p>
             </div>
+
+          /* ─────────────────────────────────────────────── */
+          /* STATE: PENDING                                  */
+          /* ─────────────────────────────────────────────── */
           ) : homeState === 'pending' ? (
-            <div className="cc-stack">
-              <SurfaceCard className="border border-border bg-gradient-to-b from-muted/40 to-background p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <SectionHeading
-                      eyebrow="Applications in progress"
-                      title={`You are waiting on ${activeApplications.length} application${activeApplications.length === 1 ? '' : 's'}.`}
-                      description="Stay close to replies, send anything the creche still needs, and keep browsing if you want another good option in the meantime."
-                    />
-                    {latestPendingApplication ? (
-                      <p className="mt-3 text-sm font-medium text-slate-700">
-                        Most recent: <span className="font-semibold text-slate-900">{latestPendingApplication.childName}</span> at{' '}
-                        <span className="font-semibold text-slate-900">{latestPendingApplication.centreName}</span>
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col gap-3 sm:min-w-[220px]">
-                    <Link
-                      href="/parent/applications"
-                      className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                    >
-                      View applications
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      href="/parent/discover"
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-                    >
-                      Keep browsing
-                    </Link>
-                  </div>
-                </div>
-              </SurfaceCard>
-
-              <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-                <SurfaceCard className="p-5">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <FileText className="h-4 w-4 text-cyan-600" />
-                    <h2 className="text-base font-bold">Next step for your family</h2>
-                  </div>
-                  {latestPendingApplication ? (
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-4">
-                      <p className="text-sm font-semibold text-slate-900">{latestPendingApplication.childName} at {latestPendingApplication.centreName}</p>
-                      <p className="mt-1 text-sm text-slate-600">Status: {formatStatusLabel(latestPendingApplication.status)}</p>
-                      <p className="mt-1 text-xs text-slate-500">Updated {formatDate(latestPendingApplication.lastUpdatedAt)}</p>
-                      {latestPendingApplication.missingDocuments.length > 0 ? (
-                        <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                          Missing now: {latestPendingApplication.missingDocuments.slice(0, 3).map((item) => item.replaceAll('_', ' ')).join(', ')}
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-                  <ReadinessHighlights missing={progress?.nextAction.missingProfileFields ?? []} />
-                </SurfaceCard>
-
-                <div className="space-y-4">
-                  <SurfaceCard className="p-5">
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <MessageSquare className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">Inbox</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {unreadNotifications.length > 0
-                        ? `${unreadNotifications.length} unread update${unreadNotifications.length === 1 ? '' : 's'} from creches.`
-                        : 'No unread updates right now. We will keep new messages here.'}
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href="/parent/notifications" label="Open inbox" />
-                    </div>
-                  </SurfaceCard>
-
-                  <SurfaceCard className="p-5">
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <Search className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">Still exploring?</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      It is okay to keep comparing until one creche feels right. CentreConnect keeps your options organised.
-                    </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href="/parent/discover" label="Find more creches" />
-                    </div>
-                  </SurfaceCard>
-                </div>
+            <div className="space-y-5">
+              {/* Header acknowledging the wait */}
+              <div className="pt-2">
+                <h1
+                  className="text-[1.6rem] font-extrabold leading-[1.12] tracking-[-0.03em] text-slate-900 sm:text-[2rem]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  You are waiting to hear back from {activeApplications.length} crèche{activeApplications.length === 1 ? '' : 's'}.
+                </h1>
               </div>
-            </div>
-          ) : (
-            <div className="cc-stack">
-              <SurfaceCard className="relative overflow-hidden border border-border bg-gradient-to-b from-emerald-50/60 to-background p-5 sm:p-6">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.14),transparent_52%),radial-gradient(circle_at_top_right,rgba(13,148,136,0.10),transparent_38%)]" />
-                <div className="relative">
-                  <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-600">
-                    <CheckCircle2 className="h-5 w-5" />
-                  </div>
-                  <SectionHeading
-                    eyebrow={`Welcome back, ${parentFirstName}`}
-                    title={enrolledHeroTitle}
-                    description={enrolledHeroDescription}
-                  />
-                  <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Link
-                      href="/parent/daily-reports"
-                      className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
-                    >
-                      Today&apos;s updates
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                      href="/parent/notifications"
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-                    >
-                      Family inbox
-                    </Link>
-                    <Link
-                      href={pickupHref}
-                      className="inline-flex min-h-[48px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-cyan-300 hover:text-cyan-700"
-                    >
-                      Pickup &amp; collection
-                    </Link>
-                  </div>
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Continue where you left off</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <QuickLink href="/parent/daily-reports" label="Today updates" />
-                      <QuickLink href="/parent/notifications" label="Messages" />
-                      <QuickLink href="/parent/applications" label="Applications" />
-                    </div>
-                  </div>
-                </div>
-              </SurfaceCard>
 
-              <FeatureBanner context="parent" />
-
-              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-                <SurfaceCard className="p-5">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <Sparkles className="h-4 w-4 text-cyan-600" />
-                    <h2 className="text-base font-bold">{enrolledDailyUpdateCards.length > 1 ? 'Latest daily updates' : 'Latest daily update'}</h2>
-                  </div>
-                  {enrolledDailyUpdateCards.length > 1 ? (
-                    <>
-                      <div className="mt-4 grid gap-3">
-                        {enrolledDailyUpdateCards.map((card) => (
-                          <div key={card.childId} className="rounded-2xl border border-slate-200 bg-white p-4">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold text-slate-900">{card.childName}</p>
-                                <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
-                                  {card.centreName ? `${card.centreName} • ` : ''}
-                                  {card.report ? `${formatDate(card.report.reportDate)} • ${getMoodLabel(card.report.mood)}` : "Waiting for today's update"}
-                                </p>
-                              </div>
-                              <span
-                                className={card.report
-                                  ? 'rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700'
-                                  : 'rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-bold text-slate-500'}
-                              >
-                                {card.report ? 'Daily report ready' : 'Awaiting update'}
-                              </span>
-                            </div>
-                            <p className="mt-3 text-sm leading-6 text-slate-700">
-                              {card.report?.teacherNotes || `${card.childName} does not have a published daily report yet. It will appear here as soon as the creche shares it.`}
-                            </p>
-                            {card.report?.activities.length ? (
-                              <div className="mt-3 flex flex-wrap gap-1.5">
-                                {card.report.activities.slice(0, 4).map((activity) => (
-                                  <span key={activity} className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
-                                    {activity}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <QuickLink href="/parent/daily-reports" label="Open reports" />
-                        <QuickLink href="/parent/report-cards" label="Child reports" />
-                      </div>
-                    </>
-                  ) : latestDailyUpdate ? (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">{latestDailyUpdate.childName}</p>
-                          <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-slate-500">
-                            {primaryDailyUpdateCard?.centreName ? `${primaryDailyUpdateCard.centreName} • ` : ''}
-                            {formatDate(latestDailyUpdate.reportDate)} • {getMoodLabel(latestDailyUpdate.mood)}
-                          </p>
-                        </div>
-                        <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
-                          Daily report ready
-                        </span>
-                      </div>
-                      <p className="mt-3 text-sm leading-6 text-slate-700">
-                        {latestDailyUpdate.teacherNotes || 'Your creche shared a fresh update for today.'}
-                      </p>
-                      {latestDailyUpdate.activities.length > 0 ? (
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {latestDailyUpdate.activities.slice(0, 4).map((activity) => (
-                            <span key={activity} className="rounded-full border border-cyan-100 bg-cyan-50 px-2.5 py-1 text-[11px] font-bold text-cyan-700">
-                              {activity}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <QuickLink href="/parent/daily-reports" label="Open reports" />
-                        <QuickLink href="/parent/report-cards" label="Child reports" />
-                      </div>
-                    </div>
-                  ) : primaryDailyUpdateCard ? (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                      {primaryDailyUpdateCard.childName} does not have a published daily report yet. It will appear here as soon as the creche shares it.
-                    </div>
-                  ) : (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
-                      Today&apos;s daily update has not been published yet. It will appear here as soon as the creche shares it.
-                    </div>
-                  )}
-                </SurfaceCard>
-
-                <div className="space-y-4">
-                  <SurfaceCard className="p-5">
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <MessageSquare className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">Family inbox</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {unreadNotifications.length > 0
-                        ? `${unreadNotifications.length} unread message${unreadNotifications.length === 1 ? '' : 's'} or announcement${unreadNotifications.length === 1 ? '' : 's'} from your creche${hasMultipleCentres ? 's' : ''}.`
-                        : 'No unread updates right now. New messages and announcements will show here first.'}
-                    </p>
-                    {notifications[0] ? (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-                        <p className="text-sm font-semibold text-slate-900">{notifications[0].title}</p>
-                        <p className="mt-1 text-sm text-slate-600">{notifications[0].message}</p>
-                        <p className="mt-2 text-xs text-slate-500">
-                          {notifications[0].centreName ? `${notifications[0].centreName} • ` : ''}
-                          {formatDate(notifications[0].createdAt)}
+              {/* One card per active application */}
+              <div className="space-y-3">
+                {activeApplications.map((app) => (
+                  <SurfaceCard key={app.id} className="p-5">
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">{app.centreName}</h2>
+                        <p className="mt-1 text-sm text-slate-600">
+                          {app.childName}
                         </p>
                       </div>
-                    ) : null}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href="/parent/notifications" label="Open inbox" />
+
+                      <p className="text-sm font-medium text-slate-700">
+                        {statusToPlainEnglish(app.status)}
+                      </p>
+
+                      {/* Missing documents amber card */}
+                      {app.missingDocuments.length > 0 ? (
+                        <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                          <Upload className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-amber-900">
+                              Documents needed
+                            </p>
+                            <p className="mt-1 text-sm text-amber-800">
+                              {app.missingDocuments.slice(0, 3).map((item) => item.replaceAll('_', ' ')).join(', ')}
+                            </p>
+                            <Link
+                              href="/parent/profile/documents"
+                              className="mt-3 inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+                            >
+                              Upload
+                            </Link>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <p className="text-xs text-slate-400">
+                        Updated {formatDate(app.lastUpdatedAt)}
+                      </p>
                     </div>
                   </SurfaceCard>
+                ))}
+              </div>
 
-                  <SurfaceCard className="p-5">
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <CalendarDays className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">{hasMultipleCentres ? 'Next across your creches' : 'Next at your creche'}</h2>
+              {/* Inbox card — only if unread */}
+              {unreadNotifications.length > 0 ? (
+                <SurfaceCard className="p-5">
+                  <div className="flex items-center gap-3">
+                    <MessageSquare className="h-5 w-5 text-cyan-600" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">
+                        The crèche sent you {unreadNotifications.length === 1 ? 'a message' : `${unreadNotifications.length} messages`}
+                      </p>
                     </div>
-                    {nextEvent ? (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3">
-                        <p className="text-sm font-semibold text-slate-900">{nextEvent.title}</p>
-                        <p className="mt-1 text-sm text-slate-600">{formatDate(nextEvent.eventDate)}{formatEventTime(nextEvent.startTime) ? ` • ${formatEventTime(nextEvent.startTime)}` : ''}</p>
-                        {nextEvent.centreName ? <p className="mt-1 text-xs text-slate-500">{nextEvent.centreName}</p> : null}
-                      </div>
-                    ) : (
-                      <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-3 text-sm text-slate-600">
-                        No upcoming public event has been shared yet.
-                      </div>
-                    )}
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href="/parent/calendar" label="Open calendar" />
-                      <QuickLink href={centreInfoHref} label={centreInfoLabel} />
-                    </div>
-                  </SurfaceCard>
+                    <Link
+                      href="/parent/notifications"
+                      className="shrink-0 text-sm font-semibold text-cyan-600 hover:text-cyan-700"
+                    >
+                      Open
+                    </Link>
+                  </div>
+                </SurfaceCard>
+              ) : null}
 
-                  <SurfaceCard className="p-5">
-                    <div className="flex items-center gap-2 text-slate-900">
-                      <ShieldCheck className="h-4 w-4 text-cyan-600" />
-                      <h2 className="text-base font-bold">Collection and safety</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      Pickup codes and family permissions stay connected to each enrolled child, so collection stays calm and clear.
+              {/* Secondary browse link */}
+              <div className="text-center">
+                <Link
+                  href="/parent/discover"
+                  className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
+                >
+                  Browse more crèches
+                </Link>
+              </div>
+            </div>
+
+          /* ─────────────────────────────────────────────── */
+          /* STATE: ENROLLED                                 */
+          /* ─────────────────────────────────────────────── */
+          ) : (
+            <div className="space-y-5">
+              {/* Header — window into the child's day */}
+              <div className="pt-2">
+                <h1
+                  className="text-[1.6rem] font-extrabold leading-[1.12] tracking-[-0.03em] text-slate-900 sm:text-[2rem]"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  Today, {getDayName()}.{' '}
+                  <span className="text-slate-600">{enrolledChildName}&apos;s day at {enrolledCentreName}.</span>
+                </h1>
+
+                {/* Mood chips */}
+                {moodChips.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {moodChips.map((chip) => (
+                      <span
+                        key={chip}
+                        className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {/* Teacher's note */}
+              <SurfaceCard className="p-5">
+                {latestDailyUpdate?.teacherNotes ? (
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                      From {latestDailyUpdate.childName}&apos;s teacher
                     </p>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <QuickLink href={pickupHref} label={pickupLabel} />
-                      <QuickLink href="/parent/profile/guardians" label="Manage caregivers" />
-                    </div>
-                  </SurfaceCard>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                      {latestDailyUpdate.teacherNotes}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    Today&apos;s report hasn&apos;t been posted yet. Check back after lunch.
+                  </p>
+                )}
+              </SurfaceCard>
+
+              {/* Pickup code */}
+              <SurfaceCard className="border-2 border-slate-200 p-5">
+                <div className="flex items-center gap-3">
+                  <ShieldCheck className="h-5 w-5 text-cyan-600" />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={pickupHref}
+                      className="text-base font-bold text-slate-900 hover:text-cyan-700"
+                    >
+                      View pickup code
+                    </Link>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      Show this at the gate when collecting {enrolledChildName}
+                    </p>
+                  </div>
+                  <Link
+                    href={pickupHref}
+                    className="shrink-0 rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+                  >
+                    Open
+                  </Link>
                 </div>
+              </SurfaceCard>
+
+              {/* Next event */}
+              {nextEvent ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-3">
+                  <CalendarDays className="h-4 w-4 shrink-0 text-cyan-600" />
+                  <p className="text-sm text-slate-700">
+                    <span className="font-semibold">{nextEvent.title}</span>
+                    {' — '}
+                    {formatDate(nextEvent.eventDate)}
+                    {formatEventTime(nextEvent.startTime) ? ` at ${formatEventTime(nextEvent.startTime)}` : ''}
+                  </p>
+                </div>
+              ) : null}
+
+              {/* Message button */}
+              <Link
+                href="/parent/notifications"
+                className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-cyan-700"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Message {enrolledCentreName}
+              </Link>
+
+              {/* Divider + past reports */}
+              <div className="border-t border-slate-200 pt-4">
+                <Link
+                  href="/parent/daily-reports"
+                  className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
+                >
+                  Past reports
+                </Link>
               </div>
             </div>
           )}
@@ -1008,6 +648,3 @@ export default async function ParentDashboardPage() {
     logRoutePerf(perf)
   }
 }
-
-
-

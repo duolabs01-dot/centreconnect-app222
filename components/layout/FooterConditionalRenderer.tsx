@@ -6,8 +6,13 @@ import { ReactNode, useEffect, useState } from 'react'
 import { GlobalDesktopFooter } from './global-desktop-footer'
 import { GlobalMobileLegalStrip } from './global-mobile-legal-strip'
 const BottomNav = dynamic(() => import('./bottom-nav').then((mod) => mod.BottomNav), { ssr: false })
-import { PARENT_NAV_ITEMS, ADMIN_MOBILE_NAV_ITEMS } from '@/lib/navigation-config'
+import {
+  PARENT_NAV_ITEMS_PRE_ENROLLMENT,
+  PARENT_NAV_ITEMS_ENROLLED,
+  ADMIN_MOBILE_NAV_ITEMS,
+} from '@/lib/navigation-config'
 import { shouldHideParentBottomNav } from '@/lib/navigation/parent-bottom-nav'
+import { useParentLayoutSafe } from './parent-layout-provider'
 
 interface FooterConditionalRendererProps {
   children: ReactNode
@@ -33,6 +38,7 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
   const [mounted, setMounted] = useState(false)
   const isSignedIn = useIsSignedIn(pathname)
   const hideParentBottomNav = shouldHideParentBottomNav(pathname ?? '')
+  const parentLayout = useParentLayoutSafe()
 
   useEffect(() => {
     setMounted(true)
@@ -43,13 +49,17 @@ export function FooterConditionalRenderer({ children }: FooterConditionalRendere
   const isAdminPortal = pathname?.startsWith('/admin')
   const hideFooter = isParentPortal || isEcdPortal || isAdminPortal
 
+  const parentNavItems = parentLayout?.homeState === 'enrolled'
+    ? PARENT_NAV_ITEMS_ENROLLED
+    : PARENT_NAV_ITEMS_PRE_ENROLLMENT
+
   return (
     <>
       {children}
 
       {mounted && isSignedIn && (
         <>
-          {isParentPortal && !hideParentBottomNav && <BottomNav items={PARENT_NAV_ITEMS} pathname={pathname} />}
+          {isParentPortal && !hideParentBottomNav && <BottomNav items={parentNavItems} pathname={pathname} />}
           {isAdminPortal && <BottomNav items={ADMIN_MOBILE_NAV_ITEMS} pathname={pathname} />}
         </>
       )}
