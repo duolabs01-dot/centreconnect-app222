@@ -155,12 +155,10 @@ export async function POST() {
     }
 
     const warnings: string[] = []
-    const shouldSendPilotWelcomePack = isPilotRequested(
-      serviceApplication.selected_tier as string | null | undefined,
-      (serviceApplication as { admin_notes?: string | null }).admin_notes
-    )
+    // Send welcome pack to ALL new centres (not just pilot tier)
+    const shouldSendWelcomePack = Boolean(user.email)
 
-    if (shouldSendPilotWelcomePack && user.email) {
+    if (shouldSendWelcomePack && user.email) {
       const appUrlRoot = APP_URL.replace(/\/$/, '')
       const welcomePackEndpoint = new URL('/api/ecd/resend-welcome-pack', `${appUrlRoot}/`)
       try {
@@ -186,7 +184,7 @@ export async function POST() {
             ownerEmail: user.email,
             inviteType: 'welcome_pack',
             status: 'sent',
-            notes: 'Pilot welcome pack (bootstrap-centre).',
+            notes: 'Welcome pack sent on first login (bootstrap-centre).',
           })
         }
       } catch (error) {
@@ -218,7 +216,7 @@ export async function POST() {
       ok: true,
       created: true,
       warnings: warnings.length > 0 ? warnings : undefined,
-      pilotWelcomePackQueued: shouldSendPilotWelcomePack && warnings.length === 0,
+      welcomePackQueued: shouldSendWelcomePack && warnings.length === 0,
     })
   } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 })

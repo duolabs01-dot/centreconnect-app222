@@ -18,23 +18,23 @@ type WelcomeSequenceRow = {
 const WELCOME_TEMPLATE_ROWS: WelcomeSequenceRow[] = [
   {
     template_key: 'cc_welcome_intro',
-    title: 'Welcome to CentreConnect',
-    body: 'Hi {{parent_name}}, welcome aboard. CentreConnect helps families discover centres, track applications, and stay in sync with daily updates in one place.',
+    title: 'You\u2019re in, {{parent_name}}!',
+    body: 'Finding the right cr\u00e8che for your child just got easier. Start by browsing cr\u00e8ches near you \u2014 no registration fee, no upfront cost. Just apply and hear back directly.',
   },
   {
     template_key: 'cc_welcome_inbox_guide',
-    title: 'Your Notifications Live Here',
-    body: 'Open the bell in your top bar anytime, or go to /parent/notifications for your full inbox.',
+    title: 'Add your child\u2019s details',
+    body: 'Head to your profile and add your child\u2019s name and age. It takes two minutes and means applications go out looking complete and ready.',
   },
   {
     template_key: 'cc_welcome_legal',
-    title: 'Quick Legal and Terms Note',
-    body: 'By using CentreConnect, you agree to our Terms, Privacy Policy, and POPIA security commitments. You can review these under /terms, /privacy, and /popia-security.',
+    title: 'Apply to as many cr\u00e8ches as you like',
+    body: 'There\u2019s no limit on applications. Cast a wide net \u2014 apply to a few cr\u00e8ches in your area and see who responds first. We\u2019ll keep track of everything for you.',
   },
   {
     template_key: 'cc_welcome_security',
-    title: 'Security, With Heart',
-    body: 'We use secure sessions, strict role-based access, and verified pickup workflows to protect your family data and child safety records.',
+    title: 'We keep your family\u2019s info safe',
+    body: 'Your child\u2019s details and documents are stored securely. Only the cr\u00e8ches you apply to can see your information. You can review our privacy commitment under Settings any time.',
   },
 ]
 
@@ -73,7 +73,7 @@ function mapRowsForParent(parentId: string, parentName: string, fallbackCentreId
     parent_id: parentId,
     ecd_id: fallbackCentreId,
     template_key: row.template_key,
-    title: row.title,
+    title: hydrateBody(row.title, parentName),
     message: hydrateBody(row.body, parentName),
     is_read: false,
   }))

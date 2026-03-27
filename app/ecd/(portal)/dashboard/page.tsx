@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { OnboardingChecklistCard, TrialStatusBanner } from '@/components/ecd/trial-status-banner'
+import { EcdWelcomeBanner } from '@/components/ecd/ecd-welcome-banner'
 import { FeatureBanner } from '@/components/ui/feature-banner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -166,7 +167,7 @@ export default async function EcdDashboardPage({
   ] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('name,is_active,logo_url,cover_image_url,description,phone,address,suburb')
+      .select('name,is_active,logo_url,cover_image_url,description,phone,address,suburb,onboarding_complete')
       .eq('id', ecdId)
       .maybeSingle(),
     supabase.rpc('get_ecd_dashboard_snapshot', { p_ecd_id: ecdId, p_today: todayDate }),
@@ -292,9 +293,19 @@ export default async function EcdDashboardPage({
         : null,
     ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
 
+  const isOnboardingComplete = Boolean(centre?.onboarding_complete)
+  const onboardingDoneCount = onboardingChecklistItems.filter((i) => i.done).length
+
   return (
     <>
       <div className="space-y-6 pb-10">
+        {!isOnboardingComplete && (
+          <EcdWelcomeBanner
+            centreName={centre?.name ?? 'your crèche'}
+            checklistTotal={onboardingChecklistItems.length}
+            checklistDone={onboardingDoneCount}
+          />
+        )}
         <Card className="rounded-[2.2rem] border-slate-200 bg-[linear-gradient(135deg,#f0fdfa_0%,#ffffff_62%,#f8fafc_100%)] shadow-sm">
           <CardContent className="space-y-5 p-6 sm:p-7">
             <div className="space-y-2">
