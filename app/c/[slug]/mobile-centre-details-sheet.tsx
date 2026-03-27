@@ -1,7 +1,6 @@
 'use client'
 
-import type { TouchEvent } from 'react'
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Baby, BellRing, CheckCircle2, Circle, Clock3, FileText, MapPin, ShieldCheck, Wallet } from 'lucide-react'
 
@@ -86,30 +85,9 @@ export function MobileCentreDetailsSheet({
   isSaved = false,
 }: MobileCentreDetailsSheetProps) {
   const [open, setOpen] = useState(false)
-  const [dragY, setDragY] = useState(0)
-  const startYRef = useRef<number | null>(null)
 
   const claimHref = useMemo(() => `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centreSlug)}`, [centreSlug])
-  const showClaimLink = !isClaimed && userRole !== 'parent_user'
-
-  function onTouchStart(event: TouchEvent<HTMLDivElement>) {
-    startYRef.current = event.touches[0]?.clientY ?? null
-  }
-
-  function onTouchMove(event: TouchEvent<HTMLDivElement>) {
-    if (startYRef.current == null) return
-    const currentY = event.touches[0]?.clientY ?? startYRef.current
-    const delta = currentY - startYRef.current
-    setDragY(Math.max(0, Math.min(delta, 220)))
-  }
-
-  function onTouchEnd() {
-    if (dragY > 90) {
-      setOpen(false)
-    }
-    setDragY(0)
-    startYRef.current = null
-  }
+  const showClaimLink = !isClaimed
 
   return (
     <>
@@ -142,14 +120,7 @@ export function MobileCentreDetailsSheet({
             aria-label="Close centre details"
           />
           <div
-            className="absolute inset-x-0 bottom-0 rounded-t-[2rem] border-t border-border bg-background px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-24px_50px_rgba(0,0,0,0.12)]"
-            style={{
-              transform: `translateY(${dragY}px)`,
-              transition: startYRef.current == null ? 'transform 0.2s ease-out' : 'none',
-            }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-[2rem] border-t border-border bg-background px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-24px_50px_rgba(0,0,0,0.12)]"
           >
             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-300" />
 

@@ -50,3 +50,7 @@ ECD media/
 
 # Claude worktrees
 .claude/worktrees/
+
+# Playwright test output
+test-results/
+playwright-report/

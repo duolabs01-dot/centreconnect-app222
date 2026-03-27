@@ -262,7 +262,7 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 | Table | Purpose |
 |---|---|
 | `user_profiles` | id, role, full_name, phone — one row per auth user |
-| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at |
+| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN, for seeded-but-unclaimed centres) |
 | `ecd_admins` | Links user → centre (user_id, ecd_id, role, invited_at, accepted_at) |
 | `children` | id, ecd_id, first_name, last_name, date_of_birth, class_id, gender |
 | `attendance` | child_id, date, status (present/absent/sick/late), ecd_id |
@@ -283,6 +283,15 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 - **Sakhisizwe Day Care Centre**: Account exists, `onboarding_complete = false`, 0 children
 
 **NEVER hardcode counts or numbers that should come from the database. Always query.**
+
+### Public Listings (unclaimed centres)
+The `public_ecd_centres` PostgreSQL VIEW exposes centres to the directory:
+- `is_public_listing BOOLEAN` on `ecd_centres` base table — set `TRUE` for seeded-but-unclaimed centres
+- View filter: `WHERE (website_published = TRUE OR is_public_listing = TRUE) AND is_deleted = FALSE`
+- `is_claimed` is **NOT a DB column** — derived at API/component level as `Boolean(owner_id?.trim())`
+- **Column trap**: View exposes `contact_phone` and `contact_whatsapp`, NOT `phone`. Using `phone` when querying the view returns null data silently. Always use `contact_phone`.
+- Migration `20260326_002_add_address_to_view.sql` adds `address` to the view (must be applied to Supabase before address displays on centre profiles)
+- Three unclaimed seed centres: "Lombardy East Sunshine Seeds ECD", "Alexandra Brightnest Early Learning", "Alexandra Little Explorers ECD Centre"
 
 ---
 
@@ -567,6 +576,12 @@ File: `app/c/[slug]/centre-client.tsx`
 - Classroom card limit: 3 visible for claimed centres (prevents clutter, encourages contact)
 - Aftercare, classes, and schedule are shown as stat cards — always sourced from DB, never hardcoded
 
+### MobileCentreDetailsSheet (`app/c/[slug]/mobile-centre-details-sheet.tsx`) — LOCKED
+- Renders on mobile (`lg:hidden`) as a bottom sheet over the centre profile
+- **No drag-to-close** — `onTouchMove` / `onTouchStart` / `onTouchEnd` handlers were removed; they intercepted page scroll events and closed the sheet unexpectedly. Sheet closes only via backdrop click or the "Close details" button.
+- Sheet div: `max-h-[85dvh] overflow-y-auto rounded-t-[2rem]` — scroll happens inside the sheet, not the page
+- `showClaimLink = !isClaimed` — shows the "Claim this crèche" link to **all** users including parents (previously was hidden from `parent_user` role, but parents should know they can claim a listing)
+
 ### Copywriting Principles — LOCKED
 All parent-facing copy across the platform follows these rules:
 
@@ -669,6 +684,32 @@ These centres have special handling in some parts of the codebase (featured on h
 
 ---
 
+## E2E Testing (Playwright)
+
+### Setup
+- Config: `playwright.config.ts` — two projects: `chromium-desktop` (Desktop Chrome) and `android-chrome` (Pixel 5)
+- Test file: `tests/browser/e2e-journey.spec.ts`
+- Screenshots saved to: `test-results/` (numbered, e.g. `01-home.png`)
+- Console errors report: `test-results/console-errors.json`
+- Credentials loaded from `.env.local`: `TEST_PARENT_EMAIL`, `TEST_PARENT_PASSWORD`, `TEST_ECD_EMAIL`, `TEST_ECD_PASSWORD`
+
+### Running tests
+```bash
+# Desktop Chrome
+npx playwright test tests/browser/e2e-journey.spec.ts --project=chromium-desktop
+
+# Android Chrome (Pixel 5 simulation)
+npx playwright test tests/browser/e2e-journey.spec.ts --project=android-chrome
+```
+
+### Known dev-server test behaviours
+- Directory "< 2s" check will fail on first cold compile (16s+). This is a dev artefact — production Vercel is much faster.
+- Apply CTA on Bajabulile is inside `MobileCentreDetailsSheet` (`lg:hidden`). Desktop tests cannot click it because it is hidden. Desktop Apply CTA is in the right sidebar of `centre-client.tsx`.
+- CSP error for `va.vercel-scripts.com` (Vercel Analytics) appears in console on localhost — this is dev-only, not a bug.
+- Text-match for "error" on Applications/Attendance pages may false-positive if the word "error" appears in page content.
+
+---
+
 ## What NOT to Do
 
 1. **Do not import `EcdOsShell`** — it was removed. Use the portal layout directly.
@@ -687,3 +728,5 @@ These centres have special handling in some parts of the codebase (featured on h
 14. **Do not use unescaped apostrophes in JSX string literals** — use `&apos;`, `\u2019`, or template literals to avoid SWC parse errors.
 15. **Do not use `components/parent/CentreCard`** — it is deprecated. Use `SharedCentreCard` from `components/shared/CentreCard.tsx` with `variant="full"` or `variant="compact"`.
 16. **Do not use `overflow-x-hidden` on full-height containers** — it creates a scroll container that breaks vertical scroll on iOS Safari and Android Chrome. Use `overflow-x-clip` instead (set on `body` in `app/layout.tsx` and the root div in `components/layout/public-shell.tsx`).
+17. **Do not select `phone` when querying `public_ecd_centres`** — that column does not exist in the view. Use `contact_phone` and `contact_whatsapp` instead. Selecting a non-existent column causes Supabase to return `null` data with no error.
+18. **Do not add drag-to-close to bottom sheets** — `onTouchMove` handlers intercept page scroll events on mobile and close the sheet unexpectedly. Sheets should only close via explicit backdrop click or a "Close" button.
