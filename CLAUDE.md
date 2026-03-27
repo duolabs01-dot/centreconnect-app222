@@ -262,7 +262,7 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 | Table | Purpose |
 |---|---|
 | `user_profiles` | id, role, full_name, phone — one row per auth user |
-| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN, for seeded-but-unclaimed centres) |
+| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN), **onboarding_complete** (BOOLEAN), **onboarding_progress** (JSONB — keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`) |
 | `ecd_admins` | Links user → centre (user_id, ecd_id, role, invited_at, accepted_at) |
 | `children` | id, ecd_id, first_name, last_name, date_of_birth, class_id, gender |
 | `attendance` | child_id, date, status (present/absent/sick/late), ecd_id |
@@ -342,6 +342,11 @@ All under `/api/internal/platform-admin/` — require `platform_admin` role:
 - `webhooks/paystack/events/[id]/replay` — replay failed webhooks
 - `tenants/[id]/welcome-pack` — send welcome email
 - `revalidate` — trigger ISR revalidation
+
+### Cron Jobs
+| Method | Path | Schedule | Purpose |
+|---|---|---|---|
+| POST | `/api/cron/onboarding-drip` | 0 7 * * * (07:00 SAST daily) | Send onboarding drip emails (Day 3 children nudge, Day 7 go-live, 48h fallback) |
 
 ### Webhooks
 | Method | Path | Purpose |
@@ -457,6 +462,52 @@ import { createClient } from '@/lib/supabase/server'
 // Admin operations (bypasses RLS — server only)
 import { createAdminClient } from '@/lib/supabase/admin'
 ```
+
+### Welcome Pack & Onboarding Drip
+
+**ECD Welcome Pack Strategy — Complete Flow**
+
+1. **On first ECD login** (`app/api/ecd/bootstrap-centre/route.ts`):
+   - `POST /api/ecd/bootstrap-centre` provisions centre workspace
+   - Immediately sends welcome pack email via `POST /api/ecd/resend-welcome-pack` (ALL new centres, not just pilot)
+   - Logged to `invite_logs` table with `inviteType = 'welcome_pack'` and `status = 'sent'`
+
+2. **Welcome pack email** (`lib/email/templates/pilot-welcome-pack.tsx`):
+   - Sent on first login; includes 6-step checklist (logo, cover, bio, children, attendance, pickup)
+   - Uses magic link + tracked CTAs for analytics
+   - Recipients are ECD centre owners
+
+3. **In-app welcome banner** (`components/ecd/ecd-welcome-banner.tsx`):
+   - Shown on `/ecd/dashboard` if `onboarding_complete = false`
+   - Displays progress bar, step count, and quick-action links
+   - Dismissible via localStorage (key: `cc-ecd-welcome-banner-dismissed-v1`)
+   - Falls back gracefully when all steps done
+
+4. **Onboarding drip cron** (`app/api/cron/onboarding-drip/route.ts`):
+   - Runs daily at **07:00 SAST** (configured in `vercel.json`)
+   - Protected by `CRON_SECRET` environment variable
+   - Sends 3 types of emails:
+     - **Day 3**: centre has 0 children — "have you added your children yet?"
+     - **Day 7**: no logo/cover image — "share your page with families"
+     - **48h fallback**: welcome email unopened + owner hasn't logged in — "did our email reach you?"
+   - All logged to `notification_logs` with `event_type` in `[onboarding_day3, onboarding_day7, welcome_pack_fallback]`
+   - Idempotent — never fires twice per centre via `notification_logs` lookups
+
+5. **Onboarding progress tracking** (`lib/actions/onboarding-progress.ts` + migration):
+   - Column: `ecd_centres.onboarding_progress` (JSONB, default `{}`)
+   - Step keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`
+   - RPC function: `stamp_onboarding_step(p_ecd_id, p_step_key, p_completed_at)` — idempotent
+   - Call `stampOnboardingStep('children')` from ECD server actions when a step is completed
+   - Read progress via `getOnboardingProgress()` server action
+
+**Email Templates:**
+- `lib/email/templates/pilot-welcome-pack.tsx` — welcome pack (6-step checklist + tracking)
+- `lib/email/templates/onboarding-drip.ts` — Day 3, Day 7, and 48h fallback emails
+
+**Parent Welcome Notifications:**
+- `lib/notifications/parent-welcome-sequence.ts` — 4 warm, actionable in-app notifications
+- Sent on parent registration via `enqueueParentWelcomeSequence()`
+- Copy emphasizes "no registration fee" and "apply to many crèches"
 
 ---
 
