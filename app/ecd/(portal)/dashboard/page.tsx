@@ -11,11 +11,13 @@ import {
 import { ProfileCompleteness } from '@/components/ecd/TodayWidgets'
 import { OnboardingChecklistCard, TrialStatusBanner } from '@/components/ecd/trial-status-banner'
 import { EcdWelcomeBanner } from '@/components/ecd/ecd-welcome-banner'
+import { OnboardingCelebrationModal } from '@/components/ecd/onboarding-celebration-modal'
 import { FeatureBanner } from '@/components/ui/feature-banner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
+import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { formatDate, getJohannesburgGreeting, cn } from '@/lib/utils'
 
 export const revalidate = 30
@@ -141,10 +143,11 @@ const FEATURE_DISPLAY_NAMES: Record<string, string> = {
 export default async function EcdDashboardPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ upgrade?: string }>
+  searchParams?: Promise<{ upgrade?: string; celebrate?: string }>
 }) {
-  const resolvedSearchParams = await (searchParams ?? Promise.resolve({} as { upgrade?: string }))
+  const resolvedSearchParams = await (searchParams ?? Promise.resolve({} as { upgrade?: string; celebrate?: string }))
   const upgradeFeature = resolvedSearchParams.upgrade
+  const showCelebration = resolvedSearchParams.celebrate === '1'
   const { supabase, user, ecdId, role } = await requireEcdPortalSession()
   const admin = createAdminClient()
   const nowJhb = getJohannesburgGreeting()
@@ -167,7 +170,7 @@ export default async function EcdDashboardPage({
   ] = await Promise.all([
     supabase
       .from('ecd_centres')
-      .select('name,is_active,logo_url,cover_image_url,description,phone,address,suburb,onboarding_complete')
+      .select('name,slug,is_active,logo_url,cover_image_url,description,phone,address,suburb,onboarding_complete,onboarding_completed_at')
       .eq('id', ecdId)
       .maybeSingle(),
     supabase.rpc('get_ecd_dashboard_snapshot', { p_ecd_id: ecdId, p_today: todayDate }),
@@ -296,8 +299,26 @@ export default async function EcdDashboardPage({
   const isOnboardingComplete = Boolean(centre?.onboarding_complete)
   const onboardingDoneCount = onboardingChecklistItems.filter((i) => i.done).length
 
+  // First-week experience: within 7 days of completing onboarding
+  const completedAt = centre?.onboarding_completed_at
+  const isFirstWeek = isOnboardingComplete && completedAt
+    ? (Date.now() - new Date(completedAt).getTime()) < 7 * 24 * 60 * 60 * 1000
+    : false
+
+  const appUrl = normalizeAppUrl()
+  const publicProfileUrl = centre?.slug
+    ? `${appUrl}/c/${centre.slug}`
+    : `${appUrl}/ecd/website`
+
   return (
     <>
+      {showCelebration && isOnboardingComplete && (
+        <OnboardingCelebrationModal
+          ecdId={ecdId}
+          centreName={centre?.name ?? 'Your Cr\u00e8che'}
+          publicProfileUrl={publicProfileUrl}
+        />
+      )}
       <div className="space-y-6 pb-10">
         {!isOnboardingComplete && (
           <EcdWelcomeBanner
@@ -349,7 +370,7 @@ export default async function EcdDashboardPage({
                 <Link href="/ecd/dsd-export">DSD pack</Link>
               </Button>
             </div>
-            {startHereActions.length > 0 ? (
+            {!isFirstWeek && startHereActions.length > 0 ? (
               <div className="rounded-3xl border border-slate-200 bg-white/80 p-4 shadow-sm">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Start here today</p>
                 <p className="mt-1 text-sm text-slate-600">The fastest next steps for running your crèche well today.</p>
@@ -400,7 +421,7 @@ export default async function EcdDashboardPage({
           </div>
         )}
 
-        <FeatureBanner context="ecd" />
+        {!isFirstWeek && <FeatureBanner context="ecd" />}
 
         <div className="grid gap-4 xl:grid-cols-2">
           <Card className="rounded-[1.8rem] border-slate-200 shadow-sm">
@@ -535,7 +556,7 @@ export default async function EcdDashboardPage({
 
         <div className="grid gap-4 lg:grid-cols-3">
           <ProfileCompleteness items={profileItems} />
-          <OnboardingChecklistCard items={onboardingChecklistItems} />
+          {!isFirstWeek && <OnboardingChecklistCard items={onboardingChecklistItems} />}
           <Card className="rounded-3xl border-slate-200 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg font-black text-slate-900">

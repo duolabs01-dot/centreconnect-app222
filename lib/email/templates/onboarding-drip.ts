@@ -69,6 +69,207 @@ function baseLayout(body: string, appUrl: string): string {
 </html>`
 }
 
+// ---------------------------------------------------------------------------
+// Day 0: Celebration — sent immediately on onboarding completion
+// ---------------------------------------------------------------------------
+
+export type DayZeroCelebrationInput = {
+  centreName: string
+  publicProfileLink: string
+  dashboardLink: string
+  appUrl: string
+}
+
+export function renderDayZeroCelebrationEmail(input: DayZeroCelebrationInput): string {
+  const centre = escapeHtml(input.centreName)
+  const profileLink = escapeHtml(input.publicProfileLink)
+  const dashboardLink = escapeHtml(input.dashboardLink)
+  const whatsappText = encodeURIComponent(
+    `Check out ${input.centreName} on CentreConnect \u2014 no registration fee to apply: ${input.publicProfileLink}`
+  )
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
+      ${centre} is now discoverable by families
+    </p>
+    <p style="margin:0 0 16px;">
+      Your cr&egrave;che is live on CentreConnect. Parents in your area can find you in the directory,
+      view your profile, and apply &mdash; all for free.
+    </p>
+    <p style="margin:0 0 24px;">
+      Share your link today so families know you&apos;re open for applications.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+      <tr>
+        <td style="padding:12px 16px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:14px;">
+          <strong>Your public profile link</strong><br />
+          <a href="${profileLink}" style="color:${BRAND_PRIMARY};font-weight:700;word-break:break-all;">${profileLink}</a>
+        </td>
+      </tr>
+      <tr><td style="height:10px;"></td></tr>
+      <tr>
+        <td style="padding:12px 16px;background:#ECFDF5;border-radius:12px;border:1px solid #A7F3D0;font-size:14px;">
+          <strong>Share on WhatsApp</strong><br />
+          <span style="color:${BRAND_MUTED};">Copy this message and send it to parents:</span><br />
+          <a href="https://wa.me/?text=${whatsappText}" style="color:#059669;font-weight:700;">Open WhatsApp share &rarr;</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:14px;color:${BRAND_MUTED};">
+      Tip: Print your link on a poster for your gate, post it on Facebook, or add it to your WhatsApp status.
+      Every family who sees it can apply directly &mdash; no registration fee.
+    </p>
+    <p style="margin:24px 0 16px;">
+      <a href="${dashboardLink}"
+         style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;border-radius:50px;text-decoration:none;">
+        Go to my dashboard &rarr;
+      </a>
+    </p>
+    <p style="margin:24px 0 0;font-size:14px;">
+      Warm regards,<br />
+      <strong>Mandla</strong><br />
+      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
+    </p>`
+
+  return baseLayout(body, input.appUrl)
+}
+
+// ---------------------------------------------------------------------------
+// Day 1: Resume nudge — sent if onboarding still incomplete after 1 day
+// ---------------------------------------------------------------------------
+
+export type DripDay1ResumeInput = {
+  contactName: string
+  centreName: string
+  onboardingLink: string
+  appUrl: string
+}
+
+export function renderDripDay1ResumeEmail(input: DripDay1ResumeInput): string {
+  const name = escapeHtml(input.contactName || 'there')
+  const centre = escapeHtml(input.centreName)
+  const link = escapeHtml(input.onboardingLink)
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
+      Hi ${name} &mdash; finish your setup in 5 minutes
+    </p>
+    <p style="margin:0 0 16px;">
+      Your cr&egrave;che <strong>${centre}</strong> is almost ready on CentreConnect.
+      Families won&apos;t be able to find you until setup is complete.
+    </p>
+    <p style="margin:0 0 24px;">
+      It takes about 5 minutes to finish. Once you&apos;re done, your profile goes live and parents
+      can start applying &mdash; with no registration fee.
+    </p>
+    <p style="margin:0 0 32px;">
+      <a href="${link}"
+         style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;border-radius:50px;text-decoration:none;">
+        Finish setup &rarr;
+      </a>
+    </p>
+    <p style="margin:24px 0 0;font-size:14px;">
+      Warm regards,<br />
+      <strong>Mandla</strong><br />
+      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
+    </p>`
+
+  return baseLayout(body, input.appUrl)
+}
+
+// ---------------------------------------------------------------------------
+// Day 14: Features highlight — sent 14 days after onboarding completion
+// ---------------------------------------------------------------------------
+
+export type DripDay14FeaturesInput = {
+  contactName: string
+  centreName: string
+  tier: 'basic' | 'standard' | 'premium'
+  dashboardLink: string
+  billingLink: string
+  publicProfileLink: string
+  appUrl: string
+}
+
+export function renderDripDay14FeaturesEmail(input: DripDay14FeaturesInput): string {
+  const name = escapeHtml(input.contactName || 'there')
+  const centre = escapeHtml(input.centreName)
+  const isGrowthPlus = input.tier !== 'basic'
+
+  const growthFeatures = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:12px 16px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:14px;margin-bottom:8px;">
+          <strong>Daily Reports</strong><br />
+          <span style="color:${BRAND_MUTED};">Send parents a daily photo and note. Takes 2 minutes per child.</span><br />
+          <a href="${escapeHtml(input.dashboardLink.replace(/\/$/, '') + '/ecd/daily-reports')}" style="color:${BRAND_PRIMARY};font-weight:700;">Try daily reports &rarr;</a>
+        </td>
+      </tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr>
+        <td style="padding:12px 16px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;font-size:14px;">
+          <strong>Safe Pickup</strong><br />
+          <span style="color:${BRAND_MUTED};">Replace your paper collection book with QR-based verification.</span><br />
+          <a href="${escapeHtml(input.dashboardLink.replace(/\/dashboard$/, '/pickup'))}" style="color:${BRAND_PRIMARY};font-weight:700;">Enable safe pickup &rarr;</a>
+        </td>
+      </tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr>
+        <td style="padding:12px 16px;background:#FDF4FF;border-radius:12px;border:1px solid #E9D5FF;font-size:14px;">
+          <strong>Parent Messaging</strong><br />
+          <span style="color:${BRAND_MUTED};">Send announcements to all parents at once. No more WhatsApp groups.</span><br />
+          <a href="${escapeHtml(input.dashboardLink.replace(/\/dashboard$/, '/communications'))}" style="color:${BRAND_PRIMARY};font-weight:700;">Send an announcement &rarr;</a>
+        </td>
+      </tr>
+    </table>`
+
+  const starterFeatures = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:12px 16px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:14px;">
+          <strong>Share your profile</strong><br />
+          <span style="color:${BRAND_MUTED};">Post your public link on Facebook, your gate, or WhatsApp status.</span><br />
+          <a href="${escapeHtml(input.publicProfileLink)}" style="color:${BRAND_PRIMARY};font-weight:700;">See your public page &rarr;</a>
+        </td>
+      </tr>
+      <tr><td style="height:8px;"></td></tr>
+      <tr>
+        <td style="padding:12px 16px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;font-size:14px;">
+          <strong>Unlock daily operations</strong><br />
+          <span style="color:${BRAND_MUTED};">R299/month gets you daily reports, parent messaging, safe pickup, and more.</span><br />
+          <a href="${escapeHtml(input.billingLink)}" style="color:${BRAND_PRIMARY};font-weight:700;">See Growth plan &rarr;</a>
+        </td>
+      </tr>
+    </table>`
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
+      Hi ${name} &mdash; 2 weeks in with ${centre}
+    </p>
+    <p style="margin:0 0 24px;">
+      You&apos;ve had CentreConnect for two weeks now. Here are the features most centres
+      start using in their second week:
+    </p>
+    ${isGrowthPlus ? growthFeatures : starterFeatures}
+    <p style="margin:0 0 16px;">
+      <a href="${escapeHtml(input.dashboardLink)}"
+         style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;border-radius:50px;text-decoration:none;">
+        Go to my dashboard &rarr;
+      </a>
+    </p>
+    <p style="margin:24px 0 0;font-size:14px;">
+      Warm regards,<br />
+      <strong>Mandla</strong><br />
+      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
+    </p>`
+
+  return baseLayout(body, input.appUrl)
+}
+
+// ---------------------------------------------------------------------------
+// Day 3 and Day 7 (existing — unchanged)
+// ---------------------------------------------------------------------------
+
 export type DripDay3Input = {
   contactName: string
   centreName: string

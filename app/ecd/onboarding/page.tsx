@@ -449,27 +449,58 @@ export default function EcdOnboardingPage() {
           ) : null}
 
           {currentStep === 4 ? (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">You&apos;re live!</h2>
-              <p className="text-sm text-slate-600">Your centre is ready on CentreConnect.</p>
-              <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Public Profile URL</p>
-                <p className="mt-1 break-all text-sm font-semibold text-cyan-900">{publicUrl}</p>
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">You&apos;re live!</h2>
+                <p className="mt-1 text-sm text-slate-600">Families can now find your cr&egrave;che on CentreConnect.</p>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(publicUrl)
-                    toast.success('Link copied')
-                  } catch {
-                    toast.error('Could not copy link')
-                  }
-                }}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Copy Link
-              </button>
+
+              {/* Live preview card */}
+              <div className="rounded-2xl border-2 border-teal-400/40 bg-gradient-to-br from-teal-50 to-cyan-50 p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-600">Your public profile</p>
+                <p className="mt-1 text-base font-black text-slate-900">
+                  {formData.centreName || 'Your Cr\u00e8che'}
+                </p>
+                {formData.suburb ? (
+                  <p className="text-sm text-slate-500">{formData.suburb}</p>
+                ) : null}
+                <p className="mt-2 text-xs font-medium text-teal-700">
+                  No registration fee &mdash; families can apply free
+                </p>
+                <div className="mt-3 rounded-xl border border-teal-200 bg-white/80 px-3 py-2">
+                  <p className="break-all text-xs font-semibold text-cyan-800">{publicUrl}</p>
+                </div>
+              </div>
+
+              {/* Share toolkit */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Share your page</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(publicUrl)
+                        toast.success('Link copied to clipboard')
+                      } catch {
+                        toast.error('Could not copy link')
+                      }
+                    }}
+                    className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Copy link
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Check out ${formData.centreName || 'our cr\u00e8che'} on CentreConnect \u2014 no registration fee to apply: ${publicUrl}`)}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    Share on WhatsApp
+                  </a>
+                </div>
+              </div>
+
               <form action={completeOnboarding}>
                 <button
                   type="submit"

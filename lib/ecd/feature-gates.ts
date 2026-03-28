@@ -19,6 +19,7 @@ type FeatureKey =
   | 'applications'        // Starter: 3 full. Growth: unlimited.
   | 'applications-full'   // Full inbox, all applications — Growth+
   | 'communications'      // Parent messaging & announcements — Growth+
+  | 'pickup'              // Safe QR-based pickup verification — Growth+
 
 const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   financials: 'standard',
@@ -35,6 +36,7 @@ const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   applications: 'basic',          // Starter gets 3 full
   'applications-full': 'standard', // Full inbox requires Growth
   communications: 'standard',     // Parent messaging requires Growth
+  pickup: 'standard',             // Safe QR pickup verification — Growth+
 }
 
 async function getCurrentTier(supabase: SupabaseClient, ecdId: string) {
