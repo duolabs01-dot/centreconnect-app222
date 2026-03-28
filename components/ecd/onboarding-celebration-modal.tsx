@@ -1,0 +1,193 @@
+'use client'
+
+import { useEffect, useState, type CSSProperties } from 'react'
+import { CheckCircle2, Share2, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+
+const CONFETTI_PIECES = [
+  { left: '5%',  hue: '165', delayMs: 0,   driftMs: 2100, drift: '-20px' },
+  { left: '13%', hue: '188', delayMs: 80,  driftMs: 2300, drift: '14px'  },
+  { left: '21%', hue: '36',  delayMs: 40,  driftMs: 2200, drift: '-12px' },
+  { left: '29%', hue: '345', delayMs: 110, driftMs: 2400, drift: '16px'  },
+  { left: '38%', hue: '205', delayMs: 20,  driftMs: 2000, drift: '-10px' },
+  { left: '47%', hue: '162', delayMs: 150, driftMs: 2350, drift: '12px'  },
+  { left: '55%', hue: '195', delayMs: 60,  driftMs: 2500, drift: '-8px'  },
+  { left: '63%', hue: '24',  delayMs: 100, driftMs: 2300, drift: '10px'  },
+  { left: '71%', hue: '191', delayMs: 35,  driftMs: 2150, drift: '-16px' },
+  { left: '79%', hue: '166', delayMs: 130, driftMs: 2450, drift: '13px'  },
+  { left: '87%', hue: '212', delayMs: 10,  driftMs: 2250, drift: '-9px'  },
+  { left: '94%', hue: '42',  delayMs: 70,  driftMs: 2050, drift: '11px'  },
+] as const
+
+type ConfettiStyle = CSSProperties & {
+  '--confetti-hue': string
+  '--confetti-drift': string
+  '--confetti-duration': string
+  '--confetti-delay': string
+}
+
+type OnboardingCelebrationModalProps = {
+  ecdId: string
+  centreName: string
+  suburb?: string | null
+  publicProfileUrl: string
+}
+
+export function OnboardingCelebrationModal({
+  ecdId,
+  centreName,
+  suburb,
+  publicProfileUrl,
+}: OnboardingCelebrationModalProps) {
+  const [visible, setVisible] = useState(false)
+  const [confettiActive, setConfettiActive] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    const storageKey = `cc-ecd-celebrate-shown-v1:${ecdId}`
+    if (typeof window === 'undefined') return
+    if (window.localStorage.getItem(storageKey)) return
+
+    window.localStorage.setItem(storageKey, '1')
+    setVisible(true)
+    setConfettiActive(true)
+
+    const t = window.setTimeout(() => setConfettiActive(false), 2800)
+    return () => window.clearTimeout(t)
+  }, [ecdId])
+
+  if (!visible) return null
+
+  const whatsappText = encodeURIComponent(
+    `${centreName} is on CentreConnect \u2014 no registration fee to apply: ${publicProfileUrl}`
+  )
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(publicProfileUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // clipboard unavailable — silently fail
+    }
+  }
+
+  function dismiss() {
+    setVisible(false)
+  }
+
+  return (
+    <>
+      <style>{`
+        @keyframes ecd-confetti-fall {
+          0%   { transform: translateY(-10px) translateX(0) rotate(0deg) scale(1); opacity: 1; }
+          60%  { opacity: 1; }
+          100% { transform: translateY(110vh) translateX(var(--confetti-drift, 0)) rotate(540deg) scale(0.6); opacity: 0; }
+        }
+        .ecd-confetti-piece {
+          position: absolute;
+          top: -8px;
+          width: 10px;
+          height: 14px;
+          border-radius: 2px;
+          background-color: hsl(var(--confetti-hue, 165), 80%, 55%);
+          animation: ecd-confetti-fall var(--confetti-duration, 2200ms) var(--confetti-delay, 0ms) ease-in both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ecd-confetti-piece { display: none; }
+        }
+      `}</style>
+
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm px-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Onboarding complete"
+      >
+        {/* Confetti */}
+        {confettiActive && (
+          <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+            {CONFETTI_PIECES.map((piece, i) => (
+              <span
+                key={i}
+                className="ecd-confetti-piece"
+                style={{
+                  left: piece.left,
+                  '--confetti-hue': piece.hue,
+                  '--confetti-drift': piece.drift,
+                  '--confetti-duration': `${piece.driftMs}ms`,
+                  '--confetti-delay': `${piece.delayMs}ms`,
+                } as ConfettiStyle}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Modal card */}
+        <div className="relative w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl overflow-hidden">
+          {/* Teal top bar */}
+          <div className="h-1 w-full bg-gradient-to-r from-teal-500 via-emerald-400 to-teal-500" />
+
+          <div className="p-6 sm:p-8 text-center">
+            {/* Icon */}
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-teal-500/15 ring-1 ring-teal-500/30">
+              <CheckCircle2 className="h-8 w-8 text-teal-400" aria-hidden />
+            </div>
+
+            <h2 className="text-xl font-semibold text-white mb-1">
+              {centreName} is live!
+            </h2>
+            {suburb && (
+              <p className="text-sm text-slate-400 mb-1">{suburb}</p>
+            )}
+            <p className="text-sm text-slate-400 mb-6">
+              Families can find your cr\u00e8che and apply for free. Share your page to start getting enquiries.
+            </p>
+
+            {/* Share toolkit */}
+            <div className="space-y-3 mb-6">
+              <button
+                onClick={handleCopy}
+                className="w-full flex items-center justify-between gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm text-slate-300 hover:bg-slate-700/80 transition-colors"
+                type="button"
+              >
+                <span className="truncate text-left text-xs">{publicProfileUrl}</span>
+                <span className="shrink-0 text-teal-400 font-medium">
+                  {copied ? 'Copied!' : 'Copy'}
+                </span>
+              </button>
+
+              <a
+                href={`https://wa.me/?text=${whatsappText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 px-4 py-3 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/20 transition-colors"
+              >
+                <Share2 className="h-4 w-4 shrink-0" aria-hidden />
+                Share on WhatsApp
+              </a>
+            </div>
+
+            {/* CTAs */}
+            <Link
+              href="/ecd/dashboard"
+              onClick={dismiss}
+              className="block w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-colors mb-3"
+            >
+              Continue to dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-teal-400 transition-colors"
+            >
+              I&apos;ll share later
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}

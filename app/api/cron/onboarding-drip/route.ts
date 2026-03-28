@@ -4,6 +4,8 @@ import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import {
   renderDripDay3Email,
   renderDripDay7Email,
+  renderDripDay1ResumeEmail,
+  renderDripDay14FeaturesEmail,
 } from '@/lib/email/templates/onboarding-drip'
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
 import { upsertNotificationLog } from '@/lib/admin/notification-logs'
@@ -36,10 +38,14 @@ export async function POST(request: Request) {
   const now = new Date()
 
   const results = {
+    day1Sent: 0,
+    day1Skipped: 0,
     day3Sent: 0,
     day3Skipped: 0,
     day7Sent: 0,
     day7Skipped: 0,
+    day14Sent: 0,
+    day14Skipped: 0,
     fallbackSent: 0,
     fallbackSkipped: 0,
     errors: [] as string[],
@@ -51,7 +57,7 @@ export async function POST(request: Request) {
   const cutoff30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const { data: centres, error: centresError } = await admin
     .from('ecd_centres')
-    .select('id,name,slug,email,logo_url,cover_image_url,owner_id,created_at,onboarding_complete,is_deleted')
+    .select('id,name,slug,email,logo_url,cover_image_url,owner_id,created_at,onboarding_complete,onboarding_completed_at,is_deleted')
     .eq('is_deleted', false)
     .gte('created_at', cutoff30)
     .order('created_at', { ascending: true })
@@ -68,7 +74,7 @@ export async function POST(request: Request) {
     .from('notification_logs')
     .select('ecd_id,event_type')
     .in('ecd_id', centreIds)
-    .in('event_type', ['onboarding_day3', 'onboarding_day7', 'welcome_pack_fallback'])
+    .in('event_type', ['onboarding_day1_resume', 'onboarding_day3', 'onboarding_day7', 'onboarding_day14_features', 'welcome_pack_fallback'])
 
   const sentMap = new Set<string>()
   for (const log of existingLogs ?? []) {
@@ -124,7 +130,21 @@ export async function POST(request: Request) {
   }
 
   // -------------------------------------------------------------------
-  // 6. Process each centre
+  // 6. Fetch subscription tiers for all centres (for Day 14 email)
+  // -------------------------------------------------------------------
+  const { data: subscriptionRows } = await admin
+    .from('subscriptions')
+    .select('ecd_id,tier')
+    .in('ecd_id', centreIds)
+    .order('created_at', { ascending: false })
+
+  const tierMap: Record<string, string> = {}
+  for (const row of subscriptionRows ?? []) {
+    if (!tierMap[row.ecd_id]) tierMap[row.ecd_id] = row.tier ?? 'basic'
+  }
+
+  // -------------------------------------------------------------------
+  // 7. Process each centre
   // -------------------------------------------------------------------
   for (const centre of centres) {
     const ageMs = now.getTime() - new Date(centre.created_at).getTime()
@@ -138,6 +158,48 @@ export async function POST(request: Request) {
       profile?.first_name?.trim() ||
       profile?.full_name?.trim().split(' ')[0] ||
       'there'
+
+    // ---- Day 1 resume: onboarding not complete, 1–3 days old --------
+    if (ageDays >= 1 && ageDays < 3 && !centre.onboarding_complete) {
+      const key = `${centre.id}:onboarding_day1_resume`
+      if (!sentMap.has(key)) {
+        try {
+          const html = renderDripDay1ResumeEmail({
+            contactName,
+            centreName: centre.name,
+            onboardingLink: `${appUrl.replace(/\/$/, '')}/ecd/onboarding`,
+            appUrl,
+          })
+          const result = await deliverTransactionalEmail({
+            to: ownerEmail,
+            subject: `${centre.name} \u2014 finish your setup (5 min)`,
+            html,
+          })
+          await upsertNotificationLog(admin, {
+            centreId: centre.id,
+            eventKey: `onboarding_day1_resume:${centre.id}`,
+            eventType: 'onboarding_day1_resume',
+            channel: 'email',
+            recipient: ownerEmail,
+            status: result.status,
+            provider: result.directSent ? result.directProvider ?? 'smtp' : 'email_queue',
+            providerMessageId: result.directMessageId ?? result.queueMessageId,
+            payload: { centreName: centre.name, ageDays: Math.round(ageDays) },
+            errorMessage: result.status !== 'sent' ? result.deliveryMessage : null,
+          })
+          if (result.status === 'sent' || result.status === 'queued') {
+            results.day1Sent++
+            sentMap.add(key)
+          } else {
+            results.errors.push(`day1 ${centre.id}: ${result.deliveryMessage}`)
+          }
+        } catch (err) {
+          results.errors.push(`day1 ${centre.id}: ${err instanceof Error ? err.message : String(err)}`)
+        }
+      } else {
+        results.day1Skipped++
+      }
+    }
 
     // ---- Day 3 nudge: 0 children, 3–8 days old -----------------------
     if (ageDays >= 3 && ageDays < 8) {
@@ -227,6 +289,59 @@ export async function POST(request: Request) {
         }
       } else {
         results.day7Skipped++
+      }
+    }
+
+    // ---- Day 14 features: 14 days after onboarding_completed_at ------
+    if (centre.onboarding_complete && centre.onboarding_completed_at) {
+      const completionAgeMs = now.getTime() - new Date(centre.onboarding_completed_at).getTime()
+      const completionAgeDays = completionAgeMs / (24 * 60 * 60 * 1000)
+      if (completionAgeDays >= 14 && completionAgeDays < 18) {
+        const key = `${centre.id}:onboarding_day14_features`
+        if (!sentMap.has(key)) {
+          try {
+            const tier = (tierMap[centre.id] ?? 'basic') as import('@/lib/billing/plans').InternalTier
+            const slug = centre.slug?.trim() ?? ''
+            const html = renderDripDay14FeaturesEmail({
+              contactName,
+              centreName: centre.name,
+              tier,
+              publicProfileLink: slug
+                ? `${appUrl.replace(/\/$/, '')}/c/${slug}`
+                : `${appUrl.replace(/\/$/, '')}/ecd/website`,
+              dashboardLink: `${appUrl.replace(/\/$/, '')}/ecd/dashboard`,
+              billingLink: `${appUrl.replace(/\/$/, '')}/ecd/billing`,
+              appUrl,
+            })
+            const result = await deliverTransactionalEmail({
+              to: ownerEmail,
+              subject: `2 weeks in \u2014 here\u2019s what\u2019s next for ${centre.name}`,
+              html,
+            })
+            await upsertNotificationLog(admin, {
+              centreId: centre.id,
+              eventKey: `onboarding_day14_features:${centre.id}`,
+              eventType: 'onboarding_day14_features',
+              channel: 'email',
+              recipient: ownerEmail,
+              status: result.status,
+              provider: result.directSent ? result.directProvider ?? 'smtp' : 'email_queue',
+              providerMessageId: result.directMessageId ?? result.queueMessageId,
+              payload: { centreName: centre.name, tier, completionAgeDays: Math.round(completionAgeDays) },
+              errorMessage: result.status !== 'sent' ? result.deliveryMessage : null,
+            })
+            if (result.status === 'sent' || result.status === 'queued') {
+              results.day14Sent++
+              sentMap.add(key)
+            } else {
+              results.errors.push(`day14 ${centre.id}: ${result.deliveryMessage}`)
+            }
+          } catch (err) {
+            results.errors.push(`day14 ${centre.id}: ${err instanceof Error ? err.message : String(err)}`)
+          }
+        } else {
+          results.day14Skipped++
+        }
       }
     }
 

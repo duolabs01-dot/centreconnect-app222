@@ -450,26 +450,52 @@ export default function EcdOnboardingPage() {
 
           {currentStep === 4 ? (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-slate-900">You&apos;re live!</h2>
-              <p className="text-sm text-slate-600">Your centre is ready on CentreConnect.</p>
-              <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Public Profile URL</p>
-                <p className="mt-1 break-all text-sm font-semibold text-cyan-900">{publicUrl}</p>
+              {/* Live preview card */}
+              <div className="rounded-2xl border-2 border-teal-400 bg-gradient-to-br from-teal-50 to-cyan-50 p-4">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-teal-600">
+                  \u2728 Your centre is now discoverable by families
+                </p>
+                <p className="mt-1 text-base font-bold text-slate-900">{formData.centreName || 'Your Centre'}</p>
+                {formData.suburb && (
+                  <p className="text-sm text-slate-600">{formData.suburb}</p>
+                )}
+                <p className="mt-2 text-xs text-teal-700 font-medium">
+                  No registration fee \u2014 families can apply free
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(publicUrl)
-                    toast.success('Link copied')
-                  } catch {
-                    toast.error('Could not copy link')
-                  }
-                }}
-                className="w-full rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-              >
-                Copy Link
-              </button>
+
+              {/* Share toolkit */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Share your profile link</p>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                  <p className="break-all text-xs text-slate-600">{publicUrl}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(publicUrl)
+                        toast.success('Link copied!')
+                      } catch {
+                        toast.error('Could not copy link')
+                      }
+                    }}
+                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Copy link
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`${formData.centreName || 'Our centre'} is on CentreConnect \u2014 no registration fee to apply: ${publicUrl}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 px-3 py-2 text-center text-sm font-semibold text-[#25D366] hover:bg-[#25D366]/20"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+
               <form action={completeOnboarding}>
                 <button
                   type="submit"
