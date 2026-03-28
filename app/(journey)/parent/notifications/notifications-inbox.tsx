@@ -265,11 +265,6 @@ export function NotificationsInbox({
     toast.success('All notifications marked as read')
   }
 
-  async function copyMessage(text: string) {
-    await navigator.clipboard.writeText(text)
-    toast.success('Message copied')
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
@@ -326,64 +321,63 @@ export function NotificationsInbox({
             <div key={group}>
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{group}</p>
               <div className="space-y-3">
-                {groupItems.map((item) => (
-                  <div key={item.id} className={`rounded-lg border p-4 ${item.is_read ? 'border-slate-200 bg-white' : 'border-primary/20 bg-primary/5'}`}>
-                    {(() => {
-                      const centre = normalizeCentre(item.ecd_centres)
-                      const type = getNotificationType(item)
-                      const cta = getActionCta(item, centre)
-                      return (
-                        <>
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                {type === 'action' ? (
-                                  <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                                    Action needed
-                                  </span>
-                                ) : null}
-                                {type === 'message' ? (
-                                  <span className="inline-flex rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-bold text-teal-700">
-                                    Message
-                                  </span>
-                                ) : null}
-                                {!item.is_read && <span className="h-2 w-2 rounded-full bg-cyan-500" />}
-                              </div>
-                              <p className={`mt-1 text-sm font-semibold text-slate-900 ${!item.is_read ? 'font-bold' : ''}`}>{item.title}</p>
-                              <p className="mt-1 text-xs text-slate-600">
-                                {centre.name} | {formatDate(item.created_at)}
-                              </p>
-                            </div>
-                            {!item.is_read ? (
-                              <Button type="button" size="sm" variant="outline" onClick={() => void markRead(item.id)}>
-                                Mark read
-                              </Button>
-                            ) : null}
+                {groupItems.map((item) => {
+                  const centre = normalizeCentre(item.ecd_centres)
+                  const type = getNotificationType(item)
+                  const cta = getActionCta(item, centre)
+                  const isMessage = type === 'message'
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (!item.is_read) void markRead(item.id)
+                      }}
+                      className="w-full text-left"
+                    >
+                      <div className={`flex gap-3 rounded-2xl p-3 transition-colors ${item.is_read ? 'bg-transparent' : 'bg-cyan-50/60'}`}>
+                        <div
+                          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                            type === 'action'
+                              ? 'bg-amber-100 text-amber-700'
+                              : isMessage
+                                ? 'bg-teal-100 text-teal-700'
+                                : 'bg-slate-100 text-slate-600'
+                          }`}
+                        >
+                          {centre.name.charAt(0).toUpperCase()}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <p className={`truncate text-sm ${item.is_read ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}`}>
+                              {centre.name}
+                            </p>
+                            <p className="shrink-0 text-[10px] text-slate-400">{formatDate(item.created_at)}</p>
                           </div>
-                          <p className="mt-3 text-sm text-slate-700">{item.message}</p>
+                          <p className={`mt-0.5 text-sm leading-snug ${item.is_read ? 'text-slate-500' : 'text-slate-700'}`}>
+                            {item.message}
+                          </p>
                           {cta ? (
-                            <div className="mt-2">
-                              <a
-                                href={cta.href}
-                                target={cta.href.startsWith('http') ? '_blank' : undefined}
-                                rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
-                                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-teal-700"
-                              >
-                                {cta.label}
-                                <ArrowRight className="h-3 w-3" />
-                              </a>
-                            </div>
+                            <a
+                              href={cta.href}
+                              target={cta.href.startsWith('http') ? '_blank' : undefined}
+                              rel={cta.href.startsWith('http') ? 'noreferrer' : undefined}
+                              onClick={(event) => event.stopPropagation()}
+                              className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-teal-600"
+                            >
+                              {cta.label}
+                              <ArrowRight className="h-3 w-3" />
+                            </a>
                           ) : null}
-                          <div className="mt-3">
-                            <Button type="button" size="sm" variant="outline" onClick={() => void copyMessage(item.message)}>
-                              Copy message
-                            </Button>
-                          </div>
-                        </>
-                      )
-                    })()}
-                  </div>
-                ))}
+                        </div>
+
+                        {!item.is_read ? <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-500" /> : null}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))}

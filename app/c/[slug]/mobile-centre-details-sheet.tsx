@@ -87,7 +87,7 @@ export function MobileCentreDetailsSheet({
   const [open, setOpen] = useState(false)
 
   const claimHref = useMemo(() => `/for-centres/register?flow=confirm&claim=${encodeURIComponent(centreSlug)}`, [centreSlug])
-  const showClaimLink = !isClaimed
+  const showClaimLink = !isClaimed && userRole !== null && userRole !== 'parent_user'
 
   return (
     <>
@@ -233,21 +233,19 @@ export function MobileCentreDetailsSheet({
                       : 'Save this creche now and come back when digital applications open.'}
                   </p>
                 </div>
-                <ApplyCTA
-                  variant="hero"
-                  centreSlug={centreSlug}
-                  userRole={userRole}
-                  existingApplicationId={existingApplicationId ?? null}
-                  existingApplicationStatus={existingApplicationStatus ?? null}
-                  existingHelperText={isClaimed ? 'CentreConnect keeps your application, daily updates, replies, and next steps together.' : null}
-                  isAvailable={isClaimed}
-                  unavailableLabel="Online applications not available yet"
-                  helperText={
-                    isClaimed
-                      ? 'Apply now and move forward with one organised parent profile, visible daily activities, and a calmer follow-up journey.'
-                      : 'Save this creche now and come back when applications open.'
-                  }
-                />
+                {isClaimed ? (
+                  <ApplyCTA
+                    variant="hero"
+                    centreSlug={centreSlug}
+                    userRole={userRole}
+                    existingApplicationId={existingApplicationId ?? null}
+                    existingApplicationStatus={existingApplicationStatus ?? null}
+                    existingHelperText="CentreConnect keeps your application, daily updates, replies, and next steps together."
+                    isAvailable={true}
+                    unavailableLabel="Online applications not available yet"
+                    helperText="Apply now and move forward with one organised parent profile, visible daily activities, and a calmer follow-up journey."
+                  />
+                ) : null}
                 {isClaimed ? (
                   <ContactCentreSheet
                     centreId={centreId}

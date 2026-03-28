@@ -36,6 +36,8 @@ type DiscoverCentre = {
   contact_phone?: string | null
   is_claimed?: boolean
   is_registered?: boolean
+  is_pilot?: boolean
+  is_featured?: boolean
   distanceMeters?: number
   coordinateSource?: CentreCoordinateSource
   coordinateConfidence?: CentreCoordinateConfidence | null
@@ -138,6 +140,8 @@ export default function ParentDiscoverClient() {
               contact_phone: (centre.contact_phone as string | null | undefined) ?? null,
               is_claimed: Boolean(centre.is_claimed),
               is_registered: Boolean(centre.is_registered),
+              is_pilot: Boolean(centre.is_pilot),
+              is_featured: Boolean(centre.is_featured),
             }
           }) as DiscoverCentre[]
           setCentres(mapped)
@@ -241,7 +245,13 @@ export default function ParentDiscoverClient() {
             : undefined,
         }
       })
-      .sort((a, b) => (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY))
+      .sort((a, b) => {
+        const aPromoted = Boolean(a.is_featured || a.is_pilot)
+        const bPromoted = Boolean(b.is_featured || b.is_pilot)
+        if (aPromoted && !bPromoted) return -1
+        if (!aPromoted && bPromoted) return 1
+        return (a.distanceMeters ?? Number.POSITIVE_INFINITY) - (b.distanceMeters ?? Number.POSITIVE_INFINITY)
+      })
   }, [centres, location])
 
   const suburbOptions = useMemo(() => {
@@ -268,6 +278,16 @@ export default function ParentDiscoverClient() {
         (centre.city ?? '').toLowerCase().includes(needle)
     )
   }, [centresWithDistance, query, selectedSuburb])
+
+  const promotedCentres = useMemo(
+    () => filteredCentres.filter((centre) => Boolean(centre.is_featured || centre.is_pilot)),
+    [filteredCentres]
+  )
+
+  const listCentres = useMemo(
+    () => filteredCentres.filter((centre) => !centre.is_featured && !centre.is_pilot),
+    [filteredCentres]
+  )
 
   return (
     <div className="min-h-screen overflow-x-clip bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
@@ -364,33 +384,82 @@ export default function ParentDiscoverClient() {
             </Button>
           </section>
         ) : (
-          <div className={cardVariant === 'full' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2'}>
-            {filteredCentres.map((centre) => {
-              const { age_min_months, age_max_months } = parseAgeGroupsToMonths(centre.age_groups)
-              const cardData: CentreCardData = {
-                id: centre.id,
-                slug: centre.slug ?? centre.id,
-                name: centre.name,
-                suburb: centre.suburb ?? null,
-                area: centre.city ?? null,
-                fee_min: centre.fee_min ?? null,
-                fee_max: centre.fee_max ?? null,
-                age_min_months,
-                age_max_months,
-                hero_image_url: centre.cover_image_url ?? null,
-                is_verified: Boolean(centre.is_claimed),
-                is_dsd_registered: Boolean(centre.is_registered),
-                vacancy_status: null,
-                is_claimed: Boolean(centre.is_claimed),
-                logo_url: centre.logo_url ?? null,
-                tagline: centre.tagline ?? null,
-                age_groups: centre.age_groups ?? null,
-                contact_whatsapp: centre.contact_whatsapp ?? null,
-                contact_phone: centre.contact_phone ?? null,
-                is_saved: savedCentreIds.has(centre.id),
-              }
-              return <SharedCentreCard key={centre.id} centre={cardData} variant={cardVariant} />
-            })}
+          <div className="space-y-4">
+            {promotedCentres.length > 0 ? (
+              <div>
+                <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-teal-700">Recommended near you</p>
+                <div className={cardVariant === 'full' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2'}>
+                  {promotedCentres.map((centre) => {
+                    const { age_min_months, age_max_months } = parseAgeGroupsToMonths(centre.age_groups)
+                    const cardData: CentreCardData = {
+                      id: centre.id,
+                      slug: centre.slug ?? centre.id,
+                      name: centre.name,
+                      suburb: centre.suburb ?? null,
+                      area: centre.city ?? null,
+                      fee_min: centre.fee_min ?? null,
+                      fee_max: centre.fee_max ?? null,
+                      age_min_months,
+                      age_max_months,
+                      hero_image_url: centre.cover_image_url ?? null,
+                      is_verified: Boolean(centre.is_claimed),
+                      is_dsd_registered: Boolean(centre.is_registered),
+                      vacancy_status: null,
+                      is_claimed: Boolean(centre.is_claimed),
+                      logo_url: centre.logo_url ?? null,
+                      tagline: centre.tagline ?? null,
+                      age_groups: centre.age_groups ?? null,
+                      contact_whatsapp: centre.contact_whatsapp ?? null,
+                      contact_phone: centre.contact_phone ?? null,
+                      is_saved: savedCentreIds.has(centre.id),
+                      is_pilot: Boolean(centre.is_pilot),
+                      is_featured: Boolean(centre.is_featured),
+                      viewer_role: 'parent_user',
+                    }
+                    return <SharedCentreCard key={centre.id} centre={cardData} variant={cardVariant} />
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {listCentres.length > 0 ? (
+              <div>
+                {promotedCentres.length > 0 ? (
+                  <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">More cr&egrave;ches</p>
+                ) : null}
+                <div className={cardVariant === 'full' ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2'}>
+                  {listCentres.map((centre) => {
+                    const { age_min_months, age_max_months } = parseAgeGroupsToMonths(centre.age_groups)
+                    const cardData: CentreCardData = {
+                      id: centre.id,
+                      slug: centre.slug ?? centre.id,
+                      name: centre.name,
+                      suburb: centre.suburb ?? null,
+                      area: centre.city ?? null,
+                      fee_min: centre.fee_min ?? null,
+                      fee_max: centre.fee_max ?? null,
+                      age_min_months,
+                      age_max_months,
+                      hero_image_url: centre.cover_image_url ?? null,
+                      is_verified: Boolean(centre.is_claimed),
+                      is_dsd_registered: Boolean(centre.is_registered),
+                      vacancy_status: null,
+                      is_claimed: Boolean(centre.is_claimed),
+                      logo_url: centre.logo_url ?? null,
+                      tagline: centre.tagline ?? null,
+                      age_groups: centre.age_groups ?? null,
+                      contact_whatsapp: centre.contact_whatsapp ?? null,
+                      contact_phone: centre.contact_phone ?? null,
+                      is_saved: savedCentreIds.has(centre.id),
+                      is_pilot: Boolean(centre.is_pilot),
+                      is_featured: Boolean(centre.is_featured),
+                      viewer_role: 'parent_user',
+                    }
+                    return <SharedCentreCard key={centre.id} centre={cardData} variant={cardVariant} />
+                  })}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Heart, MapPin, Check, Phone, ArrowRight } from 'lucide-react'
+import { Heart, MapPin, Check, Phone, ArrowRight, ShieldCheck } from 'lucide-react'
 import { getCentreHeroImage } from '@/lib/ui/centre-hero-images'
 import { buildCentrePreviewImage } from '@/lib/ui/centre-preview-image'
 import { type CentreCardData, formatAgeRange } from '@/types/centre-card'
 import { cn } from '@/lib/utils'
+import { SaveCentreButton } from '@/components/parent/SaveCentreButton'
 
 // ─── Age group helpers ──────────────────────────────────────────────────────
 
@@ -108,28 +109,16 @@ function LogoBubble({ data, size = 44 }: { data: CentreCardData; size?: number }
   if (data.logo_url) {
     return (
       <div
-        className="relative overflow-hidden rounded-xl border-[2.5px] border-white shadow-md bg-white"
+        className="relative overflow-hidden rounded-xl border-[3px] border-white bg-white shadow-md ring-2 ring-white/90"
         style={{ width: s, height: s, flexShrink: 0 }}
       >
         <Image src={data.logo_url} alt={data.name} fill className="object-cover" sizes={`${s}px`} />
       </div>
     )
   }
-  // Initial-letter bubble using the same gradient palette as preview image
-  const previewSrc = buildCentrePreviewImage({ name: data.name, suburb: data.suburb, isClaimed: data.is_claimed })
-  // Extract a teal/green gradient for initial bubble — simpler derived colour
-  const seed = data.name.charCodeAt(0) + (data.name.charCodeAt(1) ?? 0)
-  const gradients = [
-    'from-teal-500 to-cyan-600',
-    'from-emerald-500 to-teal-600',
-    'from-violet-500 to-purple-600',
-    'from-rose-500 to-pink-600',
-    'from-amber-500 to-orange-600',
-  ]
-  const gradient = gradients[seed % gradients.length]
   return (
     <div
-      className={cn('flex items-center justify-center rounded-xl border-[2.5px] border-white shadow-md bg-gradient-to-br text-white font-black', gradient)}
+      className="flex items-center justify-center rounded-xl border-[3px] border-white bg-gradient-to-br from-teal-600 to-cyan-600 text-white font-black shadow-md ring-2 ring-white/90"
       style={{ width: s, height: s, fontSize: s * 0.38, flexShrink: 0 }}
     >
       {(data.name.trim().charAt(0) || 'C').toUpperCase()}
@@ -173,6 +162,8 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
   const heroSrc = resolveHeroSrc(centre)
   const hasRealPhoto = isRealPhoto(heroSrc)
   const ageCategories = deriveAgeCategories(centre)
+  const isPromoted = Boolean(centre.is_pilot || centre.is_featured)
+  const showClaimLink = !centre.is_claimed && centre.viewer_role !== null && centre.viewer_role !== 'parent_user'
 
   function handleSave(e: React.MouseEvent) {
     e.preventDefault()
@@ -232,7 +223,11 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
 
         {/* Top-right: Heart save button */}
         <div className="absolute right-2.5 top-2.5 z-10">
-          <HeartButton isSaved={isSaved} onToggle={handleSave} size={32} />
+          {onSave ? (
+            <HeartButton isSaved={isSaved} onToggle={handleSave} size={32} />
+          ) : (
+            <SaveCentreButton centreId={centre.id} initialSaved={isSaved} />
+          )}
         </div>
 
         {/* Bottom-left: Logo bubble — overlaps into body */}
@@ -256,6 +251,15 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
               <span className="truncate">{[centre.suburb, centre.area].filter(Boolean).join(', ')}</span>
             </div>
           )}
+
+          {isPromoted ? (
+            <div className="mt-2">
+              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-800">
+                <ShieldCheck className="h-3 w-3" />
+                Promoted
+              </span>
+            </div>
+          ) : null}
 
           {/* Stats row */}
           <div className="mt-2.5 flex items-center gap-4 text-xs text-slate-600">
@@ -325,7 +329,7 @@ function FullCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardProp
       </Link>
 
       {/* Unclaimed: claim listing link — outside the main Link to avoid nested <a> */}
-      {!centre.is_claimed && (
+      {!centre.is_claimed && showClaimLink && (
         <div className="px-4 pb-3">
           <a
             href="/ecd/claim"
@@ -346,6 +350,8 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
   const heroSrc = resolveHeroSrc(centre)
   const hasRealPhoto = isRealPhoto(heroSrc)
   const ageCategories = deriveAgeCategories(centre)
+  const isPromoted = Boolean(centre.is_pilot || centre.is_featured)
+  const showClaimLink = !centre.is_claimed && centre.viewer_role !== null && centre.viewer_role !== 'parent_user'
 
   function handleSave(e: React.MouseEvent) {
     e.preventDefault()
@@ -390,7 +396,11 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
           )}
           {/* Heart button */}
           <div className="absolute left-1.5 top-1.5 z-10">
-            <HeartButton isSaved={isSaved} onToggle={handleSave} size={26} />
+            {onSave ? (
+              <HeartButton isSaved={isSaved} onToggle={handleSave} size={26} />
+            ) : (
+              <SaveCentreButton centreId={centre.id} initialSaved={isSaved} />
+            )}
           </div>
         </div>
 
@@ -409,6 +419,14 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
                 )}
               </p>
             )}
+            {isPromoted ? (
+              <div className="mt-1">
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-800">
+                  <ShieldCheck className="h-2.5 w-2.5" />
+                  Promoted
+                </span>
+              </div>
+            ) : null}
             {ageCategories.filter(c => c !== 'dsd').length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {ageCategories.filter(c => c !== 'dsd').map(cat => (
@@ -442,7 +460,7 @@ function CompactCard({ centre, onSave, isSaved = false }: Omit<SharedCentreCardP
       </Link>
 
       {/* Unclaimed: claim link — outside Link to avoid nested <a> */}
-      {!centre.is_claimed && (
+      {!centre.is_claimed && showClaimLink && (
         <a
           href="/ecd/claim"
           className="mt-1 inline-flex items-center gap-1 px-1 text-[10.5px] text-slate-400 hover:text-teal-600 transition-colors"

@@ -20,6 +20,9 @@ export interface CentreCardData {
   contact_whatsapp?: string | null
   contact_phone?: string | null
   is_saved?: boolean
+  is_pilot?: boolean
+  is_featured?: boolean
+  viewer_role?: string | null
 }
 
 /**

@@ -558,32 +558,36 @@ export default function DirectoryExplorer({
             </div>
             {/* Card view toggle */}
             <div className="flex items-center gap-1 rounded-full bg-slate-100 p-0.5">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setCardVariant('full')}
                 aria-label="Grid view"
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-all',
+                  'h-8 w-8 rounded-full transition-all',
                   cardVariant === 'full'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'bg-transparent text-slate-400 hover:text-slate-600'
+                    ? 'bg-white text-teal-600 shadow-sm hover:bg-white hover:text-teal-600'
+                    : 'bg-transparent text-slate-400 hover:bg-transparent hover:text-slate-600'
                 )}
               >
                 <LayoutGrid className="h-4 w-4" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setCardVariant('compact')}
                 aria-label="List view"
                 className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-all',
+                  'h-8 w-8 rounded-full transition-all',
                   cardVariant === 'compact'
-                    ? 'bg-white text-teal-600 shadow-sm'
-                    : 'bg-transparent text-slate-400 hover:text-slate-600'
+                    ? 'bg-white text-teal-600 shadow-sm hover:bg-white hover:text-teal-600'
+                    : 'bg-transparent text-slate-400 hover:bg-transparent hover:text-slate-600'
                 )}
               >
                 <List className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -679,6 +683,9 @@ export default function DirectoryExplorer({
                     contact_whatsapp: centre.contact_whatsapp ?? null,
                     contact_phone: centre.contact_phone ?? null,
                     is_saved: Boolean(centre.is_saved),
+                    is_pilot: Boolean(centre.is_pilot),
+                    is_featured: Boolean(centre.is_featured),
+                    viewer_role: viewerRole,
                   }
                   return (
                     <motion.div
