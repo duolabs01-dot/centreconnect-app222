@@ -246,6 +246,7 @@ Function: `hasEcdFeatureAccess({ supabase, ecdId, feature })` → `{ allowed, ti
 | `compliance` | `standard` (Growth) | |
 | `employment` | `standard` (Growth) | |
 | `financials` | `standard` (Growth) | |
+| `pickup` | `standard` (Growth) | QR-based safe collection verification |
 | `website-builder` | `premium` (Pro) | Coming soon |
 
 ### Subscription Status Values
@@ -262,7 +263,7 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 | Table | Purpose |
 |---|---|
 | `user_profiles` | id, role, full_name, phone — one row per auth user |
-| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN), **onboarding_complete** (BOOLEAN), **onboarding_progress** (JSONB — keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`) |
+| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN), **onboarding_complete** (BOOLEAN), **onboarding_completed_at** (TIMESTAMPTZ — set when owner completes `/ecd/onboarding`; used to gate first-week dashboard experience and Day 14 drip email), **onboarding_progress** (JSONB — keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`) |
 | `ecd_admins` | Links user → centre (user_id, ecd_id, role, invited_at, accepted_at) |
 | `children` | id, ecd_id, first_name, last_name, date_of_birth, class_id, gender |
 | `attendance` | child_id, date, status (present/absent/sick/late), ecd_id |
@@ -346,7 +347,7 @@ All under `/api/internal/platform-admin/` — require `platform_admin` role:
 ### Cron Jobs
 | Method | Path | Schedule | Purpose |
 |---|---|---|---|
-| POST | `/api/cron/onboarding-drip` | 0 7 * * * (07:00 SAST daily) | Send onboarding drip emails (Day 3 children nudge, Day 7 go-live, 48h fallback) |
+| POST | `/api/cron/onboarding-drip` | 0 7 * * * (07:00 SAST daily) | Send onboarding drip emails (Day 1 resume, Day 3 children nudge, Day 7 go-live, Day 14 features, 48h fallback) |
 
 ### Webhooks
 | Method | Path | Purpose |
@@ -483,17 +484,27 @@ import { createAdminClient } from '@/lib/supabase/admin'
    - Dismissible via localStorage (key: `cc-ecd-welcome-banner-dismissed-v1`)
    - Falls back gracefully when all steps done
 
-4. **Onboarding drip cron** (`app/api/cron/onboarding-drip/route.ts`):
+4. **Onboarding completion action** (`app/ecd/onboarding/actions.ts`):
+   - `completeOnboarding()` server action called when owner submits the final onboarding step
+   - Stamps `onboarding_complete = true` AND `onboarding_completed_at = now()` on `ecd_centres`
+   - Fire-and-forgets `renderDayZeroCelebrationEmail` (idempotent via `notification_logs`)
+   - Redirects to `/ecd/dashboard?celebrate=1` — triggers the celebration modal
+
+5. **Onboarding drip cron** (`app/api/cron/onboarding-drip/route.ts`):
    - Runs daily at **07:00 SAST** (configured in `vercel.json`)
    - Protected by `CRON_SECRET` environment variable
-   - Sends 3 types of emails:
+   - Sends 5 types of emails:
+     - **Day 0**: centre just completed onboarding — celebration + share toolkit (fired from action, not cron)
+     - **Day 1**: onboarding not complete, 1–3 days old — resume nudge ("5 min to finish")
      - **Day 3**: centre has 0 children — "have you added your children yet?"
      - **Day 7**: no logo/cover image — "share your page with families"
+     - **Day 14**: anchored to `onboarding_completed_at`, tier-aware — Growth shows daily-reports/pickup/comms features; Starter shows share + upgrade CTA
      - **48h fallback**: welcome email unopened + owner hasn't logged in — "did our email reach you?"
-   - All logged to `notification_logs` with `event_type` in `[onboarding_day3, onboarding_day7, welcome_pack_fallback]`
+   - All logged to `notification_logs` with `event_type` in `[onboarding_day0_celebration, onboarding_day1_resume, onboarding_day3, onboarding_day7, onboarding_day14_features, welcome_pack_fallback]`
    - Idempotent — never fires twice per centre via `notification_logs` lookups
+   - Bulk fetches subscription tiers for all centres (used for Day 14 tier-aware content)
 
-5. **Onboarding progress tracking** (`lib/actions/onboarding-progress.ts` + migration):
+6. **Onboarding progress tracking** (`lib/actions/onboarding-progress.ts` + migration):
    - Column: `ecd_centres.onboarding_progress` (JSONB, default `{}`)
    - Step keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`
    - RPC function: `stamp_onboarding_step(p_ecd_id, p_step_key, p_completed_at)` — idempotent
@@ -502,7 +513,31 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 **Email Templates:**
 - `lib/email/templates/pilot-welcome-pack.tsx` — welcome pack (6-step checklist + tracking)
-- `lib/email/templates/onboarding-drip.ts` — Day 3, Day 7, and 48h fallback emails
+- `lib/email/templates/onboarding-drip.ts` — all drip emails:
+  - `renderDripDay3Email` — Day 3 children nudge
+  - `renderDripDay7Email` — Day 7 go-live nudge
+  - `renderDayZeroCelebrationEmail` — Day 0 celebration (fired from `completeOnboarding` action)
+  - `renderDripDay1ResumeEmail` — Day 1 resume nudge (onboarding incomplete)
+  - `renderDripDay14FeaturesEmail` — Day 14 tier-aware feature spotlight (anchored to `onboarding_completed_at`; `isGrowthPlus = tier !== 'basic'`)
+
+**First-Week Dashboard Experience** (components rendered in `app/ecd/(portal)/dashboard/page.tsx`):
+
+- `isFirstWeek` — computed as `(Date.now() - new Date(onboarding_completed_at).getTime()) < 7 * 24 * 60 * 60 * 1000`. `false` if `onboarding_completed_at` is null.
+- **During the first week**, the dashboard:
+  - Shows `OnboardingCelebrationModal` (once only, show-guard via localStorage `cc-ecd-celebrate-shown-v1:{ecdId}`) when `?celebrate=1` is in the URL
+  - Shows `DashboardContextStrip` above the hero card — a single priority-ordered next-action prompt
+  - Shows `FeatureDiscoveryCards` instead of `FeatureBanner`
+  - Hides `startHereActions` and `OnboardingChecklistCard` (avoids duplicate nudges)
+- **After the first week**, the dashboard reverts to the standard layout
+
+**New ECD Components** (`components/ecd/`):
+- `onboarding-celebration-modal.tsx` — confetti modal shown once after onboarding completion. Props: `{ ecdId, centreName, suburb?, publicProfileUrl }`. Uses inline `<style>` tag for confetti CSS (`@keyframes ecd-confetti-fall`, `.ecd-confetti-piece`). Respects `prefers-reduced-motion`.
+- `dashboard-context-strip.tsx` — single next-action strip. Priority: add children → take attendance → upload logo → add cover → all done. Props: `{ childrenCount, attendanceToday, hasLogo, hasCover, tier }`.
+- `feature-discovery-cards.tsx` — tier-filtered feature grid. Props: `{ tier: InternalTier, publicProfileUrl?: string }`. Starter (basic) gets 4 basic feature cards + amber upgrade card spanning 2 cols.
+
+**Onboarding page** (`app/ecd/onboarding/page.tsx`):
+- Step 4 shows a live preview card (centre name, suburb, "No registration fee" copy) instead of a plain URL box
+- Copy link button + WhatsApp `wa.me/?text=` share link in the share toolkit
 
 **Parent Welcome Notifications:**
 - `lib/notifications/parent-welcome-sequence.ts` — 4 warm, actionable in-app notifications
