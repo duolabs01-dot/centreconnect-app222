@@ -348,6 +348,7 @@ All under `/api/internal/platform-admin/` — require `platform_admin` role:
 | Method | Path | Schedule | Purpose |
 |---|---|---|---|
 | POST | `/api/cron/onboarding-drip` | 0 7 * * * (07:00 SAST daily) | Send onboarding drip emails (Day 1 resume, Day 3 children nudge, Day 7 go-live, Day 14 features, 48h fallback) |
+| POST | `/api/cron/parent-lifecycle` | 0 8 * * * (08:00 SAST daily) | Parent lifecycle emails (Day 1 no-child nudge, Day 3 apply nudge, Day 7 post-enrollment feedback) |
 
 ### Webhooks
 | Method | Path | Purpose |
@@ -543,6 +544,15 @@ import { createAdminClient } from '@/lib/supabase/admin'
 - `lib/notifications/parent-welcome-sequence.ts` — 4 warm, actionable in-app notifications
 - Sent on parent registration via `enqueueParentWelcomeSequence()`
 - Copy emphasizes "no registration fee" and "apply to many crèches"
+
+### `lib/public-centres/query.ts`
+`fetchFeaturedPublicCentres(admin, { limit? })` — canonical public centre query for all parent-facing surfaces. Queries `public_ecd_centres` view (never `ecd_centres` directly), enriches with `owner_id` for `is_claimed`, applies pilot/featured sorting. Returns `FeaturedPublicCentre[]`. Used by landing page; should be used by any new parent-facing centre listing surface.
+
+### `lib/email/templates/parent-lifecycle.ts`
+Three parent lifecycle email templates:
+- `renderParentNoChildDay1Email` — Day 1 nudge when parent has no child added yet
+- `renderParentChildNoEnrollmentDay3Email` — Day 3 nudge, state-aware (`pending` = check applications, `discover` = browse crèches)
+- `renderParentPostEnrollmentFeedbackEmail` — Day 7 post-enrollment feedback using real child + centre name
 
 ---
 
@@ -816,3 +826,4 @@ npx playwright test tests/browser/e2e-journey.spec.ts --project=android-chrome
 16. **Do not use `overflow-x-hidden` on full-height containers** — it creates a scroll container that breaks vertical scroll on iOS Safari and Android Chrome. Use `overflow-x-clip` instead (set on `body` in `app/layout.tsx` and the root div in `components/layout/public-shell.tsx`).
 17. **Do not select `phone` when querying `public_ecd_centres`** — that column does not exist in the view. Use `contact_phone` and `contact_whatsapp` instead. Selecting a non-existent column causes Supabase to return `null` data with no error.
 18. **Do not add drag-to-close to bottom sheets** — `onTouchMove` handlers intercept page scroll events on mobile and close the sheet unexpectedly. Sheets should only close via explicit backdrop click or a "Close" button.
+19. **Do not query `ecd_centres` directly for parent-facing centre listings** — use `fetchFeaturedPublicCentres()` from `lib/public-centres/query.ts` which uses the `public_ecd_centres` view as the source of truth.

@@ -3,8 +3,8 @@ import HomeClientPage, { type HomeActiveCentre } from './page.client'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
-import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
 import { demoDirectoryCentres, shouldUseDemoCentreData } from '@/lib/demo/demo-centres'
+import { fetchFeaturedPublicCentres } from '@/lib/public-centres/query'
 import {
   deriveParentEntryPath,
   hasEnrolledChildStatus,
@@ -22,13 +22,6 @@ export const metadata: Metadata = {
   openGraph: {
     images: ['/og-image.png'],
   },
-}
-
-function pickPrimaryAgeGroup(value: unknown) {
-  if (!Array.isArray(value)) return null
-
-  const first = value.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
-  return first?.trim() ?? null
 }
 
 export default async function HomePage({
@@ -101,13 +94,19 @@ export default async function HomePage({
     })
   }
 
+  function pickDemoAgeGroup(value: unknown) {
+    if (!Array.isArray(value)) return null
+    const first = value.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    return first?.trim() ?? null
+  }
+
   let activeCentres: HomeActiveCentre[] = shouldUseDemoCentreData()
     ? demoDirectoryCentres.map((centre) => ({
         id: centre.id,
         name: centre.name,
         slug: centre.slug,
         suburb: centre.suburb,
-        primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
+        primaryAgeGroup: pickDemoAgeGroup(centre.age_groups),
         isRegistered: centre.is_registered,
         isClaimed: centre.is_claimed,
         isPilot: centre.is_pilot,
@@ -121,41 +120,21 @@ export default async function HomePage({
   if (supabase && !shouldUseDemoCentreData()) {
     try {
       const admin = createAdminClient()
-      const { data: centreRows } = await admin
-        .from('ecd_centres')
-        .select('id,name,slug,suburb,age_groups,is_registered,cover_image_url,latitude,longitude,owner_id,onboarding_complete,website_published,is_active')
-        .eq('website_published', true)
-        .or('is_deleted.is.null,is_deleted.eq.false')
-        .order('created_at', { ascending: false })
-        .limit(16)
-
-      activeCentres = (centreRows ?? [])
-        .filter((centre: any) => centre.website_published === true)
-        .map((centre: any) => ({
-          id: String(centre.id),
-          name: typeof centre.name === 'string' && centre.name.trim().length > 0 ? centre.name.trim() : 'Creche',
-          slug: typeof centre.slug === 'string' && centre.slug.trim().length > 0 ? centre.slug.trim() : null,
-          suburb: typeof centre.suburb === 'string' && centre.suburb.trim().length > 0 ? centre.suburb.trim() : null,
-          primaryAgeGroup: pickPrimaryAgeGroup(centre.age_groups),
-          isRegistered: Boolean(centre.is_registered),
-          isClaimed:
-            (typeof centre.owner_id === 'string' && centre.owner_id.trim().length > 0) ||
-            centre.onboarding_complete === true ||
-            centre.website_published === true,
-          isPilot: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
-          isFeatured: isPilotCentreIdentity({ name: centre.name, slug: centre.slug }),
-          coverImage: centre.cover_image_url ?? null,
-          latitude: typeof centre.latitude === 'number' ? centre.latitude : null,
-          longitude: typeof centre.longitude === 'number' ? centre.longitude : null,
-        }))
-        .sort((a, b) => {
-          if (a.isFeatured && !b.isFeatured) return -1
-          if (!a.isFeatured && b.isFeatured) return 1
-          if (a.isPilot && !b.isPilot) return -1
-          if (!a.isPilot && b.isPilot) return 1
-          return 0
-        })
-        .slice(0, 6)
+      const raw = await fetchFeaturedPublicCentres(admin, { limit: 6 })
+      activeCentres = raw.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        suburb: c.suburb,
+        primaryAgeGroup: c.primaryAgeGroup,
+        isRegistered: c.isRegistered,
+        isClaimed: c.isClaimed,
+        isPilot: c.isPilot,
+        isFeatured: c.isFeatured,
+        coverImage: c.coverImage,
+        latitude: c.latitude,
+        longitude: c.longitude,
+      }))
     } catch (error) {
       console.error('[home] Failed to load active centres for landing page:', error)
     }
