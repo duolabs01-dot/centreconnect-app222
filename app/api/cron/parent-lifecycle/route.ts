@@ -54,14 +54,17 @@ export async function POST(request: Request) {
   }
 
   // -------------------------------------------------------------------
-  // Step 1: Fetch parents registered in the last 30 days
+  // Step 1: Fetch parents registered in the last 90 days
+  // Branch 1 fires ~day 1–3 after signup, but Branch 2 fires 3–7 days after the
+  // parent *added their first child* (which may happen weeks after signup), and
+  // Branch 3 fires 7–21 days after *enrollment* — so we need a generous window.
   // -------------------------------------------------------------------
-  const cutoff30 = new Date(now.getTime() - 30 * DAY_MS).toISOString()
+  const cutoff90 = new Date(now.getTime() - 90 * DAY_MS).toISOString()
   const { data: parents } = await admin
     .from('user_profiles')
     .select('id,full_name,email,created_at')
     .eq('role', 'parent_user')
-    .gte('created_at', cutoff30)
+    .gte('created_at', cutoff90)
     .not('email', 'is', null)
     .order('created_at', { ascending: true })
 
@@ -86,31 +89,38 @@ export async function POST(request: Request) {
 
   // -------------------------------------------------------------------
   // Step 3: Bulk fetch children for all parents
+  // ecd_id lets us fall back to the child record when there is no enrolled application.
+  // created_at lets us anchor Branch 2 to when the child was added, not account age.
   // -------------------------------------------------------------------
   const { data: allChildren } = await admin
     .from('children')
-    .select('id,parent_id,first_name,enrollment_status')
+    .select('id,parent_id,ecd_id,first_name,enrollment_status,created_at')
     .in('parent_id', parentIds)
 
   // -------------------------------------------------------------------
   // Step 4: Bulk fetch applications for all parents
+  // updated_at lets us anchor Branch 3 to when enrollment happened, not account age.
   // -------------------------------------------------------------------
   const { data: allApplications } = await admin
     .from('applications')
-    .select('id,parent_id,ecd_id,status')
+    .select('id,parent_id,ecd_id,status,updated_at')
     .in('parent_id', parentIds)
 
   // -------------------------------------------------------------------
-  // Step 5: Fetch centre names for enrolled applications
+  // Step 5: Fetch centre names for enrolled applications + enrolled child records
+  // Build the lookup from both sources so we handle the case where the child
+  // record shows enrolled but no matching application row exists.
   // -------------------------------------------------------------------
-  const enrolledEcdIds = [
-    ...new Set(
-      (allApplications ?? [])
-        .filter((a: any) => isEnrolledApplicationStatus(a.status))
-        .map((a: any) => a.ecd_id as string)
-        .filter(Boolean)
-    ),
-  ]
+  const enrolledEcdIdsFromApps = (allApplications ?? [])
+    .filter((a: any) => isEnrolledApplicationStatus(a.status))
+    .map((a: any) => a.ecd_id as string)
+    .filter(Boolean)
+
+  const enrolledEcdIdsFromChildren = (allChildren ?? [])
+    .filter((c: any) => hasEnrolledChildStatus(c.enrollment_status) && c.ecd_id)
+    .map((c: any) => c.ecd_id as string)
+
+  const enrolledEcdIds = [...new Set([...enrolledEcdIdsFromApps, ...enrolledEcdIdsFromChildren])]
 
   const centreNameMap: Record<string, string> = {}
   if (enrolledEcdIds.length > 0) {
@@ -197,8 +207,23 @@ export async function POST(request: Request) {
       }
     }
 
-    // ---- Branch 2: Has child, not enrolled — Day 3 -----------------------
-    if (ageDays >= 3 && ageDays < 7 && childrenCount > 0 && !hasEnrolledChild) {
+    // ---- Branch 2: Has child, not enrolled — 3–7 days since first child added ----
+    // Anchored to when the parent first added a child, NOT account age.
+    // This fires even if the parent signed up weeks ago but only just added a child.
+    const firstChildCreatedAt = (parentChildren as any[])
+      .map((c) => new Date((c as any).created_at).getTime())
+      .filter((t) => !Number.isNaN(t))
+      .sort((a, b) => a - b)[0]
+    const firstChildAgeDays =
+      firstChildCreatedAt != null ? (now.getTime() - firstChildCreatedAt) / DAY_MS : null
+
+    if (
+      firstChildAgeDays != null &&
+      firstChildAgeDays >= 3 &&
+      firstChildAgeDays < 7 &&
+      childrenCount > 0 &&
+      !hasEnrolledChild
+    ) {
       const state: 'pending' | 'discover' = hasPendingApplications ? 'pending' : 'discover'
       const eventKey = `parent_child_no_enrollment_day3:${(parent as any).id}`
       if (!sentKeys.has(eventKey)) {
@@ -239,17 +264,34 @@ export async function POST(request: Request) {
       }
     }
 
-    // ---- Branch 3: Post-enrollment feedback — Day 7 ----------------------
-    if (ageDays >= 7 && hasEnrolledChild) {
+    // ---- Branch 3: Post-enrollment feedback — 7–21 days since enrollment --------
+    // Anchored to when enrollment happened (application.updated_at when status →
+    // enrolled), NOT account age. Falls back to child record's ecd_id when no
+    // enrolled application row exists.
+    if (hasEnrolledChild) {
+      const enrolledApp = (parentApplications as any[])
+        .filter((a) => isEnrolledApplicationStatus(a.status) && a.updated_at)
+        .sort((a, b) => new Date((b as any).updated_at).getTime() - new Date((a as any).updated_at).getTime())[0]
+
       const enrolledChild = (parentChildren as any[]).find((c) =>
         hasEnrolledChildStatus(c.enrollment_status)
       )
-      const enrolledApp = (parentApplications as any[]).find((a) =>
-        isEnrolledApplicationStatus(a.status)
-      )
-      const centreId: string | null = enrolledApp?.ecd_id ?? null
-      const childName: string = enrolledChild?.first_name || (enrolledApp ? 'your child' : 'your child')
-      const centreName: string = centreId ? centreNameMap[centreId] ?? 'their cr\u00e8che' : 'their cr\u00e8che'
+
+      const enrollmentTs = enrolledApp?.updated_at
+        ? new Date(enrolledApp.updated_at).getTime()
+        : null
+      const enrollmentAgeDays = enrollmentTs != null ? (now.getTime() - enrollmentTs) / DAY_MS : null
+
+      // Only fire in the 7–21 day window after enrollment; skip if we can't determine timing
+      if (enrollmentAgeDays == null || enrollmentAgeDays < 7 || enrollmentAgeDays >= 21) {
+        results.postEnrollmentFeedbackSkipped++
+        continue
+      }
+
+      // Resolve centre: prefer enrolled application ecd_id, fall back to child.ecd_id
+      const centreId: string | null = enrolledApp?.ecd_id ?? enrolledChild?.ecd_id ?? null
+      const childName: string = enrolledChild?.first_name ?? 'your child'
+      const centreName: string = centreId ? (centreNameMap[centreId] ?? 'their cr\u00e8che') : 'their cr\u00e8che'
       const dashboardLink = `${appUrl.replace(/\/$/, '')}/parent/dashboard`
 
       const eventKey = `parent_post_enrollment_feedback_day7:${(parent as any).id}:${enrolledChild?.id ?? 'nochild'}:${centreId ?? 'nocentre'}`
@@ -276,7 +318,7 @@ export async function POST(request: Request) {
             status: result.status,
             provider: result.directSent ? result.directProvider ?? 'smtp' : 'email_queue',
             providerMessageId: result.directMessageId ?? result.queueMessageId,
-            payload: { ageDays: Math.round(ageDays), childName, centreName },
+            payload: { enrollmentAgeDays: Math.round(enrollmentAgeDays), childName, centreName },
             errorMessage: result.status !== 'sent' ? result.deliveryMessage : null,
           })
           if (result.status === 'sent' || result.status === 'queued') {

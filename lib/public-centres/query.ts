@@ -2,6 +2,7 @@ import 'server-only'
 
 import { normalizeCentreSlug } from '@/lib/ecd/centre-slug'
 import { isPilotCentreIdentity } from '@/lib/ecd/pilot-centres'
+import { resolveCentreCoordinates } from '@/lib/geo/centre-location'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 type AdminClient = ReturnType<typeof createAdminClient>
@@ -64,16 +65,22 @@ export async function fetchFeaturedPublicCentres(
 
     if (validRows.length === 0) return []
 
-    // Step 3: Fetch owner_id from ecd_centres base table for isClaimed
+    // Step 3: Fetch owner_id + geo from ecd_centres base table for isClaimed + distance
     const centreIds = validRows.map((r: any) => r.id as string)
-    const { data: ownerRows } = await admin
+    const { data: baseRows } = await admin
       .from('ecd_centres')
-      .select('id,owner_id')
+      .select('id,owner_id,latitude,longitude,address')
       .in('id', centreIds)
 
     const ownerMap: Record<string, string | null> = {}
-    for (const row of ownerRows ?? []) {
+    const geoMap: Record<string, { latitude: unknown; longitude: unknown; address: string | null }> = {}
+    for (const row of baseRows ?? []) {
       ownerMap[(row as any).id] = (row as any).owner_id ?? null
+      geoMap[(row as any).id] = {
+        latitude: (row as any).latitude ?? null,
+        longitude: (row as any).longitude ?? null,
+        address: (row as any).address ?? null,
+      }
     }
 
     // Step 4: Map to FeaturedPublicCentre
@@ -81,6 +88,14 @@ export async function fetchFeaturedPublicCentres(
       const ownerId = ownerMap[row.id] ?? null
       const isClaimed = Boolean(ownerId?.trim())
       const isPilot = isPilotCentreIdentity({ name: row.name, slug: row._normalizedSlug })
+      const geo = geoMap[row.id]
+      const resolvedCoords = resolveCentreCoordinates({
+        latitude: geo?.latitude,
+        longitude: geo?.longitude,
+        slug: row._normalizedSlug,
+        suburb: typeof row.suburb === 'string' ? row.suburb : null,
+        address: geo?.address ?? null,
+      })
       return {
         id: String(row.id),
         slug: row._normalizedSlug,
@@ -98,8 +113,8 @@ export async function fetchFeaturedPublicCentres(
         contact_whatsapp: row.contact_whatsapp ?? null,
         fee_min: typeof row.monthly_fee_min === 'number' ? row.monthly_fee_min : null,
         fee_max: typeof row.monthly_fee_max === 'number' ? row.monthly_fee_max : null,
-        latitude: null,
-        longitude: null,
+        latitude: resolvedCoords.latitude,
+        longitude: resolvedCoords.longitude,
       }
     })
 
