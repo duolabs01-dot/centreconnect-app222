@@ -12,7 +12,7 @@ export async function completeOnboarding() {
   const { supabase, ecdId, user } = await requireEcdPortalSession({ cached: false })
   const now = new Date().toISOString()
 
-  // 1. Mark complete + stamp timestamp
+  // 1. Mark complete + stamp completion timestamp
   await supabase
     .from('ecd_centres')
     .update({ onboarding_complete: true, onboarding_completed_at: now })
@@ -24,9 +24,7 @@ export async function completeOnboarding() {
   redirect('/ecd/dashboard?celebrate=1')
 }
 
-async function sendCelebrationEmail(ecdId: string, ownerEmail: string) {
-  if (!ownerEmail) return
-
+async function sendCelebrationEmail(ecdId: string, fallbackEmail: string) {
   const admin = createAdminClient()
   const eventKey = `onboarding_day0_celebration:${ecdId}`
 
@@ -42,15 +40,29 @@ async function sendCelebrationEmail(ecdId: string, ownerEmail: string) {
 
   const { data: centre } = await admin
     .from('ecd_centres')
-    .select('name,slug,suburb')
+    .select('name,slug,suburb,owner_id')
     .eq('id', ecdId)
     .maybeSingle()
 
-  const centreName = centre?.name ?? 'Your Cr\u00e8che'
-  const slug = centre?.slug?.trim() ?? ''
+  if (!centre) return
+
+  const centreName = centre.name ?? 'Your Cr\u00e8che'
+  const slug = centre.slug?.trim() ?? ''
   const appUrl = normalizeAppUrl()
   const publicProfileLink = slug ? `${appUrl}/c/${slug}` : `${appUrl}/ecd/website`
   const dashboardLink = `${appUrl}/ecd/dashboard`
+
+  // Resolve owner email — prefer profile email over auth fallback
+  let ownerEmail = fallbackEmail
+  if (centre.owner_id) {
+    const { data: profile } = await admin
+      .from('user_profiles')
+      .select('email')
+      .eq('id', centre.owner_id)
+      .maybeSingle()
+    if (profile?.email?.trim()) ownerEmail = profile.email.trim()
+  }
+  if (!ownerEmail) return
 
   const html = renderDayZeroCelebrationEmail({
     contactName: 'there',

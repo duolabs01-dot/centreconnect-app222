@@ -36,7 +36,7 @@ const FEATURE_MINIMUM_TIER: Record<FeatureKey, InternalTier> = {
   applications: 'basic',          // Starter gets 3 full
   'applications-full': 'standard', // Full inbox requires Growth
   communications: 'standard',     // Parent messaging requires Growth
-  pickup: 'standard',             // Safe QR pickup requires Growth
+  pickup: 'standard',             // Safe QR pickup verification — Growth+
 }
 
 async function getCurrentTier(supabase: SupabaseClient, ecdId: string) {
@@ -77,4 +77,3 @@ export async function requireEcdFeatureAccess(args: {
   }
   return access
 }
-

@@ -69,108 +69,6 @@ function baseLayout(body: string, appUrl: string): string {
 </html>`
 }
 
-export type DripDay3Input = {
-  contactName: string
-  centreName: string
-  addChildrenLink: string
-  appUrl: string
-}
-
-export type DripDay7Input = {
-  contactName: string
-  centreName: string
-  centreSlug: string
-  websiteLink: string
-  publicProfileLink: string
-  appUrl: string
-}
-
-export function renderDripDay3Email(input: DripDay3Input): string {
-  const name = escapeHtml(input.contactName || 'there')
-  const centre = escapeHtml(input.centreName)
-  const link = escapeHtml(input.addChildrenLink)
-
-  const body = `
-    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
-      Hi ${name} &mdash; have you added your children yet?
-    </p>
-    <p style="margin:0 0 16px;">
-      It has been a few days since <strong>${centre}</strong> joined CentreConnect.
-      The one thing that makes the biggest difference early on is adding your first
-      few children &mdash; it unlocks attendance, daily reports, and the parent
-      pickup workflow all at once.
-    </p>
-    <p style="margin:0 0 24px;">
-      It takes about two minutes.
-    </p>
-    <p style="margin:0 0 32px;">
-      <a href="${link}"
-         style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;border-radius:50px;text-decoration:none;">
-        Add your first children &rarr;
-      </a>
-    </p>
-    <p style="margin:0 0 8px;font-size:14px;color:${BRAND_MUTED};">
-      Once they&rsquo;re in, you can mark attendance, send daily reports to parents,
-      and turn on safe pickup &mdash; all from your dashboard.
-    </p>
-    <p style="margin:24px 0 0;font-size:14px;">
-      Warm regards,<br />
-      <strong>Mandla</strong><br />
-      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
-    </p>`
-
-  return baseLayout(body, input.appUrl)
-}
-
-export function renderDripDay7Email(input: DripDay7Input): string {
-  const name = escapeHtml(input.contactName || 'there')
-  const centre = escapeHtml(input.centreName)
-  const websiteLink = escapeHtml(input.websiteLink)
-  const publicLink = escapeHtml(input.publicProfileLink)
-
-  const body = `
-    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
-      ${centre} is live &mdash; share it with families
-    </p>
-    <p style="margin:0 0 16px;">
-      Hi ${name}, your cr&egrave;che has been on CentreConnect for a week now.
-      Parents in your area can already find ${centre} in the directory
-      &mdash; but a complete profile with a logo and cover photo gets
-      <strong>3&times; more applications</strong> than one without.
-    </p>
-    <p style="margin:0 0 24px;">
-      Two things make the biggest difference this week:
-    </p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
-      <tr>
-        <td style="padding:12px 16px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:14px;">
-          <strong>1. Upload your logo &amp; cover photo</strong><br />
-          <span style="color:${BRAND_MUTED};">Parents trust a page with real photos. It takes 2 minutes.</span><br />
-          <a href="${websiteLink}" style="color:${BRAND_PRIMARY};font-weight:700;">Go to Website Builder &rarr;</a>
-        </td>
-      </tr>
-      <tr><td style="height:10px;"></td></tr>
-      <tr>
-        <td style="padding:12px 16px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;font-size:14px;">
-          <strong>2. Share your public profile link</strong><br />
-          <span style="color:${BRAND_MUTED};">Send it on WhatsApp, paste it on your gate poster, or add it to your Facebook page.</span><br />
-          <a href="${publicLink}" style="color:${BRAND_PRIMARY};font-weight:700;">See your profile &rarr;</a>
-        </td>
-      </tr>
-    </table>
-    <p style="margin:0 0 8px;font-size:14px;color:${BRAND_MUTED};">
-      Families in Alexandra, Sandton, and Tembisa are looking for cr&egrave;ches right now.
-      A complete profile means they find you &mdash; not someone else.
-    </p>
-    <p style="margin:24px 0 0;font-size:14px;">
-      Warm regards,<br />
-      <strong>Mandla</strong><br />
-      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
-    </p>`
-
-  return baseLayout(body, input.appUrl)
-}
-
 // ---------------------------------------------------------------------------
 // Day 0: Celebration — sent immediately on onboarding completion
 // ---------------------------------------------------------------------------
@@ -367,6 +265,112 @@ export function renderDripDay14FeaturesEmail(input: DripDay14FeaturesInput): str
       Warm regards,<br />
       <strong>Mandla</strong><br />
       <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect \u2014 Alexandra, Johannesburg</span>
+    </p>`
+
+  return baseLayout(body, input.appUrl)
+}
+
+// ---------------------------------------------------------------------------
+// Day 3 and Day 7 (existing — unchanged)
+// ---------------------------------------------------------------------------
+
+export type DripDay3Input = {
+  contactName: string
+  centreName: string
+  addChildrenLink: string
+  appUrl: string
+}
+
+export type DripDay7Input = {
+  contactName: string
+  centreName: string
+  centreSlug: string
+  websiteLink: string
+  publicProfileLink: string
+  appUrl: string
+}
+
+export function renderDripDay3Email(input: DripDay3Input): string {
+  const name = escapeHtml(input.contactName || 'there')
+  const centre = escapeHtml(input.centreName)
+  const link = escapeHtml(input.addChildrenLink)
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
+      Hi ${name} &mdash; have you added your children yet?
+    </p>
+    <p style="margin:0 0 16px;">
+      It has been a few days since <strong>${centre}</strong> joined CentreConnect.
+      The one thing that makes the biggest difference early on is adding your first
+      few children &mdash; it unlocks attendance, daily reports, and the parent
+      pickup workflow all at once.
+    </p>
+    <p style="margin:0 0 24px;">
+      It takes about two minutes.
+    </p>
+    <p style="margin:0 0 32px;">
+      <a href="${link}"
+         style="display:inline-block;background:${BRAND_PRIMARY};color:#ffffff;font-size:14px;font-weight:800;padding:14px 28px;border-radius:50px;text-decoration:none;">
+        Add your first children &rarr;
+      </a>
+    </p>
+    <p style="margin:0 0 8px;font-size:14px;color:${BRAND_MUTED};">
+      Once they&rsquo;re in, you can mark attendance, send daily reports to parents,
+      and turn on safe pickup &mdash; all from your dashboard.
+    </p>
+    <p style="margin:24px 0 0;font-size:14px;">
+      Warm regards,<br />
+      <strong>Mandla</strong><br />
+      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
+    </p>`
+
+  return baseLayout(body, input.appUrl)
+}
+
+export function renderDripDay7Email(input: DripDay7Input): string {
+  const name = escapeHtml(input.contactName || 'there')
+  const centre = escapeHtml(input.centreName)
+  const websiteLink = escapeHtml(input.websiteLink)
+  const publicLink = escapeHtml(input.publicProfileLink)
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:22px;font-weight:900;color:#0F172A;">
+      ${centre} is live &mdash; share it with families
+    </p>
+    <p style="margin:0 0 16px;">
+      Hi ${name}, your cr&egrave;che has been on CentreConnect for a week now.
+      Parents in your area can already find ${centre} in the directory
+      &mdash; but a complete profile with a logo and cover photo gets
+      <strong>3&times; more applications</strong> than one without.
+    </p>
+    <p style="margin:0 0 24px;">
+      Two things make the biggest difference this week:
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+      <tr>
+        <td style="padding:12px 16px;background:#F0FDF4;border-radius:12px;border:1px solid #BBF7D0;font-size:14px;">
+          <strong>1. Upload your logo &amp; cover photo</strong><br />
+          <span style="color:${BRAND_MUTED};">Parents trust a page with real photos. It takes 2 minutes.</span><br />
+          <a href="${websiteLink}" style="color:${BRAND_PRIMARY};font-weight:700;">Go to Website Builder &rarr;</a>
+        </td>
+      </tr>
+      <tr><td style="height:10px;"></td></tr>
+      <tr>
+        <td style="padding:12px 16px;background:#EFF6FF;border-radius:12px;border:1px solid #BFDBFE;font-size:14px;">
+          <strong>2. Share your public profile link</strong><br />
+          <span style="color:${BRAND_MUTED};">Send it on WhatsApp, paste it on your gate poster, or add it to your Facebook page.</span><br />
+          <a href="${publicLink}" style="color:${BRAND_PRIMARY};font-weight:700;">See your profile &rarr;</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:0 0 8px;font-size:14px;color:${BRAND_MUTED};">
+      Families in Alexandra, Sandton, and Tembisa are looking for cr&egrave;ches right now.
+      A complete profile means they find you &mdash; not someone else.
+    </p>
+    <p style="margin:24px 0 0;font-size:14px;">
+      Warm regards,<br />
+      <strong>Mandla</strong><br />
+      <span style="font-size:12px;color:${BRAND_MUTED};">Founder, CentreConnect &mdash; Alexandra, Johannesburg</span>
     </p>`
 
   return baseLayout(body, input.appUrl)

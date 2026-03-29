@@ -5,18 +5,18 @@ import { CheckCircle2, Share2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 const CONFETTI_PIECES = [
-  { left: '5%',  hue: '165', delayMs: 0,   driftMs: 2100, drift: '-20px' },
-  { left: '13%', hue: '188', delayMs: 80,  driftMs: 2300, drift: '14px'  },
-  { left: '21%', hue: '36',  delayMs: 40,  driftMs: 2200, drift: '-12px' },
-  { left: '29%', hue: '345', delayMs: 110, driftMs: 2400, drift: '16px'  },
-  { left: '38%', hue: '205', delayMs: 20,  driftMs: 2000, drift: '-10px' },
-  { left: '47%', hue: '162', delayMs: 150, driftMs: 2350, drift: '12px'  },
-  { left: '55%', hue: '195', delayMs: 60,  driftMs: 2500, drift: '-8px'  },
-  { left: '63%', hue: '24',  delayMs: 100, driftMs: 2300, drift: '10px'  },
-  { left: '71%', hue: '191', delayMs: 35,  driftMs: 2150, drift: '-16px' },
-  { left: '79%', hue: '166', delayMs: 130, driftMs: 2450, drift: '13px'  },
-  { left: '87%', hue: '212', delayMs: 10,  driftMs: 2250, drift: '-9px'  },
-  { left: '94%', hue: '42',  delayMs: 70,  driftMs: 2050, drift: '11px'  },
+  { left: '5%',  hue: '165', delayMs: 0,   durationMs: 2100, drift: '-20px' },
+  { left: '13%', hue: '188', delayMs: 80,  durationMs: 2300, drift: '14px'  },
+  { left: '21%', hue: '36',  delayMs: 40,  durationMs: 2200, drift: '-12px' },
+  { left: '29%', hue: '345', delayMs: 110, durationMs: 2400, drift: '16px'  },
+  { left: '38%', hue: '205', delayMs: 20,  durationMs: 2000, drift: '-10px' },
+  { left: '47%', hue: '162', delayMs: 150, durationMs: 2350, drift: '12px'  },
+  { left: '55%', hue: '195', delayMs: 60,  durationMs: 2500, drift: '-8px'  },
+  { left: '63%', hue: '24',  delayMs: 100, durationMs: 2300, drift: '10px'  },
+  { left: '71%', hue: '191', delayMs: 35,  durationMs: 2150, drift: '-16px' },
+  { left: '79%', hue: '166', delayMs: 130, durationMs: 2450, drift: '13px'  },
+  { left: '87%', hue: '212', delayMs: 10,  durationMs: 2250, drift: '-9px'  },
+  { left: '94%', hue: '42',  delayMs: 70,  durationMs: 2050, drift: '11px'  },
 ] as const
 
 type ConfettiStyle = CSSProperties & {
@@ -61,6 +61,7 @@ export function OnboardingCelebrationModal({
   const whatsappText = encodeURIComponent(
     `${centreName} is on CentreConnect \u2014 no registration fee to apply: ${publicProfileUrl}`
   )
+  const whatsappHref = `https://wa.me/?text=${whatsappText}`
 
   async function handleCopy() {
     try {
@@ -116,7 +117,7 @@ export function OnboardingCelebrationModal({
                   left: piece.left,
                   '--confetti-hue': piece.hue,
                   '--confetti-drift': piece.drift,
-                  '--confetti-duration': `${piece.driftMs}ms`,
+                  '--confetti-duration': `${piece.durationMs}ms`,
                   '--confetti-delay': `${piece.delayMs}ms`,
                 } as ConfettiStyle}
               />
@@ -159,7 +160,7 @@ export function OnboardingCelebrationModal({
               </button>
 
               <a
-                href={`https://wa.me/?text=${whatsappText}`}
+                href={whatsappHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 px-4 py-3 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/20 transition-colors"

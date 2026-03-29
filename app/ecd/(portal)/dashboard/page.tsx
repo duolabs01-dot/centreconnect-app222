@@ -254,56 +254,63 @@ export default async function EcdDashboardPage({
     { id: 'publish', label: 'Publish your creche page', done: Boolean(centre?.is_active), href: '/ecd/website' },
   ]
 
-    const startHereActions = [
-      pendingCount > 0
-        ? {
-            title: 'Review new applications',
-            detail: `${pendingCount} ${pendingCount === 1 ? 'application is' : 'applications are'} waiting for you.`,
-            href: '/ecd/applications',
-            tone: 'border-amber-200 bg-amber-50/80',
-          }
-        : null,
-      !centre?.logo_url || !centre?.cover_image_url
-        ? {
-            title: 'Finish your website photos',
-            detail: 'Add your logo and hero image so parents trust your page faster.',
-            href: '/ecd/website#brand-media',
-            tone: 'border-teal-200 bg-teal-50/80',
-          }
-        : null,
-      (snapshot.attendance_today_count ?? 0) === 0
-        ? {
-            title: 'Take attendance',
-            detail: 'Start the day by marking who is in class.',
-            href: '/ecd/attendance',
-            tone: 'border-cyan-200 bg-cyan-50/80',
-          }
-        : null,
-      unreadNotifications > 0
-        ? {
-            title: 'Check unread messages',
-            detail: `${unreadNotifications} message${unreadNotifications === 1 ? '' : 's'} still need attention.`,
-            href: '/ecd/communications',
-            tone: 'border-slate-200 bg-white/90',
-          }
-        : null,
-      // Calendar is Growth+ only — don't show for Starter (would just redirect back)
-      !isStarterTier
-        ? {
-            title: 'View calendar',
-            detail: "See your centre's events and schedule.",
-            href: '/ecd/calendar',
-            tone: 'border-purple-200 bg-purple-50/80',
-          }
-        : null,
-    ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
+  const startHereActions = [
+    pendingCount > 0
+      ? {
+          title: 'Review new applications',
+          detail: `${pendingCount} ${pendingCount === 1 ? 'application is' : 'applications are'} waiting for you.`,
+          href: '/ecd/applications',
+          tone: 'border-amber-200 bg-amber-50/80',
+        }
+      : null,
+    !centre?.logo_url || !centre?.cover_image_url
+      ? {
+          title: 'Finish your website photos',
+          detail: 'Add your logo and hero image so parents trust your page faster.',
+          href: '/ecd/website#brand-media',
+          tone: 'border-teal-200 bg-teal-50/80',
+        }
+      : null,
+    (snapshot.attendance_today_count ?? 0) === 0
+      ? {
+          title: 'Take attendance',
+          detail: 'Start the day by marking who is in class.',
+          href: '/ecd/attendance',
+          tone: 'border-cyan-200 bg-cyan-50/80',
+        }
+      : null,
+    unreadNotifications > 0
+      ? {
+          title: 'Check unread messages',
+          detail: `${unreadNotifications} message${unreadNotifications === 1 ? '' : 's'} still need attention.`,
+          href: '/ecd/communications',
+          tone: 'border-slate-200 bg-white/90',
+        }
+      : null,
+    // Calendar is Growth+ only — don't show for Starter (would just redirect back)
+    !isStarterTier
+      ? {
+          title: 'View calendar',
+          detail: "See your centre's events and schedule.",
+          href: '/ecd/calendar',
+          tone: 'border-purple-200 bg-purple-50/80',
+        }
+      : null,
+  ].filter(Boolean) as Array<{ title: string; detail: string; href: string; tone: string }>
 
   const isOnboardingComplete = Boolean(centre?.onboarding_complete)
   const onboardingDoneCount = onboardingChecklistItems.filter((i) => i.done).length
-  const isFirstWeek = centre?.onboarding_completed_at
-    ? (Date.now() - new Date(centre.onboarding_completed_at).getTime()) < 7 * 24 * 60 * 60 * 1000
+
+  // First-week experience: within 7 days of completing onboarding
+  const completedAt = centre?.onboarding_completed_at
+  const isFirstWeek = isOnboardingComplete && completedAt
+    ? (Date.now() - new Date(completedAt).getTime()) < 7 * 24 * 60 * 60 * 1000
     : false
-  const publicProfileUrl = centre?.slug ? normalizeAppUrl(`/c/${centre.slug}`) : ''
+
+  const appUrl = normalizeAppUrl()
+  const publicProfileUrl = centre?.slug
+    ? `${appUrl}/c/${centre.slug}`
+    : `${appUrl}/ecd/website`
 
   return (
     <>
@@ -350,8 +357,8 @@ export default async function EcdDashboardPage({
               ].map((item) => (
                 <div key={item.label} className={cn(
                   'rounded-2xl border p-4 shadow-sm transition-all',
-                  item.urgent 
-                    ? 'border-amber-200 bg-amber-50/70' 
+                  item.urgent
+                    ? 'border-amber-200 bg-amber-50/70'
                     : 'border-white bg-white/90'
                 )}>
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{item.label}</p>
@@ -600,4 +607,3 @@ export default async function EcdDashboardPage({
     </>
   )
 }
-

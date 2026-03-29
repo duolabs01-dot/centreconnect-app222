@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { deliverTransactionalEmail } from '@/lib/email/delivery'
 import {
+  renderDripDay1ResumeEmail,
   renderDripDay3Email,
   renderDripDay7Email,
-  renderDripDay1ResumeEmail,
   renderDripDay14FeaturesEmail,
 } from '@/lib/email/templates/onboarding-drip'
 import { normalizeAppUrl } from '@/lib/auth/onboarding-links'
@@ -130,12 +130,13 @@ export async function POST(request: Request) {
   }
 
   // -------------------------------------------------------------------
-  // 6. Fetch subscription tiers for all centres (for Day 14 email)
+  // 6. Fetch subscription tiers for all centres (for Day 14 tier-aware email)
   // -------------------------------------------------------------------
   const { data: subscriptionRows } = await admin
     .from('subscriptions')
     .select('ecd_id,tier')
     .in('ecd_id', centreIds)
+    .in('status', ['trial', 'active'])
     .order('created_at', { ascending: false })
 
   const tierMap: Record<string, string> = {}
@@ -292,7 +293,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // ---- Day 14 features: 14 days after onboarding_completed_at ------
+    // ---- Day 14 features: 14–18 days after onboarding completed ------
     if (centre.onboarding_complete && centre.onboarding_completed_at) {
       const completionAgeMs = now.getTime() - new Date(centre.onboarding_completed_at).getTime()
       const completionAgeDays = completionAgeMs / (24 * 60 * 60 * 1000)

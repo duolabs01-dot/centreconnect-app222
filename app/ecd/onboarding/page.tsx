@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
@@ -449,7 +449,12 @@ export default function EcdOnboardingPage() {
           ) : null}
 
           {currentStep === 4 ? (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">You&apos;re live!</h2>
+                <p className="mt-1 text-sm text-slate-600">Families can now find your cr&egrave;che on CentreConnect.</p>
+              </div>
+
               {/* Live preview card */}
               <div className="rounded-2xl border-2 border-teal-400 bg-gradient-to-br from-teal-50 to-cyan-50 p-4">
                 <p className="text-xs font-black uppercase tracking-[0.18em] text-teal-600">
@@ -462,15 +467,15 @@ export default function EcdOnboardingPage() {
                 <p className="mt-2 text-xs text-teal-700 font-medium">
                   No registration fee \u2014 families can apply free
                 </p>
+                <div className="mt-3 rounded-xl border border-teal-200 bg-white/80 px-3 py-2">
+                  <p className="break-all text-xs font-semibold text-cyan-800">{publicUrl}</p>
+                </div>
               </div>
 
               {/* Share toolkit */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Share your profile link</p>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-                  <p className="break-all text-xs text-slate-600">{publicUrl}</p>
-                </div>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <button
                     type="button"
                     onClick={async () => {
@@ -481,7 +486,7 @@ export default function EcdOnboardingPage() {
                         toast.error('Could not copy link')
                       }
                     }}
-                    className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     Copy link
                   </button>
@@ -489,9 +494,9 @@ export default function EcdOnboardingPage() {
                     href={`https://wa.me/?text=${encodeURIComponent(`${formData.centreName || 'Our centre'} is on CentreConnect \u2014 no registration fee to apply: ${publicUrl}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 px-3 py-2 text-center text-sm font-semibold text-[#25D366] hover:bg-[#25D366]/20"
+                    className="flex-1 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
                   >
-                    WhatsApp
+                    Share on WhatsApp
                   </a>
                 </div>
               </div>
@@ -511,4 +516,3 @@ export default function EcdOnboardingPage() {
     </div>
   )
 }
-
