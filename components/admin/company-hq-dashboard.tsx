@@ -57,10 +57,18 @@ function formatDateTime(value: string) {
   })
 }
 
-function aiSignalModeLabel(signalMode: CompanyHqSnapshot['aiLayer']['signalMode']) {
-  if (signalMode === 'live') return 'AI OS live signals'
-  if (signalMode === 'mixed') return 'AI OS mixed signals'
-  return 'AI OS mock fallback'
+function advisorStatusLabel(aiLayer: CompanyHqSnapshot['aiLayer']) {
+  if (!aiLayer.hasRuns) return 'Advisor: no briefs yet'
+  if (aiLayer.lastRunStatus === 'completed') return 'Advisor: brief available'
+  if (aiLayer.lastRunStatus === 'failed') return 'Advisor: last run failed'
+  return 'Advisor: brief pending'
+}
+
+function advisorStatusTone(aiLayer: CompanyHqSnapshot['aiLayer']): CompanyHqTone {
+  if (!aiLayer.hasRuns) return 'muted'
+  if (aiLayer.lastRunStatus === 'completed') return 'good'
+  if (aiLayer.lastRunStatus === 'failed') return 'watch'
+  return 'info'
 }
 
 function openClawModeLabel(mode: CompanyHqSnapshot['openClaw']['mode']) {
@@ -280,12 +288,12 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
   return (
     <AdminPageLayout
       title="Company HQ"
-      description="The founder operating layer above AI Company OS and OpenClaw. Keep real pilot truth, role ownership, and the next bottleneck visible in one place."
+      description="The founder operating layer. Keep real pilot truth, role ownership, and the next bottleneck visible in one place."
       roleLabel="Platform Admin"
       wide
       actions={
         <>
-          <SmallAction href="/admin/ai-os" label="AI Company OS" />
+          <SmallAction href="/admin/ai-os" label="Founder Advisor" />
           <SmallAction href="/admin/openclaw" label="OpenClaw Ops" />
           <SmallAction href="/admin/dashboard" label="Admin dashboard" />
         </>
@@ -297,7 +305,7 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
             <div className="flex flex-wrap items-center gap-2">
               <ToneBadge label={snapshot.founderOverview.stage} tone="watch" />
               <ToneBadge label="R0 scheduled now" tone="critical" />
-              <ToneBadge label={aiSignalModeLabel(snapshot.aiLayer.signalMode)} tone={snapshot.aiLayer.signalMode === 'live' ? 'good' : snapshot.aiLayer.signalMode === 'mixed' ? 'watch' : 'muted'} />
+              <ToneBadge label={advisorStatusLabel(snapshot.aiLayer)} tone={advisorStatusTone(snapshot.aiLayer)} />
               <ToneBadge label={openClawModeLabel(snapshot.openClaw.mode)} tone={snapshot.openClaw.mode === 'filesystem' ? 'good' : 'watch'} />
             </div>
             <div className="grid gap-4 xl:grid-cols-[minmax(0,1.6fr)_360px]">
@@ -326,11 +334,15 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
                     <p className="mt-1 text-sm text-slate-400">{formatDateTime(snapshot.generatedAt)}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">AI Company OS</p>
+                    <p className="text-sm font-semibold text-white">Founder Advisor</p>
                     <p className="mt-1 text-sm text-slate-400">
-                      {snapshot.aiLayer.enabled ? aiSignalModeLabel(snapshot.aiLayer.signalMode) : 'Feature flag off, fallback snapshot only'}
+                      {advisorStatusLabel(snapshot.aiLayer)}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">Snapshot {formatDateTime(snapshot.aiLayer.generatedAt)}</p>
+                    {snapshot.aiLayer.lastRunAt ? (
+                      <p className="mt-1 text-xs text-slate-500">Last brief {formatDateTime(snapshot.aiLayer.lastRunAt)}</p>
+                    ) : (
+                      <p className="mt-1 text-xs text-slate-500">No briefs generated yet — open Founder Advisor to start.</p>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white">OpenClaw</p>
@@ -366,9 +378,9 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
 
         <Card className={PANEL_CLASS}>
           <CardHeader>
-            <CardTitle className="text-xl text-white">Role Accountability Board</CardTitle>
+            <CardTitle className="text-xl text-white">Operating ownership</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
-              If a role is not shipping, it should be obvious here. This board keeps ownership, queue, and blockage visible.
+              Keeps ownership, current focus, and blockers visible across every operating lane.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -402,9 +414,9 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
 
         <Card className={PANEL_CLASS}>
           <CardHeader>
-            <CardTitle className="text-xl text-white">Agent Performance Board</CardTitle>
+            <CardTitle className="text-xl text-white">Delegated work status</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
-              Live lane accountability: who is running, who is stale, and who needs escalation now.
+              OpenClaw lane visibility: running, stale, and queued work items from the local runtime.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -446,9 +458,9 @@ export function CompanyHqDashboard({ snapshot, openclawSnapshot }: { snapshot: C
 
         <Card className={PANEL_CLASS}>
           <CardHeader>
-            <CardTitle className="text-2xl text-white">Company hierarchy</CardTitle>
+            <CardTitle className="text-2xl text-white">Founder operating lanes</CardTitle>
             <CardDescription className="text-sm leading-6 text-slate-400">
-              Every role still belongs to the founder right now. The point of this layer is to keep ownership explicit and prevent strategic drift.
+              Every lane still belongs to the founder right now. This keeps ownership explicit and prevents strategic drift.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">

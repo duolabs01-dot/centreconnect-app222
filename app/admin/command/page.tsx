@@ -10,7 +10,7 @@ import { SystemHealthWidget } from '@/components/cc-admin/SystemHealthWidget'
 import { HexHeatmap, type ProvinceScore } from '@/components/cc-admin/HexHeatmap'
 import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import Link from 'next/link'
-import { Building2, Users, Activity, TrendingUp, Globe, Zap, AlertTriangle, LifeBuoy, BellDot, ArrowRight } from 'lucide-react'
+import { Building2, Users, Activity, TrendingUp, Globe, Zap, AlertTriangle, LifeBuoy, BellDot, ArrowRight, LogIn, Target } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -71,12 +71,19 @@ export default async function AdminDashboardPage() {
   let staleParents = 0
   let supportStale24h = 0
   let supportStale72h = 0
+  let dormantOwnerCount = 0
+  type FunnelRow = { id: string; name: string; slug: string | null; stage: number; stages: [boolean, boolean, boolean, boolean, boolean] }
+  let funnelData: FunnelRow[] = []
+  type FunnelCentreRow = { id: string; name: string; slug: string | null; logo_url: string | null; cover_image_url: string | null; onboarding_complete: boolean | null; owner_id: string | null }
+  let funnelCentresQ: { data: FunnelCentreRow[] | null } = { data: null }
+  let funnelChildrenQ: { data: { ecd_id: string }[] | null } = { data: null }
+  let funnelAttendanceQ: { data: { ecd_id: string }[] | null } = { data: null }
 
   try {
     const activeStatuses = ['active', 'trial', 'past_due']
     const stale24hIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const stale72hIso = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()
-    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff, supportTickets, ownerNotifs, webhookRows, parentRelRows, support24h, support72h] = await Promise.all([
+    const [centres, activeSubs, newSubs, mrrRows, pendingApps, centresProv, admins, parents, staff, supportTickets, ownerNotifs, webhookRows, parentRelRows, support24h, support72h, _funnelCentresQ, _funnelChildrenQ, _funnelAttendanceQ] = await Promise.all([
       admin.from('ecd_centres').select('id', { count: 'exact', head: true }).eq('is_active', true),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses),
       admin.from('subscriptions').select('id', { count: 'exact', head: true }).in('status', activeStatuses).gte('created_at', thirtyDaysAgo.toISOString()),
@@ -92,7 +99,13 @@ export default async function AdminDashboardPage() {
       admin.from('parent_reliability_watch').select('id', { count: 'exact', head: true }).eq('status', 'stale'),
       admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress', 'waiting_response']).lt('created_at', stale24hIso),
       admin.from('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress', 'waiting_response']).lt('created_at', stale72hIso),
+      admin.from('ecd_centres').select('id,name,slug,logo_url,cover_image_url,onboarding_complete,owner_id').eq('is_active', true).eq('is_deleted', false),
+      admin.from('children').select('ecd_id').limit(5000),
+      admin.from('attendance').select('ecd_id').limit(5000),
     ])
+    funnelCentresQ = _funnelCentresQ as typeof funnelCentresQ
+    funnelChildrenQ = _funnelChildrenQ as typeof funnelChildrenQ
+    funnelAttendanceQ = _funnelAttendanceQ as typeof funnelAttendanceQ
 
     activeCentreCount = centres.count ?? 0
     mrrValue = (mrrRows.data ?? []).reduce((s, row) => s + (Number(row.monthly_price) || 0), 0)
@@ -128,6 +141,35 @@ export default async function AdminDashboardPage() {
     }))
   } catch (e) { console.error(e) }
 
+  // Activation funnel + 48h dormant owner count
+  try {
+    const funnelCentres = funnelCentresQ.data ?? []
+    const childrenSet = new Set((funnelChildrenQ.data ?? []).map((r: { ecd_id: string }) => r.ecd_id))
+    const attendanceSet = new Set((funnelAttendanceQ.data ?? []).map((r: { ecd_id: string }) => r.ecd_id))
+
+    funnelData = funnelCentres.map(c => {
+      const s1 = true // workspace active
+      const s2 = Boolean(c.logo_url && c.cover_image_url)
+      const s3 = childrenSet.has(c.id)
+      const s4 = attendanceSet.has(c.id)
+      const s5 = Boolean(c.onboarding_complete)
+      const stages: [boolean, boolean, boolean, boolean, boolean] = [s1, s2, s3, s4, s5]
+      return { id: c.id, name: c.name, slug: c.slug ?? null, stage: stages.filter(Boolean).length, stages }
+    }).sort((a, b) => a.stage - b.stage)
+
+    const ownerIds = funnelCentres.map(c => c.owner_id).filter(Boolean) as string[]
+    if (ownerIds.length > 0) {
+      const { data: { users } } = await admin.auth.admin.listUsers({ perPage: 1000 })
+      const ownerIdSet = new Set(ownerIds)
+      const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000)
+      dormantOwnerCount = users.filter(u => {
+        if (!ownerIdSet.has(u.id)) return false
+        const lastLogin = u.last_sign_in_at ? new Date(u.last_sign_in_at) : null
+        return !lastLogin || lastLogin < fortyEightHoursAgo
+      }).length
+    }
+  } catch (e) { console.error('Funnel/dormant calc failed:', e) }
+
   const mrrFormatted = new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(mrrValue)
 
   return (
@@ -152,7 +194,7 @@ export default async function AdminDashboardPage() {
               <p className="text-xs text-admin-text-muted mt-1">No guessing. These are the live queues that need founder/operator attention.</p>
             </div>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             {[
               {
                 label: 'Support queue',
@@ -181,6 +223,13 @@ export default async function AdminDashboardPage() {
                 href: '/admin/webhook-failures',
                 hint: 'Events needing replay or triage',
                 icon: Activity,
+              },
+              {
+                label: 'Dormant owners',
+                value: dormantOwnerCount,
+                href: '/admin/tenants',
+                hint: 'Active centres with no login in 48+ hours',
+                icon: LogIn,
               },
             ].map((item) => (
               <Link key={item.label} href={item.href} className="rounded-2xl border border-admin-border bg-admin-bg p-4 hover:border-admin-accent/60 transition-colors">
@@ -222,6 +271,53 @@ export default async function AdminDashboardPage() {
                 <Link href="/admin/webhook-failures" className="text-xs font-bold text-admin-accent hover:underline">Open webhook replay queue</Link>
               </div>
             </div>
+          </div>
+        </div>
+
+        <div className="admin-card p-6 border-t-2 border-t-teal-500/80">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-teal-300">Activation funnel</p>
+              <p className="text-xs text-admin-text-muted mt-1">Per-centre progress across 5 stages: Active → Branded → Children → Attendance → Live.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-teal-300" />
+              <Link href="/admin/tenants" className="text-xs font-black uppercase tracking-[0.16em] text-admin-accent hover:underline">View tenants</Link>
+            </div>
+          </div>
+          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1">
+            {(['Active', 'Branded', 'Children', 'Attendance', 'Live'] as const).map((label, i) => (
+              <span key={label} className="flex items-center gap-1 text-[10px] text-admin-text-muted">
+                <span className="w-2 h-2 rounded-full bg-teal-400 inline-block" />
+                {i + 1}. {label}
+              </span>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {funnelData.length === 0 ? (
+              <p className="text-sm text-admin-text-muted">No active centres.</p>
+            ) : funnelData.map(centre => (
+              <Link key={centre.id} href="/admin/tenants" className="flex items-center justify-between rounded-xl border border-admin-border bg-admin-bg px-4 py-3 hover:border-admin-accent/60 transition-colors">
+                <div>
+                  <p className="text-sm font-bold text-admin-text">{centre.name}</p>
+                  <p className="text-[11px] text-admin-text-muted">{centre.stage}/5 stages complete</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    {centre.stages.map((done, i) => (
+                      <div
+                        key={i}
+                        className={`w-3 h-3 rounded-full transition-colors ${done ? 'bg-teal-400' : 'bg-admin-border'}`}
+                        title={(['Active', 'Branded', 'Children', 'Attendance', 'Live'])[i]}
+                      />
+                    ))}
+                  </div>
+                  <span className={`text-xs font-black tabular-nums ${centre.stage === 5 ? 'text-teal-300' : centre.stage >= 3 ? 'text-amber-300' : 'text-rose-300'}`}>
+                    {centre.stage}/5
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
 

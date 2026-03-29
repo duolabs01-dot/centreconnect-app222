@@ -1,10 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
-import type { AiCompanyAgentId, AiCompanySignalMode } from '@/lib/ai/company-os/types'
-import { getAiCompanyOperatingSystemSnapshot } from '@/lib/ai/company-os/service'
 import type { OpenClawOpsMode } from '@/lib/ai/openclaw-ops/types'
 import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getFounderVisibilityTruth } from '@/lib/founder/admin-truth'
 
 const OPEN_SUPPORT_STATUSES = ['open', 'in_progress', 'waiting_response'] as const
 const BACKLOG_DOC_PATH = 'docs/BACKLOG_EXECUTION_SCOREBOARD.md'
@@ -128,9 +127,9 @@ export type CompanyHqSnapshot = {
   }
   readiness: CompanyHqReadinessItem[]
   aiLayer: {
-    enabled: boolean
-    signalMode: AiCompanySignalMode
-    generatedAt: string
+    hasRuns: boolean
+    lastRunAt: string | null
+    lastRunStatus: string | null
   }
   openClaw: {
     mode: OpenClawOpsMode
@@ -225,19 +224,6 @@ function safeRows<T>(result: RowsResult<T>, issues: string[], label: string) {
   return (result.data ?? []) as T[]
 }
 
-function ownerFromAgent(agentId: AiCompanyAgentId) {
-  if (agentId === 'ceo') return 'Founder / CEO'
-  if (agentId === 'cto') return 'CTO'
-  if (agentId === 'ops') return 'Ops'
-  return 'Growth'
-}
-
-function toneFromSignalMode(signalMode: AiCompanySignalMode): CompanyHqTone {
-  if (signalMode === 'live') return 'good'
-  if (signalMode === 'mixed') return 'watch'
-  return 'muted'
-}
-
 function toneFromOpenClawMode(mode: OpenClawOpsMode): CompanyHqTone {
   return mode === 'filesystem' ? 'good' : 'watch'
 }
@@ -294,7 +280,7 @@ export async function getCompanyHqSnapshot(input?: {
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const [
-    aiSnapshot,
+    realPartnerCentresResult,
     openClawSnapshot,
     centresResult,
     applicationsResult,
@@ -302,8 +288,14 @@ export async function getCompanyHqSnapshot(input?: {
     supportTicketsResult,
     analyticsResult,
     backlogMarkdown,
+    latestAdvisorTaskResult,
   ] = await Promise.all([
-    getAiCompanyOperatingSystemSnapshot({ ownerEmail: input?.ownerEmail ?? null }),
+    admin
+      .from('ecd_centres')
+      .select('name')
+      .eq('is_real_partner', true)
+      .eq('is_deleted', false)
+      .order('name'),
     getOpenClawOpsSnapshot(),
     admin
       .from('ecd_centres')
@@ -323,6 +315,12 @@ export async function getCompanyHqSnapshot(input?: {
       .select('ecd_id,event_type,created_at')
       .gte('created_at', sevenDaysAgo),
     readBacklogDocument(),
+    admin
+      .from('agent_tasks')
+      .select('run_id, created_at')
+      .eq('agent_name', 'advisor')
+      .order('created_at', { ascending: false })
+      .limit(1),
   ])
 
   const centres = safeRows(centresResult as RowsResult<CentreRow>, issues, 'ecd_centres')
@@ -347,7 +345,24 @@ export async function getCompanyHqSnapshot(input?: {
     'support_tickets'
   )
 
-  const foundingPartners = aiSnapshot.founderTruth.foundingPartners
+  const latestAdvisorTask = latestAdvisorTaskResult.data?.[0] ?? null
+  let advisorLastRunStatus: string | null = null
+  if (latestAdvisorTask?.run_id) {
+    const { data: runData } = await admin
+      .from('agent_runs')
+      .select('status')
+      .eq('id', latestAdvisorTask.run_id)
+      .single()
+    advisorLastRunStatus = runData?.status ?? null
+  }
+
+  const realPartnerCentres = (realPartnerCentresResult.data ?? []) as Array<{ name: string }>
+  const founderTruth = getFounderVisibilityTruth({
+    systemCentreCount: centres.length,
+    realPartnerCentres,
+  })
+
+  const foundingPartners = founderTruth.foundingPartners
   const foundingRows = foundingPartners.map((partner) =>
     centres.find((centre) => {
       const normalizedName = normalizeIdentifier(centre.name)
@@ -421,18 +436,11 @@ export async function getCompanyHqSnapshot(input?: {
   ).length
   const activeFoundingRows = foundingRows.filter((row: any) => row?.is_active === true).length
 
-  const ceoBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'ceo')
-  const ctoBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'cto')
-  const opsBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'ops')
-  const growthBrief = aiSnapshot.agents.find((agent) => agent.agentId === 'growth')
-  const dailyFocus = aiSnapshot.workflows.find((workflow) => workflow.id === 'daily_focus')
-  const topFocusItem = dailyFocus?.items[0]
-
   const summaryStats: CompanyHqSummaryStat[] = [
     {
       id: 'real-partners',
       label: 'Real founding centres',
-      value: aiSnapshot.founderTruth.partnerCount.toString(),
+      value: founderTruth.partnerCount.toString(),
       detail: foundingPartners.map((partner) => partner.name).join(' + '),
       tone: 'good',
     },
@@ -440,13 +448,13 @@ export async function getCompanyHqSnapshot(input?: {
       id: 'demo-testers',
       label: 'Prospect centres not yet onboarded',
       value:
-        aiSnapshot.founderTruth.demoTesterCentreCount === null
+        founderTruth.demoTesterCentreCount === null
           ? 'Unknown'
-          : aiSnapshot.founderTruth.demoTesterCentreCount.toString(),
-      detail: aiSnapshot.founderTruth.demoTesterSummary,
+          : founderTruth.demoTesterCentreCount.toString(),
+      detail: founderTruth.demoTesterSummary,
       tone:
-        aiSnapshot.founderTruth.demoTesterCentreCount &&
-        aiSnapshot.founderTruth.demoTesterCentreCount > 0
+        founderTruth.demoTesterCentreCount &&
+        founderTruth.demoTesterCentreCount > 0
           ? 'watch'
           : 'muted',
     },
@@ -454,7 +462,7 @@ export async function getCompanyHqSnapshot(input?: {
       id: 'scheduled-money',
       label: 'Money scheduled now',
       value: 'R0',
-      detail: aiSnapshot.founderTruth.revenueSummary,
+      detail: founderTruth.revenueSummary,
       tone: 'critical',
     },
     {
@@ -473,37 +481,33 @@ export async function getCompanyHqSnapshot(input?: {
     {
       id: 'founder-ceo',
       label: 'Founder / CEO',
-      owner: 'Founder, with AI OS advisory',
+      owner: 'Founder',
       mission: 'Pick the bottleneck closest to real partner value, activation, and eventual payment readiness.',
       currentFocus:
-        ceoBrief?.headline ??
         'Run the company from active partner centres, and track prospect rows separately until onboarding is complete.',
-      href: '/admin/ai-os/ceo',
-      hrefLabel: 'Open CEO brief',
-      sourceLabel: 'AI Company OS founder brief',
+      href: '/admin/ai-os',
+      hrefLabel: 'Open Founder Advisor',
+      sourceLabel: 'Founder Advisor brief',
     },
     {
       id: 'cto',
       label: 'CTO',
-      owner: 'Founder, with AI OS advisory',
+      owner: 'Founder',
       mission: 'Protect trust, reliability, and shared source-of-truth logic across admin surfaces.',
-      currentFocus:
-        ctoBrief?.headline ?? 'Fix the visible failure path before adding another layer.',
-      href: '/admin/ai-os/cto',
-      hrefLabel: 'Open CTO brief',
-      sourceLabel: 'AI Company OS reliability brief',
+      currentFocus: 'Fix the visible failure path before adding another layer.',
+      href: '/admin/ai-os',
+      hrefLabel: 'Open Founder Advisor',
+      sourceLabel: 'Founder Advisor brief',
     },
     {
       id: 'ops',
       label: 'Ops',
       owner: 'Founder',
       mission: 'Keep Bajabulile and Sakhisizwe moving through setup, support, and follow-through without losing the thread.',
-      currentFocus:
-        opsBrief?.headline ??
-        'Founding partner follow-through still needs tight human ops discipline.',
+      currentFocus: 'Founding partner follow-through still needs tight human ops discipline.',
       href: '/admin/tenants',
       hrefLabel: 'Open centres',
-      sourceLabel: 'Live admin queue + AI OS ops brief',
+      sourceLabel: 'Live admin queue',
     },
     {
       id: 'ux-product',
@@ -519,14 +523,12 @@ export async function getCompanyHqSnapshot(input?: {
     {
       id: 'growth',
       label: 'Growth',
-      owner: 'Founder, with AI OS advisory',
+      owner: 'Founder',
       mission: 'Turn real demand into trustworthy applications without letting not-yet-onboarded prospect rows distort the funnel story.',
-      currentFocus:
-        growthBrief?.headline ??
-        'Demand exists, but the funnel still needs one careful repair at a time.',
+      currentFocus: 'Demand exists, but the funnel still needs one careful repair at a time.',
       href: '/admin/analytics',
       hrefLabel: 'Open analytics',
-      sourceLabel: 'AI Company OS growth brief',
+      sourceLabel: 'Founder Advisor brief',
     },
     {
       id: 'support',
@@ -553,63 +555,56 @@ export async function getCompanyHqSnapshot(input?: {
     },
   ]
 
+  const nowBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Now'))
+  const nextBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Next'))
+  const blockedBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Blocked'))
+  const doneBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Done This Week')).slice(0, 8)
+
   const roadmap: CompanyHqBucket[] = [
     mapRoadmapBucket(
       'Now',
       'now',
       'critical',
-      'Immediate founder work from the live AI Company OS queue.',
-      aiSnapshot.queues
-        .filter((item) => item.priority === 'now')
-        .map((item) => ({
-          id: item.id,
-          title: item.title,
-          summary: item.summary,
-          owner: ownerFromAgent(item.ownerAgentId),
-          href: item.href,
-          hrefLabel: item.actionLabel,
-        })),
-      'AI Company OS live founder queue'
+      'Immediate founder work.',
+      nowBacklog.map((item) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.detail || 'Active in the founder backlog doc.',
+        owner: 'Founder',
+      })),
+      `Doc-backed from ${BACKLOG_DOC_PATH}`
     ),
     mapRoadmapBucket(
       'Next',
       'next',
       'watch',
       'Important work that should follow once the current bottleneck is under control.',
-      aiSnapshot.queues
-        .filter((item) => item.priority === 'next')
-        .map((item) => ({
-          id: item.id,
-          title: item.title,
-          summary: item.summary,
-          owner: ownerFromAgent(item.ownerAgentId),
-          href: item.href,
-          hrefLabel: item.actionLabel,
-        })),
-      'AI Company OS live founder queue'
+      nextBacklog.map((item) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.detail || 'Queued in the founder backlog doc.',
+        owner: 'Founder',
+      })),
+      `Doc-backed from ${BACKLOG_DOC_PATH}`
     ),
     mapRoadmapBucket(
       'Later',
       'later',
       'muted',
       'Work that is understood but should not outrank current founder pressure.',
-      aiSnapshot.queues
-        .filter((item) => item.priority === 'later')
-        .map((item) => ({
-          id: item.id,
-          title: item.title,
-          summary: item.summary,
-          owner: ownerFromAgent(item.ownerAgentId),
-          href: item.href,
-          hrefLabel: item.actionLabel,
-        })),
-      'AI Company OS live founder queue'
+      blockedBacklog.map((item) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.detail || 'Blocked in the founder backlog doc.',
+        owner: 'Founder',
+      })),
+      `Doc-backed from ${BACKLOG_DOC_PATH}`
     ),
     {
       id: 'parked',
       label: 'Parked',
       description: 'Deliberately held back until pilot truth, signal quality, and founder bandwidth improve.',
-      sourceLabel: 'Founder-managed park list from AI OS + admin audit docs',
+      sourceLabel: 'Founder-managed park list',
       tone: 'muted',
       items: [
         {
@@ -619,8 +614,8 @@ export async function getCompanyHqSnapshot(input?: {
             'Parked until confirmation flows, audit logging, and founder signal quality are trustworthy enough to automate safely.',
           owner: 'Founder / CTO',
           href: '/admin/ai-os',
-          hrefLabel: 'Open AI OS',
-          sourceLabel: 'docs/ai-company-operating-system-plan.md',
+          hrefLabel: 'Open Founder Advisor',
+          sourceLabel: 'Founder Advisor v1',
         },
         {
           id: 'parked-external-briefs',
@@ -629,8 +624,8 @@ export async function getCompanyHqSnapshot(input?: {
             'Parked until access rules, redaction, and audience-specific messaging are stable.',
           owner: 'Founder / CEO',
           href: '/admin/ai-os',
-          hrefLabel: 'Open AI OS',
-          sourceLabel: 'docs/ai-company-operating-system-plan.md',
+          hrefLabel: 'Open Founder Advisor',
+          sourceLabel: 'Founder Advisor v1',
         },
         {
           id: 'parked-broader-rollout',
@@ -646,17 +641,12 @@ export async function getCompanyHqSnapshot(input?: {
     },
   ]
 
-  const nowBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Now'))
-  const nextBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Next'))
-  const blockedBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Blocked'))
-  const doneBacklog = parseBacklogSection(getSection(backlogMarkdown, 'Done This Week')).slice(0, 8)
-
   const backlog: CompanyHqBucket[] = [
     {
       id: 'comprehended',
       label: 'Comprehended',
       description: 'This lane is not wired to a durable table yet, so these are founder-managed placeholders for understood work.',
-      sourceLabel: 'Founder-managed placeholder from AI OS follow-up docs',
+      sourceLabel: 'Founder-managed placeholder',
       tone: 'muted',
       items: [
         {
@@ -667,7 +657,7 @@ export async function getCompanyHqSnapshot(input?: {
           owner: 'Founder / CEO',
           href: '/admin/hq',
           hrefLabel: 'Stay in HQ',
-          sourceLabel: 'docs/ai-company-operating-system-plan.md',
+          sourceLabel: 'Founder backlog',
         },
         {
           id: 'cmp-demand-outcomes',
@@ -677,7 +667,7 @@ export async function getCompanyHqSnapshot(input?: {
           owner: 'Founder / Growth',
           href: '/admin/analytics',
           hrefLabel: 'Open analytics',
-          sourceLabel: 'docs/ai-company-operating-system-plan.md',
+          sourceLabel: 'Founder backlog',
         },
       ],
     },
@@ -806,8 +796,8 @@ export async function getCompanyHqSnapshot(input?: {
           : `${row.is_active ? 'Published' : 'Not published'} | ${row.is_registered ? 'Registered' : 'Registration not confirmed'} | Created ${formatDateTime(row.created_at)}`,
       }
     }),
-    demoTesterCount: aiSnapshot.founderTruth.demoTesterCentreCount,
-    demoTesterSummary: aiSnapshot.founderTruth.demoTesterSummary,
+    demoTesterCount: founderTruth.demoTesterCentreCount,
+    demoTesterSummary: founderTruth.demoTesterSummary,
     demoTesterNames: demoCentres
       .map((centre) => centre.name?.trim())
       .filter((name): name is string => Boolean(name))
@@ -823,7 +813,7 @@ export async function getCompanyHqSnapshot(input?: {
       owner: 'Founder / CEO',
       evidence:
         'This page now holds founder truth, role ownership, roadmap, backlog, pilot board, and readiness in one place.',
-      nextMove: 'Keep HQ as the first admin layer above AI Company OS and OpenClaw.',
+      nextMove: 'Keep HQ as the founder control room above the Founder Advisor and OpenClaw.',
       sourceLabel: 'This route',
       href: '/admin/hq',
     },
@@ -890,25 +880,42 @@ export async function getCompanyHqSnapshot(input?: {
       statusLabel: 'Not commercially live',
       tone: 'critical',
       owner: 'Founder / CEO',
-      evidence: aiSnapshot.founderTruth.revenueSummary,
+      evidence: founderTruth.revenueSummary,
       nextMove: 'Keep prospect/test billing artifacts out of the founder narrative until active partner centres are actually billed.',
       sourceLabel: 'Founder truth + admin audit docs',
       href: '/admin/revenue',
     },
     {
-      id: 'ai-company-os',
-      workflow: 'AI Company OS',
+      id: 'founder-advisor',
+      workflow: 'Founder Advisor',
       statusLabel:
-        aiSnapshot.signalMode === 'live'
-          ? 'Advisory live'
-          : aiSnapshot.signalMode === 'mixed'
-          ? 'Advisory mixed'
-          : 'Mock fallback',
-      tone: toneFromSignalMode(aiSnapshot.signalMode),
-      owner: 'Founder / CEO / CTO',
-      evidence: `${aiSnapshot.queues.length} queue items and ${aiSnapshot.risks.length} risk summaries are available with ${aiSnapshot.signalMode} signal mode.`,
-      nextMove: 'Use AI OS as a routing and advisory layer, not as autonomous control.',
-      sourceLabel: 'AI Company OS snapshot',
+        !latestAdvisorTask
+          ? 'No briefs yet'
+          : advisorLastRunStatus === 'completed'
+          ? 'Brief available'
+          : advisorLastRunStatus === 'failed'
+          ? 'Last brief failed'
+          : 'Brief pending',
+      tone:
+        !latestAdvisorTask
+          ? 'watch'
+          : advisorLastRunStatus === 'completed'
+          ? 'good'
+          : advisorLastRunStatus === 'failed'
+          ? 'critical'
+          : 'watch',
+      owner: 'Founder',
+      evidence: !latestAdvisorTask
+        ? 'No Founder Advisor briefs have been generated yet. Open the Founder Advisor to run the first brief.'
+        : `Last brief ${advisorLastRunStatus ?? 'unknown status'} — ${latestAdvisorTask.created_at ? new Date(latestAdvisorTask.created_at).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : 'timestamp unavailable'}. Draft-only — all outputs require your review before any action.`,
+      nextMove: !latestAdvisorTask
+        ? 'Ask the Founder Advisor a question to generate the first ranked brief.'
+        : advisorLastRunStatus === 'completed'
+        ? 'Review the latest brief in the Founder Advisor.'
+        : advisorLastRunStatus === 'failed'
+        ? 'Check the Founder Advisor for errors and re-run when ready.'
+        : 'Wait for the current brief to complete, then review it.',
+      sourceLabel: 'Founder Advisor run history',
       href: '/admin/ai-os',
     },
     {
@@ -925,11 +932,7 @@ export async function getCompanyHqSnapshot(input?: {
     },
   ]
 
-  const notes = [...aiSnapshot.founderTruth.notes]
-
-  if (topFocusItem?.title) {
-    notes.unshift(`This week focus anchor: ${topFocusItem.title}.`)
-  }
+  const notes = [...founderTruth.notes]
 
   if (issues.length > 0) {
     notes.push(`Some HQ selectors fell back to safe defaults: ${issues.join(', ')}.`)
@@ -940,12 +943,10 @@ export async function getCompanyHqSnapshot(input?: {
     founderOverview: {
       stage: 'Pilot truth, not scale theatre',
       topBottleneck:
-        ceoBrief?.headline ??
         'Run the founder lane from active partner centres, not from not-yet-onboarded prospect rows.',
       thisWeekFocus:
-        topFocusItem?.summary ??
         'Keep Bajabulile and Sakhisizwe as the only real founder lane, and remove friction that blocks daily usage.',
-      revenueContext: aiSnapshot.founderTruth.revenueSummary,
+      revenueContext: founderTruth.revenueSummary,
     },
     summaryStats,
     hierarchy,
@@ -954,9 +955,9 @@ export async function getCompanyHqSnapshot(input?: {
     pilotBoard,
     readiness,
     aiLayer: {
-      enabled: aiSnapshot.enabled,
-      signalMode: aiSnapshot.signalMode,
-      generatedAt: aiSnapshot.generatedAt,
+      hasRuns: latestAdvisorTask !== null,
+      lastRunAt: latestAdvisorTask?.created_at ?? null,
+      lastRunStatus: advisorLastRunStatus,
     },
     openClaw: {
       mode: openClawSnapshot.mode,

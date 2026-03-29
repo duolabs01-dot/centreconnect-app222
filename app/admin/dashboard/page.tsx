@@ -379,7 +379,7 @@ export default async function AdminDashboardPage() {
       title: 'Founder visibility',
       statusLabel: 'Read-only',
       detail:
-        'AI Company OS and OpenClaw stay as visibility layers. Use them for status and handoff context, not as a runtime controller or a fake queue feed.',
+        'The Founder Advisor and OpenClaw stay as visibility layers. Use them for status and handoff context, not as a runtime controller or a fake queue feed.',
       href: '/admin/openclaw',
       hrefLabel: 'Open OpenClaw ops',
       tone: 'cyan',

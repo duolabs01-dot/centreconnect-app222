@@ -35,7 +35,7 @@ export const ADMIN_ADVANCED_ITEMS: AdminNavItem[] = [
   { href: '/admin/analytics', label: 'Analytics' },
   { href: '/admin/invites', label: 'Invites' },
   { href: '/admin/parent-reliability', label: 'Parent Reliability' },
-  { href: '/admin/ai-os', label: 'AI Company OS' },
+  { href: '/admin/ai-os', label: 'Founder Advisor' },
   { href: '/admin/openclaw', label: 'OpenClaw Ops' },
   { href: '/admin/webhook-failures', label: 'Webhook Failures' },
   { href: '/admin/audit-trail', label: 'Audit Trail' },
@@ -59,6 +59,6 @@ export const ADMIN_TASK_ROUTER: Array<{ task: string; href: string; label: strin
   { task: 'Fix a parent issue', href: '/admin/parent-reliability', label: 'Open Parent Reliability' },
   { task: 'Handle support tickets', href: '/admin/support', label: 'Open Support' },
   { task: 'Check revenue status', href: '/admin/revenue', label: 'Open Revenue' },
-  { task: 'Review AI founder brief', href: '/admin/ai-os', label: 'Open AI Company OS' },
+  { task: 'Review AI founder brief', href: '/admin/ai-os', label: 'Open Founder Advisor' },
   { task: 'Check automation runtime', href: '/admin/openclaw', label: 'Open OpenClaw Ops' },
 ]

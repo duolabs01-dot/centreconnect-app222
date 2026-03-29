@@ -1,55 +1,7 @@
-import type { Metadata } from 'next'
-import { notFound, redirect } from 'next/navigation'
-import { AiCompanyLightBrief } from '@/components/admin/ai-company-light-brief'
-import {
-  isAiCompanyLightPersonaId,
-  isAiCompanyLightPersonasEnabled,
-} from '@/lib/ai/company-os/config'
-import { getAiCompanyOperatingSystemSnapshot } from '@/lib/ai/company-os/service'
-import { requirePlatformAdmin } from '@/lib/auth/platform-admin'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export const metadata: Metadata = {
-  title: 'AI Company OS Light Brief | Platform Admin',
-  description: 'Feature-flagged light briefing surfaces for CEO and CTO.',
-}
-
-export default async function AdminAiCompanyLightPersonaPage({
-  params,
-}: {
-  params: Promise<{ persona: string }>
-}) {
-  const { persona: personaId } = await params
-  const identity = await requirePlatformAdmin()
-  if (!identity) redirect('/login')
-
-  if (!isAiCompanyLightPersonasEnabled() || !isAiCompanyLightPersonaId(personaId)) {
-    notFound()
-  }
-
-  const snapshot = await getAiCompanyOperatingSystemSnapshot({
-    ownerEmail: identity.email,
-  })
-
-  const persona = snapshot.lightPersonas.find(
-    (item) => item.agentId === personaId
-  )
-  const brief = snapshot.agents.find((item) => item.agentId === personaId)
-
-  if (!persona || !brief) {
-    notFound()
-  }
-
-  return (
-    <AiCompanyLightBrief
-      persona={persona}
-      brief={brief}
-      risks={snapshot.risks.slice(0, 3)}
-      signalMode={snapshot.signalMode}
-      dataNotes={snapshot.dataNotes}
-      generatedAt={snapshot.generatedAt}
-      founderTruth={snapshot.founderTruth}
-    />
-  )
+// The persona-specific agent pages (CEO/CTO light briefs) have been superseded
+// by the unified Founder Advisor. All requests are forwarded there.
+export default function AdminAiPersonaPage() {
+  redirect('/admin/ai-os')
 }

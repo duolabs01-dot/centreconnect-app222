@@ -6,10 +6,10 @@ export default function Error() {
   return (
     <div className="rounded-[2rem] border border-rose-500/20 bg-rose-500/10 p-6 text-rose-100 shadow-2xl">
       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-300">
-        AI Company OS
+        Founder Advisor
       </p>
       <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
-        The founder cockpit could not load
+        The Founder Advisor could not load
       </h2>
       <p className="mt-3 max-w-2xl text-sm leading-6 text-rose-100/80">
         The route stays read-only. Use the existing admin surfaces while this page is
