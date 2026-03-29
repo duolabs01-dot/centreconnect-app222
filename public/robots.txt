@@ -1,4 +1,27 @@
 User-agent: *
-Allow: /
-Sitemap: https://centerconnect.co.za/sitemap.xml
-Host: centerconnect.co.za
+
+# Public pages — allow crawling
+Allow: /$
+Allow: /directory
+Allow: /for-centres
+Allow: /c/
+Allow: /apply/
+Allow: /privacy
+Allow: /popia
+Allow: /terms
+Allow: /register
+Allow: /login
+
+# Private portals — block entirely
+Disallow: /ecd/
+Disallow: /admin/
+Disallow: /parent/
+
+# API routes — no crawling
+Disallow: /api/
+
+# Auth callbacks and internal routes
+Disallow: /auth/
+Disallow: /_next/
+
+Sitemap: https://centreconnect.co.za/sitemap.xml
