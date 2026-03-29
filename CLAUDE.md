@@ -32,7 +32,7 @@ The product is live and in production. There are real paying customers. Treat ev
 | Auth | Supabase Auth (email/password + Google OAuth) |
 | Payments | Paystack (ZAR, webhooks at `/api/webhooks/paystack`) |
 | Email | Nodemailer + SMTP |
-| AI | Google Gemini (`GEMINI_API_KEY`) |
+| AI | Google Gemini — two separate keys: `GEMINI_API_KEY` (OCR/document extraction) · `GEMINI_ADVISOR_API_KEY` (Founder Advisor synthesis) |
 | OCR | Tesseract.js (attendance register scanning) |
 | Maps | MapLibre GL (no Google Maps dependency) |
 | Push Notifications | Web Push API + VAPID keys |
@@ -87,6 +87,11 @@ centreconnect-app222/
 │   ├── email/                  # Email templates + sender
 │   ├── supabase/               # Client, server, admin Supabase clients
 │   ├── actions/                # Server Actions (admissions, guardians, etc.)
+│   ├── ai/
+│   │   ├── company-os/         # loadLiveSignals() — 18-query parallel signal fetch
+│   │   └── founder-advisor/    # Founder Advisor pipeline (input → synthesize → persist → run)
+│   ├── founder/
+│   │   └── admin-truth.ts      # getFounderVisibilityTruth() — separates real partners from demo rows
 │   └── ...
 ├── supabase/
 │   └── migrations/             # 125+ SQL migration files
@@ -263,7 +268,7 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 | Table | Purpose |
 |---|---|
 | `user_profiles` | id, role, full_name, phone — one row per auth user |
-| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN), **onboarding_complete** (BOOLEAN), **onboarding_completed_at** (TIMESTAMPTZ — set when owner completes `/ecd/onboarding`; used to gate first-week dashboard experience and Day 14 drip email), **onboarding_progress** (JSONB — keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`) |
+| `ecd_centres` | id, slug, name, email, address, suburb, city, province, lat/lng, logo_url, cover_image_url, is_active, onboarded_at, **is_public_listing** (BOOLEAN), **onboarding_complete** (BOOLEAN), **onboarding_completed_at** (TIMESTAMPTZ — set when owner completes `/ecd/onboarding`; used to gate first-week dashboard experience and Day 14 drip email), **onboarding_progress** (JSONB — keys: `logo`, `cover`, `description`, `children`, `attendance`, `pickup`, `published`), **is_real_partner** (BOOLEAN DEFAULT FALSE — marks genuinely onboarded ECD partners; used by Founder Advisor to separate real business signal from demo/test rows. Add new partners via DB update, not code change.) |
 | `ecd_admins` | Links user → centre (user_id, ecd_id, role, invited_at, accepted_at) |
 | `children` | id, ecd_id, first_name, last_name, date_of_birth, class_id, gender |
 | `attendance` | child_id, date, status (present/absent/sick/late), ecd_id |
@@ -278,6 +283,29 @@ All tables use Supabase RLS. Use `lib/supabase/admin.ts` only on the server when
 | `support_tickets` | id, ecd_id or parent_id, status, subject, messages |
 | `audit_logs` | Platform-wide action audit trail |
 | `payment_webhook_events` | Paystack webhook payloads (for replay/debugging) |
+
+### Agent System Tables (v1 — platform_admin only)
+
+Migration: `supabase/migrations/20260329_001_agent_system_v1.sql`
+
+| Table | Purpose |
+|---|---|
+| `agent_runs` | One row per advisor invocation — written at START before any work begins (status: `running`). Updated to `completed` or `failed`. |
+| `agent_tasks` | One task per run in v1. Holds the full `FounderBrief` JSON in `output`. Starts at `ready_for_review` — approval required before any action. |
+| `agent_messages` | Append-only conversation log: system prompt, user message, raw Gemini response (sequence 1–3). |
+
+**Approval state machine** (`agent_tasks.status`):
+`draft → ready_for_review → approved → executed`
+`ready_for_review → rejected` or `expired`
+
+**v1 design constraints** (enforced in types and DB):
+- `action_type = 'draft_only'` — no side-effecting actions
+- `approval_required = true` — every task requires Mandla's review
+- `agent_name` CHECK: `('advisor', 'system')` only
+- All access gated by `is_platform_admin()` RLS function
+- Audit guarantee: every invocation leaves a row even on failure
+
+Types: `types/agent.ts` — `AgentRun`, `AgentTask`, `AgentMessage`, `FounderBrief` and all sub-types, `AGENT_VERSIONS`
 
 ### Confirmed Real Data
 - **Bajabulile Day Care Centre**: ~30 children, 17 boys, 13 girls — active pilot
@@ -405,7 +433,8 @@ VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 
 # AI
-GEMINI_API_KEY=                    # Google Gemini (AI features, OCR)
+GEMINI_API_KEY=                    # Google Gemini — OCR + document extraction only
+GEMINI_ADVISOR_API_KEY=            # Google Gemini — Founder Advisor synthesis (separate key, no fallback)
 
 # Rate limiting (optional)
 UPSTASH_REDIS_REST_URL=
@@ -463,6 +492,37 @@ import { createClient } from '@/lib/supabase/server'
 
 // Admin operations (bypasses RLS — server only)
 import { createAdminClient } from '@/lib/supabase/admin'
+```
+
+### Founder Advisor (`lib/ai/founder-advisor/`)
+
+The v1 AI Chief of Staff. Analysis and draft generation only — no side effects. All outputs require Mandla's explicit review.
+
+**Files:**
+| File | Role |
+|---|---|
+| `input.ts` | `buildFounderBriefInput(goal)` — loads 18 live signals + real-partner DB query in parallel, assembles full context |
+| `synthesize.ts` | `synthesizeFounderBrief(input)` — calls Gemini (`GEMINI_ADVISOR_API_KEY`), validates response against Zod schema, returns `SynthesisResult` |
+| `persist.ts` | Three functions: `createAdvisorRunRecord` (writes run at start), `finalizeAdvisorRun` (writes messages + task, marks completed), `failAdvisorRun` (marks failed — never throws) |
+| `run.ts` | `runFounderAdvisor({ goal, triggeredBy? })` — orchestrates the full pipeline, returns `FounderAdvisorResult` |
+
+**Audit guarantee:** `agent_run` row is written (status `running`) BEFORE any signals are loaded or Gemini is called. Every invocation — including failures — leaves a durable record. Only exception: DB itself being unreachable.
+
+**Model:** `GEMINI_ADVISOR_MODEL` env var, defaults to `gemini-2.5-flash`.
+
+**Output (`FounderBrief`):** `summary` · `confidence` · `top_priorities` · `recommended_actions` · `what_can_wait` · `risk_flags` · `required_inputs` · `drafts?` · `data_freshness`
+
+**Grounding:** `lib/founder/admin-truth.ts` — `getFounderVisibilityTruth()` uses `is_real_partner` column to identify real ECD partners vs demo/test rows. Receives live revenue figures from signals. Falls back to hardcoded partner list if the migration has not yet been applied.
+
+**Calling the advisor:**
+```typescript
+import { runFounderAdvisor } from '@/lib/ai/founder-advisor/run'
+
+const result = await runFounderAdvisor({
+  goal: 'What should I focus on this week?',
+  triggeredBy: userId,          // optional — platform_admin user id
+})
+// result: { runId, taskId, brief, generatedAt, dataIssues }
 ```
 
 ### Welcome Pack & Onboarding Drip
@@ -827,3 +887,7 @@ npx playwright test tests/browser/e2e-journey.spec.ts --project=android-chrome
 17. **Do not select `phone` when querying `public_ecd_centres`** — that column does not exist in the view. Use `contact_phone` and `contact_whatsapp` instead. Selecting a non-existent column causes Supabase to return `null` data with no error.
 18. **Do not add drag-to-close to bottom sheets** — `onTouchMove` handlers intercept page scroll events on mobile and close the sheet unexpectedly. Sheets should only close via explicit backdrop click or a "Close" button.
 19. **Do not query `ecd_centres` directly for parent-facing centre listings** — use `fetchFeaturedPublicCentres()` from `lib/public-centres/query.ts` which uses the `public_ecd_centres` view as the source of truth.
+20. **Do not use `GEMINI_API_KEY` in the Founder Advisor** — it uses `GEMINI_ADVISOR_API_KEY` exclusively. There is no fallback. Mixing keys defeats the purpose of quota and audit separation.
+21. **Do not add new real ECD partners by editing code** — set `is_real_partner = TRUE` on the `ecd_centres` row in the database. The Founder Advisor reads this at runtime; no code change is needed.
+22. **Do not let the Founder Advisor write to business tables** — it writes only to `agent_runs`, `agent_tasks`, `agent_messages`. It must never mutate `ecd_centres`, `subscriptions`, `applications`, or any other business record.
+23. **Do not skip the `createAdvisorRunRecord` step** — the audit trail run record must be written before any signals are loaded or Gemini is called. This ensures every invocation is traceable even on failure.

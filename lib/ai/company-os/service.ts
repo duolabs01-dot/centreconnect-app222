@@ -49,7 +49,7 @@ type AnalyticsEventRow = {
   created_at: string
 }
 
-type LiveSignals = {
+export type LiveSignals = {
   centres: {
     total: number
     live: number
@@ -952,7 +952,7 @@ function buildLightPersonas(
   }))
 }
 
-async function loadLiveSignals() {
+export async function loadLiveSignals() {
   const admin = createAdminClient()
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
