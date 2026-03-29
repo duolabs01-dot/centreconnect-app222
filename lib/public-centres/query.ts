@@ -103,7 +103,9 @@ export async function fetchFeaturedPublicCentres(
         suburb: typeof row.suburb === 'string' && row.suburb.trim().length > 0 ? row.suburb.trim() : null,
         primaryAgeGroup: pickPrimaryAgeGroup(row.age_groups),
         age_groups: Array.isArray(row.age_groups) ? (row.age_groups as string[]) : null,
-        isRegistered: Boolean(row.is_registered),
+        // Match directory/discover: only show registration badge on claimed centres.
+        // An unclaimed listing has no verified owner, so the registered flag is unreliable.
+        isRegistered: isClaimed ? Boolean(row.is_registered) : false,
         isClaimed,
         isPilot,
         isFeatured: isPilot,

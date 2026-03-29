@@ -18,8 +18,10 @@ export async function completeOnboarding() {
     .update({ onboarding_complete: true, onboarding_completed_at: now })
     .eq('id', ecdId)
 
-  // 2. Fire-and-forget: send Day 0 celebration email (do not await — never blocks redirect)
-  void sendCelebrationEmail(ecdId, user.email ?? '')
+  // 2. Send Day 0 celebration email — awaited before redirect so the serverless
+  //    function does not terminate before the email and notification log are written.
+  //    sendCelebrationEmail is idempotent and fast (~300 ms); the redirect delay is acceptable.
+  await sendCelebrationEmail(ecdId, user.email ?? '')
 
   redirect('/ecd/dashboard?celebrate=1')
 }

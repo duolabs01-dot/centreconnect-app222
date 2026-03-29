@@ -277,9 +277,14 @@ export async function POST(request: Request) {
         hasEnrolledChildStatus(c.enrollment_status)
       )
 
+      // Prefer the enrolled application's updated_at (most accurate enrollment date).
+      // Fall back to the child record's created_at for legacy/imported children that
+      // have no matching application row — this is the best available proxy.
       const enrollmentTs = enrolledApp?.updated_at
         ? new Date(enrolledApp.updated_at).getTime()
-        : null
+        : enrolledChild?.created_at
+          ? new Date(enrolledChild.created_at).getTime()
+          : null
       const enrollmentAgeDays = enrollmentTs != null ? (now.getTime() - enrollmentTs) / DAY_MS : null
 
       // Only fire in the 7–21 day window after enrollment; skip if we can't determine timing

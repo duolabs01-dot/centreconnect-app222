@@ -72,13 +72,13 @@ export async function POST(request: Request) {
   const centreIds = centres.map((c) => c.id)
   const { data: existingLogs } = await admin
     .from('notification_logs')
-    .select('ecd_id,event_type')
-    .in('ecd_id', centreIds)
+    .select('centre_id,event_type')
+    .in('centre_id', centreIds)
     .in('event_type', ['onboarding_day1_resume', 'onboarding_day3', 'onboarding_day7', 'onboarding_day14_features', 'welcome_pack_fallback'])
 
   const sentMap = new Set<string>()
   for (const log of existingLogs ?? []) {
-    sentMap.add(`${log.ecd_id}:${log.event_type}`)
+    sentMap.add(`${log.centre_id}:${log.event_type}`)
   }
 
   // -------------------------------------------------------------------
@@ -99,15 +99,15 @@ export async function POST(request: Request) {
   // -------------------------------------------------------------------
   const { data: welcomeLogs } = await admin
     .from('notification_logs')
-    .select('ecd_id,created_at,status')
-    .in('ecd_id', centreIds)
+    .select('centre_id,created_at,status')
+    .in('centre_id', centreIds)
     .eq('event_type', 'welcome_pack')
     .order('created_at', { ascending: false })
 
   const welcomeLogMap: Record<string, { sentAt: Date; status: string }> = {}
   for (const log of welcomeLogs ?? []) {
-    if (!welcomeLogMap[log.ecd_id]) {
-      welcomeLogMap[log.ecd_id] = {
+    if (!welcomeLogMap[log.centre_id]) {
+      welcomeLogMap[log.centre_id] = {
         sentAt: new Date(log.created_at),
         status: log.status,
       }
