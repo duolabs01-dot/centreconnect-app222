@@ -22,24 +22,29 @@ export default async function AdminFounderAdvisorPage() {
   // Query agent_tasks first to get the run_ids for advisor tasks, then fetch
   // the matching agent_runs. This ensures system/future agent types never appear
   // in the Founder Advisor history even when other agent names are added.
-  const { data: advisorTasks } = await admin
-    .from('agent_tasks')
-    .select('run_id')
-    .eq('agent_name', 'advisor')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
+  // Wrapped in try/catch so the page renders even if the migration hasn't been applied yet.
   let recentRuns: RecentRun[] = []
 
-  if (advisorTasks && advisorTasks.length > 0) {
-    const runIds = advisorTasks.map((t) => t.run_id as string)
-    const { data: rawRuns } = await admin
-      .from('agent_runs')
-      .select('id, status, input, summary, created_at')
-      .in('id', runIds)
+  try {
+    const { data: advisorTasks } = await admin
+      .from('agent_tasks')
+      .select('run_id')
+      .eq('agent_name', 'advisor')
       .order('created_at', { ascending: false })
+      .limit(10)
 
-    recentRuns = (rawRuns ?? []) as RecentRun[]
+    if (advisorTasks && advisorTasks.length > 0) {
+      const runIds = advisorTasks.map((t) => t.run_id as string)
+      const { data: rawRuns } = await admin
+        .from('agent_runs')
+        .select('id, status, input, summary, created_at')
+        .in('id', runIds)
+        .order('created_at', { ascending: false })
+
+      recentRuns = (rawRuns ?? []) as RecentRun[]
+    }
+  } catch {
+    // Agent system tables not yet migrated — render empty history gracefully.
   }
 
   return <FounderAdvisorPage recentRuns={recentRuns} />
