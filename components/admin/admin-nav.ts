@@ -1,4 +1,5 @@
 import {
+  Bot,
   Building2,
   CreditCard,
   LayoutDashboard,
@@ -28,6 +29,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { href: '/admin/revenue', label: 'Revenue', icon: CreditCard },
   { href: '/admin/support', label: 'Support', icon: LifeBuoy },
   { href: '/admin/command', label: 'Command', icon: Terminal },
+  { href: '/admin/ai-os', label: 'Founder Advisor', icon: Bot },
 ]
 
 /** Advanced tools — accessible via Overview dashboard drill-down, not primary nav */
