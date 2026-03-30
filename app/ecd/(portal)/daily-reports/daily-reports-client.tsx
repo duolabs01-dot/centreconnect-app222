@@ -12,6 +12,7 @@ import { saveDailyReportAction } from './actions'
 import {
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   CloudRain,
   Coffee,
   Cookie,
@@ -184,6 +185,7 @@ export function DailyReportsClient({
   isStarterTier = false,
 }: DailyReportsClientProps) {
   const [activeTab, setActiveTab] = useState<ReportTab>('today')
+  const [aiSummaryOpen, setAiSummaryOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedChildId, setExpandedChildId] = useState<string | null>(enrolledChildren[0]?.id ?? null)
   const [selectedDateByChild, setSelectedDateByChild] = useState<Record<string, string>>({})
@@ -448,30 +450,42 @@ export function DailyReportsClient({
           </div>
         </section>
 
-        <Card className="border-cyan-100 bg-gradient-to-br from-cyan-50 via-white to-emerald-50">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+        <Card className="overflow-hidden border-cyan-100 bg-gradient-to-br from-cyan-50 via-white to-emerald-50">
+          <button
+            type="button"
+            onClick={() => setAiSummaryOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-5 py-4 text-left"
+          >
+            <span className="flex items-center gap-2 text-base font-bold text-slate-900">
               <Sparkles className="h-4 w-4 text-cyan-600" />
               AI Daily Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-slate-700">{aiSummaryStats.text}</p>
-            <div className="grid gap-2 sm:grid-cols-4">
-              <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
-                Published: {aiSummaryStats.publishedCount}
+            </span>
+            <ChevronDown
+              className={cn(
+                'h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200',
+                aiSummaryOpen && 'rotate-180'
+              )}
+            />
+          </button>
+          {aiSummaryOpen && (
+            <CardContent className="space-y-3 pb-5 pt-0">
+              <p className="text-sm text-slate-700">{aiSummaryStats.text}</p>
+              <div className="grid gap-2 sm:grid-cols-4">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+                  Published: {aiSummaryStats.publishedCount}
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                  Drafts: {aiSummaryStats.draftCount}
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                  Not started: {aiSummaryStats.missingCount}
+                </div>
+                <div className="rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">
+                  Meal completion: {aiSummaryStats.mealCompletionRate}%
+                </div>
               </div>
-              <div className="rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
-                Drafts: {aiSummaryStats.draftCount}
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
-                Not started: {aiSummaryStats.missingCount}
-              </div>
-              <div className="rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-xs font-semibold text-cyan-700">
-                Meal completion: {aiSummaryStats.mealCompletionRate}%
-              </div>
-            </div>
-          </CardContent>
+            </CardContent>
+          )}
         </Card>
 
         <Card>

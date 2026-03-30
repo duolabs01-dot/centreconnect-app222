@@ -16,6 +16,7 @@ import { toApplicationDocumentLabels } from '@/lib/admissions/application-docume
 import { cn } from '@/lib/utils'
 import { Search, Filter, ChevronLeft, ChevronRight, FileText, ShieldAlert, Info } from 'lucide-react'
 import { ApplicationsRealtimeBridge } from './applications-realtime-bridge'
+import { CollapsibleCard } from '@/components/ui/collapsible-card'
 
 export const revalidate = 30
 
@@ -219,10 +220,10 @@ async function partitionPendingForReview(applications: ApplicationRow[], allowIn
 function renderApplicationList(applications: ApplicationRow[]) {
   if (applications.length === 0) {
     return (
-      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-12 text-center">
+      <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-center sm:p-12">
         <p className="text-sm text-slate-500">No applications found in this category.</p>
         <div className="mt-4">
-          <Button asChild className="bg-teal-600 hover:bg-teal-700 text-white h-11 px-8 rounded-2xl font-bold shadow-sm">
+          <Button asChild className="w-full rounded-2xl bg-teal-600 px-4 font-bold text-white shadow-sm hover:bg-teal-700 sm:w-auto sm:px-8">
             <Link href="/ecd/website">Complete Profile to attract parents</Link>
           </Button>
         </div>
@@ -938,80 +939,82 @@ export default async function EcdApplicationsPage(props: ApplicationsPageProps) 
           </CardContent>
         </Card>
 
-        <section id="details" className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-slate-50 bg-slate-50/30 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-teal-600" />
+        <CollapsibleCard
+          id="details"
+          title={
+            <span className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-teal-600" />
               Application Insights
-            </h2>
-          </div>
-          <div className="p-0">
-            {focusedApplication ? (
-              <div className="flex flex-col">
-                <div className="flex-1 space-y-6 p-5 sm:space-y-8 sm:p-8">
-                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</p>
-                      <p className="mt-1 break-all text-2xl font-black tracking-tight text-slate-900">{focusedApplication.application_number}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
-                      <div className="mt-2"><StatusBadge status={focusedApplication.status} /></div>
-                    </div>
+            </span>
+          }
+          defaultOpen={false}
+          className="rounded-[2.5rem] border-slate-100"
+        >
+          {focusedApplication ? (
+            <div className="flex flex-col -mx-5 -mb-5">
+              <div className="flex-1 space-y-6 p-5 sm:space-y-8 sm:p-8">
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference</p>
+                    <p className="mt-1 break-all text-2xl font-black tracking-tight text-slate-900">{focusedApplication.application_number}</p>
                   </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</p>
+                    <div className="mt-2"><StatusBadge status={focusedApplication.status} /></div>
+                  </div>
+                </div>
 
-                  <div className="h-px bg-slate-100" />
+                <div className="h-px bg-slate-100" />
 
-                  <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-lg">
-                          {focusedChild?.first_name?.[0] ?? 'C'}
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-slate-900">{focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'Child name not added'}</p>
-                          <p className="text-xs text-slate-500 font-medium">Applicant</p>
-                        </div>
+                <div className="grid gap-4 sm:grid-cols-2 sm:gap-8">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Child Profile</p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-black text-lg">
+                        {focusedChild?.first_name?.[0] ?? 'C'}
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Primary Guardian</p>
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
-                          {focusedParentProfile?.full_name?.[0] ?? 'P'}
-                        </div>
-                        <div>
-                          <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'Parent name not added'}</p>
-                          <p className="break-all text-xs font-bold text-teal-600">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone on file'}</p>
-                        </div>
+                      <div>
+                        <p className="text-lg font-bold text-slate-900">{focusedChild ? `${focusedChild.first_name} ${focusedChild.last_name}` : 'Child name not added'}</p>
+                        <p className="text-xs text-slate-500 font-medium">Applicant</p>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="w-full border-t border-slate-50 bg-slate-50/50 p-5 sm:p-8 md:w-80 md:border-l md:border-t-0">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Internal Notes</p>
-                  <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm min-h-[120px]">
-                    <p className="text-sm text-slate-600 italic leading-relaxed">
-                      {focusedApplication.admin_notes || 'No private notes added yet.'}
-                    </p>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Primary Guardian</p>
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center font-black text-lg">
+                        {focusedParentProfile?.full_name?.[0] ?? 'P'}
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-slate-900">{focusedParentProfile?.full_name ?? 'Parent name not added'}</p>
+                        <p className="break-all text-xs font-bold text-teal-600">{focusedParentProfile?.phone ?? focusedParent?.alt_phone ?? 'No phone on file'}</p>
+                      </div>
+                    </div>
                   </div>
-                  <Button variant="outline" className="mt-4 h-12 w-full rounded-2xl border-slate-200 font-bold text-slate-600 hover:border-teal-200 hover:bg-white hover:text-teal-700" asChild>
-                    <Link href={applicationDetailsHref(focusedApplication)} prefetch={false}>Full Case File -&gt;</Link>
-                  </Button>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mb-6 shadow-sm">
-                  <Info className="w-8 h-8 text-slate-300" />
+
+              <div className="w-full border-t border-slate-50 bg-slate-50/50 p-5 sm:p-8 md:w-80 md:border-l md:border-t-0">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Internal Notes</p>
+                <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm min-h-[120px]">
+                  <p className="text-sm text-slate-600 italic leading-relaxed">
+                    {focusedApplication.admin_notes || 'No private notes added yet.'}
+                  </p>
                 </div>
-                <p className="text-sm font-bold text-slate-400 max-w-xs uppercase tracking-widest leading-relaxed">Select an application from the table above to view deep-dive details.</p>
+                <Button variant="outline" className="mt-4 h-12 w-full rounded-2xl border-slate-200 font-bold text-slate-600 hover:border-teal-200 hover:bg-white hover:text-teal-700" asChild>
+                  <Link href={applicationDetailsHref(focusedApplication)} prefetch={false}>Full Case File &rarr;</Link>
+                </Button>
               </div>
-            )}
-          </div>
-        </section>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="h-20 w-20 rounded-[2rem] bg-slate-50 flex items-center justify-center mb-6 shadow-sm">
+                <Info className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-sm font-bold text-slate-400 max-w-xs uppercase tracking-widest leading-relaxed">Select an application from the list above to view details.</p>
+            </div>
+          )}
+        </CollapsibleCard>
       </div>
     </>
   )

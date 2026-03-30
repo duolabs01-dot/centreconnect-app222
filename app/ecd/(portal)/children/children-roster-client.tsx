@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
   CalendarDays,
+  ChevronDown,
   Mail,
   PencilLine,
   Search,
@@ -14,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -178,6 +180,144 @@ function sendButtonLabel(child: ChildRosterItem) {
   if (child.parentLinkRequest) return 'Send invite again'
   if (child.parentEmail) return 'Send parent invite'
   return 'Add parent details'
+}
+
+function ChildCardItem({
+  child,
+  onOpenEdit,
+  onOpenParentLink,
+}: {
+  child: ChildRosterItem
+  onOpenEdit: (child: ChildRosterItem) => void
+  onOpenParentLink: (child: ChildRosterItem) => void
+}) {
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const parentStatus = getParentStatus(child)
+
+  return (
+    <Card className="rounded-[1.8rem] border-slate-200 bg-white shadow-sm">
+      <CardContent className="space-y-4 p-5">
+        {/* Name + status badge */}
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-0.5">
+            <h2 className="text-xl font-black tracking-tight text-slate-900">
+              {child.firstName} {child.lastName}
+            </h2>
+            <p className="text-sm font-medium text-slate-500">
+              {child.className ?? 'No class yet'}
+              {child.enrollmentStartDate ? ` \u00b7 Started ${formatDateLabel(child.enrollmentStartDate)}` : ''}
+            </p>
+          </div>
+          <Badge className={parentStatus.badgeClassName}>{parentStatus.label}</Badge>
+        </div>
+
+        {/* Action buttons — always visible, flex-wrap for mobile */}
+        <div className="flex flex-wrap gap-2">
+          {!child.parentId ? (
+            <Button
+              type="button"
+              className="h-10 rounded-2xl bg-teal-600 text-sm text-white hover:bg-teal-700"
+              onClick={() => onOpenParentLink(child)}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              {sendButtonLabel(child)}
+            </Button>
+          ) : (
+            <Button asChild type="button" className="h-10 rounded-2xl bg-teal-600 text-sm text-white hover:bg-teal-700">
+              <Link href={child.detailHref}>
+                <UserRoundCheck className="mr-2 h-4 w-4" />
+                Open child
+              </Link>
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-10 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+            onClick={() => onOpenEdit(child)}
+          >
+            <PencilLine className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button asChild type="button" variant="outline" size="sm" className="h-10 rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+            <Link href={buildAttendanceHref(child)}>
+              <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+              Attendance
+            </Link>
+          </Button>
+        </div>
+
+        {/* Details toggle */}
+        <button
+          type="button"
+          onClick={() => setDetailsOpen((o) => !o)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 transition-colors hover:text-slate-600"
+        >
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 shrink-0 transition-transform duration-200',
+              detailsOpen && 'rotate-180'
+            )}
+          />
+          {detailsOpen ? 'Hide details' : 'Parent & class details'}
+        </button>
+
+        {/* Collapsible detail panels */}
+        {detailsOpen && (
+          <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Child</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">
+                  Birthday: {formatDateLabel(child.dateOfBirth)}
+                </p>
+                <p className="mt-1 text-sm text-slate-500">Added {formatDateLabel(child.createdAt)}</p>
+              </div>
+              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Class</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">{child.className ?? 'Add class later'}</p>
+                <p className="mt-1 text-sm text-slate-500">{child.ageGroup ?? 'Age group not set yet'}</p>
+              </div>
+            </div>
+            <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4">
+              <div className="flex items-center gap-2 text-slate-800">
+                {child.parentId ? (
+                  <UserRoundCheck className="h-4 w-4 text-emerald-600" />
+                ) : (
+                  <Mail className="h-4 w-4 text-teal-600" />
+                )}
+                <p className="text-sm font-black">Parent</p>
+              </div>
+              <div className="mt-3 space-y-1 text-sm text-slate-700">
+                <p>{child.parentName || 'Parent name not added yet'}</p>
+                <p>{child.parentEmail || 'Parent email not added yet'}</p>
+                <p>{child.parentPhone || 'Phone number optional'}</p>
+              </div>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                {child.parentSource === 'synced'
+                  ? 'Connected to parent account'
+                  : child.parentLinkRequest?.status === 'opened'
+                    ? `Opened ${formatDateLabel(child.parentLinkRequest.openedAt)}`
+                    : child.parentLinkRequest?.status === 'pending'
+                      ? `Sent ${formatDateLabel(child.parentLinkRequest.sentAt)}`
+                      : child.parentSource === 'snapshot'
+                        ? 'Contact details on file'
+                        : 'No parent linked yet'}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{parentStatus.helper}</p>
+            </div>
+            <Button asChild type="button" variant="outline" className="h-10 w-full rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
+              <Link href={child.detailHref}>
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Full child profile
+              </Link>
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 export function ChildrenRosterClient({ centreName, classes, initialChildren }: ChildrenRosterClientProps) {
@@ -450,122 +590,14 @@ export function ChildrenRosterClient({ centreName, classes, initialChildren }: C
 
       {filteredChildren.length > 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
-          {filteredChildren.map((child) => {
-            const parentStatus = getParentStatus(child)
-
-            return (
-              <Card key={child.id} className="rounded-[1.8rem] border-slate-200 bg-white shadow-sm">
-                <CardContent className="space-y-5 p-5 sm:p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <h2 className="text-xl font-black tracking-tight text-slate-900">
-                        {child.firstName} {child.lastName}
-                      </h2>
-                      <p className="text-sm font-medium text-slate-500">
-                        {child.className ?? 'No class yet'}
-                        {child.enrollmentStartDate ? ` • Started ${formatDateLabel(child.enrollmentStartDate)}` : ''}
-                      </p>
-                    </div>
-                    <Badge className={parentStatus.badgeClassName}>{parentStatus.label}</Badge>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Child</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-800">
-                        Birthday: {formatDateLabel(child.dateOfBirth)}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">Added {formatDateLabel(child.createdAt)}</p>
-                    </div>
-                    <div className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-                      <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Class</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-800">{child.className ?? 'Add class later'}</p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {child.ageGroup ?? 'Age group not set yet'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[1.4rem] border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2 text-slate-800">
-                      {child.parentId ? <UserRoundCheck className="h-4 w-4 text-emerald-600" /> : <Mail className="h-4 w-4 text-teal-600" />}
-                      <p className="text-sm font-black">Parent</p>
-                    </div>
-                    <div className="mt-3 space-y-1 text-sm text-slate-700">
-                      <p>{child.parentName || 'Parent name not added yet'}</p>
-                      <p>{child.parentEmail || 'Parent email not added yet'}</p>
-                      <p>{child.parentPhone || 'Phone number optional'}</p>
-                    </div>
-                    <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                      {child.parentSource === 'synced'
-                        ? 'Connected to parent account'
-                        : child.parentLinkRequest?.status === 'opened'
-                          ? `Opened ${formatDateLabel(child.parentLinkRequest.openedAt)}`
-                          : child.parentLinkRequest?.status === 'pending'
-                            ? `Sent ${formatDateLabel(child.parentLinkRequest.sentAt)}`
-                            : child.parentSource === 'snapshot'
-                              ? 'Contact details on file'
-                              : 'No parent linked yet'}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{parentStatus.helper}</p>
-                  </div>
-
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    {!child.parentId ? (
-                      <Button
-                        type="button"
-                        className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700"
-                        onClick={() => openParentDialog(child)}
-                      >
-                        <Mail className="mr-2 h-4 w-4" />
-                        {sendButtonLabel(child)}
-                      </Button>
-                    ) : (
-                      <Button asChild type="button" className="rounded-2xl bg-teal-600 text-white hover:bg-teal-700">
-                        <Link href={child.detailHref}>
-                          <UserRoundCheck className="mr-2 h-4 w-4" />
-                          Open child
-                        </Link>
-                      </Button>
-                    )}
-
-                    {!child.parentId ? (
-                      <Button asChild type="button" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                        <Link href={child.detailHref}>
-                          <UserRoundCheck className="mr-2 h-4 w-4" />
-                          Open child
-                        </Link>
-                      </Button>
-                    ) : null}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                      onClick={() => openEditDialog(child)}
-                    >
-                      <PencilLine className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-
-                    <Button asChild type="button" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                      <Link href={child.detailHref}>
-                        <ArrowRight className="mr-2 h-4 w-4" />
-                        Full details
-                      </Link>
-                    </Button>
-
-                    <Button asChild type="button" variant="outline" className="rounded-2xl border-slate-200 bg-white text-slate-700 hover:bg-slate-50">
-                      <Link href={buildAttendanceHref(child)}>
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        Attendance
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
+          {filteredChildren.map((child) => (
+            <ChildCardItem
+              key={child.id}
+              child={child}
+              onOpenEdit={openEditDialog}
+              onOpenParentLink={openParentDialog}
+            />
+          ))}
         </div>
       ) : totalChildren > 0 ? (
         <Card className="rounded-[2rem] border-slate-200 bg-white shadow-sm">
