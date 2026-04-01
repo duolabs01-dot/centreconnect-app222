@@ -3,12 +3,12 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
-import { BellRing, CalendarCheck2, CalendarDays, ChevronLeft, ChevronRight, Megaphone, UsersRound } from 'lucide-react'
+import { BellRing, CalendarCheck2, CalendarDays, ChevronLeft, ChevronRight, Flag, Megaphone, UsersRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
-export type EcdCalendarFeedSource = 'event' | 'attendance' | 'announcement' | 'reminder'
+export type EcdCalendarFeedSource = 'event' | 'attendance' | 'announcement' | 'reminder' | 'holiday'
 
 export type EcdCalendarFeedItem = {
   id: string
@@ -67,6 +67,13 @@ const SOURCE_META: Record<EcdCalendarFeedSource, SourceMeta> = {
     chipClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
     textClass: 'text-emerald-700',
     icon: Megaphone,
+  },
+  holiday: {
+    label: 'Public Holiday',
+    dotClass: 'bg-rose-400',
+    chipClass: 'border-rose-200 bg-rose-50 text-rose-700',
+    textClass: 'text-rose-700',
+    icon: Flag,
   },
 }
 
@@ -210,7 +217,7 @@ export function EcdIosCalendarView({
         acc[item.source] += 1
         return acc
       },
-      { event: 0, attendance: 0, reminder: 0, announcement: 0 }
+      { event: 0, attendance: 0, reminder: 0, announcement: 0, holiday: 0 }
     )
     return {
       total: monthlyItems.length,

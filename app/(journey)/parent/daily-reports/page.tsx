@@ -398,6 +398,17 @@ export default async function ParentDailyReportsPage({ searchParams }: ParentDai
                                 </span>
                               ))}
                             </div>
+                            {report.photo_url ? (
+                              <div className="relative mt-3 overflow-hidden rounded-2xl border border-slate-200" style={{ aspectRatio: '16/9' }}>
+                                <Image
+                                  src={report.photo_url}
+                                  alt={`Photo from today at the cr\u00e8che`}
+                                  fill
+                                  className="object-cover"
+                                  sizes="(max-width: 768px) 100vw, 400px"
+                                />
+                              </div>
+                            ) : null}
                             {report.nap_start ? (
                               <p className="mt-2 text-[11px] font-medium text-slate-600">
                                 Rest: {report.nap_start} - {report.nap_end || '...'}

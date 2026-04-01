@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CollapsibleCard } from '@/components/ui/collapsible-card'
 import { Button } from '@/components/ui/button'
 import { EcdIosCalendarView, type EcdCalendarFeedItem } from '@/components/ecd/ecd-ios-calendar-view'
+import { getSaHolidayFeedItems } from '@/lib/ecd/sa-public-holidays'
 import { requireEcdPortalSession } from '@/lib/ecd/portal-session'
 import { requireEcdFeatureAccess } from '@/lib/ecd/feature-gates'
 import { DEFAULT_COMMUNICATION_AUTOMATION_SETTINGS, normalizeCommunicationAutomationSettings } from '@/lib/communications/automation-settings'
@@ -404,6 +405,16 @@ export default async function EcdCalendarPage({ searchParams: searchParamsPromis
       source: 'reminder',
       href: `/ecd/applications/${encodeURIComponent(reminder.id)}`,
     })
+  }
+
+  // SA public holidays — injected for the two visible years in the range
+  const holidayYears = Array.from(new Set([selectedYear, parseInt(rangeEndKey.slice(0, 4), 10)]))
+  for (const yr of holidayYears) {
+    for (const item of getSaHolidayFeedItems(yr)) {
+      if (item.event_date >= rangeStartKey && item.event_date <= rangeEndKey) {
+        calendarFeed.push(item)
+      }
+    }
   }
 
   const editId = (searchParams?.edit ?? '').trim()

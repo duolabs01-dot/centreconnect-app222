@@ -458,6 +458,9 @@ export default async function ParentDashboardPage() {
                 >
                   You are waiting to hear back from {activeApplications.length} crèche{activeApplications.length === 1 ? '' : 's'}.
                 </h1>
+                <p className="mt-2 text-sm text-slate-500">
+                  Most cr&egrave;ches respond within 3&ndash;5 days. We&rsquo;ll let you know the moment something changes.
+                </p>
               </div>
 
               {/* One card per active application */}
