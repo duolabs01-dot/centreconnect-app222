@@ -156,6 +156,16 @@ export default async function DsdExportPage(props: {
         }}
       />
       <div className="space-y-6 pb-10">
+        {/* Mobile: print guidance banner */}
+        <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 md:hidden print-hide">
+          <span className="text-xl leading-none" aria-hidden="true">📱</span>
+          <div>
+            <p className="text-sm font-black text-blue-800">Open on a computer to print</p>
+            <p className="mt-1 text-xs leading-5 text-blue-700">
+              Tap <strong>Download</strong> below to save the report, then open it on your computer and press <strong>Ctrl+P → Save as PDF</strong> to submit your official DSD monthly return.
+            </p>
+          </div>
+        </div>
         {/* ── Starter quarterly nudge / quota wall ── */}
         {isStarterTier && !starterExportUsed && (
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 print-hide">

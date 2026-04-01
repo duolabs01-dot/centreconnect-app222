@@ -46,6 +46,10 @@ function getTicketAge(createdAt: string): string {
   return `${diffDays} days ago`
 }
 
+function getTicketAgeHours(createdAt: string): number {
+  return Math.floor((Date.now() - new Date(createdAt).getTime()) / 3_600_000)
+}
+
 export function SupportPageClientLayout({ tickets, availableCentres, availableAssignees }: SupportPageClientLayoutProps) {
   const [isPipelineView, setIsPipelineView] = useState(false)
   const [isPending, startTransition] = useTransition() // Use useTransition
@@ -149,6 +153,7 @@ export function SupportPageClientLayout({ tickets, availableCentres, availableAs
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 min-w-[150px]">Node_Origin</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 min-w-[120px]">Status</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 min-w-[100px]">Priority</TableHead>
+                <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 min-w-[90px]">Age</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 min-w-[200px]">Subject</TableHead>
                 <TableHead className="font-orbitron text-[10px] uppercase tracking-widest text-slate-500 text-right min-w-[100px]">Actions</TableHead>
               </TableRow>
@@ -187,6 +192,19 @@ export function SupportPageClientLayout({ tickets, availableCentres, availableAs
                           />
                         ))}
                       </div>
+                    </TableCell>
+                    <TableCell className="p-4">
+                      {(() => {
+                        const hours = getTicketAgeHours(ticket.created_at)
+                        const label = getTicketAge(ticket.created_at)
+                        const cls =
+                          hours >= 72
+                            ? 'text-rose-400 font-bold text-xs'
+                            : hours >= 48
+                            ? 'text-amber-400 font-bold text-xs'
+                            : 'text-slate-500 text-xs'
+                        return <span className={cls}>{label}</span>
+                      })()}
                     </TableCell>
                     <TableCell className="p-4 max-w-[240px] truncate">
                       <span className="text-slate-300 text-xs">{ticket.subject}</span>

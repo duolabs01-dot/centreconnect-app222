@@ -350,7 +350,7 @@ export default async function EcdDashboardPage({
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {[
-                { label: 'Children here today', value: snapshot.attendance_today_count ?? 0, icon: '✓', subtext: 'marked in' },
+                { label: 'Children here today', value: snapshot.attendance_today_count ?? 0, icon: (snapshot.attendance_today_count ?? 0) === 0 ? '!' : '✓', subtext: 'marked in', urgent: (snapshot.attendance_today_count ?? 0) === 0 },
                 { label: 'Applications', value: pendingCount, icon: pendingCount > 0 ? '!' : '—', subtext: 'waiting for review', urgent: pendingCount > 0 },
                 { label: 'Messages', value: unreadNotifications, icon: unreadNotifications > 0 ? '●' : '—', subtext: 'unread', urgent: unreadNotifications > 0 },
                 { label: 'Family links', value: familyFollowUps, icon: familyFollowUps > 0 ? '→' : '✓', subtext: familyFollowUps > 0 ? 'need connecting' : 'all connected' },

@@ -101,6 +101,19 @@ type ApplicationRow = {
   | null
 }
 
+function daysAgo(dateStr: string): number {
+  return Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000)
+}
+
+function agingBadge(dateStr: string) {
+  const days = daysAgo(dateStr)
+  if (days >= 7)
+    return { label: `${days}d waiting`, className: 'rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[10px] font-black text-rose-700' }
+  if (days >= 3)
+    return { label: `${days}d waiting`, className: 'rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700' }
+  return { label: `${days}d`, className: 'rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-500' }
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
@@ -249,7 +262,10 @@ function renderApplicationList(applications: ApplicationRow[]) {
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-900 truncate">{childName}</p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {parentName} - {formatDate(application.submitted_at)}
+                    {parentName}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {formatDate(application.submitted_at)} {'\u00b7'} <span className={agingBadge(application.submitted_at).className}>{agingBadge(application.submitted_at).label}</span>
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <StatusBadge status={application.status} />
@@ -297,7 +313,7 @@ function renderApplicationList(applications: ApplicationRow[]) {
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Parent</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Docs</TableHead>
               <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Status</TableHead>
-              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Date</TableHead>
+              <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400 h-12">Waiting</TableHead>
               <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 h-12 pr-6">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -330,7 +346,9 @@ function renderApplicationList(applications: ApplicationRow[]) {
                   <TableCell>
                     <StatusBadge status={application.status} />
                   </TableCell>
-                  <TableCell className="text-slate-500 text-xs">{formatDate(application.submitted_at)}</TableCell>
+                  <TableCell className="text-slate-500 text-xs">
+                    <span className={agingBadge(application.submitted_at).className}>{agingBadge(application.submitted_at).label}</span>
+                  </TableCell>
                   <TableCell className="text-right pr-6">
                     <div className="flex items-center justify-end gap-2">
                       <Button size="sm" variant="outline" className="h-9 rounded-2xl px-3 font-semibold" asChild disabled={!phoneLinks?.tel}>

@@ -39,6 +39,43 @@ export default async function ParentPreferencesPage() {
         </p>
       </header>
 
+      {/* Active preferences summary */}
+      {(parentProfile?.max_monthly_budget || parentProfile?.preferred_radius_km || (parentProfile?.preferred_suburbs ?? []).length > 0) && (
+        <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">Your current filters</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {parentProfile?.max_monthly_budget ? (
+              <span className="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-teal-800">
+                Budget: up to R{parentProfile.max_monthly_budget}/mo
+              </span>
+            ) : null}
+            {parentProfile?.preferred_radius_km ? (
+              <span className="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-teal-800">
+                Within {parentProfile.preferred_radius_km} km
+              </span>
+            ) : null}
+            {(parentProfile?.preferred_suburbs ?? []).map((suburb: string) => (
+              <span key={suburb} className="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-teal-800">
+                {suburb}
+              </span>
+            ))}
+            {parentProfile?.transport_needed ? (
+              <span className="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-teal-800">
+                Transport needed
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-3">
+            <a
+              href="/parent/discover"
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-teal-700"
+            >
+              See matching cr&egrave;ches &rarr;
+            </a>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-6">
         <PreferencesForm
           initial={{

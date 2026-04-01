@@ -66,6 +66,7 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [enlarged, setEnlarged] = useState(false)
 
   const loadLatestCode = useCallback(
     async ({ silent = false }: { silent?: boolean } = {}) => {
@@ -139,16 +140,47 @@ function PickupCodeSection({ applicationId, childId, ecdId, parentId }: PickupCo
             <div className="mt-2 h-3 w-64 rounded-xl bg-slate-100" />
           </div>
         ) : code ? (
+          <>
           <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
             <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Active code</p>
-            <p className="mt-2 text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Show this code to the crèche staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
+            <button
+              type="button"
+              onClick={() => setEnlarged(true)}
+              className="mt-2 flex flex-col items-start gap-1 rounded-xl border-2 border-cyan-300 bg-white px-4 py-3 text-left transition-colors hover:bg-cyan-50 active:scale-95 w-full"
+              title="Tap to enlarge"
+            >
+              <span className="text-4xl font-black tracking-[0.3em] text-cyan-900">{code}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-600">Tap to enlarge for gate staff</span>
+            </button>
+            <p className="mt-2 text-xs text-slate-500">
+              Show this code to the cr&egrave;che staff at pickup. Expires {expiresAt ? formatDate(expiresAt) : 'soon'}.
             </p>
             {createdAt ? (
               <p className="mt-1 text-[11px] font-medium text-cyan-700">Generated at {formatDate(createdAt)}</p>
             ) : null}
           </div>
+
+          {enlarged ? (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Pickup code enlarged"
+              className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-cyan-950/95 p-6"
+              onClick={() => setEnlarged(false)}
+            >
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-cyan-300">Pickup code</p>
+              <p className="mt-4 text-7xl font-black tracking-[0.4em] text-white sm:text-8xl">{code}</p>
+              <p className="mt-6 text-sm text-cyan-300">Show this to gate staff</p>
+              <button
+                type="button"
+                className="mt-8 rounded-2xl border border-cyan-400 px-6 py-3 text-sm font-bold text-cyan-100 hover:bg-cyan-900"
+                onClick={(e) => { e.stopPropagation(); setEnlarged(false) }}
+              >
+                Close
+              </button>
+            </div>
+          ) : null}
+          </>
         ) : (
           <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
             <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Waiting for check-in</p>
@@ -491,9 +523,22 @@ export default function ApplicationDetailClient({
               Once-off total: <span className="font-bold">R {(offerOnceOffTotal / 100).toFixed(2)}</span>
             </div>
           </div>
-          {offerExpiresAt ? (
-            <p className="mt-2 text-xs text-cyan-800">Offer valid until {formatDate(offerExpiresAt)}.</p>
-          ) : null}
+          {offerExpiresAt ? (() => {
+            const msLeft = new Date(offerExpiresAt).getTime() - Date.now()
+            const daysLeft = Math.ceil(msLeft / 86_400_000)
+            const isExpiringSoon = daysLeft <= 2
+            const label = daysLeft <= 0
+              ? 'This offer has expired'
+              : daysLeft === 1
+              ? 'Offer expires tomorrow \u2014 respond today'
+              : `Offer expires in ${daysLeft} days (${formatDate(offerExpiresAt)})`
+            return (
+              <div className={`mt-3 flex items-start gap-2 rounded-xl border p-3 ${isExpiringSoon ? 'border-rose-300 bg-rose-50' : 'border-amber-200 bg-amber-50'}`}>
+                <span className="text-base leading-none" aria-hidden="true">{isExpiringSoon ? '\u26a0\ufe0f' : '\u23f0'}</span>
+                <p className={`text-xs font-bold ${isExpiringSoon ? 'text-rose-800' : 'text-amber-800'}`}>{label}</p>
+              </div>
+            )
+          })() : null}
           {offerConditions ? (
             <p className="mt-2 text-xs text-cyan-900">
               <span className="font-semibold">Conditions:</span> {offerConditions}
