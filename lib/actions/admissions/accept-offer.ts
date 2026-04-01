@@ -20,7 +20,7 @@ export async function acceptOffer(applicationId: string): Promise<AcceptOfferRes
 
   const { data: application, error: fetchError } = await supabase
     .from('applications')
-    .select('id,parent_id,status')
+    .select('id,parent_id,status,offer_expires_at')
     .eq('id', applicationId)
     .eq('parent_id', user.id)
     .maybeSingle()
@@ -31,6 +31,13 @@ export async function acceptOffer(applicationId: string): Promise<AcceptOfferRes
 
   if (application.status !== 'approved') {
     return { success: false, error: 'Offer is not available for acceptance' }
+  }
+
+  if (
+    application.offer_expires_at != null &&
+    new Date(application.offer_expires_at as string).getTime() <= Date.now()
+  ) {
+    return { success: false, error: 'This offer has expired and can no longer be accepted' }
   }
 
   const { error: rpcError } = await supabase.rpc('accept_offer_atomic', {

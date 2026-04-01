@@ -5,7 +5,8 @@ type HolidayEntry = {
   name: string
 }
 
-// Fixed South African public holidays — same date every year
+// Fixed South African public holidays — same date every year.
+// Source: https://www.gov.za/about-sa/public-holidays
 const FIXED_HOLIDAYS: Array<{ month: number; day: number; name: string }> = [
   { month: 1,  day: 1,  name: 'New Year\u2019s Day' },
   { month: 3,  day: 21, name: 'Human Rights Day' },
@@ -19,23 +20,38 @@ const FIXED_HOLIDAYS: Array<{ month: number; day: number; name: string }> = [
   { month: 12, day: 26, name: 'Day of Goodwill' },
 ]
 
-// Easter-relative holidays (Good Friday = -2, Family Day = +1 from Easter Sunday)
-const EASTER_DATES: Record<number, string> = {
-  2024: '2024-03-31',
-  2025: '2025-04-20',
-  2026: '2026-04-05',
-  2027: '2027-03-28',
-  2028: '2028-04-16',
+// Compute Easter Sunday for any year using the Anonymous Gregorian algorithm.
+// Replaces the previous hardcoded EASTER_DATES lookup (which only covered 2024-2028).
+function computeEasterSunday(year: number): Date {
+  const a = year % 19
+  const b = Math.floor(year / 100)
+  const c = year % 100
+  const d = Math.floor(b / 4)
+  const e = b % 4
+  const f = Math.floor((b + 8) / 25)
+  const g = Math.floor((b - f + 1) / 3)
+  const h = (19 * a + b - d - g + 15) % 30
+  const i = Math.floor(c / 4)
+  const k = c % 4
+  const l = (32 + 2 * e + 2 * i - h - k) % 7
+  const m = Math.floor((a + 11 * h + 22 * l) / 451)
+  const month = Math.floor((h + l - 7 * m + 114) / 31)
+  const day = ((h + l - 7 * m + 114) % 31) + 1
+  return new Date(year, month - 1, day)
 }
 
-function easterRelative(easterSunday: string, offsetDays: number): string {
-  const d = new Date(`${easterSunday}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + offsetDays)
-  return d.toISOString().slice(0, 10)
-}
-
-function pad(n: number) {
+function pad(n: number): string {
   return String(n).padStart(2, '0')
+}
+
+function dateKey(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+function addDays(d: Date, days: number): Date {
+  const next = new Date(d)
+  next.setDate(next.getDate() + days)
+  return next
 }
 
 export function getSaPublicHolidays(year: number): HolidayEntry[] {
@@ -44,13 +60,26 @@ export function getSaPublicHolidays(year: number): HolidayEntry[] {
     name,
   }))
 
-  const easter = EASTER_DATES[year]
-  if (easter) {
-    holidays.push({ date: easterRelative(easter, -2), name: 'Good Friday' })
-    holidays.push({ date: easterRelative(easter, +1), name: 'Family Day' })
+  // Easter-relative holidays (Good Friday = -2, Family Day = +1 from Easter Sunday)
+  const easter = computeEasterSunday(year)
+  holidays.push({ date: dateKey(addDays(easter, -2)), name: 'Good Friday' })
+  holidays.push({ date: dateKey(addDays(easter, 1)), name: 'Family Day' })
+
+  // When a public holiday falls on a Sunday, the following Monday is observed.
+  // Source: https://www.gov.za/about-sa/public-holidays
+  const observed: HolidayEntry[] = []
+  for (const holiday of holidays) {
+    const [y, m, d] = holiday.date.split('-').map(Number)
+    const date = new Date(y, (m ?? 1) - 1, d ?? 1)
+    if (date.getDay() === 0) {
+      observed.push({
+        date: dateKey(addDays(date, 1)),
+        name: `${holiday.name} (Observed)`,
+      })
+    }
   }
 
-  return holidays.sort((a, b) => a.date.localeCompare(b.date))
+  return [...holidays, ...observed].sort((a, b) => a.date.localeCompare(b.date))
 }
 
 export function getSaHolidayFeedItems(year: number): EcdCalendarFeedItem[] {

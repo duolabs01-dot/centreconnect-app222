@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { cn, formatDate } from '@/lib/utils'
+import { getSaPublicHolidays } from '@/lib/ecd/sa-public-holidays'
 
 // NOTE: ECD crèches are partial-care facilities under the Children&apos;s Act, NOT schools.
 // They operate year-round with centre-specific closure dates.
@@ -82,77 +83,15 @@ function formatTimeRange(startTime: string | null, endTime: string | null) {
   return end ? `${start} - ${end}` : start
 }
 
+// Holiday data comes from getSaPublicHolidays() — the single canonical source.
+// Do NOT add a local getSouthAfricaHolidays() here.
+
 function getIsoWeekNumber(date: Date) {
   const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = utcDate.getUTCDay() || 7
   utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1))
   return Math.ceil((((utcDate.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-}
-
-function addDays(date: Date, days: number) {
-  const next = new Date(date)
-  next.setDate(next.getDate() + days)
-  return next
-}
-
-function pad2(value: number) {
-  return String(value).padStart(2, '0')
-}
-
-function toDateKey(date: Date) {
-  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
-}
-
-function getEasterSunday(year: number) {
-  const a = year % 19
-  const b = Math.floor(year / 100)
-  const c = year % 100
-  const d = Math.floor(b / 4)
-  const e = b % 4
-  const f = Math.floor((b + 8) / 25)
-  const g = Math.floor((b - f + 1) / 3)
-  const h = (19 * a + b - d - g + 15) % 30
-  const i = Math.floor(c / 4)
-  const k = c % 4
-  const l = (32 + 2 * e + 2 * i - h - k) % 7
-  const m = Math.floor((a + 11 * h + 22 * l) / 451)
-  const month = Math.floor((h + l - 7 * m + 114) / 31)
-  const day = ((h + l - 7 * m + 114) % 31) + 1
-  return new Date(year, month - 1, day)
-}
-
-function getSouthAfricaHolidays(year: number) {
-  const easter = getEasterSunday(year)
-  const goodFriday = addDays(easter, -2)
-  const familyDay = addDays(easter, 1)
-
-  const list = [
-    { date: `${year}-01-01`, name: 'New Year\'s Day' },
-    { date: toDateKey(goodFriday), name: 'Good Friday' },
-    { date: toDateKey(familyDay), name: 'Family Day' },
-    { date: `${year}-03-21`, name: 'Human Rights Day' },
-    { date: `${year}-04-27`, name: 'Freedom Day' },
-    { date: `${year}-05-01`, name: 'Workers Day' },
-    { date: `${year}-06-16`, name: 'Youth Day' },
-    { date: `${year}-08-09`, name: 'Women\'s Day' },
-    { date: `${year}-09-24`, name: 'Heritage Day' },
-    { date: `${year}-12-16`, name: 'Day of Reconciliation' },
-    { date: `${year}-12-25`, name: 'Christmas Day' },
-    { date: `${year}-12-26`, name: 'Day of Goodwill' },
-  ]
-
-  // Add substitute Mondays when a holiday falls on Sunday
-  const observed: Array<{ date: string; name: string }> = []
-  for (const holiday of list) {
-    const [y, m, d] = holiday.date.split('-').map(Number)
-    const date = new Date(y, (m ?? 1) - 1, d ?? 1)
-    if (date.getDay() === 0) {
-      observed.push({ date: toDateKey(addDays(date, 1)), name: `${holiday.name} (Observed)` })
-    }
-  }
-
-  return [...list, ...observed]
 }
 
 export function CalendarInteractiveView({
@@ -242,7 +181,7 @@ export function CalendarInteractiveView({
     const years = new Set(days.map((day) => day.getFullYear()))
     const map = new Map<string, string>()
     for (const year of years) {
-      const holidays = getSouthAfricaHolidays(year)
+      const holidays = getSaPublicHolidays(year)
       for (const holiday of holidays) {
         map.set(holiday.date, holiday.name)
       }

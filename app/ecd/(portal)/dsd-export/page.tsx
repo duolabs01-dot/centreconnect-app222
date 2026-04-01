@@ -156,16 +156,36 @@ export default async function DsdExportPage(props: {
         }}
       />
       <div className="space-y-6 pb-10">
-        {/* Mobile: print guidance banner */}
-        <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 md:hidden print-hide">
-          <span className="text-xl leading-none" aria-hidden="true">📱</span>
-          <div>
-            <p className="text-sm font-black text-blue-800">Open on a computer to print</p>
-            <p className="mt-1 text-xs leading-5 text-blue-700">
-              Tap <strong>Download</strong> below to save the report, then open it on your computer and press <strong>Ctrl+P → Save as PDF</strong> to submit your official DSD monthly return.
-            </p>
+        {/* Mobile: guidance banner — content changes based on whether download is available */}
+        {isStarterTier && starterExportUsed ? (
+          <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 md:hidden print-hide">
+            <span className="text-xl leading-none" aria-hidden="true">🔒</span>
+            <div>
+              <p className="text-sm font-black text-amber-800">Download not available on this plan</p>
+              <p className="mt-1 text-xs leading-5 text-amber-700">
+                Your 1 free quarterly export has been used. Upgrade to <strong>Growth</strong> for unlimited
+                downloads and full attendance history.
+              </p>
+              <Link
+                href="/ecd/billing"
+                className="mt-2 inline-block rounded-2xl bg-amber-500 px-4 py-1.5 text-xs font-black text-white hover:bg-amber-600"
+              >
+                Upgrade &rarr; R299/mo
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 md:hidden print-hide">
+            <span className="text-xl leading-none" aria-hidden="true">📱</span>
+            <div>
+              <p className="text-sm font-black text-blue-800">Open on a computer to print</p>
+              <p className="mt-1 text-xs leading-5 text-blue-700">
+                Tap <strong>Download</strong> below to save the report, then open it on your computer and press{' '}
+                <strong>Ctrl+P &rarr; Save as PDF</strong> to submit your official DSD monthly return.
+              </p>
+            </div>
+          </div>
+        )}
         {/* ── Starter quarterly nudge / quota wall ── */}
         {isStarterTier && !starterExportUsed && (
           <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 print-hide">

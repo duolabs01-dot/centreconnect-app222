@@ -7,7 +7,7 @@ import { SurfaceCard } from '@/components/ui/surface-card'
 
 export const metadata: Metadata = {
   title: 'Preferences | Parent Portal | CentreConnect',
-  description: 'Tell us your budget, distance, and transport preferences to get smarter crèche suggestions.',
+  description: 'Save your budget, distance, and transport preferences for your cr\u00e8che search.',
 }
 
 export default async function ParentPreferencesPage() {
@@ -34,15 +34,15 @@ export default async function ParentPreferencesPage() {
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-600 mb-1">Smart Preferences</p>
         <h1 className="text-3xl font-bold text-slate-900">Set Preferences</h1>
         <p className="mt-2 text-sm text-slate-600 max-w-2xl">
-          Distance, budget, and transport filters help us recommend the exact crèches you want to see. Update
-          them whenever your needs shift.
+          Save your budget, distance, and transport needs here. These are your personal filters \u2014 update
+          them whenever your situation changes.
         </p>
       </header>
 
       {/* Active preferences summary */}
-      {(parentProfile?.max_monthly_budget || parentProfile?.preferred_radius_km || (parentProfile?.preferred_suburbs ?? []).length > 0) && (
+      {(parentProfile?.max_monthly_budget || parentProfile?.preferred_radius_km || (parentProfile?.preferred_suburbs ?? []).length > 0 || parentProfile?.transport_needed) && (
         <div className="rounded-2xl border border-teal-100 bg-teal-50 p-4 mb-6">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">Your current filters</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-700">Your saved preferences</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {parentProfile?.max_monthly_budget ? (
               <span className="rounded-full border border-teal-200 bg-white px-3 py-1 text-xs font-semibold text-teal-800">
@@ -70,7 +70,7 @@ export default async function ParentPreferencesPage() {
               href="/parent/discover"
               className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-4 py-2 text-xs font-black text-white shadow-sm hover:bg-teal-700"
             >
-              See matching cr&egrave;ches &rarr;
+              Browse nearby cr&egrave;ches &rarr;
             </a>
           </div>
         </div>

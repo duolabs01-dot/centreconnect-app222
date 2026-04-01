@@ -35,19 +35,20 @@ const PIPELINE_COLUMNS = [
   { id: 'closed', title: 'Closed', statuses: ['closed'] },
 ]
 
-// Utility to calculate ticket age
-function getTicketAge(createdAt: string): string {
-  const now = new Date()
-  const created = new Date(createdAt)
-  const diffTime = Math.abs(now.getTime() - created.getTime())
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return '1 day ago'
-  return `${diffDays} days ago`
-}
-
+// Returns elapsed hours (floor). Used for both colour thresholds and labels.
 function getTicketAgeHours(createdAt: string): number {
   return Math.floor((Date.now() - new Date(createdAt).getTime()) / 3_600_000)
+}
+
+// Label derived from hours so it is always consistent with colour thresholds.
+// Math.ceil was previously used for diffDays which caused same-day tickets to
+// show "1 day ago" and 25-hour tickets to show "2 days ago".
+function getTicketAge(createdAt: string): string {
+  const hours = getTicketAgeHours(createdAt)
+  if (hours < 1) return 'Just now'
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? '1 day ago' : `${days} days ago`
 }
 
 export function SupportPageClientLayout({ tickets, availableCentres, availableAssignees }: SupportPageClientLayoutProps) {

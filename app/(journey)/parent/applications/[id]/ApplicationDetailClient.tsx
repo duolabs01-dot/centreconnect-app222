@@ -226,11 +226,19 @@ export default function ApplicationDetailClient({
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = useMemo(() => createClient(), [])
+
+  // Must be a plain (non-state) value derived from props — declared before any
+  // useState/useEffect that gates on it so TypeScript flow analysis is satisfied.
+  const isOfferExpired =
+    offerExpiresAt != null && new Date(offerExpiresAt).getTime() <= Date.now()
+
   const [liveStatus, setLiveStatus] = useState(initialStatus)
   const [liveAcceptedAt, setLiveAcceptedAt] = useState(acceptedAt)
   const [liveHistory, setLiveHistory] = useState<TimelineEvent[]>(initialHistory)
   const [liveMissingDocuments, setLiveMissingDocuments] = useState(initialMissingDocuments)
-  const [decisionOpen, setDecisionOpen] = useState(initialStatus === 'approved' && !acceptedAt)
+  const [decisionOpen, setDecisionOpen] = useState(
+    initialStatus === 'approved' && !acceptedAt && !isOfferExpired
+  )
   const [isEditing, setIsEditing] = useState(false)
   const [parentMessage, setParentMessage] = useState(initialParentMessage ?? '')
   const [editMessage, setEditMessage] = useState(initialParentMessage ?? '')
@@ -279,10 +287,10 @@ export default function ApplicationDetailClient({
 
   useEffect(() => {
     statusRef.current = liveStatus
-    if (liveStatus === 'approved' && !liveAcceptedAt) {
+    if (liveStatus === 'approved' && !liveAcceptedAt && !isOfferExpired) {
       setDecisionOpen(true)
     }
-  }, [liveAcceptedAt, liveStatus])
+  }, [isOfferExpired, liveAcceptedAt, liveStatus])
 
   useEffect(() => {
     const channel = supabase
@@ -525,17 +533,21 @@ export default function ApplicationDetailClient({
           </div>
           {offerExpiresAt ? (() => {
             const msLeft = new Date(offerExpiresAt).getTime() - Date.now()
-            const daysLeft = Math.ceil(msLeft / 86_400_000)
-            const isExpiringSoon = daysLeft <= 2
-            const label = daysLeft <= 0
+            // Use Math.floor so a 2-hour-remaining offer shows "today", not "tomorrow"
+            const daysLeft = Math.floor(msLeft / 86_400_000)
+            const isExpired = daysLeft < 0
+            const isExpiringSoon = daysLeft <= 1
+            const label = isExpired
               ? 'This offer has expired'
+              : daysLeft === 0
+              ? 'Offer expires today \u2014 respond now'
               : daysLeft === 1
               ? 'Offer expires tomorrow \u2014 respond today'
               : `Offer expires in ${daysLeft} days (${formatDate(offerExpiresAt)})`
             return (
-              <div className={`mt-3 flex items-start gap-2 rounded-xl border p-3 ${isExpiringSoon ? 'border-rose-300 bg-rose-50' : 'border-amber-200 bg-amber-50'}`}>
-                <span className="text-base leading-none" aria-hidden="true">{isExpiringSoon ? '\u26a0\ufe0f' : '\u23f0'}</span>
-                <p className={`text-xs font-bold ${isExpiringSoon ? 'text-rose-800' : 'text-amber-800'}`}>{label}</p>
+              <div className={`mt-3 flex items-start gap-2 rounded-xl border p-3 ${isExpired ? 'border-slate-300 bg-slate-50' : isExpiringSoon ? 'border-rose-300 bg-rose-50' : 'border-amber-200 bg-amber-50'}`}>
+                <span className="text-base leading-none" aria-hidden="true">{isExpired ? '\u{1F512}' : isExpiringSoon ? '\u26a0\ufe0f' : '\u23f0'}</span>
+                <p className={`text-xs font-bold ${isExpired ? 'text-slate-600' : isExpiringSoon ? 'text-rose-800' : 'text-amber-800'}`}>{label}</p>
               </div>
             )
           })() : null}
