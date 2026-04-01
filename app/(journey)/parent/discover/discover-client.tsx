@@ -1,8 +1,9 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
 
-import { LayoutGrid, List } from 'lucide-react'
+import { LayoutGrid, List, Map } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,6 +17,16 @@ import {
   type CentreCoordinateConfidence,
   type CentreCoordinateSource,
 } from '@/lib/geo/centre-location-metadata'
+import type { DirectoryCentre } from '@/types/directory-centre'
+
+const DirectoryMap = dynamic(() => import('@/components/directory/DirectoryMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[260px] animate-pulse items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 sm:h-[420px]">
+      <p className="text-sm font-medium text-slate-500">Loading map\u2026</p>
+    </div>
+  ),
+})
 
 type DiscoverCentre = {
   id: string
@@ -41,6 +52,35 @@ type DiscoverCentre = {
   distanceMeters?: number
   coordinateSource?: CentreCoordinateSource
   coordinateConfidence?: CentreCoordinateConfidence | null
+}
+
+function toDirectoryCentre(c: DiscoverCentre): DirectoryCentre {
+  return {
+    id: c.id,
+    slug: c.slug ?? c.id,
+    name: c.name,
+    tagline: c.tagline ?? null,
+    suburb: c.suburb ?? '',
+    city: c.city ?? '',
+    age_groups: c.age_groups ?? null,
+    is_registered: Boolean(c.is_registered),
+    logo_url: c.logo_url ?? null,
+    cover_image_url: c.cover_image_url ?? null,
+    capacity: null,
+    fees_display_mode: null,
+    monthly_fee_min: c.fee_min ?? null,
+    monthly_fee_max: c.fee_max ?? null,
+    subsidy_accepted: false,
+    is_claimed: Boolean(c.is_claimed),
+    is_pilot: Boolean(c.is_pilot),
+    is_featured: Boolean(c.is_featured),
+    latitude: c.latitude ?? null,
+    longitude: c.longitude ?? null,
+    coordinate_source: c.coordinateSource,
+    coordinate_confidence: c.coordinateConfidence ?? null,
+    contact_whatsapp: c.contact_whatsapp ?? null,
+    contact_phone: c.contact_phone ?? null,
+  }
 }
 
 const FALLBACK_CENTRES: DiscoverCentre[] = [
@@ -96,6 +136,7 @@ export default function ParentDiscoverClient() {
   const [locationMode, setLocationMode] = useState<'device' | 'fallback'>('fallback')
   const [savedCentreIds, setSavedCentreIds] = useState<Set<string>>(new Set())
   const { variant: cardVariant, setVariant: setCardVariant } = useCardViewPreference()
+  const [showMap, setShowMap] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -289,6 +330,21 @@ export default function ParentDiscoverClient() {
     [filteredCentres]
   )
 
+  const centresForMap = useMemo(
+    () =>
+      filteredCentres
+        .filter((c) => c.latitude != null && c.longitude != null)
+        .map(toDirectoryCentre),
+    [filteredCentres]
+  )
+
+  const userLocationTuple = useMemo<[number, number] | null>(
+    () => (locationMode === 'device' ? [location.lng, location.lat] : null),
+    [location, locationMode]
+  )
+
+  const locationHint = selectedSuburb || (locationMode === 'device' ? 'Your location' : 'Johannesburg, ZA')
+
   return (
     <div className="min-h-screen overflow-x-clip bg-slate-50 px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] pt-8 md:px-6">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -348,23 +404,42 @@ export default function ParentDiscoverClient() {
               {loading ? 'Loading\u2026' : `${filteredCentres.length} cr\u00e8che${filteredCentres.length === 1 ? '' : 's'} found`}
             </p>
           </div>
-          <div className="flex gap-1 rounded-full bg-slate-100 p-0.5">
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 rounded-full bg-slate-100 p-0.5">
+              <button
+                onClick={() => setCardVariant('full')}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${cardVariant === 'full' ? 'bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                aria-label="Grid view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setCardVariant('compact')}
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${cardVariant === 'compact' ? 'bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                aria-label="List view"
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
             <button
-              onClick={() => setCardVariant('full')}
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${cardVariant === 'full' ? 'bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-              aria-label="Grid view"
+              onClick={() => setShowMap((v) => !v)}
+              className={`flex h-8 items-center gap-1.5 rounded-full px-3 transition-colors ${showMap ? 'bg-cyan-600 text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:text-slate-700'}`}
+              aria-label={showMap ? 'Hide map' : 'Show map'}
             >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setCardVariant('compact')}
-              className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${cardVariant === 'compact' ? 'bg-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-              aria-label="List view"
-            >
-              <List className="h-4 w-4" />
+              <Map className="h-3.5 w-3.5" />
+              <span className="text-[11px] font-semibold">{showMap ? 'Hide map' : 'Map'}</span>
             </button>
           </div>
         </div>
+
+        {showMap ? (
+          <DirectoryMap
+            centresWithLocation={centresForMap}
+            userLocation={userLocationTuple}
+            locationHint={locationHint}
+            showMap={showMap}
+          />
+        ) : null}
 
         {loading ? (
           <div className={cardVariant === 'full' ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3' : 'space-y-2'}>
