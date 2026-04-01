@@ -15,7 +15,7 @@ import { formatDate, getJohannesburgNowParts } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Calendar - CentreConnect',
-  description: 'Plan your school calendar, automate reminders, and keep parent communication consistent.',
+  description: 'Plan your cr\u00e8che calendar, automate reminders, and keep parent communication consistent.',
 }
 
 type CalendarPageProps = {
