@@ -55,7 +55,7 @@ export async function GET(req: Request) {
   let centresQuery = admin
     .from('public_ecd_centres')
     .select(
-      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
+      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary,latitude,longitude,owner_id,address'
     )
     .order('name', { ascending: true })
     .range(0, PAGE_SIZE - 1)
@@ -125,7 +125,7 @@ export async function GET(req: Request) {
   const bajabulileQuery = admin
     .from('public_ecd_centres')
     .select(
-      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary'
+      'id,slug,name,tagline,suburb,city,age_groups,is_registered,logo_url,cover_image_url,fees_display_mode,monthly_fee_min,monthly_fee_max,registration_fee,subsidy_accepted,contact_whatsapp,contact_phone,operating_schedule,operating_hours_summary,latitude,longitude,owner_id,address'
     )
     .eq('id', BAJABULILE_ID)
     .maybeSingle()
@@ -204,26 +204,33 @@ export async function GET(req: Request) {
     return [
       (() => {
         const geo = geoById.get(centre.id as string)
+        // Prefer coordinates/ownership from the view (populated by migration 20260401_001);
+        // fall back to the secondary geo query for centres not yet in the view.
+        const viewLat = (centre.latitude as number | string | null | undefined) ?? null
+        const viewLng = (centre.longitude as number | string | null | undefined) ?? null
+        const viewOwnerId = (centre.owner_id as string | null | undefined) ?? null
+        const viewAddress = (centre.address as string | null | undefined) ?? null
         const locationMetadata = readCentreLocationMetadata(geo?.communication_automation_settings)
         const resolvedCoordinates = resolveCentreCoordinates({
-          latitude: geo?.latitude,
-          longitude: geo?.longitude,
+          latitude: viewLat ?? geo?.latitude,
+          longitude: viewLng ?? geo?.longitude,
           slug: safeSlug,
           suburb: (centre.suburb as string | null | undefined) ?? null,
           city: (centre.city as string | null | undefined) ?? null,
-          address: geo?.address ?? null,
+          address: viewAddress ?? geo?.address ?? null,
           storedSource: locationMetadata?.source,
         })
+        const effectiveOwnerId = viewOwnerId || geo?.owner_id || null
         return {
           ...centre,
           slug: safeSlug,
           subsidy_accepted: Boolean(centre.subsidy_accepted),
-          is_registered: Boolean(geoById.get(centre.id as string)?.owner_id) ? Boolean(centre.is_registered) : false,
-          is_claimed: Boolean(geoById.get(centre.id as string)?.owner_id),
+          is_registered: Boolean(effectiveOwnerId) ? Boolean(centre.is_registered) : false,
+          is_claimed: Boolean(effectiveOwnerId),
           is_pilot: isPilotCentreIdentity(centre),
           is_featured: isPilotCentreIdentity(centre),
-          latitude: resolvedCoordinates.latitude,
-          longitude: resolvedCoordinates.longitude,
+          latitude: resolvedCoordinates.latitude ?? null,
+          longitude: resolvedCoordinates.longitude ?? null,
           coordinate_source: resolvedCoordinates.source,
           coordinate_confidence: locationMetadata?.confidence ?? defaultConfidenceForSource(resolvedCoordinates.source),
           existingApplicationId: applicationByCentre.get(centre.id as string)?.id ?? null,

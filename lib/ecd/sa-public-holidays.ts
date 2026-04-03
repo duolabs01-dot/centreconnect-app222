@@ -66,16 +66,25 @@ export function getSaPublicHolidays(year: number): HolidayEntry[] {
   holidays.push({ date: dateKey(addDays(easter, 1)), name: 'Family Day' })
 
   // When a public holiday falls on a Sunday, the following Monday is observed.
-  // Source: https://www.gov.za/about-sa/public-holidays
+  // Exception: if that Monday is already a public holiday, Tuesday is observed instead.
+  //
+  // Real example: 25 Dec 2022 (Sunday) — Monday 26 Dec is Day of Goodwill (already a holiday).
+  // SA government declared Tuesday 27 Dec 2022 as the observed Christmas holiday.
+  // Source: https://www.gov.za/documents/notices/public-holidays-act-declaration-twenty-seventh-day-december-2022-public-holiday
+  //
+  // Algorithm: build a Set of base dates first, then resolve each Sunday holiday's substitute.
+  const baseDateSet = new Set(holidays.map((h) => h.date))
+
   const observed: HolidayEntry[] = []
   for (const holiday of holidays) {
     const [y, m, d] = holiday.date.split('-').map(Number)
     const date = new Date(y, (m ?? 1) - 1, d ?? 1)
     if (date.getDay() === 0) {
-      observed.push({
-        date: dateKey(addDays(date, 1)),
-        name: `${holiday.name} (Observed)`,
-      })
+      const monday = addDays(date, 1)
+      const mondayKey = dateKey(monday)
+      // If Monday is already a holiday, shift to Tuesday
+      const substituteKey = baseDateSet.has(mondayKey) ? dateKey(addDays(date, 2)) : mondayKey
+      observed.push({ date: substituteKey, name: `${holiday.name} (Observed)` })
     }
   }
 
