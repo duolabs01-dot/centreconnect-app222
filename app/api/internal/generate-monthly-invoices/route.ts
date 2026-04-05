@@ -1,5 +1,6 @@
 // app/api/internal/generate-monthly-invoices/route.ts
 import { NextRequest, NextResponse } from 'next/server'
+import { getEcdPortalSession } from '@/lib/ecd/portal-session'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { resolveAgeGroupFeeForDateOfBirth } from '@/lib/pricing/age-group-pricing'
 
@@ -30,16 +31,17 @@ function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('CC_INTERNAL_API_KEY')
-  if (authHeader !== process.env.CC_INTERNAL_API_KEY) {
+  const session = await getEcdPortalSession({ cached: false })
+  if (!session || session.role !== 'ecd_admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { ecdId, year, month } = await req.json()
-  if (!ecdId || !year || !month) {
+  const { year, month } = await req.json()
+  if (!year || !month) {
     return NextResponse.json({ error: 'Missing parameters' }, { status: 400 })
   }
 
+  const ecdId = session.ecdId
   const billingMonthDate = `${year}-${String(month).padStart(2, '0')}-01`
   const supabase = createAdminClient()
 
@@ -163,3 +165,4 @@ export async function POST(req: NextRequest) {
     results 
   })
 }
+

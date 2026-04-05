@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 import { FileText, TrendingUp, Users } from 'lucide-react'
 
 type MonthlyInvoicesCardProps = {
-  ecdId: string
   enrolledWithFeesCount: number
   totalExpectedMonthlyRevenue: number
   currentMonthName: string
@@ -17,7 +16,6 @@ type MonthlyInvoicesCardProps = {
 }
 
 export function MonthlyInvoicesCard({
-  ecdId,
   enrolledWithFeesCount,
   totalExpectedMonthlyRevenue,
   currentMonthName,
@@ -37,10 +35,9 @@ export function MonthlyInvoicesCard({
       const response = await fetch('/api/internal/generate-monthly-invoices', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'CC_INTERNAL_API_KEY': process.env.NEXT_PUBLIC_CC_INTERNAL_API_KEY || '' // Using public key for demo/manual trigger
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ ecdId, year, month })
+        body: JSON.stringify({ year, month })
       })
 
       const data = await response.json()
@@ -101,3 +98,4 @@ export function MonthlyInvoicesCard({
     </Card>
   )
 }
+

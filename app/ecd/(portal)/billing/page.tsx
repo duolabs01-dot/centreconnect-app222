@@ -101,7 +101,6 @@ export default async function EcdBillingPage() {
         )}
         {role === 'ecd_admin' && (
           <MonthlyInvoicesCard
-            ecdId={ecdId}
             enrolledWithFeesCount={enrolledWithFeesCount}
             totalExpectedMonthlyRevenue={totalExpectedMonthlyRevenue}
             currentMonthName={monthName}
@@ -417,6 +416,7 @@ export default async function EcdBillingPage() {
     </>
   )
 }
+
 
 
 
