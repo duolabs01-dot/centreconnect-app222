@@ -347,3 +347,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true, ...results })
 }
+
+export async function GET(request: Request) {
+  return POST(request)
+}

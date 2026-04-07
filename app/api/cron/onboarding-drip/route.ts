@@ -411,3 +411,7 @@ but it looks like you may not have had a chance to open it yet.</p>
 
   return NextResponse.json({ ok: true, ...results })
 }
+
+export async function GET(request: Request) {
+  return POST(request)
+}
