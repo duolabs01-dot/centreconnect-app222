@@ -59,9 +59,9 @@ export default async function ActivateAccountPage() {
         <Card className="border-cyan-100 bg-white/95 shadow-[var(--shadow-elevation-2)] backdrop-blur">
           <CardHeader className="space-y-2">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Final step</p>
-            <CardTitle className="text-2xl font-black text-slate-900">Hi {firstName}, activate your account</CardTitle>
+            <CardTitle className="text-2xl font-black text-slate-900">Hi {firstName}, finish opening your account</CardTitle>
             <p className="text-sm text-slate-600">
-              Your details are ready. Please confirm activation before opening your dashboard.
+              Your workspace is almost ready. Complete this activation step to finish password setup and open your dashboard.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">

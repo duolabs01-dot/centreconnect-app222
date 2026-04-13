@@ -366,6 +366,9 @@ export async function POST(request: Request) {
     )
   }
 
+  const activationRequestedAt = new Date().toISOString()
+  const activationReason = 'Please set your password to finish opening your CentreConnect workspace.'
+
   const { error: profileError } = await adminClient.from('user_profiles').upsert({
     id: adminUserId,
     first_name: contactFirstName,
@@ -373,6 +376,10 @@ export async function POST(request: Request) {
     full_name: contactFullName,
     phone: data.phone,
     role: 'ecd_admin',
+    account_activation_required: true,
+    activation_reason: activationReason,
+    activation_requested_at: activationRequestedAt,
+    activation_completed_at: null,
   }, { onConflict: 'id' })
 
   if (profileError) {
@@ -503,6 +510,8 @@ export async function POST(request: Request) {
       migratedExistingUser: reusedExistingUser,
       previousRole: resolvedExistingRole,
       roleForcedTo: 'ecd_admin',
+      activationRequired: true,
+      activationReason,
       parentAccessRevoked,
       parentAccessRevocationError,
       linkedExistingUnclaimedListing: linkingExistingUnclaimedCentre,

@@ -451,6 +451,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         surname: ownerSurname || null,
         full_name: ownerDisplayName,
         phone: ownerPhoneRaw ?? null,
+        account_activation_required: needsPasswordSetup,
+        activation_reason: needsPasswordSetup
+          ? 'Please set your password to finish opening your CentreConnect workspace.'
+          : null,
+        activation_requested_at: needsPasswordSetup ? nowIso : null,
+        activation_completed_at: needsPasswordSetup ? null : nowIso,
       },
       { onConflict: 'id' }
     )
@@ -520,6 +526,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       linkSanitization: accessLink.diagnostics,
       primaryActionLabel,
       needsPasswordSetup,
+      activationRequired: needsPasswordSetup,
     },
   })
 

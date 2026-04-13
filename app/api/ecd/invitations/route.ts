@@ -271,14 +271,29 @@ export async function POST(request: Request) {
   const previousRole = typeof existingProfile?.role === 'string' ? existingProfile.role : null
   let parentAccessRevoked = false
   let parentAccessRevocationError: string | null = null
+  let invitedNeedsPasswordSetup = true
 
   if (invitedUserId) {
+    const { data: invitedProfileState } = await adminClient
+      .from('user_profiles')
+      .select('first_password_set_at')
+      .eq('id', invitedUserId)
+      .maybeSingle()
+
+    invitedNeedsPasswordSetup = !invitedProfileState?.first_password_set_at
+
     const { error: profileError } = await adminClient.from('user_profiles').upsert(
       {
         id: invitedUserId,
         role: data.role,
         full_name: fullName,
         phone: existingProfile?.phone ?? null,
+        account_activation_required: invitedNeedsPasswordSetup,
+        activation_reason: invitedNeedsPasswordSetup
+          ? 'Please set your password to finish opening your CentreConnect workspace.'
+          : null,
+        activation_requested_at: invitedNeedsPasswordSetup ? nowIso : null,
+        activation_completed_at: invitedNeedsPasswordSetup ? null : nowIso,
       },
       { onConflict: 'id' }
     )
@@ -481,6 +496,7 @@ export async function POST(request: Request) {
       accessLinkWarning: accessLinkResult.warning,
       passwordSetupLinkGenerated: Boolean(passwordSetupResult.link),
       passwordSetupWarning: passwordSetupResult.warning,
+      activationRequired: invitedNeedsPasswordSetup,
       directEmailProvider: null,
       emailQueued: true,
       deliveryWarning: queueMessage,
@@ -504,6 +520,7 @@ export async function POST(request: Request) {
     accessLinkWarning: accessLinkResult.warning,
     passwordSetupLinkGenerated: Boolean(passwordSetupResult.link),
     passwordSetupWarning: passwordSetupResult.warning,
+    activationRequired: invitedNeedsPasswordSetup,
     directEmailProvider,
     emailQueued: emailQueueResult.success,
   })

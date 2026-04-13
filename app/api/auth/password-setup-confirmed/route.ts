@@ -190,7 +190,12 @@ export async function POST() {
   if (shouldMarkFirstPassword) {
     const updateResult = await admin
       .from('user_profiles')
-      .update({ first_password_set_at: nowIso })
+      .update({
+        first_password_set_at: nowIso,
+        account_activation_required: false,
+        activation_reason: null,
+        activation_completed_at: nowIso,
+      })
       .eq('id', user.id)
 
     if (updateResult.error) {
@@ -202,6 +207,9 @@ export async function POST() {
         first_name: profile?.first_name ?? firstName,
         full_name: fallbackName,
         first_password_set_at: nowIso,
+        account_activation_required: false,
+        activation_reason: null,
+        activation_completed_at: nowIso,
       })
       if (fallbackInsert.error) {
         console.error(
