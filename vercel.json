@@ -20,6 +20,10 @@
     {
       "path": "/api/cron/attendance-register-reminders",
       "schedule": "0 8 * * 1-5"
+    },
+    {
+      "path": "/api/cron/password-activation-reminders",
+      "schedule": "0 7 * * 1-5"
     }
   ]
 }

@@ -38,6 +38,12 @@ export const metadata: Metadata = {
 
 const ECD_ROLES = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'] as const
 const ECD_INVITE_EVENTS = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
+const PASSWORD_ACTIVATION_EVENTS = [
+  'password_activation_day1',
+  'password_activation_day3',
+  'password_activation_day7',
+  'password_activation_weekly',
+] as const
 const PARENT_WELCOME_KEYS = ['cc_welcome_intro', 'cc_welcome_inbox_guide', 'cc_welcome_legal', 'cc_welcome_security'] as const
 const OPEN_SUPPORT_STATUSES = ['open', 'in_progress', 'waiting_response'] as const
 const PENDING_INVOICE_STATUSES = ['draft', 'sent', 'overdue'] as const
@@ -92,6 +98,27 @@ type InviteRow = {
   centreId: string | null
 }
 
+type ActivationReminderStatus = {
+  event_type: string
+  event_key: string
+  created_at: string
+  status: string
+  payload?: {
+    weekly_ordinal?: number | null
+  } | null
+}
+
+type OverdueActivationRow = {
+  centreId: string
+  centreName: string
+  ownerEmail: string
+  ownerName: string
+  activationRequestedAt: string
+  lastReminderAt: string | null
+  nextReminderDueAt: string
+  reminderLabel: string
+}
+
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null
   return Array.isArray(value) ? value[0] ?? null : value
@@ -105,6 +132,89 @@ function safe(value: string | null | undefined, fallback: string) {
 function fmtDate(value: string | null | undefined) {
   if (!value) return '-'
   return new Date(value).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' })
+}
+
+function addDaysToIso(value: string, days: number) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  date.setDate(date.getDate() + days)
+  return date.toISOString()
+}
+
+function ageDaysSince(value: string, now = new Date()) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return 0
+  return Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000))
+}
+
+function getOverdueActivationReminder(input: {
+  activationRequestedAt: string | null
+  firstPasswordSetAt: string | null
+  activationRequired: boolean | null
+  logs: ActivationReminderStatus[]
+  now?: Date
+}) {
+  if (!input.activationRequestedAt || input.firstPasswordSetAt || !input.activationRequired) return null
+
+  const now = input.now ?? new Date()
+  const ageDays = ageDaysSince(input.activationRequestedAt, now)
+  const sentEventTypes = new Set<string>()
+  const weeklyOrdinals = new Set<number>()
+  let lastReminderAt: string | null = null
+
+  for (const log of input.logs) {
+    if (log.status === 'failed') continue
+    sentEventTypes.add(log.event_type)
+    if (!lastReminderAt || new Date(log.created_at).getTime() > new Date(lastReminderAt).getTime()) {
+      lastReminderAt = log.created_at
+    }
+
+    if (log.event_type === 'password_activation_weekly') {
+      const weeklyOrdinal = Number(log.payload?.weekly_ordinal)
+      if (Number.isFinite(weeklyOrdinal) && weeklyOrdinal > 0) {
+        weeklyOrdinals.add(weeklyOrdinal)
+      }
+    }
+  }
+
+  if (ageDays >= 14) {
+    const weeklyOrdinal = Math.floor((ageDays - 14) / 7) + 1
+    if (!weeklyOrdinals.has(weeklyOrdinal)) {
+      const weekCount = weeklyOrdinal + 1
+      return {
+        reminderLabel: `Week ${weekCount} follow-up`,
+        nextReminderDueAt: addDaysToIso(input.activationRequestedAt, 14 + (weeklyOrdinal - 1) * 7),
+        lastReminderAt,
+      }
+    }
+    return null
+  }
+
+  if (ageDays >= 7 && !sentEventTypes.has('password_activation_day7')) {
+    return {
+      reminderLabel: 'Day 7 follow-up',
+      nextReminderDueAt: addDaysToIso(input.activationRequestedAt, 7),
+      lastReminderAt,
+    }
+  }
+
+  if (ageDays >= 3 && !sentEventTypes.has('password_activation_day3')) {
+    return {
+      reminderLabel: 'Day 3 follow-up',
+      nextReminderDueAt: addDaysToIso(input.activationRequestedAt, 3),
+      lastReminderAt,
+    }
+  }
+
+  if (ageDays >= 1 && !sentEventTypes.has('password_activation_day1')) {
+    return {
+      reminderLabel: 'Day 1 follow-up',
+      nextReminderDueAt: addDaysToIso(input.activationRequestedAt, 1),
+      lastReminderAt,
+    }
+  }
+
+  return null
 }
 
 function eventLabel(event: string) {
@@ -461,6 +571,73 @@ export default async function AdminDashboardPage() {
     }
   }) as InviteRow[]
 
+  const activationCentresResult = await admin
+    .from('ecd_centres')
+    .select('id,name,email,owner_id,is_deleted')
+    .eq('is_deleted', false)
+    .not('owner_id', 'is', null)
+    .order('created_at', { ascending: true })
+
+  const activationCentres = (activationCentresResult.data ?? []) as Array<any>
+  const activationOwnerIds = Array.from(new Set(activationCentres.map((row: any) => row.owner_id).filter(Boolean))) as string[]
+  const activationCentreIds = activationCentres.map((row: any) => row.id) as string[]
+
+  const [activationProfilesResult, activationLogsResult] = await Promise.all([
+    activationOwnerIds.length > 0
+      ? admin
+          .from('user_profiles')
+          .select('id,first_name,full_name,first_password_set_at,activation_requested_at,account_activation_required')
+          .in('id', activationOwnerIds)
+      : Promise.resolve({ data: [], error: null }),
+    activationCentreIds.length > 0
+      ? admin
+          .from('notification_logs')
+          .select('centre_id,event_type,event_key,created_at,status,payload')
+          .in('centre_id', activationCentreIds)
+          .in('event_type', [...PASSWORD_ACTIVATION_EVENTS])
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  const activationProfilesById = new Map<string, any>()
+  for (const profile of (activationProfilesResult.data ?? []) as Array<any>) {
+    activationProfilesById.set(profile.id, profile)
+  }
+
+  const activationLogsByCentre = new Map<string, ActivationReminderStatus[]>()
+  for (const log of (activationLogsResult.data ?? []) as Array<any>) {
+    if (!log.centre_id) continue
+    const current = activationLogsByCentre.get(log.centre_id) ?? []
+    current.push(log as ActivationReminderStatus)
+    activationLogsByCentre.set(log.centre_id, current)
+  }
+
+  const overdueActivations = activationCentres
+    .map((centre: any) => {
+      const profile = activationProfilesById.get(centre.owner_id)
+      const reminder = getOverdueActivationReminder({
+        activationRequestedAt: profile?.activation_requested_at ?? null,
+        firstPasswordSetAt: profile?.first_password_set_at ?? null,
+        activationRequired: profile?.account_activation_required ?? null,
+        logs: activationLogsByCentre.get(centre.id) ?? [],
+      })
+
+      if (!reminder) return null
+
+      return {
+        centreId: centre.id,
+        centreName: safe(centre.name, 'Unknown centre'),
+        ownerEmail: safe(centre.email, 'No owner email'),
+        ownerName: safe(profile?.first_name || profile?.full_name, 'Owner'),
+        activationRequestedAt: profile?.activation_requested_at,
+        lastReminderAt: reminder.lastReminderAt,
+        nextReminderDueAt: reminder.nextReminderDueAt,
+        reminderLabel: reminder.reminderLabel,
+      }
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => new Date(a.nextReminderDueAt).getTime() - new Date(b.nextReminderDueAt).getTime()) as OverdueActivationRow[]
+
   return (
     <div className="space-y-8 pb-20">
       <AdminRealtimePulse />
@@ -651,6 +828,49 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-sm text-slate-400">{action.detail}</p>
             </Link>
           ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Overdue activations"
+        description="Centres whose owners still have not set a password. This is the live follow-up queue for stalled workspace activation."
+        href="/admin/tenants"
+        hrefLabel="Open centres"
+        icon={<BellRing className="h-4 w-4" />}
+      >
+        <div className="mb-4 flex flex-wrap gap-3 text-xs text-slate-400">
+          <span>Overdue now: {overdueActivations.length}</span>
+          <span>Rule: day 1, day 3, day 7, then weekly</span>
+        </div>
+        <div className="space-y-3">
+          {overdueActivations.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">
+              No overdue activation reminders right now.
+            </div>
+          ) : (
+            overdueActivations.slice(0, 8).map((row) => (
+              <Link
+                key={row.centreId}
+                href={`/admin/tenants/${row.centreId}`}
+                className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:bg-white/5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-white">{row.centreName}</p>
+                    <p className="text-xs text-cyan-300">{row.ownerEmail}</p>
+                  </div>
+                  <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">
+                    {row.reminderLabel}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
+                  <p>Requested: <span className="text-slate-200">{fmtDate(row.activationRequestedAt)}</span></p>
+                  <p>Last reminder: <span className="text-slate-200">{fmtDate(row.lastReminderAt)}</span></p>
+                  <p>Due since: <span className="text-slate-200">{fmtDate(row.nextReminderDueAt)}</span></p>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </SectionCard>
 
