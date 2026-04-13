@@ -24,7 +24,7 @@ export async function POST() {
   const admin = createAdminClient()
   const { data: profile, error: profileError } = await admin
     .from('user_profiles')
-    .select('role,account_activation_required')
+    .select('role,account_activation_required,first_password_set_at')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -42,6 +42,18 @@ export async function POST() {
       alreadyActive: true,
       redirectTo: toDashboardPath(role),
     })
+  }
+
+  if (!profile.first_password_set_at) {
+    return NextResponse.json(
+      {
+        ok: false,
+        needsPasswordSetup: true,
+        error: 'Please finish setting your password before opening your workspace.',
+        redirectTo: '/reset-password?next=/account/activate',
+      },
+      { status: 409 }
+    )
   }
 
   const nowIso = new Date().toISOString()

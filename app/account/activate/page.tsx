@@ -33,7 +33,7 @@ export default async function ActivateAccountPage() {
 
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('role,first_name,surname,full_name,email,account_activation_required,activation_reason,activation_requested_at')
+    .select('role,first_name,surname,full_name,email,account_activation_required,activation_reason,activation_requested_at,first_password_set_at')
     .eq('id', user.id)
     .maybeSingle()
 
@@ -53,6 +53,8 @@ export default async function ActivateAccountPage() {
   })
   const fullName = [profile?.first_name, profile?.surname].filter(Boolean).join(' ').trim() || profile?.full_name || firstName
 
+  const requiresPasswordSetup = !profile?.first_password_set_at
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#ecfeff_0%,#f8fafc_46%,#eef2ff_100%)] px-4 py-10">
       <div className="mx-auto w-full max-w-3xl space-y-5">
@@ -61,7 +63,9 @@ export default async function ActivateAccountPage() {
             <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-700">Final step</p>
             <CardTitle className="text-2xl font-black text-slate-900">Hi {firstName}, finish opening your account</CardTitle>
             <p className="text-sm text-slate-600">
-              Your workspace is almost ready. Complete this activation step to finish password setup and open your dashboard.
+              {requiresPasswordSetup
+                ? 'Your workspace is almost ready. Set your password first, then come straight back to open your dashboard.'
+                : 'Your password is set. Complete this final step to open your dashboard.'}
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -97,7 +101,16 @@ export default async function ActivateAccountPage() {
               </div>
             ) : null}
 
-            <ActivateAccountClient defaultRedirectTo={redirectPath} />
+            {requiresPasswordSetup ? (
+              <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-900">
+                You still need to create your password before this account can be opened.
+              </div>
+            ) : null}
+
+            <ActivateAccountClient
+              defaultRedirectTo={redirectPath}
+              requiresPasswordSetup={requiresPasswordSetup}
+            />
           </CardContent>
         </Card>
       </div>
