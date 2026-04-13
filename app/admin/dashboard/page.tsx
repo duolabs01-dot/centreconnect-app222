@@ -16,6 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { assertInviteDomainHealth } from '@/lib/auth/onboarding-links'
 import { getCompanyHqSnapshot } from '@/lib/admin/company-hq'
 import { getOpenClawOpsSnapshot } from '@/lib/ai/openclaw-ops/service'
+import { getJohannesburgDateKey } from '@/lib/utils'
 import { AdminKpiCard } from '@/components/admin/admin-kpi-card'
 import { AdminDashboardInviteActions } from '@/components/admin/admin-dashboard-invite-actions'
 import { ADMIN_ADVANCED_ITEMS } from '@/components/admin/admin-nav'
@@ -38,6 +39,7 @@ export const metadata: Metadata = {
 
 const ECD_ROLES = ['ecd_admin', 'ecd_staff', 'ecd_supervisor'] as const
 const ECD_INVITE_EVENTS = ['owner_invite', 'admin_access_invite', 'welcome_pack', 'centre_bootstrap_created'] as const
+const ATTENDANCE_REGISTER_EVENT = 'attendance_register_reminder'
 const PASSWORD_ACTIVATION_EVENTS = [
   'password_activation_day1',
   'password_activation_day3',
@@ -117,6 +119,15 @@ type OverdueActivationRow = {
   lastReminderAt: string | null
   nextReminderDueAt: string
   reminderLabel: string
+}
+
+type OverdueRegisterRow = {
+  centreId: string
+  centreName: string
+  ownerEmail: string
+  activeChildrenCount: number
+  reminderSentToday: boolean
+  lastReminderAt: string | null
 }
 
 function normalizeOne<T>(value: T | T[] | null | undefined): T | null {
@@ -386,8 +397,10 @@ function PilotStatusCard({
 
 export default async function AdminDashboardPage() {
   const admin = createAdminClient()
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+  const now = new Date()
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
+  const todayKey = getJohannesburgDateKey(now)
 
   const [
     totalCentresResult,
@@ -638,6 +651,93 @@ export default async function AdminDashboardPage() {
     .filter(Boolean)
     .sort((a: any, b: any) => new Date(a.nextReminderDueAt).getTime() - new Date(b.nextReminderDueAt).getTime()) as OverdueActivationRow[]
 
+  const registerCentresResult = await admin
+    .from('ecd_centres')
+    .select('id,name,email,is_active,is_deleted')
+    .eq('is_active', true)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: true })
+
+  const registerCentres = (registerCentresResult.data ?? []) as Array<any>
+  const registerCentreIds = registerCentres.map((row: any) => row.id) as string[]
+
+  const [registerChildrenResult, attendanceRecordsResult, legacyAttendanceResult, attendanceReminderLogsResult] = await Promise.all([
+    registerCentreIds.length > 0
+      ? admin.from('children').select('ecd_id').in('ecd_id', registerCentreIds).eq('enrollment_status', 'active')
+      : Promise.resolve({ data: [], error: null }),
+    registerCentreIds.length > 0
+      ? admin.from('attendance_records').select('centre_id').in('centre_id', registerCentreIds).eq('date', todayKey)
+      : Promise.resolve({ data: [], error: null }),
+    registerCentreIds.length > 0
+      ? admin.from('attendance').select('ecd_id').in('ecd_id', registerCentreIds).eq('date', todayKey)
+      : Promise.resolve({ data: [], error: null }),
+    registerCentreIds.length > 0
+      ? admin
+          .from('notification_logs')
+          .select('centre_id,created_at,status')
+          .in('centre_id', registerCentreIds)
+          .eq('event_type', ATTENDANCE_REGISTER_EVENT)
+          .gte('created_at', twentyFourHoursAgo)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  const activeChildrenByCentre = new Map<string, number>()
+  for (const row of ((registerChildrenResult.data ?? []) as Array<any>)) {
+    if (!row.ecd_id) continue
+    activeChildrenByCentre.set(row.ecd_id, (activeChildrenByCentre.get(row.ecd_id) ?? 0) + 1)
+  }
+
+  const centresWithAttendance = new Set<string>()
+  for (const row of ((attendanceRecordsResult.data ?? []) as Array<any>)) {
+    if (row.centre_id) centresWithAttendance.add(row.centre_id)
+  }
+  for (const row of ((legacyAttendanceResult.data ?? []) as Array<any>)) {
+    if (row.ecd_id) centresWithAttendance.add(row.ecd_id)
+  }
+
+  const attendanceReminderLogByCentre = new Map<string, { lastReminderAt: string | null; reminderSentToday: boolean }>()
+  for (const row of ((attendanceReminderLogsResult.data ?? []) as Array<any>)) {
+    if (!row.centre_id) continue
+    const existing = attendanceReminderLogByCentre.get(row.centre_id)
+    const createdAt = row.created_at as string | null
+    const reminderSentToday = createdAt ? getJohannesburgDateKey(createdAt) === todayKey && row.status !== 'failed' : false
+    if (!existing) {
+      attendanceReminderLogByCentre.set(row.centre_id, {
+        lastReminderAt: createdAt,
+        reminderSentToday,
+      })
+      continue
+    }
+
+    attendanceReminderLogByCentre.set(row.centre_id, {
+      lastReminderAt: existing.lastReminderAt ?? createdAt,
+      reminderSentToday: existing.reminderSentToday || reminderSentToday,
+    })
+  }
+
+  const overdueRegisters = registerCentres
+    .map((centre: any) => {
+      const activeChildrenCount = activeChildrenByCentre.get(centre.id) ?? 0
+      if (activeChildrenCount === 0) return null
+      if (centresWithAttendance.has(centre.id)) return null
+
+      const reminderState = attendanceReminderLogByCentre.get(centre.id)
+      return {
+        centreId: centre.id,
+        centreName: safe(centre.name, 'Unknown centre'),
+        ownerEmail: safe(centre.email, 'No owner email'),
+        activeChildrenCount,
+        reminderSentToday: reminderState?.reminderSentToday ?? false,
+        lastReminderAt: reminderState?.lastReminderAt ?? null,
+      }
+    })
+    .filter(Boolean)
+    .sort((a: any, b: any) => {
+      if (a.reminderSentToday !== b.reminderSentToday) return a.reminderSentToday ? 1 : -1
+      return b.activeChildrenCount - a.activeChildrenCount
+    }) as OverdueRegisterRow[]
+
   return (
     <div className="space-y-8 pb-20">
       <AdminRealtimePulse />
@@ -831,48 +931,97 @@ export default async function AdminDashboardPage() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Overdue activations"
-        description="Centres whose owners still have not set a password. This is the live follow-up queue for stalled workspace activation."
-        href="/admin/tenants"
-        hrefLabel="Open centres"
-        icon={<BellRing className="h-4 w-4" />}
-      >
-        <div className="mb-4 flex flex-wrap gap-3 text-xs text-slate-400">
-          <span>Overdue now: {overdueActivations.length}</span>
-          <span>Rule: day 1, day 3, day 7, then weekly</span>
-        </div>
-        <div className="space-y-3">
-          {overdueActivations.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">
-              No overdue activation reminders right now.
-            </div>
-          ) : (
-            overdueActivations.slice(0, 8).map((row) => (
-              <Link
-                key={row.centreId}
-                href={`/admin/tenants/${row.centreId}`}
-                className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:bg-white/5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-white">{row.centreName}</p>
-                    <p className="text-xs text-cyan-300">{row.ownerEmail}</p>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <SectionCard
+          title="Overdue activations"
+          description="Centres whose owners still have not set a password. This is the live follow-up queue for stalled workspace activation."
+          href="/admin/tenants"
+          hrefLabel="Open centres"
+          icon={<BellRing className="h-4 w-4" />}
+        >
+          <div className="mb-4 flex flex-wrap gap-3 text-xs text-slate-400">
+            <span>Overdue now: {overdueActivations.length}</span>
+            <span>Rule: day 1, day 3, day 7, then weekly</span>
+          </div>
+          <div className="space-y-3">
+            {overdueActivations.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">
+                No overdue activation reminders right now.
+              </div>
+            ) : (
+              overdueActivations.slice(0, 8).map((row) => (
+                <Link
+                  key={row.centreId}
+                  href={`/admin/tenants/${row.centreId}`}
+                  className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:bg-white/5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{row.centreName}</p>
+                      <p className="text-xs text-cyan-300">{row.ownerEmail}</p>
+                    </div>
+                    <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">
+                      {row.reminderLabel}
+                    </span>
                   </div>
-                  <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300">
-                    {row.reminderLabel}
-                  </span>
-                </div>
-                <div className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
-                  <p>Requested: <span className="text-slate-200">{fmtDate(row.activationRequestedAt)}</span></p>
-                  <p>Last reminder: <span className="text-slate-200">{fmtDate(row.lastReminderAt)}</span></p>
-                  <p>Due since: <span className="text-slate-200">{fmtDate(row.nextReminderDueAt)}</span></p>
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-      </SectionCard>
+                  <div className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
+                    <p>Requested: <span className="text-slate-200">{fmtDate(row.activationRequestedAt)}</span></p>
+                    <p>Last reminder: <span className="text-slate-200">{fmtDate(row.lastReminderAt)}</span></p>
+                    <p>Due since: <span className="text-slate-200">{fmtDate(row.nextReminderDueAt)}</span></p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Overdue registers"
+          description="Live centres that still have active children but no attendance marked today. This is the operational queue behind register reminders."
+          href="/admin/tenants"
+          hrefLabel="Open centres"
+          icon={<FileSpreadsheet className="h-4 w-4" />}
+        >
+          <div className="mb-4 flex flex-wrap gap-3 text-xs text-slate-400">
+            <span>Overdue now: {overdueRegisters.length}</span>
+            <span>Rule: active children + no attendance today</span>
+          </div>
+          <div className="space-y-3">
+            {overdueRegisters.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-slate-500">
+                No overdue register reminders right now.
+              </div>
+            ) : (
+              overdueRegisters.slice(0, 8).map((row) => (
+                <Link
+                  key={row.centreId}
+                  href={`/admin/tenants/${row.centreId}`}
+                  className="block rounded-2xl border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:bg-white/5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-white">{row.centreName}</p>
+                      <p className="text-xs text-cyan-300">{row.ownerEmail}</p>
+                    </div>
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] ${
+                      row.reminderSentToday
+                        ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                        : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                    }`}>
+                      {row.reminderSentToday ? 'Reminder sent today' : 'Reminder due now'}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-xs text-slate-400 sm:grid-cols-3">
+                    <p>Active children: <span className="text-slate-200">{row.activeChildrenCount}</span></p>
+                    <p>Reminder status: <span className="text-slate-200">{row.reminderSentToday ? 'Sent today' : 'Not sent yet'}</span></p>
+                    <p>Last reminder: <span className="text-slate-200">{fmtDate(row.lastReminderAt)}</span></p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </SectionCard>
+      </div>
 
       <SectionCard
         title="Product readiness today"
