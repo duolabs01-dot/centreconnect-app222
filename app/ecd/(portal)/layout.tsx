@@ -83,7 +83,7 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
     unreadEcdNotificationsCount,
     pendingTransportCount,
     complianceOutstandingCount,
-    subscriptionTier,
+    subscriptionRow,
   ] = await Promise.all([
     admin
       .from('applications')
@@ -125,11 +125,18 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
       .then(({ count, error }) => (error ? 0 : count ?? 0)),
     admin
       .from('subscriptions')
-      .select('tier')
+      .select('tier,status,trial_ends_at')
       .eq('ecd_id', ecdId)
+      .order('current_period_start', { ascending: false })
+      .limit(1)
       .maybeSingle()
-      .then(({ data }) => data?.tier ?? null),
+      .then(({ data }) => data ?? null),
   ])
+
+  const subscriptionTier = subscriptionRow?.tier ?? null
+  const TRIAL_EXTENSION_END_ISO = '2026-05-31T21:59:59.999Z'
+  const showTrialExtensionBanner =
+    subscriptionRow?.status === 'trial' && new Date(TRIAL_EXTENSION_END_ISO).getTime() > Date.now()
 
   const attentionBadges: Partial<Record<string, number>> = {
     '/ecd/applications': pendingApplicationsCount,
@@ -158,6 +165,14 @@ export default async function EcdLayout({ children }: EcdLayoutProps) {
         <EcdMainScrollMemory />
         <div className="mx-auto w-full max-w-[1600px] px-4 pb-6 pt-20 sm:px-6 md:pb-10 md:pt-8 lg:px-8 xl:px-10">
           <BrowserNotificationBridge mode="ecd" ecdId={ecdId} />
+          {showTrialExtensionBanner ? (
+            <div className="mb-4 rounded-2xl border border-amber-300/90 bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 text-amber-900 shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-700">Trial update</p>
+              <p className="mt-1 text-sm font-semibold">
+                Your CentreConnect pilot trial has been extended to <strong>31 May 2026</strong>. Keep using the app as normal.
+              </p>
+            </div>
+          ) : null}
           {showBreadcrumbs ? (
             <AppBreadcrumbs
               rootHref="/ecd/dashboard"
