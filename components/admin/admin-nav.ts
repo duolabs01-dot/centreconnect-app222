@@ -36,6 +36,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
 export const ADMIN_ADVANCED_ITEMS: AdminNavItem[] = [
   { href: '/admin/analytics', label: 'Analytics' },
   { href: '/admin/invites', label: 'Invites' },
+  { href: '/admin/notifications', label: 'Notifications' },
   { href: '/admin/parent-reliability', label: 'Parent Reliability' },
   { href: '/admin/ai-os', label: 'Founder Advisor' },
   { href: '/admin/openclaw', label: 'OpenClaw Ops' },
@@ -61,6 +62,7 @@ export const ADMIN_TASK_ROUTER: Array<{ task: string; href: string; label: strin
   { task: 'Fix a parent issue', href: '/admin/parent-reliability', label: 'Open Parent Reliability' },
   { task: 'Handle support tickets', href: '/admin/support', label: 'Open Support' },
   { task: 'Check revenue status', href: '/admin/revenue', label: 'Open Revenue' },
+  { task: 'Review notification operations', href: '/admin/notifications', label: 'Open Notifications' },
   { task: 'Review AI founder brief', href: '/admin/ai-os', label: 'Open Founder Advisor' },
   { task: 'Check automation runtime', href: '/admin/openclaw', label: 'Open OpenClaw Ops' },
 ]
