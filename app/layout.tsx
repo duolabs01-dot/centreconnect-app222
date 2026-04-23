@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme/theme-provider'
 import { ThemeRouteSync } from '@/components/theme/theme-route-sync'
 import { FooterConditionalRenderer } from '@/components/layout/FooterConditionalRenderer'
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { ServiceWorkerRegister } from '@/lib/components/ServiceWorkerRegister'
 import { LiteModeProvider } from '@/lib/context/LiteModeProvider'
 import { SessionTimeoutProvider } from '@/lib/context/SessionTimeoutProvider'
@@ -96,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </FooterConditionalRenderer>
                 <SonnerToaster position="top-right" richColors />
                 <Analytics />
+                <SpeedInsights />
                 <ServiceWorkerRegister />
               </ThemeProvider>
             </BottomNavProvider>
